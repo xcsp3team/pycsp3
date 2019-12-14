@@ -1,0 +1,24 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" size="[10][10]"> 0..149 </array>
+    <array id="z" size="[10][10][10]"> 0..149 </array>
+    <array id="q" size="[10][10][10]"> 0..149 </array>
+  </variables>
+  <constraints>
+    <element>
+      <list> x[][0] </list>
+      <index> x[0][0] </index>
+      <value> 5 </value>
+    </element>
+    <element>
+      <matrix> z[0][][] </matrix>
+      <index> z[0][0][0] q[0][1][2] </index>
+      <value> 5 </value>
+    </element>
+    <element>
+      <matrix> z[1][][] </matrix>
+      <index> z[0][0][0] q[0][1][2] </index>
+      <value> 6 </value>
+    </element>
+  </constraints>
+</instance>

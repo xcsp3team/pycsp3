@@ -1,0 +1,30 @@
+% Size of the grid
+4 6
+% Number of bug types
+2
+% Number of required squares for each type of bug
+3 2
+% Number of bugs in the grid
+10
+% Bugs positions in the grid (each line for an insect: its two coordinates, and its type)
+0 2 1
+0 3 1
+1 0 0
+1 1 0
+1 2 1
+1 5 0
+2 2 1
+2 5 0
+3 4 1
+3 5 1
+% Visual representation of the grid (optional, not read by the parser)
+
+ -----------
+| | |1|1| | |
+|-----------|
+|0|0|1| | |0|
+|-----------|
+| | |1| | |0|
+|-----------|
+| | | | |1|1|
+ -----------

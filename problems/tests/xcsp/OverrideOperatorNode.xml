@@ -1,0 +1,139 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" size="[10]"> 0..149 </array>
+    <var id="y"> 0..149 </var>
+  </variables>
+  <constraints>
+    <group>
+      <intension> in(%0,set(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99)) </intension>
+      <args> x[0] </args>
+      <args> x[1] </args>
+      <args> x[2] </args>
+      <args> x[3] </args>
+      <args> x[4] </args>
+      <args> x[5] </args>
+      <args> x[6] </args>
+      <args> x[7] </args>
+      <args> x[8] </args>
+      <args> x[9] </args>
+    </group>
+    <group>
+      <intension> in(%0,set(1,2,3)) </intension>
+      <args> x[0] </args>
+      <args> x[1] </args>
+      <args> x[2] </args>
+      <args> x[3] </args>
+      <args> x[4] </args>
+      <args> x[5] </args>
+      <args> x[6] </args>
+      <args> x[7] </args>
+      <args> x[8] </args>
+      <args> x[9] </args>
+    </group>
+    <group>
+      <intension> notin(%0,set(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99)) </intension>
+      <args> x[0] </args>
+      <args> x[1] </args>
+      <args> x[2] </args>
+      <args> x[3] </args>
+      <args> x[4] </args>
+      <args> x[5] </args>
+      <args> x[6] </args>
+      <args> x[7] </args>
+      <args> x[8] </args>
+      <args> x[9] </args>
+    </group>
+    <group>
+      <intension> notin(%0,set(1,2,3)) </intension>
+      <args> x[0] </args>
+      <args> x[1] </args>
+      <args> x[2] </args>
+      <args> x[3] </args>
+      <args> x[4] </args>
+      <args> x[5] </args>
+      <args> x[6] </args>
+      <args> x[7] </args>
+      <args> x[8] </args>
+      <args> x[9] </args>
+    </group>
+    <group>
+      <intension> le(%0,5) </intension>
+      <args> x[0] </args>
+      <args> x[1] </args>
+      <args> x[2] </args>
+      <args> x[3] </args>
+      <args> x[4] </args>
+      <args> x[5] </args>
+      <args> x[6] </args>
+      <args> x[7] </args>
+      <args> x[8] </args>
+      <args> x[9] </args>
+    </group>
+    <group>
+      <intension> lt(%0,5) </intension>
+      <args> x[0] </args>
+      <args> x[1] </args>
+      <args> x[2] </args>
+      <args> x[3] </args>
+      <args> x[4] </args>
+      <args> x[5] </args>
+      <args> x[6] </args>
+      <args> x[7] </args>
+      <args> x[8] </args>
+      <args> x[9] </args>
+    </group>
+    <group>
+      <intension> ge(%0,5) </intension>
+      <args> x[0] </args>
+      <args> x[1] </args>
+      <args> x[2] </args>
+      <args> x[3] </args>
+      <args> x[4] </args>
+      <args> x[5] </args>
+      <args> x[6] </args>
+      <args> x[7] </args>
+      <args> x[8] </args>
+      <args> x[9] </args>
+    </group>
+    <group>
+      <intension> gt(%0,5) </intension>
+      <args> x[0] </args>
+      <args> x[1] </args>
+      <args> x[2] </args>
+      <args> x[3] </args>
+      <args> x[4] </args>
+      <args> x[5] </args>
+      <args> x[6] </args>
+      <args> x[7] </args>
+      <args> x[8] </args>
+      <args> x[9] </args>
+    </group>
+    <instantiation>
+      <list> x[] </list>
+      <values> 5 5 5 5 5 5 5 5 5 5 </values>
+    </instantiation>
+    <group>
+      <intension> ne(%0,5) </intension>
+      <args> x[0] </args>
+      <args> x[1] </args>
+      <args> x[2] </args>
+      <args> x[3] </args>
+      <args> x[4] </args>
+      <args> x[5] </args>
+      <args> x[6] </args>
+      <args> x[7] </args>
+      <args> x[8] </args>
+      <args> x[9] </args>
+    </group>
+    <intension> in(y,set(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49)) </intension>
+    <intension> notin(y,set(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49)) </intension>
+    <intension> in(y,set(1,2,3)) </intension>
+    <intension> notin(y,set(1,2,3)) </intension>
+    <intension> le(y,5) </intension>
+    <intension> lt(y,5) </intension>
+    <intension> ge(y,5) </intension>
+    <intension> gt(y,5) </intension>
+    <intension> eq(y,5) </intension>
+    <intension> ne(y,5) </intension>
+  </constraints>
+</instance>

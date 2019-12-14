@@ -1,0 +1,14 @@
+% Size of the grid
+3
+% Number of hints
+3
+% Hints: coordinates + number or operator + v (vertical) or h (horizontal) if operator
+0 0 2
+0 1 lt h
+2 0 lt h
+% Visual representation of the grid (optional, not read by the parser)
+2 _<_
+     
+_ _ _
+     
+_<_ _

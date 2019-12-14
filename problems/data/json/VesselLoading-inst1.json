@@ -1,0 +1,10 @@
+{
+    "containerWidth": 5,
+    "containerHeight": 5,
+    "containers" : [
+	{"width": 5, "height": 1, "type": 0},
+	{"width": 2, "height": 4, "type": 0},
+	{"width": 3, "height": 4, "type": 0}
+    ],
+    "separations": [[0]]
+}
