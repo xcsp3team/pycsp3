@@ -9,7 +9,9 @@ With PyCSP3, it is possible to generate instances of:
 
 in format XCSP3; see [www.xcsp.org](www.xcsp.org).
 
-**Important:** In November 2019, the version 1.0 together with a detailed documentation will be made available on GitHub.
+Note that:
+* the code is available on [Github](https://github.com/xcsp3team/pycsp3)
+* a [guide](https://github.com/xcsp3team/pycsp3/blob/master/guidePyCSP3.pdf) is available
 
 
 # Installation
@@ -278,6 +280,12 @@ To generate an XCSP3 instance (file), we can for example execute a command like:
 
 ```console
 python3 Bibd.py -data=[9,0,0,3,9]
+```
+
+With some command interpreters (shells), you may have to escape the characters '[' and ']', which gives:
+
+```console
+python3 Bibd.py -data=\[9,0,0,3,9\]
 ```
 
 Certainly, you wonder how values are associated with fields of `data`.
