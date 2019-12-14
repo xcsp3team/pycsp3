@@ -1,0 +1,14 @@
+{
+    "nRacks": 10,
+    "rackModels": [
+	{"power":150,"nConnectors":8,"price":150},
+	{"power":200,"nConnectors":16,"price":200}
+    ],
+    "cardTypes": [
+	{"power":20,"demand":20},
+	{"power":40,"demand":8},
+	{"power":50,"demand":4},
+	{"power":75,"demand":2}
+    ]
+}
+    

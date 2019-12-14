@@ -1,0 +1,8 @@
+	BUGS
+
+The current version has the following known bugs and limitations:
+
+  - Attributes inside start-tags and empty element tags are not indented.
+  - The scanner trips over on characters that are not part of 7-bit ASCII
+    (ISO-8859-1 and UTF-8, for example, don't work correctly).
+  - Comments are not formatted.

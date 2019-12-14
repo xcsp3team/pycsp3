@@ -1,0 +1,58 @@
+.TH "xmlindent" "1" "0.2.17" "Thomas Fischer" ""
+.SH "NAME"
+.LP 
+xmlindent \- XML stream reformatter
+.SH "SYNTAX"
+.LP 
+xmlindent [\fB\-o\fP \fIoutput file\fP] [\fB\-i\fP \fIindent level\fP]
+[\fB\-l\fP \fImax columns\fP] [\fB\-n\fP \fInewline position\fP]
+[\fB\-t\fP] [\fB\-c\fP] [\fB-f\fP] [\fB\-w\fP] [\fB\-h\fP] [\fB\-v\fP]
+.SH "DESCRIPTION"
+.LP 
+XML Indent is a XML stream reformatter written in ANSI C. It is analogous to GNU indent.
+.SH "OPTIONS"
+.LP 
+.TP 
+\fB\-o\fR \fIoutput file\fP
+Write indented XML to \fIoutput file\fP
+.TP 
+\fB\-i\fR \fIindent level\fP
+Indent each level \fIindent level\fP spaces deeper
+.TP 
+\fB\-l\fR \fImax columns\fP
+Wrap lines longer than \fImax columns\fP
+.TP 
+\fB\-t\fR
+Use tabs instead of spaces
+.TP 
+\fB\-nas\fR
+Suppress newline after start-tag
+.TP 
+\fB\-nae\fR
+Suppress newline after end-tag
+.TP 
+\fB\-nbs\fR
+Suppress newline before start-tag
+.TP 
+\fB\-nbe\fR
+Suppress newline before end-tag
+.TP 
+\fB\-f\fR
+Force newline on elements without children
+.TP 
+\fB\-w\fR
+Overwrite original file
+.TP 
+\fB\-v\fR
+Show version
+.TP 
+\fB\-h\fR
+Show command line help
+.SH "AUTHORS"
+.LP 
+Pekka Enberg <penberg@iki.fi>
+.br 
+Thomas Fischer <th.fischer@gmx.net> (man page)
+.SH "SEE ALSO"
+.LP 
+indent(1)

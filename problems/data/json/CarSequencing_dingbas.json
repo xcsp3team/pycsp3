@@ -1,0 +1,1 @@
+{"classes":[{"demand":1,"options":[1,0,1,1,0]},{"demand":1,"options":[0,0,0,1,0]},{"demand":2,"options":[0,1,0,0,1]},{"demand":2,"options":[0,1,0,1,0]},{"demand":2,"options":[1,0,1,0,0]},{"demand":2,"options":[1,1,0,0,0]}],"limits":[{"num":1,"den":2},{"num":2,"den":3},{"num":1,"den":3},{"num":2,"den":5},{"num":1,"den":5}]}

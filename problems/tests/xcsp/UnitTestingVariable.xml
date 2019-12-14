@@ -1,0 +1,13 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="x"> 0 1 </var>
+    <var id="y"> 0 1 </var>
+    <var id="z"> 0 1 </var>
+    <var id="xx" note="comment not discarded"> 0 1 </var>
+    <var id="yy"> 0 1 </var>
+    <array id="g1" note="comment not discarded" size="[1][2][3][4]"> 0..99 </array>
+    <array id="g2" size="[1][2][3][4]"> 1 2 3 </array>
+    <array id="g3" size="[1][2][3][4]"> 1 2 3 </array>
+    <array id="z1" size="[2][2][2][2][2][2][2][2][2][2]"> 0..99 </array>
+  </variables>
+</instance>

@@ -1,0 +1,261 @@
+2012-01-24  Pekka Enberg <penberg@kernel.fi>
+
+	* Fix whitespace corruption in XML elements.
+
+2004-09-17  Pekka Enberg <penberg@iki.fi>
+
+	* Release 0.2.17.
+
+2004-09-07  Pekka Enberg <penberg@iki.fi>
+
+	* New README file.
+	* Better usage printout.
+	* Support for multiple files in the command line.
+
+2004-03-29  Heikki Orsila <shd@modeemi.cs.tut.fi>
+
+	* Fixed Makefile dependencies.
+
+2004-03-28  Pekka Enberg <penberg@iki.fi>
+
+	* Update BUGS, bump up version, and release 0.2.16.
+
+2004-03-28  Alexander Dupuy <dupuy@sysd.com>
+
+	* Fixed a bug in line wrapping code that caused corrupted output.
+
+2004-02-16  Pekka Enberg <penberg@iki.fi>
+
+	* Released 0.2.15.
+	* Updated BUGS. 
+
+2004-02-16  Aubin Paul <debian@outlyer.org>
+
+	* Debian packaging.
+
+2004-02-15  Pekka Enberg <penberg@iki.fi>
+
+	* Released 0.2.14.
+	* Added a LICENSE file and standard GPL banner to source files.
+	* Added processing instruction parsing (see Section 2.6 of XML 1.0
+	  specification). Thanks to Rob Austein <sra@hactrn.net> for the bug
+	  report.
+
+2004-02-05  Pekka Enberg <penberg@iki.fi>
+
+	* Bump up version number and re-release 0.2.13.
+	* Fix for the doctype section parsing fix. Thanks David for testing. 
+	* Release 0.2.13
+	* Fix DOCTYPE parsing error that caused corruption in output file.
+	  Bug reported by <david@dyn-ns.net>.
+
+2003-09-28  Pekka Enberg <penberg@iki.fi>
+
+	* Release 0.2.12
+	* Fix empty element indentation. Thanks to Gabriel C Millerd and Mika
+	  Viljanen for the bug reports.
+
+2003-09-26  Pekka Enberg <penberg@iki.fi>
+
+	* Release 0.2.11
+	* Fix error in empty element tag indentation that caused corruption
+	  in files (spotted by Mika Viljanen).
+	* Avoid zero-length files. Thanks to Mika Viljanen for spotting this
+	  one!
+
+2003-09-18  Pekka Enberg <penberg@iki.fi>
+
+	* Release 0.2.10
+	* Code cleanups
+	* Follow indent options for empty element tags too. Thanks to Todd
+	  Hammer for pointing out the limitation.
+
+2003-08-09  Pekka Enberg <penberg@iki.fi>
+
+	* Release 0.2.9
+
+2003-08-09  Nicola S. Vitale <nivit@libero.it>
+
+	* Parse attributes with character references properly.
+
+2003-07-08  Pekka Enberg <penberg@iki.fi>
+
+	* Release 0.2.8
+	* Minor cleanups to Basile's patch
+
+2003-07-08  Basile Starynkevitch <basile.starynkevitch@cea.fr>
+
+	* Fix compile with Flex 2.5.31
+
+2003-07-02  Pekka Enberg <penberg@iki.fi>
+
+	* Release 0.2.7
+
+2003-06-11  Nicola S. Vitale <nivit@libero.it>
+
+	* Fix incorrect EOF handling.
+
+2003-06-08  Pekka Enberg <penberg@iki.fi>
+
+	* Release 0.2.6
+	* Add new command line option '-f' (force newline for elements without
+	  children) to fix a bug reported by Paul Campbell.
+
+2003-06-04  Pekka Enberg <penberg@iki.fi>
+
+	* Release 0.2.5
+	* Fix bug in parsing attributes scattered across multiple
+	  lines.
+	* Fix start-tag attribute parsing bug.
+
+2003-05-14  Pekka Enberg <penberg@iki.fi>
+
+	* Fix compile warnings when compiled with '-Wstrict-prototypes'
+
+2003-05-14  Graham Barr <gbarr@pobox.com>
+
+	* Fix too greedy CDATA section parsing
+
+2003-03-10  Pekka Enberg <penberg@iki.fi>
+
+	* Release version 0.2.4
+	* Cleanups for automatic newline suppressing code.
+
+2003-03-07  Pekka Enberg <penberg@iki.fi>
+
+	* Reverse meaning of '-n<xx' command line options.
+	* Never force newline for elements that do not have child
+	  elements.
+
+2003-03-02  Pekka Enberg <penberg@iki.fi>
+
+	* Release version 0.2.3
+	* Fix DOCTYPE parsing error that caused problems with DocBook
+	  XMLs.
+
+2003-02-26  Pekka Enberg <penberg@iki.fi>
+	
+	* Fix EOF check on PPC and probably some other non IA-32 platforms
+	  as well
+
+2003-02-25  Pekka Enberg <penberg@iki.fi>
+
+	* Makefile fix for Solaris
+
+2003-02-12  Pekka Enberg <penberg@iki.fi>
+
+	* Fix bug in line wrapping that ate whitespace from next line.
+	* Add '-nbs' and '-nbe' options.
+	* Release version 0.2.2
+	* Fix comment parsing bug found by Nicolas Girard.
+
+2003-02-11  Pekka Enberg <penberg@iki.fi>
+
+	* Make it compile with non-ANSI C99 compiliant compiler (thanks
+	  to Nicolas Girard for spotting this one)
+
+2003-02-08  Pekka Enberg <penberg@iki.fi>
+
+	* Release version 0.2.1
+	* Remove support for forcing newline before tags because it
+	  produces too funky results
+	* Support line wrapping command line option '-l'
+
+2003-02-06  Pekka Enberg <penberg@iki.fi>
+
+	* Avoid duplicate newlines
+	* Eat whitespace after newline
+
+2003-02-03  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Release version 0.2.0
+	* Support forcing newline after and before start and end-tags.
+	* Use flex for generating the XML parser. Regressions -c not
+	  supported anymore.
+
+2002-10-26  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Release version 0.1.9
+
+2002-10-25  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Emit last line even if there was no newline before end of file.
+
+2002-10-04  Peter Bray <pdb_ml@yahoo.com.au>
+
+	* Avoid reallocations for long lines.
+
+2002-10-04  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Release version 0.1.8
+	* Fix segfault for lines longer than 1024 characters. Thanks to
+	  Peter Bray for spotting this one.
+
+2002-10-01  Brett Pemberton <brett@bad-sports.com>
+
+	* RPM spec and Makefile fixes
+
+2002-10-01  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Recognize two character end of line markers.
+	* Added overwrite original file command line option -w.
+
+2002-09-29  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Release version 0.1.7
+
+2002-09-28  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Add RPM spec file.  
+	* Add version printing command line option -v.  
+	* Add output filename command line option -o.  
+	* Fix eats empty lines.  
+	* Release version 0.1.6
+
+2002-09-25  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Use <unistd.h> instead of <getopt.h>.  
+	* Add compile, install, and uninstall targets to Makefile.  
+
+2002-09-24  Thomas Fischer <th.fischer@gmx.net>
+
+	* Add man page.  
+
+2002-09-24  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Release version 0.1.5
+	* Leave CDATA sections alone.  
+
+2002-09-23  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Release version 0.1.4
+	* Add use tabs command line option.
+
+2002-09-23  Brett Pemberton <brett@bad-sports.com>
+
+	* Break up xmlindent to xmlindent.c and main.c.
+	* Parse command line arguments with getopts.
+
+2002-09-21  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Release version 0.1.3
+	* Better end of line recognizition.  
+	* Add leave comments alone command line option -c.  
+	* Recognize start-tags beginning with underscore or colon.
+
+2002-09-21  Markus Hjort <Markus.Hjort@hut.fi>
+
+	* Add indent level command line option -i.
+
+2002-09-19  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Release version 0.1.2
+	* Fix closed XML tag after XML begin tag caused indent errors.  
+	* Release version 0.1.1
+	* Recognize XML comments.  
+	* Eat leading whitespace.  
+	* Remove fixed-size buffer. Recognize begin tags better.
+
+2002-09-18  Pekka Enberg <Pekka.Enberg@cs.helsinki.fi>
+
+	* Release version 0.1

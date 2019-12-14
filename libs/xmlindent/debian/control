@@ -1,0 +1,13 @@
+Source: xmlindent
+Section: devel
+Priority: optional
+Maintainer: Aubin Paul <debian@outlyer.org>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.6.0
+
+Package: xmlindent
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: An XML stream reformatter
+ XML Indent is a XML stream reformatter written in ANSI C. It is
+ analogous to GNU indent. 
