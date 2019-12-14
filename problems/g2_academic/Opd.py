@@ -26,7 +26,7 @@ if not variant():
     )
 
 elif variant("aux"):
-    #  scalar variables
+    # scalar variables
     s = VarArray(size=[v, v, b], dom={0, 1}, when=lambda i, j, k: i < j)
 
     satisfy(
