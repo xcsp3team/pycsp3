@@ -28,7 +28,7 @@ satisfy(
     [y[i] + h[i] <= height for i in range(nContainers)],
 
     # managing rotation
-    [(r[i], w[i], h[i]) in [(0, container.width, container.height), (1, container.height, container.width)] for i, container in enumerate(containers)],
+    [(r[i], w[i], h[i]) in {(0, container.width, container.height), (1, container.height, container.width)} for i, container in enumerate(containers)],
 
     # no overlapping between rectangles
     NoOverlap(origins=[(x[i], y[i]) for i in range(nContainers)], lengths=[(w[i], h[i]) for i in range(nContainers)])

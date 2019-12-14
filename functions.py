@@ -592,13 +592,13 @@ def Count(term, *others, value=None, values=None, condition=None):
 
 
 # def AtLeastOne(term, *others, value=None, values=None):
-#     return Count(term, others, value=value, values=values, condition=(TypeConditionOperator.GE, 1))
+#     return Count(term, others, value=value, values=values) >= 1
 #
 # def AtMostOne(term, *others, value=None, values=None):
-#     return Count(term, others, value=value, values=values, condition=(TypeConditionOperator.LE, 1))
+#     return Count(term, others, value=value, values=values) <= 1
 #
 # def ExactlyOne(term, *others, value=None, values=None):
-#     return Count(term, others, value=value, values=values, condition=(TypeConditionOperator.EQ, 1))
+#     return Count(term, others, value=value, values=values) == 1
 
 
 def NValues(term, *others, excepting=None, condition=None):
@@ -611,7 +611,7 @@ def NValues(term, *others, excepting=None, condition=None):
 
 
 # def NotAllEqual(term, *others):
-#    return NValues(term, others, condition=(TypeConditionOperator.GT, 1))
+#    return NValues(term, others) > 1 
 
 
 def Cardinality(term, *others, occurrences, closed=False):

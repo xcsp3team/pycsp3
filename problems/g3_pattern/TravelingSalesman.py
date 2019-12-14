@@ -2,16 +2,14 @@ from pycsp3 import *
 
 distances = data.distances
 nCities = len(distances)
-allDistances = {d for row in distances for d in row}
 
-table = [(i, j, distances[i][j]) for i in range(nCities) for j in range(nCities) if i != j]
+table = {(i, j, distances[i][j]) for i in range(nCities) for j in range(nCities) if i != j}
 
 # c[i] is the ith city of the tour
 c = VarArray(size=nCities, dom=range(nCities))
 
 # d[i] is the distance between the cities i and i+1
-d = VarArray(size=nCities, dom=allDistances)
-
+d = VarArray(size=nCities, dom={d for row in distances for d in row})
 
 satisfy(
 

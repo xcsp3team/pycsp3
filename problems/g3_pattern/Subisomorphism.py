@@ -9,7 +9,7 @@ tLoops = [n1 for (n1, n2) in targetEdges if n1 == n2]
 pDegrees = [len([edge for edge in patternEdges if i in edge]) for i in range(nPatternNodes)]
 tDegrees = [len([edge for edge in targetEdges if i in edge]) for i in range(nTargetNodes)]
 
-bothWayTable = [(n1, n2) for (n1, n2) in targetEdges] + [(n2, n1) for (n1, n2) in targetEdges]
+bothWayTable = {(n1, n2) for (n1, n2) in targetEdges} | {(n2, n1) for (n1, n2) in targetEdges}
 degree_conflicts = [[j for j in range(nTargetNodes) if tDegrees[j] < pDegrees[i]] for i in range(nPatternNodes)]
 
 # x[i] is the node from the target graph to which the ith node of the pattern graph is mapped.
