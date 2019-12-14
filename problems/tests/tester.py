@@ -135,7 +135,7 @@ class Tester:
         return None if data is None else DATA_PATH + "json/" + data if data.endswith(".json") else data
 
     def data_jv(self, data):
-        return None if data is None else "../MCSP3python/" + DATA_PATH + "json/" + data if data.endswith(".json") else data
+        return None if data is None else DATA_PATH + "json/" + data if data.endswith(".json") else data
 
     def _command_py(self, model, data, variant, prs_py):
         cmd = "python3 " + self.dir_pbs_py + model + ".py"
