@@ -27,6 +27,7 @@ hates = VarArray(size=[3, 3], dom={0, 1})
 
 # richer[i][j] is 1 iff person i is richer than person j
 richer = VarArray(size=[3, 3], dom={0, 1})
+
 satisfy(
     # a killer always hates his victim
     hates[killer][agatha] == 1,
