@@ -5,7 +5,7 @@ def summing(word):
     return Sum(x[i] for i in to_alphabet_positions(word))
 
 
-#  x[i] is the value for the ith letter of the alphabet
+# x[i] is the value for the ith letter of the alphabet
 x = VarArray(size=26, dom=range(1, 27))
 
 satisfy(
