@@ -29,8 +29,8 @@ class Variable:
         return name + "[" + "][".join(str(i) for i in indexes) + "]"
 
     @staticmethod
-    def build_domain(name, domain, when, indexes):
-        if domain is None or when is not None and when(*indexes) is None:
+    def build_domain(name, domain, indexes):
+        if domain is None:
             return None
         if isinstance(domain, Domain):
             return domain
@@ -53,8 +53,8 @@ class Variable:
         return Domain(domain)
 
     @staticmethod
-    def build_variable(name, domain, when, indexes):  # name, domain):
-        dom = Variable.build_domain(name, domain, when, indexes)
+    def build_variable(name, domain, indexes):
+        dom = Variable.build_domain(name, domain, indexes)
         if dom is None:
             return None
         var = VariableInteger(name, dom) if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name, dom)
@@ -62,20 +62,20 @@ class Variable:
         return var
 
     @staticmethod
-    def build_variables_array(name, sizes, domain, when=None, indexes=[]):
+    def build_variables_array(name, sizes, domain, indexes=[]):
         if isinstance(name, list):
             # it means that several variables are declared with a single line
             assert len(sizes) == 1, "When using several declarations, only one-dimensional arrays are allowed."
-            return [Variable.build_variable(var_name.strip(), domain, when, indexes) for var_name in name]
+            return [Variable.build_variable(var_name.strip(), domain, indexes) for var_name in name]
         if sizes:
             t = []
             for i in range(sizes[0]):
                 indexes.append(i)
-                t.append(Variable.build_variables_array(name, sizes[1:], domain, when, indexes))
+                t.append(Variable.build_variables_array(name, sizes[1:], domain, indexes))
                 indexes.pop()
             return t
         var_name = name + "[" + "][".join(str(i) for i in indexes) + "]"
-        return Variable.build_variable(var_name, domain, when, indexes)
+        return Variable.build_variable(var_name, domain, indexes)
 
     def __init__(self, name, dom):
         self.id = name

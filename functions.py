@@ -84,7 +84,7 @@ def Var(term=None, *others, dom=None):
     return var_object
 
 
-def VarArray(*, size, dom, when=None, comment=None):
+def VarArray(*, size, dom, comment=None):
     size = [size] if isinstance(size, int) else size
     assert all(dimension != 0 for dimension in size), "No dimension must not be equal to 0"
     checkType(size, [int])
@@ -101,7 +101,7 @@ def VarArray(*, size, dom, when=None, comment=None):
         "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
     assert str(name) not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
 
-    var_objects = Variable.build_variables_array(name, size, dom, when)
+    var_objects = Variable.build_variables_array(name, size, dom)
     if isinstance(name, list):
         for variable in var_objects:
             EVar(variable, None, None)  # object wrapping the variables
