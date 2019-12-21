@@ -611,7 +611,7 @@ def NValues(term, *others, excepting=None, condition=None):
 
 
 # def NotAllEqual(term, *others):
-#    return NValues(term, others) > 1 
+#    return NValues(term, others) > 1
 
 
 def Cardinality(term, *others, occurrences, closed=False):
