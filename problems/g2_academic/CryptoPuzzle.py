@@ -6,7 +6,7 @@ assert len(word2) == n and len(word3) in {n, n + 1}
 letters = set(to_alphabet_positions(word1 + word2 + word3))
 
 # l[i] is the value assigned to the ith letter (if present) of the alphabet
-l = VarArray(size=26, dom=range(10), when=lambda i: i in letters)
+l = VarArray(size=26, dom=lambda i: range(10) if i in letters else None)
 
 # c[i] is the ith carry
 c = VarArray(size=n + 1, dom={0, 1})

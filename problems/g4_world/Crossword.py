@@ -76,7 +76,7 @@ nHoles = len(holes)
 
 if not variant():
     #  x[i][j] is the letter, number from 0 to 25, at row i and column j (when no spot)
-    x = VarArray(size=[nRows, nCols], dom=lambda i, j: range(26), when=lambda i, j: spots[i][j] == 0)
+    x = VarArray(size=[nRows, nCols], dom=lambda i, j: range(26) if spots[i][j] == 0 else None)
 
     satisfy(
         #  fill the grid with words

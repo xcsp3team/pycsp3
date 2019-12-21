@@ -30,13 +30,11 @@ class Variable:
 
     @staticmethod
     def build_domain(name, domain, when, indexes):
-        if domain is None:
-            return None
-        if when and not when(*indexes):
+        if domain is None or when is not None and when(*indexes) is None:
             return None
         if isinstance(domain, Domain):
             return domain
-        if isinstance(domain, list) and all(isinstance(v, int) for v in domain):  # possible, even if using a set is recommended
+        if isinstance(domain, list) and (all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)):  # possible, even if using a set is recommended
             return Domain(set(domain))
         if isinstance(domain, list):  # meaning a specific domain for each variable
             for i in indexes:

@@ -27,7 +27,7 @@ if not variant():
 
 elif variant("aux"):
     # scalar variables
-    s = VarArray(size=[v, v, b], dom={0, 1}, when=lambda i, j, k: i < j)
+    s = VarArray(size=[v, v, b], dom=lambda i, j, k: {0, 1} if i < j else None)
 
     satisfy(
         [s[i][j][k] == x[i][k] * x[j][k] for i in range(v) for j in range(i + 1, v) for k in range(b)],

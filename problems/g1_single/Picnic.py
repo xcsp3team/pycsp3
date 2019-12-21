@@ -1,7 +1,6 @@
 from pycsp3 import *
 
-MINDY, SABRINA, TANYA, ANTON, CHET = "Mindy", "Sabrina", "Tanya", "Anton", "Chet"
-friends = {MINDY, SABRINA, TANYA, ANTON, CHET}
+MINDY, SABRINA, TANYA, ANTON, CHET = friends = ["Mindy", "Sabrina", "Tanya", "Anton", "Chet"]
 
 jetski, kayak, canoe, sailboard, sailboat = sports = VarArray(size=5, dom=friends)
 

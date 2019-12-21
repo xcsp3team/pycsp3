@@ -33,10 +33,10 @@ elif variant("01"):
     sch = VarArray(size=[nWeeks, nGroups, nPlayers], dom={0, 1})
 
     # tw[p1][p2][w] is 1 iff players p1 and p2 play together at week w
-    tw = VarArray(size=[nPlayers, nPlayers, nWeeks], dom={0, 1}, when=lambda p1, p2, w: p1 < p2)
+    tw = VarArray(size=[nPlayers, nPlayers, nWeeks], dom=lambda p1, p2, w:{0, 1} if p1 < p2 else None)
 
     # tgw[p1][p2][w][g] is 1 iff players p1 and p2 play together at week w in group g
-    tgw = VarArray(size=[nPlayers, nPlayers, nWeeks, nGroups], dom={0, 1}, when=lambda p1, p2, w, g: p1 < p2)
+    tgw = VarArray(size=[nPlayers, nPlayers, nWeeks, nGroups], dom=lambda p1, p2, w, g: {0, 1} if p1 < p2 else None)
 
     satisfy(
         #  each week, each player plays exactly once
