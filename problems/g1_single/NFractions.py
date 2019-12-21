@@ -1,5 +1,7 @@
 from pycsp3 import *
 
+# Problem 041 at CSPLib
+
 digits = VarArray(size=9, dom=range(1, 10))
 a, b, c, d, e, f, g, h, i = digits
 

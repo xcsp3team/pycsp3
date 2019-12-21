@@ -1,17 +1,16 @@
 from pycsp3 import *
 
-DEBRA, JANET, HUGH, RICK = "Debra", "Janet", "Hugh", "Rick"
-friends = {DEBRA, JANET, HUGH, RICK}
+DEBRA, JANET, HUGH, RICK = friends = ["Debra", "Janet", "Hugh", "Rick"]
 
-eggs = Var(dom=friends)
-mold = Var(dom=friends)
-nuts = Var(dom=friends)
-ragweed = Var(dom=friends)
+eggs = Var(friends)
+mold = Var(friends)
+nuts = Var(friends)
+ragweed = Var(friends)
 
-baxter = Var(dom=friends)
-lemmon = Var(dom=friends)
-malone = Var(dom=friends)
-vanfleet = Var(dom=friends)
+baxter = Var(friends)
+lemmon = Var(friends)
+malone = Var(friends)
+vanfleet = Var(friends)
 
 satisfy(
     AllDifferent(eggs, mold, nuts, ragweed),
