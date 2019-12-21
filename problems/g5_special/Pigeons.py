@@ -1,6 +1,5 @@
 from pycsp3 import *
 
-
 n = data.n  # number of pigeons
 
 # p[i] is the hole where is put the ith pigeon

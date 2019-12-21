@@ -14,9 +14,8 @@ slice2 = [[x[2][1], x[2][2], x[2][3]],
           [x[5][1], x[5][2], x[5][3]],
           [x[6][1], x[6][2], x[6][3]]
           ]
-
 slice3 = [[z[1][1][1], z[1][2][1], z[1][3][1], z[1][4][1]], [z[2][1][1], z[2][2][1], z[2][3][1], z[2][4][1]]]
 
-assert x[:7, 8] == slice1, "Error with slice1"
-assert x[2:7, 1:4] == slice2, "Error with slice2"
-assert z[1:3, 1:5, 1] == slice3, "Error with slice3"
+assert x[:7, 8] == slice1
+assert x[2:7, 1:4] == slice2
+assert z[1:3, 1:5, 1] == slice3

@@ -34,20 +34,21 @@ class Variable:
             return None
         if isinstance(domain, Domain):
             return domain
-        if isinstance(domain, list) and (all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)):  # possible, even if using a set is recommended
-            return Domain(set(domain))
-        if isinstance(domain, list):  # meaning a specific domain for each variable
+        if isinstance(domain, list):
+            if all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain):  # possible, even if using a set is recommended
+                return Domain(set(domain))
+            # at this point, it means a specific domain for each variable given in a list
             for i in indexes:
-                assert i < len(domain), ("The number of domains is less than the specified index " + str(name) + " - " + str(domain)
+                assert i < len(domain), ("The number of domains is less than the specified index " + name + " - " + str(domain)
                                          + "\nUse a set instead of a list if you want the same domain for all variables.")
                 domain = domain[i]
-        elif isinstance(domain, type(lambda: 0)):
+        if isinstance(domain, type(lambda: 0)):
             domain = domain(*indexes)
             if domain is None:
                 return None
         if isinstance(domain, Domain):
             return domain
-        if isinstance(domain, list) and all(isinstance(ele, int) for ele in domain):
+        if isinstance(domain, list) and (all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)):
             return Domain(set(domain))
         assert isinstance(domain, (range, set)), type(domain)
         return Domain(domain)
