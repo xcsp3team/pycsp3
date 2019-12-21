@@ -111,7 +111,7 @@ if not variant():
 
 elif variant("short"):
     # d[i][j] is the distance between the ith and the jth frequencies (for i < j when a soft link exists)
-    d = VarArray(size=[n, n], dom=lambda i, j: distances(i, j), when=lambda i, j: i < j and softLinks[i][j])
+    d = VarArray(size=[n, n], dom=lambda i, j: distances(i, j) if i < j and softLinks[i][j] else None)
 
     satisfy(
 

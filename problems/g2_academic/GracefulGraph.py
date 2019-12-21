@@ -10,7 +10,7 @@ nEdges = int(((k * (k - 1)) * p) / 2 + k * (p - 1))
 cn = VarArray(size=[p, k], dom=range(nEdges + 1))
 
 # ce[i][j1][j2] is the color of the edge (j1,j2) of the ith clique, for j1 strictly less than j2
-ce = VarArray(size=[p, k, k], dom=range(1, nEdges + 1), when=lambda i, j1, j2: j1 < j2)
+ce = VarArray(size=[p, k, k], dom=lambda i, j1, j2: range(1, nEdges + 1) if j1 < j2 else None)
 
 # cp[i][j] is the color of the jth edge of the ith path
 cp = VarArray(size=[p - 1, k], dom=range(1, nEdges + 1))

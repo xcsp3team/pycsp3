@@ -8,7 +8,7 @@ n = data.n
 x = VarArray(size=n, dom={-1, 1})
 
 # y[k][i] is the ith product value required to compute the kth auto-correlation
-y = VarArray(size=[n - 1, n - 1], dom={-1, 1}, when=lambda k, i: i < n - k - 1)
+y = VarArray(size=[n - 1, n - 1], dom=lambda k, i: {-1, 1} if i < n - k - 1 else None)
 
 # c[k] is the value of the kth auto-correlation
 c = VarArray(size=n - 1, dom=lambda k: range(-n + k + 1, n - k))

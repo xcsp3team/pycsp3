@@ -17,7 +17,7 @@ def scope(i, right):
 
 
 # x represents the hexagon; on row x[i], only the first n - |n/2 - i| cells are useful (here, n = 'd').
-x = VarArray(size=[d, d], dom=range(s, s + gap), when=lambda i, j: j < d - abs(d // 2 - i))
+x = VarArray(size=[d, d], dom=lambda i, j: range(s, s + gap) if j < d - abs(d // 2 - i) else None)
 
 satisfy(
     AllDifferent(x),

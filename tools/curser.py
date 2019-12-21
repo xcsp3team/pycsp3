@@ -38,7 +38,7 @@ def _range_in(self, other):
     return range.__contains__(self, other)
 
 
-''' __contains__ method of set (To use the keyword "in" of python as a comparison operator in conditions of XCSP) '''
+''' __contains__ method of set (to be able to use the Python keyword "in" for intension and extension constraints) '''
 
 
 def _set_in(self, other):
@@ -53,7 +53,7 @@ def _set_in(self, other):
     return self.__contains__(other)
 
 
-''' __contains__ method of list (To use the keyword "in" of python in table constraints) '''
+''' __contains__ method of list (to be able to use the Python keyword "in" for table constraints) '''
 
 
 def _list_in(self, other):

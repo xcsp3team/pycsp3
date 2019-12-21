@@ -11,7 +11,7 @@ from pycsp3 import *
 
 n = data.n
 
-x = VarArray(size=[n, n], dom=range((n * (n - 1)) // 2), when=lambda i, j: i < j)
+x = VarArray(size=[n, n], dom=lambda i, j: range((n * (n - 1)) // 2) if i < j else None)
 
 satisfy(
     NValues(x[i][j], x[i][k], x[j][k]) > 1 for (i, j, k) in combinations(range(n), 3)
