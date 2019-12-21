@@ -1,6 +1,4 @@
-
 from pycsp3 import *
-
 
 x = VarArray(size=[2, 2], dom=range(150))
 y = VarArray(size=[2, 2], dom=range(150))
@@ -32,4 +30,3 @@ satisfy(
     a - Sum(x) + ([z[1][1], z[0][1]] * [1, 1]) - Sum(x) > 4444,
     3 * z[0][1] < 10
 )
-

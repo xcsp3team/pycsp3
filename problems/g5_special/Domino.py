@@ -9,7 +9,7 @@ if not variant():
     satisfy(
         AllEqual(x),
 
-        disjunction(x[0] + 1 == x[- 1], (x[0] == x[- 1]) == v - 1)
+        (x[0] + 1 == x[- 1]) | ((x[0] == x[- 1]) == v - 1)  # TODO would it be possible to write : (x[0] == x[- 1] == v - 1? this is not obvious
     )
 
 elif variant("table"):

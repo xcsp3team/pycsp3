@@ -16,6 +16,5 @@ satisfy(
 if clues:
     satisfy(
         # imposing clues  tag(clues)
-        x[i][j] == clues[i][j]
-        for i in range(9) for j in range(9) if clues[i][j] > 0
+        x[i][j] == clues[i][j] for i in range(9) for j in range(9) if clues[i][j] > 0
     )

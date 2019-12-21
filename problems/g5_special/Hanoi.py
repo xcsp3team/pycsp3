@@ -1,11 +1,9 @@
 from pycsp3 import *
 
-nDisks = data.nDisks
-nTowers = 3
-nStates = nTowers ** nDisks
-nSteps = 2 ** nDisks - 1
+nDisks, nTowers = data.nDisks, 3
+nStates, nSteps = nTowers ** nDisks, 2 ** nDisks - 1
 
-x = VarArray(size=[nSteps - 1], dom=range(nStates))
+x = VarArray(size=nSteps - 1, dom=range(nStates))
 
 
 def are_compatible(state1, state2):
