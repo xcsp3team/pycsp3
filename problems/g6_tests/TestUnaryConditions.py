@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-x = VarArray(size=[10], dom=range(150))
+x = VarArray(size=10, dom=range(150))
 y = Var(dom=range(150))
 
 satisfy(

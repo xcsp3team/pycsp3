@@ -2,7 +2,7 @@ from pycsp3 import *
 
 x = VarArray(size=[10, 10], dom=range(150))
 y = VarArray(size=[10, 10], dom=range(150))
-z = VarArray(size=[10], dom=range(150))
+z = VarArray(size=10, dom=range(150))
 
 satisfy(
     [Sum(x[p]) in range(100) for p in range(10)],

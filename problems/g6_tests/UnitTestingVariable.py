@@ -1,9 +1,9 @@
 from pycsp3 import *
 
-# comment discarded
+#  comment discarded
 x, y, z = VarArray(size=3, dom={0, 1})
 
-# comment not discarded
+#  comment not discarded
 xx = Var(dom={0, 1})
 
 yy = Var(dom=[0, 1])
@@ -84,4 +84,3 @@ except AssertionError as e:
     print("Not assigned Var:")
     print(str(e))
     print()
-
