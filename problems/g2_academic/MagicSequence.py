@@ -12,11 +12,7 @@ satisfy(
     Cardinality(x, occurrences={i: x[i] for i in range(n)}),
 
     # tag(redundant-constraints)
-    [
-        Sum(x) == n,
-
-        Sum((i - 1) * x[i] for i in range(n)) == 0
-    ]
+    [Sum(x) == n, Sum((i - 1) * x[i] for i in range(n)) == 0]
 )
 
 
