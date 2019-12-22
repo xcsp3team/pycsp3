@@ -3,34 +3,33 @@ from pycsp3 import *
 rows, cols = data.rowPatterns, data.colPatterns
 nRows, nCols = len(rows), len(cols)
 
-
-def automaton(pattern):
-    def q(i):
-        return "q" + str(i)
-
-    transitions = []
-    if len(pattern) == 0:
-        n_states = 1
-        transitions.append((q(0), 0, q(0)))
-    else:
-        n_states = sum(pattern) + len(pattern)
-        num = 0
-        for i in range(len(pattern)):
-            transitions.append((q(num), 0, q(num)))
-            for j in range(pattern[i]):
-                transitions.append((q(num), 1, q(num + 1)))
-                num += 1
-            if i < len(pattern) - 1:
-                transitions.append((q(num), 0, q(num + 1)))
-                num += 1
-        transitions.append((q(num), 0, q(num)))
-    return Automaton(start=q(0), final=q(n_states - 1), transitions=transitions)
-
-
 #  x[i][j] is 1 iff the cell at row i and col j is colored in black
 x = VarArray(size=[nRows, nCols], dom={0, 1})
 
 if not variant():
+    def automaton(pattern):
+        def q(i):
+            return "q" + str(i)
+
+        transitions = []
+        if len(pattern) == 0:
+            n_states = 1
+            transitions.append((q(0), 0, q(0)))
+        else:
+            n_states = sum(pattern) + len(pattern)
+            num = 0
+            for i in range(len(pattern)):
+                transitions.append((q(num), 0, q(num)))
+                for j in range(pattern[i]):
+                    transitions.append((q(num), 1, q(num + 1)))
+                    num += 1
+                if i < len(pattern) - 1:
+                    transitions.append((q(num), 0, q(num + 1)))
+                    num += 1
+            transitions.append((q(num), 0, q(num)))
+        return Automaton(start=q(0), final=q(n_states - 1), transitions=transitions)
+
+
     satisfy(
         [x[i] in automaton(rows[i]) for i in range(nRows)],
 

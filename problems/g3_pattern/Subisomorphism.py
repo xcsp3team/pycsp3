@@ -1,31 +1,32 @@
 from pycsp3 import *
 
-nPatternNodes, nTargetNodes = data.nPatternNodes, data.nTargetNodes
-patternEdges, targetEdges = data.patternEdges, data.targetEdges
+n, m = data.nPatternNodes, data.nTargetNodes
 
-pLoops = [n1 for (n1, n2) in patternEdges if n1 == n2]
-tLoops = [n1 for (n1, n2) in targetEdges if n1 == n2]
 
-pDegrees = [len([edge for edge in patternEdges if i in edge]) for i in range(nPatternNodes)]
-tDegrees = [len([edge for edge in targetEdges if i in edge]) for i in range(nTargetNodes)]
+def structures():
+    p_edges, t_edges = data.patternEdges, data.targetEdges
+    p_degrees = [len([edge for edge in p_edges if i in edge]) for i in range(n)]
+    t_degrees = [len([edge for edge in t_edges if i in edge]) for i in range(m)]
+    both_way_table = {(i, j) for (i, j) in t_edges} | {(j, i) for (i, j) in t_edges}
+    degree_conflicts = [[j for j in range(m) if t_degrees[j] < p_degrees[i]] for i in range(n)]
+    return [i for (i, j) in p_edges if i == j], [i for (i, j) in t_edges if i == j], both_way_table, degree_conflicts
 
-bothWayTable = {(n1, n2) for (n1, n2) in targetEdges} | {(n2, n1) for (n1, n2) in targetEdges}
-degree_conflicts = [[j for j in range(nTargetNodes) if tDegrees[j] < pDegrees[i]] for i in range(nPatternNodes)]
 
-# x[i] is the node from the target graph to which the ith node of the pattern graph is mapped.
-x = VarArray(size=nPatternNodes, dom=range(nTargetNodes))
+p_loops, t_loops, table, degree_conflicts = structures()
+
+# x[i] is the target node to which the ith pattern node is mapped
+x = VarArray(size=n, dom=range(m))
 
 satisfy(
     # ensuring injectivity
     AllDifferent(x),
 
-    # being careful of self-loops
-    [x[n] in tLoops for n in pLoops],
-
     # preserving edges
-    [(x[n1], x[n2]) in bothWayTable for (n1, n2) in patternEdges],
+    [(x[i], x[j]) in table for (i, j) in data.patternEdges],
+
+    # being careful of self-loops
+    [x[i] in t_loops for i in p_loops],
 
     # tag(redundant-constraints)
     [x[i] not in conflicts for i, conflicts in enumerate(degree_conflicts) if len(conflicts) > 0]
 )
-
