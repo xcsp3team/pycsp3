@@ -38,35 +38,34 @@ if not variant():
     )
 
 elif variant("table"):
-
-    def tuples(lst, tmp, i, pattern, k):
-        s = sum([pattern[e] for e in range(k, len(pattern))])
-        if i + s + (len(pattern) - 1 - k) > len(tmp):
-            return lst
-        if i == len(tmp):
-            lst.append(tuple(tmp))
-        else:
-            tmp[i] = 0
-            tuples(lst, tmp, i + 1, pattern, k)
-            if k < len(pattern):
-                for j in range(i, i + pattern[k]):
-                    tmp[j] = 1
-                if i + pattern[k] == len(tmp):
-                    tuples(lst, tmp, i + pattern[k], pattern, k + 1)
-                else:
-                    tmp[i + pattern[k]] = 0
-                    tuples(lst, tmp, i + pattern[k] + 1, pattern, k + 1)
-        return lst
+    cache = dict()
 
 
     def table(pattern, row):
+        def tuples(lst, tmp, i, k):
+            s = sum([pattern[e] for e in range(k, len(pattern))])
+            if i + s + (len(pattern) - 1 - k) > len(tmp):
+                return lst
+            if i == len(tmp):
+                lst.append(tuple(tmp))
+            else:
+                tmp[i] = 0
+                tuples(lst, tmp, i + 1, k)
+                if k < len(pattern):
+                    for j in range(i, i + pattern[k]):
+                        tmp[j] = 1
+                    if i + pattern[k] == len(tmp):
+                        tuples(lst, tmp, i + pattern[k], k + 1)
+                    else:
+                        tmp[i + pattern[k]] = 0
+                        tuples(lst, tmp, i + pattern[k] + 1, k + 1)
+            return lst
+
         key = str("R" if row else "C") + "".join(str(pattern))
         if key not in cache:
-            cache[key] = tuples([], [0] * (nCols if row else nRows), 0, pattern, 0)
+            cache[key] = tuples([], [0] * (nCols if row else nRows), 0, 0)
         return cache[key]
 
-
-    cache = dict()
 
     satisfy(
         [x[i] in table(rows[i], row=True) for i in range(nRows)],

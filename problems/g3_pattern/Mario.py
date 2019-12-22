@@ -19,6 +19,7 @@ g = VarArray(size=nHouses, dom=lambda i: {0, houses[i].gold})
 
 if not variant():
     satisfy(
+        # fuel consumption at each step
         fuels[i][s[i]] == f[i] for i in range(nHouses)
     )
 
@@ -38,7 +39,7 @@ satisfy(
     # Mario must make a tour (not necessarily complete)
     Circuit(s),
 
-    # Mario's house succeedes to Luigi's house
+    # Mario's house succeeds to Luigi's house
     s[luigiHouse] == marioHouse
 )
 

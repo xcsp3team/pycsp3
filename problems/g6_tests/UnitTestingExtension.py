@@ -8,9 +8,7 @@ table = list(permutations(range(1, n + 1)))
 try:
     Extension(scope=x, table=table, positive=True)
 except AssertionError as e:
-    print("Scope and tuples not compatible:")
-    print(str(e))
-    print()
+    print("Scope and tuples not compatible:", e)
 
 satisfy(
     # supports
@@ -22,16 +20,12 @@ satisfy(
 try:
     satisfy(Extension(scope=[1] * len(x[0]), table=table, positive=True))
 except TypeError as e:
-    print("Parameter 1:")
-    print(str(e))
-    print()
+    print("Parameter 1:", e)
 
 try:
     satisfy(Extension(scope=x[0], table=None, positive=True))
 except TypeError as e:
-    print("Parameter 1:")
-    print(str(e))
-    print()
+    print("Parameter 1:", e)
 
 table[1] = (1, 2)
 satisfy(
@@ -45,9 +39,7 @@ table[1] = ("a", "b", "c", "d", "e")
 try:
     satisfy(Extension(scope=x[0], table=table, positive=True))
 except TypeError as e:
-    print("Table with different types:")
-    print(str(e))
-    print()
+    print("Table with different types:", e)
 
 table = [(1, 2, 3, 4, 5), (0.1, 0.2, 0.3, 0.4, 0.5)]
 satisfy(
@@ -66,16 +58,12 @@ satisfy(
 try:
     satisfy(x[0][0] in table)
 except AssertionError as e:
-    print("Scope and tuples not compatible:")
-    print(str(e))
-    print()
+    print("Scope and tuples not compatible:", e)
 
 try:
     satisfy(x[0] in table[0])
 except AssertionError as e:
-    print("Bad type for operand of in:")
-    print(str(e))
-    print()
+    print("Bad type for operand of in:", e)
 
 # TODO
 satisfy(

@@ -35,7 +35,7 @@ def pattern_size(i, j, k):
 # x[i][j][k] is 1 iff the slice with left top cell at (i,j) and pattern k is selected
 x = VarArray(size=[nRows, nCols, nPatterns], dom=lambda i, j, k: {0, 1} if slices[i][j][k] else None)
 
-# s[i][j][k] is the size of the slice with left top cell at (i,j) and pattern k is selected (0 if the slice is not selected)
+# s[i][j][k] is the size of the slice with left top cell at (i,j) and pattern k (0 if the slice is not selected)
 s = VarArray(size=[nRows, nCols, nPatterns], dom=lambda i, j, k: {0, pattern_size(i, j, k)} if slices[i][j][k] else None)
 
 satisfy(

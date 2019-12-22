@@ -12,13 +12,11 @@ c = VarArray(size=nCities, dom=range(nCities))
 d = VarArray(size=nCities, dom={d for row in distances for d in row})
 
 satisfy(
-
     # Visiting each city only once
     AllDifferent(c),
 
     # computing the distance between any two successive cities in the tour
     [(c[i], c[(i + 1) % nCities], d[i]) in table for i in range(nCities)]
-
 )
 
 minimize(
