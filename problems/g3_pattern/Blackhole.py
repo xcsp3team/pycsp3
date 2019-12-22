@@ -2,7 +2,6 @@ from pycsp3 import *
 
 # Problem 081 at CSPLib
 
-piles = data.piles
 m = data.nCardsPerSuit
 nCards = 4 * m
 
@@ -21,7 +20,7 @@ satisfy(
     y[0] == 0,
 
     # cards must be played in the order of the piles
-    [Increasing([y[j] for j in pile], strict=True) for pile in piles],
+    [Increasing([y[j] for j in pile], strict=True) for pile in data.piles],
 
     # each new card put on the stack must be at a rank higher or lower than the previous one.
     Slide((x[i], x[i + 1]) in table for i in range(nCards - 1))

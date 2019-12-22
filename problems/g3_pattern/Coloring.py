@@ -1,14 +1,13 @@
 from pycsp3 import *
 
-n, nColors, edges = data.nNodes, data.nColors, data.edges
-assert len(edges) != 0
+n, nColors =  data.nNodes, data.nColors
 
 # x[i] is the color assigned to the ith node of the graph
 x = VarArray(size=n, dom=range(nColors))
 
 satisfy(
     # two adjacent nodes must be colored differently
-    [x[i] != x[j] for (i, j) in edges]
+    [x[i] != x[j] for (i, j) in data.edges]
 )
 
 if not variant():

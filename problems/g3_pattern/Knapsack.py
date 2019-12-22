@@ -1,11 +1,11 @@
 from pycsp3 import *
 
-capacity, items = data.capacity, data.items
-weights = [item.weight for item in items]
-values = [item.value for item in items]
+capacity, nItems = data.capacity, len(data.items)
+weights = [item.weight for item in data.items]
+values = [item.value for item in data.items]
 
 # x[i] is 1 iff the ith item is selected
-x = VarArray(size=len(items), dom={0, 1})
+x = VarArray(size=nItems, dom={0, 1})
 
 satisfy(
     x * weights <= capacity

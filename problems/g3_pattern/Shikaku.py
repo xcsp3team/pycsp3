@@ -11,10 +11,9 @@ def no_overlapping(i, j):
     p = r[leftmost] <= l[rightmost]
     if rooms[leftmost].row == rooms[rightmost].row:
         return p
-    elif rooms[leftmost].row > rooms[rightmost].row:
+    if rooms[leftmost].row > rooms[rightmost].row:
         return p | (t[leftmost] >= b[rightmost])
-    else:
-        return p | (b[leftmost] <= t[rightmost])
+    return p | (b[leftmost] <= t[rightmost])
 
 
 # l[i] is the position of the left border of the ith room

@@ -47,8 +47,10 @@ w = VarArray(size=[nBins, maxPerBin], dom={0} | set(weights))
 
 if not variant():
     satisfy(
+        # not exceeding the capacity of each bin
         [Sum(row) <= capacity for row in w],
 
+        # items are stored decreasingly in each bin according to their weights
         [Decreasing(row) for row in w]
     )
 elif variant("table"):
@@ -82,11 +84,13 @@ elif variant("table"):
     )
 
 satisfy(
+    # ensuring that each item is stored in a bin
     Cardinality(w, occurrences={0: nBins * maxPerBin - nItems} + {weight: occ for (weight, occ) in occurrences_of_weights()}),
 
     # tag(symmetry-breaking)
     LexDecreasing(w),
 
+    # counting the number of unused bins
     Count(w[:, 0], value=0) == u
 )
 

@@ -1,14 +1,13 @@
 from pycsp3 import *
 
-nTasks, shifts = data.nTasks, data.shifts
-nShifts = len(shifts)
+nTasks, nShifts = data.nTasks, len(data.shifts)
 
 # x[i] is 1 iff the ith shift is selected
 x = VarArray(size=nShifts, dom={0, 1})
 
 satisfy(
-    #  Each task is covered by exactly one shift
-    Count(x[i] for i in range(nShifts) if t in shifts[i]) == 1 for t in range(nTasks)
+    # Each task is covered by exactly one shift
+    Count(x[i] for i, shift in enumerate(data.shifts) if t in shift) == 1 for t in range(nTasks)
 )
 
 minimize(
