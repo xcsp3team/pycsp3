@@ -1,10 +1,12 @@
 from pycsp3 import *
 
 """
- From http://jimorlin.wordpress.com/2009/02/17/colored-letters-labeled-dice-a-logic-puzzle/ There are 13 words as follows: BUOY, CAVE, CELT, FLUB, FORK, HEMP,
- JUDY, JUNK, LIMN, QUIP, SWAG, VISA, WISH. There are 24 different letters that appear in the 13 words. The question is: can one assign the 24 letters to 4
- different cubes so that the four letters of each word appears on different cubes. (There is one letter from each word on each cube.). The puzzle was created
- by Humphrey Dudley
+ From http://jimorlin.wordpress.com/2009/02/17/colored-letters-labeled-dice-a-logic-puzzle/
+ There are 13 words as follows: buoy, cave, celt, flub, fork, hemp, judy, junk, limn, quip, swag, visa.
+ There are 24 different letters that appear in the 13 words.
+ The question is: can one assign the 24 letters to 4 different cubes so that the four letters of each word appears on different cubes.
+ There is one letter from each word on each cube.
+ The puzzle was created by Humphrey Dudley
 """
 
 words = ["buoy", "cave", "celt", "flub", "fork", "hemp", "judy", "junk", "limn", "quip", "swag", "visa"]

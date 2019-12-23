@@ -1,23 +1,50 @@
 from pycsp3 import *
 
-yellow, green, red, white, blue = colors = VarArray(size=5, dom=range(1, 6))
-# colors = yellow, green, red, white, blue
+"""
+The Zebra puzzle (sometimes referred to as Einstein's puzzle) is defined as follows.
+There are five houses in a row, numbered from left to right.
+Each of the five houses is painted a different color, and has one inhabitant.
+The inhabitants are all of different nationalities, own different pets, drink different beverages and have different jobs.
+We know that:
+ - colors are yellow, green, red, white, and blue
+ - nations of inhabitants are italy, spain, japan, england, and norway
+ - pets are cat, zebra, bear, snails, and horse
+ - drinks are milk, water, tea, coffee, and juice
+ - jobs are painter, sculptor, diplomat, pianist, and doctor
+ - The painter owns the horse
+ - The diplomat drinks coffee
+ - The one who drinks milk lives in the white house
+ - The Spaniard is a painter
+ - The Englishman lives in the red house
+ - The snails are owned by the sculptor
+ - The green house is on the left of the red one
+ - The Norwegian lives on the right of the blue house
+ - The doctor drinks milk
+ - The diplomat is Japanese
+ - The Norwegian owns the zebra
+ - The green house is next to the white one
+ - The horse is owned by the neighbor of the diplomat
+ - The Italian either lives in the red, white or green house
+"""
 
-countries = VarArray(size=5, dom=range(1, 6))
-italy, spain, japan, england, norway = countries
+# colors[i] is the color of the ith house
+yellow, green, red, white, blue = colors = VarArray(size=5, dom=range(5))
 
-jobs = VarArray(size=5, dom=range(1, 6))
-painter, sculptor, diplomat, pianist, doctor = jobs
+# nations[i] corresponds to the nationality of the inhabitant of the ith house
+italy, spain, japan, england, norway = nations = VarArray(size=5, dom=range(5))
 
-pets = VarArray(size=5, dom=range(1, 6))
-cat, zebra, bear, snails, horse = pets
+# jobs[i] is the job of the inhabitant of the ith house
+painter, sculptor, diplomat, pianist, doctor = jobs = VarArray(size=5, dom=range(5))
 
-drinks = VarArray(size=5, dom=range(1, 6))
-milk, water, tea, coffee, juice = drinks
+# pets[i] is the pet of the inhabitant of the ith house
+cat, zebra, bear, snails, horse = pets = VarArray(size=5, dom=range(5))
+
+# drinks[i] is the drink of the inhabitant of the ith house
+milk, water, tea, coffee, juice = drinks = VarArray(size=5, dom=range(5))
 
 satisfy(
     AllDifferent(colors),
-    AllDifferent(countries),
+    AllDifferent(nations),
     AllDifferent(jobs),
     AllDifferent(pets),
     AllDifferent(drinks),
@@ -33,7 +60,7 @@ satisfy(
     doctor == milk,
     japan == diplomat,
     norway == zebra,
-    dist(green, white) == 1,
+    abs(green - white) == 1,
     horse in {diplomat - 1, diplomat + 1},
     italy in {red, white, green}
 )
