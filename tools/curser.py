@@ -127,6 +127,7 @@ class OpOverrider:
         main.variables.Variable.__and__ = entities.Node.__and__ = OpOverrider.__and__
         main.variables.Variable.__or__ = entities.Node.__or__ = OpOverrider.__or__
         main.variables.Variable.__invert__ = entities.Node.__invert__ = OpOverrider.__invert__
+        main.variables.Variable.__xor__ = entities.Node.__xor__ = OpOverrider.__xor__
 
     @staticmethod
     def disable():
@@ -158,6 +159,7 @@ class OpOverrider:
         main.variables.Variable.__and__ = entities.Node.__and__ = None
         main.variables.Variable.__or__ = entities.Node.__or__ = None
         main.variables.Variable.__invert__ = entities.Node.__invert__ = None
+        main.variables.Variable.__xor__ = entities.Node.__xor__ = None
 
         return OpOverrider
 
@@ -246,6 +248,9 @@ class OpOverrider:
 
     def __invert__(self):
         return main.variables.NotVariable(self) if isinstance(self, main.variables.VariableInteger) else functions.lnot(self)
+
+    def __xor__(self, other):
+        return object.__xor__(self, other) if None in {self, other} else functions.xor(self, other)
 
     def __eq__lv(self, other):
         if isinstance(other, list) and any(isinstance(v, int) for v in other):
