@@ -11,20 +11,20 @@ We know that:
  - pets are cat, zebra, bear, snails, and horse
  - drinks are milk, water, tea, coffee, and juice
  - jobs are painter, sculptor, diplomat, pianist, and doctor
- - The painter owns the horse
- - The diplomat drinks coffee
- - The one who drinks milk lives in the white house
- - The Spaniard is a painter
- - The Englishman lives in the red house
- - The snails are owned by the sculptor
- - The green house is on the left of the red one
- - The Norwegian lives on the right of the blue house
- - The doctor drinks milk
- - The diplomat is Japanese
- - The Norwegian owns the zebra
- - The green house is next to the white one
- - The horse is owned by the neighbor of the diplomat
- - The Italian either lives in the red, white or green house
+ - the painter owns the horse
+ - the diplomat drinks coffee
+ - the one who drinks milk lives in the white house
+ - the Spaniard is a painter
+ - the Englishman lives in the red house
+ - the snails are owned by the sculptor
+ - the green house is on the left of the red one
+ - the Norwegian lives on the right of the blue house
+ - the doctor drinks milk
+ - the diplomat is Japanese
+ - the Norwegian owns the zebra
+ - the green house is next to the white one
+ - the horse is owned by the neighbor of the diplomat
+ - the Italian either lives in the red, white or green house
 """
 
 # colors[i] is the color of the ith house
