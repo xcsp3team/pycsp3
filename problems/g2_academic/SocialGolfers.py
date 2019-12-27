@@ -39,10 +39,10 @@ elif variant("01"):
     tgw = VarArray(size=[nPlayers, nPlayers, nWeeks, nGroups], dom=lambda p1, p2, w, g: {0, 1} if p1 < p2 else None)
 
     satisfy(
-        #  each week, each player plays exactly once
+        # each week, each player plays exactly once
         [Sum([sch[w][x][p] for x in range(nGroups)]) == 1 for w in range(nWeeks) for p in range(nPlayers)],
 
-        #  each week, each group contains exactly #s players
+        # each week, each group contains exactly #s players
         [Sum(sch[w][g]) == groupSize for w in range(nWeeks) for g in range(nGroups)],
 
         # constraints on scalar products for having no two players playing twice together

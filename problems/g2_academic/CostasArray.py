@@ -1,7 +1,6 @@
 from pycsp3 import *
 
-# Problem 076 at CSPLib
-# NumberJack example
+# Problem 076 at CSPLib, and NumberJack example
 
 n = data.n
 

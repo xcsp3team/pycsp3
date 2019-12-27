@@ -355,9 +355,9 @@ class Node(Entity):
         if self.type != t or len(self.sons) != 2 or self.sons[0].type == self.sons[1].type:
             return None
         if self.sons[0].type != TypeNode.INT and self.sons[1].type == TypeNode.INT:
-            return self.sons[0].sons, self.sons[1].sons
+            return self.sons[0].sons if self.sons[0].type == TypeNode.VAR else self.sons[0], self.sons[1].sons
         elif self.sons[0].type == TypeNode.INT and self.sons[1].type != TypeNode.INT:
-            return self.sons[1].sons, self.sons[0].sons
+            return self.sons[1].sons if self.sons[1].type == TypeNode.VAR else self.sons[1], self.sons[0].sons
         else:
             return None
 
@@ -384,7 +384,7 @@ class Node(Entity):
             elif isinstance(arg, str):
                 t.append(Node(TypeNode.SYMBOL, arg))
             else:
-                raise ValueError("Problem: bad form of predicate " + arg)
+                raise ValueError("Problem: bad form of predicate " + str(arg))
         return t
 
     @staticmethod

@@ -30,7 +30,7 @@ elif variant("aux"):
         [Sum(x[i]) == r for i in range(v)],
 
         # constraints on columns
-        [Sum(x[:, j]) == k for j in range(b)],  # or use Sum(x[ANY, j])
+        [Sum(x[:, j]) == k for j in range(b)],
 
         # computing scalar variables
         [s[i][j][k] == x[i][k] * x[j][k] for i in range(v) for j in range(i + 1, v) for k in range(b)],
@@ -40,14 +40,6 @@ elif variant("aux"):
     )
 
 satisfy(
-    # Increasingly ordering both rows and columns tag(symmetry-breaking)
+    # Increasingly ordering both rows and columns  tag(symmetry-breaking)
     LexIncreasing(x, matrix=True)
 )
-
-'''
-Possible data passing:
-    -data=Bibd-3-4-6.json
-    -data=[9,0,0,3,9]  # Important: order is imposed by the order in which fields are accessed
-    -data=[v=9,b=0,r=0,k=3,l=9] ou -data=[b=0,v=9,r=0,k=3,l=9]  # no more need to pay attention to order
-    example of data: 46,69,9,6,1
-'''

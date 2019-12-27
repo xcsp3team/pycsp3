@@ -43,6 +43,9 @@ class ConstraintArgument:
         self.content_ordered = content_ordered  # indicates if the content must be kept as it is (order is important)
         self.lifted = lifted  # indicates if the constraint is lifted to several lists (or sets); see specifications
 
+    def __str__(self):
+        return str(self.name) + str(self.content)
+
 
 class Constraint:
     def __init__(self, name):
@@ -101,6 +104,9 @@ class Constraint:
         length = len(p) if isinstance(p, list) else 1
         self.n_parameters += length
         return " ".join("%" + str(v + self.n_parameters - length) for v in range(length))
+
+    def __str__(self):
+        return str(self.name) + ": " + " ".join(str(a) for a in self.attributes) + " ".join(str(v) for k, v in self.arguments.items())
 
 
 class ConstraintUnmergeable(Constraint):
@@ -480,7 +486,8 @@ class PartialConstraint:  # constraint whose condition is missing initially
 
 class ScalarProduct:
     def __init__(self, variables, coefficients):
-        assert isinstance(variables, list) and isinstance(coefficients, (int, list, range)), self
+        variables = list(variables) if isinstance(variables, tuple) else variables
+        assert isinstance(variables, list) and isinstance(coefficients, (int, list, range)), variables
         self.variables = variables
         self.coeffs = [coefficients] * len(variables) if isinstance(coefficients, int) else coefficients
 
