@@ -11,8 +11,7 @@ satisfy(
     # ensuring a Latin square
     AllDifferent(x, matrix=True),
 
-    # ensuring idempotence (x[i][i] = i)
-    # tag(idempotence)
+    # ensuring idempotence (x[i][i] = i)  tag(idempotence)
     [x[i][i] == i for i in range(n)]
 )
 

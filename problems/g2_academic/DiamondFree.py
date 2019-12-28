@@ -14,12 +14,16 @@ y = VarArray(size=n, dom={i for i in range(1, n) if i % 3 == 0})
 s = Var(dom={i for i in range(n, n * (n - 1) + 1) if i % 12 == 0})
 
 satisfy(
+    # ensuring the absence of diamond in the graph
     [Sum(x[i][j], x[i][k], x[i][l], x[j][k], x[j][l], x[k][l]) <= 4 for (i, j, k, l) in combinations(range(n), 4)],
 
+    # ensuring that the graph is undirected (symmetric)
     [x[i][j] == x[j][i] for i in range(n) for j in range(n) if i != j],
 
+    # computing node degrees
     [Sum(x[i]) == y[i] for i in range(n)],
 
+    # computing the sum of node degrees
     Sum(y) == s,
 
     # tag(symmetry-breaking)

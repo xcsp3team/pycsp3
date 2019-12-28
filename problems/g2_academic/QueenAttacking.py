@@ -20,19 +20,23 @@ m = len(primes)
 q = Var(dom=range(n * n))
 
 # x[i] is the cell for the i+1th value
-x = VarArray(size=[n * n], dom=range(n * n))
+x = VarArray(size=n * n, dom=range(n * n))
 
 # b[i] is 0 if the ith prime value is not attacked
 b = VarArray(size=m, dom={0, 1})
 
 satisfy(
+    # all values are put in different cells
     AllDifferent(x),
 
+    # ensuring a knight move between two successive values
     Slide(knight_attack(x[i], x[i + 1], n) for i in range(n * n - 1)),
 
+    # computing primes attacked by the queen
     [b[i] == ~queen_attack(q, x[primes[i] - 1], n) for i in range(m)]
 )
 
 minimize(
+    # minimizing the number of free primes
     Sum(b)
 )

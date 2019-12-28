@@ -25,7 +25,7 @@ if variant("m1"):
         [less_equal(i1, j1, i2, j2) for (i1, j1, i2, j2) in product(range(n), repeat=4)],
 
         # ensuring the same numbers of black and white queens
-        Sum(b) - Sum(w) == 0
+        Sum(b) == Sum(w)
     )
 
     maximize(
