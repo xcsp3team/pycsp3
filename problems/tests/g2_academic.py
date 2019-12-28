@@ -61,6 +61,7 @@ same = (Tester(NAME)
 
 xcsp = (Tester(NAME)
         .add(same.instances)
+        .add("CryptoPuzzle", data="[SEND,MORE,MONEY]")
         )
 
 inprogress = (Tester(NAME)

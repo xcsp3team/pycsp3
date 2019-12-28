@@ -21,7 +21,7 @@ co = VarArray(size=nPeriods, dom=range(minCourses, maxCourses + 1))
 cr = VarArray(size=nPeriods, dom=range(minCredits, maxCredits + 1))
 
 if variant("m1"):
-    #  cp[c][p] is 0 if the course c is not planned at period p, the number of credits for c otherwise
+    # cp[c][p] is 0 if the course c is not planned at period p, the number of credits for c otherwise
     cp = VarArray(size=[nCourses, nPeriods], dom=lambda c, p: {0, credits[c]})
 
     satisfy(
@@ -49,7 +49,7 @@ elif variant("m2"):
         # counting the number of courses in each period
         [Sum(pc[p]) == co[p] for p in range(nPeriods)],
 
-        #  counting the number of credits in each period
+        # counting the number of credits in each period
         [Sum(pc[p] * credits) == cr[p] for p in range(nPeriods)]
     )
 

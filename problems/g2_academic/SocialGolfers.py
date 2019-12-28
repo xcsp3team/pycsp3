@@ -7,11 +7,11 @@ allGroups = range(nGroups)
 nPlayers = nGroups * groupSize
 
 if not variant():
-    #  x[w][p] is the group in which player p plays in week w
+    # x[w][p] is the group in which player p plays in week w
     x = VarArray(size=[nWeeks, nPlayers], dom=allGroups)
 
     satisfy(
-        #  ensuring that two players don't meet more than one time
+        # ensuring that two players don't meet more than one time
         [(x[w1][p1] != x[w1][p2]) | (x[w2][p1] != x[w2][p2]) for w1 in range(nWeeks)
          for w2 in range(w1 + 1, nWeeks) for p1 in range(nPlayers) for p2 in range(p1 + 1, nPlayers)],
 
