@@ -5,7 +5,7 @@ nRows, nCols = len(spots), len(spots[0])
 
 words = dict()
 for line in open(data.dictFileName):
-    code = to_alphabet_positions(line.strip().lower())
+    code = alphabet_positions(line.strip().lower())
     if len(code) in words:
         words[len(code)].append(code)
     else:

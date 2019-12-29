@@ -15,7 +15,7 @@ from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_2d_list, is_matrix, is_square_matrix, to_alphabet_positions, transpose, is_containing
+from pycsp3.tools.utilities import flatten, is_1d_list, is_2d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing
 
 ''' Global Variables '''
 
@@ -527,15 +527,13 @@ def _manage_coeffs(terms, coeffs):
             coeffs = list(coeffs)
         elif isinstance(coeffs, (int, Variable)):
             coeffs = [coeffs]
-        assert len(terms) == len(coeffs), \
-            "Lists (variables and coefficients) should have the same length." \
-            + " Here, we have " + str(len(terms)) + "!=" + str(len(coeffs))
+        assert len(terms) == len(coeffs), "Lists (vars and coeffs) should have the same length. Here, we have " + str(len(terms)) + "!=" + str(len(coeffs))
         # if 0 in coeffs:
-        #    terms = [terms[i] for i in range(len(terms)) if coeffs[i] != 0]
-        #    coeffs = [c for c in coeffs if c != 0]
+        #    terms = [term for i, term in enumerate(terms) if coeffs[i] != 0]
+        #    coeffs = [coeff for coeff in coeffs if coeff != 0]
         if all(c == 1 for c in coeffs):
             coeffs = None
-        checkType(coeffs, allowedTypes=([Variable, int], type(None)))
+        checkType(coeffs, ([Variable, int], type(None)))
         OpOverrider.enable()
     return terms, coeffs
 
@@ -587,7 +585,7 @@ def Count(term, *others, value=None, values=None, condition=None):
         value = 1
     assert value is None or values is None, str(value) + " " + str(values)
     values = list(values) if isinstance(values, (tuple, set)) else [value] if isinstance(value, (int, Variable)) else values
-    checkType(values, allowedTypes=([int], [Variable]))
+    checkType(values, ([int], [Variable]))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
 
@@ -882,7 +880,7 @@ import pycsp3.tools.curser
 
 def _pycharm_security():
     _ = pycsp3.tools.curser
-    _ = to_alphabet_positions
+    _ = alphabet_positions
     _ = transpose
     _ = is_containing
     _ = CtrEntities

@@ -102,7 +102,7 @@ def is_containing(l, types, *, check_first_only=False):
         return isinstance(l, types)
 
 
-def to_alphabet_positions(s):
+def alphabet_positions(s):
     assert isinstance(s, str)
     return tuple(ord(c) - ord('a') for c in s.lower())
 

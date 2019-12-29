@@ -12,11 +12,11 @@ from pycsp3 import *
 words = ["buoy", "cave", "celt", "flub", "fork", "hemp", "judy", "junk", "limn", "quip", "swag", "visa"]
 
 # x[i] is the cube where the ith letter of the alphabet is put
-x = VarArray(size=26, dom=lambda i: range(1, 5) if any(i in to_alphabet_positions(w) for w in words) else None)
+x = VarArray(size=26, dom=lambda i: range(1, 5) if any(i in alphabet_positions(w) for w in words) else None)
 
 satisfy(
     # the four letters of each word appears on different cubes
-    [AllDifferent(x[i] for i in to_alphabet_positions(w)) for w in words],
+    [AllDifferent(x[i] for i in alphabet_positions(w)) for w in words],
 
     # each cube is assigned 6 letters
     Cardinality(x, occurrences={i: 6 for i in range(1, 5)})

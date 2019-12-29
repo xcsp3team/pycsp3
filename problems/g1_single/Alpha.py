@@ -2,7 +2,7 @@ from pycsp3 import *
 
 
 def summing(word):
-    return Sum(x[i] for i in to_alphabet_positions(word))
+    return Sum(x[i] for i in alphabet_positions(word))
 
 
 # x[i] is the value for the ith letter of the alphabet
