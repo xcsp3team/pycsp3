@@ -1,51 +1,31 @@
 from pycsp3 import *
-from copy import copy
+from pycsp3.problems.data.dataparser import DataDict
+
+data.shifts.append(DataDict({"id": "_off", "length": 0, "forbiddenFollowingShifts": None}))  # we add first a dummy off shift
+off = len(data.shifts) - 1  # value for _off
 
 nDays, nWeeks = data.nDays, data.nDays // 7
-shifts, staffs, covers = data.shifts, data.staffs, data.covers
-
-
-def dummy_shift():
-    c = copy(shifts[0])
-    c.id = "_off"
-    c.length = 0
-    c.forbiddenFollowingShifts = None
-    shifts.append(c)  # we add first a dummy off shift
-    for staff in staffs:
-        staff.maxShifts.append(nDays)  # we add no limit (nDays) for the new off shift
-
-
-dummy_shift()  # we add first a dummy off shift
+shifts, staffs = data.shifts, data.staffs
 nShifts, nStaffs = len(shifts), len(staffs)
-off = nShifts - 1  # value for _off
 
-
-def on_request(person, day):
-    return next((r for r in staffs[person].onRequests if r.day == day), None) if staffs[person].onRequests else None
-
-
-def off_request(person, day):
-    return next((r for r in staffs[person].offRequests if r.day == day), None) if staffs[person].offRequests else None
-
-
-def cost(cover, i):
-    return (cover.requirement - i) * cover.weightIfUnder if i <= cover.requirement else (i - cover.requirement) * cover.weightIfOver
-
-
-def costs(day, shift):
-    t = [0] * (len(staffs) + 1)
-    if shift != len(shifts) - 1:  # if not '_off'
-        for i in range(len(t)):
-            t[i] = cost(covers[day][shift], i)
-    return t
+on_r = [[next((r for r in staff.onRequests if r.day == day), None) if staff.onRequests else None for day in range(nDays)] for staff in staffs]
+off_r = [[next((r for r in staff.offRequests if r.day == day), None) if staff.offRequests else None for day in range(nDays)] for staff in staffs]
+lengths = [shift.length for shift in shifts]
+kmax = [staff.maxConsecutiveShifts for staff in staffs]
+kmin = [staff.minConsecutiveShifts for staff in staffs]
+kminday = [staff.minConsecutiveDaysOff for staff in staffs]
 
 
 def shift_pos(s):
     return next(i for i in range(nShifts) if shifts[i].id == s)
 
 
-def rotation():
-    return {(shift_pos(s1.id), shift_pos(s2)) for s1 in shifts if s1.forbiddenFollowingShifts for s2 in s1.forbiddenFollowingShifts}
+table = {(shift_pos(s1.id), shift_pos(s2)) for s1 in shifts if s1.forbiddenFollowingShifts for s2 in s1.forbiddenFollowingShifts}  # rotation
+
+
+def costs(day, shift):
+    c = None if shift == off else data.covers[day][shift]
+    return [0 if c is None else abs(c.requirement - i) * (c.weightIfUnder if i <= c.requirement else c.weightIfOver) for i in range(nStaffs + 1)]
 
 
 def automaton_min_consecutive(k, for_shifts):
@@ -61,17 +41,11 @@ def automaton_min_consecutive(k, for_shifts):
     return Automaton(start=q(0), final=q(k + 1), transitions=t)
 
 
-table = rotation()
-lengths = [shift.length for shift in shifts]
-kmax = [staff.maxConsecutiveShifts for staff in staffs]
-kmin = [staff.minConsecutiveShifts for staff in staffs]
-kminday = [staff.minConsecutiveDaysOff for staff in staffs]
-
 # x[d][p] is the shift at day d for person p (value 'off' denotes off)
 x = VarArray(size=[nDays, nStaffs], dom=range(nShifts))
 
 # ps[p][s] is the number of days such that person p works with shift s
-ps = VarArray(size=[nStaffs, nShifts], dom=lambda p, s: range(staffs[p].maxShifts[s] + 1))
+ps = VarArray(size=[nStaffs, nShifts], dom=lambda p, s: range((nDays if s == off else staffs[p].maxShifts[s]) + 1))
 
 # ds[d][s] is the number of persons working on day d with shift s
 ds = VarArray(size=[nDays, nShifts], dom=range(nStaffs + 1))
@@ -80,10 +54,10 @@ ds = VarArray(size=[nDays, nShifts], dom=range(nStaffs + 1))
 wk = VarArray(size=[nStaffs, nWeeks], dom={0, 1})
 
 # cn[p][d] is the cost of not satisfying the on-request (if it exists) of person p on day d
-cn = VarArray(size=[nStaffs, nDays], dom=lambda p, d: {0, on_request(p, d).weight} if on_request(p, d) else None)
+cn = VarArray(size=[nStaffs, nDays], dom=lambda p, d: {0, on_r[p][d].weight} if on_r[p][d] else None)
 
 # cf[p][d] is the cost of not satisfying the off-request (if it exists) of person p on day d
-cf = VarArray(size=[nStaffs, nDays], dom=lambda p, d: {0, off_request(p, d).weight} if off_request(p, d) else None)
+cf = VarArray(size=[nStaffs, nDays], dom=lambda p, d: {0, off_r[p][d].weight} if off_r[p][d] else None)
 
 # cc[d][s] is the cost of not satisfying cover for shift s on day d
 cc = VarArray(size=[nDays, nShifts], dom=lambda d, s: costs(d, s))
@@ -123,10 +97,10 @@ satisfy(
     [x[i: i + kminday[p] + 1, p] in automaton_min_consecutive(kminday[p], False) for p in range(nStaffs) for i in range(nDays - kminday[p])],
 
     # cost of not satisfying on requests
-    [iff(x[d][p] == shift_pos(on_request(p, d).shift), cn[p][d] == 0) for p in range(nStaffs) for d in range(nDays) if on_request(p, d)],
+    [iff(x[d][p] == shift_pos(on_r[p][d].shift), cn[p][d] == 0) for p in range(nStaffs) for d in range(nDays) if on_r[p][d]],
 
     # cost of not satisfying off requests 
-    [iff(x[d][p] == shift_pos(off_request(p, d).shift), cf[p][d] != 0) for p in range(nStaffs) for d in range(nDays) if off_request(p, d)],
+    [iff(x[d][p] == shift_pos(off_r[p][d].shift), cf[p][d] != 0) for p in range(nStaffs) for d in range(nDays) if off_r[p][d]],
 
     # cost of under or over covering 
     [(ds[d][s], cc[d][s]) in enumerate(costs(d, s)) for d in range(nDays) for s in range(nShifts)]
@@ -139,4 +113,3 @@ minimize(
 # possible to write ps[p] * lengths or Sum(ps[p] * lengths)
 
 # [iff(x[d][p] == shift, cn[p][d] == 0) for (p,d,shift) in [(p,d, shift_pos(on_request(p, d).shift)) for p in range(nStaffs) for d in range(nDays) if on_request(p, d)]],
-

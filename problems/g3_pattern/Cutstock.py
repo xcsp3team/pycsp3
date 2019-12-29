@@ -13,7 +13,7 @@ r = VarArray(size=[nPieces, nItems], dom=lambda i, j: range(demands[j] + 1))
 
 satisfy(
     # each item demand must be exactly satisfied
-    [Sum(r[:, i]) == demand for i, demand in enumerate(demands)],
+    [Sum(r[:, j]) == demand for j, demand in enumerate(demands)],
 
     # each piece of the stock cannot provide more than its length
     [r[i] * lengths <= p[i] * pieceLength for i in range(nPieces)],
@@ -23,5 +23,6 @@ satisfy(
 )
 
 minimize(
+    # minimizing the number of used pieces
     Sum(p)
 )

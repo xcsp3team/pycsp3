@@ -2,27 +2,21 @@ from pycsp3 import *
 from math import ceil, floor
 
 nSlots = data.nSlots
-demands = data.demands
-nVariations = len(demands)
-nTemplates = nVariations
+nTemplates = nVariations = len(data.demands)
 
 
-def lb(v):
-    return ceil(demands[v] * 0.95)
-
-
-def ub(v):
-    return floor(demands[v] * 1.1)
+def variation_interval(v):
+    return range(ceil(data.demands[v] * 0.95), floor(data.demands[v] * 1.1) + 1)
 
 
 # d[i][j] is the number of occurrences of the jth variation on the ith template
 d = VarArray(size=[nTemplates, nVariations], dom=range(nSlots + 1))
 
 # p[i] is the number of printings of the ith template
-p = VarArray(size=[nTemplates], dom=range(max(demands) + 1))
+p = VarArray(size=nTemplates, dom=range(max(data.demands) + 1))
 
 # u[i] is 1 iff the ith template is used
-u = VarArray(size=[nTemplates], dom={0, 1})
+u = VarArray(size=nTemplates, dom={0, 1})
 
 satisfy(
     # all slots of all templates are used
@@ -35,19 +29,19 @@ satisfy(
 if not variant():
     satisfy(
         # respecting printing bounds for each variation
-        p * d[:, j] in range(lb(j), ub(j) + 1) for j in range(nVariations)
+        p * d[:, j] in variation_interval(j) for j in range(nVariations)
     )
 
 elif variant("aux"):
     # pv[i][j] is the number of printings of the jth variation by using the ith template
-    pv = VarArray(size=[nTemplates, nVariations], dom=lambda i, j: range(ub(j)))
+    pv = VarArray(size=[nTemplates, nVariations], dom=lambda i, j: range(variation_interval(j).stop))
 
     satisfy(
         # linking variables of arrays p and pv
         [p[i] * d[i][j] == pv[i][j] for i in range(nTemplates) for j in range(nVariations)],
 
         # respecting printing bounds for each variation v
-        [Sum(pv[:, j]) in range(lb(j), ub(j) + 1) for j in range(nVariations)]
+        [Sum(pv[:, j]) in variation_interval(j) for j in range(nVariations)]
     )
 
 satisfy(
@@ -60,6 +54,6 @@ satisfy(
 )
 
 minimize(
-    #  minimizing the number of used templates
+    # minimizing the number of used templates
     Sum(u)
 )
