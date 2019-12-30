@@ -53,7 +53,7 @@ class AnnotationDecision(ConstraintUnmergeable):
     def __init__(self, variables):
         super().__init__(TypeXML.DECISION)
         variables = flatten(variables)
-        checkType(variables, allowedTypes=([Variable]))
+        checkType(variables, [Variable])
         self.arg(TypeXML.DECISION, variables)
 
 
@@ -61,7 +61,7 @@ class AnnotationOutput(ConstraintUnmergeable):
     def __init__(self, variables):
         super().__init__(TypeXML.OUTPUT)
         variables = flatten(variables)
-        checkType(variables, allowedTypes=([Variable]))
+        checkType(variables, [Variable])
         self.arg(TypeXML.OUTPUT, variables)
 
 
@@ -82,7 +82,7 @@ class AnnotationHeuristic(ConstraintUnmergeable):
 class AnnotationVarHeuristic(AnnotationHeuristic):
     def __init__(self, h):
         super().__init__(TypeXML.VAR_HEURISTIC)
-        checkType(h, allowedTypes=VarHeuristic)
+        checkType(h, VarHeuristic)
         self.attributes.append((TypeArg.LC, h.lc))
         if h.staticData:
             self.arg(TypeArg.STATIC, h.staticData)
@@ -92,7 +92,7 @@ class AnnotationVarHeuristic(AnnotationHeuristic):
 class AnnotationValHeuristic(AnnotationHeuristic):
     def __init__(self, h):
         super().__init__(TypeXML.VAL_HEURISTIC)
-        checkType(h, allowedTypes=ValHeuristic)
+        checkType(h, ValHeuristic)
         if h.staticData:
             self.arg(TypeArg.STATIC, h.staticData[0], attributes=[(TypeArg.ORDER, " ".join(str(ele) for ele in h.staticData[1]))])
         self.add_arguments(h.randomData, h.minData, h.maxData)
@@ -101,28 +101,28 @@ class AnnotationValHeuristic(AnnotationHeuristic):
 class AnnotationFiltering(ConstraintUnmergeable):
     def __init__(self, consistency):
         super().__init__(TypeXML.FILTERING)
-        checkType(consistency, allowedTypes=TypeConsistency)
+        checkType(consistency, TypeConsistency)
         self.attributes.append((TypeArg.TYPE, consistency))
 
 
 class AnnotationPrepro(ConstraintUnmergeable):
     def __init__(self, consistency):
         super().__init__(TypeXML.PREPRO)
-        checkType(consistency, allowedTypes=TypeConsistency)
+        checkType(consistency, TypeConsistency)
         self.attributes.append((TypeArg.CONSISTENCY, consistency))
 
 
 class AnnotationSearch(ConstraintUnmergeable):
     def __init__(self, search):
         super().__init__(TypeXML.SEARCH)
-        checkType(search, allowedTypes=Search)
+        checkType(search, Search)
         self.attributes = [(TypeArg.CONSISTENCY, search.consistency), (TypeArg.BRANCHING, search.branching)]
 
 
 class AnnotationRestarts(ConstraintUnmergeable):
     def __init__(self, restarts):
         super().__init__(TypeXML.RESTARTS)
-        checkType(restarts, allowedTypes=Restarts)
+        checkType(restarts, Restarts)
         self.attributes = [(TypeArg.TYPE, restarts.type), (TypeArg.CUTOFF, restarts.cutoff), (TypeArg.FACTOR, restarts.factor)]
 
 
@@ -154,14 +154,14 @@ class VHeuristic:
 
     def random(self, variables=None):
         variables = flatten(variables)
-        checkType(variables, allowedTypes=([Variable], type(None)))
+        checkType(variables, ([Variable], type(None)))
         self.randomPart = (variables,)
         return self
 
     def _opt(self, variables, type):
         if variables:
             variables = flatten(variables)
-            checkType(variables, allowedTypes=([Variable]))
+            checkType(variables, [Variable])
         types = TypeVarHeuristic if isinstance(self, VarHeuristic) else TypeValHeuristic
         assert isinstance(type, str) and all(p in [t.name for t in types] for p in re.split(r'/|\+', type)), "Bad value for " + type
         return variables, type
@@ -182,7 +182,7 @@ class VarHeuristic(VHeuristic):
 
     def static(self, variables):
         variables = flatten(variables)
-        checkType(variables, allowedTypes=([Variable]))
+        checkType(variables, [Variable])
         self.staticPart = variables
         return self
 
@@ -193,8 +193,8 @@ class ValHeuristic(VHeuristic):
 
     def static(self, variables, *, order):
         variables = flatten(variables)
-        checkType(variables, allowedTypes=([Variable]))
+        checkType(variables, [Variable])
         order = flatten(order)
-        checkType(order, allowedTypes=([int]))
+        checkType(order, [int])
         self.staticPart = (variables, order)
         return self

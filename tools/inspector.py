@@ -248,14 +248,14 @@ def docstringOf(name):
     return None if att is None else att.__doc__
 
 
-def checkType(obj, allowedTypes, message=None):
+def checkType(obj, allowed_types, message=None):
     if options.checker == "none":
         return True
     if options.checker == "fast" and isinstance(obj, (list, tuple, set)) and len(obj) > 100:
         obj = obj[:1]
-    allowedTypes = (allowedTypes,) if not isinstance(allowedTypes, tuple) else allowedTypes
+    allowed_types = (allowed_types,) if not isinstance(allowed_types, tuple) else allowed_types
 
-    for allowedType in allowedTypes:
+    for allowedType in allowed_types:
         if not isinstance(allowedType, list):
             if isinstance(obj, allowedType):
                 return True
@@ -297,20 +297,15 @@ def checkType(obj, allowedTypes, message=None):
             noline = stack[2].lineno
         functions.no_parameter_satisfy = None
 
-    s = "\n\tAt line " + str(stack[1].lineno) + " of function " + stack[1].function + " in file " \
-        + stack[1].filename[stack[1].filename.rindex("/") + 1:]
+    s = "\n\tAt line " + str(stack[1].lineno) + " of function " + stack[1].function + " in file " + stack[1].filename[stack[1].filename.rindex("/") + 1:]
     s += "\n\tThis assertion fails: " + stack[1].code_context[0].strip()
     if modeling_file is not None and len(problem_lines) > 0:
         if functions.no_parameter_satisfy is not None:
-            s += "\n\n\tThe problem comes of the parameter " + str(
-                functions.no_parameter_satisfy) + " of satisfy() in file " \
+            s += "\n\n\tThe problem comes from parameter " + str(functions.no_parameter_satisfy) + " of satisfy() in file " \
                  + modeling_file.filename[modeling_file.filename.rindex("/") + 1:] + ","
         else:
-            s += "\n\n\tThe problem comes at the line " + str(
-                noline) + " of in file " \
-                 + modeling_file.filename[modeling_file.filename.rindex("/") + 1:] + ","
-        s += "\n\tWhen executing:\n\t\t" + "\n\t\t".join(problem_lines)
-        s += "\n\t" + message if message is not None else ""
+            s += "\n\n\tThe problem is at line " + str(noline) + " of file " + modeling_file.filename[modeling_file.filename.rindex("/") + 1:] + ","
+        s += "\n\tWhen executing:\n\t\t" + "\n\t\t".join(problem_lines) + "\n\t" + message if message is not None else ""
 
         # TODO get the good docstring
         # s += "\n\n\tDocumentation for function: " + stack[1].function

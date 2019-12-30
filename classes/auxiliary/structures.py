@@ -26,6 +26,10 @@ class Automaton:
                 t.append(transition)
         return t
 
+    @staticmethod
+    def q(i, j=None):
+        return "q" + str(i) + ("" if j is None else "x" + str(j))
+
     def __init__(self, *, start, transitions, final):
         self.start = start
         self.transitions = Automaton._add_transitions(transitions)

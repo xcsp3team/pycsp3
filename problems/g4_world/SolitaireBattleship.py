@@ -9,13 +9,11 @@ pos, neg = sizes, [-v for v in sizes]
 
 
 def automaton(horizontal):
-    def q(i, j=None):
-        return "q" + str(i) + ("" if j is None else "x" + str(j))
-
+    q = Automaton.q  # for building state names
     transitions = [(q(0), 0, q(0)), (q(0), neg if horizontal else pos, "qq"), ("qq", 0, q(0))]
-    for s in sizes:
-        v = s if horizontal else -s
-        transitions += [(q(0), v, q(s, 1))] + [(q(s, j), v, q(s, j + 1)) for j in range(1, s)] + [(q(s, s), 0, q(0))]
+    for i in sizes:
+        v = i if horizontal else -i
+        transitions += [(q(0), v, q(i, 1))] + [(q(i, j), v, q(i, j + 1)) for j in range(1, i)] + [(q(i, i), 0, q(0))]
     return Automaton(start=q(0), final=q(0), transitions=transitions)
 
 

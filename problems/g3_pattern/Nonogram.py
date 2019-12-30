@@ -8,9 +8,7 @@ x = VarArray(size=[nRows, nCols], dom={0, 1})
 
 if not variant():
     def automaton(pattern):
-        def q(i):
-            return "q" + str(i)
-
+        q = Automaton.q  # for building state names
         transitions = []
         if len(pattern) == 0:
             n_states = 1
