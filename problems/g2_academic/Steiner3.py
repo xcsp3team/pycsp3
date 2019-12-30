@@ -16,7 +16,7 @@ table = {(i1, i2, i3, j1, j2, j3) for (i1, i2, i3, j1, j2, j3) in product(range(
 x = VarArray(size=[nTriples, 3], dom=range(1, n + 1))
 
 satisfy(
-    # ensuring that triples are formed of distinct elements, given in increasing order
+    # ensuring that triples are formed of distinct increasing integers
     [Increasing(x[i], strict=True) for i in range(nTriples)],
 
     # ensuring that triples share at most one value
