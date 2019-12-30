@@ -16,6 +16,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSym
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import flatten, is_1d_list, is_2d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing
+from pycsp3.problems.data.dataparser import DataDict
 
 ''' Global Variables '''
 
@@ -151,7 +152,7 @@ def _wrap_intension_constraints(entities):
 
 def _group(*args):
     entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args)))
-    checkType(entities, allowedTypes=[ECtr, ECtrs])
+    checkType(entities, [ECtr, ECtrs])
     return EToGather(entities)
 
 
@@ -173,21 +174,21 @@ def _reorder(entities):
 
 def _block(*args):
     entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args)))
-    checkType(entities, allowedTypes=[ECtr, ECtrs])
+    checkType(entities, [ECtr, ECtrs])
     entities = _reorder(entities)
     return EBlock(entities)
 
 
 def IfThenElse(*args):
     entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args)))
-    checkType(entities, allowedTypes=[ECtr])
+    checkType(entities, [ECtr])
     assert len(entities) == 3, "Error: three components must be specified in ifThenElse"
     return EIfThenElse(entities)
 
 
 def Slide(*args):
     entities = _wrap_intension_constraints(flatten(*args))  # we cannot directly complete partial forms (because it may be called by the user?)
-    checkType(entities, allowedTypes=[ECtr, bool])
+    checkType(entities, [ECtr, bool])
     return ESlide([EToGather(entities)])
 
 
@@ -429,7 +430,10 @@ def AllDifferent(term, *others, excepting=None, matrix=None):
     terms = flatten(term, others)
     if matrix is not None:
         assert excepting is None, "excepting values are currently not supported for AllDifferentMatrix"
-        return AllDifferentMatrix(terms)
+        matrix = [flatten(row) for row in terms]
+        assert all(len(row) == len(matrix[0]) for row in matrix), "The matrix id badly formed"
+        assert all(checkType(l, [Variable]) for l in matrix)
+        return ECtr(ConstraintAllDifferentMatrix(matrix))
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
     checkType(terms, ([Variable], [Node]))
     checkType(excepting, ([int], type(None)))
@@ -440,20 +444,11 @@ def AllDifferentList(lists, *others, excepting=None):
     if len(others) > 0:
         lists = list((lists,) + others)
     lists = [flatten(l) for l in lists]
-    for l in lists:
-        checkType(l, [Variable])
+    assert all(checkType(l, [Variable]) for l in lists)
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else excepting
     checkType(excepting, ([int], type(None)))
     assert all(len(l) == len(lists[0]) for l in lists) and (excepting is None or len(excepting) == len(list[0]))
     return ECtr(ConstraintAllDifferentList(lists, excepting))
-
-
-def AllDifferentMatrix(matrix):
-    matrix = [flatten(row) for row in matrix]
-    assert all(len(row) == len(matrix[0]) for row in matrix), "The matrix id badly formed"
-    for l in matrix:
-        checkType(l, [Variable])
-    return ECtr(ConstraintAllDifferentMatrix(matrix))
 
 
 def AllEqual(term, *others):
@@ -470,8 +465,7 @@ def _ordered(term, *others, operator, lengths=None):
     if lengths is not None:
         if len(terms) == len(lengths):
             lengths = lengths[:-1]  # we assume that the last value is useless
-        else:
-            assert len(terms) == len(lengths) + 1
+        assert len(terms) == len(lengths) + 1
     return ECtr(ConstraintOrdered(terms, operator, lengths))
 
 
@@ -491,7 +485,7 @@ def _lex(term, *others, operator, matrix=False):
         assert is_1d_list(term, Variable) and all(is_1d_list(l, Variable) for l in others)
         lists = [flatten(term)] + [flatten(l) for l in others]
     assert is_matrix(lists, Variable)  # new check because some null cells (variables) may have been discarded
-    checkType(lists, ([Variable]))
+    checkType(lists, [Variable])
     assert all(len(l) == len(lists[0]) for l in lists)
     checkType(operator, TypeOrderedOperator)
     if matrix:
@@ -614,7 +608,7 @@ def NValues(term, *others, excepting=None, condition=None):
 
 def Cardinality(term, *others, occurrences, closed=False):
     terms = flatten(term, others)
-    checkType(terms, ([Variable]))
+    checkType(terms, [Variable])
     assert isinstance(occurrences, dict)
     values = list(occurrences.keys())
     assert all(isinstance(value, (int, Variable)) for value in values)
@@ -680,20 +674,20 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
 
 
 def NoOverlap(*, origins, lengths, zero_ignored=False):
-    checkType(origins, allowedTypes=([Variable]))
-    checkType(lengths, allowedTypes=([Variable], [int]))
+    checkType(origins, [Variable])
+    checkType(lengths, ([Variable], [int]))
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
 
 def Cumulative(*, origins, lengths, heights, ends=None, condition=None):
     origins = flatten(origins)
-    checkType(origins, allowedTypes=([Variable]))
+    checkType(origins, [Variable])
     lengths = flatten(lengths)
-    checkType(lengths, allowedTypes=([Variable], [int]))
+    checkType(lengths, ([Variable], [int]))
     heights = flatten(heights)
-    checkType(heights, allowedTypes=([Variable], [int]))
+    checkType(heights, ([Variable], [int]))
     if ends is not None: ends = flatten(ends)
-    checkType(ends, allowedTypes=([Variable], type(None)))
+    checkType(ends, ([Variable], type(None)))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, heights, Condition.build_condition(condition), ends))
 
 
@@ -875,12 +869,8 @@ def cp_array(l):
 #    assert isinstance(l, list)
 #    return [(i, *v) if isinstance(v, (tuple, list)) else (i, v) for i, v in enumerate(l)]
 
-import pycsp3.tools.curser
+import pycsp3.tools.curser  # keep it here?
 
 
 def _pycharm_security():
-    _ = pycsp3.tools.curser
-    _ = alphabet_positions
-    _ = transpose
-    _ = is_containing
-    _ = CtrEntities
+    _ = (pycsp3.tools.curser, alphabet_positions, transpose, is_containing, CtrEntities, DataDict)
