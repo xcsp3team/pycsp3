@@ -4,7 +4,7 @@ import types
 from collections import deque
 
 from pycsp3.classes.auxiliary.conditions import Condition
-from pycsp3.classes.auxiliary.structures import Automaton
+from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.auxiliary.types import TypeOrderedOperator, TypeRank, TypeVar
 from pycsp3.classes.entities import *
 from pycsp3.classes.main.annotations import AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, \
@@ -118,12 +118,14 @@ def VarArray(*, size, dom, comment=None):
 def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     assert type(bool_value) is bool
     if isinstance(left_operand, Variable) and isinstance(right_operand, (set, frozenset, range)):
-        # It is a unary constraint of the form x in/not in set/range
+        # it is a unary constraint of the form x in/not in set/range
         ctr = Intension(isin(left_operand, right_operand) if bool_value else notin(left_operand, right_operand))
-    elif isinstance(left_operand, PartialConstraint):  # It is a partial form of constraint (sum, count, maximum, ...)
+    elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
         ctr = ECtr(left_operand.constraint.replace_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
-    elif isinstance(right_operand, Automaton):  #  It is a regular constraint
+    elif isinstance(right_operand, Automaton):  #  it is a regular constraint
         ctr = Regular(scope=left_operand, automaton=right_operand)
+    elif isinstance(right_operand, MDD):  # it is a MDD constraint
+        ctr = Mdd(scope=left_operand, mdd=right_operand)
     else:  #  It is a table constraint
         if not hasattr(left_operand, '__iter__'):
             left_operand = [left_operand]
@@ -416,11 +418,11 @@ def Regular(*, scope, automaton):
     return ECtr(ConstraintRegular(scope, automaton))
 
 
-def Mdd(*, scope, transitions):
+def Mdd(*, scope, mdd):
     scope = flatten(scope)
     checkType(scope, [Variable])
-    checkType(transitions, list)
-    return ECtr(ConstraintMdd(scope, transitions))
+    checkType(mdd, MDD)
+    return ECtr(ConstraintMdd(scope, mdd.transitions))
 
 
 ''' Comparison-based Constraints '''
