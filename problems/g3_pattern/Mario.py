@@ -14,9 +14,6 @@ s = VarArray(size=nHouses, dom=range(nHouses))
 # f[i] is the fuel consumed at each step (from house i to its successor)
 f = VarArray(size=nHouses, dom=lambda i: set(fuels[i]))
 
-# g[i] is the gold earned at house i
-g = VarArray(size=nHouses, dom=lambda i: {0, houses[i].gold})
-
 if not variant():
     satisfy(
         # fuel consumption at each step
@@ -33,9 +30,6 @@ satisfy(
     # we cannot consume more than the available fuel
     Sum(f) <= fuelLimit,
 
-    # gold earned at each house
-    [iff(s[i] == i, g[i] == 0) for i in range(nHouses) if i not in {marioHouse, luigiHouse}],
-
     # Mario must make a tour (not necessarily complete)
     Circuit(s),
 
@@ -45,10 +39,18 @@ satisfy(
 
 maximize(
     # maximizing collected gold
-    Sum(g)
+    Sum((s[i] != i) * houses[i].gold for i in range(nHouses) if i not in {marioHouse, luigiHouse})
 )
 
 
 # [(s[i], f[i]) in [(j, houses[i].fuelConsumption[j]) for j in range(len(houses[i].fuelConsumption))] for i in range(nHouses)],
 
 # [(s[i], f[i]) in [(j, fuel) for j, fuel in enumerate(houses[i].fuelConsumption)] for i in range(nHouses)],
+
+# g[i] is the gold earned at house i
+# g = VarArray(size=nHouses, dom=lambda i: {0, houses[i].gold})
+# gold earned at each house
+# maximize(
+#    maximizing collected gold
+#    Sum(g)
+# )

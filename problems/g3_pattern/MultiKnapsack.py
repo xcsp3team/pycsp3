@@ -1,13 +1,13 @@
 from pycsp3 import *
 
-weights, constraints = data.coefficients, data.constraints
+weights = data.coefficients
 n = len(weights)
 
 # x[i] is 1 iff the ith item is selected
 x = VarArray(size=n, dom={0, 1})
 
 satisfy(
-    x * c.coeffs <= c.limit for c in constraints
+    x * c.coeffs <= c.limit for c in data.constraints
 )
 
 maximize(
