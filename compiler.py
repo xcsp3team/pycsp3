@@ -144,13 +144,11 @@ def _load(*, console=False):
     _load_options()
     if options.time:
         Compilation.stopwatch1, Compilation.stopwatch2 = Stopwatch(), Stopwatch()
-
     if console is False:
         Compilation.model, Compilation.string_model = _load_model()
         if options.dataparser:
             Compilation.data, Compilation.string_data = _load_dataparser(options.dataparser, options.data)
         else:
-
             Compilation.data, Compilation.string_data = _load_data()
             # functions.data = Compilation.data
     else:

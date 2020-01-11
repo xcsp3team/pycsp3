@@ -214,8 +214,9 @@ def satisfy(*args):
         elif isinstance(arg, Node):  # a predicate to be wrapped by a constraint (intension)
             to_post = Intension(arg)
         elif isinstance(arg, bool):  # a Boolean representing the case of a partial constraint or a node with operator in {IN, NOT IN}
-            assert queue_in, "A boolean that do not represents a constraint is in the list of constraints in satisfy(): " \
-                             + str(args) + ".\nA constraint is certainly wrong"
+            assert queue_in, "An argument of satisfy() before position " + str(i) + " is badly formed"
+            #assert queue_in, "A boolean that do not represents a constraint is in the list of constraints in satisfy(): " \
+            #                 + str(args) + " " + str(i) + ".\nA constraint is certainly badly formed"
             other, partial = queue_in.popleft()
             to_post = _bool_interpretation_for_in(partial, other, arg)
         elif any(isinstance(ele, ESlide) for ele in arg):  #  Case: Slide
