@@ -397,6 +397,9 @@ class ConstraintInstantiation(Constraint):
         self.arg(TypeCtrArg.VALUES, values, content_ordered=True)
 
 
+''' PartialConstraints and ScalarProduct '''
+
+
 class PartialConstraint:  # constraint whose condition is missing initially
     def __init__(self, constraint):
         self.constraint = constraint

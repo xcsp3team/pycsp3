@@ -12,7 +12,7 @@ from pycsp3 import *
   - Janet (who isn't Lemon) isn't allergic to eggs or mold
 """
 
-Debra, Janet, Hugh, Rick = friends = ["Debra", "Janet", "Hugh", "Rick"]
+friends = Debra, Janet, Hugh, Rick = "Debra", "Janet", "Hugh", "Rick"
 
 # foods[i] is the friend allergic to the ith food
 eggs, mold, nuts, ragweed = foods = VarArray(size=4, dom=friends)

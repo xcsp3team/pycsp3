@@ -16,8 +16,7 @@ from pycsp3 import *
   - Agatha is not the butler.
 """
 
-persons = range(3)
-agatha, butler, charles = 0, 1, 2
+persons = agatha, butler, charles = 0, 1, 2
 
 # killer is the person who kills Agatha
 killer = Var(dom=persons)

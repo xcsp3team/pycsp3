@@ -219,27 +219,26 @@ def comments_and_tags_of_parameters_of(*, function_name, args):
 
 def extract_declaration_for(function_name):
     code = list(reversed(_extract_code(function_name)))
-    equal_before_name = False
     for line in code:
-        if function_name in line:
+        if function_name in line and not is_comment_line(line):
             pos = line.find(function_name)
             if "=" in line[:pos]:
-                equal_before_name = True
-        if function_name is False:
-            if "=" in line:
-                equal_before_name = True
-        if '=' in line and not is_comment_line(line):
-            break
-    assert equal_before_name, function_name + " object must be assigned to a variable"
-
-    declaration = line[:line.index("=")].strip()
+                break
+    else:
+        assert False, " the object returned by " + function_name + " should be assigned to a variable"
+    declaration = line[:pos].strip()
+    if declaration[-1] == '=':
+        declaration=declaration[:-1].strip()
+    assert declaration.count('=') < 2
+    if '=' in declaration:
+        t = declaration.split('=')
+        declaration = t[0] if ',' in t[0] else t[1]
     if function_name == "Var":
         assert "," not in declaration and ")" not in declaration, \
             "Every declaration must be on its own. For example, 'x, y = Var(dom={0,1}), Var(dom={0,1})' is not allowed."
         return declaration
     elif function_name == "VarArray":
-        assert ")" not in declaration, \
-            "VarArray() without affectation (VarArray(dom={0,1}) is not allowed."
+        assert ")" not in declaration
         return declaration if "," not in declaration else declaration.split(",")
 
 

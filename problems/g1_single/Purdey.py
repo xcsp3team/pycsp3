@@ -12,7 +12,7 @@ from pycsp3 import *
   - Purdey only extended credit to regular customers, such as the family that bought the muslin on credit
 """
 
-Boyds, Garveys, Logans, Navarros = families = ["Boyds", "Garveys", "Logans", "Navarros"]
+families = Boyds, Garveys, Logans, Navarros = "Boyds", "Garveys", "Logans", "Navarros"
 
 flour = Var(families)
 kerosene = Var(families)

@@ -1,17 +1,13 @@
-import atexit
-import sys
-import os
+import atexit, os, sys
 from itertools import combinations, product, permutations
 
-from pycsp3.functions import *
+from pycsp3.functions import *  # keep it at first position (before Compilation)
 from pycsp3.compiler import Compilation
 from pycsp3.tools.utilities import value_in_base
 
 
 def _pycharm_security():
-    _ = combinations
-    _ = product
-    _ = permutations
+    _ = (combinations, product, permutations)
 
 
 __version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt'), encoding='utf-8').read()
@@ -31,14 +27,11 @@ if sys.argv:
     elif sys.argv[0] == '':
         Compilation.load(console=True)
         data = None
+    elif 'tests' not in sys.argv[0].split("/"):  #  Import from tests are not models ; didn't understand the comment (chriss)
+        Compilation.load()
+        data = Compilation.data
     else:
-        directories = sys.argv[0].split("/")
-        if 'tests' not in directories:
-            #  Import from tests are not models
-            Compilation.load()
-            data = Compilation.data
-        else:
-            Compilation.done = True
+        Compilation.done = True
 
 
 @atexit.register

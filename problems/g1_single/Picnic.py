@@ -15,9 +15,9 @@ from pycsp3 import *
   - The person who arrived by sailboat is not the person who brought the soda and the other person who brought the cookies.
 """
 
-Mindy, Sabrina, Tanya, Anton, Chet = friends = ["Mindy", "Sabrina", "Tanya", "Anton", "Chet"]
+friends = Mindy, Sabrina, Tanya, Anton, Chet = "Mindy", "Sabrina", "Tanya", "Anton", "Chet"
 
-# sports[i] is the friend who arrived with the ith conveyance
+# conveyances[i] is the friend who arrived with the ith conveyance
 jetski, kayak, canoe, sailboard, sailboat = conveyances = VarArray(size=5, dom=friends)
 
 # drinks[i] is the friend who brought the ith drink
