@@ -34,7 +34,7 @@ class Variable:
             return None
         if isinstance(domain, Domain):
             return domain
-        if isinstance(domain, list):
+        if isinstance(domain, (tuple,list)):
             if all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain):  # possible, even if using a set is recommended
                 return Domain(set(domain))
             # at this point, it means a specific domain for each variable given in a list

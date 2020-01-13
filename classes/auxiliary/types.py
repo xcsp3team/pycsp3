@@ -14,7 +14,7 @@ def auto(n_occurrences=1):
 
 @unique
 class TypeFramework(Enum):
-    CSP, COP, WCSP = auto(3)
+    CSP, COP = auto(2)
 
     def __str__(self):
         return self.name

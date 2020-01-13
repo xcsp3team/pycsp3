@@ -1,10 +1,4 @@
-import ast
-import inspect
-import json
-import lzma
-import os.path
-import sys
-from collections import namedtuple
+import ast, inspect, json, lzma, os.path, sys
 from importlib import util
 
 from lxml import etree
@@ -46,7 +40,8 @@ class DataVisitor(ast.NodeVisitor):
 
     def visit(self, node):
         if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "data" and not hasattr(self.compilation_data, node.attr):
-            assert self.cnt < len(self.raw_data), "The number of fields in the object data must be equal to the number of values specified with the option -data "
+            assert self.cnt < len(
+                self.raw_data), "The number of fields in the object data must be equal to the number of values specified with the option -data "
             value = int(self.raw_data[self.cnt]) if self.raw_data[self.cnt] is not None and self.raw_data[self.cnt].isdigit() else self.raw_data[self.cnt]
             if options.debug:
                 print("Load data", value, "in", node.attr)

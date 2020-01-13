@@ -10,7 +10,7 @@ from pycsp3.tools.utilities import flatten
 
 @unique
 class TypeVarHeuristic(AbstractType):
-    LEXICO, DOM, DEG, DDEG, WDEG, IMPACT, ACTIVITY = (auto() for _ in range(7))
+    LEXICO, DOM, DEG, DDEG, WDEG, IMPACT, ACTIVITY = auto(7)
 
 
 @unique
@@ -20,7 +20,7 @@ class TypeValHeuristic(AbstractType):
 
 @unique
 class TypeConsistency(AbstractType):
-    FC, BC, AC, SAC, FPWC, PC, CDC, FDAC, EDAC, VAC = (auto() for _ in range(10))
+    FC, BC, AC, SAC, FPWC, PC, CDC, FDAC, EDAC, VAC = auto(10)
 
     def __str__(self):
         return super().__str__().upper()
@@ -42,11 +42,11 @@ class TypeRestart(AbstractType):
 @unique
 class TypeArg(AbstractType):
     TYPE = auto()
-    STATIC, RANDOM, MIN, MAX = (auto() for _ in range(4))
+    STATIC, RANDOM, MIN, MAX = auto(4)
     LC = auto()
     ORDER = auto()
-    CONSISTENCY, BRANCHING, CUTOFF, FACTOR = (auto() for _ in range(4))
-    START_INDEX, START_ROW_INDEX, START_COL_INDEX = (auto() for _ in range(3))
+    CONSISTENCY, BRANCHING, CUTOFF, FACTOR = auto(4)
+    START_INDEX, START_ROW_INDEX, START_COL_INDEX = auto(3)
 
 
 class AnnotationDecision(ConstraintUnmergeable):

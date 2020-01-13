@@ -12,11 +12,11 @@ class Condition:
     @staticmethod
     def build_condition(condition):
         if condition is None:
-            return None  # possibility when building a partial constraint
+            return None  # it is possible when building a partial constraint
         condition = tuple(condition) if isinstance(condition, list) else condition  # we expect a condition to be given as a tuple (or a list)
         assert isinstance(condition, tuple) and len(condition) == 2, "a condition must a pair, given as a tuple (or a list)"
         operator = TypeConditionOperator.value_of(condition[0]) if isinstance(condition[0], str) else condition[0]
-        assert isinstance(operator, TypeConditionOperator)
+        assert isinstance(operator, TypeConditionOperator), "the operator " + str(operator) + " is not correct (should be of type TypeConditionOperator)"
         right_operand = list(condition[1]) if isinstance(condition[1], (set, frozenset, GeneratorType)) else condition[1]
         checkType(right_operand, (int, Variable, range, [int, Variable]))
         if isinstance(right_operand, range) and right_operand.step != 1:

@@ -19,8 +19,8 @@ class Domain:
         return self.type
 
     def _add_value(self, arg):
-        assert isinstance(arg, (list, set, range, int, str)), "Bad type for the domain " + str(arg) + " of type " + str(type(arg))
-        if isinstance(arg, (list, set)):
+        assert isinstance(arg, (tuple, list, set, range, int, str)), "Bad type for the domain " + str(arg) + " of type " + str(type(arg))
+        if isinstance(arg, (tuple, list, set)):
             for a in arg:
                 self._add_value(a)
         elif isinstance(arg, range):

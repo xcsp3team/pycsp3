@@ -27,20 +27,22 @@ We know that:
  - the Italian either lives in the red, white or green house
 """
 
+houses = range(5)  # each house has a number from 0 (left) to 4 (right)
+
 # colors[i] is the house of the ith color
-yellow, green, red, white, blue = colors = VarArray(size=5, dom=range(5))
+yellow, green, red, white, blue = colors = VarArray(size=5, dom=houses)
 
 # nations[i] is the house of the inhabitant with the ith nationality
-italy, spain, japan, england, norway = nations = VarArray(size=5, dom=range(5))
+italy, spain, japan, england, norway = nations = VarArray(size=5, dom=houses)
 
 # jobs[i] is the house of the inhabitant with the ith job
-painter, sculptor, diplomat, pianist, doctor = jobs = VarArray(size=5, dom=range(5))
+painter, sculptor, diplomat, pianist, doctor = jobs = VarArray(size=5, dom=houses)
 
 # pets[i] is the house of the inhabitant with the ith pet
-cat, zebra, bear, snails, horse = pets = VarArray(size=5, dom=range(5))
+cat, zebra, bear, snails, horse = pets = VarArray(size=5, dom=houses)
 
 # drinks[i] is the house of the inhabitant with the ith preferred drink
-milk, water, tea, coffee, juice = drinks = VarArray(size=5, dom=range(5))
+milk, water, tea, coffee, juice = drinks = VarArray(size=5, dom=houses)
 
 satisfy(
     AllDifferent(colors),
