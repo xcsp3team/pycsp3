@@ -7,7 +7,7 @@ from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import ECtr, TypeNode, Node
 from pycsp3.classes.main import variables, constraints
 from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, \
-    parallel_table_to_string, flatten, is_matrix
+    table_to_string, flatten, is_matrix
 
 
 class Diffs:
@@ -149,7 +149,7 @@ class ConstraintExtension(Constraint):
         if h not in ConstraintExtension.cache:
             if arity > 1:
                 table.sort()
-                ConstraintExtension.cache[h] = parallel_table_to_string(table)
+                ConstraintExtension.cache[h] = table_to_string(table, parallel=True)
             else:
                 ConstraintExtension.cache[h] = integers_to_string(table)
         return ConstraintExtension.cache[h]
@@ -457,7 +457,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
             self.constraint = ConstraintElementMatrix(lst, index, i)
         elif isinstance(i, int):
-            self.constraint = ConstraintElement(lst.col(i), index)
+            self.constraint = ConstraintElement(lst[:, i], index)
         return self
 
     @staticmethod

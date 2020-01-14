@@ -4,7 +4,7 @@ from collections import defaultdict
 from pycsp3.classes.auxiliary.types import TypeCtrArg
 from pycsp3.classes.entities import CtrEntities, ObjEntities, AnnEntities, ESlide, EGroup, VarEntities
 from pycsp3.classes.main.variables import Variable
-from pycsp3.tools.utilities import flatten
+from pycsp3.tools.utilities import flatten, is_containing
 
 
 class SequenceOfSuccessiveVariables:
@@ -246,7 +246,7 @@ def _compact_constraint_arguments(arguments):
             elif arg.lifted is True:
                 arg.content = [compact(l, preserveOrder=arg.content_ordered) for l in arg.content]
         elif arg.name == TypeCtrArg.MATRIX:  # Special case for matrix
-            sc = _simple_compact(flatten(arg.content_compressible))
+            sc = None if is_containing(arg.content_compressible, int) else _simple_compact(flatten(arg.content_compressible))
             arg.content = sc if sc is not None else arg.content
 
 

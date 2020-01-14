@@ -252,25 +252,22 @@ class OpOverrider:
     def __xor__(self, other):
         return object.__xor__(self, other) if None in {self, other} else functions.xor(self, other)
 
-    def __eq__lv(self, other):
+    def __eq__lv(self, other):  # lv for ListVar
         if isinstance(other, list) and any(isinstance(v, int) for v in other):
             return functions.Instantiation(variables=self, values=other)
         return list.__eq__(self, other)
 
     def __getitem__lv(self, indexes):
         if isinstance(indexes, main.variables.Variable):
-            return main.constraints.PartialConstraint(
-                main.constraints.ConstraintElement(self, indexes))
+            return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
-            if any(isinstance(ele, main.variables.Variable) for ele in indexes):  # this must be a constraint Element
+            if any(isinstance(i, main.variables.Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert utilities.is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
-                if all(isinstance(ele, main.variables.Variable) for ele in indexes):
-                    return main.constraints.PartialConstraint(
-                        main.constraints.ConstraintElementMatrix(self, indexes[0], indexes[1]))
+                if all(isinstance(i, main.variables.Variable) for i in indexes):
+                    return main.constraints.PartialConstraint(main.constraints.ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
                     assert isinstance(indexes[0], main.variables.Variable) and isinstance(indexes[1], int)
-                    return main.constraints.PartialConstraint(
-                        main.constraints.ConstraintElement(self.col(indexes[1]), indexes[0]))
+                    return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self[:, indexes[1]], indexes[0]))
             result = OpOverrider.project_recursive(self, indexes, 0)
             try:
                 return ListVar(result)  # TODO are sublists also guaranteed to be ListVar?
@@ -282,11 +279,17 @@ class OpOverrider:
         except TypeError:
             return result
 
-    def __getitem__li(self, indexes):
+    def __getitem__li(self, indexes):  # li for ListInt
         if isinstance(indexes, main.variables.Variable):
-            return main.constraints.PartialConstraint(
-                main.constraints.ConstraintElement(self, indexes))
+            return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
+            if any(isinstance(i, main.variables.Variable) for i in indexes):  # this must be a constraint Element-Matrix
+                assert utilities.is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
+                if all(isinstance(i, main.variables.Variable) for i in indexes):
+                    return main.constraints.PartialConstraint(main.constraints.ConstraintElementMatrix(self, indexes[0], indexes[1]))
+                else:
+                    assert isinstance(indexes[0], main.variables.Variable) and isinstance(indexes[1], int)
+                    return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self[:, indexes[1]], indexes[0]))
             result = OpOverrider.project_recursive(self, indexes, 0)
             try:
                 return ListVar(result)  # TODO is it ListVar or ListInt ?
@@ -306,13 +309,20 @@ class OpOverrider:
 
 
 class ListInt(list):
-    def __init__(self, elements):
-        self.extend(elements)
+    def __init__(self, integers):
+        self.extend(integers)
+
+    def __getslice__(self, i, j):
+        return ListInt(list.__getslice__(self, i, j))
+
+    def __add__(self, other):
+        return ListInt(list.__add__(self, other))
 
     def __mul__(self, other):
-        if utilities.is_containing(self, (main.variables.Variable, entities.Node)):
-            return main.constraints.ScalarProduct(self, other)
-        return ListVar(list.__mul__(self, other))
+        if utilities.is_containing(other, (main.variables.Variable, entities.Node)):
+            return main.constraints.ScalarProduct(other, self)
+        assert utilities.is_containing(self, (main.variables.Variable, entities.Node))
+        return main.constraints.ScalarProduct(self, other)
 
     def __rmul__(self, other):
         return ListInt.__mul__(other, self)
@@ -329,12 +339,10 @@ class ListVar(list):
         return ListVar(list.__add__(self, other))
 
     def __mul__(self, other):
-        if utilities.is_containing(self, (main.variables.Variable, entities.Node)):
-            return main.constraints.ScalarProduct(self, other)
-        return ListVar(list.__mul__(self, other))
+        assert utilities.is_containing(self, (main.variables.Variable, entities.Node))
+        return main.constraints.ScalarProduct(self, other)
+
+    # def __rmul__(self, other): return ListVar.__mul__(other, self)
 
     def columns(self):
         return functions.columns(self)
-
-    def col(self, i):
-        return functions.column(self, i)
