@@ -30,7 +30,7 @@ We know that:
 houses = range(5)  # each house has a number from 0 (left) to 4 (right)
 
 # colors[i] is the house of the ith color
-yellow, green, red, white, blue = colors = VarArray(size=5, dom=houses)
+yellow, green, red, white, blue = colors =VarArray(size=5, dom=houses)
 
 # nations[i] is the house of the inhabitant with the ith nationality
 italy, spain, japan, england, norway = nations = VarArray(size=5, dom=houses)

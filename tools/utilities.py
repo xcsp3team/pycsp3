@@ -1,12 +1,24 @@
 import datetime
-import time as clock
 import types
+
 from collections import OrderedDict
 from collections.abc import Iterable
 from multiprocessing import cpu_count, Pool
+from time import time
 
 from pycsp3.classes.main.domains import Domain
 from pycsp3.tools.curser import ListInt
+
+
+class Stopwatch:
+    def __init__(self):
+        self.initial_time = time()
+
+    def elapsed_time(self, *, reset=False):
+        elapsed_time = time() - self.initial_time
+        if reset:
+            self.initial_time = time()
+        return elapsed_time
 
 
 # used to save data in jSON
@@ -23,17 +35,6 @@ def prepare_for_json(obj):
             for i, v in enumerate(obj):
                 obj[i] = prepare_for_json(v)
         return obj
-
-
-class Stopwatch:
-    def __init__(self):
-        self.initial_time = clock.time()
-
-    def elapsed_time(self, *, reset=False):
-        elapsed_time = clock.time() - self.initial_time
-        if reset:
-            self.initial_time = clock.time()
-        return elapsed_time
 
 
 class DefaultListOrderedDict(OrderedDict):
@@ -90,13 +91,11 @@ def is_containing(l, types, *, check_first_only=False):
             return None
         found = False
         for v in l:
-            res = is_containing(v, types, check_first_only=check_first_only)
-            if res is False:
+            if not is_containing(v, types, check_first_only=check_first_only):
                 return False
-            elif res is True:
-                if check_first_only:
-                    return True
-                found = True
+            if check_first_only:
+                return True
+            found = True
         return True if found else None
     else:
         return isinstance(l, types)
@@ -105,14 +104,6 @@ def is_containing(l, types, *, check_first_only=False):
 def alphabet_positions(s):
     assert isinstance(s, str)
     return tuple(ord(c) - ord('a') for c in s.lower())
-
-
-def matrix_to_string(m):
-    return "\n".join(["\t(" + ",".join([str(v) for v in t]) + ")\n" for t in m])
-
-
-def transitions_to_string(ts):
-    return "".join(["(" + q1 + "," + str(v) + "," + q2 + ")" for (q1, v, q2) in ts])
 
 
 def value_in_base(decimal_value, length, base):
@@ -125,48 +116,46 @@ def value_in_base(decimal_value, length, base):
     return value
 
 
-def parallel_table_to_string(table):
-    if len(table) < 100000:
-        return "".join(table_to_string(table))
-    print("Parallel creation of a table of size: " + str(len(table)))
-    nb_threads = cpu_count()
-    nb_elements = len(table) // nb_threads
-    pool = Pool(nb_threads)
-    start_position = 0
-    end_position = nb_elements
-    result_objects = []
-
-    for i in range(nb_threads):
-        result_objects.append(pool.apply_async(table_to_string, args=(table[start_position:end_position],)))
-        start_position += nb_elements
-        end_position = len(table) if i in {nb_threads - 2, nb_threads - 1} else end_position + nb_elements
-    assert end_position == len(table)
-
-    results = [r.get() for r in result_objects]
-    pool.close()
-    pool.join()
-
-    previous_part = None
-    for i in results:
-        if previous_part is not None:
-            pos_last = len(previous_part) - 1
-            if previous_part[pos_last] == i[0]:
-                previous_part.pop()
-        previous_part = i
-
-    return "".join("".join(t) for t in results)
+def matrix_to_string(m):
+    return "".join(["(" + ",".join([str(v) for v in t]) + ")"for t in m])
+    #return "\n" + "\n".join(["\t(" + ",".join([str(v) for v in t]) + ")" for t in m]) + "\n"
 
 
-# table is assumed to be sorted (adding an assert?)
-# only distinct tuples are kept
-def table_to_string(table):
-    s = []
-    previous = ""
-    for t in table:
-        if t != previous:
-            s.append("(" + ",".join(str(v) for v in t) + ")")
-            previous = t
-    return s
+def transitions_to_string(ts):
+    return "".join(["(" + q1 + "," + str(v) + "," + q2 + ")" for (q1, v, q2) in ts])
+
+
+def table_to_string(table, *, parallel=False):
+    if not parallel or len(table) < 100000:
+        s = []
+        previous = ""
+        for t in table:  # table is assumed to be sorted (adding an assert?) ; only distinct tuples are kept
+            if t != previous:
+                s.append("(" + ",".join(str(v) for v in t) + ")")
+                previous = t
+        return "".join(s)
+    else:
+        print("Parallel creation of a table of size: " + str(len(table)))
+        n_threads = cpu_count()
+        size = len(table) // n_threads
+        pool = Pool(n_threads)
+        left, right = 0, size
+        t = []
+        for piece in range(n_threads):
+            t.append(pool.apply_async(table_to_string, args=(table[left:right],)))  # call not in parallel
+            left += size
+            right = len(table) if piece in {n_threads - 2, n_threads - 1} else right + size
+        assert right == len(table)
+        pieces = [r.get() for r in t]
+        pool.close()
+        pool.join()
+        # checking and removing similar tuples before returning the string ?
+        previous = None
+        for piece in pieces:
+            if previous and previous[-1] == piece[0]:
+                previous.pop()
+            previous = piece
+        return "".join("".join(piece) for piece in pieces)
 
 
 def integers_to_string(numbers):
