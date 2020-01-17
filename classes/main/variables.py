@@ -34,13 +34,12 @@ class Variable:
             return None
         if isinstance(domain, Domain):
             return domain
-        if isinstance(domain, (tuple,list)):
+        if isinstance(domain, (tuple, list)):
             if all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain):  # possible, even if using a set is recommended
                 return Domain(set(domain))
-            # at this point, it means a specific domain for each variable given in a list
+            # at this point, it means that a specific domain for each variable is given in a list
             for i in indexes:
-                assert i < len(domain), ("The number of domains is less than the specified index " + name + " - " + str(domain)
-                                         + "\nUse a set instead of a list if you want the same domain for all variables.")
+                assert i < len(domain), "The number of domains is less than the specified index " + name + " - " + str(domain)
                 domain = domain[i]
         if isinstance(domain, type(lambda: 0)):
             domain = domain(*indexes)
@@ -87,9 +86,6 @@ class Variable:
         else:
             self.prefix, self.suffix = self.id[:pos], self.id[pos:]
             self.indexes = [int(v) for v in re.split("\]\[", self.suffix[1:-1])]
-
-    # def tag(self, tag):
-    #     VarEntities.varToEVar[self].tag(tag)
 
     def __invert__(self):
         return NotVariable(self)

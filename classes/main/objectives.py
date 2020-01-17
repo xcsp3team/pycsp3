@@ -1,14 +1,11 @@
 from pycsp3.classes.auxiliary.types import TypeCtr, TypeCtrArg
-from pycsp3.classes.main.constraints import Constraint
+from pycsp3.classes.main.constraints import ConstraintUnmergeable
 
 
-class Objective(Constraint):
+class Objective(ConstraintUnmergeable):
     def __init__(self, way):
         assert way in {TypeCtr.MINIMIZE, TypeCtr.MAXIMIZE}
         super().__init__(way)
-
-    def close_to(self, other):
-        return False
 
 
 class ObjectiveExpression(Objective):
