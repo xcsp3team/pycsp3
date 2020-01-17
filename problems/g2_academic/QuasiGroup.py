@@ -60,9 +60,9 @@ elif variant("aux"):
         y = VarArray(size=[n, n], dom=range(n))
 
         satisfy(
-            [x[ANY, i][x[i][j]] == y[i][j] for i in range(n) for j in range(n) if i != j],
+            [x[:, i][x[i][j]] == y[i][j] for i in range(n) for j in range(n) if i != j],
 
-            [x[ANY, i][y[i][j]] == j for i in range(n) for j in range(n) if i != j]
+            [x[:, i][y[i][j]] == j for i in range(n) for j in range(n) if i != j]
         )
     elif subvariant("v7"):
         y = VarArray(size=[n, n], dom=range(n))

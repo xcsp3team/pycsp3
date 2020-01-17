@@ -22,7 +22,7 @@ satisfy(
 
 if not variant():
     satisfy(
-        Sum(x[i] * x[j]) <= z for i in range(v) for j in range(i + 1, v)
+        x[i] * x[j] <= z for i in range(v) for j in range(i + 1, v)
     )
 
 elif variant("aux"):

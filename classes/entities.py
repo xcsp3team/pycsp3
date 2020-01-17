@@ -106,7 +106,7 @@ class EVarArray(Entity):
 
 class ECtr(Entity):
     def __init__(self, c):
-        super().__init__(None)  # no need to have an id for CtrEntity objects
+        super().__init__(None)  # no need to have an id here
         if c is None:
             self.constraint = None
             print("Warning: a constraint is None")
@@ -121,7 +121,7 @@ class ECtrs(Entity):
     """ Class to represent sets of constraints """
 
     def __init__(self, constraints=None):
-        super().__init__(None)  # no need to have an id for CtrArray objects
+        super().__init__(None)  # no need to have an id here
         assert constraints is not None and isinstance(constraints, list)
         self.entities = [c for c in constraints if c is not None]
         if options.debug is True:
@@ -179,7 +179,7 @@ class EObjective(Entity):
     def __init__(self, c):
         if c is None:
             return
-        super().__init__(None)  # no need to have an id for CtrEntity objects
+        super().__init__(None)  # no need to have an id here
         self.constraint = c
         ObjEntities.items.append(self)
         if options.debug is True:
@@ -190,7 +190,7 @@ class EAnnotation(Entity):
     def __init__(self, c):
         if c is None:
             return
-        super().__init__(None)  # no need to have an id for CtrEntity objects
+        super().__init__(None)  # no need to have an id here
         self.constraint = c
         AnnEntities.items.append(self)
         AnnEntities.items_types.append(type(c))

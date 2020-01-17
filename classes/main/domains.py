@@ -37,12 +37,10 @@ class Domain:
             self.set_type(TypeVar.SYMBOLIC)
 
     def __iter__(self):
-        return self.values[0].__iter__() \
-            if len(self.values) == 1 and isinstance(self.values[0], IntegerInterval) else self.values.__iter__()
+        return self.values[0].__iter__() if len(self.values) == 1 and isinstance(self.values[0], IntegerInterval) else self.values.__iter__()
 
     def __getitem__(self, item):
-        return self.values[0].__getitem__(item) \
-            if len(self.values) == 1 and isinstance(self.values[0], IntegerInterval) else self.values.__getitem__(item)
+        return self.values[0].__getitem__(item) if len(self.values) == 1 and isinstance(self.values[0], IntegerInterval) else self.values.__getitem__(item)
 
     def __hash__(self):
         return super().__hash__()
