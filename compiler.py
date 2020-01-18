@@ -1,4 +1,4 @@
-import ast, inspect, json, lzma, os.path, sys
+import ast, inspect, json, lzma, os, os.path, sys
 from importlib import util
 
 from lxml import etree
@@ -203,6 +203,7 @@ def _compile():
 
     Compilation.done = True
     return filename
+
 
 
 def usage(message):

@@ -1,12 +1,12 @@
-import datetime
+import datetime, sys
 import types
-
 from collections import OrderedDict
 from collections.abc import Iterable
 from multiprocessing import cpu_count, Pool
 from time import time
 
 from pycsp3.classes.main.domains import Domain
+from pycsp3.dashboard import options
 from pycsp3.tools.curser import ListInt
 
 
@@ -117,8 +117,8 @@ def value_in_base(decimal_value, length, base):
 
 
 def matrix_to_string(m):
-    return "".join(["(" + ",".join([str(v) for v in t]) + ")"for t in m])
-    #return "\n" + "\n".join(["\t(" + ",".join([str(v) for v in t]) + ")" for t in m]) + "\n"
+    return "".join(["(" + ",".join([str(v) for v in t]) + ")" for t in m])
+    # return "\n" + "\n".join(["\t(" + ",".join([str(v) for v in t]) + ")" for t in m]) + "\n"
 
 
 def transitions_to_string(ts):
@@ -190,3 +190,12 @@ PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, UNDERLINE = '\033[95m', '\0
 
 def warning(message):
     print("  " + ORANGE + "Warning: " + WHITE + message)
+
+
+def error(s):
+    print("\n\t" + RED + "ERROR: " + WHITE, s, "\n")
+    print("\t\t(add option -ev to your command if you want to see the trace of the error)\n")
+    if options.ev:
+        raise TypeError(s)
+    else:
+        sys.exit(0)

@@ -7,7 +7,7 @@ from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import ECtr, TypeNode, Node
 from pycsp3.classes.main import variables, constraints
 from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, \
-    table_to_string, flatten, is_matrix
+    table_to_string, flatten, is_matrix, error
 
 
 class Diffs:
@@ -477,7 +477,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
         elif isinstance(obj2, ScalarProduct):
             obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))
         elif not isinstance(obj2, PartialConstraint):
-            raise TypeError("The type of the operand of the partial constraint Sum is wrong")
+            error("The type of the operand of the partial constraint Sum is wrong as it is " + str(type(obj2)))
 
         obj1, obj2 = (obj1, obj2) if not inverted else (obj2, obj1)  # we invert back
 
