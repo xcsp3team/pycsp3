@@ -7,7 +7,7 @@ models = [(0, 0, 0)] + [tuple(model) for model in models]
 nModels, nTypes = len(models), len(cardTypes)
 
 powers, sizes, costs = [row[0] for row in models], [row[1] for row in models], [row[2] for row in models]
-cardPowers, cardDemands = [row[0] for row in cardTypes],  [row[1] for row in cardTypes]
+cardPowers, cardDemands = [row[0] for row in cardTypes], [row[1] for row in cardTypes]
 
 # m[i] is the model used for the ith rack
 m = VarArray(size=nRacks, dom=range(nModels))

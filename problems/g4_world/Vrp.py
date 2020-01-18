@@ -24,5 +24,3 @@ satisfy(
 minimize(
     x * distances
 )
-
-

@@ -41,7 +41,6 @@ satisfy(
     [e[i] >= sum(durations[i]) for i in range(n)]
 )
 
-
 minimize(
     # minimizing the makespan
     Maximum(e)
