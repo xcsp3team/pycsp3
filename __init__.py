@@ -16,10 +16,13 @@ if sys.argv:
     if len(sys.argv) == 1 and sys.argv[0] == "-m":
         from shutil import copytree, ignore_patterns
         import os
-
+        if os.name == 'nt':
+            separator = "\\"
+        else: 
+            separator = "/"
         print("pycsp3 ", __version__)
-        problems = "/".join(pycsp3.__file__.split("/")[:-1]) + "/problems/"
-        target = os.getcwd() + "/problems/"
+        problems = separator.join(pycsp3.__file__.split(separator)[:-1]) + separator + "problems" + separator
+        target = os.getcwd() + separator + "problems" + separator
         print("Source of files found: ", problems)
         copytree(problems, target, ignore=ignore_patterns('g7_todo', 'tests', '__init__.py', '__pycache__*'))
         print("Successfully created the directory " + target + " containing the problems !")
