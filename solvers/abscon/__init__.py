@@ -18,5 +18,5 @@ class AbsconPy4J(SolverPy4J):
         super().__init__(
             name="AbsCon",
             command="java -cp " + jarAbsCon + ":" + directoryAbsCon + "py4j0.10.8.1.jar:" + directoryAbsCon + " AbsConPy4J"
-            # command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAbsCon/ StackEntryPoint"
+           # command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAbsCon/ StackEntryPoint"
         )
