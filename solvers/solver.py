@@ -39,11 +39,9 @@ class SolverPy4J:
             element.close()
 
     def connexion(self, command):
-        connect = False
-        gateway = None
         process = subprocess.Popen(command.split())
         cnt = 0
-        while connect is False:
+        while True:
             time.sleep(0.1)
             cnt += 1
             print("Py4J Connection " + str(cnt) + " ...")
