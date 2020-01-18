@@ -1,10 +1,13 @@
 import subprocess
-from lxml import etree
-from pycsp3.tools.utilities import Stopwatch
-from pycsp3.classes.entities import VarEntities
-from py4j.java_gateway import JavaGateway, Py4JNetworkError
 import time
 from io import IOBase
+
+from lxml import etree
+from py4j.java_gateway import JavaGateway, Py4JNetworkError
+
+from pycsp3.classes.entities import VarEntities
+from pycsp3.tools.utilities import Stopwatch
+
 
 class Instantiation:
     def __init__(self, xml, variables, values):
@@ -37,13 +40,13 @@ class SolverPy4J:
 
     def connexion(self, command):
         connect = False
-        cptConnect = 0
         gateway = None
         process = subprocess.Popen(command.split())
+        cnt = 0
         while connect is False:
             time.sleep(0.1)
-            cptConnect += 1
-            print("Py4J Connection " + str(cptConnect) + " ...")
+            cnt += 1
+            print("Py4J Connection " + str(cnt) + " ...")
             try:
                 gateway = JavaGateway(eager_load=True)
             except Py4JNetworkError:
@@ -64,12 +67,12 @@ class SolverPy4J:
 class SolverProcess:
     def __init__(self, *, name, command):
         self.name = name
+        self.command = command
         self.stdout = None
         self.stderr = None
-        self.command = command
 
     def solve(self, model, time=0, restarts=0):
-        etime = Stopwatch()
+        stopwatch = Stopwatch()
         print(self.command)
         print("Resolution with " + self.name + " in progress ... ")
         print("Command: ", self.command + " " + model)
@@ -77,36 +80,31 @@ class SolverProcess:
             model += " -t=" + str(time) + "s"
         if restarts != 0:
             model += " -r_n=" + str(restarts)
-
         model += " -cm -valh=Last"
         result = self.execute(self.command + " " + model)
-
-        print("Solve with " + self.name + " in %.3f" % etime.elapsed_time() + " seconds.")
+        print("Solve with " + self.name + " in %.3f" % stopwatch.elapsed_time() + " seconds.")
         return self.solution() if result is True else None
 
     def execute(self, command):
         try:
-            proc = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, error = proc.communicate()
+            p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            out, error = p.communicate()
             self.stdout, self.stderr = out.decode('utf-8'), error.decode('utf-8')
             return True
         except KeyboardInterrupt:
-            out, error = proc.communicate()
+            out, error = p.communicate()
             self.stdout, self.stderr = out.decode('utf-8'), error.decode('utf-8')
             print(self.stdout)
             return False
 
     def solution(self):
-        parser = etree.XMLParser(remove_blank_text=True)
-        posStart = self.stdout.find("<instantiation")
-        posEnd = self.stdout.find("</instantiation>")
-        solutionXML = self.stdout[posStart:posEnd + len("</instantiation>")]
-        rootXML = etree.fromstring(solutionXML, parser)
-        variableXML = rootXML[0].text.split()
-        valuesXML = rootXML[1].text.split()
-        variableWithOrder = [var for element in variableXML for varEntitie in VarEntities.items
-                             for var in varEntitie.flatVars if varEntitie.name in element]
-        for index, value in enumerate(valuesXML):
-            variableWithOrder[index].solution = str(value)
-        solutionXML = etree.tostring(rootXML, pretty_print=True, xml_declaration=False).decode("UTF-8")
-        return Instantiation(solutionXML[:-1], variableWithOrder, valuesXML)
+        left = self.stdout.find("<instantiation")
+        right = self.stdout.find("</instantiation>")
+        root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))
+        xml_variables = root[0].text.split()
+        xml_values = root[1].text.split()
+        variableWithOrder = [var for element in xml_variables for item in VarEntities.items for var in item.flatVars if item.name in element]
+        for i, v in enumerate(xml_values):
+            variableWithOrder[i].solution = str(v)
+        xml_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8")
+        return Instantiation(xml_solution[:-1], variableWithOrder, xml_values)
