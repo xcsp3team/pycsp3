@@ -58,7 +58,7 @@ def _load_data_names(raw_data):
 
 def _load_options():
     options.set_values("dataparser", "data", "dataexport", "variant", "output", "checker")
-    options.set_flags("dataexport", "ev", "compress", "debug", "display", "time", "nocomment")
+    options.set_flags("dataexport", "ev", "compress", "debug", "display", "time", "nocomment", "solve")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -202,6 +202,13 @@ def _compile():
         print("\tTotal wall clock time:", Compilation.stopwatch2.elapsed_time(), "seconds")
 
     Compilation.done = True
+
+    if options.solve is True:
+        from pycsp3.solvers.abscon import AbsConProcess
+        solution = AbsConProcess().solve(filename)
+        print("solution:")
+        print(solution)
+
     return filename
 
 
