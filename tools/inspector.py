@@ -1,5 +1,7 @@
 import inspect
-import readline
+import os
+if not os.name == 'nt':
+    import readline
 import sys
 
 from pycsp3 import functions
@@ -41,6 +43,8 @@ def _extract_code(function_name):
     stack = list(reversed(inspect.stack(context=1)))
     frame = [(i - 1, stack[i - 1]) for i, frame in enumerate(stack) if is_correct_frame(frame, function_name) and i > 0][0]  # Get the correct frame
     if frame[1].filename == "<stdin>":  # Console mode
+        if os.name == 'nt':
+            assert os.name != 'nt', "Console mode is not available on Windows"
         lines = reversed([readline.get_history_item(i + 1) for i in range(readline.get_current_history_length())])
     else:  # File mode
         frame = list(reversed(inspect.stack(context=100)))[frame[0]]  # Get the same frame but with at more 100 line of codes
