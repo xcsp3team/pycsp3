@@ -15,6 +15,7 @@
 *.snm
 *.toc
 *.vrb
+problems/tests/tmp
 pycsp3/problems/tests/tmp
 pycsp3/build
 pycsp3/pycsp3.egg-info/
