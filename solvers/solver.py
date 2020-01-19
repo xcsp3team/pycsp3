@@ -10,8 +10,8 @@ from pycsp3.tools.utilities import Stopwatch
 
 
 class Instantiation:
-    def __init__(self, xml, variables, values):
-        self.xml = xml
+    def __init__(self, pretty_solution, variables, values):
+        self.pretty_solution = pretty_solution
         self.variables = variables
         self.values = values
 
@@ -19,26 +19,22 @@ class Instantiation:
         return self.variables, self.values
 
     def __str__(self):
-        return str(self.xml)
+        return str(self.pretty_solution)
 
 
 class SolverPy4J:
-    processes = []
     gateways = []
+    processes = []
 
     def __init__(self, *, name, command):
-        self.gateway, self.process = self.connexion(command)
+        self.gateway, self.process = SolverPy4J.connexion(command)
         SolverPy4J.gateways.append(self.gateway)
         SolverPy4J.processes.append(self.process)
         self.solver = self.gateway.entry_point.getSolver()
         self.name = name
 
     @staticmethod
-    def close():
-        for element in SolverPy4J.gateways:
-            element.close()
-
-    def connexion(self, command):
+    def connexion(command):
         process = subprocess.Popen(command.split())
         cnt = 0
         while True:
@@ -54,12 +50,16 @@ class SolverPy4J:
                 return gateway, process
         return gateway, process
 
+    @staticmethod
+    def close():
+        for element in SolverPy4J.gateways:
+            element.close()
+
     def loadXCSP3(self, arg):
         if isinstance(arg, str):
             self.solver.loadXCSP3(arg)
         elif isinstance(arg, IOBase):
             self.solver.loadXCSP3(arg.name)
-        return self
 
 
 class SolverProcess:
@@ -69,18 +69,18 @@ class SolverProcess:
         self.stdout = None
         self.stderr = None
 
-    def solve(self, model, time=0, restarts=0):
+    def solve(self, model, time_limit=0, n_restarts=0):
         stopwatch = Stopwatch()
         print(self.command)
-        print("Resolution with " + self.name + " in progress ... ")
+        print("Solving by " + self.name + " in progress ... ")
         print("Command: ", self.command + " " + model)
-        if time != 0:
-            model += " -t=" + str(time) + "s"
-        if restarts != 0:
-            model += " -r_n=" + str(restarts)
+        if time_limit != 0:
+            model += " -t=" + str(time_limit) + "s"
+        if n_restarts != 0:
+            model += " -r_n=" + str(n_restarts)
         model += " -cm -valh=Last"
         result = self.execute(self.command + " " + model)
-        print("Solve with " + self.name + " in %.3f" % stopwatch.elapsed_time() + " seconds.")
+        print("Solving by " + self.name + " in %.3f" % stopwatch.elapsed_time() + " seconds.")
         return self.solution() if result is True else None
 
     def execute(self, command):
@@ -96,13 +96,11 @@ class SolverProcess:
             return False
 
     def solution(self):
-        left = self.stdout.find("<instantiation")
-        right = self.stdout.find("</instantiation>")
+        left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
         root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))
-        xml_variables = root[0].text.split()
-        xml_values = root[1].text.split()
-        variableWithOrder = [var for element in xml_variables for item in VarEntities.items for var in item.flatVars if item.name in element]
-        for i, v in enumerate(xml_values):
-            variableWithOrder[i].solution = str(v)
-        xml_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8")
-        return Instantiation(xml_solution[:-1], variableWithOrder, xml_values)
+        variables = [x for token in root[0].text.split() for item in VarEntities.items for x in item.flatVars if item.name in token]
+        values = root[1].text.split()  # a list with all values given as strings (possibly '*')
+        for i, v in enumerate(values):
+            variables[i].value = v  # we add new field (may be useful)
+        pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
+        return Instantiation(pretty_solution, variables, values)
