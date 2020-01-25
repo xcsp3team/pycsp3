@@ -9,7 +9,7 @@ from pycsp3.classes.main import variables, constraints
 from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, \
     table_to_string, flatten, is_matrix, error
 
-
+import os
 class Diffs:
     """"
       Objects of this class are used to record the differences between two (or more) close constraints.
@@ -149,7 +149,7 @@ class ConstraintExtension(Constraint):
         if h not in ConstraintExtension.cache:
             if arity > 1:
                 table.sort()
-                ConstraintExtension.cache[h] = table_to_string(table, parallel=True)
+                ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
             else:
                 ConstraintExtension.cache[h] = integers_to_string(table)
         return ConstraintExtension.cache[h]
