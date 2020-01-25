@@ -1,6 +1,6 @@
-<h1 align="center"> PyCSP3 </h1>
+<h1 align="center"> PyCSP3 v1.0.x </h1>
 
-This is the first (beta) version of PyCSP3, a library in Python for modeling constrained combinatorial problems.
+This is the first (beta) version of PyCSP3, v1.0.x, a library in Python 3 (version 3.5 or later) for modeling constrained combinatorial problems.
 PyCSP3 is inspired from both [JvCSP3](http://www.xcsp.org/modeling) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack); it is also related to [CPpy](https://github.com/tias/cppy).
 
 With PyCSP3, it is possible to generate instances of:
@@ -142,7 +142,7 @@ To generate the XCSP3 instance (file), the command is:
 python3 SendMore.py
 ```
 
-To generate and solve the XCSP3 instance, the command is:
+To generate and solve (with AbsCon) the XCSP3 instance, the command is:
 
 ```console
 python3 SendMore.py -solve
@@ -160,16 +160,16 @@ A classical model is:
 #### File **`AllInterval.py`** (version 1)
 
 ```python
-from pycsp3 import *
-
 n = data.n
 
-# x[i] is the ith value of the series
+# x[i] is the ith note of the series
 x = VarArray(size=n, dom=range(n))
 
 satisfy(
+    # notes must occur once, and so form a permutation
     AllDifferent(x),
 
+    # intervals between neighbouring notes must form a permutation
     AllDifferent(abs(x[i] - x[i + 1]) for i in range(n - 1)),
 
     # tag(symmetry-breaking)
@@ -190,21 +190,22 @@ This would give:
 #### File **`AllInterval.py`** (version 2)
 
 ```python
-from pycsp3 import *
-
 n = data.n
 
-# x[i] is the ith value of the series
+# x[i] is the ith note of the series
 x = VarArray(size=n, dom=range(n))
 
 # y[i] is the distance between x[i] and x[i+1]
 y = VarArray(size=n - 1, dom=range(1, n))
 
 satisfy(
+    # notes must occur once, and so form a permutation
     AllDifferent(x),
 
+    # intervals between neighbouring notes must form a permutation
     AllDifferent(y),
 
+    # computing distances
     [y[i] == abs(x[i] - x[i + 1]) for i in range(n - 1)],
 
     # tag(symmetry-breaking)
@@ -218,18 +219,18 @@ In our example, this would give:
 #### File **`AllInterval.py`** (version 3)
 
 ```python
-from pycsp3 import *
-
 n = data.n
 
-# x[i] is the ith value of the series
+# x[i] is the ith note of the series
 x = VarArray(size=n, dom=range(n))
 
 if not variant():
 
     satisfy(
+        # notes must occur once, and so form a permutation
         AllDifferent(x),
 
+        # intervals between neighbouring notes must form a permutation
         AllDifferent(abs(x[i] - x[i + 1]) for i in range(n - 1)),
 
         # tag(symmetry-breaking)
@@ -242,10 +243,13 @@ elif variant("aux"):
     y = VarArray(size=n - 1, dom=range(1, n))
 
     satisfy(
+        # notes must occur once, and so form a permutation
         AllDifferent(x),
 
+        # intervals between neighbouring notes must form a permutation
         AllDifferent(y),
 
+        # computing distances
         [y[i] == abs(x[i] - x[i + 1]) for i in range(n - 1)],
 
         # tag(symmetry-breaking)
@@ -263,6 +267,12 @@ For compiling the second model variant, using the option `-variant`, the command
 
 ```console
 python3 AllInterval.py -data=5 -variant=aux
+```
+
+To generate and solve (with AbsCon) the instance of order 10 and variant 'aux', the command is:
+
+```console
+python3 AllInterval.py -data=10 -variant=aux -solve
 ```
 
 
