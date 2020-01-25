@@ -96,6 +96,8 @@ class SolverProcess:
             return False
 
     def solution(self):
+        if self.stdout.find("<unsatisfiable"):
+            return Instantiation("unsatisfiable", "None", "None")
         left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
         root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))
         variables = [x for token in root[0].text.split() for item in VarEntities.items for x in item.flatVars if item.name in token]
