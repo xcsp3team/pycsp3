@@ -4,7 +4,7 @@ from functools import reduce
 from pycsp3.classes.auxiliary.types import auto
 from pycsp3.classes.main.variables import Variable, NotVariable, NegVariable
 from pycsp3.dashboard import options
-from pycsp3.tools import utilities
+from pycsp3.tools import utilities, inspector
 
 
 class Entity:
@@ -172,6 +172,8 @@ class ESlide(ECtrs):
 
 class EIfThenElse(ECtrs):
     def __init__(self, constraints):
+        inspector.checkType(constraints, [ECtr])
+        assert len(constraints) == 3, "Error: three components must be specified in ifThenElse"
         super().__init__(constraints)
 
 
