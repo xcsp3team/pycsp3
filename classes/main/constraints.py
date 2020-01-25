@@ -519,7 +519,7 @@ class ScalarProduct:
         return self._combine_with(TypeConditionOperator.NE, other)
 
     def __add__(self, other):
-        return constraints.PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
+        return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
     def __sub__(self, other):
-        return constraints.PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
+        return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)

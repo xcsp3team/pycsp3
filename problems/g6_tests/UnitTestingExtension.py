@@ -6,45 +6,45 @@ x = VarArray(size=[n, n], dom=range(1, n + 1))
 table = list(permutations(range(1, n + 1)))
 
 try:
-    Extension(scope=x, table=table, positive=True)
+    x in table
 except AssertionError as e:
     print("Scope and tuples not compatible:", e)
 
 satisfy(
     # supports
-    Extension(scope=x[0], table=table, positive=True),
+    x[0] in table,
 
     # conflicts
-    Extension(scope=x[0], table=table, positive=False)
+    x[0] not in table
 )
 try:
-    satisfy(Extension(scope=[1] * len(x[0]), table=table, positive=True))
+    satisfy([1] * len(x[0]) in table)
 except TypeError as e:
     print("Parameter 1:", e)
 
 try:
-    satisfy(Extension(scope=x[0], table=None, positive=True))
+    satisfy(x[0] in None)
 except TypeError as e:
     print("Parameter 1:", e)
 
 table[1] = (1, 2)
 satisfy(
     # Wrong but too costly to check all lengths
-    Extension(scope=x[0], table=table, positive=True)
+    x[0] in table
 )
 
 table = list(permutations(range(1, n + 1)))
 table[1] = ("a", "b", "c", "d", "e")
 
 try:
-    satisfy(Extension(scope=x[0], table=table, positive=True))
+    satisfy(x[0] in table)
 except TypeError as e:
     print("Table with different types:", e)
 
 table = [(1, 2, 3, 4, 5), (0.1, 0.2, 0.3, 0.4, 0.5)]
 satisfy(
     #  float and int in table
-    Extension(scope=x[0], table=table, positive=True)
+    x[0] in table
 )
 
 satisfy(
