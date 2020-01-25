@@ -69,10 +69,11 @@ def _load_model():
     try:
         name = sys.argv[0]
         assert name.strip().endswith(".py"), "The first argument has to be a python file."
-        model_string = name[name.rfind("/") + 1:name.rfind(".")]
+        model_string = name[name.rfind(os.sep) + 1:name.rfind(".")]
         specification = util.spec_from_file_location("", name)
         model = util.module_from_spec(specification)
         # model.specification = specification
+        
         return model, model_string
     except:
         usage("It was not possible to read the file: " + sys.argv[0])
@@ -91,7 +92,7 @@ def _load_data():
         if os.path.exists(data):
             with open(data) as f:
                 compilation_data = dataparser.DataDict(json.loads(f.read()))
-                string_data = "-" + data.split("/")[-1:][0].split(".")[:1][0]
+                string_data = "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
     else:
         #  if '{' in data and '}' in data:
         #    compilation_data = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()), object_pairs_hook=OrderedDict)
@@ -126,7 +127,7 @@ def _load_dataparser(parser_file, data_file):
         compilation_data = dataparser.register_fields(data_file)  # the object used for recording data is returned, available in the model
         specification = util.spec_from_file_location("", parser_file)
         specification.loader.exec_module(util.module_from_spec(specification))
-        string_data = "-" + options.data.split("/")[-1:][0].split(".")[:1][0] if options.data else None
+        string_data = "-" + options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.data else None
         if string_data is None:
             string_data = Compilation.string_data if Compilation.string_data else ""  # in case data are recorded through the dataparser (after asking the user)
         return dataparser.make_clean(compilation_data), string_data
@@ -170,10 +171,12 @@ def _compile():
     build_compact_forms()
     if options.time:
         print("\tWall time for creating compact forms:", Compilation.stopwatch1.elapsed_time(reset=True), "seconds")
-
+    
     filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
+    
     filename = filename_prefix + ".xml"
     root = build_document(filename_prefix)
+    print(filename_prefix)
     if root is not None:
         pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8")
         with open(filename, "w") as f:

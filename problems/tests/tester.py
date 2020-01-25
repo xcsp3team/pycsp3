@@ -8,8 +8,8 @@ from pycsp3.tools.utilities import PURPLE, BLUE, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
-DATA_PATH = 'pycsp3/problems/data/'
-XCSP_PATH = 'pycsp3/problems/tests/xcsp/'
+DATA_PATH = "pycsp3"+os.sep+"problems"+os.sep+"data"+os.sep
+XCSP_PATH = "pycsp3"+os.sep+"problems"+os.sep+"tests"+os.sep+"xcsp"+os.sep
 
 
 def run(tests1, tests2=None, tests3=None, *, tests=False):
@@ -38,6 +38,11 @@ class Tester:
     @staticmethod
     def system_command(command, origin, target):
         assert command in {"mv", "cp"}
+        print(os.getcwd())
+        if os.name == 'nt':
+            command = "move" if command == 'mv' else command
+            command = "copy" if command == 'cp' else command
+        print(command, origin, target)
         if not os.path.isfile(origin):
             print("error: do not found the file " + origin)
             exit(0)
@@ -45,7 +50,8 @@ class Tester:
 
     @staticmethod
     def xml_indent(file):
-        cmd = ['pycsp3/libs/xmlindent/xmlindent', '-i', '2', '-w', file]
+        cmd = ["pycsp3"+os.sep+"libs"+os.sep+"xmlindent"+os.sep+"xmlindent", '-i', '2', '-w', file]
+        print(cmd)
         out, error = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         if error.decode('utf-8') != "":
             print("XmlIndent stderr : ")
@@ -71,23 +77,24 @@ class Tester:
         return lines
 
     def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_xml=None, dir_prs_py=None, dir_prs_jv=None):
+        
         if name is None:
             assert dir_pbs_py and dir_pbs_jv and dir_xml
         else:
-            dir_pbs_py = "pycsp3/problems/" + name + "/"
+            dir_pbs_py = "pycsp3"+os.sep+"problems"+os.sep + name + os.sep
             dir_pbs_jv = "problems." + name + "."
-            dir_xml = "pycsp3/problems/tests/tmp/" + name + "/"
-            dir_prs_py = "pycsp3/problems/data/parsers/"
+            dir_xml = "pycsp3"+os.sep+"problems"+os.sep+"tests"+os.sep+"tmp"+os.sep + name
+            dir_prs_py = "pycsp3"+os.sep+"problems"+os.sep+"data"+os.sep+"parsers"+os.sep
             dir_prs_jv = "problems.generators."
 
-        self.tmpDiff = dir_xml + "/tmpDiff.txt"
+        self.tmpDiff = dir_xml + os.sep +"tmpDiff.txt"
         if not os.path.exists(dir_xml):
             os.makedirs(dir_xml)
         else:
             shutil.rmtree(dir_xml)
             os.makedirs(dir_xml)
-        self.dir_xml_py = dir_xml + "/PyCSP/"
-        self.dir_xml_jv = dir_xml + "/JvCSP/"
+        self.dir_xml_py = dir_xml + os.sep + "PyCSP" + os.sep
+        self.dir_xml_jv = dir_xml + os.sep + "JvCSP" + os.sep
         os.makedirs(self.dir_xml_py)
         os.makedirs(self.dir_xml_jv)
 
@@ -132,15 +139,15 @@ class Tester:
         return self.dir_xml_jv + self.name_xml
 
     def data_py(self, data):
-        return None if data is None else DATA_PATH + "json/" + data if data.endswith(".json") else data
+        return None if data is None else DATA_PATH + "json" + os.sep + data if data.endswith(".json") else data
 
     def data_jv(self, data):
-        return None if data is None else DATA_PATH + "json/" + data if data.endswith(".json") else data
+        return None if data is None else DATA_PATH + "json" + os.sep + data if data.endswith(".json") else data
 
     def _command_py(self, model, data, variant, prs_py):
         cmd = "python3 " + self.dir_pbs_py + model + ".py"
         if self.data_py(data):
-            cmd += " -data=" + ("" if prs_py is None else DATA_PATH + "raw/") + self.data_py(data)
+            cmd += " -data=" + ("" if prs_py is None else DATA_PATH + "raw" + os.sep) + self.data_py(data)
         if prs_py:
             cmd += " -dataparser=" + self.dir_prs_py + prs_py
         if variant:
@@ -150,13 +157,15 @@ class Tester:
         return cmd
 
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
-        cmd = "java -cp pycsp3/solvers/abscon/AbsCon-19-08.jar:pycsp3/solvers/abscon/xcsp3-tools-1.1.1-SNAPSHOT.jar:pycsp3/solvers/abscon/javax.json-1.0.4.jar"
+        print()
+
+        cmd = "java -cp pycsp3"+os.sep+"solvers"+os.sep+"abscon"+os.sep+"AbsCon-19-08.jar"+os.pathsep+"pycsp3"+os.sep+"solvers"+os.sep+"abscon"+os.sep+"xcsp3-tools-1.1.1-SNAPSHOT.jar"+os.pathsep+"pycsp3"+os.sep+"solvers"+os.sep+"abscon"+os.sep+"javax.json-1.0.4.jar"
         cmd += " AbsCon " if special else " org.xcsp.modeler.Compiler "
         cmd += "problems.generators." + prs_jv if prs_jv else self.dir_pbs_jv + model
         if self.data_jv(data):
             if dataSpecial:
                 cmd += " " + str(dataSpecial)
-            cmd += " " + (DATA_PATH + "raw/" if prs_jv else " -data=") + self.data_jv(data)
+            cmd += " " + (DATA_PATH + "raw"+os.sep if prs_jv else " -data=") + self.data_jv(data)
         if special:
             cmd += " -ic=false -export=file"
         if variant:
@@ -186,21 +195,25 @@ class Tester:
             self.print_information(model, data, variant, prs_py, prs_jv)
 
             self.execute_compiler("PyCSP", self._command_py(model, data, variant, prs_py if not prs_py or prs_py[-1] == 'y' else prs_py + ".py"))
-            self.system_command("mv", self.name_xml, self.xml_path_py())
+            shutil.move(self.name_xml, self.xml_path_py())
             if mode == 1:  # comparison with jv
                 self.execute_compiler("JvCSP", self._command_jv(model, data, variant, prs_jv, special, dataSpecial))
-                self.xml_indent(self.name_xml)
-                self.system_command("mv", self.name_xml, self.xml_path_jv())
-                self.check()
+                if os.name != 'nt':
+                    self.xml_indent(self.name_xml)
+                shutil.move(self.name_xml, self.xml_path_jv())
+                if os.name != 'nt':
+                    self.check()
             elif mode == 2:  # comparison with recorded XCSP files
-                self.system_command("cp", XCSP_PATH + self.name_xml, self.xml_path_jv())
-                print("| Comparing outcome of PyCSP with the XCSP3 file in " + XCSP_PATH)
-                self.check()
+                if os.name != 'nt':
+                    shutil.copy(XCSP_PATH + self.name_xml, self.xml_path_jv())
+                    print("| Comparing outcome of PyCSP with the XCSP3 file in " + XCSP_PATH)
+                    self.check()
             else:
                 with open(self.xml_path_py(), "r") as f:
                     for line in f.readlines():
                         print(COLOR_PY + line[0:-1])
-            os.system("rm -rf *.*~")  # for removing the temporary files
+            if os.name != 'nt':
+                os.system("rm -rf *.*~")  # for removing the temporary files
 
     def check(self):
         self.counters["total"] += 1
