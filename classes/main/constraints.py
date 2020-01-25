@@ -1,13 +1,12 @@
 from collections import OrderedDict
 
 from pycsp3 import functions
-from pycsp3.classes.auxiliary import conditions
+from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.auxiliary.types import TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import ECtr, TypeNode, Node
-from pycsp3.classes.main import variables, constraints
-from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, \
-    table_to_string, flatten, is_matrix, error
+from pycsp3.classes.main.variables import Variable
+from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error
 
 import os
 class Diffs:
@@ -88,7 +87,7 @@ class Constraint:
         return diffs
 
     def replace_condition(self, operator, right_operand):
-        self.arg(TypeCtrArg.CONDITION, conditions.Condition.build_condition((operator, right_operand)))
+        self.arg(TypeCtrArg.CONDITION, Condition.build_condition((operator, right_operand)))
         return self
 
     def replace(self, arg_name, arg_value):
@@ -156,7 +155,7 @@ class ConstraintExtension(Constraint):
 
     def __init__(self, scope, table, positive=True):
         super().__init__(TypeCtr.EXTENSION)
-        assert is_1d_list(scope, variables.Variable)
+        assert is_1d_list(scope, Variable)
         assert len(table) == 0 or (len(scope) == 1 and is_1d_list(table, int)) or (len(scope) > 1 and len(scope) == len(table[0]))
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)
         self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, ConstraintExtension.caching(table), content_compressible=False)
@@ -405,7 +404,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
         self.constraint = constraint
 
     def add_condition(self, operator, right_operand):
-        if isinstance(right_operand, (int, variables.Variable)):
+        if isinstance(right_operand, (int, Variable)):
             return ECtr(self.constraint.replace_condition(operator, right_operand))
         pc = PartialConstraint.combine_partial_objects(self, TypeNode.SUB, right_operand)  # the 'complex' right operand is moved to the left
         return ECtr(pc.constraint.replace_condition(operator, 0))
@@ -453,7 +452,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
         assert isinstance(self.constraint, ConstraintElement)
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
-        if isinstance(i, variables.Variable):
+        if isinstance(i, Variable):
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
             self.constraint = ConstraintElementMatrix(lst, index, i)
         elif isinstance(i, int):
@@ -472,7 +471,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
         pair = obj2.var_val_if_binary_type(TypeNode.MUL) if isinstance(obj2, Node) else None
         if pair:
             obj2 = PartialConstraint(ConstraintSum([pair[0]], [pair[1]], None))
-        elif isinstance(obj2, variables.Variable):
+        elif isinstance(obj2, Variable):
             obj2 = PartialConstraint(ConstraintSum([obj2], [1], None))
         elif isinstance(obj2, ScalarProduct):
             obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))
