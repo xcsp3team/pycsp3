@@ -2,99 +2,81 @@ from pycsp3 import functions
 from pycsp3.classes import main
 from pycsp3.classes.entities import Node, TypeNode
 from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
-#from pycsp3.classes.main.constraints import ScalarProduct
+# from pycsp3.classes.main.constraints import ScalarProduct
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools import utilities
 
 
-''' __add__ method of dict (To merge dictionaries) in sum) '''
+def cursing():
+    def _dict_add(self, other):  # for being able to merge dictionaries
+        if isinstance(other, dict):
+            d = self.copy()
+            d.update(other)
+            return d
+        raise NotImplementedError  # return save_dict_add(self, other)
 
+    def _list_mul(self, other):  # for being able to use scalar products
+        if utilities.is_containing(self, (Variable, Node), check_first_only=True):
+            return main.constraints.ScalarProduct(self, other)
+        return list.__mul__(self, other)
 
-def _dict_add(self, other):
-    if isinstance(other, dict):
-        d = self.copy()
-        d.update(other)
-        return d
-    raise NotImplementedError  # return save_dict_add(self, other)
-
-
-''' __mul__ method of list (To represent coeffs in sum) '''
-
-
-def _list_mul(self, other):
-    if utilities.is_containing(self, (Variable, Node), check_first_only=True):
-        return main.constraints.ScalarProduct(self, other)
-    return list.__mul__(self, other)
-
-
-''' __contains__ method of range (To use the keyword "in" of python as a comparison operator in conditions of XCSP)'''
-
-
-def _range_in(self, other):
-    if not OpOverrider.activated:
-        return range.__contains__(other)
-    if isinstance(other, main.constraints.ScalarProduct):
-        other = functions.Sum(other)
-    if isinstance(other, (main.constraints.PartialConstraint, Variable)):
-        functions.queue_in.append((self, other))
-        return True
-    return range.__contains__(self, other)
-
-
-''' __contains__ method of set (to be able to use the Python keyword "in" for intension and extension constraints) '''
-
-
-def _set_in(self, other):
-    if not OpOverrider.activated:
-        return self.__contains__(other)
-    if isinstance(other, (main.constraints.PartialConstraint, Variable)):
-        functions.queue_in.append((self, other))
-        return True
-    if utilities.is_1d_tuple(other, Variable) or utilities.is_1d_list(other, Variable):  # this is a table constraint
-        functions.queue_in.append((list(self), other))
-        return True
-    return self.__contains__(other)
-
-
-''' __contains__ method of list (to be able to use the Python keyword "in" for table constraints) '''
-
-
-def _list_in(self, other):
-    if not OpOverrider.activated:
-        return self.__contains__(other)
-    if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
-        functions.queue_in.append((self, other))
-        return True
-    return self.__contains__(other)
-
-
-def _tuple_in(self, other):
-    if not OpOverrider.activated:
-        return self.__contains__(other)
-    if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
-        functions.queue_in.append((list(self), other))
-        return True
-    return self.__contains__(other)
-
-
-def _enumerate_in(self, other):
-    if not OpOverrider.activated:
-        return self.__contains__(other)
-    if utilities.is_containing(other, Variable):
-        tmp = list(self)
-        if len(tmp) > 0 and isinstance(tmp[0], (tuple, int)):
-            functions.queue_in.append((tmp, other))
+    def _range_contains(self, other):  # for being able to use 'in' when expressing conditions of constraints
+        if not OpOverrider.activated:
+            return range.__contains__(other)
+        if isinstance(other, main.constraints.ScalarProduct):
+            other = functions.Sum(other)
+        if isinstance(other, (main.constraints.PartialConstraint, Variable)):
+            functions.queue_in.append((self, other))
             return True
-    return self.__contains__(other)
+        return range.__contains__(self, other)
+
+    def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
+        if not OpOverrider.activated:
+            return self.__contains__(other)
+        if isinstance(other, (main.constraints.PartialConstraint, Variable)):
+            functions.queue_in.append((self, other))
+            return True
+        if utilities.is_1d_tuple(other, Variable) or utilities.is_1d_list(other, Variable):  # this is a table constraint
+            functions.queue_in.append((list(self), other))
+            return True
+        return self.__contains__(other)
+
+    def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
+        if not OpOverrider.activated:
+            return self.__contains__(other)
+        if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
+            functions.queue_in.append((self, other))
+            return True
+        return self.__contains__(other)
+
+    def _tuple_contains(self, other):
+        if not OpOverrider.activated:
+            return self.__contains__(other)
+        if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
+            functions.queue_in.append((list(self), other))
+            return True
+        return self.__contains__(other)
+
+    def _enumerate_contains(self, other):
+        if not OpOverrider.activated:
+            return self.__contains__(other)
+        if utilities.is_containing(other, Variable):
+            tmp = list(self)
+            if len(tmp) > 0 and isinstance(tmp[0], (tuple, int)):
+                functions.queue_in.append((tmp, other))
+                return True
+        return self.__contains__(other)
+
+    curse(dict, "__add__", _dict_add)
+    curse(list, "__mul__", _list_mul)
+    curse(list, "__contains__", _list_contains)
+    curse(tuple, "__contains__", _tuple_contains)
+    curse(enumerate, "__contains__", _enumerate_contains)
+    curse(range, "__contains__", _range_contains)
+    curse(set, "__contains__", _set_contains)
 
 
-curse(dict, "__add__", _dict_add)
-curse(list, "__mul__", _list_mul)
-curse(list, "__contains__", _list_in)
-curse(tuple, "__contains__", _tuple_in)
-curse(enumerate, "__contains__", _enumerate_in)
-curse(range, "__contains__", _range_in)
-curse(set, "__contains__", _set_in)
+cursing()
 
 
 class OpOverrider:

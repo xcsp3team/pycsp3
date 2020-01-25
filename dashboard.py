@@ -33,8 +33,9 @@ class _Options:
                 if len(t) == 1:
                     if t[0] in self.flags:
                         vars(self)[t[0]] = True
-                    assert t[0] not in self.values or t[0] == 'dataexport', "You have to specify a value for the option -" + t[0]
-                    print("Warning: Unknown option", arg)
+                        assert t[0] not in self.values or t[0] == 'dataexport', "You have to specify a value for the option -" + t[0]
+                    else:
+                        print("Warning: Unknown option", arg)
                 else:
                     assert len(t) == 2
                     if t[0] in self.values:
