@@ -2,9 +2,9 @@ from enum import Enum, unique
 from functools import reduce
 
 from pycsp3.classes.auxiliary.types import auto
-from pycsp3.classes.main import variables
+from pycsp3.classes.main.variables import Variable, NotVariable, NegVariable
 from pycsp3.dashboard import options
-from pycsp3.tools import utilities
+from pycsp3.tools import utilities, inspector
 
 
 class Entity:
@@ -172,6 +172,8 @@ class ESlide(ECtrs):
 
 class EIfThenElse(ECtrs):
     def __init__(self, constraints):
+        inspector.checkType(constraints, [ECtr])
+        assert len(constraints) == 3, "Error: three components must be specified in ifThenElse"
         super().__init__(constraints)
 
 
@@ -373,11 +375,11 @@ class Node(Entity):
                 t.append(arg)
             elif isinstance(arg, EVar):
                 t.append(Node(TypeNode.VAR, arg.variable))
-            elif isinstance(arg, variables.NotVariable):
+            elif isinstance(arg, NotVariable):
                 t.append(Node(TypeNode.NOT, [Node(TypeNode.VAR, arg.variable)]))
-            elif isinstance(arg, variables.NegVariable):
+            elif isinstance(arg, NegVariable):
                 t.append(Node(TypeNode.NEG, [Node(TypeNode.VAR, arg.variable)]))
-            elif isinstance(arg, variables.Variable):
+            elif isinstance(arg, Variable):
                 t.append(Node(TypeNode.VAR, arg))
             elif isinstance(arg, int):
                 t.append(Node(TypeNode.INT, arg))

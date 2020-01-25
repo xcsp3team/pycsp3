@@ -5,24 +5,29 @@ from collections import deque
 
 from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
-from pycsp3.classes.auxiliary.types import TypeOrderedOperator, TypeRank, TypeVar
-from pycsp3.classes.entities import *
-from pycsp3.classes.main.annotations import AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, \
-    AnnotationFiltering, AnnotationPrepro, AnnotationSearch, AnnotationRestarts
-from pycsp3.classes.main.constraints import *
+from pycsp3.classes.auxiliary.types import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
+from pycsp3.classes.entities import (
+    EVar, EVarArray, ECtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EIfThenElse, EObjective, EAnnotation, AnnEntities, TypeNode, Node)
+from pycsp3.classes.main.annotations import (
+    AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
+    AnnotationRestarts)
+from pycsp3.classes.main.constraints import (
+    ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
+    ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintSum,
+    ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
+    ConstraintCumulative, ConstraintCircuit, ConstraintClause, ConstraintInstantiation, PartialConstraint, ScalarProduct)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
+from pycsp3.dashboard import options
+from pycsp3.problems.data.dataparser import DataDict
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import flatten, is_1d_list, is_2d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing
-from pycsp3.problems.data.dataparser import DataDict
 
 ''' Global Variables '''
 
-absPython = abs
-maxPython = max
-minPython = min
+absPython, maxPython, minPython = abs, max, min
 
 
 class Star(float):
@@ -119,7 +124,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     assert type(bool_value) is bool
     if isinstance(left_operand, Variable) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
-        ctr = Intension(isin(left_operand, right_operand) if bool_value else notin(left_operand, right_operand))
+        ctr = Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
         ctr = ECtr(left_operand.constraint.replace_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
     elif isinstance(right_operand, Automaton):  #  it is a regular constraint
@@ -152,40 +157,8 @@ def _wrap_intension_constraints(entities):
     return entities
 
 
-def _group(*args):
-    entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args)))
-    checkType(entities, [ECtr, ECtrs])
-    return EToGather(entities)
-
-
-def _reorder(entities):
-    reordered_entities = []
-    g = []
-    for c in entities:
-        if isinstance(c, ECtr):
-            g.append(c)
-        else:
-            if len(g) != 0:
-                reordered_entities.append(_group(g))
-            g.clear()
-            reordered_entities.append(c)
-    if len(g) != 0:
-        reordered_entities.append(_group(g))
-    return reordered_entities
-
-
-def _block(*args):
-    entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args)))
-    checkType(entities, [ECtr, ECtrs])
-    entities = _reorder(entities)
-    return EBlock(entities)
-
-
 def IfThenElse(*args):
-    entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args)))
-    checkType(entities, [ECtr])
-    assert len(entities) == 3, "Error: three components must be specified in ifThenElse"
-    return EIfThenElse(entities)
+    return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def Slide(*args):
@@ -195,8 +168,33 @@ def Slide(*args):
 
 
 def satisfy(*args):
-    global no_parameter_satisfy
-    global nb_parameter_satisfy
+    global no_parameter_satisfy, nb_parameter_satisfy
+
+    def _group(*_args):
+        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
+        checkType(entities, [ECtr, ECtrs])
+        return EToGather(entities)
+
+    def _block(*_args):
+        def _reorder(_entities):
+            reordered_entities = []
+            g = []
+            for c in _entities:
+                if isinstance(c, ECtr):
+                    g.append(c)
+                else:
+                    if len(g) != 0:
+                        reordered_entities.append(_group(g))
+                    g.clear()
+                    reordered_entities.append(c)
+            if len(g) != 0:
+                reordered_entities.append(_group(g))
+            return reordered_entities
+
+        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
+        checkType(entities, [ECtr, ECtrs])
+        return EBlock(_reorder(entities))
+
     no_parameter_satisfy = 0
     nb_parameter_satisfy = len(args)
     comments1, comments2, tags1, tags2 = comments_and_tags_of_parameters_of(function_name="satisfy", args=args)
@@ -215,13 +213,13 @@ def satisfy(*args):
             to_post = Intension(arg)
         elif isinstance(arg, bool):  # a Boolean representing the case of a partial constraint or a node with operator in {IN, NOT IN}
             assert queue_in, "An argument of satisfy() before position " + str(i) + " is badly formed"
-            #assert queue_in, "A boolean that do not represents a constraint is in the list of constraints in satisfy(): " \
+            # assert queue_in, "A boolean that do not represents a constraint is in the list of constraints in satisfy(): " \
             #                 + str(args) + " " + str(i) + ".\nA constraint is certainly badly formed"
             other, partial = queue_in.popleft()
             to_post = _bool_interpretation_for_in(partial, other, arg)
         elif any(isinstance(ele, ESlide) for ele in arg):  #  Case: Slide
             to_post = _block(arg)
-        elif comment_at_2:  #  Case: block
+        elif comment_at_2:  # Case: block
             for j, ele in enumerate(arg):
                 if isinstance(arg[j], (ECtr, ESlide)):
                     arg[j].note(comments2[i][j]).tag(tags2[i][j])
@@ -247,8 +245,7 @@ def Extension(*, scope, table, positive=True):
     checkType(positive, bool)
     assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples"
     assert isinstance(table[0], (tuple, int)), "Table in extension must be a list of tuples or a list of int"
-    if not isinstance(table[0], int):
-        assert len(scope) == len(table[0]), "Scope and tuples of the table must be of the same length"
+    assert isinstance(table[0], int) or len(scope) == len(table[0]), "Scope and tuples of the table must be of the same length"
     # TODO: this ckecking don't pass on Waterbucket.py, but the xml file is the same that the java version !
     # if options.checker:
     #    if id(table) not in checked_tables:
@@ -277,38 +274,6 @@ def abs(*args):
     return Node.build(TypeNode.ABS, *args) if len(args) == 1 and isinstance(args[0], (Node, Variable)) else absPython(*args)
 
 
-def neg(*args):
-    return Node.build(TypeNode.NEG, *args)
-
-
-def sqr(*args):
-    return Node.build(TypeNode.SQR, *args)
-
-
-def add(*args):
-    return Node.build(TypeNode.ADD, *args)
-
-
-def sub(*args):
-    return Node.build(TypeNode.SUB, *args)
-
-
-def mul(*args):
-    return Node.build(TypeNode.MUL, *args)
-
-
-def div(*args):
-    return Node.build(TypeNode.DIV, *args)
-
-
-def mod(*args):
-    return Node.build(TypeNode.MOD, *args)
-
-
-def power(*args):
-    return Node.build(TypeNode.POW, *args)
-
-
 def min(*args):
     return Node.build(TypeNode.MIN, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 
@@ -319,50 +284,6 @@ def max(*args):
 
 def dist(*args):
     return Node.build(TypeNode.DIST, *args)
-
-
-def lt(*args):
-    return Node.build(TypeNode.LT, *args)
-
-
-def le(*args):
-    return Node.build(TypeNode.LE, *args)
-
-
-def ge(*args):
-    return Node.build(TypeNode.GE, *args)
-
-
-def gt(*args):
-    return Node.build(TypeNode.GT, *args)
-
-
-def ne(*args):
-    return Node.build(TypeNode.NE, *args)
-
-
-def eq(*args):
-    return Node.build(TypeNode.EQ, *args)
-
-
-def isin(*args):
-    return Node.build(TypeNode.IN, *args)
-
-
-def notin(*args):
-    return Node.build(TypeNode.NOTIN, *args)
-
-
-def lnot(*args):
-    return Node.build(TypeNode.NOT, *args)
-
-
-def land(*args):
-    return Node.build(TypeNode.AND, *args) if len(args) > 1 else args[0]
-
-
-def lor(*args):
-    return Node.build(TypeNode.OR, *args) if len(args) > 1 else args[0]
 
 
 def xor(*args):
@@ -387,7 +308,7 @@ def conjunction(*args):
             args = tuple(args[0])
         if isinstance(args[0], types.GeneratorType):
             args = tuple(list(args[0]))
-    return land(*args)
+    return Node.build(TypeNode.AND, *args) if len(args) > 1 else args[0]
 
 
 def disjunction(*args):
@@ -396,7 +317,7 @@ def disjunction(*args):
             args = tuple(args[0])
         if isinstance(args[0], types.GeneratorType):
             args = tuple(list(args[0]))
-    return lor(*args)
+    return Node.build(TypeNode.OR, *args) if len(args) > 1 else args[0]
 
 
 def knight_attack(x, y, order):
@@ -872,7 +793,7 @@ def cp_array(l):
 #    assert isinstance(l, list)
 #    return [(i, *v) if isinstance(v, (tuple, list)) else (i, v) for i, v in enumerate(l)]
 
-import pycsp3.tools.curser  # keep it here?
+# import pycsp3.tools.curser  # no more need to let that statement ?
 
 
 def _pycharm_security():

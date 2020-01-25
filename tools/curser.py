@@ -1,8 +1,11 @@
 from pycsp3 import functions
-from pycsp3.classes import entities
 from pycsp3.classes import main
+from pycsp3.classes.entities import Node, TypeNode
+from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
+#from pycsp3.classes.main.constraints import ScalarProduct
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools import utilities
+
 
 ''' __add__ method of dict (To merge dictionaries) in sum) '''
 
@@ -19,7 +22,7 @@ def _dict_add(self, other):
 
 
 def _list_mul(self, other):
-    if utilities.is_containing(self, (main.variables.Variable, entities.Node), check_first_only=True):
+    if utilities.is_containing(self, (Variable, Node), check_first_only=True):
         return main.constraints.ScalarProduct(self, other)
     return list.__mul__(self, other)
 
@@ -32,7 +35,7 @@ def _range_in(self, other):
         return range.__contains__(other)
     if isinstance(other, (main.constraints.ScalarProduct)):
         other = functions.Sum(other)
-    if isinstance(other, (main.constraints.PartialConstraint, main.variables.Variable)):
+    if isinstance(other, (main.constraints.PartialConstraint, Variable)):
         functions.queue_in.append((self, other))
         return True
     return range.__contains__(self, other)
@@ -44,10 +47,10 @@ def _range_in(self, other):
 def _set_in(self, other):
     if not OpOverrider.activated:
         return self.__contains__(other)
-    if isinstance(other, (main.constraints.PartialConstraint, main.variables.Variable)):
+    if isinstance(other, (main.constraints.PartialConstraint, Variable)):
         functions.queue_in.append((self, other))
         return True
-    if utilities.is_1d_tuple(other, main.variables.Variable) or utilities.is_1d_list(other, main.variables.Variable):  # this is a table constraint
+    if utilities.is_1d_tuple(other, Variable) or utilities.is_1d_list(other, Variable):  # this is a table constraint
         functions.queue_in.append((list(self), other))
         return True
     return self.__contains__(other)
@@ -59,7 +62,7 @@ def _set_in(self, other):
 def _list_in(self, other):
     if not OpOverrider.activated:
         return self.__contains__(other)
-    if utilities.is_containing(other, main.variables.Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
+    if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
         functions.queue_in.append((self, other))
         return True
     return self.__contains__(other)
@@ -68,7 +71,7 @@ def _list_in(self, other):
 def _tuple_in(self, other):
     if not OpOverrider.activated:
         return self.__contains__(other)
-    if utilities.is_containing(other, main.variables.Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
+    if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
         functions.queue_in.append((list(self), other))
         return True
     return self.__contains__(other)
@@ -77,7 +80,7 @@ def _tuple_in(self, other):
 def _enumerate_in(self, other):
     if not OpOverrider.activated:
         return self.__contains__(other)
-    if utilities.is_containing(other, main.variables.Variable):
+    if utilities.is_containing(other, Variable):
         tmp = list(self)
         if len(tmp) > 0 and isinstance(tmp[0], (tuple, int)):
             functions.queue_in.append((tmp, other))
@@ -106,28 +109,28 @@ class OpOverrider:
         ListInt.__getitem__ = OpOverrider.__getitem__li
         ListInt.__contains__ = OpOverrider.__contains__li
 
-        main.variables.Variable.__eq__ = entities.Node.__eq__ = OpOverrider.__eq__
-        main.variables.Variable.__ne__ = entities.Node.__ne__ = OpOverrider.__ne__
-        main.variables.Variable.__lt__ = entities.Node.__lt__ = OpOverrider.__lt__
-        main.variables.Variable.__le__ = entities.Node.__le__ = OpOverrider.__le__
-        main.variables.Variable.__ge__ = entities.Node.__ge__ = OpOverrider.__ge__
-        main.variables.Variable.__gt__ = entities.Node.__gt__ = OpOverrider.__gt__
+        Variable.__eq__ = Node.__eq__ = OpOverrider.__eq__
+        Variable.__ne__ = Node.__ne__ = OpOverrider.__ne__
+        Variable.__lt__ = Node.__lt__ = OpOverrider.__lt__
+        Variable.__le__ = Node.__le__ = OpOverrider.__le__
+        Variable.__ge__ = Node.__ge__ = OpOverrider.__ge__
+        Variable.__gt__ = Node.__gt__ = OpOverrider.__gt__
 
-        main.variables.Variable.__add__ = entities.Node.__add__ = OpOverrider.__add__
-        main.variables.Variable.__radd__ = entities.Node.__radd__ = OpOverrider.__radd__
-        main.variables.Variable.__sub__ = entities.Node.__sub__ = OpOverrider.__sub__
-        main.variables.Variable.__rsub__ = entities.Node.__rsub__ = OpOverrider.__rsub__
-        main.variables.Variable.__mul__ = entities.Node.__mul__ = OpOverrider.__mul__
-        main.variables.Variable.__rmul__ = entities.Node.__rmul__ = OpOverrider.__rmul__
-        main.variables.Variable.__pow__ = entities.Node.__pow__ = OpOverrider.__pow__
-        main.variables.Variable.__mod__ = entities.Node.__mod__ = OpOverrider.__mod__
-        main.variables.Variable.__floordiv__ = entities.Node.__floordiv__ = OpOverrider.__floordiv__
-        main.variables.Variable.__rfloordiv__ = entities.Node.__rfloordiv__ = OpOverrider.__rfloordiv__
+        Variable.__add__ = Node.__add__ = OpOverrider.__add__
+        Variable.__radd__ = Node.__radd__ = OpOverrider.__radd__
+        Variable.__sub__ = Node.__sub__ = OpOverrider.__sub__
+        Variable.__rsub__ = Node.__rsub__ = OpOverrider.__rsub__
+        Variable.__mul__ = Node.__mul__ = OpOverrider.__mul__
+        Variable.__rmul__ = Node.__rmul__ = OpOverrider.__rmul__
+        Variable.__pow__ = Node.__pow__ = OpOverrider.__pow__
+        Variable.__mod__ = Node.__mod__ = OpOverrider.__mod__
+        Variable.__floordiv__ = Node.__floordiv__ = OpOverrider.__floordiv__
+        Variable.__rfloordiv__ = Node.__rfloordiv__ = OpOverrider.__rfloordiv__
 
-        main.variables.Variable.__and__ = entities.Node.__and__ = OpOverrider.__and__
-        main.variables.Variable.__or__ = entities.Node.__or__ = OpOverrider.__or__
-        main.variables.Variable.__invert__ = entities.Node.__invert__ = OpOverrider.__invert__
-        main.variables.Variable.__xor__ = entities.Node.__xor__ = OpOverrider.__xor__
+        Variable.__and__ = Node.__and__ = OpOverrider.__and__
+        Variable.__or__ = Node.__or__ = OpOverrider.__or__
+        Variable.__invert__ = Node.__invert__ = OpOverrider.__invert__
+        Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
 
     @staticmethod
     def disable():
@@ -138,28 +141,28 @@ class OpOverrider:
         ListInt.__getitem__ = list.__getitem__
         ListInt.__contains__ = list.__contains__
 
-        main.variables.Variable.__eq__ = entities.Node.__eq__ = object.__eq__
-        main.variables.Variable.__ne__ = entities.Node.__ne__ = object.__ne__
-        main.variables.Variable.__lt__ = entities.Node.__lt__ = object.__lt__
-        main.variables.Variable.__le__ = entities.Node.__le__ = object.__le__
-        main.variables.Variable.__ge__ = entities.Node.__ge__ = object.__ge__
-        main.variables.Variable.__gt__ = entities.Node.__gt__ = object.__gt__
+        Variable.__eq__ = Node.__eq__ = object.__eq__
+        Variable.__ne__ = Node.__ne__ = object.__ne__
+        Variable.__lt__ = Node.__lt__ = object.__lt__
+        Variable.__le__ = Node.__le__ = object.__le__
+        Variable.__ge__ = Node.__ge__ = object.__ge__
+        Variable.__gt__ = Node.__gt__ = object.__gt__
 
-        main.variables.Variable.__add__ = entities.Node.__add__ = None
-        main.variables.Variable.__radd__ = entities.Node.__radd__ = None
-        main.variables.Variable.__sub__ = entities.Node.__sub__ = None
-        main.variables.Variable.__rsub__ = entities.Node.__rsub__ = None
-        main.variables.Variable.__mul__ = entities.Node.__mul__ = None
-        main.variables.Variable.__rmul__ = entities.Node.__rmul__ = None
-        main.variables.Variable.__pow__ = entities.Node.__pow__ = None
-        main.variables.Variable.__mod__ = entities.Node.__mod__ = None
-        main.variables.Variable.__floordiv__ = entities.Node.__floordiv__ = None
-        main.variables.Variable.__rfloordiv__ = entities.Node.__rfloordiv__ = None
+        Variable.__add__ = Node.__add__ = None
+        Variable.__radd__ = Node.__radd__ = None
+        Variable.__sub__ = Node.__sub__ = None
+        Variable.__rsub__ = Node.__rsub__ = None
+        Variable.__mul__ = Node.__mul__ = None
+        Variable.__rmul__ = Node.__rmul__ = None
+        Variable.__pow__ = Node.__pow__ = None
+        Variable.__mod__ = Node.__mod__ = None
+        Variable.__floordiv__ = Node.__floordiv__ = None
+        Variable.__rfloordiv__ = Node.__rfloordiv__ = None
 
-        main.variables.Variable.__and__ = entities.Node.__and__ = None
-        main.variables.Variable.__or__ = entities.Node.__or__ = None
-        main.variables.Variable.__invert__ = entities.Node.__invert__ = None
-        main.variables.Variable.__xor__ = entities.Node.__xor__ = None
+        Variable.__and__ = Node.__and__ = None
+        Variable.__or__ = Node.__or__ = None
+        Variable.__invert__ = Node.__invert__ = None
+        Variable.__xor__ = Node.__xor__ = None
 
         return OpOverrider
 
@@ -190,55 +193,55 @@ class OpOverrider:
 
     def __add__(self, other):
         if isinstance(other, main.constraints.PartialConstraint):
-            return main.constraints.PartialConstraint.combine_partial_objects(self, entities.TypeNode.ADD, other)
-        return functions.add(self, other)
+            return main.constraints.PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
+        return Node.build(TypeNode.ADD, self, other)
 
     def __radd__(self, other):
-        return functions.add(other, self)
+        return Node.build(TypeNode.ADD, other, self)
 
     def __sub__(self, other):
         if isinstance(other, main.constraints.PartialConstraint):
-            return main.constraints.PartialConstraint.combine_partial_objects(self, entities.TypeNode.SUB, other)
-        return functions.sub(self, other)
+            return main.constraints.PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
+        return Node.build(TypeNode.SUB, self, other)
 
     def __rsub__(self, other):
-        return functions.sub(other, self)
+        return Node.build(TypeNode.SUB, other, self)
 
     def __mul__(self, other):
-        return functions.mul(self, other)
+        return Node.build(TypeNode.MUL, self, other)
 
     def __rmul__(self, other):
-        return functions.mul(other, self)
+        return Node.build(TypeNode.MUL, other, self)
 
     def __mod__(self, other):
-        return functions.mod(self, other)
+        return Node.build(TypeNode.MOD, self, other)
 
     def __pow__(self, other):
-        return functions.power(self, other)
+        return Node.build(TypeNode.POW, self, other)
 
     def __floordiv__(self, other):
-        return functions.div(self, other)
+        return Node.build(TypeNode.DIV, self, other)
 
     def __rfloordiv__(self, other):
-        return functions.div(other, self)
-
-    def __le__(self, other):
-        return object.__le__(self, other) if None in {self, other} else functions.le(self, other)
+        return Node.build(TypeNode.DIV, other, self)
 
     def __lt__(self, other):
-        return object.__lt__(self, other) if None in {self, other} else functions.lt(self, other)
+        return object.__lt__(self, other) if None in {self, other} else Node.build(TypeNode.LT, self, other)
+
+    def __le__(self, other):
+        return object.__le__(self, other) if None in {self, other} else Node.build(TypeNode.LE, self, other)
 
     def __ge__(self, other):
-        return object.__ge__(self, other) if None in {self, other} else functions.ge(self, other)
+        return object.__ge__(self, other) if None in {self, other} else Node.build(TypeNode.GE, self, other)
 
     def __gt__(self, other):
-        return object.__gt__(self, other) if None in {self, other} else functions.gt(self, other)
+        return object.__gt__(self, other) if None in {self, other} else Node.build(TypeNode.GT, self, other)
 
     def __eq__(self, other):
-        return object.__eq__(self, other) if None in {self, other} else functions.eq(self, other)
+        return object.__eq__(self, other) if None in {self, other} else Node.build(TypeNode.EQ, self, other)
 
     def __ne__(self, other):
-        return object.__ne__(self, other) if None in {self, other} else functions.ne(self, other)
+        return object.__ne__(self, other) if None in {self, other} else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
         return object.__or__(self, other) if None in {self, other} else functions.disjunction(self, other)
@@ -247,7 +250,7 @@ class OpOverrider:
         return object.__and__(self, other) if None in {self, other} else functions.conjunction(self, other)
 
     def __invert__(self):
-        return main.variables.NotVariable(self) if isinstance(self, main.variables.VariableInteger) else functions.lnot(self)
+        return NotVariable(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
         return object.__xor__(self, other) if None in {self, other} else functions.xor(self, other)
@@ -258,15 +261,15 @@ class OpOverrider:
         return list.__eq__(self, other)
 
     def __getitem__lv(self, indexes):
-        if isinstance(indexes, main.variables.Variable):
+        if isinstance(indexes, Variable):
             return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
-            if any(isinstance(i, main.variables.Variable) for i in indexes):  # this must be a constraint Element-Matrix
+            if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert utilities.is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
-                if all(isinstance(i, main.variables.Variable) for i in indexes):
+                if all(isinstance(i, Variable) for i in indexes):
                     return main.constraints.PartialConstraint(main.constraints.ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
-                    assert isinstance(indexes[0], main.variables.Variable) and isinstance(indexes[1], int)
+                    assert isinstance(indexes[0], Variable) and isinstance(indexes[1], int)
                     return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self[:, indexes[1]], indexes[0]))
             result = OpOverrider.project_recursive(self, indexes, 0)
             try:
@@ -280,15 +283,15 @@ class OpOverrider:
             return result
 
     def __getitem__li(self, indexes):  # li for ListInt
-        if isinstance(indexes, main.variables.Variable):
+        if isinstance(indexes, Variable):
             return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
-            if any(isinstance(i, main.variables.Variable) for i in indexes):  # this must be a constraint Element-Matrix
+            if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert utilities.is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
-                if all(isinstance(i, main.variables.Variable) for i in indexes):
+                if all(isinstance(i, Variable) for i in indexes):
                     return main.constraints.PartialConstraint(main.constraints.ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
-                    assert isinstance(indexes[0], main.variables.Variable) and isinstance(indexes[1], int)
+                    assert isinstance(indexes[0], Variable) and isinstance(indexes[1], int)
                     return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self[:, indexes[1]], indexes[0]))
             result = OpOverrider.project_recursive(self, indexes, 0)
             try:
@@ -302,7 +305,7 @@ class OpOverrider:
             return result
 
     def __contains__li(self, other):
-        if utilities.is_containing(other, main.variables.Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
+        if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
             functions.queue_in.append((self, other))
             return True
         return list.__contains__(self, other)
@@ -319,9 +322,9 @@ class ListInt(list):
         return ListInt(list.__add__(self, other))
 
     def __mul__(self, other):
-        if utilities.is_containing(other, (main.variables.Variable, entities.Node)):
+        if utilities.is_containing(other, (Variable, Node)):
             return main.constraints.ScalarProduct(other, self)
-        assert utilities.is_containing(self, (main.variables.Variable, entities.Node))
+        assert utilities.is_containing(self, (Variable, Node))
         return main.constraints.ScalarProduct(self, other)
 
     def __rmul__(self, other):
@@ -339,7 +342,7 @@ class ListVar(list):
         return ListVar(list.__add__(self, other))
 
     def __mul__(self, other):
-        assert utilities.is_containing(self, (main.variables.Variable, entities.Node))
+        assert utilities.is_containing(self, (Variable, Node))
         return main.constraints.ScalarProduct(self, other)
 
     # def __rmul__(self, other): return ListVar.__mul__(other, self)
