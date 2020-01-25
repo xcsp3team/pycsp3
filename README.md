@@ -11,12 +11,20 @@ in format XCSP3; see [www.xcsp.org](www.xcsp.org).
 
 Note that:
 * the code is available on [Github](https://github.com/xcsp3team/pycsp3)
-* a [guide](https://github.com/xcsp3team/pycsp3/blob/master/guidePyCSP3.pdf) is available
+* a [well-documented guide](https://github.com/xcsp3team/pycsp3/blob/master/guidePyCSP3.pdf) is available
+* PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
+
+**Important**: we plan to post a (hopefully) very stable version, 1.1.0, within a few months.
+Currently, our main goal is :
+* to fix a few problems encountered with python 3.8 (with python 3.5, 3.6 and 3.7, things look good)
+* to give more helpful messages when the user (modeler) writes something incorrect
 
 
 # Installation
 
 ## Installing PyCSP3
+
+Installation instructions are currently given for Linux (instructions for Mac and Windows will be inserted soon)
 
 For installing PyCSP3, you need to execute:
 
@@ -329,53 +337,53 @@ nRacks, models, cardTypes = data.nRacks, data.models, data.cardTypes
 models = [(0, 0, 0)] + [tuple(model) for model in models]
 nModels, nTypes = len(models), len(cardTypes)
 
-powers, connectors, prices = [row[0] for row in models], [row[1] for row in models], [row[2] for row in models]
-cardPowers = [row[0] for row in cardTypes]
-maxCapacity = max(connectors)
+powers, sizes, costs = [row[0] for row in models], [row[1] for row in models], [row[2] for row in models]
+cardPowers, cardDemands = [row[0] for row in cardTypes], [row[1] for row in cardTypes]
 
-#  r[i] is the model used for the ith rack
-r = VarArray(size=nRacks, dom=range(nModels))
+# m[i] is the model used for the ith rack
+m = VarArray(size=nRacks, dom=range(nModels))
 
-#  c[i][j] is the number of cards of type j put in the ith rack
-c = VarArray(size=[nRacks, nTypes], dom=lambda i, j: range(min(maxCapacity, cardTypes[j][1]) + 1))
+# nc[i][j] is the number of cards of type j put in the ith rack
+nc = VarArray(size=[nRacks, nTypes], dom=lambda i, j: range(min(max(sizes), cardDemands[j]) + 1))
 
-# rpw[i] is the power of the ith rack
-rpw = VarArray(size=nRacks, dom=set(powers))
+# p[i] is the power of the ith rack
+p = VarArray(size=nRacks, dom=set(powers))
 
-# rcn[i] is the number of connectors of the ith rack
-rcn = VarArray(size=nRacks, dom=set(connectors))
+# s[i] is the size of the ith rack
+s = VarArray(size=nRacks, dom=set(sizes))
 
-# rpr[i] is the price of the ith rack
-rpr = VarArray(size=nRacks, dom=set(prices))
+# c[i] is the cost of the ith rack
+c = VarArray(size=nRacks, dom=set(costs))
 
 satisfy(
-    # linking the ith rack with its power
-    [(r[i], rpw[i]) in enumerate(powers) for i in range(nRacks)],
+    # linking model and power of the ith rack
+    [(m[i], p[i]) in enumerate(powers) for i in range(nRacks)],
 
-    # linking the ith rack with its number of connectors
-    [(r[i], rcn[i]) in enumerate(connectors) for i in range(nRacks)],
+    # linking model and size of the ith rack
+    [(m[i], s[i]) in enumerate(sizes) for i in range(nRacks)],
 
-    # linking the ith rack with its price
-    [(r[i], rpr[i]) in enumerate(prices) for i in range(nRacks)],
+    # linking model and cost of the ith rack
+    [(m[i], c[i]) in enumerate(costs) for i in range(nRacks)],
 
     # connector-capacity constraints
-    [Sum(c[i]) <= rcn[i] for i in range(nRacks)],
+    [Sum(nc[i]) <= s[i] for i in range(nRacks)],
 
     # power-capacity constraints
-    [Sum(c[i] * cardPowers) <= rpw[i] for i in range(nRacks)],
+    [nc[i] * cardPowers <= p[i] for i in range(nRacks)],
 
     # demand constraints
-    [Sum(c[:, i]) == cardTypes[i][1] for i in range(nTypes)],
+    [Sum(nc[:, j]) == cardDemands[j] for j in range(nTypes)],
 
     # tag(symmetry-breaking)
     [
-        Decreasing(r),
-        (r[0] != r[1]) | (c[0][0] >= c[1][0])
+        Decreasing(m),
+        (m[0] != m[1]) | (nc[0][0] >= nc[1][0])
     ]
 )
 
 minimize(
-    Sum(rpr)
+    # minimizing the total cost paid for all racks
+    Sum(c)
 )
 ```
 
@@ -420,53 +428,53 @@ nRacks, models, cardTypes = data.nRacks, data.rackModels, data.cardTypes
 models = [{'power': 0, 'nConnectors': 0, 'price': 0}] + models
 nModels, nTypes = len(models), len(cardTypes)
 
-powers, connectors, prices = [model['power'] for model in models], [model['nConnectors'] for model in models], [model['price'] for model in models]
-cardPowers = [cardType['power'] for cardType in cardTypes]
-maxCapacity = max(connectors)
+powers, sizes, costs = [model['power'] for model in models], [model['nConnectors'] for model in models], [model['price'] for model in models]
+cardPowers, cardDemands = [cardType['power'] for cardType in cardTypes], [cardType['demand'] for cardType in cardTypes]
 
-#  r[i] is the model used for the ith rack
-r = VarArray(size=nRacks, dom=range(nModels))
+# m[i] is the model used for the ith rack
+m = VarArray(size=nRacks, dom=range(nModels))
 
-#  c[i][j] is the number of cards of type j put in the ith rack
-c = VarArray(size=[nRacks, nTypes], dom=lambda i, j: range(min(maxCapacity, cardTypes[j]['demand'])+1))
+# nc[i][j] is the number of cards of type j put in the ith rack
+nc = VarArray(size=[nRacks, nTypes], dom=lambda i, j: range(min(max(sizes), cardDemands[j]) + 1))
 
-# rpw[i] is the power of the ith rack
-rpw = VarArray(size=nRacks, dom=set(powers))
+# p[i] is the power of the ith rack
+p = VarArray(size=nRacks, dom=set(powers))
 
-# rcn[i] is the number of connectors of the ith rack
-rcn = VarArray(size=nRacks, dom=set(connectors))
+# s[i] is the size of the ith rack
+s = VarArray(size=nRacks, dom=set(sizes))
 
-# rpr[i] is the price of the ith rack
-rpr = VarArray(size=nRacks, dom=set(prices))
+# c[i] is the cost of the ith rack
+c = VarArray(size=nRacks, dom=set(costs))
 
 satisfy(
-    # linking the ith rack with its power
-    [(r[i], rpw[i]) in enumerate(powers) for i in range(nRacks)],
+    # linking model and power of the ith rack
+    [(m[i], p[i]) in enumerate(powers) for i in range(nRacks)],
 
-    # linking the ith rack with its number of connectors
-    [(r[i], rcn[i]) in enumerate(connectors) for i in range(nRacks)],
+    # linking model and size of the ith rack
+    [(m[i], s[i]) in enumerate(sizes) for i in range(nRacks)],
 
-    # linking the ith rack with its price
-    [(r[i], rpr[i]) in enumerate(prices) for i in range(nRacks)],
+    # linking model and cost of the ith rack
+    [(m[i], c[i]) in enumerate(costs) for i in range(nRacks)],
 
     # connector-capacity constraints
-    [Sum(c[i]) <= rcn[i] for i in range(nRacks)],
+    [Sum(nc[i]) <= s[i] for i in range(nRacks)],
 
     # power-capacity constraints
-    [Sum(c[i] * cardPowers) <= rpw[i] for i in range(nRacks)],
+    [nc[i] * cardPowers <= p[i] for i in range(nRacks)],
 
     # demand constraints
-    [Sum(c[:, i]) == cardTypes[i]['demand'] for i in range(nTypes)],
+    [Sum(nc[:, j]) == cardDemands[j] for j in range(nTypes)],
 
     # tag(symmetry-breaking)
     [
-        Decreasing(r),
-        (r[0] != r[1]) | (c[0][0] >= c[1][0])
+        Decreasing(m),
+        (m[0] != m[1]) | (nc[0][0] >= nc[1][0])
     ]
 )
 
 minimize(
-    Sum(rpr)
+    # minimizing the total cost paid for all racks
+    Sum(c)
 )
 ```
 
@@ -569,9 +577,7 @@ In the code below, note how an object `Automaton` is defined from a specified pa
 from pycsp3 import *
 
 def automaton(pattern):
-    def q(i):
-        return "q" + str(i)
-
+    q = Automaton.q  # for building state names
     transitions = []
     if len(pattern) == 0:
         n_states = 1
@@ -589,7 +595,6 @@ def automaton(pattern):
                 num += 1
         transitions.append((q(num), 0, q(num)))
     return Automaton(start=q(0), final=q(n_states - 1), transitions=transitions)
-
 
 rows, cols = data.rowPatterns, data.colPatterns
 nRows, nCols = len(rows), len(cols)

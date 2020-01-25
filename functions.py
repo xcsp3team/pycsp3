@@ -6,14 +6,16 @@ from collections import deque
 from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.auxiliary.types import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
-from pycsp3.classes.entities import EVar, EVarArray, ECtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EIfThenElse, EObjective, EAnnotation, AnnEntities, \
-    TypeNode, Node
-from pycsp3.classes.main.annotations import AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, \
-    AnnotationFiltering, AnnotationPrepro, AnnotationSearch, AnnotationRestarts
-from pycsp3.classes.main.constraints import ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent, \
-    ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintSum, \
-    ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap, \
-    ConstraintCumulative, ConstraintCircuit, ConstraintClause, ConstraintInstantiation, PartialConstraint, ScalarProduct
+from pycsp3.classes.entities import (
+    EVar, EVarArray, ECtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EIfThenElse, EObjective, EAnnotation, AnnEntities, TypeNode, Node)
+from pycsp3.classes.main.annotations import (
+    AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
+    AnnotationRestarts)
+from pycsp3.classes.main.constraints import (
+    ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
+    ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintSum,
+    ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
+    ConstraintCumulative, ConstraintCircuit, ConstraintClause, ConstraintInstantiation, PartialConstraint, ScalarProduct)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
@@ -155,40 +157,8 @@ def _wrap_intension_constraints(entities):
     return entities
 
 
-def _group(*args):
-    entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args)))
-    checkType(entities, [ECtr, ECtrs])
-    return EToGather(entities)
-
-
-def _reorder(entities):
-    reordered_entities = []
-    g = []
-    for c in entities:
-        if isinstance(c, ECtr):
-            g.append(c)
-        else:
-            if len(g) != 0:
-                reordered_entities.append(_group(g))
-            g.clear()
-            reordered_entities.append(c)
-    if len(g) != 0:
-        reordered_entities.append(_group(g))
-    return reordered_entities
-
-
-def _block(*args):
-    entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args)))
-    checkType(entities, [ECtr, ECtrs])
-    entities = _reorder(entities)
-    return EBlock(entities)
-
-
 def IfThenElse(*args):
-    entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args)))
-    checkType(entities, [ECtr])
-    assert len(entities) == 3, "Error: three components must be specified in ifThenElse"
-    return EIfThenElse(entities)
+    return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def Slide(*args):
@@ -198,8 +168,33 @@ def Slide(*args):
 
 
 def satisfy(*args):
-    global no_parameter_satisfy
-    global nb_parameter_satisfy
+    global no_parameter_satisfy, nb_parameter_satisfy
+
+    def _group(*_args):
+        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
+        checkType(entities, [ECtr, ECtrs])
+        return EToGather(entities)
+
+    def _block(*_args):
+        def _reorder(_entities):
+            reordered_entities = []
+            g = []
+            for c in _entities:
+                if isinstance(c, ECtr):
+                    g.append(c)
+                else:
+                    if len(g) != 0:
+                        reordered_entities.append(_group(g))
+                    g.clear()
+                    reordered_entities.append(c)
+            if len(g) != 0:
+                reordered_entities.append(_group(g))
+            return reordered_entities
+
+        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
+        checkType(entities, [ECtr, ECtrs])
+        return EBlock(_reorder(entities))
+
     no_parameter_satisfy = 0
     nb_parameter_satisfy = len(args)
     comments1, comments2, tags1, tags2 = comments_and_tags_of_parameters_of(function_name="satisfy", args=args)
@@ -224,7 +219,7 @@ def satisfy(*args):
             to_post = _bool_interpretation_for_in(partial, other, arg)
         elif any(isinstance(ele, ESlide) for ele in arg):  #  Case: Slide
             to_post = _block(arg)
-        elif comment_at_2:  #  Case: block
+        elif comment_at_2:  # Case: block
             for j, ele in enumerate(arg):
                 if isinstance(arg[j], (ECtr, ESlide)):
                     arg[j].note(comments2[i][j]).tag(tags2[i][j])
@@ -250,8 +245,7 @@ def Extension(*, scope, table, positive=True):
     checkType(positive, bool)
     assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples"
     assert isinstance(table[0], (tuple, int)), "Table in extension must be a list of tuples or a list of int"
-    if not isinstance(table[0], int):
-        assert len(scope) == len(table[0]), "Scope and tuples of the table must be of the same length"
+    assert isinstance(table[0], int) or len(scope) == len(table[0]), "Scope and tuples of the table must be of the same length"
     # TODO: this ckecking don't pass on Waterbucket.py, but the xml file is the same that the java version !
     # if options.checker:
     #    if id(table) not in checked_tables:

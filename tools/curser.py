@@ -194,10 +194,10 @@ class OpOverrider:
     def __add__(self, other):
         if isinstance(other, main.constraints.PartialConstraint):
             return main.constraints.PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
-        return Node.build(TypeNode.ADD, self, other) #functions.add(self, other)
+        return Node.build(TypeNode.ADD, self, other)
 
     def __radd__(self, other):
-        return Node.build(TypeNode.ADD, other, self) #functions.add(other, self)
+        return Node.build(TypeNode.ADD, other, self)
 
     def __sub__(self, other):
         if isinstance(other, main.constraints.PartialConstraint):
