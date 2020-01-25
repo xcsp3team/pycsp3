@@ -14,11 +14,14 @@ Note that:
 * a [well-documented guide](https://github.com/xcsp3team/pycsp3/blob/master/guidePyCSP3.pdf) is available
 * PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
 
-**Important**: we plan to post a (hopefully) very stable version, 1.1.0, within a few months.
+**Important**: we plan to post a (hopefully) very stable version, 1.1.0, within a few weeks/months.
 Currently, our main goal is :
-* to fix a few problems encountered with python 3.8 (with python 3.5, 3.6 and 3.7, things look good)
+* to fix a few problems encountered with python 3.8 (with python 3.5, 3.6 and 3.7, things seem to look good)
 * to give more helpful messages when the user (modeler) writes something incorrect
 
+At this stage, one can run the constraint solver 'AbsCon' (with the option -solve; see below).
+Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
+In the medium term, we also plan to develop an interface that will allow users to pilot solvers with Python.
 
 # Installation
 
@@ -73,6 +76,9 @@ Among the options, we find:
 
 * ```-variant=<variant_name>```: the name of a variant, to be used with function `variant()`.
       See Example AllInterval below, for an illustration.
+
+* ```-solve```: attempts to solve the instance with the embedded solver 'AbsCon'. It requires that Java version 8 (at least) is installed.
+
 
 ## Copying a pool of models
 
@@ -135,6 +141,13 @@ To generate the XCSP3 instance (file), the command is:
 ```console
 python3 SendMore.py
 ```
+
+To generate and solve the XCSP3 instance, the command is:
+
+```console
+python3 SendMore.py -solve
+```
+
 
 
 ## Example 3: All-Interval Series

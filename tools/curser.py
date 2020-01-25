@@ -33,7 +33,7 @@ def _list_mul(self, other):
 def _range_in(self, other):
     if not OpOverrider.activated:
         return range.__contains__(other)
-    if isinstance(other, (main.constraints.ScalarProduct)):
+    if isinstance(other, main.constraints.ScalarProduct):
         other = functions.Sum(other)
     if isinstance(other, (main.constraints.PartialConstraint, Variable)):
         functions.queue_in.append((self, other))
