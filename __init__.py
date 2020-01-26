@@ -4,7 +4,7 @@ from itertools import combinations, product, permutations
 from pycsp3.functions import *  # keep it at first position (before Compilation)
 from pycsp3.compiler import Compilation
 from pycsp3.tools.utilities import value_in_base
-
+import pycsp3
 
 def _pycharm_security():
     _ = (combinations, product, permutations)
