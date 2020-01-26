@@ -176,7 +176,6 @@ def _compile():
     
     filename = filename_prefix + ".xml"
     root = build_document(filename_prefix)
-    print(filename_prefix)
     if root is not None:
         pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8")
         with open(filename, "w") as f:
@@ -209,7 +208,7 @@ def _compile():
     if options.solve is True:
         from pycsp3.solvers.abscon import AbsConProcess
         solution = AbsConProcess().solve(filename)
-        print("solution:")
+        print()
         print(solution)
 
     return filename
