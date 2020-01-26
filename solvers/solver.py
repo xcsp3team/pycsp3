@@ -5,7 +5,7 @@ from io import IOBase
 from lxml import etree
 from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
-from pycsp3.classes.entities import VarEntities
+from pycsp3.classes.entities import VarEntities, EVarArray, EVar
 from pycsp3.tools.utilities import Stopwatch
 
 
@@ -95,11 +95,23 @@ class SolverProcess:
             return False
 
     def solution(self):
-        if self.stdout.find("<unsatisfiable"):
+        if self.stdout.find("<unsatisfiable") != -1 or self.stdout.find("s UNSATISFIABLE") != -1:
             return Instantiation("unsatisfiable", "None", "None")
         left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
         root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))
-        variables = [x for token in root[0].text.split() for item in VarEntities.items for x in item.flatVars if item.name in token]
+        
+        variables = []
+        for token in root[0].text.split():
+            for item in VarEntities.items:
+                if isinstance(item, EVarArray):
+                    for x in item.flatVars:
+                        if item.name in token:
+                            variables.append(x)
+                            
+                if isinstance(item, EVar):
+                    if item.variable.id in token:
+                        variables.append(item.variable)
+        
         values = root[1].text.split()  # a list with all values given as strings (possibly '*')
         for i, v in enumerate(values):
             variables[i].value = v  # we add new field (may be useful)
