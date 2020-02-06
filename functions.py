@@ -243,9 +243,9 @@ def Extension(*, scope, table, positive=True):
     checkType(scope, [Variable])
     checkType(table, [str, int, float])
     checkType(positive, bool)
-    assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples"
-    assert isinstance(table[0], (tuple, int)), "Table in extension must be a list of tuples or a list of int"
-    assert isinstance(table[0], int) or len(scope) == len(table[0]), "Scope and tuples of the table must be of the same length"
+    assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples (or integers)"
+    assert isinstance(table[0], (tuple, int)), "Elements of tables are tuples or integers"
+    assert isinstance(table[0], int) or len(scope) == len(table[0]), "The length of each tuple must be the same as the arity"
     # TODO: this ckecking don't pass on Waterbucket.py, but the xml file is the same that the java version !
     # if options.checker:
     #    if id(table) not in checked_tables:
@@ -683,27 +683,21 @@ def maximize(term):
 
 
 def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None, filtering=None, prepro=None, search=None, restarts=None):
-    def _new_annotation(obj):
-        assert type(obj) not in AnnEntities.items_types, "This annotation can be specified only one time"
-        return EAnnotation(obj)
+    def add_annotation(obj, Ann):
+        if obj:
+            ann = Ann(obj)
+            assert type(ann) not in AnnEntities.items_types, "This annotation can be specified only one time"
+            annotations.append(EAnnotation(ann))
 
     annotations = []
-    if decision:
-        annotations.append(_new_annotation(AnnotationDecision(decision)))
-    if output:
-        annotations.append(_new_annotation(AnnotationOutput(output)))
-    if varHeuristic:
-        annotations.append(_new_annotation(AnnotationVarHeuristic(varHeuristic)))
-    if valHeuristic:
-        annotations.append(_new_annotation(AnnotationValHeuristic(valHeuristic)))
-    if filtering:
-        annotations.append(_new_annotation(AnnotationFiltering(filtering)))
-    if prepro:
-        annotations.append(_new_annotation(AnnotationPrepro(prepro)))
-    if search:
-        annotations.append(_new_annotation(AnnotationSearch(search)))
-    if restarts:
-        annotations.append(_new_annotation(AnnotationRestarts(restarts)))
+    add_annotation(decision, AnnotationDecision)
+    add_annotation(output, AnnotationOutput)
+    add_annotation(varHeuristic, AnnotationVarHeuristic)
+    add_annotation(valHeuristic, AnnotationValHeuristic)
+    add_annotation(filtering, AnnotationFiltering)
+    add_annotation(prepro, AnnotationPrepro)
+    add_annotation(search, AnnotationSearch)
+    add_annotation(restarts, AnnotationRestarts)
     return annotations
 
 
@@ -797,4 +791,4 @@ def cp_array(l):
 
 
 def _pycharm_security():
-    _ = (pycsp3.tools.curser, alphabet_positions, transpose, is_containing, CtrEntities, DataDict)
+    _ = (alphabet_positions, transpose, is_containing, DataDict)

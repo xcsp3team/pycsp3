@@ -1,3 +1,4 @@
+import os
 from collections import OrderedDict
 
 from pycsp3 import functions
@@ -8,7 +9,7 @@ from pycsp3.classes.entities import ECtr, TypeNode, Node
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error
 
-import os
+
 class Diffs:
     """"
       Objects of this class are used to record the differences between two (or more) close constraints.
@@ -86,18 +87,16 @@ class Constraint:
             return False  # condition cannot be currently abstracted and two arguments of different size cannot be currently abstracted
         return diffs
 
-    def replace_condition(self, operator, right_operand):
-        self.arg(TypeCtrArg.CONDITION, Condition.build_condition((operator, right_operand)))
-        return self
-
-    def replace(self, arg_name, arg_value):
+    def replace_arg(self, arg_name, arg_value):
         assert isinstance(arg_name, TypeCtrArg)
         self.arg(arg_name, arg_value)
         return self
 
+    def replace_condition(self, operator, right_operand):
+        return self.replace_arg(TypeCtrArg.CONDITION, Condition.build_condition((operator, right_operand)))
+
     def replace_value(self, new_value):
-        self.arg(TypeCtrArg.VALUE, new_value)
-        return self
+        return self.replace_arg(TypeCtrArg.VALUE, new_value)
 
     def parameter_form(self, p):
         length = len(p) if isinstance(p, list) else 1
@@ -192,7 +191,7 @@ class ConstraintMdd(Constraint):
     def __init__(self, lst, transitions):
         super().__init__(TypeCtr.MDD)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
-        # TODO reordering transitions in order to have
+        # TODO reordering transitions in order to guarantee to have
         # - the root as the src of the first transition
         # - the terminal as the dst of the last transition
         # - no transition with a src occurring before it was reached
@@ -442,7 +441,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
         assert isinstance(self.constraint, ConstraintSum) and isinstance(other, int)
         args = self.constraint.arguments
         coeffs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-        self.constraint.replace(TypeCtrArg.COEFFS, [c * other for c in coeffs])
+        self.constraint.replace_arg(TypeCtrArg.COEFFS, [c * other for c in coeffs])
         return self
 
     def __rmul__(self, other):
