@@ -76,12 +76,9 @@ def Var(term=None, *others, dom=None):
     name = extract_declaration_for("Var")
     comment, tags = comment_and_tags_of(function_name="Var")
 
-    assert isinstance(comment, (str, type(None))), \
-        "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
-    assert name not in Variable.name2obj, \
-        "The identifier " + name + " is used twice. This is not possible"
-    assert dom.get_type() in {TypeVar.INTEGER, TypeVar.SYMBOLIC}, \
-        "Currently, only integer and symbolic variables are supported. Problem with domain " + str(dom)
+    assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
+    assert name not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
+    assert dom.get_type() in {TypeVar.INTEGER, TypeVar.SYMBOLIC}, "Currently, only integer and symbolic variables are supported. Problem with " + str(dom)
     assert str(name) not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
 
     var_object = VariableInteger(name, dom) if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name, dom)
@@ -99,12 +96,10 @@ def VarArray(*, size, dom, comment=None):
     if comment is None and not isinstance(name, list):
         comment, tags = comment_and_tags_of(function_name="VarArray")
 
-    assert isinstance(comment, (str, type(None))), \
-        "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
+    assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
     assert not isinstance(dom, type(lambda: 0)) or len(size) == len(inspect.signature(dom).parameters), \
         "The number of arguments of the lambda must be equal to the number of dimensions of the multidimensional array"
-    assert isinstance(comment, (str, type(None))), \
-        "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
+    assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
     assert str(name) not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
 
     var_objects = Variable.build_variables_array(name, size, dom)
@@ -258,9 +253,6 @@ def Extension(*, scope, table, positive=True):
     return ECtr(ConstraintExtension(scope, table, positive))
 
 
-''' Constraints in intension '''
-
-
 def Intension(node):
     checkType(node, Node)
     ctr = ECtr(ConstraintIntension(node))
@@ -381,7 +373,7 @@ def AllEqual(term, *others):
     return ECtr(ConstraintAllEqual(terms))
 
 
-def _ordered(term, *others, operator, lengths=None):
+def _ordered(term, others, operator, lengths):
     terms = flatten(term, others)
     checkType(terms, [Variable])
     checkType(operator, TypeOrderedOperator)
@@ -394,14 +386,14 @@ def _ordered(term, *others, operator, lengths=None):
 
 
 def Increasing(term, *others, strict=False, lengths=None):
-    return _ordered(term, *others, operator=TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, lengths=lengths)
+    return _ordered(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, lengths)
 
 
 def Decreasing(term, *others, strict=False, lengths=None):
-    return _ordered(term, *others, operator=TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, lengths=lengths)
+    return _ordered(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, lengths)
 
 
-def _lex(term, *others, operator, matrix=False):
+def _lex(term, others, operator, matrix):
     if len(others) == 0:
         assert is_matrix(term, Variable)
         lists = [flatten(l) for l in term]
@@ -409,20 +401,18 @@ def _lex(term, *others, operator, matrix=False):
         assert is_1d_list(term, Variable) and all(is_1d_list(l, Variable) for l in others)
         lists = [flatten(term)] + [flatten(l) for l in others]
     assert is_matrix(lists, Variable)  # new check because some null cells (variables) may have been discarded
-    checkType(lists, [Variable])
     assert all(len(l) == len(lists[0]) for l in lists)
+    checkType(lists, [Variable])
     checkType(operator, TypeOrderedOperator)
-    if matrix:
-        return ECtr(ConstraintLexMatrix(lists, operator))
-    return ECtr(ConstraintLex(lists, operator))
+    return ECtr(ConstraintLexMatrix(lists, operator)) if matrix else ECtr(ConstraintLex(lists, operator))
 
 
 def LexIncreasing(term, *others, strict=False, matrix=False):
-    return _lex(term, *others, operator=TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, matrix=matrix)
+    return _lex(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, matrix)
 
 
 def LexDecreasing(term, *others, strict=False, matrix=False):
-    return _lex(term, *others, operator=TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix=matrix)
+    return _lex(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix)
 
 
 ''' Method for handling complete/partial constraints '''
@@ -552,24 +542,22 @@ def Cardinality(term, *others, occurrences, closed=False):
 ''' Connection Constraints '''
 
 
-def Maximum(term, *others, index=None, start_index=0, type_rank=TypeRank.ANY, condition=None):
+def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     terms = flatten(term, others)
     checkType(terms, [Variable])
     checkType(index, (Variable, type(None)))
     checkType(start_index, int)
     checkType(type_rank, TypeRank)
     assert index is not None or (start_index == 0 and type_rank is TypeRank.ANY)
-    return _wrapping_by_complete_or_partial_constraint(ConstraintMaximum(terms, index, start_index, type_rank, Condition.build_condition(condition)))
+    return ConstraintMaximum(terms, index, start_index, type_rank, condition) if maximum else ConstraintMinimum(terms, index, start_index, type_rank, condition)
+
+
+def Maximum(term, *others, index=None, start_index=0, type_rank=TypeRank.ANY, condition=None):
+    return _wrapping_by_complete_or_partial_constraint(_extremum(term, others, index, start_index, type_rank, condition, True))
 
 
 def Minimum(term, *others, index=None, start_index=0, type_rank=TypeRank.ANY, condition=None):
-    terms = flatten(term, others)
-    checkType(terms, [Variable])
-    checkType(index, (Variable, type(None)))
-    checkType(start_index, int)
-    checkType(type_rank, TypeRank)
-    assert index is not None or (start_index == 0 and type_rank is TypeRank.ANY)
-    return _wrapping_by_complete_or_partial_constraint(ConstraintMinimum(terms, index, start_index, type_rank, Condition.build_condition(condition)))
+    return _wrapping_by_complete_or_partial_constraint(_extremum(term, others, index, start_index, type_rank, condition, False))
 
 
 # def Element(*, vector, index=None, value, rank=TypeRank.ANY):
@@ -686,7 +674,7 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
     def add_annotation(obj, Ann):
         if obj:
             ann = Ann(obj)
-            assert type(ann) not in AnnEntities.items_types, "This annotation can be specified only one time"
+            assert type(ann) not in AnnEntities.items_types, "This type of annotation can be specified only one time"
             annotations.append(EAnnotation(ann))
 
     annotations = []
@@ -729,8 +717,7 @@ def diagonals_down(m, *, broken=False):
     assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     if broken:
         return ListVar(diagonal_down(m, i, -1, False) for i in range(len(m)))
-    return ListVar(diagonal_down(m, i, 0, False) for i in reversed(range(len(m) - 1))) + ListVar(
-        diagonal_down(m, 0, j, False) for j in range(1, len(m) - 1))
+    return ListVar(diagonal_down(m, i, 0, False) for i in reversed(range(len(m) - 1))) + ListVar(diagonal_down(m, 0, j, False) for j in range(1, len(m) - 1))
 
 
 def diagonal_up(m, i=-1, j=-1, check=True):
@@ -747,8 +734,7 @@ def diagonals_up(m, *, broken=False):
     assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     if broken:
         return ListVar(diagonal_up(m, i, -1, False) for i in range(len(m)))
-    return ListVar(diagonal_up(m, i, 0, False) for i in range(1, len(m))) + ListVar(
-        diagonal_up(m, len(m) - 1, j, False) for j in range(1, len(m) - 1))
+    return ListVar(diagonal_up(m, i, 0, False) for i in range(1, len(m))) + ListVar(diagonal_up(m, len(m) - 1, j, False) for j in range(1, len(m) - 1))
 
 
 def different_values(*args):

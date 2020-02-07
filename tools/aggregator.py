@@ -54,42 +54,40 @@ def detecting_groups_recursively(ctr_entities):
 
 # Phase 2 : Building groups (constraint templates and args)
 
-def _replace_parameter(s, k, v):
-    return (s.replace("(" + k + ")", "(" + v + ")").replace("," + k + ",", "," + v + ",").replace("(" + k + ",", "(" + v + ",")
-            .replace("," + k + ")", "," + v + ")").replace("(" + k + ")", "(" + v + ")"))
-
-
-def _is_same_value_at_column(i, all_args):
-    """ comparison from both ends so as to find opportunistically that the parameter is not the same everywhere"""
-    left, right = 1, len(all_args) - 1
-    value = all_args[0][i]
-    while True:
-        if value != all_args[left][i]:
-            return False
-        left += 1
-        if value != all_args[right][i]:
-            return False
-        right -= 1
-        if left > right:
-            break
-    return True
-
-
-def _is_same_value_in_columns(i, j, all_args):
-    left, right = 0, len(all_args) - 1
-    while True:
-        if all_args[left][i] != all_args[left][j]:
-            return False
-        left += 1
-        if all_args[right][i] != all_args[right][j]:
-            return False
-        right -= 1
-        if left > right:
-            break
-    return True
-
 
 def _compute_group_abstraction_intension(group):
+    def _replace_parameter(s, k, v):
+        return (s.replace("(" + k + ")", "(" + v + ")").replace("," + k + ",", "," + v + ",").replace("(" + k + ",", "(" + v + ",")
+                .replace("," + k + ")", "," + v + ")").replace("(" + k + ")", "(" + v + ")"))
+
+    def _is_same_value_at_column(i, all_args):
+        """ comparison from both ends so as to find opportunistically that the parameter is not the same everywhere"""
+        left, right = 1, len(all_args) - 1
+        value = all_args[0][i]
+        while True:
+            if value != all_args[left][i]:
+                return False
+            left += 1
+            if value != all_args[right][i]:
+                return False
+            right -= 1
+            if left > right:
+                break
+        return True
+
+    def _is_same_value_in_columns(i, j, all_args):
+        left, right = 0, len(all_args) - 1
+        while True:
+            if all_args[left][i] != all_args[left][j]:
+                return False
+            left += 1
+            if all_args[right][i] != all_args[right][j]:
+                return False
+            right -= 1
+            if left > right:
+                break
+        return True
+
     all_args = [ce.constraint.abstract_values() for ce in group.entities]
     abstract_tree = group.entities[0].constraint.abstract_tree()
     n_parameters = len(group.entities[0].constraint.abstract_values())
@@ -190,20 +188,20 @@ def building_groups_recursively(ctr_entities, previous=None):
 
 # Phase 3 : adding/removing some blocks
 
-def _building_block(ce):
-    if len(ce.entities) == 0:
-        return ce
-    if len(ce.entities) == 1:  # no need to create a block in this case
-        ce.entities[0].copy_basic_attributes_of(ce)
-        return ce.entities[0]
-    block = EBlock([ce])  # creating a new block and copying the appropriate comments and tags
-    block.copy_basic_attributes_of(ce if not ce.blank_basic_attributes() else ce.entities[0])
-    for c in ce.entities:  # clearing comments and tags of the constraints embedded in the block
-        c.clear_basic_attributes()
-    return block
-
 
 def canonizing_groups_and_blocks(ctr_entities, previous=None):
+    def _building_block(ce):
+        if len(ce.entities) == 0:
+            return ce
+        if len(ce.entities) == 1:  # no need to create a block in this case
+            ce.entities[0].copy_basic_attributes_of(ce)
+            return ce.entities[0]
+        block = EBlock([ce])  # creating a new block and copying the appropriate comments and tags
+        block.copy_basic_attributes_of(ce if not ce.blank_basic_attributes() else ce.entities[0])
+        for c in ce.entities:  # clearing comments and tags of the constraints embedded in the block
+            c.clear_basic_attributes()
+        return block
+
     for i, ce in enumerate(ctr_entities):
         if not isinstance(ce, ECtrs) or len(ce.entities) == 0:
             continue
@@ -232,18 +230,18 @@ def canonizing_groups_and_blocks(ctr_entities, previous=None):
 
 # Phase 4 : detecting forms corresponding to instantiations
 
-def _elements_for_building_instantiation(trees):
-    t1, t2 = [], []
-    for tree in trees:
-        pair = tree.var_val_if_binary_type(TypeNode.EQ)
-        if pair is None:
-            return None
-        t1.append(pair[0])
-        t2.append(pair[1])
-    return t1, t2
-
 
 def recognizing_instantiations(ctr_entities):
+    def _elements_for_building_instantiation(trees):
+        t1, t2 = [], []
+        for tree in trees:
+            pair = tree.var_val_if_binary_type(TypeNode.EQ)
+            if pair is None:
+                return None
+            t1.append(pair[0])
+            t2.append(pair[1])
+        return t1, t2
+
     for i, ce in enumerate(ctr_entities):
         # since a group, we can test only the first constraint (to see if it is a group of intension constraints)
         if isinstance(ce, EGroup) and isinstance(ce.entities[0].constraint, ConstraintIntension):
