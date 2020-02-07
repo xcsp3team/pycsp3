@@ -73,7 +73,7 @@ def _load_model():
         specification = util.spec_from_file_location("", name)
         model = util.module_from_spec(specification)
         # model.specification = specification
-        
+
         return model, model_string
     except:
         usage("It was not possible to read the file: " + sys.argv[0])
@@ -171,9 +171,9 @@ def _compile():
     build_compact_forms()
     if options.time:
         print("\tWall time for creating compact forms:", Compilation.stopwatch1.elapsed_time(reset=True), "seconds")
-    
+
     filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
-    
+
     filename = filename_prefix + ".xml"
     root = build_document(filename_prefix)
     if root is not None:
@@ -212,7 +212,6 @@ def _compile():
         print(solution)
 
     return filename
-
 
 
 def usage(message):
