@@ -1,7 +1,7 @@
 import inspect
-import itertools
 import types
 from collections import deque
+from itertools import combinations, product, permutations
 
 from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
@@ -739,14 +739,14 @@ def diagonals_up(m, *, broken=False):
 
 def different_values(*args):
     assert all(isinstance(arg, int) for arg in args)
-    return all(a != b for (a, b) in itertools.combinations(args, 2))
+    return all(a != b for (a, b) in combinations(args, 2))
 
 
 def to_ordinary_table(table, domain_sizes):
     tb = set()
     for t in table:
         if ANY in t:
-            for otuple in itertools.product(*(range(v, v + 1) if v != ANY else range(domain_sizes[i]) for i, v in enumerate(t))):
+            for otuple in product(*(range(v, v + 1) if v != ANY else range(domain_sizes[i]) for i, v in enumerate(t))):
                 tb.add(otuple)
         else:
             tb.add(t)
@@ -777,4 +777,4 @@ def cp_array(l):
 
 
 def _pycharm_security():
-    _ = (alphabet_positions, transpose, is_containing, DataDict)
+    _ = (permutations, alphabet_positions, transpose, is_containing, DataDict, no_parameter_satisfy, nb_parameter_satisfy)

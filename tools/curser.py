@@ -20,23 +20,10 @@ def cursing():
             return main.constraints.ScalarProduct(self, other)
         return list.__mul__(self, other)
 
-    def _range_contains(self, other):  # for being able to use 'in' when expressing conditions of constraints
-        if not OpOverrider.activated:
-            return range.__contains__(other)
-        if isinstance(other, main.constraints.ScalarProduct):
-            other = functions.Sum(other)
-        if isinstance(other, (main.constraints.PartialConstraint, Variable)):
-            functions.queue_in.append((self, other))
-            return True
-        return range.__contains__(self, other)
-
-    def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
+    def _tuple_contains(self, other):
         if not OpOverrider.activated:
             return self.__contains__(other)
-        if isinstance(other, (main.constraints.PartialConstraint, Variable)):
-            functions.queue_in.append((self, other))
-            return True
-        if utilities.is_1d_tuple(other, Variable) or utilities.is_1d_list(other, Variable):  # this is a table constraint
+        if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
             functions.queue_in.append((list(self), other))
             return True
         return self.__contains__(other)
@@ -49,13 +36,26 @@ def cursing():
             return True
         return self.__contains__(other)
 
-    def _tuple_contains(self, other):
+    def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
-        if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
+        if isinstance(other, (main.constraints.PartialConstraint, Variable)):
+            functions.queue_in.append((self, other))
+            return True
+        if utilities.is_1d_tuple(other, Variable) or utilities.is_1d_list(other, Variable):  # this is a table constraint
             functions.queue_in.append((list(self), other))
             return True
         return self.__contains__(other)
+
+    def _range_contains(self, other):  # for being able to use 'in' when expressing conditions of constraints
+        if not OpOverrider.activated:
+            return range.__contains__(other)
+        if isinstance(other, main.constraints.ScalarProduct):
+            other = functions.Sum(other)
+        if isinstance(other, (main.constraints.PartialConstraint, Variable)):
+            functions.queue_in.append((self, other))
+            return True
+        return range.__contains__(self, other)
 
     def _enumerate_contains(self, other):
         if not OpOverrider.activated:
@@ -69,11 +69,11 @@ def cursing():
 
     curse(dict, "__add__", _dict_add)
     curse(list, "__mul__", _list_mul)
-    curse(list, "__contains__", _list_contains)
     curse(tuple, "__contains__", _tuple_contains)
-    curse(enumerate, "__contains__", _enumerate_contains)
-    curse(range, "__contains__", _range_contains)
+    curse(list, "__contains__", _list_contains)
     curse(set, "__contains__", _set_contains)
+    curse(range, "__contains__", _range_contains)
+    curse(enumerate, "__contains__", _enumerate_contains)
 
 
 cursing()
