@@ -1,8 +1,9 @@
 import inspect
 import os
+import sys
+
 if not os.name == 'nt':
     import readline
-import sys
 
 from pycsp3 import functions
 from pycsp3.dashboard import options
@@ -232,7 +233,7 @@ def extract_declaration_for(function_name):
         assert False, " the object returned by " + function_name + " should be assigned to a variable"
     declaration = line[:pos].strip()
     if declaration[-1] == '=':
-        declaration=declaration[:-1].strip()
+        declaration = declaration[:-1].strip()
     assert declaration.count('=') < 2
     if '=' in declaration:
         t = declaration.split('=')

@@ -1,4 +1,3 @@
-import datetime
 import sys
 import types
 from collections import OrderedDict
@@ -8,7 +7,6 @@ from time import time
 
 from pycsp3.classes.main.domains import Domain
 from pycsp3.dashboard import options
-from pycsp3.tools.curser import ListInt
 
 
 class Stopwatch:
@@ -20,22 +18,6 @@ class Stopwatch:
         if reset:
             self.initial_time = time()
         return elapsed_time
-
-
-# used to save data in jSON
-def prepare_for_json(obj):
-    if hasattr(obj, "__dict__") and not isinstance(obj, ListInt):
-        d = obj.__dict__
-        for k, v in d.items():
-            d[k] = prepare_for_json(v)
-        return d
-    else:
-        if isinstance(obj, datetime.time):
-            return str(obj)
-        if hasattr(obj, "__getitem__") and hasattr(obj, "__setitem__") and hasattr(obj, "__iter__"):  # TODO do we need all three tests?
-            for i, v in enumerate(obj):
-                obj[i] = prepare_for_json(v)
-        return obj
 
 
 class DefaultListOrderedDict(OrderedDict):

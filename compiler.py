@@ -7,9 +7,9 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data import dataparser
 from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
-from pycsp3.tools.curser import OpOverrider
+from pycsp3.tools.curser import OpOverrider, ListInt
 from pycsp3.tools.slider import handle_slides
-from pycsp3.tools.utilities import Stopwatch, prepare_for_json
+from pycsp3.tools.utilities import Stopwatch
 from pycsp3.tools.xcsp import build_document
 
 
@@ -154,6 +154,21 @@ def _load(*, console=False):
 
 
 def _compile():
+    # used to save data in jSON
+    def prepare_for_json(obj):
+        if hasattr(obj, "__dict__") and not isinstance(obj, ListInt):
+            d = obj.__dict__
+            for k, v in d.items():
+                d[k] = prepare_for_json(v)
+            return d
+        else:
+            if isinstance(obj, datetime.time):
+                return str(obj)
+            if hasattr(obj, "__getitem__") and hasattr(obj, "__setitem__") and hasattr(obj, "__iter__"):  # TODO do we need all three tests?
+                for i, v in enumerate(obj):
+                    obj[i] = prepare_for_json(v)
+            return obj
+
     OpOverrider.disable()
     if options.debug or options.display:
         print("\n", sys.argv, "\n")

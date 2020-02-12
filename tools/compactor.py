@@ -55,75 +55,73 @@ class SequenceOfSuccessiveVariables:
         return s
 
 
-def _simple_partition(vars):
-    # if isinstance(vars, list) and len(vars) == 1 and isinstance(vars[0], list): vars = vars[0]  # TODO never reached. We can remove that ?
-    harvest = []  # variables (and other objects) are collected to compute the complete expanded form (string) with their names (values)
-    arrays = []  # arrays encountered and recorded all along the process
-    others = []  # list collecting any stand-alone variables or any kind of objects that are not variables from arrays
-    arrays_partition = defaultdict(list)  # a dict for partitioning variables according to arrays
-
-    def update(z):
-        harvest.append(z)
-        if isinstance(z, Variable) and z.indexes:  # if z from an array
-            va = VarEntities.varToEVarArray[z]
-            arrays_partition[va].append(z)
-            if va not in arrays:
-                arrays.append(va)
-            elif arrays[-1][0] != va:
-                return False
-        else:  # if z is not DELETED:  # it can be a Variable, but also an integer, a Node, a state (for an automaton).
-            others.append(z)
-        return True
-
-    for x in vars:
-        if isinstance(x, list):
-            for y in x:
-                assert isinstance(y, Variable), "a variable is expected in the inner list. Problem with " + str(
-                    y)  # relaxing this by a test 'not isinstance(y,list)' ?
-                if not update(y):
-                    return None  # because variables from different arrays are mixed
-        else:
-            if not update(x):
-                return None  # because variables from different arrays are mixed
-    # arrays = sorted(arrays, key=attrgetter('id'))  # TODO useless. No impact at all. We can remove that, right?
-    return arrays, others, arrays_partition, " ".join(str(x) for x in harvest)
-
-
-def _complex_partition(vars):
-    harvest = []  # variables (and other objects) are collected to compute the complete expanded form (string) with their names (values)
-    partition = []  # the partition built from successive identified parts
-    part = []  # the current part being built (before being added to the partition)
-    no_arrays = False
-
-    def update(z):
-        nonlocal part, no_arrays
-        harvest.append(z)
-        if isinstance(z, Variable) and z.indexes:
-            no_arrays = False
-            if len(part) == 0 or VarEntities.varToEVarArray[z].id == VarEntities.varToEVarArray[part[-1]].id:
-                part.append(z)
-            else:
-                partition.append(part)
-                part = [z]
-        else:  # z is not DELETED:
-            partition.append(part)
-            partition.append(z)
-            part = []
-
-    for x in vars:
-        if isinstance(x, list):
-            for y in x:
-                update(y)
-        else:
-            update(x)
-    if len(part) > 0:
-        partition.append(part)
-    if no_arrays:
-        return None, None
-    return partition, " ".join(str(x) for x in harvest)
-
-
 def build_partition(vars, preserveOrder):
+    def _simple_partition(vars):
+        # if isinstance(vars, list) and len(vars) == 1 and isinstance(vars[0], list): vars = vars[0]  # TODO never reached. We can remove that ?
+        harvest = []  # variables (and other objects) are collected to compute the complete expanded form (string) with their names (values)
+        arrays = []  # arrays encountered and recorded all along the process
+        others = []  # list collecting any stand-alone variables or any kind of objects that are not variables from arrays
+        arrays_partition = defaultdict(list)  # a dict for partitioning variables according to arrays
+
+        def update(z):
+            harvest.append(z)
+            if isinstance(z, Variable) and z.indexes:  # if z from an array
+                va = VarEntities.varToEVarArray[z]
+                arrays_partition[va].append(z)
+                if va not in arrays:
+                    arrays.append(va)
+                elif arrays[-1][0] != va:
+                    return False
+            else:  # if z is not DELETED:  # it can be a Variable, but also an integer, a Node, a state (for an automaton).
+                others.append(z)
+            return True
+
+        for x in vars:
+            if isinstance(x, list):
+                for y in x:
+                    assert isinstance(y, Variable), "a variable is expected in the inner list. Problem with " + str(
+                        y)  # relaxing this by a test 'not isinstance(y,list)' ?
+                    if not update(y):
+                        return None  # because variables from different arrays are mixed
+            else:
+                if not update(x):
+                    return None  # because variables from different arrays are mixed
+        # arrays = sorted(arrays, key=attrgetter('id'))  # TODO useless. No impact at all. We can remove that, right?
+        return arrays, others, arrays_partition, " ".join(str(x) for x in harvest)
+
+    def _complex_partition(vars):
+        harvest = []  # variables (and other objects) are collected to compute the complete expanded form (string) with their names (values)
+        partition = []  # the partition built from successive identified parts
+        part = []  # the current part being built (before being added to the partition)
+        no_arrays = False
+
+        def update(z):
+            nonlocal part, no_arrays
+            harvest.append(z)
+            if isinstance(z, Variable) and z.indexes:
+                no_arrays = False
+                if len(part) == 0 or VarEntities.varToEVarArray[z].id == VarEntities.varToEVarArray[part[-1]].id:
+                    part.append(z)
+                else:
+                    partition.append(part)
+                    part = [z]
+            else:  # z is not DELETED:
+                partition.append(part)
+                partition.append(z)
+                part = []
+
+        for x in vars:
+            if isinstance(x, list):
+                for y in x:
+                    update(y)
+            else:
+                update(x)
+        if len(part) > 0:
+            partition.append(part)
+        if no_arrays:
+            return None, None
+        return partition, " ".join(str(x) for x in harvest)
+
     if not preserveOrder:
         simple_partition = _simple_partition(vars)  # we make an attempt to build a simple partition
     else:

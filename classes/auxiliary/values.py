@@ -1,12 +1,13 @@
-class SymbolicValue():
+class SymbolicValue:
     def __init__(self, value):
         self.value = value
 
     def __eq__(self, other):
-        return self.value == other.value if isinstance(other, SymbolicValue) else NotImplemented
+        return self.value == other.value if isinstance(other, SymbolicValue) else False
 
     def __lt__(self, other):
-        return self.value < other.value if isinstance(other, SymbolicValue) else NotImplemented
+        assert isinstance(other, SymbolicValue)
+        return self.value < other.value
 
     def __contains__(self, v):
         return v == self.value
@@ -43,10 +44,11 @@ class IntegerValue(IntegerEntity):
         return [self.value]
 
     def __eq__(self, other):
-        return self.value == other.value if isinstance(other, IntegerValue) else NotImplemented
+        return self.value == other.value if isinstance(other, IntegerValue) else False
 
     def __lt__(self, other):
-        return self.value < other.value if isinstance(other, IntegerValue) else NotImplemented
+        assert isinstance(other, IntegerValue)
+        return self.value < other.value
 
     def __contains__(self, v):
         return v == self.value
@@ -71,23 +73,24 @@ class IntegerInterval(IntegerEntity):
     def width(self):
         return self.width
 
-    def is_binary(self):
-        return self.inf == 0 and self.sup == 1
-
     def to_list(self):
         return [v for v in range(self.inf, self.sup + 1)]
 
-    def __eq__(self, other):
-        return self.inf == other.inf and self.sup == other.sup if isinstance(other, IntegerInterval) else NotImplemented
-
-    def __lt__(self, other):
-        return self.sup <= other.inf if isinstance(other, IntegerInterval) else NotImplemented
+    def is_binary(self):
+        return self.inf == 0 and self.sup == 1
 
     def __iter__(self):
         return self.to_list().__iter__()
 
     def __getitem__(self, item):
         return self.to_list().__getitem__(item)
+
+    def __eq__(self, other):
+        return self.inf == other.inf and self.sup == other.sup if isinstance(other, IntegerInterval) else False
+
+    def __lt__(self, other):
+        assert isinstance(other, IntegerInterval)
+        return self.sup <= other.inf
 
     def __contains__(self, v):
         return self.inf <= v <= self.sup

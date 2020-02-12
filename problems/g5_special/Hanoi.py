@@ -1,4 +1,5 @@
 from pycsp3 import *
+from pycsp3.tools.utilities import value_in_base
 
 nDisks, nTowers = data.nDisks, 3
 nStates, nSteps = nTowers ** nDisks, 2 ** nDisks - 1

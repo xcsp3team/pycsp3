@@ -2,14 +2,13 @@ import os
 import shutil
 import subprocess
 import sys
-
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import PURPLE, BLUE, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
-DATA_PATH = "pycsp3"+os.sep+"problems"+os.sep+"data"+os.sep
-XCSP_PATH = "pycsp3"+os.sep+"problems"+os.sep+"tests"+os.sep+"xcsp"+os.sep
+DATA_PATH = "pycsp3" + os.sep + "problems" + os.sep + "data" + os.sep
+XCSP_PATH = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "xcsp" + os.sep
 
 
 def run(tests1, tests2=None, tests3=None, *, tests=False):
@@ -50,7 +49,7 @@ class Tester:
 
     @staticmethod
     def xml_indent(file):
-        cmd = ["pycsp3"+os.sep+"libs"+os.sep+"xmlindent"+os.sep+"xmlindent", '-i', '2', '-w', file]
+        cmd = ["pycsp3" + os.sep + "libs" + os.sep + "xmlindent" + os.sep + "xmlindent", '-i', '2', '-w', file]
         print(cmd)
         out, error = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         if error.decode('utf-8') != "":
@@ -77,17 +76,17 @@ class Tester:
         return lines
 
     def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_xml=None, dir_prs_py=None, dir_prs_jv=None):
-        
+
         if name is None:
             assert dir_pbs_py and dir_pbs_jv and dir_xml
         else:
-            dir_pbs_py = "pycsp3"+os.sep+"problems"+os.sep + name + os.sep
+            dir_pbs_py = "pycsp3" + os.sep + "problems" + os.sep + name + os.sep
             dir_pbs_jv = "problems." + name + "."
-            dir_xml = "pycsp3"+os.sep+"problems"+os.sep+"tests"+os.sep+"tmp"+os.sep + name
-            dir_prs_py = "pycsp3"+os.sep+"problems"+os.sep+"data"+os.sep+"parsers"+os.sep
+            dir_xml = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "tmp" + os.sep + name
+            dir_prs_py = "pycsp3" + os.sep + "problems" + os.sep + "data" + os.sep + "parsers" + os.sep
             dir_prs_jv = "problems.generators."
 
-        self.tmpDiff = dir_xml + os.sep +"tmpDiff.txt"
+        self.tmpDiff = dir_xml + os.sep + "tmpDiff.txt"
         if not os.path.exists(dir_xml):
             os.makedirs(dir_xml)
         else:
@@ -159,13 +158,13 @@ class Tester:
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
         print()
 
-        cmd = "java -cp pycsp3"+os.sep+"solvers"+os.sep+"abscon"+os.sep+"AbsCon-19-08.jar"+os.pathsep+"pycsp3"+os.sep+"solvers"+os.sep+"abscon"+os.sep+"xcsp3-tools-1.1.1-SNAPSHOT.jar"+os.pathsep+"pycsp3"+os.sep+"solvers"+os.sep+"abscon"+os.sep+"javax.json-1.0.4.jar"
+        cmd = "java -cp pycsp3" + os.sep + "solvers" + os.sep + "abscon" + os.sep + "AbsCon-19-08.jar" + os.pathsep + "pycsp3" + os.sep + "solvers" + os.sep + "abscon" + os.sep + "xcsp3-tools-1.1.1-SNAPSHOT.jar" + os.pathsep + "pycsp3" + os.sep + "solvers" + os.sep + "abscon" + os.sep + "javax.json-1.0.4.jar"
         cmd += " AbsCon " if special else " org.xcsp.modeler.Compiler "
         cmd += "problems.generators." + prs_jv if prs_jv else self.dir_pbs_jv + model
         if self.data_jv(data):
             if dataSpecial:
                 cmd += " " + str(dataSpecial)
-            cmd += " " + (DATA_PATH + "raw"+os.sep if prs_jv else " -data=") + self.data_jv(data)
+            cmd += " " + (DATA_PATH + "raw" + os.sep if prs_jv else " -data=") + self.data_jv(data)
         if special:
             cmd += " -ic=false -export=file"
         if variant:
