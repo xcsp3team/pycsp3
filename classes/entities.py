@@ -4,7 +4,8 @@ from functools import reduce
 from pycsp3.classes.auxiliary.types import auto
 from pycsp3.classes.main.variables import Variable, NotVariable, NegVariable
 from pycsp3.dashboard import options
-from pycsp3.tools import utilities, inspector
+from pycsp3.tools.utilities import flatten
+from pycsp3.tools.inspector import checkType
 
 
 class Entity:
@@ -68,7 +69,7 @@ class EVarArray(Entity):
         super().__init__(name, comment, tags)
         self.name = name
         self.variables = X
-        self.flatVars = utilities.flatten(X)
+        self.flatVars = flatten(X)
         assert len(self.flatVars) != 0, "Array of variable empty !"
         self.size = []
         curr = self.variables
@@ -172,7 +173,7 @@ class ESlide(ECtrs):
 
 class EIfThenElse(ECtrs):
     def __init__(self, constraints):
-        inspector.checkType(constraints, [ECtr])
+        checkType(constraints, [ECtr])
         assert len(constraints) == 3, "Error: three components must be specified in ifThenElse"
         super().__init__(constraints)
 
@@ -394,7 +395,7 @@ class Node(Entity):
         if type is TypeNode.SET:
             assert len(args) == 1
             return Node(type, Node._create_sons(*sorted(args[0])))
-        args = utilities.flatten(Node.build(TypeNode.SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args)
+        args = flatten(Node.build(TypeNode.SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args)
         assert type.is_valid_arity(len(args)), "Problem: Bad arity for node " + type.name + ". It is " + str(
             len(args)) + " but it should be between " + str(type.arityMin) + " and " + str(type.arityMax)
         node = Node(type, Node._create_sons(*args))

@@ -1,11 +1,13 @@
+from collections import deque
 from pycsp3 import functions
 from pycsp3.classes import main
 from pycsp3.classes.entities import Node, TypeNode
 from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
 # from pycsp3.classes.main.constraints import ScalarProduct
 from pycsp3.libs.forbiddenfruit import curse
-from pycsp3.tools import utilities
+from pycsp3.tools.utilities import is_containing, is_1d_tuple, is_1d_list, is_matrix
 
+queue_in = deque()  # To keep partial constraints when using the IN operator
 
 def cursing():
     def _dict_add(self, other):  # for being able to merge dictionaries
@@ -16,23 +18,23 @@ def cursing():
         raise NotImplementedError  # return save_dict_add(self, other)
 
     def _list_mul(self, other):  # for being able to use scalar products
-        if utilities.is_containing(self, (Variable, Node), check_first_only=True):
+        if is_containing(self, (Variable, Node), check_first_only=True):
             return main.constraints.ScalarProduct(self, other)
         return list.__mul__(self, other)
 
     def _tuple_contains(self, other):
         if not OpOverrider.activated:
             return self.__contains__(other)
-        if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
-            functions.queue_in.append((list(self), other))
+        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
+            queue_in.append((list(self), other))
             return True
         return self.__contains__(other)
 
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
-        if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
-            functions.queue_in.append((self, other))
+        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
+            queue_in.append((self, other))
             return True
         return self.__contains__(other)
 
@@ -40,10 +42,10 @@ def cursing():
         if not OpOverrider.activated:
             return self.__contains__(other)
         if isinstance(other, (main.constraints.PartialConstraint, Variable)):
-            functions.queue_in.append((self, other))
+            queue_in.append((self, other))
             return True
-        if utilities.is_1d_tuple(other, Variable) or utilities.is_1d_list(other, Variable):  # this is a table constraint
-            functions.queue_in.append((list(self), other))
+        if is_1d_tuple(other, Variable) or is_1d_list(other, Variable):  # this is a table constraint
+            queue_in.append((list(self), other))
             return True
         return self.__contains__(other)
 
@@ -51,19 +53,19 @@ def cursing():
         if not OpOverrider.activated:
             return range.__contains__(other)
         if isinstance(other, main.constraints.ScalarProduct):
-            other = functions.Sum(other)
+            other = other.toward_sum()  # functions.Sum(other)
         if isinstance(other, (main.constraints.PartialConstraint, Variable)):
-            functions.queue_in.append((self, other))
+            queue_in.append((self, other))
             return True
         return range.__contains__(self, other)
 
     def _enumerate_contains(self, other):
         if not OpOverrider.activated:
             return self.__contains__(other)
-        if utilities.is_containing(other, Variable):
+        if is_containing(other, Variable):
             tmp = list(self)
             if len(tmp) > 0 and isinstance(tmp[0], (tuple, int)):
-                functions.queue_in.append((tmp, other))
+                queue_in.append((tmp, other))
                 return True
         return self.__contains__(other)
 
@@ -247,7 +249,7 @@ class OpOverrider:
             return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
-                assert utilities.is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
+                assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
                     return main.constraints.PartialConstraint(main.constraints.ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
@@ -269,7 +271,7 @@ class OpOverrider:
             return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
-                assert utilities.is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
+                assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
                     return main.constraints.PartialConstraint(main.constraints.ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
@@ -287,8 +289,8 @@ class OpOverrider:
             return result
 
     def __contains__li(self, other):
-        if utilities.is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
-            functions.queue_in.append((self, other))
+        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
+            queue_in.append((self, other))
             return True
         return list.__contains__(self, other)
 
@@ -304,9 +306,9 @@ class ListInt(list):
         return ListInt(list.__add__(self, other))
 
     def __mul__(self, other):
-        if utilities.is_containing(other, (Variable, Node)):
+        if is_containing(other, (Variable, Node)):
             return main.constraints.ScalarProduct(other, self)
-        assert utilities.is_containing(self, (Variable, Node))
+        assert is_containing(self, (Variable, Node))
         return main.constraints.ScalarProduct(self, other)
 
     def __rmul__(self, other):
@@ -324,7 +326,7 @@ class ListVar(list):
         return ListVar(list.__add__(self, other))
 
     def __mul__(self, other):
-        assert utilities.is_containing(self, (Variable, Node))
+        assert is_containing(self, (Variable, Node))
         return main.constraints.ScalarProduct(self, other)
 
     # def __rmul__(self, other): return ListVar.__mul__(other, self)
