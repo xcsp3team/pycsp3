@@ -21,7 +21,7 @@ from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
 from pycsp3.dashboard import options
 from pycsp3.problems.data.dataparser import DataDict
-from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
+from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, queue_in
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import flatten, is_1d_list, is_2d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing
 
@@ -40,7 +40,7 @@ class Star(float):
 
 ANY = Star("inf")
 
-queue_in = deque()  # To keep partial constraints when using the IN operator
+
 
 
 def protect():
@@ -439,8 +439,7 @@ def _manage_coeffs(terms, coeffs):
         # if 0 in coeffs:
         #    terms = [term for i, term in enumerate(terms) if coeffs[i] != 0]
         #    coeffs = [coeff for coeff in coeffs if coeff != 0]
-        if all(c == 1 for c in coeffs):
-            coeffs = None
+        # if all(c == 1 for c in coeffs): coeffs = None
         checkType(coeffs, ([Variable, int], type(None)))
         OpOverrider.enable()
     return terms, coeffs

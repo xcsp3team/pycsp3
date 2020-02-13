@@ -2,12 +2,11 @@ import inspect
 import os
 import sys
 
-if not os.name == 'nt':
-    import readline
-
-from pycsp3 import functions
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import flatten
+
+if not os.name == 'nt':
+    import readline
 
 fileToTrace = [arg for arg in sys.argv if arg.endswith(".py") and "compiler.py" not in arg] + ["<stdin>"]
 
@@ -247,18 +246,17 @@ def extract_declaration_for(function_name):
         return declaration if "," not in declaration else declaration.split(",")
 
 
-def docstringOf(name):
-    att = getattr(functions, name, None)
-    return None if att is None else att.__doc__
+# def docstringOf(name):
+#    att = getattr(functions, name, None)
+#    return None if att is None else att.__doc__
 
 
-def checkType(obj, allowed_types, message=None):
+def checkType(obj, allowed_types, message=""):
     if options.checker == "none":
         return True
     if options.checker == "fast" and isinstance(obj, (list, tuple, set)) and len(obj) > 100:
         obj = obj[:1]
     allowed_types = (allowed_types,) if not isinstance(allowed_types, tuple) else allowed_types
-
     for allowedType in allowed_types:
         if not isinstance(allowedType, list):
             if isinstance(obj, allowedType):
@@ -269,51 +267,49 @@ def checkType(obj, allowed_types, message=None):
                     break  # raise TypeMCSPError(inspector.getCalling(), p, allowedTypes, message, position)
             else:
                 return True
-    stack = inspect.stack(context=1)
-    name_function_stack = [s.function for s in stack]
-    position_functions_file = [i for i, s in enumerate(stack) if s.filename.endswith("functions.py")][0]
-    modeling_file = stack[position_functions_file + 2] if len(stack) > position_functions_file + 2 else None
-    if modeling_file is None and "<module>" in name_function_stack:
-        modeling_file = stack[[i for i, s in enumerate(stack) if s.function == "<module>"][0]]
+    # stack = inspect.stack(context=1)
+    # name_function_stack = [s.function for s in stack]
+    # position_functions_file = [i for i, s in enumerate(stack) if s.filename.endswith("functions.py")][0]
+    # modeling_file = stack[position_functions_file + 2] if len(stack) > position_functions_file + 2 else None
+    # if modeling_file is None and "<module>" in name_function_stack:
+    #     modeling_file = stack[[i for i, s in enumerate(stack) if s.function == "<module>"][0]]
+    # function_name = "satisfy"
+    # problem_lines = []
+    # if function_name in name_function_stack: #  satisfy case
+    #     code = list(reversed(_extract_code(function_name)))
+    #     if len(code) > 0:
+    #         without_bracket_code = _delete_bracket_part(code, functions.nb_parameter_satisfy)
+    #         found = False  # the function name
+    #         pos_parameter = 0
+    #         for i, line in enumerate(without_bracket_code):
+    #             if function_name in line:
+    #                 found = True
+    #             if found and pos_parameter == functions.no_parameter_satisfy and not is_comment_line(line):
+    #                 problem_lines.append(code[i])
+    #             if not is_comment_line(line) and ',' in line:
+    #                 pos_parameter += line.count(',')
+    # else:
+    #     if modeling_file:
+    #         problem_lines.extend(modeling_file.code_context)
+    #         noline = modeling_file.lineno
+    #     else:
+    #         problem_lines.extend(stack[2].code_context)
+    #         noline = stack[2].lineno
+    #     functions.no_parameter_satisfy = None
+    #
+    # s = "\n\tAt line " + str(stack[1].lineno) + " of function " + stack[1].function + " in file " + stack[1].filename[stack[1].filename.rindex(os.sep) + 1:]
+    # s += "\n\tThis assertion fails: " + stack[1].code_context[0].strip()
+    # if modeling_file is not None and len(problem_lines) > 0:
+    #     if functions.no_parameter_satisfy is not None:
+    #         s += "\n\n\tThe problem comes from parameter " + str(functions.no_parameter_satisfy) + " of satisfy() in file " \
+    #              + modeling_file.filename[modeling_file.filename.rindex(os.sep) + 1:] + ","
+    #     else:
+    #         s += "\n\n\tThe problem is at line " + str(noline) + " of file " + modeling_file.filename[modeling_file.filename.rindex(os.sep) + 1:] + ","
+    #     s += "\n\tWhen executing:\n\t\t" + "\n\t\t".join(problem_lines) + "\n\t" + message if message is not None else ""
+    #
+    #     # TODO get the good docstring
+    #     # s += "\n\n\tDocumentation for function: " + stack[1].function
+    #     # doc = docstringOf(stack[1].function)
+    #     # s += doc if doc is not None else "\n\tNo python docstring for this function"
 
-    function_name = "satisfy"
-    problem_lines = []
-    if function_name in name_function_stack:
-        #  satisfy case
-        code = list(reversed(_extract_code(function_name)))
-        if len(code) > 0:
-            without_bracket_code = _delete_bracket_part(code, functions.nb_parameter_satisfy)
-            found = False  # the function name
-            pos_parameter = 0
-            for i, line in enumerate(without_bracket_code):
-                if function_name in line:
-                    found = True
-                if found and pos_parameter == functions.no_parameter_satisfy and not is_comment_line(line):
-                    problem_lines.append(code[i])
-                if not is_comment_line(line) and ',' in line:
-                    pos_parameter += line.count(',')
-    else:
-        if modeling_file:
-            problem_lines.extend(modeling_file.code_context)
-            noline = modeling_file.lineno
-        else:
-            problem_lines.extend(stack[2].code_context)
-            noline = stack[2].lineno
-        functions.no_parameter_satisfy = None
-
-    s = "\n\tAt line " + str(stack[1].lineno) + " of function " + stack[1].function + " in file " + stack[1].filename[stack[1].filename.rindex(os.sep) + 1:]
-    s += "\n\tThis assertion fails: " + stack[1].code_context[0].strip()
-    if modeling_file is not None and len(problem_lines) > 0:
-        if functions.no_parameter_satisfy is not None:
-            s += "\n\n\tThe problem comes from parameter " + str(functions.no_parameter_satisfy) + " of satisfy() in file " \
-                 + modeling_file.filename[modeling_file.filename.rindex(os.sep) + 1:] + ","
-        else:
-            s += "\n\n\tThe problem is at line " + str(noline) + " of file " + modeling_file.filename[modeling_file.filename.rindex(os.sep) + 1:] + ","
-        s += "\n\tWhen executing:\n\t\t" + "\n\t\t".join(problem_lines) + "\n\t" + message if message is not None else ""
-
-        # TODO get the good docstring
-        # s += "\n\n\tDocumentation for function: " + stack[1].function
-        # doc = docstringOf(stack[1].function)
-        # s += doc if doc is not None else "\n\tNo python docstring for this function"
-
-    raise TypeError(s)
+    raise TypeError(message)  # s)

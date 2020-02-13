@@ -1,5 +1,4 @@
-from pycsp3.classes.entities import CtrEntities
-from pycsp3.classes.entities import EBlock, EGroup, ESlide, EToGather, EToSatisfy
+from pycsp3.classes.entities import CtrEntities, EBlock, EGroup, ESlide, EToGather, EToSatisfy
 from pycsp3.classes.main.variables import Variable
 
 

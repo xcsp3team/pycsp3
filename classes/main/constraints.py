@@ -1,7 +1,6 @@
 import os
 from collections import OrderedDict
 
-from pycsp3 import functions
 from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.auxiliary.types import TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
@@ -462,7 +461,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
     def combine_partial_objects(obj1, operator, obj2):
         assert operator in {TypeNode.ADD, TypeNode.SUB}
         if isinstance(obj1, ScalarProduct):
-            obj1 = functions.Sum(obj1)  # to be sure to have at least one PartialConstraint
+            obj1 = obj1.toward_sum()  # functions.Sum(obj1)  # to be sure to have at least one PartialConstraint
         assert isinstance(obj1, PartialConstraint) or isinstance(obj2, PartialConstraint)
 
         inverted, obj1, obj2 = (False, obj1, obj2) if isinstance(obj1, PartialConstraint) else (True, obj2, obj1)
@@ -493,11 +492,15 @@ class ScalarProduct:
     def __init__(self, variables, coefficients):
         variables = list(variables) if isinstance(variables, tuple) else variables
         assert isinstance(variables, list) and isinstance(coefficients, (int, list, range)), variables
-        self.variables = variables
-        self.coeffs = [coefficients] * len(variables) if isinstance(coefficients, int) else coefficients
+        self.variables = flatten(variables)  # for example, in order to remove None occurrences
+        self.coeffs = flatten([coefficients] * len(variables) if isinstance(coefficients, int) else coefficients)
+        assert len(self.variables) == len(self.coeffs)
+
+    def toward_sum(self):
+        return PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
 
     def _combine_with(self, operator, right_operand):
-        return functions.Sum(self).add_condition(operator, right_operand)
+        return self.toward_sum().add_condition(operator, right_operand)  # functions.Sum(self).add_condition(operator, right_operand)
 
     def __lt__(self, other):
         return self._combine_with(TypeConditionOperator.LT, other)
