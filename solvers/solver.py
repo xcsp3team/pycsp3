@@ -72,12 +72,12 @@ class SolverProcess:
     def solve(self, model, time_limit=0, n_restarts=0):
         stopwatch = Stopwatch()
         print("\nSolving by " + self.name + " in progress ... ")
-        print("  command: ", self.command + " " + model)
         if time_limit != 0:
             model += " -t=" + str(time_limit) + "s"
         if n_restarts != 0:
             model += " -r_n=" + str(n_restarts)
         model += " -cm -valh=Last"
+        print("  command: ", self.command + " " + model)
         result = self.execute(self.command + " " + model)
         print("Solved by " + self.name + " in %.3f" % stopwatch.elapsed_time() + " seconds.")
         return self.solution() if result is True else None
