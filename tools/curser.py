@@ -327,16 +327,14 @@ class ListInt(list):
         return ListInt.__mul__(other, self)
 
 
-# TODO duplicated functions (see functions)
-def column(m, j):
-    assert is_2d_list(m), "column() can only be called on 2-dimensional lists"
-    assert all(len(row) > j for row in m), "one row has not at least j+1 elements"
-    return ListVar(row[j] for row in m)
-
-
 def columns(m):
+    def column(j):
+        assert is_2d_list(m), "column() can only be called on 2-dimensional lists"
+        assert all(len(row) > j for row in m), "one row has not at least j+1 elements"
+        return ListVar(row[j] for row in m)
+
     assert is_matrix(m), "columns() can only be called on matrices"
-    return ListVar(column(m, j) for j in range(len(m[0])))
+    return ListVar(column(j) for j in range(len(m[0])))
 
 
 class ListVar(list):

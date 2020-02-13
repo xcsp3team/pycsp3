@@ -20,7 +20,7 @@ from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
 from pycsp3.dashboard import options
 from pycsp3.problems.data.dataparser import DataDict
-from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, queue_in
+from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns, queue_in
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import flatten, is_1d_list, is_2d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing, ANY
 
@@ -402,53 +402,49 @@ def _wrapping_by_complete_or_partial_constraint(ctr):
 ''' Counting and Summing Constraints '''
 
 
-def _manage_coeffs(terms, coeffs):
-    if coeffs:
-        OpOverrider.disable()
-        if len(coeffs) == 1 and isinstance(coeffs[0], (tuple, set, range)):
-            coeffs = list(coeffs[0])
-        elif isinstance(coeffs, (tuple, set, range)):
-            coeffs = list(coeffs)
-        elif isinstance(coeffs, (int, Variable)):
-            coeffs = [coeffs]
-        assert len(terms) == len(coeffs), "Lists (vars and coeffs) should have the same length. Here, we have " + str(len(terms)) + "!=" + str(len(coeffs))
-        # if 0 in coeffs:
-        #    terms = [term for i, term in enumerate(terms) if coeffs[i] != 0]
-        #    coeffs = [coeff for coeff in coeffs if coeff != 0]
-        # if all(c == 1 for c in coeffs): coeffs = None
-        checkType(coeffs, ([Variable, int], type(None)))
-        OpOverrider.enable()
-    return terms, coeffs
-
-
-def _get_terms_coeffs(terms):
-    if len(terms) == 1 and isinstance(terms[0], ScalarProduct):
-        return flatten(terms[0].variables), flatten(terms[0].coeffs)
-    if all(isinstance(x, Variable) for x in terms):
-        return terms, None
-    t1, t2 = [], []
-    for tree in terms:
-        if isinstance(tree, Variable):
-            t1.append(tree)
-            t2.append(1)
-        else:
-            assert isinstance(tree, (Node, NegVariable))
-            pair = (tree.variable, -1) if isinstance(tree, NegVariable) else tree.tree_val_if_binary_type(TypeNode.MUL)
-            if pair is None:
-                break
-            t1.append(pair[0])
-            t2.append(pair[1])
-    if len(t1) == len(terms):
-        for tree in terms:
-            if isinstance(tree, Node):
-                tree.mark_as_used()
-        return t1, t2
-    return terms, None
-
-
 def Sum(term, *others, condition=None):
-    """Builds a constraint http://xcsp.org/specifications/sum from the specified arguments
-    """
+    def _get_terms_coeffs(terms):
+        if len(terms) == 1 and isinstance(terms[0], ScalarProduct):
+            return flatten(terms[0].variables), flatten(terms[0].coeffs)
+        if all(isinstance(x, Variable) for x in terms):
+            return terms, None
+        t1, t2 = [], []
+        for tree in terms:
+            if isinstance(tree, Variable):
+                t1.append(tree)
+                t2.append(1)
+            else:
+                assert isinstance(tree, (Node, NegVariable))
+                pair = (tree.variable, -1) if isinstance(tree, NegVariable) else tree.tree_val_if_binary_type(TypeNode.MUL)
+                if pair is None:
+                    break
+                t1.append(pair[0])
+                t2.append(pair[1])
+        if len(t1) == len(terms):
+            for tree in terms:
+                if isinstance(tree, Node):
+                    tree.mark_as_used()
+            return t1, t2
+        return terms, None
+
+    def _manage_coeffs(terms, coeffs):
+        if coeffs:
+            OpOverrider.disable()
+            if len(coeffs) == 1 and isinstance(coeffs[0], (tuple, set, range)):
+                coeffs = list(coeffs[0])
+            elif isinstance(coeffs, (tuple, set, range)):
+                coeffs = list(coeffs)
+            elif isinstance(coeffs, (int, Variable)):
+                coeffs = [coeffs]
+            assert len(terms) == len(coeffs), "Lists (vars and coeffs) should have the same length. Here, we have " + str(len(terms)) + "!=" + str(len(coeffs))
+            # if 0 in coeffs:
+            #    terms = [term for i, term in enumerate(terms) if coeffs[i] != 0]
+            #    coeffs = [coeff for coeff in coeffs if coeff != 0]
+            # if all(c == 1 for c in coeffs): coeffs = None
+            checkType(coeffs, ([Variable, int], type(None)))
+            OpOverrider.enable()
+        return terms, coeffs
+
     term = list(term) if isinstance(term, types.GeneratorType) else term
     checkType(term, ([Variable], [Node], Variable, Node, ScalarProduct))
     for other in others:
@@ -605,18 +601,6 @@ def Clause(term, *others, phases=None):
     return ECtr(ConstraintClause(literals, phases))
 
 
-# def Instantiation(*, variables, values):
-#     variables = flatten(variables)
-#     values = flatten(values) if not isinstance(values, range) else list(values)
-#     checkType(variables, [Variable])
-#     checkType(values, (int, [int]))
-#     if len(variables) == 0:
-#         return ECtr(None)
-#     if len(values) == 1 and len(variables) > 1:
-#         values = [values[0]] * len(variables)
-#     return ECtr(ConstraintInstantiation(variables, values))
-
-
 ''' Objectives '''
 
 
@@ -667,15 +651,15 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
 ''' Helpers '''
 
 
-def column(m, j):
-    assert is_2d_list(m), "column() can only be called on 2-dimensional lists"
-    assert all(len(row) > j for row in m), "one row has not at least j+1 elements"
-    return ListVar(row[j] for row in m)
-
-
-def columns(m):
-    assert is_matrix(m), "columns() can only be called on matrices"
-    return ListVar(column(m, j) for j in range(len(m[0])))
+# def column(m, j):
+#     assert is_2d_list(m), "column() can only be called on 2-dimensional lists"
+#     assert all(len(row) > j for row in m), "one row has not at least j+1 elements"
+#     return ListVar(row[j] for row in m)
+#
+#
+# def columns(m):
+#     assert is_matrix(m), "columns() can only be called on matrices"
+#     return ListVar(column(m, j) for j in range(len(m[0])))
 
 
 def diagonal_down(m, i=-1, j=-1, check=True):
@@ -748,8 +732,6 @@ def cp_array(l):
 #    assert isinstance(l, list)
 #    return [(i, *v) if isinstance(v, (tuple, list)) else (i, v) for i, v in enumerate(l)]
 
-# import pycsp3.tools.curser  # no more need to let that statement ?
-
 
 def _pycharm_security():
-    _ = (permutations, alphabet_positions, transpose, is_containing, DataDict)
+    _ = (permutations, alphabet_positions, transpose, is_containing, DataDict, columns)
