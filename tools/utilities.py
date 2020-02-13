@@ -20,6 +20,17 @@ class Stopwatch:
         return elapsed_time
 
 
+class _Star(float):
+    def __init__(self, val):
+        super().__init__()
+
+    def __str__(self):
+        return "*"
+
+
+ANY = _Star("inf")
+
+
 class DefaultListOrderedDict(OrderedDict):
     def __missing__(self, k):
         self[k] = []

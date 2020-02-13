@@ -1,4 +1,4 @@
-from pycsp3 import functions
+from pycsp3.tools.curser import queue_in
 
 
 class Diagram:
@@ -21,7 +21,7 @@ class Diagram:
         return t
 
     def __contains__(self, other):
-        functions.queue_in.append((self, other))
+        queue_in.append((self, other))
         return True
 
 

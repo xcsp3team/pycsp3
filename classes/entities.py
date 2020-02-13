@@ -1,3 +1,5 @@
+import types
+
 from enum import Enum, unique
 from functools import reduce
 
@@ -364,6 +366,8 @@ class Node(Entity):
         else:
             return None
 
+
+
     """
       Static methods
     """
@@ -410,3 +414,21 @@ class Node(Entity):
     @staticmethod
     def set(*args):
         return Node.build(TypeNode.SET, *args)
+
+    @staticmethod
+    def conjunction(*args):
+        if len(args) == 1:
+            if isinstance(args[0], list):
+                args = tuple(args[0])
+            if isinstance(args[0], types.GeneratorType):
+                args = tuple(list(args[0]))
+        return Node.build(TypeNode.AND, *args) if len(args) > 1 else args[0]
+
+    @staticmethod
+    def disjunction(*args):
+        if len(args) == 1:
+            if isinstance(args[0], list):
+                args = tuple(args[0])
+            if isinstance(args[0], types.GeneratorType):
+                args = tuple(list(args[0]))
+        return Node.build(TypeNode.OR, *args) if len(args) > 1 else args[0]
