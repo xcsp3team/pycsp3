@@ -1,13 +1,14 @@
 from collections import deque
-from pycsp3 import functions
-from pycsp3.classes import main
+
 from pycsp3.classes.entities import Node, TypeNode
+from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation, ECtr
 from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
-# from pycsp3.classes.main.constraints import ScalarProduct
 from pycsp3.libs.forbiddenfruit import curse
-from pycsp3.tools.utilities import is_containing, is_1d_tuple, is_1d_list, is_matrix
+from pycsp3.tools.inspector import checkType
+from pycsp3.tools.utilities import flatten, is_containing, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY
 
 queue_in = deque()  # To keep partial constraints when using the IN operator
+
 
 def cursing():
     def _dict_add(self, other):  # for being able to merge dictionaries
@@ -19,7 +20,7 @@ def cursing():
 
     def _list_mul(self, other):  # for being able to use scalar products
         if is_containing(self, (Variable, Node), check_first_only=True):
-            return main.constraints.ScalarProduct(self, other)
+            return ScalarProduct(self, other)
         return list.__mul__(self, other)
 
     def _tuple_contains(self, other):
@@ -41,7 +42,7 @@ def cursing():
     def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
-        if isinstance(other, (main.constraints.PartialConstraint, Variable)):
+        if isinstance(other, (PartialConstraint, Variable)):
             queue_in.append((self, other))
             return True
         if is_1d_tuple(other, Variable) or is_1d_list(other, Variable):  # this is a table constraint
@@ -52,9 +53,9 @@ def cursing():
     def _range_contains(self, other):  # for being able to use 'in' when expressing conditions of constraints
         if not OpOverrider.activated:
             return range.__contains__(other)
-        if isinstance(other, main.constraints.ScalarProduct):
+        if isinstance(other, ScalarProduct):
             other = other.toward_sum()  # functions.Sum(other)
-        if isinstance(other, (main.constraints.PartialConstraint, Variable)):
+        if isinstance(other, (PartialConstraint, Variable)):
             queue_in.append((self, other))
             return True
         return range.__contains__(self, other)
@@ -157,7 +158,7 @@ class OpOverrider:
 
     @staticmethod
     def project_recursive(t, indexes, dimension):
-        index = slice(None, None, None) if indexes[dimension] == functions.ANY else indexes[dimension]
+        index = slice(None, None, None) if indexes[dimension] == ANY else indexes[dimension]
         if isinstance(index, int):
             if isinstance(t, list):
                 t = t[index]  #  to keep the shape (dimensions), we need to do that
@@ -176,16 +177,16 @@ class OpOverrider:
         return t
 
     def __add__(self, other):
-        if isinstance(other, main.constraints.PartialConstraint):
-            return main.constraints.PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
+        if isinstance(other, PartialConstraint):
+            return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
         return Node.build(TypeNode.ADD, self, other)
 
     def __radd__(self, other):
         return Node.build(TypeNode.ADD, other, self)
 
     def __sub__(self, other):
-        if isinstance(other, main.constraints.PartialConstraint):
-            return main.constraints.PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
+        if isinstance(other, PartialConstraint):
+            return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
         return Node.build(TypeNode.SUB, self, other)
 
     def __rsub__(self, other):
@@ -228,33 +229,44 @@ class OpOverrider:
         return object.__ne__(self, other) if None in {self, other} else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
-        return object.__or__(self, other) if None in {self, other} else functions.disjunction(self, other)
+        return object.__or__(self, other) if None in {self, other} else Node.disjunction(self, other)
 
     def __and__(self, other):
-        return object.__and__(self, other) if None in {self, other} else functions.conjunction(self, other)
+        return object.__and__(self, other) if None in {self, other} else Node.conjunction(self, other)
 
     def __invert__(self):
         return NotVariable(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
-        return object.__xor__(self, other) if None in {self, other} else functions.xor(self, other)
+        return object.__xor__(self, other) if None in {self, other} else Node.build(TypeNode.XOR, self, other)
 
     def __eq__lv(self, other):  # lv for ListVar
+        def Instantiation(*, variables, values):
+            variables = flatten(variables)
+            values = flatten(values) if not isinstance(values, range) else list(values)
+            checkType(variables, [Variable])
+            checkType(values, (int, [int]))
+            if len(variables) == 0:
+                return None
+            if len(values) == 1 and len(variables) > 1:
+                values = [values[0]] * len(variables)
+            return ConstraintInstantiation(variables, values)
+
         if isinstance(other, list) and any(isinstance(v, int) for v in other):
-            return functions.Instantiation(variables=self, values=other)
+            return ECtr(Instantiation(variables=self, values=other))
         return list.__eq__(self, other)
 
     def __getitem__lv(self, indexes):
         if isinstance(indexes, Variable):
-            return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self, indexes))
+            return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
-                    return main.constraints.PartialConstraint(main.constraints.ConstraintElementMatrix(self, indexes[0], indexes[1]))
+                    return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
                     assert isinstance(indexes[0], Variable) and isinstance(indexes[1], int)
-                    return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self[:, indexes[1]], indexes[0]))
+                    return PartialConstraint(ConstraintElement(self[:, indexes[1]], indexes[0]))
             result = OpOverrider.project_recursive(self, indexes, 0)
             try:
                 return ListVar(result)  # TODO are sublists also guaranteed to be ListVar?
@@ -268,15 +280,15 @@ class OpOverrider:
 
     def __getitem__li(self, indexes):  # li for ListInt
         if isinstance(indexes, Variable):
-            return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self, indexes))
+            return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
-                    return main.constraints.PartialConstraint(main.constraints.ConstraintElementMatrix(self, indexes[0], indexes[1]))
+                    return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
                     assert isinstance(indexes[0], Variable) and isinstance(indexes[1], int)
-                    return main.constraints.PartialConstraint(main.constraints.ConstraintElement(self[:, indexes[1]], indexes[0]))
+                    return PartialConstraint(ConstraintElement(self[:, indexes[1]], indexes[0]))
             result = OpOverrider.project_recursive(self, indexes, 0)
             try:
                 return ListVar(result)  # TODO is it ListVar or ListInt ?
@@ -307,12 +319,24 @@ class ListInt(list):
 
     def __mul__(self, other):
         if is_containing(other, (Variable, Node)):
-            return main.constraints.ScalarProduct(other, self)
+            return ScalarProduct(other, self)
         assert is_containing(self, (Variable, Node))
-        return main.constraints.ScalarProduct(self, other)
+        return ScalarProduct(self, other)
 
     def __rmul__(self, other):
         return ListInt.__mul__(other, self)
+
+
+# TODO duplicated functions (see functions)
+def column(m, j):
+    assert is_2d_list(m), "column() can only be called on 2-dimensional lists"
+    assert all(len(row) > j for row in m), "one row has not at least j+1 elements"
+    return ListVar(row[j] for row in m)
+
+
+def columns(m):
+    assert is_matrix(m), "columns() can only be called on matrices"
+    return ListVar(column(m, j) for j in range(len(m[0])))
 
 
 class ListVar(list):
@@ -327,9 +351,9 @@ class ListVar(list):
 
     def __mul__(self, other):
         assert is_containing(self, (Variable, Node))
-        return main.constraints.ScalarProduct(self, other)
+        return ScalarProduct(self, other)
 
     # def __rmul__(self, other): return ListVar.__mul__(other, self)
 
     def columns(self):
-        return functions.columns(self)
+        return columns(self)

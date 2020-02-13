@@ -1,6 +1,5 @@
 import inspect
 import types
-from collections import deque
 from itertools import combinations, product, permutations
 
 from pycsp3.classes.auxiliary.conditions import Condition
@@ -23,24 +22,11 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data.dataparser import DataDict
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, queue_in
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_2d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing
+from pycsp3.tools.utilities import flatten, is_1d_list, is_2d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing, ANY
 
 ''' Global Variables '''
 
 absPython, maxPython, minPython = abs, max, min
-
-
-class Star(float):
-    def __init__(self, val):
-        super().__init__()
-
-    def __str__(self):
-        return "*"
-
-
-ANY = Star("inf")
-
-
 
 
 def protect():
@@ -295,21 +281,11 @@ def ift(*args):
 
 
 def conjunction(*args):
-    if len(args) == 1:
-        if isinstance(args[0], list):
-            args = tuple(args[0])
-        if isinstance(args[0], types.GeneratorType):
-            args = tuple(list(args[0]))
-    return Node.build(TypeNode.AND, *args) if len(args) > 1 else args[0]
+    return Node.conjunction(*args)
 
 
 def disjunction(*args):
-    if len(args) == 1:
-        if isinstance(args[0], list):
-            args = tuple(args[0])
-        if isinstance(args[0], types.GeneratorType):
-            args = tuple(list(args[0]))
-    return Node.build(TypeNode.OR, *args) if len(args) > 1 else args[0]
+    return Node.disjunction(*args)
 
 
 def knight_attack(x, y, order):
@@ -629,16 +605,16 @@ def Clause(term, *others, phases=None):
     return ECtr(ConstraintClause(literals, phases))
 
 
-def Instantiation(*, variables, values):
-    variables = flatten(variables)
-    values = flatten(values) if not isinstance(values, range) else list(values)
-    checkType(variables, [Variable])
-    checkType(values, (int, [int]))
-    if len(variables) == 0:
-        return ECtr(None)
-    if len(values) == 1 and len(variables) > 1:
-        values = [values[0]] * len(variables)
-    return ECtr(ConstraintInstantiation(variables, values))
+# def Instantiation(*, variables, values):
+#     variables = flatten(variables)
+#     values = flatten(values) if not isinstance(values, range) else list(values)
+#     checkType(variables, [Variable])
+#     checkType(values, (int, [int]))
+#     if len(variables) == 0:
+#         return ECtr(None)
+#     if len(values) == 1 and len(variables) > 1:
+#         values = [values[0]] * len(variables)
+#     return ECtr(ConstraintInstantiation(variables, values))
 
 
 ''' Objectives '''
@@ -776,4 +752,4 @@ def cp_array(l):
 
 
 def _pycharm_security():
-    _ = (permutations, alphabet_positions, transpose, is_containing, DataDict, no_parameter_satisfy, nb_parameter_satisfy)
+    _ = (permutations, alphabet_positions, transpose, is_containing, DataDict)
