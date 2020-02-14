@@ -1,7 +1,8 @@
 from collections import deque
 
 from pycsp3.classes.entities import Node, TypeNode
-from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation, ECtr
+from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix, \
+    ConstraintInstantiation, ECtr
 from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
@@ -54,7 +55,7 @@ def cursing():
         if not OpOverrider.activated:
             return range.__contains__(other)
         if isinstance(other, ScalarProduct):
-            other = other.toward_sum()  # functions.Sum(other)
+            other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))  # functions.Sum(other)
         if isinstance(other, (PartialConstraint, Variable)):
             queue_in.append((self, other))
             return True

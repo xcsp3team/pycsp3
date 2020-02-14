@@ -1,15 +1,15 @@
 from enum import Enum, unique
 
 
-def _auto():  # To be replaced by auto() in python 3.6 ?
-    if not hasattr(_auto, "counter"):
-        _auto.counter = 0
-    _auto.counter += 1
-    return _auto.counter
-
-
 def auto(n_occurrences=1):
+    def _auto():  # To be replaced by auto() in python 3.6 ?
+        auto.counter += 1
+        return auto.counter
+
     return _auto() if n_occurrences == 1 else (_auto() for _ in range(n_occurrences))
+
+
+auto.counter = 0
 
 
 @unique
@@ -81,7 +81,6 @@ class TypeCtrArg(AbstractType):
     WIDTHS, PATTERNS = auto(2)
     ORIGINS, LENGTHS, ENDS, HEIGHTS, MACHINES, CONDITIONS = auto(6)
     SIZES, WEIGTHS, PROFITS = auto(3)
-    # LIMIT = auto()
     SIZE, ROOT, IMAGE, GRAPH, ROW, EXPRESSION, TYPE = auto(7)
     START_INDEX, START_ROW_INDEX, START_COL_INDEX = auto(3)
 
