@@ -11,7 +11,8 @@ x = VarArray(size=nCards, dom=range(nCards))
 # y[j] is the position i of the card whose value is j
 y = VarArray(size=nCards, dom=range(nCards))
 
-table = {(i, j) for i in range(nCards) for j in range(nCards) if i % m == (j + 1) % m or j % m == (i + 1) % m}
+table = {(i, j) for i in range(nCards) for j in range(nCards)
+         if i % m == (j + 1) % m or j % m == (i + 1) % m}
 
 satisfy(
     Channel(x, y),

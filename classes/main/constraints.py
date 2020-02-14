@@ -190,7 +190,7 @@ class ConstraintMdd(Constraint):
     def __init__(self, lst, transitions):
         super().__init__(TypeCtr.MDD)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
-        # TODO reordering transitions in order to guarantee to have
+        # TODO reordering transitions in order to guarantee to have:
         # - the root as the src of the first transition
         # - the terminal as the dst of the last transition
         # - no transition with a src occurring before it was reached
@@ -404,14 +404,15 @@ class PartialConstraint:  # constraint whose condition is missing initially
     def add_condition(self, operator, right_operand):
         if isinstance(right_operand, (int, Variable)):
             return ECtr(self.constraint.replace_condition(operator, right_operand))
+        # TODO : whick kind of right operand is authorized? just a partial sum?
         pc = PartialConstraint.combine_partial_objects(self, TypeNode.SUB, right_operand)  # the 'complex' right operand is moved to the left
         return ECtr(pc.constraint.replace_condition(operator, 0))
 
     def __eq__(self, other):
         if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)):
             if isinstance(self.constraint, ConstraintElement):
-                self.constraint.arguments[TypeCtrArg.LIST].content = flatten(
-                    self.constraint.arguments[TypeCtrArg.LIST].content)  # we need to flatten now because it has not been done before
+                arg = self.constraint.arguments[TypeCtrArg.LIST]
+                arg.content = flatten(arg.content)  # we need to flatten now because it has not been done before
             return ECtr(self.constraint.replace_value(other))  # only value must be replaced for these constraints
         return self.add_condition(TypeConditionOperator.EQ, other)
 
@@ -461,11 +462,9 @@ class PartialConstraint:  # constraint whose condition is missing initially
     def combine_partial_objects(obj1, operator, obj2):
         assert operator in {TypeNode.ADD, TypeNode.SUB}
         if isinstance(obj1, ScalarProduct):
-            obj1 = obj1.toward_sum()  # functions.Sum(obj1)  # to be sure to have at least one PartialConstraint
+            obj1 = PartialConstraint(ConstraintSum(obj1.variables, obj1.coeffs, None))  # to be sure to have at least one PartialConstraint
         assert isinstance(obj1, PartialConstraint) or isinstance(obj2, PartialConstraint)
-
         inverted, obj1, obj2 = (False, obj1, obj2) if isinstance(obj1, PartialConstraint) else (True, obj2, obj1)
-
         pair = obj2.var_val_if_binary_type(TypeNode.MUL) if isinstance(obj2, Node) else None
         if pair:
             obj2 = PartialConstraint(ConstraintSum([pair[0]], [pair[1]], None))
@@ -475,9 +474,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
             obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))
         elif not isinstance(obj2, PartialConstraint):
             error("The type of the operand of the partial constraint Sum is wrong as it is " + str(type(obj2)))
-
         obj1, obj2 = (obj1, obj2) if not inverted else (obj2, obj1)  # we invert back
-
         assert isinstance(obj1, PartialConstraint) and isinstance(obj2, PartialConstraint)
         assert isinstance(obj1.constraint, ConstraintSum) and isinstance(obj2.constraint, ConstraintSum)
         args1, args2 = obj1.constraint.arguments, obj2.constraint.arguments
@@ -496,11 +493,8 @@ class ScalarProduct:
         self.coeffs = flatten([coefficients] * len(variables) if isinstance(coefficients, int) else coefficients)
         assert len(self.variables) == len(self.coeffs)
 
-    def toward_sum(self):
-        return PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
-
     def _combine_with(self, operator, right_operand):
-        return self.toward_sum().add_condition(operator, right_operand)  # functions.Sum(self).add_condition(operator, right_operand)
+        return PartialConstraint(ConstraintSum(self.variables, self.coeffs, None)).add_condition(operator, right_operand)
 
     def __lt__(self, other):
         return self._combine_with(TypeConditionOperator.LT, other)

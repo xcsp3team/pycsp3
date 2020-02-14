@@ -15,7 +15,7 @@ class TypeVarHeuristic(AbstractType):
 
 @unique
 class TypeValHeuristic(AbstractType):
-    CONFLICTS, VALUE = auto(), auto()
+    CONFLICTS, VALUE = auto(2)
 
 
 @unique
@@ -23,12 +23,12 @@ class TypeConsistency(AbstractType):
     FC, BC, AC, SAC, FPWC, PC, CDC, FDAC, EDAC, VAC = auto(10)
 
     def __str__(self):
-        return super().__str__().upper()
+        return self.name
 
 
 @unique
 class TypeBranching(AbstractType):
-    TWO_WAY, D_WAY = auto(), auto()
+    TWO_WAY, D_WAY = auto(2)
 
     def __str__(self):
         return self.name.replace("_", "-").replace("TWO", "2").lower()
@@ -36,11 +36,11 @@ class TypeBranching(AbstractType):
 
 @unique
 class TypeRestart(AbstractType):
-    LUBY, GEOMETRIC = auto(), auto()
+    LUBY, GEOMETRIC = auto(2)
 
 
 @unique
-class TypeArg(AbstractType):
+class TypeAnnArg(AbstractType):
     TYPE = auto()
     STATIC, RANDOM, MIN, MAX = auto(4)
     LC = auto()
@@ -49,7 +49,11 @@ class TypeArg(AbstractType):
     START_INDEX, START_ROW_INDEX, START_COL_INDEX = auto(3)
 
 
-class AnnotationDecision(ConstraintUnmergeable):
+class Annotation(ConstraintUnmergeable):
+    pass
+
+
+class AnnotationDecision(Annotation):
     def __init__(self, variables):
         super().__init__(TypeXML.DECISION)
         variables = flatten(variables)
@@ -57,7 +61,7 @@ class AnnotationDecision(ConstraintUnmergeable):
         self.arg(TypeXML.DECISION, variables)
 
 
-class AnnotationOutput(ConstraintUnmergeable):
+class AnnotationOutput(Annotation):
     def __init__(self, variables):
         super().__init__(TypeXML.OUTPUT)
         variables = flatten(variables)
@@ -65,27 +69,27 @@ class AnnotationOutput(ConstraintUnmergeable):
         self.arg(TypeXML.OUTPUT, variables)
 
 
-class AnnotationHeuristic(ConstraintUnmergeable):
+class AnnotationHeuristic(Annotation):
     def __init__(self, name):
         super().__init__(name)
 
     # To keep the good order
     def add_arguments(self, random_part, min_part, max_part):
         if random_part:
-            self.arg(TypeArg.RANDOM, random_part[0] if random_part[0] else [None])
+            self.arg(TypeAnnArg.RANDOM, random_part[0] if random_part[0] else [None])
         if min_part:
-            self.arg(TypeArg.MIN, min_part[0] if min_part[0] else [None], attributes=[(TypeArg.TYPE, min_part[1])])
+            self.arg(TypeAnnArg.MIN, min_part[0] if min_part[0] else [None], attributes=[(TypeAnnArg.TYPE, min_part[1])])
         if max_part:
-            self.arg(TypeArg.MAX, max_part[0] if max_part[0] else [None], attributes=[(TypeArg.TYPE, max_part[1])])
+            self.arg(TypeAnnArg.MAX, max_part[0] if max_part[0] else [None], attributes=[(TypeAnnArg.TYPE, max_part[1])])
 
 
 class AnnotationVarHeuristic(AnnotationHeuristic):
     def __init__(self, h):
         super().__init__(TypeXML.VAR_HEURISTIC)
         checkType(h, VarHeuristic)
-        self.attributes.append((TypeArg.LC, h.lc))
+        self.attributes.append((TypeAnnArg.LC, h.lc))
         if h.staticData:
-            self.arg(TypeArg.STATIC, h.staticData)
+            self.arg(TypeAnnArg.STATIC, h.staticData)
         self.add_arguments(h.randomPart, h.minPart, h.maxPart)
 
 
@@ -94,36 +98,36 @@ class AnnotationValHeuristic(AnnotationHeuristic):
         super().__init__(TypeXML.VAL_HEURISTIC)
         checkType(h, ValHeuristic)
         if h.staticData:
-            self.arg(TypeArg.STATIC, h.staticData[0], attributes=[(TypeArg.ORDER, " ".join(str(ele) for ele in h.staticData[1]))])
+            self.arg(TypeAnnArg.STATIC, h.staticData[0], attributes=[(TypeAnnArg.ORDER, " ".join(str(ele) for ele in h.staticData[1]))])
         self.add_arguments(h.randomData, h.minData, h.maxData)
 
 
-class AnnotationFiltering(ConstraintUnmergeable):
+class AnnotationFiltering(Annotation):
     def __init__(self, consistency):
         super().__init__(TypeXML.FILTERING)
         checkType(consistency, TypeConsistency)
-        self.attributes.append((TypeArg.TYPE, consistency))
+        self.attributes.append((TypeAnnArg.TYPE, consistency))
 
 
-class AnnotationPrepro(ConstraintUnmergeable):
+class AnnotationPrepro(Annotation):
     def __init__(self, consistency):
         super().__init__(TypeXML.PREPRO)
         checkType(consistency, TypeConsistency)
-        self.attributes.append((TypeArg.CONSISTENCY, consistency))
+        self.attributes.append((TypeAnnArg.CONSISTENCY, consistency))
 
 
-class AnnotationSearch(ConstraintUnmergeable):
+class AnnotationSearch(Annotation):
     def __init__(self, search):
         super().__init__(TypeXML.SEARCH)
         checkType(search, Search)
-        self.attributes = [(TypeArg.CONSISTENCY, search.consistency), (TypeArg.BRANCHING, search.branching)]
+        self.attributes = [(TypeAnnArg.CONSISTENCY, search.consistency), (TypeAnnArg.BRANCHING, search.branching)]
 
 
-class AnnotationRestarts(ConstraintUnmergeable):
+class AnnotationRestarts(Annotation):
     def __init__(self, restarts):
         super().__init__(TypeXML.RESTARTS)
         checkType(restarts, Restarts)
-        self.attributes = [(TypeArg.TYPE, restarts.type), (TypeArg.CUTOFF, restarts.cutoff), (TypeArg.FACTOR, restarts.factor)]
+        self.attributes = [(TypeAnnArg.TYPE, restarts.type), (TypeAnnArg.CUTOFF, restarts.cutoff), (TypeAnnArg.FACTOR, restarts.factor)]
 
 
 ''' Annotations classes '''
