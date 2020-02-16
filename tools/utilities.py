@@ -1,4 +1,4 @@
-import sys, os
+import sys
 import types
 from collections import OrderedDict
 from collections.abc import Iterable
@@ -29,21 +29,6 @@ class _Star(float):
 
 
 ANY = _Star("inf")
-
-
-# print("file", pycsp3.dashboard.__file__)
-def directory_of_solver(name):
-    assert name == "abscon", "for the moment, only one embedded solver (abscon)"
-    import pycsp3
-    return os.sep.join(pycsp3.__file__.split(os.sep)[:-1]) + os.sep + "solvers" + os.sep + name + os.sep
-
-
-print("diri", directory_of_solver("abscon"))
-
-
-def class_path_abscon():
-    d = directory_of_solver("abscon")
-    return d + "AbsCon-20-01.jar" + os.pathsep + d + "xcsp3-tools-1.1.1-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
 
 
 class DefaultListOrderedDict(OrderedDict):
