@@ -55,7 +55,7 @@ class SequenceOfSuccessiveVariables:
         return s
 
 
-def build_partition(vars, preserveOrder):
+def build_partition(variables, preserve_order):
     def _simple_partition(vars):
         # if isinstance(vars, list) and len(vars) == 1 and isinstance(vars[0], list): vars = vars[0]  # TODO never reached. We can remove that ?
         harvest = []  # variables (and other objects) are collected to compute the complete expanded form (string) with their names (values)
@@ -122,8 +122,8 @@ def build_partition(vars, preserveOrder):
             return None, None
         return partition, " ".join(str(x) for x in harvest)
 
-    if not preserveOrder:
-        simple_partition = _simple_partition(vars)  # we make an attempt to build a simple partition
+    if not preserve_order:
+        simple_partition = _simple_partition(variables)  # we make an attempt to build a simple partition
     else:
         simple_partition = None
     if simple_partition:
@@ -133,13 +133,13 @@ def build_partition(vars, preserveOrder):
         # Here, as the order is not a problem, we can below build the partition by means of the returned structure
         return [arrays_partition[a] for a in arrays] + [others], complete_expanded_form
     else:
-        return _complex_partition(vars)
+        return _complex_partition(variables)
 
 
-def _complex_compact(vars):
+def _complex_compact(variables):
     compact_form = ""
     sequence = None
-    for x in vars:
+    for x in variables:
         if sequence is None:
             sequence = SequenceOfSuccessiveVariables(x)
         elif not sequence.can_be_extended_with(x.id):
@@ -152,10 +152,10 @@ def _complex_compact(vars):
 ''' We try to identify a compact form corresponding to a unique token (note that variables are from the same array, by construction) '''
 
 
-def _simple_compact(vars):
-    var_array = VarEntities.varToEVarArray[vars[0]]
+def _simple_compact(variables):
+    var_array = VarEntities.varToEVarArray[variables[0]]
     mins, maxs = [float('inf')] * len(var_array.size), [float('-inf')] * len(var_array.size)
-    for x in vars:
+    for x in variables:
         for i, v in enumerate(x.indexes):
             mins[i] = min(mins[i], v)
             maxs[i] = max(maxs[i], v)
@@ -163,7 +163,7 @@ def _simple_compact(vars):
     size = 1
     for i in range(len(mins)):
         size *= maxs[i] - mins[i] + 1
-    if size != len(vars):
+    if size != len(variables):
         return None  # because it means that we didn't succeed in having a simple compact form (i.e., a unique token)
 
     compact_form = var_array.id
@@ -203,25 +203,25 @@ def _expand(compact_form):
     return " ".join(s for s in var_names)
 
 
-def compact(vars, *, preserveOrder=False, groupArgs=False):
-    if not isinstance(vars, list):
-        return vars
-    if groupArgs is False and len(vars) < 3:
-        return vars
-    partition, complete_expanded_form = build_partition(vars, preserveOrder)
+def compact(variables, *, preserve_order=False, group_args=False):
+    if not isinstance(variables, list):
+        return variables
+    if group_args is False and len(variables) < 3:
+        return variables
+    partition, complete_expanded_form = build_partition(variables, preserve_order)
     if partition is None:
-        return vars
+        return variables
     t = []
     for part in partition:
         if isinstance(part, list):
-            if not preserveOrder:
+            if not preserve_order:
                 part = sorted(part, key=lambda x: [int(v) for v in re.split("\]\[", x.id[x.id.index("[") + 1:-1])])
             if len(part) > 2:
                 compact = _simple_compact(part)
                 if compact is None:
                     t.append(_complex_compact(part))
                 else:
-                    if preserveOrder:
+                    if preserve_order:
                         expand = " ".join([_expand(e) for e in compact.split()])
                         if expand not in complete_expanded_form:
                             t.append(_complex_compact(part))
@@ -240,9 +240,9 @@ def _compact_constraint_arguments(arguments):
     for arg in list(arguments.values()):
         if isinstance(arg.content, list) and len(arg.content) > 0 and arg.content_compressible:
             if not isinstance(arg.content[0], list):  # It is only one list
-                arg.content = compact(arg.content, preserveOrder=arg.content_ordered)
+                arg.content = compact(arg.content, preserve_order=arg.content_ordered)
             elif arg.lifted is True:
-                arg.content = [compact(l, preserveOrder=arg.content_ordered) for l in arg.content]
+                arg.content = [compact(l, preserve_order=arg.content_ordered) for l in arg.content]
         elif arg.name == TypeCtrArg.MATRIX:  # Special case for matrix
             sc = None if is_containing(arg.content_compressible, int) else _simple_compact(flatten(arg.content_compressible))
             arg.content = sc if sc is not None else arg.content
@@ -262,7 +262,7 @@ def _compact_constraint_group(group):
                         sc = _simple_compact(flatten(argument.content_compressible))
                         group.abstraction[key] = sc if sc is not None else group.abstraction[key]
                     else:
-                        group.abstraction[key] = compact(value, preserveOrder=argument.content_ordered)
+                        group.abstraction[key] = compact(value, preserve_order=argument.content_ordered)
                 elif argument.content_ordered is True:
                     preserve_order = True
     else:
@@ -270,23 +270,23 @@ def _compact_constraint_group(group):
     if cnt > 1:
         preserve_order = True
     for i in range(len(group.all_args)):
-        group.all_args[i] = compact(group.all_args[i], preserveOrder=preserve_order, groupArgs=True)
+        group.all_args[i] = compact(group.all_args[i], preserve_order=preserve_order, group_args=True)
 
 
 def _compact_forms_recursive(entities):
-    for ce in entities:
-        if ce is not None:
-            if hasattr(ce, "entities"):
-                if isinstance(ce, EGroup):
-                    _compact_constraint_group(ce)
-                elif isinstance(ce, ESlide):
-                    if len(ce.scope) > 0:
-                        ce.scope = compact(ce.scope)
-                    _compact_forms_recursive(ce.entities)
+    for e in entities:
+        if e is not None:
+            if hasattr(e, "entities"):
+                if isinstance(e, EGroup):
+                    _compact_constraint_group(e)
+                elif isinstance(e, ESlide):
+                    if len(e.scope) > 0:
+                        e.scope = compact(e.scope)
+                    _compact_forms_recursive(e.entities)
                 else:
-                    _compact_forms_recursive(ce.entities)
-            elif ce.constraint is not None:
-                _compact_constraint_arguments(ce.constraint.arguments)
+                    _compact_forms_recursive(e.entities)
+            elif e.constraint is not None:
+                _compact_constraint_arguments(e.constraint.arguments)
 
 
 def build_compact_forms():

@@ -24,7 +24,7 @@ satisfy(
     AllDifferent(friends),
 
     # determining which preferences are not satisfied
-    [(p1, p2, costs[i]) in table for i, (p1, p2) in enumerate(preferences)]
+    [(f1, f2, costs[i]) in table for i, (f1, f2) in enumerate(preferences)]
 )
 
 minimize(

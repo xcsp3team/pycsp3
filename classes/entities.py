@@ -121,7 +121,7 @@ class ECtr(Entity):
 
 
 class ECtrs(Entity):
-    """ Class to represent sets of constraints """
+    """ Class for representing sets of constraints """
 
     def __init__(self, constraints=None):
         super().__init__(None)  # no need to have an id here
@@ -132,14 +132,14 @@ class ECtrs(Entity):
 
 
 class EToGather(ECtrs):
-    ''' Constraints possibly in a group (user ask to gather these constraints)'''
+    ''' Constraints possibly stored in a group (the user asked to gather these constraints)'''
 
     def __init__(self, constraints):
         super().__init__(constraints)
 
 
 class EToSatisfy(ECtrs):
-    ''' Constraints possibly in several groups or several blocks (automatic block when a group is not possible) or alones'''
+    ''' Constraints possibly stored in several groups or several blocks (block built when a group is not possible) or stand-alone constraints'''
 
     def __init__(self, constraints):
         assert constraints is not None
@@ -164,7 +164,7 @@ class EBlock(ECtrs):
 
 
 class ESlide(ECtrs):
-    ''' Constraints possibly in a slide (user ask to slide these constraints)'''
+    ''' Constraints possibly stored as a slide meta-constraint (the user asked to slide the constraints)'''
 
     def __init__(self, constraints):
         super().__init__(constraints)

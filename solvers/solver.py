@@ -1,3 +1,4 @@
+import os
 import subprocess
 import time
 from io import IOBase
@@ -7,6 +8,16 @@ from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
 from pycsp3.classes.entities import VarEntities, EVarArray, EVar
 from pycsp3.tools.utilities import Stopwatch
+
+
+def directory_of_solver(name):
+    assert name == "abscon", "for the moment, only one embedded solver (abscon)"
+    return os.sep.join(__file__.split(os.sep)[:-1]) + os.sep + name + os.sep
+
+
+def class_path_abscon():
+    d = directory_of_solver("abscon")
+    return d + "AbsCon-20-01.jar" + os.pathsep + d + "xcsp3-tools-1.1.1-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
 
 
 class Instantiation:
@@ -99,7 +110,7 @@ class SolverProcess:
             return Instantiation("unsatisfiable", "None", "None")
         left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
         root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))
-        
+
         variables = []
         for token in root[0].text.split():
             for item in VarEntities.items:
@@ -107,11 +118,11 @@ class SolverProcess:
                     for x in item.flatVars:
                         if item.name in token:
                             variables.append(x)
-                            
+
                 if isinstance(item, EVar):
                     if item.variable.id in token:
                         variables.append(item.variable)
-        
+
         values = root[1].text.split()  # a list with all values given as strings (possibly '*')
         for i, v in enumerate(values):
             variables[i].value = v  # we add new field (may be useful)

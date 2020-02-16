@@ -8,7 +8,7 @@ from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY
 
-queue_in = deque()  # To keep partial constraints when using the IN operator
+queue_in = deque()  # To store partial constraints when using the IN operator
 
 
 def cursing():

@@ -1,4 +1,4 @@
-import ast, inspect, json, lzma, os, os.path, sys
+import ast, inspect, json, lzma, os, os.path, sys, datetime
 from importlib import util
 
 from lxml import etree
@@ -190,7 +190,7 @@ def _compile():
     filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
 
     filename = filename_prefix + ".xml"
-    root = build_document(filename_prefix)
+    root = build_document()
     if root is not None:
         pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8")
         with open(filename, "w") as f:
