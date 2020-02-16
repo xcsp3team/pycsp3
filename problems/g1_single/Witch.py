@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-# x is the number of magic potions for desire
+# x is the number of magic potions for love
 x = Var(range(400))
 
 # y is the number of magic potions for youth

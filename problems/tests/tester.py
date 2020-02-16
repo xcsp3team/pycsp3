@@ -2,7 +2,9 @@ import os
 import shutil
 import subprocess
 import sys
+
 from pycsp3.dashboard import options
+from pycsp3.solvers.solver import class_path_abscon
 from pycsp3.tools.utilities import PURPLE, BLUE, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
@@ -157,9 +159,7 @@ class Tester:
 
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
         print()
-
-        cmd = "java -cp pycsp3" + os.sep + "solvers" + os.sep + "abscon" + os.sep + "AbsCon-19-08.jar" + os.pathsep + "pycsp3" + os.sep + "solvers" + os.sep + "abscon" + os.sep + "xcsp3-tools-1.1.1-SNAPSHOT.jar" + os.pathsep + "pycsp3" + os.sep + "solvers" + os.sep + "abscon" + os.sep + "javax.json-1.0.4.jar"
-        cmd += " AbsCon " if special else " org.xcsp.modeler.Compiler "
+        cmd = "java -cp " + class_path_abscon() + (" AbsCon " if special else " org.xcsp.modeler.Compiler ")
         cmd += "problems.generators." + prs_jv if prs_jv else self.dir_pbs_jv + model
         if self.data_jv(data):
             if dataSpecial:

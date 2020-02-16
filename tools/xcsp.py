@@ -186,7 +186,7 @@ def _annotations():
     return elt
 
 
-def build_document(filename_prefix):
+def build_document():
     root = _element(TypeXML.INSTANCE, attributes=(TypeXML.FORMAT, "XCSP3"))
 
     variables = _variables()

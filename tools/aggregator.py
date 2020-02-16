@@ -15,44 +15,42 @@ def build_similar_constraints():
     recognizing_instantiations(CtrEntities.items)
 
 
-# Phase 1 : Detecting groups of similar constraints
-
-def _detecting_groups(ctr_entities):
-    flags = [False] * len(ctr_entities)  # indicate (indexes of) constraints that are similar at a given moment (see intern loop)
-    removal = False
-    for i, ce1 in enumerate(ctr_entities):
-        if flags[i] or ce1 is None or isinstance(ce1, EGroup):
-            continue
-        Diffs.reset()
-        group = EGroup()  # group of similar constraints tried to be built
-        group.entities.append(ce1)  # first constraint of the new group
-        for j in range(i + 1, len(ctr_entities)):
-            ce2 = ctr_entities[j]
-            if flags[j] is False and not isinstance(ce2, EGroup):
-                diffs = ce2.constraint.close_to(ce1.constraint)
-                if diffs is not False:
-                    diffs.merge()  # merging flags of two lists, indicating if the length of argument contents is different
-                    group.entities.append(ce2)  # adding the constraint to the new group
-                    flags[j] = True  # to avoid processing it again
-                    ctr_entities[j] = None  # to discard this constraint (since it is now in a group)
-                    removal = True
-        if len(group.entities) > 1:
-            group.diff_argument_names = Diffs.fusion.argument_names
-            group.diff_argument_flags = Diffs.fusion.argument_flags
-            ctr_entities[i] = group  # constraint replaced by the new group (and other constraints of the group will be now ignored since flagged to False)
-
-    return [ce for ce in ctr_entities if ce is not None] if removal else ctr_entities
-
-
+# Phase 1: Detecting groups of similar constraints
 def detecting_groups_recursively(ctr_entities):
-    for ce in ctr_entities:
-        if isinstance(ce, (EBlock, ESlide, EToSatisfy)):
-            detecting_groups_recursively(ce.entities)
-        if isinstance(ce, EToGather):
-            ce.entities = _detecting_groups(ce.entities)
+    def _detecting_groups(entities):
+        flags = [False] * len(entities)  # indicate (indexes of) constraints that are similar at a given moment (see intern loop)
+        removal = False
+        for i, e1 in enumerate(entities):
+            if flags[i] or e1 is None or isinstance(e1, EGroup):
+                continue
+            Diffs.reset()
+            group = EGroup()  # group of similar constraints tried to be built
+            group.entities.append(e1)  # first constraint of the new group
+            for j in range(i + 1, len(entities)):
+                e2 = entities[j]
+                if flags[j] is False and not isinstance(e2, EGroup):
+                    diffs = e2.constraint.close_to(e1.constraint)
+                    if diffs is not False:
+                        diffs.merge()  # merging flags of two lists, indicating if the length of argument contents is different
+                        group.entities.append(e2)  # adding the constraint to the new group
+                        flags[j] = True  # to avoid processing it again
+                        entities[j] = None  # to discard this constraint (since it is now in a group)
+                        removal = True
+            if len(group.entities) > 1:
+                group.diff_argument_names = Diffs.fusion.argument_names
+                group.diff_argument_flags = Diffs.fusion.argument_flags
+                entities[i] = group  # constraint replaced by the new group (and other constraints of the group will be now ignored since flagged to False)
+
+        return [e for e in entities if e is not None] if removal else entities
+
+    for e in ctr_entities:
+        if isinstance(e, (EBlock, ESlide, EToSatisfy)):
+            detecting_groups_recursively(e.entities)
+        if isinstance(e, EToGather):
+            e.entities = _detecting_groups(e.entities)
 
 
-# Phase 2 : Building groups (constraint templates and args)
+# Phase 2: Building groups (constraint templates and args)
 
 
 def _compute_group_abstraction_intension(group):
@@ -169,69 +167,64 @@ def _compute_group_abstraction_other(group):
     return abstraction, all_args
 
 
-def _build_group(group):
-    if isinstance(group.entities[0].constraint, ConstraintIntension):
-        group.abstraction, group.all_args = _compute_group_abstraction_intension(group)
-    else:
-        group.abstraction, group.all_args = _compute_group_abstraction_other(group)
+def building_groups_recursively(entities, previous=None):
 
+    def _build_group(group):
+        if isinstance(group.entities[0].constraint, ConstraintIntension):
+            group.abstraction, group.all_args = _compute_group_abstraction_intension(group)
+        else:
+            group.abstraction, group.all_args = _compute_group_abstraction_other(group)
 
-def building_groups_recursively(ctr_entities, previous=None):
-    for ce in ctr_entities:
-        if isinstance(ce, EGroup):
-            _build_group(ce)
-            ce.copy_basic_attributes_of(previous)
+    for e in entities:
+        if isinstance(e, EGroup):
+            _build_group(e)
+            e.copy_basic_attributes_of(previous)
             # previous.clearBasicAttributes()
-        if isinstance(ce, (ESlide, EToGather, EBlock, EToSatisfy)):
-            building_groups_recursively(ce.entities, ce)
+        if isinstance(e, (ESlide, EToGather, EBlock, EToSatisfy)):
+            building_groups_recursively(e.entities, e)
 
 
-# Phase 3 : adding/removing some blocks
+# Phase 3: adding/removing some blocks
+def canonizing_groups_and_blocks(entities, previous=None):
 
-
-def canonizing_groups_and_blocks(ctr_entities, previous=None):
-    def _building_block(ce):
-        if len(ce.entities) == 0:
-            return ce
-        if len(ce.entities) == 1:  # no need to create a block in this case
-            ce.entities[0].copy_basic_attributes_of(ce)
-            return ce.entities[0]
-        block = EBlock([ce])  # creating a new block and copying the appropriate comments and tags
-        block.copy_basic_attributes_of(ce if not ce.blank_basic_attributes() else ce.entities[0])
-        for c in ce.entities:  # clearing comments and tags of the constraints embedded in the block
+    def _building_block(entity):
+        if len(entity.entities) == 0:
+            return entity
+        if len(entity.entities) == 1:  # no need to create a block in this case
+            entity.entities[0].copy_basic_attributes_of(entity)
+            return entity.entities[0]
+        block = EBlock([entity])  # creating a new block and copying the appropriate comments and tags
+        block.copy_basic_attributes_of(entity if not entity.blank_basic_attributes() else entity.entities[0])
+        for c in entity.entities:  # clearing comments and tags of the constraints embedded in the block
             c.clear_basic_attributes()
         return block
 
-    for i, ce in enumerate(ctr_entities):
-        if not isinstance(ce, ECtrs) or len(ce.entities) == 0:
+    for i, e in enumerate(entities):
+        if not isinstance(e, ECtrs) or len(e.entities) == 0:
             continue
-        first = ce.entities[0]
-
-        if isinstance(ce, EBlock) and isinstance(first, (ECtr, EToGather, EGroup)):
+        first = e.entities[0]
+        if isinstance(e, EBlock) and isinstance(first, (ECtr, EToGather, EGroup)):
             # removing a block when we have only one element inside
-            if len(ce.entities) == 1 and None in {ce.comment, first.comment} and 0 in {len(ce.tags), len(first.tags)}:
-                if ce.comment:
-                    first.note(ce.comment)
-                if len(ce.tags) > 0:
-                    first.tag(ce.tags)
-                ctr_entities[i] = first
-
-        if isinstance(ce, EToGather):
+            if len(e.entities) == 1 and None in {e.comment, first.comment} and 0 in {len(e.tags), len(first.tags)}:
+                if e.comment:
+                    first.note(e.comment)
+                if len(e.tags) > 0:
+                    first.tag(e.tags)
+                entities[i] = first
+        if isinstance(e, EToGather):
             # Creating a new block when there are several sub-groups (or stand-alone constraints); it was impossible to do a single group
-            if any(not c.blank_basic_attributes() for c in ce.entities):
+            if any(not c.blank_basic_attributes() for c in e.entities):
                 if not isinstance(previous, EBlock):
-                    ctr_entities[i] = _building_block(ce)
-            elif not ce.blank_basic_attributes():
-                ctr_entities[i] = _building_block(ce)
-
-        if isinstance(ce, (ESlide, EBlock, EToSatisfy)):
-            canonizing_groups_and_blocks(ce.entities, ce)
-
-
-# Phase 4 : detecting forms corresponding to instantiations
+                    entities[i] = _building_block(e)
+            elif not e.blank_basic_attributes():
+                entities[i] = _building_block(e)
+        if isinstance(e, (ESlide, EBlock, EToSatisfy)):
+            canonizing_groups_and_blocks(e.entities, e)
 
 
-def recognizing_instantiations(ctr_entities):
+# Phase 4: detecting forms corresponding to instantiations
+def recognizing_instantiations(entities):
+
     def _elements_for_building_instantiation(trees):
         t1, t2 = [], []
         for tree in trees:
@@ -242,11 +235,11 @@ def recognizing_instantiations(ctr_entities):
             t2.append(pair[1])
         return t1, t2
 
-    for i, ce in enumerate(ctr_entities):
+    for i, e in enumerate(entities):
         # since a group, we can test only the first constraint (to see if it is a group of intension constraints)
-        if isinstance(ce, EGroup) and isinstance(ce.entities[0].constraint, ConstraintIntension):
-            elements = _elements_for_building_instantiation(c.constraint.arguments[TypeCtrArg.FUNCTION].content for c in ce.entities)
+        if isinstance(e, EGroup) and isinstance(e.entities[0].constraint, ConstraintIntension):
+            elements = _elements_for_building_instantiation(c.constraint.arguments[TypeCtrArg.FUNCTION].content for c in e.entities)
             if elements:
-                ctr_entities[i] = ECtr(ConstraintInstantiation(elements[0], elements[1])).copy_basic_attributes_of(ce)
-        elif isinstance(ce, (ESlide, EToGather, EBlock, EToSatisfy)):
-            recognizing_instantiations(ce.entities)
+                entities[i] = ECtr(ConstraintInstantiation(elements[0], elements[1])).copy_basic_attributes_of(e)
+        elif isinstance(e, (ESlide, EToGather, EBlock, EToSatisfy)):
+            recognizing_instantiations(e.entities)

@@ -5,34 +5,34 @@ persons = alice, bob, sascha = 0, 1, 2
 # culprit is among alice (0), bob (1) and sascha (2)
 culprit = Var(persons)
 
-# likes[i][j] is 1 iff the ith guy likes the jth guy
-likes = VarArray(size=[3, 3], dom={0, 1})
+# liking[i][j] is 1 iff the ith guy likes the jth guy
+liking = VarArray(size=[3, 3], dom={0, 1})
 
 # taller[i][j] is 1 iff the ith guy is taller than the jth guy
 taller = VarArray(size=[3, 3], dom={0, 1})
 
 satisfy(
     # the culprit likes Alice
-    likes[culprit][alice] == 1,
+    liking[culprit][alice] == 1,
 
     # the culprit is taller than Alice
     taller[culprit][alice] == 1,
 
     # nobody is taller than himself
-    [taller[i][i] == 0 for i in persons],
+    [taller[p][p] == 0 for p in persons],
 
     # the ith guy is taller than the jth guy iff the jth guy is not taller than the ith guy
-    [taller[i][j] != taller[j][i] for i in persons for j in persons if i != j],
+    [taller[p1][p2] != taller[p2][p1] for p1 in persons for p2 in persons if p1 != p2],
 
     # Bob likes no one that Alice likes
-    [imply(likes[alice][i], ~likes[bob][i]) for i in persons],
+    [imply(liking[alice][p], ~liking[bob][p]) for p in persons],
 
     # Alice likes everybody except Bob
-    [likes[alice][i] == 1 for i in persons if i != bob],
+    [liking[alice][p] == 1 for p in persons if p != bob],
 
     # Sascha likes everyone that Alice likes
-    [imply(likes[alice][i], likes[sascha][i]) for i in persons],
+    [imply(liking[alice][p], liking[sascha][p]) for p in persons],
 
     # nobody likes everyone
-    [Count(likes[i], value=0) >= 1 for i in persons]
+    [Count(liking[p], value=0) >= 1 for p in persons]
 )
