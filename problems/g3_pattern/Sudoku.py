@@ -28,8 +28,7 @@ elif variant("table"):
         [x[i:i + base, j:j + base] in table for i in range(0, n, base) for j in range(0, n, base)]
     )
 
-if clues:
-    satisfy(
-        # imposing clues  tag(clues)
-        x[i][j] == clues[i][j] for i in range(n) for j in range(n) if clues[i][j] > 0
-    )
+satisfy(
+    # imposing clues  tag(clues)
+    x[i][j] == clues[i][j] for i in range(n) for j in range(n) if clues and clues[i][j] > 0
+)
