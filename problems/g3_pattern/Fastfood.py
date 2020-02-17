@@ -25,5 +25,5 @@ satisfy(
 )
 
 minimize(
-    Sum(md)   # TODO in a future version, being able to post Sum(Minimum(d[i] for i in range(nRestaurants). But requires an extension of XCSP3.
+    Sum(md)   # TODO in a future version, being able to post Sum(Minimum(d[i] for i in range(nRestaurants). But requires an extension of XCSP3 (or automatic reformulation).
 )

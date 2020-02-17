@@ -15,15 +15,9 @@ d = VarArray(size=[nTemplates, nVariations], dom=range(nSlots + 1))
 # p[i] is the number of printings of the ith template
 p = VarArray(size=nTemplates, dom=range(max(data.demands) + 1))
 
-# u[i] is 1 iff the ith template is used
-u = VarArray(size=nTemplates, dom={0, 1})
-
 satisfy(
     # all slots of all templates are used
-    [Sum(d[i]) == nSlots for i in range(nTemplates)],
-
-    # if a template is used, it is printed at least once
-    [iff(u[i] == 1, p[i] > 0) for i in range(nTemplates)]
+    Sum(d[i]) == nSlots for i in range(nTemplates)
 )
 
 if not variant():
@@ -47,7 +41,7 @@ elif variant("aux"):
 satisfy(
     # tag(symmetry-breaking)
     [
-        [iff(u[i] == 0, d[i][0] == nSlots) for i in range(nTemplates)],
+        [iff(p[i] == 0, d[i][0] == nSlots) for i in range(nTemplates)],
 
         Decreasing(p),
     ]
@@ -55,5 +49,5 @@ satisfy(
 
 minimize(
     # minimizing the number of used templates
-    Sum(u)
+    Sum(p[i] > 0 for i in range(nTemplates))
 )

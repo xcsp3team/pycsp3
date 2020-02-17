@@ -13,9 +13,6 @@ p = VarArray(size=nVouchers, dom=lambda i: {0, vouchers[i].payPart})
 # f[i] is the number of free pizzas wrt the ith voucher
 f = VarArray(size=nVouchers, dom=lambda i: range(vouchers[i].freePart + 1))
 
-# c[i] is the cost (paid price) of the ith pizza
-c = VarArray(size=nPizzas, dom=lambda i: {0, prices[i]})
-
 satisfy(
     # counting paid pizzas
     [Count(v, value=-i - 1) == p[i] for i in range(nVouchers)],
@@ -26,16 +23,13 @@ satisfy(
     # a voucher, if used, must contribute to have at least one free pizza.
     [iff(f[i] == 0, p[i] != vouchers[i].payPart) for i in range(nVouchers)],
 
-    # a pizza must be paid iff a free voucher part is not used to have it free
-    [imply(v[i] <= 0, c[i] != 0) for i in range(nPizzas)],
-
     # a free pizza obtained with a voucher must be cheaper than any pizza paid wrt this voucher
     [(v[i] >= v[j]) | (v[i] != -v[j]) for i in range(nPizzas) for j in range(nPizzas) if i != j and prices[i] < prices[j]]
 )
 
 minimize(
     # minimizing summed up costs of pizzas
-    Sum(c)
+    Sum((v[i] <= 0) * prices[i] for i in range(nPizzas))
 )
 
 annotate(decision=v)
