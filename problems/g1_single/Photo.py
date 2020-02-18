@@ -14,20 +14,33 @@ betty, chris, donald, fred, gary, mary, paul = friends = VarArray(size=7, dom=ra
 
 preferences = [(betty, gary), (betty, mary), (chris, betty), (chris, gary), (fred, mary), (fred, donald), (paul, fred), (paul, donald)]
 
-# costs[i] is the cost of not respecting the ith preference
-costs = VarArray(size=len(preferences), dom={0, 1})
+if not variant():
+    satisfy(
+        # all friends are at a different position
+        AllDifferent(friends)
+    )
 
-table = {(i, j, 0 if abs(i - j) == 1 else 1) for i in range(7) for j in range(7) if i != j}
+    minimize(
+        # minimizing the overall dissatisfaction
+        Sum(abs(f1 - f2) != 1 for (f1, f2) in preferences)
+    )
 
-satisfy(
-    # all friends are at a different position
-    AllDifferent(friends),
+elif variant("aux"):
 
-    # determining which preferences are not satisfied
-    [(f1, f2, costs[i]) in table for i, (f1, f2) in enumerate(preferences)]
-)
+    # costs[i] is the cost of not respecting the ith preference
+    costs = VarArray(size=len(preferences), dom={0, 1})
 
-minimize(
-    # minimizing the overall dissatisfaction
-    Sum(costs)
-)
+    table = {(i, j, 0 if abs(i - j) == 1 else 1) for i in range(7) for j in range(7) if i != j}
+
+    satisfy(
+        # all friends are at a different position
+        AllDifferent(friends),
+
+        # determining which preferences are not satisfied
+        [(f1, f2, costs[i]) in table for i, (f1, f2) in enumerate(preferences)]
+    )
+
+    minimize(
+        # minimizing the overall dissatisfaction
+        Sum(costs)
+    )

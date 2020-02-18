@@ -40,7 +40,7 @@ if variant("m1"):
 
         [(np[i][j], r[i][j], o[i][j]) in table1(i) for i in range(n) for j in range(m)],
 
-        [Sum(o[ANY, j]) == ns[j] for j in range(m)]
+        [Sum(o[:, j]) == ns[j] for j in range(m)]
     )
 
     minimize(

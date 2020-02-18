@@ -13,19 +13,13 @@ y = VarArray(size=[n - 1, n - 1], dom=lambda k, i: {-1, 1} if i < n - k - 1 else
 # c[k] is the value of the kth auto-correlation
 c = VarArray(size=n - 1, dom=lambda k: range(-n + k + 1, n - k))
 
-# s[k] is the square of the kth auto-correlation
-s = VarArray(size=n - 1, dom=lambda k: {v ** 2 for v in range(n - k)})
-
 satisfy(
     [y[k][i] == x[i] * x[i + k + 1] for k in range(n - 1) for i in range(n - k - 1)],
 
-    [Sum(y[k]) == c[k] for k in range(n - 1)],
-
-    [s[k] == c[k] * c[k] for k in range(n - 1)]
+    [Sum(y[k]) == c[k] for k in range(n - 1)]
 )
-
 
 minimize(
     # minimizing the sum of the squares of the auto-correlation
-    Sum(s)
+    Sum(c[k] * c[k] for k in range(n - 1))
 )

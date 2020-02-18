@@ -70,6 +70,7 @@ same = (Tester(NAME)
         .add("Sudoku", data="Sudoku_s13a.json", variant="table")
         .add("Sudoku", data="Sudoku_example.txt", prs_py="Sudoku_Parser", prs_jv="Sudoku_Parser")
         .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json")
+        .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json", variant="table")
         .add("VesselLoading", data="VesselLoading-inst1.json")
         )
 

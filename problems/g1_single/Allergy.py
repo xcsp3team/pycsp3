@@ -5,11 +5,11 @@ from pycsp3 import *
  eggs, mold, nuts and ragweed.
  We would like to match each one's surname (Baxter, Lemon, Malone and Fleet) with his or her allergy.
  We know that:
-  - Rick isn't allergic to mold
+  - Rick is not allergic to mold
   - Baxter is allergic to eggs
-  - Hugh isn't surnamed Lemon or Fleet
+  - Hugh is neither surnamed Lemon nor Fleet
   - Debra is allergic to ragweed
-  - Janet (who isn't Lemon) isn't allergic to eggs or mold
+  - Janet (who isn't Lemon) is neither allergic to eggs nor to mold
 """
 
 friends = Debra, Janet, Hugh, Rick = "Debra", "Janet", "Hugh", "Rick"

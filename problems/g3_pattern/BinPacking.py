@@ -39,8 +39,6 @@ def occurrences_of_weights():
 
 nBins, maxPerBin = n_bins(), max_items_per_bin()
 
-# u is the number of unused bins
-u = Var(dom=range(nBins + 1))
 
 # w[i][j] indicates the weight of the jth object put in the ith bin. It is 0 if there is no object at this place.
 w = VarArray(size=[nBins, maxPerBin], dom={0} | set(weights))
@@ -88,13 +86,10 @@ satisfy(
     Cardinality(w, occurrences={0: nBins * maxPerBin - nItems} + {weight: occ for (weight, occ) in occurrences_of_weights()}),
 
     # tag(symmetry-breaking)
-    LexDecreasing(w),
-
-    # counting the number of unused bins
-    Count(w[:, 0], value=0) == u
+    LexDecreasing(w)
 )
 
 maximize(
     # maximizing the number of unused bins
-    u
+    Sum(w[i][0] == 0 for i in range(nBins))
 )

@@ -38,7 +38,7 @@ satisfy(
     [imply(hating[agatha][p], ~hating[charles][p]) for p in persons],
 
     # Agatha hates everybody except the butler
-    [hating[agatha][p] == 1 for p in range(3) if p != butler],
+    [hating[agatha][p] == 1 for p in persons if p != butler],
 
     # the butler hates everyone not richer than Aunt Agatha
     [imply(~richer[p, agatha], hating[butler, p]) for p in persons],
