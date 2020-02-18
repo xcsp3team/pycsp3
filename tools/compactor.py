@@ -259,7 +259,7 @@ def _compact_constraint_group(group):
             if argument.content_compressible:
                 if "%" not in str(value):
                     if key == TypeCtrArg.MATRIX:  # Special case for matrix
-                        sc = _simple_compact(flatten(argument.content_compressible))
+                        sc = None if is_containing(argument.content_compressible, int) else _simple_compact(flatten(argument.content_compressible))
                         group.abstraction[key] = sc if sc is not None else group.abstraction[key]
                     else:
                         group.abstraction[key] = compact(value, preserve_order=argument.content_ordered)

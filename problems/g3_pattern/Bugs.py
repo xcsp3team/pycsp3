@@ -14,9 +14,6 @@ n1 = VarArray(size=nBugs, dom=range(nBugs + 1))
 # n2[i] corresponds to the number of squares in x with a bug on it and with value i
 n2 = VarArray(size=nBugs, dom=range(height * width + 1))
 
-# the number of times a bug is in a rectangle whose index is different from the one of the bug
-s = Var(dom=range(nBugs + 1))
-
 
 def neighbors(i, j, k, l):
     return i == k and j in {l - 1, l + 1} or j == l and i in {k - 1, k + 1}
@@ -37,8 +34,6 @@ satisfy(
 
     [n2[i] * types[bugs[i].type].length == n1[i] for i in range(nBugs)],
 
-    Count(n2, value=0) == s,
-
     # if two squares have the same value, then all the squares in the rectangle they delimit must take this value
     [
         (x[i][j] != x[k][l]) | (x[i][j] == x[m][n])
@@ -48,4 +43,7 @@ satisfy(
         ]
 )
 
-maximize(s)
+maximize(
+    # maximizing the number of times a bug is in a rectangle whose index is different from the one of the bug
+    Sum(n2[i] == 0 for i in range(nBugs))
+)

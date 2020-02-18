@@ -16,5 +16,4 @@ satisfy(
 )
 
 
-# Sum((i - 1) * x[i] for i in range(n)) == 0
-# or x * range(-1, n - 1) == 0
+# Sum((i - 1) * x[i] for i in range(n)) == 0, or equivalently, x * range(-1, n - 1) == 0

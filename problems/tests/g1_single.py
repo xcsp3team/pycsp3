@@ -22,6 +22,7 @@ xcsp = (Tester(NAME)
         .add(same.instances)
         .add("Agatha")
         .add("Photo")
+        .add("Photo", variant="aux")
         .add("SendMore")
         )
 

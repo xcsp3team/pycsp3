@@ -10,5 +10,5 @@ satisfy(
     AllDifferent(x, matrix=True),
 
     # tag(clues)
-    [x[i][j] == clues[i][j] for i in range(n) for j in range(n) if clues[i][j] != -1]
+    [x[i][j] == clues[i][j] for i in range(n) for j in range(n) if clues and clues[i][j] != -1]
 )

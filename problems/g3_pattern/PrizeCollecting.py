@@ -12,23 +12,22 @@ p = VarArray(size=n, dom=range(-1, n))
 g = VarArray(size=n, dom=lambda i: set(prizes[i]))
 
 
-# we build the short table for 'vector[index] = value + offset' where index and value are both variables and value assumed to be in vector
-def short_table_for_element(vector, index, value, offset):
-    position = protect().execute(next((i for i, x in enumerate(vector) if x == value), -1))  # is value present in the vector?
-    assert position != -1  # this current version assumes that fact. Should be generalized in the future
-    arity = len(vector) + 1  # since the assumption just above
-    short = []
-    for vi in (v for v in index.dom if 0 <= v < len(vector)):
-        if vi == position:
-            if offset == 0:  # only case for a support
-                short.append(tuple(vi if i == 0 else ANY for i in range(arity)))
-        else:
-            for vv in (v for v in vector[vi].dom if v - offset in value.dom):
-                short.append(tuple(vi if i == 0 else vv if i == 1 + vi else vv - offset if i == 1 + position else ANY for i in range(arity)))
-    return short
-
-
 def table(pos):
+    # we build the short table for 'vector[index] = value + offset' where index and value are both variables and value assumed to be in vector
+    def short_table_for_element(vector, index, value, offset):
+        position = protect().execute(next((i for i, x in enumerate(vector) if x == value), -1))  # is value present in the vector?
+        assert position != -1  # this current version assumes that fact. Should be generalized in the future
+        arity = len(vector) + 1  # since the assumption just above
+        short = []
+        for vi in (v for v in index.dom if 0 <= v < len(vector)):
+            if vi == position:
+                if offset == 0:  # only case for a support
+                    short.append(tuple(vi if i == 0 else ANY for i in range(arity)))
+            else:
+                for vv in (v for v in vector[vi].dom if v - offset in value.dom):
+                    short.append(tuple(vi if i == 0 else vv if i == 1 + vi else vv - offset if i == 1 + position else ANY for i in range(arity)))
+        return short
+
     short = short_table_for_element(p, s[pos], p[pos], 1)
     t1, t2 = (-1, *(ANY,) * n), (0, *(ANY,) * n)  # tuple([-1] + [ANY] * n), tuple([0] + [ANY] * n)
     return [t1, t2] + (short if pos == 0 else [t for t in short[2:] if t[0] != 0])
