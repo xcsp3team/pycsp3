@@ -7,9 +7,6 @@ horizon = sum(sum(t) for t in durations) + 1
 # s[i][j] is the start time of the jth operation for the ith job
 s = VarArray(size=[n, m], dom=range(horizon))
 
-# e[i] is the end time of the last operation for the ith job
-e = VarArray(size=[n], dom=range(horizon))
-
 # d[i][j] is the duration of the jth operation of the ith job
 d = VarArray(size=[n, m], dom=lambda i, j: durations[i])
 
@@ -23,9 +20,6 @@ satisfy(
     # operations must be ordered on each job
     [Increasing(s[i], lengths=d[i]) for i in range(n)],
 
-    # computing the end time of each job
-    [e[i] == s[i][- 1] + d[i][- 1] for i in range(n)],
-
     # each machine must be used for each job
     [AllDifferent(mc[i]) for i in range(n)],
 
@@ -38,10 +32,10 @@ satisfy(
     [NoOverlap(origins=sd[:, j], lengths=durations[:, j]) for j in range(m)],
 
     # tag(redundant-constraints)
-    [e[i] >= sum(durations[i]) for i in range(n)]
+    [s[i][- 1] + d[i][- 1] >= sum(durations[i]) for i in range(n)]
 )
 
 minimize(
     # minimizing the makespan
-    Maximum(e)
+    Maximum(s[i][- 1] + d[i][- 1] for i in range(n))
 )

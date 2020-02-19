@@ -9,24 +9,19 @@ indexes = [[job.resources.index(j) for j in range(m)] for job in jobs]
 # s[i][j] is the start time of the jth operation for the ith job
 s = VarArray(size=[n, m], dom=range(horizon))
 
-# e[i] is the end time of the last operation for the ith job
-e = VarArray(size=[n], dom=range(horizon))
-
 
 def respecting_dates(i):
+    t = []
     if jobs[i].releaseDate > 0:
-        return s[i][0] > jobs[i].releaseDate
+        t.append(s[i][0] > jobs[i].releaseDate)
     if jobs[i].dueDate != -1 and jobs[i].dueDate < horizon - 1:
-        return e[i] <= jobs[i].dueDate
-    return None
+        t.append(s[i][- 1] <= (jobs[i].dueDate - durations[i][- 1]))
+    return t
 
 
 satisfy(
     # operations must be ordered on each job
     [Increasing(s[i], lengths=durations[i]) for i in range(n)],
-
-    # computing the end time of each job
-    [e[i] == s[i][- 1] + durations[i][- 1] for i in range(n)],
 
     # respecting release and due dates
     [respecting_dates(i) for i in range(n)],
@@ -37,5 +32,5 @@ satisfy(
 
 minimize(
     # minimizing the makespan
-    Maximum(e)
+    Maximum(s[i][- 1] + durations[i][- 1] for i in range(n))
 )
