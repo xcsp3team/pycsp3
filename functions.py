@@ -515,7 +515,7 @@ def Cardinality(term, *others, occurrences, closed=False):
 
 def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     terms = flatten(term, others)
-    checkType(terms, [Variable])
+    checkType(terms, ([Variable],[Node]))
     checkType(index, (Variable, type(None)))
     checkType(start_index, int)
     checkType(type_rank, TypeRank)

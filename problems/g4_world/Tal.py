@@ -26,7 +26,7 @@ a = VarArray(size=[nLevels, nWords], dom=lambda i, j: range(maxArity + 1) if i %
 # x[i][j] is the index of the jth word at the ith level
 x = VarArray(size=[nLevels, nWords], dom=lambda i, j: range(lengths[i]) if 0 < i and i % 2 == 0 and j < lengths[i] else {0})
 
-s = VarArray(size=[nLevels - 2], dom=lambda i: range(lengths[i + 1]))
+s = VarArray(size=nLevels - 2, dom=lambda i: range(lengths[i + 1]))
 
 
 def table_for(vector_length):

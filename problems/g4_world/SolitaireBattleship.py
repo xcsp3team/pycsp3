@@ -74,8 +74,8 @@ satisfy(
 
     #  ensuring the right number of occurrences of ship segments of each type
     [
-        [Count(scp, value=pos[i]) == cp[i] for i in range(nTypes)],
-        [Count(scp, value=neg[i]) == cn[i] for i in range(nTypes)],
+        Cardinality(scp, occurrences={pos[i]: cp[i] for i in range(nTypes)}),
+        Cardinality(scp, occurrences={neg[i]: cn[i] for i in range(nTypes)}),
         [cp[i] + cn[i] == occurrences[i] for i in range(nTypes)]
     ],
 
@@ -89,4 +89,5 @@ satisfy(
     [hint_ctr(hint) for hint in hints]
 )
 
-# TODO cardinality a la place des count ?  (chriss)
+# [Count(scp, value=pos[i]) == cp[i] for i in range(nTypes)],
+# [Count(scp, value=neg[i]) == cn[i] for i in range(nTypes)],

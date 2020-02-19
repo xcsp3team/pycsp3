@@ -9,6 +9,8 @@ nModels, nTypes = len(models), len(cardTypes)
 powers, sizes, costs = [model['power'] for model in models], [model['nConnectors'] for model in models], [model['price'] for model in models]
 cardPowers, cardDemands = [cardType['power'] for cardType in cardTypes], [cardType['demand'] for cardType in cardTypes]
 
+table = {(i, powers[i], sizes[i], costs[i]) for i in range(nModels)}
+
 # m[i] is the model used for the ith rack
 m = VarArray(size=nRacks, dom=range(nModels))
 
@@ -25,14 +27,8 @@ s = VarArray(size=nRacks, dom=set(sizes))
 c = VarArray(size=nRacks, dom=set(costs))
 
 satisfy(
-    # linking model and power of the ith rack
-    [(m[i], p[i]) in enumerate(powers) for i in range(nRacks)],
-
-    # linking model and size of the ith rack
-    [(m[i], s[i]) in enumerate(sizes) for i in range(nRacks)],
-
-    # linking model and cost of the ith rack
-    [(m[i], c[i]) in enumerate(costs) for i in range(nRacks)],
+    # linking model with power, size and cost of the ith rack
+    [(m[i], p[i], s[i], c[i]) in table for i in range(nRacks)],
 
     # connector-capacity constraints
     [Sum(nc[i]) <= s[i] for i in range(nRacks)],
