@@ -17,7 +17,7 @@ satisfy(
     [Sum(dgn) == magic for dgn in [diagonal_down(x), diagonal_up(x)]],
 
     # respecting specified clues (if any)  tag(clues)
-    [x[i][j] == clues[i][j] for i in range(n) for j in range(n) if clues[i][j] != 0]
+    [x[i][j] == clues[i][j] for i in range(n) for j in range(n) if clues and clues[i][j] != 0]
 )
 
 

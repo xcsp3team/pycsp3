@@ -14,7 +14,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintSum,
     ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
-    ConstraintCumulative, ConstraintCircuit, ConstraintClause, ConstraintInstantiation, PartialConstraint, ScalarProduct)
+    ConstraintCumulative, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
@@ -22,7 +22,7 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data.dataparser import DataDict
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns, queue_in
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_2d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing, ANY
+from pycsp3.tools.utilities import flatten, is_1d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing, ANY
 
 ''' Global Variables '''
 
@@ -406,7 +406,7 @@ def Sum(term, *others, condition=None):
     def _get_terms_coeffs(terms):
         if len(terms) == 1 and isinstance(terms[0], ScalarProduct):
             return flatten(terms[0].variables), flatten(terms[0].coeffs)
-        if all(isinstance(x, Variable) for x in terms):
+        if all(isinstance(x, (Variable, PartialConstraint)) for x in terms):
             return terms, None
         t1, t2 = [], []
         for tree in terms:
@@ -446,9 +446,9 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     term = list(term) if isinstance(term, types.GeneratorType) else term
-    checkType(term, ([Variable], [Node], Variable, Node, ScalarProduct))
+    checkType(term, ([Variable], [Node], [PartialConstraint], Variable, Node, PartialConstraint, ScalarProduct)), type(term)
     for other in others:
-        checkType(other, ([Variable], [Node], Variable, Node, ScalarProduct))
+        checkType(other, ([Variable], [Node], [PartialConstraint], Variable, Node, PartialConstraint, ScalarProduct))
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
@@ -515,7 +515,7 @@ def Cardinality(term, *others, occurrences, closed=False):
 
 def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     terms = flatten(term, others)
-    checkType(terms, ([Variable],[Node]))
+    checkType(terms, ([Variable], [Node]))
     checkType(index, (Variable, type(None)))
     checkType(start_index, int)
     checkType(type_rank, TypeRank)

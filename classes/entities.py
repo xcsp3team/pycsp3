@@ -5,6 +5,7 @@ from functools import reduce
 
 from pycsp3.classes.auxiliary.types import auto
 from pycsp3.classes.main.variables import Variable, NotVariable, NegVariable
+from pycsp3.classes import main
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import flatten
 from pycsp3.tools.inspector import checkType
@@ -249,12 +250,12 @@ class TypeNode(Enum):
     SET = (auto(), 0, float("inf"))
 
     ''' 0-ary '''
-    VAR, PAR, INT, RATIONAL, DECIMAL, SYMBOL = ((id, 0, 0) for id in auto(6))
+    VAR, PAR, INT, RATIONAL, DECIMAL, SYMBOL, PARTIAL = ((id, 0, 0) for id in auto(7))
 
     SPECIAL = (auto(), 0, float("inf"))
 
     def is_leaf(self):
-        return self in {TypeNode.VAR, TypeNode.PAR, TypeNode.INT, TypeNode.RATIONAL, TypeNode.DECIMAL, TypeNode.SYMBOL, TypeNode.SPECIAL}
+        return self == TypeNode.SPECIAL or (self.min_arity == self.max_arity == 0)
 
     def is_valid_arity(self, k):
         return self.min_arity <= k <= self.max_arity
@@ -366,8 +367,6 @@ class Node(Entity):
         else:
             return None
 
-
-
     """
       Static methods
     """
@@ -390,6 +389,8 @@ class Node(Entity):
                 t.append(Node(TypeNode.INT, arg))
             elif isinstance(arg, str):
                 t.append(Node(TypeNode.SYMBOL, arg))
+            elif isinstance(arg, main.constraints.PartialConstraint):
+                t.append(Node(TypeNode.PARTIAL, arg))
             else:
                 raise ValueError("Problem: bad form of predicate " + str(arg))
         return t
