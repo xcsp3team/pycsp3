@@ -26,16 +26,15 @@ satisfy(
     Cardinality(c, occurrences={i: demands[i] for i in range(nClasses)})
 )
 
-useTable = True
-if useTable:
+if not variant():
     satisfy(
         # constraints about options
-        [(c[i], *o[i]) in {(i, *cl.options) for i, cl in enumerate(classes)} for i in range(nCars)]
+        imply(c[i] == j, o[i][k] == cl.options[k]) for i in range(nCars) for j, cl in enumerate(classes) for k in range(nOptions)
     )
-else:
+elif variant("table"):
     satisfy(
-        # linking cars and options
-        [imply(c[i] == j, o[i][k] == cl.options[k]) for i in range(nCars) for j, cl in enumerate(classes) for k in range(nOptions)]
+        # constraints about options
+        (c[i], *o[i]) in {(i, *cl.options) for i, cl in enumerate(classes)} for i in range(nCars)
     )
 
 satisfy(

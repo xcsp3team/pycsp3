@@ -7,7 +7,7 @@ from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import ECtr, TypeNode, Node
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error
-
+from pycsp3.tools.compactor import compact
 
 class Diffs:
     """"
@@ -435,6 +435,8 @@ class PartialConstraint:  # constraint whose condition is missing initially
         return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
     def __sub__(self, other):
+        if isinstance(other, PartialConstraint) and self.constraint.name != other.constraint.name:
+            return Node.build(TypeNode.SUB, self, other)
         return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
     def __mul__(self, other):
@@ -457,6 +459,12 @@ class PartialConstraint:  # constraint whose condition is missing initially
         elif isinstance(i, int):
             self.constraint = ConstraintElement(lst[:, i], index)
         return self
+
+    def __str__(self):
+        c = self.constraint
+        assert len(c.arguments) == 2
+        print(type(c.arguments[TypeCtrArg.LIST]))
+        return str(c.name) + "(" + compact(c.arguments[TypeCtrArg.LIST].content) + ")"  # TODO experimental stuff
 
     @staticmethod
     def combine_partial_objects(obj1, operator, obj2):

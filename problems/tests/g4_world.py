@@ -15,6 +15,7 @@ same = (Tester(NAME)
         .add("Bacp", data="Bacp_inst0.json", variant="m2-d")
         .add("Bacp", data="Bacp_10.mzn", variant="m1", prs_py="Bacp_ParserZ", prs_jv="Bacp_ParserZ")  # m1 is enough to test parsing
         .add("CarSequencing", data="CarSequencing_dingbas.json")
+        .add("CarSequencing", data="CarSequencing_dingbas.json", variant="table")
         .add("Crossword", data="Crossword_vg6-7-ogd.json")
         .add("Crossword", data="Crossword_h1501-lex.json")
         .add("Crossword", data="Crossword_h0504-lex.json", variant="alt")
