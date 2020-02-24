@@ -41,7 +41,7 @@ satisfy(
     # channeling arrays vr and ve, each week
     [Channel(vr[:, w], ve[:, w]) for w in range(nWeeks)],
 
-    #  tag(symmetry-breaking)
+    # tag(symmetry-breaking)
     [
         LexIncreasing(vr, matrix=True),
 

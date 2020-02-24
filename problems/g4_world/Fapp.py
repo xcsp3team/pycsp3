@@ -40,6 +40,7 @@ def table_relaxable_link(c, short):
                     if kl == 11 or distance >= t[kl]:  # for kl=11, we suppose t[kl] = 0
                         suffix = (p1, p2, kl, 0 if kl == 0 or distance >= t[kl - 1] else 1, 0 if kl <= 1 else calculate_size())
                         table.add((distance, *suffix) if short else (f1, f2, *suffix))
+            # set_short_version.add(distance)  # not possible because parallel computation?
     OpOverrider.enable()
     return table
 

@@ -80,7 +80,7 @@ def flatten(*args):
 
 
 def is_containing(l, types, *, check_first_only=False):
-    if isinstance(l, (list, tuple)):
+    if isinstance(l, (list, tuple, set, frozenset)):
         if len(l) == 0:
             return None
         found = False
