@@ -91,7 +91,7 @@ elif variant("alt"):
 
     satisfy(
         # words must intersect correctly
-        [(w[i], w[j]) in compatible_words(holes[i], holes[j]) for i in range(nHoles) for j in range(i + 1, nHoles) if holes[i].offset(holes[j]) is not None],
+        [(w[i], w[j]) in compatible_words(holes[i], holes[j]) for i in range(nHoles) for j in range(i + 1, nHoles) if holes[i].offset(holes[j])],
 
         # tag(distinct-words)
         [w[i] != w[j] for i in range(nHoles) for j in range(i + 1, nHoles) if holes[i].size == holes[j].size]

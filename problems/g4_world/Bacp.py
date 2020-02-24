@@ -55,7 +55,7 @@ elif variant("m2"):
 
 satisfy(
     # handling prerequisites
-    [s[c1] < s[c2] for (c1, c2) in prerequisites]
+    s[c1] < s[c2] for (c1, c2) in prerequisites
 )
 
 if subvariant("d"):
