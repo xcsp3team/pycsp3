@@ -9,6 +9,8 @@ from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error
 from pycsp3.tools.compactor import compact
 
+from pycsp3 import functions
+
 class Diffs:
     """"
       Objects of this class are used to record the differences between two (or more) close constraints.
@@ -404,9 +406,13 @@ class PartialConstraint:  # constraint whose condition is missing initially
     def add_condition(self, operator, right_operand):
         if isinstance(right_operand, (int, Variable)):
             return ECtr(self.constraint.replace_condition(operator, right_operand))
-        # TODO : whick kind of right operand is authorized? just a partial sum?
+        # TODO : which kind of right operand is authorized? just a partial sum?
         pc = PartialConstraint.combine_partial_objects(self, TypeNode.SUB, right_operand)  # the 'complex' right operand is moved to the left
         return ECtr(pc.constraint.replace_condition(operator, 0))
+
+    #def _possible_values(self):
+    #    if isinstance(self.constraint, ConstraintMaximum):
+
 
     def __eq__(self, other):
         if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)):
@@ -437,6 +443,12 @@ class PartialConstraint:  # constraint whose condition is missing initially
     def __sub__(self, other):
         if isinstance(other, PartialConstraint) and self.constraint.name != other.constraint.name:
             return Node.build(TypeNode.SUB, self, other)
+            # print(type(self.constraint))
+            # aux1 = functions.add_aux()
+            # functions.satisfy(self == aux1)
+            # aux2 = functions.add_aux()
+            # functions.satisfy(other == aux2)
+            # return Node.build(TypeNode.SUB, aux1, aux2)
         return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
     def __mul__(self, other):
@@ -463,7 +475,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
     def __str__(self):
         c = self.constraint
         assert len(c.arguments) == 2
-        print(type(c.arguments[TypeCtrArg.LIST]))
+        # print(type(c.arguments[TypeCtrArg.LIST]))
         return str(c.name) + "(" + compact(c.arguments[TypeCtrArg.LIST].content) + ")"  # TODO experimental stuff
 
     @staticmethod

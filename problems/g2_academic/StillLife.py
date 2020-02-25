@@ -104,7 +104,7 @@ elif variant("wastage"):
         [Sum(w[0] if i == 0 else [ws[i - 1], w[i]]) == ws[i] for i in range(n + 2)],
 
         # setting the value of the objective
-        Sum([z, ws[n + 1]] * [4, 1]) == 2 * n * n + 4 * n,
+        Sum([z, ws[-1]] * [4, 1]) == 2 * n * n + 4 * n,
 
         # tag(redundant-constraints)
         [(ws[n + 1] - ws[i]) >= 2 * ((n - i) // 3) + n // 3 for i in range(n + 1)]

@@ -86,6 +86,13 @@ class EVarArray(Entity):
         if options.debug:
             print("New VarArray entity: ", self)
 
+    def extend_with(self, var):  # used when building auxiliary variables (to be used with global constraints)
+        self.variables.append(var)
+        self.flatVars.append(var)
+        self.size[0] +=1
+        VarEntities.varToEVarArray[var] = self
+
+
     def get_type(self):
         return self.flatVars[0].dom.get_type()
 
@@ -104,8 +111,7 @@ class EVarArray(Entity):
     def size_to_string(self):
         return "".join("[" + str(v) + "]" for v in self.size)
 
-    # class CtrEntity(ModelingEntity):
-    """ Class to represent stand-alone constraints """
+""" Class to represent stand-alone constraints """
 
 
 class ECtr(Entity):

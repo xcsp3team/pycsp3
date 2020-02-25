@@ -231,6 +231,8 @@ def extract_declaration_for(function_name):
     else:
         assert False, " the object returned by " + function_name + " should be assigned to a variable"
     declaration = line[:pos].strip()
+    if declaration.endswith("functions."):
+        declaration = declaration[:-10].strip()
     if declaration[-1] == '=':
         declaration = declaration[:-1].strip()
     assert declaration.count('=') < 2
@@ -239,7 +241,7 @@ def extract_declaration_for(function_name):
         declaration = t[0] if ',' in t[0] else t[1]
     if function_name == "Var":
         assert "," not in declaration and ")" not in declaration, \
-            "Every declaration must be on its own. For example, 'x, y = Var(dom={0,1}), Var(dom={0,1})' is not allowed."
+            "Every simple declaration must be on its own line. For example, 'x, y = Var(dom={0,1}), Var(dom={0,1})' is not allowed."
         return declaration
     elif function_name == "VarArray":
         assert ")" not in declaration
