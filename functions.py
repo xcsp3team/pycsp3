@@ -98,6 +98,24 @@ def VarArray(*, size, dom, comment=None):
         return ListVar(var_objects)
 
 
+_aux_gb = None
+
+
+def add_aux():
+    global _aux_gb
+
+    index = 0 if _aux_gb is None else len(_aux_gb)
+    prefix = "aux_gb"
+    name = prefix + "[" + str(index) + "]"
+    var = VariableInteger(name, Domain({0, 1}))  # if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name, dom)
+    Variable.name2obj[name] = var
+    if index == 0:
+        _aux_gb = EVarArray([var], prefix, prefix + "[i] is the ith auxiliary variable having been automatically introduced")
+    else:
+        _aux_gb.extend_with(var)
+    return var
+
+
 ''' Posting constraints (through satisfy()) '''
 
 

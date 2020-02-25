@@ -65,16 +65,17 @@ if subvariant("d"):
     # maxcr is the maximum number of credits over the periods
     maxcr = Var(dom=range(minCredits, maxCredits + 1))
 
-    # distcr is the maximal distance in term of credits
-    distcr = Var(dom=range(maxCredits + 1))
-
     satisfy(
         Minimum(cr) == mincr,
-        Maximum(cr) == maxcr,
-        distcr == maxcr - mincr
+        Maximum(cr) == maxcr
     )
-    minimize(distcr)
-    # minimize(Maximum(cr) - Minimum(cr))  # todo  experimental stuff
+
+    minimize(
+        # minimizing the maximal distance in term of credits
+        maxcr - mincr
+    )
+
+    #minimize(Maximum(cr) - Minimum(cr))  # todo  experimental stuff
 else:
     minimize(
         # minimizing the maximum number of credits in periods
@@ -82,3 +83,9 @@ else:
     )
 
 annotate(decision=s)
+
+
+
+# distcr is the maximal distance in term of credits
+# distcr = Var(dom=range(maxCredits + 1))
+# distcr == maxcr - mincr
