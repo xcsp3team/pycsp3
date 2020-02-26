@@ -91,7 +91,7 @@ class SolverProcess:
         print("  command: ", self.command + " " + model)
         result = self.execute(self.command + " " + model)
         print("Solved by " + self.name + " in %.3f" % stopwatch.elapsed_time() + " seconds.")
-        return self.solution() if result is True else None
+        return self.solution() if result else None
 
     def execute(self, command):
         try:
@@ -107,10 +107,9 @@ class SolverProcess:
 
     def solution(self):
         if self.stdout.find("<unsatisfiable") != -1 or self.stdout.find("s UNSATISFIABLE") != -1:
-            return Instantiation("unsatisfiable", "None", "None")
+            return Instantiation("unsatisfiable", None, None)
         left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
         root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))
-
         variables = []
         for token in root[0].text.split():
             for item in VarEntities.items:
