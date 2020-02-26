@@ -231,8 +231,6 @@ def extract_declaration_for(function_name):
     else:
         assert False, " the object returned by " + function_name + " should be assigned to a variable"
     declaration = line[:pos].strip()
-    if declaration.endswith("functions."):
-        declaration = declaration[:-10].strip()
     if declaration[-1] == '=':
         declaration = declaration[:-1].strip()
     assert declaration.count('=') < 2
