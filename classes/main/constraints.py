@@ -6,10 +6,12 @@ from pycsp3.classes.auxiliary.types import TypeCtr, TypeCtrArg, TypeXML, TypeCon
 from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import ECtr, TypeNode, Node
 from pycsp3.classes.main.variables import Variable
+from pycsp3.classes.main.domains import Domain
 from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error
 from pycsp3.tools.compactor import compact
 
 from pycsp3 import functions
+
 
 class Diffs:
     """"
@@ -114,6 +116,17 @@ class ConstraintUnmergeable(Constraint):
 
     def close_to(self, other):
         return False
+
+
+class ConstraintWithCondition(Constraint):
+    def __init__(self, name):
+        super().__init__(name)
+
+    def min_possible_value(self):
+        pass
+
+    def max_possible_value(self):
+        pass
 
 
 ''' Generic Constraints '''
@@ -253,7 +266,7 @@ class ConstraintLexMatrix(ConstraintUnmergeable):
 ''' Counting and Summing Constraints '''
 
 
-class ConstraintSum(Constraint):
+class ConstraintSum(ConstraintWithCondition):
     def __init__(self, lst, coefficients, condition):
         super().__init__(TypeCtr.SUM)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)  # coefficients is not None)
@@ -261,21 +274,49 @@ class ConstraintSum(Constraint):
             self.arg(TypeCtrArg.COEFFS, coefficients, content_ordered=True)
         self.arg(TypeCtrArg.CONDITION, condition)
 
+    def min_possible_value(self):
+        vs = self.arguments[TypeCtrArg.LIST].content
+        cs = self.arguments[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in self.arguments else None
+        if cs is None:
+            return sum(x.dom.smallest_value() for x in vs)
+        else:
+            return sum(min(x.dom.smallest_value() * cs[i], x.dom.greatest_value() * cs[i]) for i, x in vs)
 
-class ConstraintCount(Constraint):
+    def max_possible_value(self):
+        vs = self.arguments[TypeCtrArg.LIST].content
+        cs = self.arguments[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in self.arguments else None
+        if cs is None:
+            return sum(x.dom.greatest_value() for x in vs)
+        else:
+            return sum(max(x.dom.smallest_value() * cs[i], x.dom.greatest_value() * cs[i]) for i, x in vs)
+
+
+class ConstraintCount(ConstraintWithCondition):
     def __init__(self, lst, values, condition):
         super().__init__(TypeCtr.COUNT)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=False)
         self.arg(TypeCtrArg.VALUES, values)
         self.arg(TypeCtrArg.CONDITION, condition)
 
+    def min_possible_value(self):
+        return 0
 
-class ConstraintNValues(Constraint):
+    def max_possible_value(self):
+        return len(self.arguments[TypeCtrArg.LIST].content)
+
+
+class ConstraintNValues(ConstraintWithCondition):
     def __init__(self, lst, excepting, condition):
         super().__init__(TypeCtr.N_VALUES)
         self.arg(TypeCtrArg.LIST, lst)
         self.arg(TypeCtrArg.EXCEPT, excepting)
         self.arg(TypeCtrArg.CONDITION, condition)
+
+    def min_possible_value(self):
+        return 1
+
+    def max_possible_value(self):
+        return len(self.arguments[TypeCtrArg.LIST].content)
 
 
 class ConstraintCardinality(Constraint):
@@ -294,7 +335,7 @@ def _index_att(v):
     return [(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
 
 
-class ConstraintMaximum(Constraint):
+class ConstraintMaximum(ConstraintWithCondition):
     def __init__(self, lst, index=None, start_index=0, type_rank=TypeRank.ANY, condition=None):
         super().__init__(TypeCtr.MAXIMUM)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(start_index))
@@ -302,20 +343,38 @@ class ConstraintMaximum(Constraint):
             self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
         self.arg(TypeCtrArg.CONDITION, condition)
 
+    def min_possible_value(self):
+        return max(x.dom.smallest_value() for x in self.arguments[TypeCtrArg.LIST].content)
+
+    def max_possible_value(self):
+        return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
+
 
 class ConstraintMinimum(ConstraintMaximum):
     def __init__(self, lst, index=None, start_index=0, type_rank=TypeRank.ANY, condition=None):
         super().__init__(lst, index, start_index, type_rank, condition)
         self.name = TypeCtr.MINIMUM
 
+    def min_possible_value(self):
+        return min(x.dom.smallest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
-class ConstraintElement(Constraint):
+    def max_possible_value(self):
+        return min(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
+
+
+class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with a general condition
     def __init__(self, lst, index, value=None, type_rank=None):
         super().__init__(TypeCtr.ELEMENT)
         smallest = index.dom[0].smallest() if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
         self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
         self.arg(TypeCtrArg.VALUE, value)
+
+    def min_possible_value(self):
+        return min(x.dom.smallest_value() for x in self.arguments[TypeCtrArg.LIST].content)
+
+    def max_possible_value(self):
+        return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
 
 class ConstraintElementMatrix(Constraint):
@@ -359,13 +418,13 @@ class ConstraintNoOverlap(ConstraintUnmergeable):
 
 
 class ConstraintCumulative(Constraint):
-    def __init__(self, origins, lengths, heights, condition, ends):
+    def __init__(self, origins, lengths, ends, heights, condition):
         super().__init__(TypeCtr.CUMULATIVE)
         self.arg(TypeCtrArg.ORIGINS, origins, content_ordered=True)
         self.arg(TypeCtrArg.LENGTHS, lengths, content_ordered=True)
+        self.arg(TypeCtrArg.ENDS, ends, content_ordered=True)
         self.arg(TypeCtrArg.HEIGHTS, heights, content_ordered=True)
         self.arg(TypeCtrArg.CONDITION, condition)
-        self.arg(TypeCtrArg.ENDS, ends, content_ordered=True)
 
 
 ''' Constraints on Graphs'''
@@ -410,52 +469,58 @@ class PartialConstraint:  # constraint whose condition is missing initially
         pc = PartialConstraint.combine_partial_objects(self, TypeNode.SUB, right_operand)  # the 'complex' right operand is moved to the left
         return ECtr(pc.constraint.replace_condition(operator, 0))
 
-    #def _possible_values(self):
-    #    if isinstance(self.constraint, ConstraintMaximum):
-
+    def _simplify_with_auxiliary_variables(self, other):
+        if not isinstance(other, PartialConstraint) or isinstance(self.constraint, ConstraintSum) and isinstance(other.constraint, ConstraintSum):
+            return None
+        assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition)
+        aux1 = functions.add_aux(Domain(range(self.constraint.min_possible_value(), self.constraint.max_possible_value() + 1)))
+        functions.satisfy(self == aux1)
+        aux2 = functions.add_aux(Domain(range(other.constraint.min_possible_value(), other.constraint.max_possible_value() + 1)))
+        functions.satisfy(other == aux2)
+        return aux1, aux2
 
     def __eq__(self, other):
-        if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)):
+        if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)) and isinstance(other, (int, Variable)):
             if isinstance(self.constraint, ConstraintElement):
                 arg = self.constraint.arguments[TypeCtrArg.LIST]
                 arg.content = flatten(arg.content)  # we need to flatten now because it has not been done before
             return ECtr(self.constraint.replace_value(other))  # only value must be replaced for these constraints
-        return self.add_condition(TypeConditionOperator.EQ, other)
+        pair = self._simplify_with_auxiliary_variables(other)
+        return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
 
     def __ne__(self, other):
-        return self.add_condition(TypeConditionOperator.NE, other)
+        pair = self._simplify_with_auxiliary_variables(other)
+        return Node.build(TypeNode.NE, pair) if pair else  self.add_condition(TypeConditionOperator.NE, other)
 
     def __lt__(self, other):
-        return self.add_condition(TypeConditionOperator.LT, other)
+        pair = self._simplify_with_auxiliary_variables(other)
+        return Node.build(TypeNode.LT, pair) if pair else self.add_condition(TypeConditionOperator.LT, other)
 
     def __le__(self, other):
-        return self.add_condition(TypeConditionOperator.LE, other)
+        pair = self._simplify_with_auxiliary_variables(other)
+        return Node.build(TypeNode.LE, pair) if pair else self.add_condition(TypeConditionOperator.LE, other)
 
     def __ge__(self, other):
-        return self.add_condition(TypeConditionOperator.GE, other)
+        pair = self._simplify_with_auxiliary_variables(other)
+        return Node.build(TypeNode.GE, pair) if pair else self.add_condition(TypeConditionOperator.GE, other)
 
     def __gt__(self, other):
-        return self.add_condition(TypeConditionOperator.GT, other)
+        pair = self._simplify_with_auxiliary_variables(other)
+        return Node.build(TypeNode.GT, pair) if pair else self.add_condition(TypeConditionOperator.GT, other)
 
     def __add__(self, other):
-        return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
+        pair = self._simplify_with_auxiliary_variables(other)
+        return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
     def __sub__(self, other):
-        if isinstance(other, PartialConstraint) and self.constraint.name != other.constraint.name:
-            return Node.build(TypeNode.SUB, self, other)
-            # print(type(self.constraint))
-            # aux1 = functions.add_aux()
-            # functions.satisfy(self == aux1)
-            # aux2 = functions.add_aux()
-            # functions.satisfy(other == aux2)
-            # return Node.build(TypeNode.SUB, aux1, aux2)
-        return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
+        pair = self._simplify_with_auxiliary_variables(other)
+        return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
     def __mul__(self, other):
         assert isinstance(self.constraint, ConstraintSum) and isinstance(other, int)
         args = self.constraint.arguments
-        coeffs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-        self.constraint.replace_arg(TypeCtrArg.COEFFS, [c * other for c in coeffs])
+        cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
+        self.constraint.replace_arg(TypeCtrArg.COEFFS, [c * other for c in cs])
         return self
 
     def __rmul__(self, other):
@@ -479,7 +544,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
         return str(c.name) + "(" + compact(c.arguments[TypeCtrArg.LIST].content) + ")"  # TODO experimental stuff
 
     @staticmethod
-    def combine_partial_objects(obj1, operator, obj2):
+    def combine_partial_objects(obj1, operator, obj2):  # currently, only partial sums can be combined
         assert operator in {TypeNode.ADD, TypeNode.SUB}
         if isinstance(obj1, ScalarProduct):
             obj1 = PartialConstraint(ConstraintSum(obj1.variables, obj1.coeffs, None))  # to be sure to have at least one PartialConstraint
@@ -498,11 +563,11 @@ class PartialConstraint:  # constraint whose condition is missing initially
         assert isinstance(obj1, PartialConstraint) and isinstance(obj2, PartialConstraint)
         assert isinstance(obj1.constraint, ConstraintSum) and isinstance(obj2.constraint, ConstraintSum)
         args1, args2 = obj1.constraint.arguments, obj2.constraint.arguments
-        vars1, vars2 = args1[TypeCtrArg.LIST].content, args2[TypeCtrArg.LIST].content
-        coeffs1 = args1[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args1 else [1] * len(vars1)
-        coeffs2 = args2[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args2 else [1] * len(vars2)
-        coeffs2 = [-c for c in coeffs2] if operator == TypeNode.SUB else coeffs2
-        return PartialConstraint(ConstraintSum(vars1 + vars2, coeffs1 + coeffs2, None))
+        vs1, vs2 = args1[TypeCtrArg.LIST].content, args2[TypeCtrArg.LIST].content
+        cs1 = args1[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args1 else [1] * len(vs1)
+        cs2 = args2[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args2 else [1] * len(vs2)
+        cs2 = [-c for c in cs2] if operator == TypeNode.SUB else cs2
+        return PartialConstraint(ConstraintSum(vs1 + vs2, cs1 + cs2, None))
 
 
 class ScalarProduct:

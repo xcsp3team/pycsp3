@@ -101,13 +101,13 @@ def VarArray(*, size, dom, comment=None):
 _aux_gb = None
 
 
-def add_aux():
+def add_aux(dom):
     global _aux_gb
 
     prefix = "aux_gb"
     index = 0 if _aux_gb is None else len(_aux_gb)
     name = prefix + "[" + str(index) + "]"
-    var = VariableInteger(name, Domain({0, 1}))  # if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name, dom)
+    var = VariableInteger(name, dom)  # if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name, dom)
     Variable.name2obj[name] = var
     if index == 0:
         _aux_gb = EVarArray([var], prefix, prefix + "[i] is the ith auxiliary variable having been automatically introduced")
@@ -351,7 +351,9 @@ def AllDifferent(term, *others, excepting=None, matrix=None):
 
 
 def AllDifferentList(lists, *others, excepting=None):
-    if len(others) > 0:
+    if isinstance(lists, types.GeneratorType):
+        lists = [l for l in lists]
+    elif len(others) > 0:
         lists = list((lists,) + others)
     lists = [flatten(l) for l in lists]
     assert all(checkType(l, [Variable]) for l in lists)
@@ -580,7 +582,7 @@ def NoOverlap(*, origins, lengths, zero_ignored=False):
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
 
-def Cumulative(*, origins, lengths, heights, ends=None, condition=None):
+def Cumulative(*, origins, lengths, ends=None, heights, condition=None):
     origins = flatten(origins)
     checkType(origins, [Variable])
     lengths = flatten(lengths)
@@ -589,7 +591,7 @@ def Cumulative(*, origins, lengths, heights, ends=None, condition=None):
     checkType(heights, ([Variable], [int]))
     if ends is not None: ends = flatten(ends)
     checkType(ends, ([Variable], type(None)))
-    return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, heights, Condition.build_condition(condition), ends))
+    return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
 
 
 ''' Constraints on Graphs'''
