@@ -15,16 +15,13 @@ def table():
 
 table = table()
 
-# x[i] is the ith triplet of value
+# x[i] is the ith triple of values
 x = VarArray(size=[nTriples, 3], dom=range(1, n + 1))
 
 satisfy(
-    # ensuring that triples are formed of distinct increasing integers
+    # each triple must be formed of strictly increasing integers
     [Increasing(x[i], strict=True) for i in range(nTriples)],
 
-    # ensuring that triples share at most one value
+    # each pair of triples must share at most one value
     [(x[i] + x[j]) in table for i in range(nTriples) for j in range(i + 1, nTriples)]
 )
-
-
-# return (1 if i1 in {j1, j2, j3} else 0) + (1 if i2 in {j1, j2, j3} else 0) + (1 if i3 in {j1, j2, j3} else 0)

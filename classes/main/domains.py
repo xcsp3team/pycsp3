@@ -48,6 +48,12 @@ class Domain:
     def __repr__(self):
         return " ".join(str(v) for v in self.values)
 
+    def smallest_value(self):
+        return self.values[0].smallest()
+
+    def greatest_value(self):
+        return self.values[-1].greatest()
+
     def is_binary(self):
         zero, one = False, False
         for v in self.values:

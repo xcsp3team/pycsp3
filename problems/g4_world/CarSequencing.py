@@ -8,8 +8,7 @@ allClasses = range(nClasses)
 
 def redu(k, i):
     # i stands for the number of blocks set to the maximal capacity
-    nOptionOccurrences = sum(cl.options[k] * cl.demand for cl in classes)
-    nOptionsRemainingToSet = nOptionOccurrences - i * limits[k].num
+    nOptionsRemainingToSet = sum(cl.options[k] * cl.demand for cl in classes) - i * limits[k].num
     nOptionsPossibleToSet = nCars - i * limits[k].den
     if nOptionsRemainingToSet > 0 and nOptionsPossibleToSet > 0:
         return Sum(o[j][k] for j in range(nOptionsPossibleToSet)) >= nOptionsRemainingToSet

@@ -50,7 +50,7 @@ elif variant("m2"):
         [Sum(pc[p]) == co[p] for p in range(nPeriods)],
 
         # counting the number of credits in each period
-        [Sum(pc[p] * credits) == cr[p] for p in range(nPeriods)]
+        [pc[p] * credits == cr[p] for p in range(nPeriods)]
     )
 
 satisfy(
@@ -59,23 +59,10 @@ satisfy(
 )
 
 if subvariant("d"):
-    # mincr is the minimum number of credits over the periods
-    mincr = Var(dom=range(minCredits, maxCredits + 1))
-
-    # maxcr is the maximum number of credits over the periods
-    maxcr = Var(dom=range(minCredits, maxCredits + 1))
-
-    satisfy(
-        Minimum(cr) == mincr,
-        Maximum(cr) == maxcr
-    )
-
     minimize(
         # minimizing the maximal distance in term of credits
-        maxcr - mincr
+        Maximum(cr) - Minimum(cr)
     )
-
-    #minimize(Maximum(cr) - Minimum(cr))  # todo  experimental stuff
 else:
     minimize(
         # minimizing the maximum number of credits in periods
@@ -84,6 +71,24 @@ else:
 
 annotate(decision=s)
 
+
+
+# mincr is the minimum number of credits over the periods
+# mincr = Var(dom=range(minCredits, maxCredits + 1))
+#
+# # maxcr is the maximum number of credits over the periods
+# maxcr = Var(dom=range(minCredits, maxCredits + 1))
+#
+# satisfy(
+#     Minimum(cr) == mincr,
+#     Maximum(cr) == maxcr
+#     #Count(s, value=1) > Count(s,value=2)
+# )
+#
+# minimize(
+#     # minimizing the maximal distance in term of credits
+#     maxcr - mincr
+# )
 
 
 # distcr is the maximal distance in term of credits
