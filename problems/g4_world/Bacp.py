@@ -6,11 +6,6 @@ minCredits, maxCredits = data.minCredits, data.maxCredits * maxCourses if subvar
 credits, prerequisites = data.credits, data.prerequisites
 nCourses, nPrerequisites = len(credits), len(prerequisites)
 
-
-def table(c):
-    return {tuple(credits[c] if j == p else p if j == nPeriods else 0 for j in range(nPeriods + 1)) for p in range(nPeriods)}
-
-
 # s[c] is the period (schedule) for course c
 s = VarArray(size=nCourses, dom=range(nPeriods))
 
@@ -21,6 +16,10 @@ co = VarArray(size=nPeriods, dom=range(minCourses, maxCourses + 1))
 cr = VarArray(size=nPeriods, dom=range(minCredits, maxCredits + 1))
 
 if variant("m1"):
+    def table(c):
+        return {tuple(credits[c] if j == p else p if j == nPeriods else 0 for j in range(nPeriods + 1)) for p in range(nPeriods)}
+
+
     # cp[c][p] is 0 if the course c is not planned at period p, the number of credits for c otherwise
     cp = VarArray(size=[nCourses, nPeriods], dom=lambda c, p: {0, credits[c]})
 
@@ -82,15 +81,12 @@ annotate(decision=s)
 # satisfy(
 #     Minimum(cr) == mincr,
 #     Maximum(cr) == maxcr
-#     #Count(s, value=1) > Count(s,value=2)
 # )
 #
 # minimize(
 #     # minimizing the maximal distance in term of credits
 #     maxcr - mincr
 # )
-
-
 # distcr is the maximal distance in term of credits
 # distcr = Var(dom=range(maxCredits + 1))
 # distcr == maxcr - mincr

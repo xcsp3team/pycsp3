@@ -479,6 +479,21 @@ class PartialConstraint:  # constraint whose condition is missing initially
         functions.satisfy(other == aux2)
         return aux1, aux2
 
+    def _simplify_operation(self, other):
+        assert isinstance(self.constraint, ConstraintWithCondition)
+        if isinstance(self.constraint, ConstraintSum) and (not isinstance(other, PartialConstraint) or isinstance(other.constraint, ConstraintSum)):
+            return None  # we can deal combine partial sums and terms
+        if not isinstance(self.constraint, ConstraintSum) and not isinstance(other, PartialConstraint):
+            aux = functions.add_aux(Domain(range(self.constraint.min_possible_value(), self.constraint.max_possible_value() + 1)))
+            functions.satisfy(self == aux)
+            return aux, other
+        assert isinstance(other.constraint, ConstraintWithCondition)
+        aux1 = functions.add_aux(Domain(range(self.constraint.min_possible_value(), self.constraint.max_possible_value() + 1)))
+        functions.satisfy(self == aux1)
+        aux2 = functions.add_aux(Domain(range(other.constraint.min_possible_value(), other.constraint.max_possible_value() + 1)))
+        functions.satisfy(other == aux2)
+        return aux1, aux2
+
     def __eq__(self, other):
         if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)) and isinstance(other, (int, Variable)):
             if isinstance(self.constraint, ConstraintElement):
@@ -513,7 +528,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
         return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
     def __sub__(self, other):
-        pair = self._simplify_with_auxiliary_variables(other)
+        pair = self._simplify_operation(other)
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
     def __mul__(self, other):

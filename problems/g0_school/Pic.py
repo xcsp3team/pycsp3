@@ -11,3 +11,4 @@ satisfy(
     (x, z) in {(a, a), (b, b)},
     (y, z) in {(a, b), (b, a)}
 )
+

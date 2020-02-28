@@ -13,8 +13,7 @@ def size(i):
     return leagueSize + (0 if i < nFullLeagues else -1)
 
 
-table1 = {(i, rank, countries[i]) for i, rank in enumerate(rankings)}
-table2 = {(i, rank, *[1 if j - 2 + 1 == countries[i] else ANY for j in range(2, 2 + nCountries)]) for i, rank in enumerate(rankings)}
+table = {(i, rankings[i], countries[i]) for i in range(nPlayers)}
 
 # p[i][j] is the jth player of the ith league
 p = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: range(nPlayers) if j < size(i) else None)
@@ -22,56 +21,19 @@ p = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: range(nPlayers) if j 
 # r[i][j] is the ranking of the jth player of the ith league
 r = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: set(rankings) if j < size(i) else None)
 
-# l[i] is the lowest ranking of a player of the ith league
-l = VarArray(size=nLeagues, dom=set(rankings))
-
-# h[i] is the highest ranking of a player of the ith league
-h = VarArray(size=nLeagues, dom=set(rankings))
-
-# d[i] is the difference between the highest and lowest rankings of players of the ith league
-d = VarArray(size=nLeagues, dom={0} | set(rankings))
-
-# nc[i] is the number of countries for players of the ith league
-nc = VarArray(size=nLeagues, dom=lambda i: range(min(nCountries, size(i)) + 1))
+# c[i][j] is the country of the jth player of the ith league
+c = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: set(countries) if j < size(i) else None)
 
 satisfy(
+    # each player belongs to only one league
     AllDifferent(p),
 
-    [Minimum(r[i]) == l[i] for i in range(nLeagues)],
-
-    [Maximum(r[i]) == h[i] for i in range(nLeagues)],
-
-    [d[i] == h[i] - l[i] for i in range(nLeagues)]
+    # linking players with their rankings and countries
+    [(p[i][j], r[i][j], c[i][j]) in table for i in range(nLeagues) for j in range(size(i))]
 )
-
-if not variant():
-    # c[i][j] is the country of the jth player of the ith league
-    c = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: set(countries) if j < size(i) else None)
-
-    satisfy(
-        [(p[i][j], r[i][j], c[i][j]) in table1 for i in range(nLeagues) for j in range(size(i))],
-
-        [NValues(c[i]) == nc[i] for i in range(nLeagues)]
-    )
-
-elif variant("01"):  # TODO not sure that this variant is correct
-    # c[i][k] is 1 if at least one player of the ith league is from country k
-    c = VarArray(size=[nLeagues, nCountries], dom={0, 1})
-
-    satisfy(
-        [(p[i][j], r[i][j], *c[i]) in table2 for i in range(nLeagues) for j in range(size(i))],
-
-        [imply(c[i][k] == 0, p[i][j] != m) for (i, j, k, m) in product(range(nLeagues), range(leagueSize), range(nCountries), range(nPlayers))
-         if j < size(i) and countries[m] == k + 1],
-
-        [Sum(c[i]) == nc[i] for i in range(nLeagues)]
-    )
 
 minimize(
-    Sum(d) * 100 - Sum(nc)
+    # minimizing overall differences between highest and lowest rankings of players in leagues while paying attention to numbers of countries
+    Sum(Maximum(r[i]) - Minimum(r[i]) for i in range(nLeagues)) * 100
+    - Sum(NValues(c[i]) for i in range(nLeagues))
 )
-
-# Sum(x * 100 for x in diffrlp) + Sum(-x for x in nc)
-# Sum(x * 100 for x in diffrlp) + Sum(x * -1 for x in nc)
-# Sum((diffrlp + nc) * ([100] * nLeagues + [-1] * nLeagues))
-# diffrlp * ([100] * nLeagues) + nc * ([-1] * nLeagues)
