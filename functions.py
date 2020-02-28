@@ -345,7 +345,7 @@ def AllDifferent(term, *others, excepting=None, matrix=None):
         assert all(checkType(l, [Variable]) for l in matrix)
         return ECtr(ConstraintAllDifferentMatrix(matrix))
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
-    checkType(terms, ([Variable], [Node]))
+    checkType(terms, ([Variable, Node]))
     checkType(excepting, ([int], type(None)))
     return ECtr(ConstraintAllDifferent(terms, excepting))
 
@@ -470,6 +470,13 @@ def Sum(term, *others, condition=None):
     for other in others:
         checkType(other, ([Variable], [Node], [PartialConstraint], Variable, Node, PartialConstraint, ScalarProduct))
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    for i, t in enumerate(terms):
+        g = []
+        if isinstance(t, PartialConstraint):
+            terms[i] = add_aux(Domain(range(t.constraint.min_possible_value(), t.constraint.max_possible_value() + 1)))
+            g.append(t == terms[i])
+        satisfy([g])
+
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
     # TODO control here some assumptions
