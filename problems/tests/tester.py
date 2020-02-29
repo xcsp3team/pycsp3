@@ -77,25 +77,25 @@ class Tester:
         os.remove(tmp)
         return lines
 
-    def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_xml=None, dir_prs_py=None, dir_prs_jv=None):
-
+    def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_tmp=None, dir_prs_py=None, dir_prs_jv=None):
         if name is None:
-            assert dir_pbs_py and dir_pbs_jv and dir_xml
+            assert dir_pbs_py and dir_pbs_jv and dir_tmp
         else:
             dir_pbs_py = "pycsp3" + os.sep + "problems" + os.sep + name + os.sep
             dir_pbs_jv = "problems." + name + "."
-            dir_xml = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "tmp" + os.sep + name
+            dir_tmp = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "tmp" + os.sep + name
             dir_prs_py = "pycsp3" + os.sep + "problems" + os.sep + "data" + os.sep + "parsers" + os.sep
             dir_prs_jv = "problems.generators."
+            self.dir_xcsp = XCSP_PATH + name + os.sep
 
-        self.tmpDiff = dir_xml + os.sep + "tmpDiff.txt"
-        if not os.path.exists(dir_xml):
-            os.makedirs(dir_xml)
+        self.tmpDiff = dir_tmp + os.sep + "tmpDiff.txt"
+        if not os.path.exists(dir_tmp):
+            os.makedirs(dir_tmp)
         else:
-            shutil.rmtree(dir_xml)
-            os.makedirs(dir_xml)
-        self.dir_xml_py = dir_xml + os.sep + "PyCSP" + os.sep
-        self.dir_xml_jv = dir_xml + os.sep + "JvCSP" + os.sep
+            shutil.rmtree(dir_tmp)
+            os.makedirs(dir_tmp)
+        self.dir_xml_py = dir_tmp + os.sep + "PyCSP" + os.sep
+        self.dir_xml_jv = dir_tmp + os.sep + "JvCSP" + os.sep
         os.makedirs(self.dir_xml_py)
         os.makedirs(self.dir_xml_jv)
 
@@ -138,6 +138,9 @@ class Tester:
 
     def xml_path_jv(self):
         return self.dir_xml_jv + self.name_xml
+
+    def xml_path_xcsp(self):
+        return self.dir_xcsp + self.name_xml
 
     def data_py(self, data):
         return None if data is None else DATA_PATH + "json" + os.sep + data if data.endswith(".json") else data
@@ -204,9 +207,10 @@ class Tester:
                     self.check()
             elif mode == 2:  # comparison with recorded XCSP files
                 if os.name != 'nt':
-                    shutil.copy(XCSP_PATH + self.name_xml, self.xml_path_jv())
-                    print("| Comparing outcome of PyCSP with the XCSP3 file in " + XCSP_PATH)
-                    self.check()
+                    print(self.xml_path_xcsp(), self.xml_path_jv())
+                    #shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simualte a comparison with JvCSP
+                    print("| Comparing outcome of PyCSP with the XCSP3 file in " + self.dir_xcsp)
+                    self.check(True)
             else:
                 with open(self.xml_path_py(), "r") as f:
                     for line in f.readlines():
@@ -214,15 +218,16 @@ class Tester:
             if os.name != 'nt':
                 os.system("rm -rf *.*~")  # for removing the temporary files
 
-    def check(self):
+    def check(self, xcsp=False):
+        f = self.xml_path_xcsp() if xcsp else self.xml_path_jv()
         self.counters["total"] += 1
-        if not os.path.isfile(self.xml_path_py()) or not os.path.isfile(self.xml_path_jv()):
-            print("error: files not found " + self.xml_path_py() + " or " + self.xml_path_jv())
+        if not os.path.isfile(self.xml_path_py()) or not os.path.isfile(f):
+            print("error: files not found " + self.xml_path_py() + " or " + f)
             self.counters["err"] += 1
             if options.wait:
                 input("Press Enter to continue...")
         else:
-            lines = self.diff_files(self.xml_path_py(), self.xml_path_jv(), self.tmpDiff)
+            lines = self.diff_files(self.xml_path_py(), f, self.tmpDiff)
             if len(lines) == 0:
                 print("=> No difference for " + self.name_xml)
             else:
@@ -231,8 +236,8 @@ class Tester:
                 self.print_differences(lines, limit=20 if len(lines) > 200 else None)
                 if options.wait:
                     input("Press Enter to continue...")
-        print("\n" + WHITE_BOLD + "[Currently] " + str(self.counters["diff"]) + " difference(s) on " + str(self.counters["total"]) + " test(s) (" + str(
-            self.counters["err"]) + " error(s))\n")
+        print("\n" + WHITE_BOLD + "[Currently] " + str(self.counters["diff"]) + " difference(s) on " + str(self.counters["total"]) + " test(s) (" + RED + str(
+            self.counters["err"]) + WHITE + " error(s))\n")
 
     def print_differences(self, lines, limit):
         print(COLOR_PY + "PyCSP" + WHITE + " vs. " + COLOR_JV + "JvCSP" + WHITE + " differences:\n")

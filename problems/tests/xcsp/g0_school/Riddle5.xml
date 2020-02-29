@@ -1,0 +1,17 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the ith value of the sequence" size="[4]"> 0..14 </array>
+  </variables>
+  <constraints>
+    <group note="four successive values are needed">
+      <intension> eq(add(%0,1),%1) </intension>
+      <args> x[0] x[1] </args>
+      <args> x[1] x[2] </args>
+      <args> x[2] x[3] </args>
+    </group>
+    <sum note="values must sum up to 14">
+      <list> x[] </list>
+      <condition> (eq,14) </condition>
+    </sum>
+  </constraints>
+</instance>

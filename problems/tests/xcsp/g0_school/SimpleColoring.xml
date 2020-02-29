@@ -1,0 +1,16 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" size="[4]" type="symbolic"> b g r </array>
+  </variables>
+  <constraints>
+    <group>
+      <intension> ne(%0,%1) </intension>
+      <args> x[0] x[1] </args>
+      <args> x[0] x[2] </args>
+      <args> x[0] x[3] </args>
+      <args> x[1] x[2] </args>
+      <args> x[1] x[3] </args>
+      <args> x[2] x[3] </args>
+    </group>
+  </constraints>
+</instance>

@@ -30,14 +30,20 @@ class Condition:
         if isinstance(right_operand, list):
             return ConditionSet(operator, right_operand)
 
+    def right_operand(self):
+        pass
+
+    def __str__(self):
+        return "(" + str(self.operator) + "," + str(self.right_operand()) + ")"
+
 
 class ConditionValue(Condition):
     def __init__(self, operator, value):
         super().__init__(operator)
         self.value = value
 
-    def __str__(self):
-        return "(" + str(self.operator) + "," + str(self.value) + ")"
+    def right_operand(self):
+        return self.value
 
 
 class ConditionVariable(Condition):
@@ -45,8 +51,8 @@ class ConditionVariable(Condition):
         super().__init__(operator)
         self.variable = variable
 
-    def __str__(self):
-        return "(" + str(self.operator) + "," + str(self.variable) + ")"
+    def right_operand(self):
+        return self.variable
 
 
 class ConditionInterval(Condition):
@@ -55,8 +61,8 @@ class ConditionInterval(Condition):
         self.min = min
         self.max = max
 
-    def __str__(self):
-        return "(" + str(self.operator) + "," + str(self.min) + ".." + str(self.max) + ")"
+    def right_operand(self):
+        return str(self.min) + ".." + str(self.max)
 
 
 class ConditionSet(Condition):
@@ -64,5 +70,5 @@ class ConditionSet(Condition):
         super().__init__(operator)
         self.t = t
 
-    def __str__(self):
-        return "(" + str(self.operator) + ",{" + ",".join(str(v) for v in self.t) + "})"
+    def right_operand(self):
+        return "{" + ",".join(str(v) for v in self.t) + "}"

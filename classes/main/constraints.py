@@ -33,8 +33,11 @@ class Diffs:
         if Diffs.fusion is None:
             Diffs.fusion = self  # this is the first time such an object is built (since the last reset); we simply record it
         else:  # the recorded object (fusion) and the last built one are compatible (we know that at time of calling); so, we simply update flags
-            for i in range(len(Diffs.fusion.argument_flags)):
-                Diffs.fusion.argument_flags[i] |= self.argument_flags[i]
+            for i, name in enumerate(self.argument_names):
+                index = Diffs.fusion.argument_names.index(name)  # note that self.argument_names must be be included in Diffs.fusion.argument_names
+                Diffs.fusion.argument_flags[index] |= self.argument_flags[i]
+            # for i in range(len(Diffs.fusion.argument_flags)):
+            #     Diffs.fusion.argument_flags[i] |= self.argument_flags[i]
 
 
 class ConstraintArgument:
@@ -77,6 +80,8 @@ class Constraint:
         records = []
         for i in range(len(args1)):
             if str(args1[i].content) != str(args2[i].content):
+                if args1[i].name == TypeCtrArg.CONDITION and args1[i].content.operator != args2[i].content.operator:
+                    return False  # the operators are different in the two condistions
                 b = hasattr(args1[i].content, '__len__') and hasattr(args2[i].content, '__len__') and len(args1[i].content) != len(args2[i].content)
                 records.append((args1[i].name, b))
         if len(records) > 2:
@@ -84,10 +89,11 @@ class Constraint:
         diffs = Diffs(records)
         if len(records) == 0:
             return diffs
-        if Diffs.fusion and diffs.argument_names != Diffs.fusion.argument_names:
+        if Diffs.fusion and not all(
+                        name in Diffs.fusion.argument_names for name in diffs.argument_names):  # diffs.argument_names != Diffs.fusion.argument_names:
             return False  # because arguments are not the same (so it is not possible to make a unique abstraction)
-        if TypeCtrArg.CONDITION in diffs.argument_names or len([flag for flag in diffs.argument_flags if flag]) > 1:
-            return False  # condition cannot be currently abstracted and two arguments of different size cannot be currently abstracted
+        if len([flag for flag in diffs.argument_flags if flag]) > 1:
+            return False  # two arguments of different size cannot be currently abstracted
         return diffs
 
     def replace_arg(self, arg_name, arg_value):
@@ -473,26 +479,16 @@ class PartialConstraint:  # constraint whose condition is missing initially
         if not isinstance(other, PartialConstraint) or isinstance(self.constraint, ConstraintSum) and isinstance(other.constraint, ConstraintSum):
             return None
         assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition)
-        aux1 = functions.add_aux(Domain(range(self.constraint.min_possible_value(), self.constraint.max_possible_value() + 1)))
-        functions.satisfy(self == aux1)
-        aux2 = functions.add_aux(Domain(range(other.constraint.min_possible_value(), other.constraint.max_possible_value() + 1)))
-        functions.satisfy(other == aux2)
-        return aux1, aux2
+        return functions.auxiliary.add(self), functions.auxiliary.add(other)
 
     def _simplify_operation(self, other):
         assert isinstance(self.constraint, ConstraintWithCondition)
         if isinstance(self.constraint, ConstraintSum) and (not isinstance(other, PartialConstraint) or isinstance(other.constraint, ConstraintSum)):
-            return None  # we can deal combine partial sums and terms
+            return None  # we can combine partial sums and terms
         if not isinstance(self.constraint, ConstraintSum) and not isinstance(other, PartialConstraint):
-            aux = functions.add_aux(Domain(range(self.constraint.min_possible_value(), self.constraint.max_possible_value() + 1)))
-            functions.satisfy(self == aux)
-            return aux, other
+            return functions.auxiliary.add(self), other
         assert isinstance(other.constraint, ConstraintWithCondition)
-        aux1 = functions.add_aux(Domain(range(self.constraint.min_possible_value(), self.constraint.max_possible_value() + 1)))
-        functions.satisfy(self == aux1)
-        aux2 = functions.add_aux(Domain(range(other.constraint.min_possible_value(), other.constraint.max_possible_value() + 1)))
-        functions.satisfy(other == aux2)
-        return aux1, aux2
+        return functions.auxiliary.add(self), functions.auxiliary.add(other)
 
     def __eq__(self, other):
         if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)) and isinstance(other, (int, Variable)):
@@ -524,7 +520,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
         return Node.build(TypeNode.GT, pair) if pair else self.add_condition(TypeConditionOperator.GT, other)
 
     def __add__(self, other):
-        pair = self._simplify_with_auxiliary_variables(other)
+        pair = self._simplify_operation(other)
         return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
     def __sub__(self, other):
@@ -554,8 +550,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
 
     def __str__(self):
         c = self.constraint
-        assert len(c.arguments) == 2
-        # print(type(c.arguments[TypeCtrArg.LIST]))
+        # assert len(c.arguments) == 2
         return str(c.name) + "(" + compact(c.arguments[TypeCtrArg.LIST].content) + ")"  # TODO experimental stuff
 
     @staticmethod

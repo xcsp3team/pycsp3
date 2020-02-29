@@ -2,6 +2,7 @@ import re
 from collections import OrderedDict
 
 from pycsp3.classes.auxiliary.types import TypeCtrArg
+from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.entities import CtrEntities, ECtr, ECtrs, EGroup, EBlock, EToGather, ESlide, EToSatisfy, TypeNode
 from pycsp3.classes.main.constraints import ConstraintIntension, Diffs, ConstraintInstantiation
 
@@ -129,23 +130,34 @@ def _compute_group_abstraction_other(group):
     var_args_argument = None
 
     # building the abstract constraint template
+    abstract_condition = len(group.diff_argument_names) == 2 and group.diff_argument_names[-1] == TypeCtrArg.CONDITION
     for arg in c.arguments.values():
         if arg.name in group.diff_argument_names:
-            if group.diff_argument_flags[group.diff_argument_names.index(arg.name)]:
+            index = group.diff_argument_names.index(arg.name)
+            if group.diff_argument_flags[index]:
                 assert len(set(len(ce.constraint.arguments[arg.name].content) for ce in group.entities)) > 1
+                abstraction[arg.name] = "%..."
+                var_args_argument = arg.name
+            elif abstract_condition and index == 0 and isinstance(group.entities[0].constraint.arguments[arg.name].content, list) and len(
+                    group.entities[0].constraint.arguments[arg.name].content) > LIMIT_FOR_VAR_ARGS:
                 abstraction[arg.name] = "%..."
                 var_args_argument = arg.name
             elif var_args_argument is None and group.diff_argument_names[- 1] == arg.name and isinstance(arg.content, list) and len(
                     arg.content) > LIMIT_FOR_VAR_ARGS:
                 abstraction[arg.name] = "%..."
             else:
-                abstraction[arg.name] = c.parameter_form(arg.content)
+                if arg.name == TypeCtrArg.CONDITION:
+                    abstraction[arg.name] = "(" + str(arg.content.operator) + "," + c.parameter_form(arg.content) + ")"  # TODO is it correct?
+                else:
+                    abstraction[arg.name] = c.parameter_form(arg.content)
         else:
             abstraction[arg.name] = arg.content
 
     def add_content(content):
         if isinstance(content, list):
             tmp.extend(content)
+        elif isinstance(content, Condition):
+            tmp.append(str(content.right_operand()))
         else:
             tmp.append(content)
 
@@ -168,7 +180,6 @@ def _compute_group_abstraction_other(group):
 
 
 def building_groups_recursively(entities, previous=None):
-
     def _build_group(group):
         if isinstance(group.entities[0].constraint, ConstraintIntension):
             group.abstraction, group.all_args = _compute_group_abstraction_intension(group)
@@ -186,7 +197,6 @@ def building_groups_recursively(entities, previous=None):
 
 # Phase 3: adding/removing some blocks
 def canonizing_groups_and_blocks(entities, previous=None):
-
     def _building_block(entity):
         if len(entity.entities) == 0:
             return entity
@@ -224,7 +234,6 @@ def canonizing_groups_and_blocks(entities, previous=None):
 
 # Phase 4: detecting forms corresponding to instantiations
 def recognizing_instantiations(entities):
-
     def _elements_for_building_instantiation(trees):
         t1, t2 = [], []
         for tree in trees:

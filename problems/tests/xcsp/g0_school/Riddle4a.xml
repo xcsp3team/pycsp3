@@ -1,0 +1,14 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" size="[4]"> 0..14 </array>
+  </variables>
+  <constraints>
+    <group>
+      <intension> eq(add(%0,1),%1) </intension>
+      <args> x[0] x[1] </args>
+      <args> x[1] x[2] </args>
+      <args> x[2] x[3] </args>
+    </group>
+    <intension> eq(add(x[0],x[1],x[2],x[3]),14) </intension>
+  </constraints>
+</instance>
