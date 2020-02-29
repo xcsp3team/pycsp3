@@ -98,23 +98,33 @@ def VarArray(*, size, dom, comment=None):
         return ListVar(var_objects)
 
 
-_aux_gb = None
+class _Auxiliary:
+    def __init__(self):
+        self._introduced_variables = []
+        self._collected_constraints = []
+        self.prefix = "aux_gb"
+
+    def add(self, pc):
+        dom = Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1))
+        assert dom.get_type() == TypeVar.INTEGER
+        index = len(self._introduced_variables)
+        name = self.prefix + "[" + str(index) + "]"
+        var = VariableInteger(name, dom)
+        Variable.name2obj[name] = var
+        if index == 0:
+            self._introduced_variables = EVarArray([var], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
+        else:
+            self._introduced_variables.extend_with(var)
+        self._collected_constraints.append((pc, var))
+        return var
+
+    def collected(self):
+        t = self._collected_constraints
+        self._collected_constraints = []
+        return t
 
 
-def add_aux(dom):
-    global _aux_gb
-
-    prefix = "aux_gb"
-    index = 0 if _aux_gb is None else len(_aux_gb)
-    name = prefix + "[" + str(index) + "]"
-    var = VariableInteger(name, dom)  # if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name, dom)
-    Variable.name2obj[name] = var
-    if index == 0:
-        _aux_gb = EVarArray([var], prefix, prefix + "[i] is the ith auxiliary variable having been automatically introduced")
-    else:
-        _aux_gb.extend_with(var)
-    return var
-
+auxiliary = _Auxiliary()
 
 ''' Posting constraints (through satisfy()) '''
 
@@ -200,8 +210,7 @@ def satisfy(*args):
     t = []
     for i, arg in enumerate(args):
         no_parameter_satisfy = i
-        assert isinstance(arg, (ECtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), \
-            "Authorized satisfy()'s type parameter are ECtr, ESlide, Node, bool, list, tuple, None or a generator. Not " + str(type(arg))
+        assert isinstance(arg, (ECtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), "non authorized type " + str(type(arg))
         if arg is None:
             continue
         arg = list(arg) if isinstance(arg, types.GeneratorType) else arg
@@ -229,6 +238,7 @@ def satisfy(*args):
             to_post = _group(arg)
         if to_post:
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
+    t.append(_group(pc == var for (pc, var) in auxiliary.collected()))
     return EToSatisfy(t)
 
 
@@ -470,12 +480,12 @@ def Sum(term, *others, condition=None):
     for other in others:
         checkType(other, ([Variable], [Node], [PartialConstraint], Variable, Node, PartialConstraint, ScalarProduct))
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    # g = []
     for i, t in enumerate(terms):
-        g = []
         if isinstance(t, PartialConstraint):
-            terms[i] = add_aux(Domain(range(t.constraint.min_possible_value(), t.constraint.max_possible_value() + 1)))
-            g.append(t == terms[i])
-        satisfy([g])
+            terms[i] = auxiliary.add(t)
+            # g.append(t == terms[i])
+    # if len(g) > 0:         satisfy(g)
 
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
@@ -635,8 +645,12 @@ def _optimize(term, minimization):
     if isinstance(term, ScalarProduct):
         term = Sum(term)  # to have a PartialConstraint
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"
+
+    satisfy(pc == var for (pc, var) in auxiliary.collected())
+
     comment, _, tag, _ = comments_and_tags_of_parameters_of(function_name="minimize" if minimization else "maximize", args=[term])
     type = TypeCtr.MINIMIZE if minimization else TypeCtr.MAXIMIZE
+
     if isinstance(term, (Variable, Node)):
         if isinstance(term, Node):
             term.mark_as_used()

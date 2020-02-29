@@ -1,0 +1,21 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="x" type="symbolic"> a b </var>
+    <var id="y" type="symbolic"> a b </var>
+    <var id="z" type="symbolic"> a b </var>
+  </variables>
+  <constraints>
+    <extension>
+      <list> x y </list>
+      <supports> (a,a)(b,b) </supports>
+    </extension>
+    <extension>
+      <list> x z </list>
+      <supports> (a,a)(b,b) </supports>
+    </extension>
+    <extension>
+      <list> y z </list>
+      <supports> (a,b)(b,a) </supports>
+    </extension>
+  </constraints>
+</instance>
