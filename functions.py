@@ -131,7 +131,7 @@ auxiliary = _Auxiliary()
 
 def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     assert type(bool_value) is bool
-    if isinstance(left_operand, Variable) and isinstance(right_operand, (set, frozenset, range)):
+    if isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
         ctr = Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
@@ -480,12 +480,9 @@ def Sum(term, *others, condition=None):
     for other in others:
         checkType(other, ([Variable], [Node], [PartialConstraint], Variable, Node, PartialConstraint, ScalarProduct))
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
-    # g = []
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary.add(t)
-            # g.append(t == terms[i])
-    # if len(g) > 0:         satisfy(g)
 
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)

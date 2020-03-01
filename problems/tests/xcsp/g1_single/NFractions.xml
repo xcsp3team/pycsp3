@@ -1,0 +1,9 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="digits" size="[9]"> 1..9 </array>
+  </variables>
+  <constraints>
+    <allDifferent> digits[] </allDifferent>
+    <intension> eq(add(mul(digits[0],add(mul(10,digits[4]),digits[5]),add(mul(10,digits[7]),digits[8])),mul(digits[3],add(mul(10,digits[1]),digits[2]),add(mul(10,digits[7]),digits[8])),mul(digits[6],add(mul(10,digits[1]),digits[2]),10,digits[4],digits[5])),mul(add(mul(10,digits[1]),digits[2]),add(mul(10,digits[4]),digits[5]),add(mul(10,digits[7]),digits[8]))) </intension>
+  </constraints>
+</instance>

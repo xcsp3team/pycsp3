@@ -1,0 +1,24 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="eggs" type="symbolic"> Debra Hugh Janet Rick </var>
+    <var id="mold" as="eggs" type="symbolic"/>
+    <var id="nuts" as="eggs" type="symbolic"/>
+    <var id="ragweed" as="eggs" type="symbolic"/>
+    <var id="baxter" as="eggs" type="symbolic"/>
+    <var id="lemon" as="eggs" type="symbolic"/>
+    <var id="malone" as="eggs" type="symbolic"/>
+    <var id="fleet" as="eggs" type="symbolic"/>
+  </variables>
+  <constraints>
+    <allDifferent> eggs mold nuts ragweed </allDifferent>
+    <allDifferent> baxter lemon malone fleet </allDifferent>
+    <intension> ne(mold,Rick) </intension>
+    <intension> eq(eggs,baxter) </intension>
+    <intension> ne(lemon,Hugh) </intension>
+    <intension> ne(fleet,Hugh) </intension>
+    <intension> eq(ragweed,Debra) </intension>
+    <intension> ne(lemon,Janet) </intension>
+    <intension> ne(eggs,Janet) </intension>
+    <intension> ne(mold,Janet) </intension>
+  </constraints>
+</instance>

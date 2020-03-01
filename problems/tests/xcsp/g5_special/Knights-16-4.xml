@@ -1,0 +1,16 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the cell number of the board where is put the ith knight" size="[4]"> 0..255 </array>
+  </variables>
+  <constraints>
+    <group>
+      <intension> ne(%0,%1) </intension>
+      <args> x[0] x[2] </args>
+      <args> x[1] x[3] </args>
+    </group>
+    <slide circular="true">
+      <list> x[] </list>
+      <intension> or(and(eq(dist(div(%0,16),div(%1,16)),1),eq(dist(mod(%0,16),mod(%1,16)),2)),and(eq(dist(div(%0,16),div(%1,16)),2),eq(dist(mod(%0,16),mod(%1,16)),1))) </intension>
+    </slide>
+  </constraints>
+</instance>

@@ -43,7 +43,7 @@ def table_for(vector_length):
 
 
 def table_for_grammar(n):
-    return {tuple(ele) for ele in grammar[n]}
+    return {tuple(ANY if v == 2147483646 else v for v in ele) for ele in grammar[n]}
 
 
 def select_label(i):
@@ -55,8 +55,8 @@ def n_possible_sons(i, j):
 
 
 def predicate(l, a, i, j, lengths):
-    r = range(1) if i != 0 and j == lengths[i] - 1 else range(min(j + 1, maxArity))
-    return xor(*([l[i][j] == 0] + [a[i + 1][j - k] > k + 1 for k in r]))
+    r = range(1 if i != 0 and j == lengths[i] - 1 else 0, min(j + 1, maxArity))
+    return xor(*([l[i][j] == 0] + [a[i + 1][j - k] >= k + 1 for k in r]))
 
 
 satisfy(

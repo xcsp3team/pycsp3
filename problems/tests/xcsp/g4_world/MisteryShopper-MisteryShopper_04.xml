@@ -1,0 +1,165 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="vr" note="vr[i][w] is the visitor for the ith visitee at week w" size="[12][3]"> 0..11 </array>
+    <array id="ve" note="ve[i][w] is the visitee for the ith visitor at week w" size="[12][3]"> 0..11 </array>
+    <array id="gr" note="gr[i][w] is the visitor group for the ith visitee at week w" size="[12][3]"> 0..2 </array>
+    <array id="ge" note="ge[i][w] is the visitee group for the ith visitor at week w" size="[12][3]"> 0..3 </array>
+  </variables>
+  <constraints>
+    <group note="each week, all visitors must be different">
+      <allDifferent> %... </allDifferent>
+      <args> vr[][0] </args>
+      <args> vr[][1] </args>
+      <args> vr[][2] </args>
+    </group>
+    <group note="each week, all visitees must be different">
+      <allDifferent> %... </allDifferent>
+      <args> ve[][0] </args>
+      <args> ve[][1] </args>
+      <args> ve[][2] </args>
+    </group>
+    <group note="the visitor groups must be different for each visitee">
+      <allDifferent> %0 %1 %2 </allDifferent>
+      <args> gr[0][] </args>
+      <args> gr[1][] </args>
+      <args> gr[2][] </args>
+      <args> gr[3][] </args>
+      <args> gr[4][] </args>
+      <args> gr[5][] </args>
+      <args> gr[6][] </args>
+      <args> gr[7][] </args>
+      <args> gr[8][] </args>
+      <args> gr[9][] </args>
+      <args> gr[10][] </args>
+      <args> gr[11][] </args>
+    </group>
+    <group note="the visitee groups must be different for each visitor">
+      <allDifferent> %0 %1 %2 </allDifferent>
+      <args> ge[0][] </args>
+      <args> ge[1][] </args>
+      <args> ge[2][] </args>
+      <args> ge[3][] </args>
+      <args> ge[4][] </args>
+      <args> ge[5][] </args>
+      <args> ge[6][] </args>
+      <args> ge[7][] </args>
+      <args> ge[8][] </args>
+      <args> ge[9][] </args>
+      <args> ge[10][] </args>
+      <args> ge[11][] </args>
+    </group>
+    <block note="channeling arrays vr and ve, each week">
+      <channel>
+        <list> vr[][0] </list>
+        <list> ve[][0] </list>
+      </channel>
+      <channel>
+        <list> vr[][1] </list>
+        <list> ve[][1] </list>
+      </channel>
+      <channel>
+        <list> vr[][2] </list>
+        <list> ve[][2] </list>
+      </channel>
+    </block>
+    <block class="symmetry-breaking">
+      <lex>
+        <matrix> vr[][] </matrix>
+        <operator> le </operator>
+      </lex>
+      <group>
+        <ordered>
+          <list> %0 %1 %2 </list>
+          <operator> lt </operator>
+        </ordered>
+        <args> vr[9..11][0] </args>
+        <args> vr[9..11][1] </args>
+        <args> vr[9..11][2] </args>
+      </group>
+    </block>
+    <group note="linking a visitor with its group">
+      <extension>
+        <list> %0 %1 </list>
+        <supports> (0,0)(0,1)(0,2)(0,3)(1,4)(1,5)(1,6)(1,7)(2,8)(2,9)(2,10)(2,11) </supports>
+      </extension>
+      <args> gr[0][0] vr[0][0] </args>
+      <args> gr[0][1] vr[0][1] </args>
+      <args> gr[0][2] vr[0][2] </args>
+      <args> gr[1][0] vr[1][0] </args>
+      <args> gr[1][1] vr[1][1] </args>
+      <args> gr[1][2] vr[1][2] </args>
+      <args> gr[2][0] vr[2][0] </args>
+      <args> gr[2][1] vr[2][1] </args>
+      <args> gr[2][2] vr[2][2] </args>
+      <args> gr[3][0] vr[3][0] </args>
+      <args> gr[3][1] vr[3][1] </args>
+      <args> gr[3][2] vr[3][2] </args>
+      <args> gr[4][0] vr[4][0] </args>
+      <args> gr[4][1] vr[4][1] </args>
+      <args> gr[4][2] vr[4][2] </args>
+      <args> gr[5][0] vr[5][0] </args>
+      <args> gr[5][1] vr[5][1] </args>
+      <args> gr[5][2] vr[5][2] </args>
+      <args> gr[6][0] vr[6][0] </args>
+      <args> gr[6][1] vr[6][1] </args>
+      <args> gr[6][2] vr[6][2] </args>
+      <args> gr[7][0] vr[7][0] </args>
+      <args> gr[7][1] vr[7][1] </args>
+      <args> gr[7][2] vr[7][2] </args>
+      <args> gr[8][0] vr[8][0] </args>
+      <args> gr[8][1] vr[8][1] </args>
+      <args> gr[8][2] vr[8][2] </args>
+      <args> gr[9][0] vr[9][0] </args>
+      <args> gr[9][1] vr[9][1] </args>
+      <args> gr[9][2] vr[9][2] </args>
+      <args> gr[10][0] vr[10][0] </args>
+      <args> gr[10][1] vr[10][1] </args>
+      <args> gr[10][2] vr[10][2] </args>
+      <args> gr[11][0] vr[11][0] </args>
+      <args> gr[11][1] vr[11][1] </args>
+      <args> gr[11][2] vr[11][2] </args>
+    </group>
+    <group note="linking a visitee with its group">
+      <extension>
+        <list> %0 %1 </list>
+        <supports> (0,0)(0,1)(0,2)(1,3)(1,4)(2,5)(2,6)(2,7)(2,8)(3,9)(3,10)(3,11) </supports>
+      </extension>
+      <args> ge[0][0] ve[0][0] </args>
+      <args> ge[0][1] ve[0][1] </args>
+      <args> ge[0][2] ve[0][2] </args>
+      <args> ge[1][0] ve[1][0] </args>
+      <args> ge[1][1] ve[1][1] </args>
+      <args> ge[1][2] ve[1][2] </args>
+      <args> ge[2][0] ve[2][0] </args>
+      <args> ge[2][1] ve[2][1] </args>
+      <args> ge[2][2] ve[2][2] </args>
+      <args> ge[3][0] ve[3][0] </args>
+      <args> ge[3][1] ve[3][1] </args>
+      <args> ge[3][2] ve[3][2] </args>
+      <args> ge[4][0] ve[4][0] </args>
+      <args> ge[4][1] ve[4][1] </args>
+      <args> ge[4][2] ve[4][2] </args>
+      <args> ge[5][0] ve[5][0] </args>
+      <args> ge[5][1] ve[5][1] </args>
+      <args> ge[5][2] ve[5][2] </args>
+      <args> ge[6][0] ve[6][0] </args>
+      <args> ge[6][1] ve[6][1] </args>
+      <args> ge[6][2] ve[6][2] </args>
+      <args> ge[7][0] ve[7][0] </args>
+      <args> ge[7][1] ve[7][1] </args>
+      <args> ge[7][2] ve[7][2] </args>
+      <args> ge[8][0] ve[8][0] </args>
+      <args> ge[8][1] ve[8][1] </args>
+      <args> ge[8][2] ve[8][2] </args>
+      <args> ge[9][0] ve[9][0] </args>
+      <args> ge[9][1] ve[9][1] </args>
+      <args> ge[9][2] ve[9][2] </args>
+      <args> ge[10][0] ve[10][0] </args>
+      <args> ge[10][1] ve[10][1] </args>
+      <args> ge[10][2] ve[10][2] </args>
+      <args> ge[11][0] ve[11][0] </args>
+      <args> ge[11][1] ve[11][1] </args>
+      <args> ge[11][2] ve[11][2] </args>
+    </group>
+  </constraints>
+</instance>

@@ -36,8 +36,8 @@ class Diffs:
             for i, name in enumerate(self.argument_names):
                 index = Diffs.fusion.argument_names.index(name)  # note that self.argument_names must be be included in Diffs.fusion.argument_names
                 Diffs.fusion.argument_flags[index] |= self.argument_flags[i]
-            # for i in range(len(Diffs.fusion.argument_flags)):
-            #     Diffs.fusion.argument_flags[i] |= self.argument_flags[i]
+                # for i in range(len(Diffs.fusion.argument_flags)):
+                #     Diffs.fusion.argument_flags[i] |= self.argument_flags[i]
 
 
 class ConstraintArgument:
@@ -81,7 +81,7 @@ class Constraint:
         for i in range(len(args1)):
             if str(args1[i].content) != str(args2[i].content):
                 if args1[i].name == TypeCtrArg.CONDITION and args1[i].content.operator != args2[i].content.operator:
-                    return False  # the operators are different in the two condistions
+                    return False  # the operators are different in the two conditions
                 b = hasattr(args1[i].content, '__len__') and hasattr(args2[i].content, '__len__') and len(args1[i].content) != len(args2[i].content)
                 records.append((args1[i].name, b))
         if len(records) > 2:
@@ -377,9 +377,13 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         self.arg(TypeCtrArg.VALUE, value)
 
     def min_possible_value(self):
+        if isinstance(self.arguments[TypeCtrArg.LIST].content[0], int):
+            return min(v for v in self.arguments[TypeCtrArg.LIST].content)
         return min(x.dom.smallest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
     def max_possible_value(self):
+        if isinstance(self.arguments[TypeCtrArg.LIST].content[0], int):
+            return max(v for v in self.arguments[TypeCtrArg.LIST].content)
         return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
 
@@ -551,7 +555,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
     def __str__(self):
         c = self.constraint
         # assert len(c.arguments) == 2
-        return str(c.name) + "(" + compact(c.arguments[TypeCtrArg.LIST].content) + ")"  # TODO experimental stuff
+        return str(c.name) + "(" + str(compact(c.arguments[TypeCtrArg.LIST].content)) + ")"  # TODO experimental stuff
 
     @staticmethod
     def combine_partial_objects(obj1, operator, obj2):  # currently, only partial sums can be combined

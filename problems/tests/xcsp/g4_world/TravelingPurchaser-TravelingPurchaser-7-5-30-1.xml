@@ -1,0 +1,1464 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[i] is the city succeeding to the ith city (itself if not part of the route)" size="[35]"> 0..34 </array>
+    <array id="d" note="d[i] is the distance (seen as a travel cost) between the ith city and its successor" size="[35]">
+      <domain for="d[0]"> 0 6 9 </domain>
+      <domain for="d[1]"> 0 8 14 15 </domain>
+      <domain for="d[2]"> 0 5 7 15 </domain>
+      <domain for="d[3]"> 0 9 10 19 </domain>
+      <domain for="d[4]"> 0 4 14 18 </domain>
+      <domain for="d[5]"> 0 3 13 15 </domain>
+      <domain for="d[6]"> 0 3 17 </domain>
+      <domain for="d[7]"> 0 10 13 17 </domain>
+      <domain for="d[8]"> 0 11 15 20 </domain>
+      <domain for="d[9]"> 0 3 14 18 19 </domain>
+      <domain for="d[10]"> 0 1 6 7 15 </domain>
+      <domain for="d[11]"> 0 1 4 10 16 </domain>
+      <domain for="d[12]"> 0 1 15 16 </domain>
+      <domain for="d[13]"> 0 18 </domain>
+      <domain for="d[14]"> 0 1 9 13 </domain>
+      <domain for="d[15]"> 0 1 13 14 18 </domain>
+      <domain for="d[16]"> 0 6 16 17 </domain>
+      <domain for="d[17]"> 0 5 10 19 </domain>
+      <domain for="d[18]"> 0 1 4 7 12 </domain>
+      <domain for="d[19]"> 0 9 15 17 19 </domain>
+      <domain for="d[20]"> 0 6 9 20 </domain>
+      <domain for="d[21]"> 0 16 17 19 </domain>
+      <domain for="d[22]"> 0 3 8 12 13 </domain>
+      <domain for="d[23]"> 0 2 3 9 18 </domain>
+      <domain for="d[24]"> 0 2 6 9 10 </domain>
+      <domain for="d[25]"> 0 11 16 20 </domain>
+      <domain for="d[26]"> 0 1 7 15 18 </domain>
+      <domain for="d[27]"> 0 2 6 14 </domain>
+      <domain for="d[28]"> 0 2 17 </domain>
+      <domain for="d[29]"> 0 11 13 15 </domain>
+      <domain for="d[30]"> 0 15 16 </domain>
+      <domain for="d[31]"> 0 4 5 9 </domain>
+      <domain for="d[32]"> 0 4 8 </domain>
+      <domain for="d[33]"> 0 1 12 14 </domain>
+      <domain for="d[34]"> 0 7 18 </domain>
+    </array>
+    <array id="l" note="l[i] is the purchase location of the ith product (last city has nothing for sale)" size="[30]"> 0..33 </array>
+    <array id="c" note="c[i] is the purchase cost of the ith product" size="[30]">
+      <domain for="c[0]"> 4 6 7 9 10 11 12 13 14 16 17 18 19 20 </domain>
+      <domain for="c[1]"> 1 2 3 4 6 8 9 10 11 12 13 14 15 16 17 18 19 </domain>
+      <domain for="c[2]"> 4 5 7 8 9 10 11 12 13 14 15 16 17 18 19 20 </domain>
+      <domain for="c[3]"> 1 2 3 4 5 6 7 9 10 11 12 13 14 16 18 19 20 </domain>
+      <domain for="c[4]"> 1 2 3 4 6 7 8 9 10 12 14 15 16 17 20 </domain>
+      <domain for="c[5]"> 1 2 3 4 6 7 8 9 10 11 12 13 14 15 17 18 19 20 </domain>
+      <domain for="c[6]"> 1 3 4 5 8 9 10 11 12 13 14 15 16 17 18 19 20 </domain>
+      <domain for="c[7]"> 1 2 3 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 </domain>
+      <domain for="c[8]"> 1 2 3 6 8 9 10 11 12 14 15 16 17 18 19 20 </domain>
+      <domain for="c[9]"> 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 19 </domain>
+      <domain for="c[10]"> 1 2 3 4 5 6 7 9 10 11 13 14 15 16 18 19 20 </domain>
+      <domain for="c[11]"> 2 3 4 5 6 7 8 9 10 11 13 14 15 17 18 19 20 </domain>
+      <domain for="c[12]"> 1 2 3 4 5 6 8 10 11 12 13 14 15 16 17 18 19 </domain>
+      <domain for="c[13]"> 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 17 18 20 </domain>
+      <domain for="c[14]"> 1 2 3 5 6 7 8 9 10 11 12 13 14 15 16 18 19 20 </domain>
+      <domain for="c[15]"> 1 3 4 5 6 7 8 9 10 11 12 13 14 16 17 18 20 </domain>
+      <domain for="c[16]"> 1 2 3 4 5 6 9 10 11 12 14 15 17 18 19 </domain>
+      <domain for="c[17]"> 1 2 4 5 6 9 10 12 13 14 15 16 17 18 19 20 </domain>
+      <domain for="c[18]"> 1 3 4 5 6 7 8 9 10 11 13 14 15 16 18 19 20 </domain>
+      <domain for="c[19]"> 1 2 4 5 7 9 10 12 13 14 15 17 19 20 </domain>
+      <domain for="c[20]"> 2 3 4 5 6 7 8 9 10 11 12 14 16 17 18 20 </domain>
+      <domain for="c[21]"> 1 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 19 </domain>
+      <domain for="c[22]"> 2 4 5 6 7 8 9 10 11 12 13 15 16 17 18 20 </domain>
+      <domain for="c[23]"> 1 2 3 4 5 6 7 8 9 10 11 12 14 15 16 17 19 20 </domain>
+      <domain for="c[24]"> 1 2 3 4 6 7 8 9 10 11 13 14 16 17 18 20 </domain>
+      <domain for="c[25]"> 1 3 4 5 7 8 9 10 11 12 14 15 16 17 18 19 20 </domain>
+      <domain for="c[26]"> 3 4 5 7 8 9 10 11 12 13 14 15 16 17 18 19 </domain>
+      <domain for="c[27]"> 1 2 3 4 5 6 8 9 10 11 12 13 14 15 16 17 19 </domain>
+      <domain for="c[28]"> 1 2 3 4 5 6 7 8 10 11 12 13 14 16 17 18 19 20 </domain>
+      <domain for="c[29]"> 1 3 4 5 7 8 9 10 11 12 13 14 15 16 17 18 20 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <block note="linking distances to successors">
+      <element>
+        <list> 0 9 -1 -1 -1 -1 -1 6 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[0] </index>
+        <value> d[0] </value>
+      </element>
+      <element>
+        <list> 8 0 15 -1 -1 -1 -1 -1 14 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[1] </index>
+        <value> d[1] </value>
+      </element>
+      <element>
+        <list> -1 5 0 7 -1 -1 -1 -1 -1 15 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[2] </index>
+        <value> d[2] </value>
+      </element>
+      <element>
+        <list> -1 -1 19 0 10 -1 -1 -1 -1 -1 9 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[3] </index>
+        <value> d[3] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 14 0 4 -1 -1 -1 -1 -1 18 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[4] </index>
+        <value> d[4] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 3 0 13 -1 -1 -1 -1 -1 15 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[5] </index>
+        <value> d[5] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 3 0 -1 -1 -1 -1 -1 -1 17 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[6] </index>
+        <value> d[6] </value>
+      </element>
+      <element>
+        <list> 10 -1 -1 -1 -1 -1 -1 0 13 -1 -1 -1 -1 -1 17 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[7] </index>
+        <value> d[7] </value>
+      </element>
+      <element>
+        <list> -1 11 -1 -1 -1 -1 -1 20 0 20 -1 -1 -1 -1 -1 15 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[8] </index>
+        <value> d[8] </value>
+      </element>
+      <element>
+        <list> -1 -1 19 -1 -1 -1 -1 -1 14 0 3 -1 -1 -1 -1 -1 18 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[9] </index>
+        <value> d[9] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 6 -1 -1 -1 -1 -1 15 0 7 -1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[10] </index>
+        <value> d[10] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 4 -1 -1 -1 -1 -1 16 0 1 -1 -1 -1 -1 -1 10 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[11] </index>
+        <value> d[11] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 16 -1 -1 -1 -1 -1 15 0 1 -1 -1 -1 -1 -1 16 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[12] </index>
+        <value> d[12] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 18 -1 -1 -1 -1 -1 18 0 -1 -1 -1 -1 -1 -1 18 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[13] </index>
+        <value> d[13] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 13 -1 -1 -1 -1 -1 -1 0 9 -1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[14] </index>
+        <value> d[14] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 18 0 14 -1 -1 -1 -1 -1 13 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[15] </index>
+        <value> d[15] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 17 -1 -1 -1 -1 -1 16 0 6 -1 -1 -1 -1 -1 17 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[16] </index>
+        <value> d[16] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 19 -1 -1 -1 -1 -1 10 0 5 -1 -1 -1 -1 -1 5 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[17] </index>
+        <value> d[17] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 12 0 4 -1 -1 -1 -1 -1 7 -1 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[18] </index>
+        <value> d[18] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 19 -1 -1 -1 -1 -1 17 0 15 -1 -1 -1 -1 -1 9 -1 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[19] </index>
+        <value> d[19] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 6 -1 -1 -1 -1 -1 9 0 -1 -1 -1 -1 -1 -1 20 -1 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[20] </index>
+        <value> d[20] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 17 -1 -1 -1 -1 -1 -1 0 19 -1 -1 -1 -1 -1 16 -1 -1 -1 -1 -1 -1 </list>
+        <index> s[21] </index>
+        <value> d[21] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 3 -1 -1 -1 -1 -1 8 0 12 -1 -1 -1 -1 -1 13 -1 -1 -1 -1 -1 </list>
+        <index> s[22] </index>
+        <value> d[22] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 2 -1 -1 -1 -1 -1 18 0 3 -1 -1 -1 -1 -1 9 -1 -1 -1 -1 </list>
+        <index> s[23] </index>
+        <value> d[23] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 2 -1 -1 -1 -1 -1 9 0 10 -1 -1 -1 -1 -1 6 -1 -1 -1 </list>
+        <index> s[24] </index>
+        <value> d[24] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 20 -1 -1 -1 -1 -1 16 0 11 -1 -1 -1 -1 -1 20 -1 -1 </list>
+        <index> s[25] </index>
+        <value> d[25] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 18 -1 -1 -1 -1 -1 7 0 1 -1 -1 -1 -1 -1 15 -1 </list>
+        <index> s[26] </index>
+        <value> d[26] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 14 -1 -1 -1 -1 -1 6 0 -1 -1 -1 -1 -1 -1 2 </list>
+        <index> s[27] </index>
+        <value> d[27] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 2 -1 -1 -1 -1 -1 -1 0 17 -1 -1 -1 -1 -1 </list>
+        <index> s[28] </index>
+        <value> d[28] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 11 -1 -1 -1 -1 -1 15 0 13 -1 -1 -1 -1 </list>
+        <index> s[29] </index>
+        <value> d[29] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 15 -1 -1 -1 -1 -1 16 0 15 -1 -1 -1 </list>
+        <index> s[30] </index>
+        <value> d[30] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 5 -1 -1 -1 -1 -1 9 0 4 -1 -1 </list>
+        <index> s[31] </index>
+        <value> d[31] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 4 -1 -1 -1 -1 -1 8 0 8 -1 </list>
+        <index> s[32] </index>
+        <value> d[32] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 1 -1 -1 -1 -1 -1 12 0 14 </list>
+        <index> s[33] </index>
+        <value> d[33] </value>
+      </element>
+      <element>
+        <list> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 18 -1 -1 -1 -1 -1 7 0 </list>
+        <index> s[34] </index>
+        <value> d[34] </value>
+      </element>
+    </block>
+    <block note="linking purchase locations to purchase costs">
+      <element>
+        <list> 18 20 11 13 20 19 17 10 16 10 14 19 17 7 10 10 11 17 7 7 14 17 12 4 10 6 4 6 14 9 9 7 17 14 </list>
+        <index> l[0] </index>
+        <value> c[0] </value>
+      </element>
+      <element>
+        <list> 6 16 10 18 9 18 10 10 18 9 10 9 12 13 6 13 4 13 14 8 1 17 11 10 3 13 4 2 6 19 19 1 15 19 </list>
+        <index> l[1] </index>
+        <value> c[1] </value>
+      </element>
+      <element>
+        <list> 11 13 16 19 5 7 4 20 10 8 12 10 10 8 20 16 7 17 9 17 17 14 19 15 12 4 10 17 10 7 10 13 18 8 </list>
+        <index> l[2] </index>
+        <value> c[2] </value>
+      </element>
+      <element>
+        <list> 10 4 9 6 7 20 2 10 5 9 4 18 1 12 4 5 4 9 18 1 11 18 19 11 13 2 7 7 14 7 3 16 20 14 </list>
+        <index> l[3] </index>
+        <value> c[3] </value>
+      </element>
+      <element>
+        <list> 9 15 1 15 2 4 15 3 6 8 12 14 4 2 6 17 12 8 2 4 15 16 7 15 20 6 10 10 4 7 8 2 2 9 </list>
+        <index> l[4] </index>
+        <value> c[4] </value>
+      </element>
+      <element>
+        <list> 4 3 1 12 20 3 11 8 14 14 20 7 9 1 11 7 2 6 7 11 6 13 9 20 3 17 10 6 19 10 11 18 19 15 </list>
+        <index> l[5] </index>
+        <value> c[5] </value>
+      </element>
+      <element>
+        <list> 11 4 16 17 19 1 16 4 18 15 5 17 4 8 4 11 9 12 15 14 17 17 14 5 12 17 3 9 15 20 10 1 13 20 </list>
+        <index> l[6] </index>
+        <value> c[6] </value>
+      </element>
+      <element>
+        <list> 17 18 7 20 10 12 5 20 12 8 9 16 12 19 14 9 18 11 15 20 6 16 1 10 2 16 14 9 18 3 11 19 9 13 </list>
+        <index> l[7] </index>
+        <value> c[7] </value>
+      </element>
+      <element>
+        <list> 17 2 19 9 18 14 8 10 3 15 14 1 6 6 6 12 16 20 17 14 11 8 6 19 1 18 8 14 8 15 6 14 9 16 </list>
+        <index> l[8] </index>
+        <value> c[8] </value>
+      </element>
+      <element>
+        <list> 17 16 8 19 9 11 6 10 3 10 2 1 15 5 10 19 6 9 14 12 16 13 13 16 11 7 13 13 13 11 6 4 17 5 </list>
+        <index> l[9] </index>
+        <value> c[9] </value>
+      </element>
+      <element>
+        <list> 2 18 9 4 19 6 2 7 9 11 1 5 15 15 13 14 5 20 10 7 6 11 5 20 13 19 14 3 16 16 4 11 1 20 </list>
+        <index> l[10] </index>
+        <value> c[10] </value>
+      </element>
+      <element>
+        <list> 20 5 10 4 3 4 11 13 6 10 15 8 6 7 4 8 5 19 8 20 13 5 19 11 5 2 18 4 14 14 17 9 2 15 </list>
+        <index> l[11] </index>
+        <value> c[11] </value>
+      </element>
+      <element>
+        <list> 15 8 3 15 17 13 5 1 6 15 17 8 11 8 17 19 12 4 16 19 10 14 14 8 17 18 17 2 8 13 16 5 5 13 </list>
+        <index> l[12] </index>
+        <value> c[12] </value>
+      </element>
+      <element>
+        <list> 20 18 20 1 8 10 14 15 10 4 15 5 4 17 12 7 6 8 11 7 1 5 9 4 11 13 2 3 3 12 14 8 12 5 </list>
+        <index> l[13] </index>
+        <value> c[13] </value>
+      </element>
+      <element>
+        <list> 9 10 12 15 20 7 16 6 10 5 13 12 9 11 20 16 18 3 1 7 12 10 19 11 1 15 14 5 16 8 8 8 2 1 </list>
+        <index> l[14] </index>
+        <value> c[14] </value>
+      </element>
+      <element>
+        <list> 12 17 1 10 12 14 5 18 1 17 4 13 9 20 10 4 4 20 7 6 14 13 8 11 3 9 20 7 5 11 7 7 16 6 </list>
+        <index> l[15] </index>
+        <value> c[15] </value>
+      </element>
+      <element>
+        <list> 11 18 19 10 10 9 10 4 17 14 19 2 12 10 11 10 15 9 5 15 9 15 2 5 2 1 12 10 15 6 15 15 9 3 </list>
+        <index> l[16] </index>
+        <value> c[16] </value>
+      </element>
+      <element>
+        <list> 6 10 14 13 19 2 14 19 16 14 10 15 5 19 2 12 1 13 2 18 1 13 20 20 16 2 20 13 2 10 20 17 4 9 </list>
+        <index> l[17] </index>
+        <value> c[17] </value>
+      </element>
+      <element>
+        <list> 16 4 6 1 9 9 4 11 13 10 15 18 19 18 9 5 3 14 8 16 19 7 6 20 7 20 3 9 18 10 10 9 3 11 </list>
+        <index> l[18] </index>
+        <value> c[18] </value>
+      </element>
+      <element>
+        <list> 17 7 13 19 5 4 9 10 13 1 15 1 5 2 20 15 12 10 20 19 10 10 20 5 14 19 12 10 20 2 13 14 19 1 </list>
+        <index> l[19] </index>
+        <value> c[19] </value>
+      </element>
+      <element>
+        <list> 5 12 2 11 2 6 7 7 16 2 6 3 4 20 17 8 14 10 9 7 5 9 20 12 3 10 20 3 10 18 6 11 14 3 </list>
+        <index> l[20] </index>
+        <value> c[20] </value>
+      </element>
+      <element>
+        <list> 12 7 16 17 3 10 7 15 8 14 16 6 13 1 4 10 6 13 4 7 9 11 4 19 13 4 12 5 17 11 7 10 8 11 </list>
+        <index> l[21] </index>
+        <value> c[21] </value>
+      </element>
+      <element>
+        <list> 17 9 10 12 20 17 4 9 8 9 16 5 8 7 8 2 5 2 5 5 11 20 12 17 13 2 18 11 5 15 13 12 18 6 </list>
+        <index> l[22] </index>
+        <value> c[22] </value>
+      </element>
+      <element>
+        <list> 17 16 7 9 6 19 7 3 2 5 19 17 16 11 16 11 19 6 8 10 12 14 20 20 6 4 14 15 1 6 7 10 1 11 </list>
+        <index> l[23] </index>
+        <value> c[23] </value>
+      </element>
+      <element>
+        <list> 9 18 17 7 6 2 17 4 2 9 4 10 10 20 9 17 4 11 6 1 14 10 13 13 17 13 18 18 16 13 8 4 3 17 </list>
+        <index> l[24] </index>
+        <value> c[24] </value>
+      </element>
+      <element>
+        <list> 9 9 8 16 15 9 19 8 17 5 5 11 8 10 3 9 7 1 18 20 20 14 18 14 4 18 9 16 5 12 12 10 10 18 </list>
+        <index> l[25] </index>
+        <value> c[25] </value>
+      </element>
+      <element>
+        <list> 12 3 4 11 7 5 19 4 14 18 9 16 5 5 18 11 16 15 19 8 13 15 10 12 16 12 17 4 11 3 19 13 15 11 </list>
+        <index> l[26] </index>
+        <value> c[26] </value>
+      </element>
+      <element>
+        <list> 3 16 19 1 11 9 12 11 15 11 4 12 19 14 10 17 1 9 6 19 6 2 5 3 8 19 13 2 16 17 6 5 8 3 </list>
+        <index> l[27] </index>
+        <value> c[27] </value>
+      </element>
+      <element>
+        <list> 4 17 3 7 12 17 4 20 20 6 14 1 16 17 7 18 13 8 20 11 4 7 4 10 17 4 7 19 2 5 17 16 6 1 </list>
+        <index> l[28] </index>
+        <value> c[28] </value>
+      </element>
+      <element>
+        <list> 11 11 8 20 16 12 4 20 7 1 8 18 13 10 18 14 5 11 4 4 13 17 8 12 7 3 13 12 9 5 15 11 15 12 </list>
+        <index> l[29] </index>
+        <value> c[29] </value>
+      </element>
+    </block>
+    <group note="purchasing a product at a city is only possible if you visit that city">
+      <intension> imp(eq(%0,%1),ne(%2,%1)) </intension>
+      <args> s[0] 0 l[0] </args>
+      <args> s[0] 0 l[1] </args>
+      <args> s[0] 0 l[2] </args>
+      <args> s[0] 0 l[3] </args>
+      <args> s[0] 0 l[4] </args>
+      <args> s[0] 0 l[5] </args>
+      <args> s[0] 0 l[6] </args>
+      <args> s[0] 0 l[7] </args>
+      <args> s[0] 0 l[8] </args>
+      <args> s[0] 0 l[9] </args>
+      <args> s[0] 0 l[10] </args>
+      <args> s[0] 0 l[11] </args>
+      <args> s[0] 0 l[12] </args>
+      <args> s[0] 0 l[13] </args>
+      <args> s[0] 0 l[14] </args>
+      <args> s[0] 0 l[15] </args>
+      <args> s[0] 0 l[16] </args>
+      <args> s[0] 0 l[17] </args>
+      <args> s[0] 0 l[18] </args>
+      <args> s[0] 0 l[19] </args>
+      <args> s[0] 0 l[20] </args>
+      <args> s[0] 0 l[21] </args>
+      <args> s[0] 0 l[22] </args>
+      <args> s[0] 0 l[23] </args>
+      <args> s[0] 0 l[24] </args>
+      <args> s[0] 0 l[25] </args>
+      <args> s[0] 0 l[26] </args>
+      <args> s[0] 0 l[27] </args>
+      <args> s[0] 0 l[28] </args>
+      <args> s[0] 0 l[29] </args>
+      <args> s[1] 1 l[0] </args>
+      <args> s[1] 1 l[1] </args>
+      <args> s[1] 1 l[2] </args>
+      <args> s[1] 1 l[3] </args>
+      <args> s[1] 1 l[4] </args>
+      <args> s[1] 1 l[5] </args>
+      <args> s[1] 1 l[6] </args>
+      <args> s[1] 1 l[7] </args>
+      <args> s[1] 1 l[8] </args>
+      <args> s[1] 1 l[9] </args>
+      <args> s[1] 1 l[10] </args>
+      <args> s[1] 1 l[11] </args>
+      <args> s[1] 1 l[12] </args>
+      <args> s[1] 1 l[13] </args>
+      <args> s[1] 1 l[14] </args>
+      <args> s[1] 1 l[15] </args>
+      <args> s[1] 1 l[16] </args>
+      <args> s[1] 1 l[17] </args>
+      <args> s[1] 1 l[18] </args>
+      <args> s[1] 1 l[19] </args>
+      <args> s[1] 1 l[20] </args>
+      <args> s[1] 1 l[21] </args>
+      <args> s[1] 1 l[22] </args>
+      <args> s[1] 1 l[23] </args>
+      <args> s[1] 1 l[24] </args>
+      <args> s[1] 1 l[25] </args>
+      <args> s[1] 1 l[26] </args>
+      <args> s[1] 1 l[27] </args>
+      <args> s[1] 1 l[28] </args>
+      <args> s[1] 1 l[29] </args>
+      <args> s[2] 2 l[0] </args>
+      <args> s[2] 2 l[1] </args>
+      <args> s[2] 2 l[2] </args>
+      <args> s[2] 2 l[3] </args>
+      <args> s[2] 2 l[4] </args>
+      <args> s[2] 2 l[5] </args>
+      <args> s[2] 2 l[6] </args>
+      <args> s[2] 2 l[7] </args>
+      <args> s[2] 2 l[8] </args>
+      <args> s[2] 2 l[9] </args>
+      <args> s[2] 2 l[10] </args>
+      <args> s[2] 2 l[11] </args>
+      <args> s[2] 2 l[12] </args>
+      <args> s[2] 2 l[13] </args>
+      <args> s[2] 2 l[14] </args>
+      <args> s[2] 2 l[15] </args>
+      <args> s[2] 2 l[16] </args>
+      <args> s[2] 2 l[17] </args>
+      <args> s[2] 2 l[18] </args>
+      <args> s[2] 2 l[19] </args>
+      <args> s[2] 2 l[20] </args>
+      <args> s[2] 2 l[21] </args>
+      <args> s[2] 2 l[22] </args>
+      <args> s[2] 2 l[23] </args>
+      <args> s[2] 2 l[24] </args>
+      <args> s[2] 2 l[25] </args>
+      <args> s[2] 2 l[26] </args>
+      <args> s[2] 2 l[27] </args>
+      <args> s[2] 2 l[28] </args>
+      <args> s[2] 2 l[29] </args>
+      <args> s[3] 3 l[0] </args>
+      <args> s[3] 3 l[1] </args>
+      <args> s[3] 3 l[2] </args>
+      <args> s[3] 3 l[3] </args>
+      <args> s[3] 3 l[4] </args>
+      <args> s[3] 3 l[5] </args>
+      <args> s[3] 3 l[6] </args>
+      <args> s[3] 3 l[7] </args>
+      <args> s[3] 3 l[8] </args>
+      <args> s[3] 3 l[9] </args>
+      <args> s[3] 3 l[10] </args>
+      <args> s[3] 3 l[11] </args>
+      <args> s[3] 3 l[12] </args>
+      <args> s[3] 3 l[13] </args>
+      <args> s[3] 3 l[14] </args>
+      <args> s[3] 3 l[15] </args>
+      <args> s[3] 3 l[16] </args>
+      <args> s[3] 3 l[17] </args>
+      <args> s[3] 3 l[18] </args>
+      <args> s[3] 3 l[19] </args>
+      <args> s[3] 3 l[20] </args>
+      <args> s[3] 3 l[21] </args>
+      <args> s[3] 3 l[22] </args>
+      <args> s[3] 3 l[23] </args>
+      <args> s[3] 3 l[24] </args>
+      <args> s[3] 3 l[25] </args>
+      <args> s[3] 3 l[26] </args>
+      <args> s[3] 3 l[27] </args>
+      <args> s[3] 3 l[28] </args>
+      <args> s[3] 3 l[29] </args>
+      <args> s[4] 4 l[0] </args>
+      <args> s[4] 4 l[1] </args>
+      <args> s[4] 4 l[2] </args>
+      <args> s[4] 4 l[3] </args>
+      <args> s[4] 4 l[4] </args>
+      <args> s[4] 4 l[5] </args>
+      <args> s[4] 4 l[6] </args>
+      <args> s[4] 4 l[7] </args>
+      <args> s[4] 4 l[8] </args>
+      <args> s[4] 4 l[9] </args>
+      <args> s[4] 4 l[10] </args>
+      <args> s[4] 4 l[11] </args>
+      <args> s[4] 4 l[12] </args>
+      <args> s[4] 4 l[13] </args>
+      <args> s[4] 4 l[14] </args>
+      <args> s[4] 4 l[15] </args>
+      <args> s[4] 4 l[16] </args>
+      <args> s[4] 4 l[17] </args>
+      <args> s[4] 4 l[18] </args>
+      <args> s[4] 4 l[19] </args>
+      <args> s[4] 4 l[20] </args>
+      <args> s[4] 4 l[21] </args>
+      <args> s[4] 4 l[22] </args>
+      <args> s[4] 4 l[23] </args>
+      <args> s[4] 4 l[24] </args>
+      <args> s[4] 4 l[25] </args>
+      <args> s[4] 4 l[26] </args>
+      <args> s[4] 4 l[27] </args>
+      <args> s[4] 4 l[28] </args>
+      <args> s[4] 4 l[29] </args>
+      <args> s[5] 5 l[0] </args>
+      <args> s[5] 5 l[1] </args>
+      <args> s[5] 5 l[2] </args>
+      <args> s[5] 5 l[3] </args>
+      <args> s[5] 5 l[4] </args>
+      <args> s[5] 5 l[5] </args>
+      <args> s[5] 5 l[6] </args>
+      <args> s[5] 5 l[7] </args>
+      <args> s[5] 5 l[8] </args>
+      <args> s[5] 5 l[9] </args>
+      <args> s[5] 5 l[10] </args>
+      <args> s[5] 5 l[11] </args>
+      <args> s[5] 5 l[12] </args>
+      <args> s[5] 5 l[13] </args>
+      <args> s[5] 5 l[14] </args>
+      <args> s[5] 5 l[15] </args>
+      <args> s[5] 5 l[16] </args>
+      <args> s[5] 5 l[17] </args>
+      <args> s[5] 5 l[18] </args>
+      <args> s[5] 5 l[19] </args>
+      <args> s[5] 5 l[20] </args>
+      <args> s[5] 5 l[21] </args>
+      <args> s[5] 5 l[22] </args>
+      <args> s[5] 5 l[23] </args>
+      <args> s[5] 5 l[24] </args>
+      <args> s[5] 5 l[25] </args>
+      <args> s[5] 5 l[26] </args>
+      <args> s[5] 5 l[27] </args>
+      <args> s[5] 5 l[28] </args>
+      <args> s[5] 5 l[29] </args>
+      <args> s[6] 6 l[0] </args>
+      <args> s[6] 6 l[1] </args>
+      <args> s[6] 6 l[2] </args>
+      <args> s[6] 6 l[3] </args>
+      <args> s[6] 6 l[4] </args>
+      <args> s[6] 6 l[5] </args>
+      <args> s[6] 6 l[6] </args>
+      <args> s[6] 6 l[7] </args>
+      <args> s[6] 6 l[8] </args>
+      <args> s[6] 6 l[9] </args>
+      <args> s[6] 6 l[10] </args>
+      <args> s[6] 6 l[11] </args>
+      <args> s[6] 6 l[12] </args>
+      <args> s[6] 6 l[13] </args>
+      <args> s[6] 6 l[14] </args>
+      <args> s[6] 6 l[15] </args>
+      <args> s[6] 6 l[16] </args>
+      <args> s[6] 6 l[17] </args>
+      <args> s[6] 6 l[18] </args>
+      <args> s[6] 6 l[19] </args>
+      <args> s[6] 6 l[20] </args>
+      <args> s[6] 6 l[21] </args>
+      <args> s[6] 6 l[22] </args>
+      <args> s[6] 6 l[23] </args>
+      <args> s[6] 6 l[24] </args>
+      <args> s[6] 6 l[25] </args>
+      <args> s[6] 6 l[26] </args>
+      <args> s[6] 6 l[27] </args>
+      <args> s[6] 6 l[28] </args>
+      <args> s[6] 6 l[29] </args>
+      <args> s[7] 7 l[0] </args>
+      <args> s[7] 7 l[1] </args>
+      <args> s[7] 7 l[2] </args>
+      <args> s[7] 7 l[3] </args>
+      <args> s[7] 7 l[4] </args>
+      <args> s[7] 7 l[5] </args>
+      <args> s[7] 7 l[6] </args>
+      <args> s[7] 7 l[7] </args>
+      <args> s[7] 7 l[8] </args>
+      <args> s[7] 7 l[9] </args>
+      <args> s[7] 7 l[10] </args>
+      <args> s[7] 7 l[11] </args>
+      <args> s[7] 7 l[12] </args>
+      <args> s[7] 7 l[13] </args>
+      <args> s[7] 7 l[14] </args>
+      <args> s[7] 7 l[15] </args>
+      <args> s[7] 7 l[16] </args>
+      <args> s[7] 7 l[17] </args>
+      <args> s[7] 7 l[18] </args>
+      <args> s[7] 7 l[19] </args>
+      <args> s[7] 7 l[20] </args>
+      <args> s[7] 7 l[21] </args>
+      <args> s[7] 7 l[22] </args>
+      <args> s[7] 7 l[23] </args>
+      <args> s[7] 7 l[24] </args>
+      <args> s[7] 7 l[25] </args>
+      <args> s[7] 7 l[26] </args>
+      <args> s[7] 7 l[27] </args>
+      <args> s[7] 7 l[28] </args>
+      <args> s[7] 7 l[29] </args>
+      <args> s[8] 8 l[0] </args>
+      <args> s[8] 8 l[1] </args>
+      <args> s[8] 8 l[2] </args>
+      <args> s[8] 8 l[3] </args>
+      <args> s[8] 8 l[4] </args>
+      <args> s[8] 8 l[5] </args>
+      <args> s[8] 8 l[6] </args>
+      <args> s[8] 8 l[7] </args>
+      <args> s[8] 8 l[8] </args>
+      <args> s[8] 8 l[9] </args>
+      <args> s[8] 8 l[10] </args>
+      <args> s[8] 8 l[11] </args>
+      <args> s[8] 8 l[12] </args>
+      <args> s[8] 8 l[13] </args>
+      <args> s[8] 8 l[14] </args>
+      <args> s[8] 8 l[15] </args>
+      <args> s[8] 8 l[16] </args>
+      <args> s[8] 8 l[17] </args>
+      <args> s[8] 8 l[18] </args>
+      <args> s[8] 8 l[19] </args>
+      <args> s[8] 8 l[20] </args>
+      <args> s[8] 8 l[21] </args>
+      <args> s[8] 8 l[22] </args>
+      <args> s[8] 8 l[23] </args>
+      <args> s[8] 8 l[24] </args>
+      <args> s[8] 8 l[25] </args>
+      <args> s[8] 8 l[26] </args>
+      <args> s[8] 8 l[27] </args>
+      <args> s[8] 8 l[28] </args>
+      <args> s[8] 8 l[29] </args>
+      <args> s[9] 9 l[0] </args>
+      <args> s[9] 9 l[1] </args>
+      <args> s[9] 9 l[2] </args>
+      <args> s[9] 9 l[3] </args>
+      <args> s[9] 9 l[4] </args>
+      <args> s[9] 9 l[5] </args>
+      <args> s[9] 9 l[6] </args>
+      <args> s[9] 9 l[7] </args>
+      <args> s[9] 9 l[8] </args>
+      <args> s[9] 9 l[9] </args>
+      <args> s[9] 9 l[10] </args>
+      <args> s[9] 9 l[11] </args>
+      <args> s[9] 9 l[12] </args>
+      <args> s[9] 9 l[13] </args>
+      <args> s[9] 9 l[14] </args>
+      <args> s[9] 9 l[15] </args>
+      <args> s[9] 9 l[16] </args>
+      <args> s[9] 9 l[17] </args>
+      <args> s[9] 9 l[18] </args>
+      <args> s[9] 9 l[19] </args>
+      <args> s[9] 9 l[20] </args>
+      <args> s[9] 9 l[21] </args>
+      <args> s[9] 9 l[22] </args>
+      <args> s[9] 9 l[23] </args>
+      <args> s[9] 9 l[24] </args>
+      <args> s[9] 9 l[25] </args>
+      <args> s[9] 9 l[26] </args>
+      <args> s[9] 9 l[27] </args>
+      <args> s[9] 9 l[28] </args>
+      <args> s[9] 9 l[29] </args>
+      <args> s[10] 10 l[0] </args>
+      <args> s[10] 10 l[1] </args>
+      <args> s[10] 10 l[2] </args>
+      <args> s[10] 10 l[3] </args>
+      <args> s[10] 10 l[4] </args>
+      <args> s[10] 10 l[5] </args>
+      <args> s[10] 10 l[6] </args>
+      <args> s[10] 10 l[7] </args>
+      <args> s[10] 10 l[8] </args>
+      <args> s[10] 10 l[9] </args>
+      <args> s[10] 10 l[10] </args>
+      <args> s[10] 10 l[11] </args>
+      <args> s[10] 10 l[12] </args>
+      <args> s[10] 10 l[13] </args>
+      <args> s[10] 10 l[14] </args>
+      <args> s[10] 10 l[15] </args>
+      <args> s[10] 10 l[16] </args>
+      <args> s[10] 10 l[17] </args>
+      <args> s[10] 10 l[18] </args>
+      <args> s[10] 10 l[19] </args>
+      <args> s[10] 10 l[20] </args>
+      <args> s[10] 10 l[21] </args>
+      <args> s[10] 10 l[22] </args>
+      <args> s[10] 10 l[23] </args>
+      <args> s[10] 10 l[24] </args>
+      <args> s[10] 10 l[25] </args>
+      <args> s[10] 10 l[26] </args>
+      <args> s[10] 10 l[27] </args>
+      <args> s[10] 10 l[28] </args>
+      <args> s[10] 10 l[29] </args>
+      <args> s[11] 11 l[0] </args>
+      <args> s[11] 11 l[1] </args>
+      <args> s[11] 11 l[2] </args>
+      <args> s[11] 11 l[3] </args>
+      <args> s[11] 11 l[4] </args>
+      <args> s[11] 11 l[5] </args>
+      <args> s[11] 11 l[6] </args>
+      <args> s[11] 11 l[7] </args>
+      <args> s[11] 11 l[8] </args>
+      <args> s[11] 11 l[9] </args>
+      <args> s[11] 11 l[10] </args>
+      <args> s[11] 11 l[11] </args>
+      <args> s[11] 11 l[12] </args>
+      <args> s[11] 11 l[13] </args>
+      <args> s[11] 11 l[14] </args>
+      <args> s[11] 11 l[15] </args>
+      <args> s[11] 11 l[16] </args>
+      <args> s[11] 11 l[17] </args>
+      <args> s[11] 11 l[18] </args>
+      <args> s[11] 11 l[19] </args>
+      <args> s[11] 11 l[20] </args>
+      <args> s[11] 11 l[21] </args>
+      <args> s[11] 11 l[22] </args>
+      <args> s[11] 11 l[23] </args>
+      <args> s[11] 11 l[24] </args>
+      <args> s[11] 11 l[25] </args>
+      <args> s[11] 11 l[26] </args>
+      <args> s[11] 11 l[27] </args>
+      <args> s[11] 11 l[28] </args>
+      <args> s[11] 11 l[29] </args>
+      <args> s[12] 12 l[0] </args>
+      <args> s[12] 12 l[1] </args>
+      <args> s[12] 12 l[2] </args>
+      <args> s[12] 12 l[3] </args>
+      <args> s[12] 12 l[4] </args>
+      <args> s[12] 12 l[5] </args>
+      <args> s[12] 12 l[6] </args>
+      <args> s[12] 12 l[7] </args>
+      <args> s[12] 12 l[8] </args>
+      <args> s[12] 12 l[9] </args>
+      <args> s[12] 12 l[10] </args>
+      <args> s[12] 12 l[11] </args>
+      <args> s[12] 12 l[12] </args>
+      <args> s[12] 12 l[13] </args>
+      <args> s[12] 12 l[14] </args>
+      <args> s[12] 12 l[15] </args>
+      <args> s[12] 12 l[16] </args>
+      <args> s[12] 12 l[17] </args>
+      <args> s[12] 12 l[18] </args>
+      <args> s[12] 12 l[19] </args>
+      <args> s[12] 12 l[20] </args>
+      <args> s[12] 12 l[21] </args>
+      <args> s[12] 12 l[22] </args>
+      <args> s[12] 12 l[23] </args>
+      <args> s[12] 12 l[24] </args>
+      <args> s[12] 12 l[25] </args>
+      <args> s[12] 12 l[26] </args>
+      <args> s[12] 12 l[27] </args>
+      <args> s[12] 12 l[28] </args>
+      <args> s[12] 12 l[29] </args>
+      <args> s[13] 13 l[0] </args>
+      <args> s[13] 13 l[1] </args>
+      <args> s[13] 13 l[2] </args>
+      <args> s[13] 13 l[3] </args>
+      <args> s[13] 13 l[4] </args>
+      <args> s[13] 13 l[5] </args>
+      <args> s[13] 13 l[6] </args>
+      <args> s[13] 13 l[7] </args>
+      <args> s[13] 13 l[8] </args>
+      <args> s[13] 13 l[9] </args>
+      <args> s[13] 13 l[10] </args>
+      <args> s[13] 13 l[11] </args>
+      <args> s[13] 13 l[12] </args>
+      <args> s[13] 13 l[13] </args>
+      <args> s[13] 13 l[14] </args>
+      <args> s[13] 13 l[15] </args>
+      <args> s[13] 13 l[16] </args>
+      <args> s[13] 13 l[17] </args>
+      <args> s[13] 13 l[18] </args>
+      <args> s[13] 13 l[19] </args>
+      <args> s[13] 13 l[20] </args>
+      <args> s[13] 13 l[21] </args>
+      <args> s[13] 13 l[22] </args>
+      <args> s[13] 13 l[23] </args>
+      <args> s[13] 13 l[24] </args>
+      <args> s[13] 13 l[25] </args>
+      <args> s[13] 13 l[26] </args>
+      <args> s[13] 13 l[27] </args>
+      <args> s[13] 13 l[28] </args>
+      <args> s[13] 13 l[29] </args>
+      <args> s[14] 14 l[0] </args>
+      <args> s[14] 14 l[1] </args>
+      <args> s[14] 14 l[2] </args>
+      <args> s[14] 14 l[3] </args>
+      <args> s[14] 14 l[4] </args>
+      <args> s[14] 14 l[5] </args>
+      <args> s[14] 14 l[6] </args>
+      <args> s[14] 14 l[7] </args>
+      <args> s[14] 14 l[8] </args>
+      <args> s[14] 14 l[9] </args>
+      <args> s[14] 14 l[10] </args>
+      <args> s[14] 14 l[11] </args>
+      <args> s[14] 14 l[12] </args>
+      <args> s[14] 14 l[13] </args>
+      <args> s[14] 14 l[14] </args>
+      <args> s[14] 14 l[15] </args>
+      <args> s[14] 14 l[16] </args>
+      <args> s[14] 14 l[17] </args>
+      <args> s[14] 14 l[18] </args>
+      <args> s[14] 14 l[19] </args>
+      <args> s[14] 14 l[20] </args>
+      <args> s[14] 14 l[21] </args>
+      <args> s[14] 14 l[22] </args>
+      <args> s[14] 14 l[23] </args>
+      <args> s[14] 14 l[24] </args>
+      <args> s[14] 14 l[25] </args>
+      <args> s[14] 14 l[26] </args>
+      <args> s[14] 14 l[27] </args>
+      <args> s[14] 14 l[28] </args>
+      <args> s[14] 14 l[29] </args>
+      <args> s[15] 15 l[0] </args>
+      <args> s[15] 15 l[1] </args>
+      <args> s[15] 15 l[2] </args>
+      <args> s[15] 15 l[3] </args>
+      <args> s[15] 15 l[4] </args>
+      <args> s[15] 15 l[5] </args>
+      <args> s[15] 15 l[6] </args>
+      <args> s[15] 15 l[7] </args>
+      <args> s[15] 15 l[8] </args>
+      <args> s[15] 15 l[9] </args>
+      <args> s[15] 15 l[10] </args>
+      <args> s[15] 15 l[11] </args>
+      <args> s[15] 15 l[12] </args>
+      <args> s[15] 15 l[13] </args>
+      <args> s[15] 15 l[14] </args>
+      <args> s[15] 15 l[15] </args>
+      <args> s[15] 15 l[16] </args>
+      <args> s[15] 15 l[17] </args>
+      <args> s[15] 15 l[18] </args>
+      <args> s[15] 15 l[19] </args>
+      <args> s[15] 15 l[20] </args>
+      <args> s[15] 15 l[21] </args>
+      <args> s[15] 15 l[22] </args>
+      <args> s[15] 15 l[23] </args>
+      <args> s[15] 15 l[24] </args>
+      <args> s[15] 15 l[25] </args>
+      <args> s[15] 15 l[26] </args>
+      <args> s[15] 15 l[27] </args>
+      <args> s[15] 15 l[28] </args>
+      <args> s[15] 15 l[29] </args>
+      <args> s[16] 16 l[0] </args>
+      <args> s[16] 16 l[1] </args>
+      <args> s[16] 16 l[2] </args>
+      <args> s[16] 16 l[3] </args>
+      <args> s[16] 16 l[4] </args>
+      <args> s[16] 16 l[5] </args>
+      <args> s[16] 16 l[6] </args>
+      <args> s[16] 16 l[7] </args>
+      <args> s[16] 16 l[8] </args>
+      <args> s[16] 16 l[9] </args>
+      <args> s[16] 16 l[10] </args>
+      <args> s[16] 16 l[11] </args>
+      <args> s[16] 16 l[12] </args>
+      <args> s[16] 16 l[13] </args>
+      <args> s[16] 16 l[14] </args>
+      <args> s[16] 16 l[15] </args>
+      <args> s[16] 16 l[16] </args>
+      <args> s[16] 16 l[17] </args>
+      <args> s[16] 16 l[18] </args>
+      <args> s[16] 16 l[19] </args>
+      <args> s[16] 16 l[20] </args>
+      <args> s[16] 16 l[21] </args>
+      <args> s[16] 16 l[22] </args>
+      <args> s[16] 16 l[23] </args>
+      <args> s[16] 16 l[24] </args>
+      <args> s[16] 16 l[25] </args>
+      <args> s[16] 16 l[26] </args>
+      <args> s[16] 16 l[27] </args>
+      <args> s[16] 16 l[28] </args>
+      <args> s[16] 16 l[29] </args>
+      <args> s[17] 17 l[0] </args>
+      <args> s[17] 17 l[1] </args>
+      <args> s[17] 17 l[2] </args>
+      <args> s[17] 17 l[3] </args>
+      <args> s[17] 17 l[4] </args>
+      <args> s[17] 17 l[5] </args>
+      <args> s[17] 17 l[6] </args>
+      <args> s[17] 17 l[7] </args>
+      <args> s[17] 17 l[8] </args>
+      <args> s[17] 17 l[9] </args>
+      <args> s[17] 17 l[10] </args>
+      <args> s[17] 17 l[11] </args>
+      <args> s[17] 17 l[12] </args>
+      <args> s[17] 17 l[13] </args>
+      <args> s[17] 17 l[14] </args>
+      <args> s[17] 17 l[15] </args>
+      <args> s[17] 17 l[16] </args>
+      <args> s[17] 17 l[17] </args>
+      <args> s[17] 17 l[18] </args>
+      <args> s[17] 17 l[19] </args>
+      <args> s[17] 17 l[20] </args>
+      <args> s[17] 17 l[21] </args>
+      <args> s[17] 17 l[22] </args>
+      <args> s[17] 17 l[23] </args>
+      <args> s[17] 17 l[24] </args>
+      <args> s[17] 17 l[25] </args>
+      <args> s[17] 17 l[26] </args>
+      <args> s[17] 17 l[27] </args>
+      <args> s[17] 17 l[28] </args>
+      <args> s[17] 17 l[29] </args>
+      <args> s[18] 18 l[0] </args>
+      <args> s[18] 18 l[1] </args>
+      <args> s[18] 18 l[2] </args>
+      <args> s[18] 18 l[3] </args>
+      <args> s[18] 18 l[4] </args>
+      <args> s[18] 18 l[5] </args>
+      <args> s[18] 18 l[6] </args>
+      <args> s[18] 18 l[7] </args>
+      <args> s[18] 18 l[8] </args>
+      <args> s[18] 18 l[9] </args>
+      <args> s[18] 18 l[10] </args>
+      <args> s[18] 18 l[11] </args>
+      <args> s[18] 18 l[12] </args>
+      <args> s[18] 18 l[13] </args>
+      <args> s[18] 18 l[14] </args>
+      <args> s[18] 18 l[15] </args>
+      <args> s[18] 18 l[16] </args>
+      <args> s[18] 18 l[17] </args>
+      <args> s[18] 18 l[18] </args>
+      <args> s[18] 18 l[19] </args>
+      <args> s[18] 18 l[20] </args>
+      <args> s[18] 18 l[21] </args>
+      <args> s[18] 18 l[22] </args>
+      <args> s[18] 18 l[23] </args>
+      <args> s[18] 18 l[24] </args>
+      <args> s[18] 18 l[25] </args>
+      <args> s[18] 18 l[26] </args>
+      <args> s[18] 18 l[27] </args>
+      <args> s[18] 18 l[28] </args>
+      <args> s[18] 18 l[29] </args>
+      <args> s[19] 19 l[0] </args>
+      <args> s[19] 19 l[1] </args>
+      <args> s[19] 19 l[2] </args>
+      <args> s[19] 19 l[3] </args>
+      <args> s[19] 19 l[4] </args>
+      <args> s[19] 19 l[5] </args>
+      <args> s[19] 19 l[6] </args>
+      <args> s[19] 19 l[7] </args>
+      <args> s[19] 19 l[8] </args>
+      <args> s[19] 19 l[9] </args>
+      <args> s[19] 19 l[10] </args>
+      <args> s[19] 19 l[11] </args>
+      <args> s[19] 19 l[12] </args>
+      <args> s[19] 19 l[13] </args>
+      <args> s[19] 19 l[14] </args>
+      <args> s[19] 19 l[15] </args>
+      <args> s[19] 19 l[16] </args>
+      <args> s[19] 19 l[17] </args>
+      <args> s[19] 19 l[18] </args>
+      <args> s[19] 19 l[19] </args>
+      <args> s[19] 19 l[20] </args>
+      <args> s[19] 19 l[21] </args>
+      <args> s[19] 19 l[22] </args>
+      <args> s[19] 19 l[23] </args>
+      <args> s[19] 19 l[24] </args>
+      <args> s[19] 19 l[25] </args>
+      <args> s[19] 19 l[26] </args>
+      <args> s[19] 19 l[27] </args>
+      <args> s[19] 19 l[28] </args>
+      <args> s[19] 19 l[29] </args>
+      <args> s[20] 20 l[0] </args>
+      <args> s[20] 20 l[1] </args>
+      <args> s[20] 20 l[2] </args>
+      <args> s[20] 20 l[3] </args>
+      <args> s[20] 20 l[4] </args>
+      <args> s[20] 20 l[5] </args>
+      <args> s[20] 20 l[6] </args>
+      <args> s[20] 20 l[7] </args>
+      <args> s[20] 20 l[8] </args>
+      <args> s[20] 20 l[9] </args>
+      <args> s[20] 20 l[10] </args>
+      <args> s[20] 20 l[11] </args>
+      <args> s[20] 20 l[12] </args>
+      <args> s[20] 20 l[13] </args>
+      <args> s[20] 20 l[14] </args>
+      <args> s[20] 20 l[15] </args>
+      <args> s[20] 20 l[16] </args>
+      <args> s[20] 20 l[17] </args>
+      <args> s[20] 20 l[18] </args>
+      <args> s[20] 20 l[19] </args>
+      <args> s[20] 20 l[20] </args>
+      <args> s[20] 20 l[21] </args>
+      <args> s[20] 20 l[22] </args>
+      <args> s[20] 20 l[23] </args>
+      <args> s[20] 20 l[24] </args>
+      <args> s[20] 20 l[25] </args>
+      <args> s[20] 20 l[26] </args>
+      <args> s[20] 20 l[27] </args>
+      <args> s[20] 20 l[28] </args>
+      <args> s[20] 20 l[29] </args>
+      <args> s[21] 21 l[0] </args>
+      <args> s[21] 21 l[1] </args>
+      <args> s[21] 21 l[2] </args>
+      <args> s[21] 21 l[3] </args>
+      <args> s[21] 21 l[4] </args>
+      <args> s[21] 21 l[5] </args>
+      <args> s[21] 21 l[6] </args>
+      <args> s[21] 21 l[7] </args>
+      <args> s[21] 21 l[8] </args>
+      <args> s[21] 21 l[9] </args>
+      <args> s[21] 21 l[10] </args>
+      <args> s[21] 21 l[11] </args>
+      <args> s[21] 21 l[12] </args>
+      <args> s[21] 21 l[13] </args>
+      <args> s[21] 21 l[14] </args>
+      <args> s[21] 21 l[15] </args>
+      <args> s[21] 21 l[16] </args>
+      <args> s[21] 21 l[17] </args>
+      <args> s[21] 21 l[18] </args>
+      <args> s[21] 21 l[19] </args>
+      <args> s[21] 21 l[20] </args>
+      <args> s[21] 21 l[21] </args>
+      <args> s[21] 21 l[22] </args>
+      <args> s[21] 21 l[23] </args>
+      <args> s[21] 21 l[24] </args>
+      <args> s[21] 21 l[25] </args>
+      <args> s[21] 21 l[26] </args>
+      <args> s[21] 21 l[27] </args>
+      <args> s[21] 21 l[28] </args>
+      <args> s[21] 21 l[29] </args>
+      <args> s[22] 22 l[0] </args>
+      <args> s[22] 22 l[1] </args>
+      <args> s[22] 22 l[2] </args>
+      <args> s[22] 22 l[3] </args>
+      <args> s[22] 22 l[4] </args>
+      <args> s[22] 22 l[5] </args>
+      <args> s[22] 22 l[6] </args>
+      <args> s[22] 22 l[7] </args>
+      <args> s[22] 22 l[8] </args>
+      <args> s[22] 22 l[9] </args>
+      <args> s[22] 22 l[10] </args>
+      <args> s[22] 22 l[11] </args>
+      <args> s[22] 22 l[12] </args>
+      <args> s[22] 22 l[13] </args>
+      <args> s[22] 22 l[14] </args>
+      <args> s[22] 22 l[15] </args>
+      <args> s[22] 22 l[16] </args>
+      <args> s[22] 22 l[17] </args>
+      <args> s[22] 22 l[18] </args>
+      <args> s[22] 22 l[19] </args>
+      <args> s[22] 22 l[20] </args>
+      <args> s[22] 22 l[21] </args>
+      <args> s[22] 22 l[22] </args>
+      <args> s[22] 22 l[23] </args>
+      <args> s[22] 22 l[24] </args>
+      <args> s[22] 22 l[25] </args>
+      <args> s[22] 22 l[26] </args>
+      <args> s[22] 22 l[27] </args>
+      <args> s[22] 22 l[28] </args>
+      <args> s[22] 22 l[29] </args>
+      <args> s[23] 23 l[0] </args>
+      <args> s[23] 23 l[1] </args>
+      <args> s[23] 23 l[2] </args>
+      <args> s[23] 23 l[3] </args>
+      <args> s[23] 23 l[4] </args>
+      <args> s[23] 23 l[5] </args>
+      <args> s[23] 23 l[6] </args>
+      <args> s[23] 23 l[7] </args>
+      <args> s[23] 23 l[8] </args>
+      <args> s[23] 23 l[9] </args>
+      <args> s[23] 23 l[10] </args>
+      <args> s[23] 23 l[11] </args>
+      <args> s[23] 23 l[12] </args>
+      <args> s[23] 23 l[13] </args>
+      <args> s[23] 23 l[14] </args>
+      <args> s[23] 23 l[15] </args>
+      <args> s[23] 23 l[16] </args>
+      <args> s[23] 23 l[17] </args>
+      <args> s[23] 23 l[18] </args>
+      <args> s[23] 23 l[19] </args>
+      <args> s[23] 23 l[20] </args>
+      <args> s[23] 23 l[21] </args>
+      <args> s[23] 23 l[22] </args>
+      <args> s[23] 23 l[23] </args>
+      <args> s[23] 23 l[24] </args>
+      <args> s[23] 23 l[25] </args>
+      <args> s[23] 23 l[26] </args>
+      <args> s[23] 23 l[27] </args>
+      <args> s[23] 23 l[28] </args>
+      <args> s[23] 23 l[29] </args>
+      <args> s[24] 24 l[0] </args>
+      <args> s[24] 24 l[1] </args>
+      <args> s[24] 24 l[2] </args>
+      <args> s[24] 24 l[3] </args>
+      <args> s[24] 24 l[4] </args>
+      <args> s[24] 24 l[5] </args>
+      <args> s[24] 24 l[6] </args>
+      <args> s[24] 24 l[7] </args>
+      <args> s[24] 24 l[8] </args>
+      <args> s[24] 24 l[9] </args>
+      <args> s[24] 24 l[10] </args>
+      <args> s[24] 24 l[11] </args>
+      <args> s[24] 24 l[12] </args>
+      <args> s[24] 24 l[13] </args>
+      <args> s[24] 24 l[14] </args>
+      <args> s[24] 24 l[15] </args>
+      <args> s[24] 24 l[16] </args>
+      <args> s[24] 24 l[17] </args>
+      <args> s[24] 24 l[18] </args>
+      <args> s[24] 24 l[19] </args>
+      <args> s[24] 24 l[20] </args>
+      <args> s[24] 24 l[21] </args>
+      <args> s[24] 24 l[22] </args>
+      <args> s[24] 24 l[23] </args>
+      <args> s[24] 24 l[24] </args>
+      <args> s[24] 24 l[25] </args>
+      <args> s[24] 24 l[26] </args>
+      <args> s[24] 24 l[27] </args>
+      <args> s[24] 24 l[28] </args>
+      <args> s[24] 24 l[29] </args>
+      <args> s[25] 25 l[0] </args>
+      <args> s[25] 25 l[1] </args>
+      <args> s[25] 25 l[2] </args>
+      <args> s[25] 25 l[3] </args>
+      <args> s[25] 25 l[4] </args>
+      <args> s[25] 25 l[5] </args>
+      <args> s[25] 25 l[6] </args>
+      <args> s[25] 25 l[7] </args>
+      <args> s[25] 25 l[8] </args>
+      <args> s[25] 25 l[9] </args>
+      <args> s[25] 25 l[10] </args>
+      <args> s[25] 25 l[11] </args>
+      <args> s[25] 25 l[12] </args>
+      <args> s[25] 25 l[13] </args>
+      <args> s[25] 25 l[14] </args>
+      <args> s[25] 25 l[15] </args>
+      <args> s[25] 25 l[16] </args>
+      <args> s[25] 25 l[17] </args>
+      <args> s[25] 25 l[18] </args>
+      <args> s[25] 25 l[19] </args>
+      <args> s[25] 25 l[20] </args>
+      <args> s[25] 25 l[21] </args>
+      <args> s[25] 25 l[22] </args>
+      <args> s[25] 25 l[23] </args>
+      <args> s[25] 25 l[24] </args>
+      <args> s[25] 25 l[25] </args>
+      <args> s[25] 25 l[26] </args>
+      <args> s[25] 25 l[27] </args>
+      <args> s[25] 25 l[28] </args>
+      <args> s[25] 25 l[29] </args>
+      <args> s[26] 26 l[0] </args>
+      <args> s[26] 26 l[1] </args>
+      <args> s[26] 26 l[2] </args>
+      <args> s[26] 26 l[3] </args>
+      <args> s[26] 26 l[4] </args>
+      <args> s[26] 26 l[5] </args>
+      <args> s[26] 26 l[6] </args>
+      <args> s[26] 26 l[7] </args>
+      <args> s[26] 26 l[8] </args>
+      <args> s[26] 26 l[9] </args>
+      <args> s[26] 26 l[10] </args>
+      <args> s[26] 26 l[11] </args>
+      <args> s[26] 26 l[12] </args>
+      <args> s[26] 26 l[13] </args>
+      <args> s[26] 26 l[14] </args>
+      <args> s[26] 26 l[15] </args>
+      <args> s[26] 26 l[16] </args>
+      <args> s[26] 26 l[17] </args>
+      <args> s[26] 26 l[18] </args>
+      <args> s[26] 26 l[19] </args>
+      <args> s[26] 26 l[20] </args>
+      <args> s[26] 26 l[21] </args>
+      <args> s[26] 26 l[22] </args>
+      <args> s[26] 26 l[23] </args>
+      <args> s[26] 26 l[24] </args>
+      <args> s[26] 26 l[25] </args>
+      <args> s[26] 26 l[26] </args>
+      <args> s[26] 26 l[27] </args>
+      <args> s[26] 26 l[28] </args>
+      <args> s[26] 26 l[29] </args>
+      <args> s[27] 27 l[0] </args>
+      <args> s[27] 27 l[1] </args>
+      <args> s[27] 27 l[2] </args>
+      <args> s[27] 27 l[3] </args>
+      <args> s[27] 27 l[4] </args>
+      <args> s[27] 27 l[5] </args>
+      <args> s[27] 27 l[6] </args>
+      <args> s[27] 27 l[7] </args>
+      <args> s[27] 27 l[8] </args>
+      <args> s[27] 27 l[9] </args>
+      <args> s[27] 27 l[10] </args>
+      <args> s[27] 27 l[11] </args>
+      <args> s[27] 27 l[12] </args>
+      <args> s[27] 27 l[13] </args>
+      <args> s[27] 27 l[14] </args>
+      <args> s[27] 27 l[15] </args>
+      <args> s[27] 27 l[16] </args>
+      <args> s[27] 27 l[17] </args>
+      <args> s[27] 27 l[18] </args>
+      <args> s[27] 27 l[19] </args>
+      <args> s[27] 27 l[20] </args>
+      <args> s[27] 27 l[21] </args>
+      <args> s[27] 27 l[22] </args>
+      <args> s[27] 27 l[23] </args>
+      <args> s[27] 27 l[24] </args>
+      <args> s[27] 27 l[25] </args>
+      <args> s[27] 27 l[26] </args>
+      <args> s[27] 27 l[27] </args>
+      <args> s[27] 27 l[28] </args>
+      <args> s[27] 27 l[29] </args>
+      <args> s[28] 28 l[0] </args>
+      <args> s[28] 28 l[1] </args>
+      <args> s[28] 28 l[2] </args>
+      <args> s[28] 28 l[3] </args>
+      <args> s[28] 28 l[4] </args>
+      <args> s[28] 28 l[5] </args>
+      <args> s[28] 28 l[6] </args>
+      <args> s[28] 28 l[7] </args>
+      <args> s[28] 28 l[8] </args>
+      <args> s[28] 28 l[9] </args>
+      <args> s[28] 28 l[10] </args>
+      <args> s[28] 28 l[11] </args>
+      <args> s[28] 28 l[12] </args>
+      <args> s[28] 28 l[13] </args>
+      <args> s[28] 28 l[14] </args>
+      <args> s[28] 28 l[15] </args>
+      <args> s[28] 28 l[16] </args>
+      <args> s[28] 28 l[17] </args>
+      <args> s[28] 28 l[18] </args>
+      <args> s[28] 28 l[19] </args>
+      <args> s[28] 28 l[20] </args>
+      <args> s[28] 28 l[21] </args>
+      <args> s[28] 28 l[22] </args>
+      <args> s[28] 28 l[23] </args>
+      <args> s[28] 28 l[24] </args>
+      <args> s[28] 28 l[25] </args>
+      <args> s[28] 28 l[26] </args>
+      <args> s[28] 28 l[27] </args>
+      <args> s[28] 28 l[28] </args>
+      <args> s[28] 28 l[29] </args>
+      <args> s[29] 29 l[0] </args>
+      <args> s[29] 29 l[1] </args>
+      <args> s[29] 29 l[2] </args>
+      <args> s[29] 29 l[3] </args>
+      <args> s[29] 29 l[4] </args>
+      <args> s[29] 29 l[5] </args>
+      <args> s[29] 29 l[6] </args>
+      <args> s[29] 29 l[7] </args>
+      <args> s[29] 29 l[8] </args>
+      <args> s[29] 29 l[9] </args>
+      <args> s[29] 29 l[10] </args>
+      <args> s[29] 29 l[11] </args>
+      <args> s[29] 29 l[12] </args>
+      <args> s[29] 29 l[13] </args>
+      <args> s[29] 29 l[14] </args>
+      <args> s[29] 29 l[15] </args>
+      <args> s[29] 29 l[16] </args>
+      <args> s[29] 29 l[17] </args>
+      <args> s[29] 29 l[18] </args>
+      <args> s[29] 29 l[19] </args>
+      <args> s[29] 29 l[20] </args>
+      <args> s[29] 29 l[21] </args>
+      <args> s[29] 29 l[22] </args>
+      <args> s[29] 29 l[23] </args>
+      <args> s[29] 29 l[24] </args>
+      <args> s[29] 29 l[25] </args>
+      <args> s[29] 29 l[26] </args>
+      <args> s[29] 29 l[27] </args>
+      <args> s[29] 29 l[28] </args>
+      <args> s[29] 29 l[29] </args>
+      <args> s[30] 30 l[0] </args>
+      <args> s[30] 30 l[1] </args>
+      <args> s[30] 30 l[2] </args>
+      <args> s[30] 30 l[3] </args>
+      <args> s[30] 30 l[4] </args>
+      <args> s[30] 30 l[5] </args>
+      <args> s[30] 30 l[6] </args>
+      <args> s[30] 30 l[7] </args>
+      <args> s[30] 30 l[8] </args>
+      <args> s[30] 30 l[9] </args>
+      <args> s[30] 30 l[10] </args>
+      <args> s[30] 30 l[11] </args>
+      <args> s[30] 30 l[12] </args>
+      <args> s[30] 30 l[13] </args>
+      <args> s[30] 30 l[14] </args>
+      <args> s[30] 30 l[15] </args>
+      <args> s[30] 30 l[16] </args>
+      <args> s[30] 30 l[17] </args>
+      <args> s[30] 30 l[18] </args>
+      <args> s[30] 30 l[19] </args>
+      <args> s[30] 30 l[20] </args>
+      <args> s[30] 30 l[21] </args>
+      <args> s[30] 30 l[22] </args>
+      <args> s[30] 30 l[23] </args>
+      <args> s[30] 30 l[24] </args>
+      <args> s[30] 30 l[25] </args>
+      <args> s[30] 30 l[26] </args>
+      <args> s[30] 30 l[27] </args>
+      <args> s[30] 30 l[28] </args>
+      <args> s[30] 30 l[29] </args>
+      <args> s[31] 31 l[0] </args>
+      <args> s[31] 31 l[1] </args>
+      <args> s[31] 31 l[2] </args>
+      <args> s[31] 31 l[3] </args>
+      <args> s[31] 31 l[4] </args>
+      <args> s[31] 31 l[5] </args>
+      <args> s[31] 31 l[6] </args>
+      <args> s[31] 31 l[7] </args>
+      <args> s[31] 31 l[8] </args>
+      <args> s[31] 31 l[9] </args>
+      <args> s[31] 31 l[10] </args>
+      <args> s[31] 31 l[11] </args>
+      <args> s[31] 31 l[12] </args>
+      <args> s[31] 31 l[13] </args>
+      <args> s[31] 31 l[14] </args>
+      <args> s[31] 31 l[15] </args>
+      <args> s[31] 31 l[16] </args>
+      <args> s[31] 31 l[17] </args>
+      <args> s[31] 31 l[18] </args>
+      <args> s[31] 31 l[19] </args>
+      <args> s[31] 31 l[20] </args>
+      <args> s[31] 31 l[21] </args>
+      <args> s[31] 31 l[22] </args>
+      <args> s[31] 31 l[23] </args>
+      <args> s[31] 31 l[24] </args>
+      <args> s[31] 31 l[25] </args>
+      <args> s[31] 31 l[26] </args>
+      <args> s[31] 31 l[27] </args>
+      <args> s[31] 31 l[28] </args>
+      <args> s[31] 31 l[29] </args>
+      <args> s[32] 32 l[0] </args>
+      <args> s[32] 32 l[1] </args>
+      <args> s[32] 32 l[2] </args>
+      <args> s[32] 32 l[3] </args>
+      <args> s[32] 32 l[4] </args>
+      <args> s[32] 32 l[5] </args>
+      <args> s[32] 32 l[6] </args>
+      <args> s[32] 32 l[7] </args>
+      <args> s[32] 32 l[8] </args>
+      <args> s[32] 32 l[9] </args>
+      <args> s[32] 32 l[10] </args>
+      <args> s[32] 32 l[11] </args>
+      <args> s[32] 32 l[12] </args>
+      <args> s[32] 32 l[13] </args>
+      <args> s[32] 32 l[14] </args>
+      <args> s[32] 32 l[15] </args>
+      <args> s[32] 32 l[16] </args>
+      <args> s[32] 32 l[17] </args>
+      <args> s[32] 32 l[18] </args>
+      <args> s[32] 32 l[19] </args>
+      <args> s[32] 32 l[20] </args>
+      <args> s[32] 32 l[21] </args>
+      <args> s[32] 32 l[22] </args>
+      <args> s[32] 32 l[23] </args>
+      <args> s[32] 32 l[24] </args>
+      <args> s[32] 32 l[25] </args>
+      <args> s[32] 32 l[26] </args>
+      <args> s[32] 32 l[27] </args>
+      <args> s[32] 32 l[28] </args>
+      <args> s[32] 32 l[29] </args>
+      <args> s[33] 33 l[0] </args>
+      <args> s[33] 33 l[1] </args>
+      <args> s[33] 33 l[2] </args>
+      <args> s[33] 33 l[3] </args>
+      <args> s[33] 33 l[4] </args>
+      <args> s[33] 33 l[5] </args>
+      <args> s[33] 33 l[6] </args>
+      <args> s[33] 33 l[7] </args>
+      <args> s[33] 33 l[8] </args>
+      <args> s[33] 33 l[9] </args>
+      <args> s[33] 33 l[10] </args>
+      <args> s[33] 33 l[11] </args>
+      <args> s[33] 33 l[12] </args>
+      <args> s[33] 33 l[13] </args>
+      <args> s[33] 33 l[14] </args>
+      <args> s[33] 33 l[15] </args>
+      <args> s[33] 33 l[16] </args>
+      <args> s[33] 33 l[17] </args>
+      <args> s[33] 33 l[18] </args>
+      <args> s[33] 33 l[19] </args>
+      <args> s[33] 33 l[20] </args>
+      <args> s[33] 33 l[21] </args>
+      <args> s[33] 33 l[22] </args>
+      <args> s[33] 33 l[23] </args>
+      <args> s[33] 33 l[24] </args>
+      <args> s[33] 33 l[25] </args>
+      <args> s[33] 33 l[26] </args>
+      <args> s[33] 33 l[27] </args>
+      <args> s[33] 33 l[28] </args>
+      <args> s[33] 33 l[29] </args>
+      <args> s[34] 34 l[0] </args>
+      <args> s[34] 34 l[1] </args>
+      <args> s[34] 34 l[2] </args>
+      <args> s[34] 34 l[3] </args>
+      <args> s[34] 34 l[4] </args>
+      <args> s[34] 34 l[5] </args>
+      <args> s[34] 34 l[6] </args>
+      <args> s[34] 34 l[7] </args>
+      <args> s[34] 34 l[8] </args>
+      <args> s[34] 34 l[9] </args>
+      <args> s[34] 34 l[10] </args>
+      <args> s[34] 34 l[11] </args>
+      <args> s[34] 34 l[12] </args>
+      <args> s[34] 34 l[13] </args>
+      <args> s[34] 34 l[14] </args>
+      <args> s[34] 34 l[15] </args>
+      <args> s[34] 34 l[16] </args>
+      <args> s[34] 34 l[17] </args>
+      <args> s[34] 34 l[18] </args>
+      <args> s[34] 34 l[19] </args>
+      <args> s[34] 34 l[20] </args>
+      <args> s[34] 34 l[21] </args>
+      <args> s[34] 34 l[22] </args>
+      <args> s[34] 34 l[23] </args>
+      <args> s[34] 34 l[24] </args>
+      <args> s[34] 34 l[25] </args>
+      <args> s[34] 34 l[26] </args>
+      <args> s[34] 34 l[27] </args>
+      <args> s[34] 34 l[28] </args>
+      <args> s[34] 34 l[29] </args>
+    </group>
+    <circuit> s[] </circuit>
+    <intension note="last city must be visited (we start here)"> ne(s[34],34) </intension>
+  </constraints>
+  <objectives>
+    <minimize type="sum"> d[] c[] </minimize>
+  </objectives>
+</instance>

@@ -1,0 +1,31 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the value assigned to the ith letter (if present) of the alphabet" size="[26]"> 0..9 </array>
+    <array id="c" note="c[i] is the ith carry" size="[5]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all letters must be assigned different values"> x[3..4] x[12..14] x[17..18] x[24] </allDifferent>
+    <group note="the most significant letter of each word cannot be equal to 0">
+      <intension> ne(%0,0) </intension>
+      <args> x[18] </args>
+      <args> x[12] </args>
+      <args> x[12] </args>
+    </group>
+    <intension note="managing the least significant carry"> eq(c[0],0) </intension>
+    <intension note="managing the most significant carry"> eq(c[4],x[12]) </intension>
+    <group note="managing remainders">
+      <intension> eq(mod(add(%0,%1,%2),10),%3) </intension>
+      <args> c[0] x[3..4] x[24] </args>
+      <args> c[1] x[13] x[17] x[4] </args>
+      <args> c[2] x[4] x[14] x[13] </args>
+      <args> c[3] x[18] x[12] x[14] </args>
+    </group>
+    <group note="managing quotients">
+      <intension> eq(div(add(%0,%1,%2),10),%3) </intension>
+      <args> c[0] x[3] x[4] c[1] </args>
+      <args> c[1] x[13] x[17] c[2] </args>
+      <args> c[2] x[4] x[14] c[3] </args>
+      <args> c[3] x[18] x[12] c[4] </args>
+    </group>
+  </constraints>
+</instance>

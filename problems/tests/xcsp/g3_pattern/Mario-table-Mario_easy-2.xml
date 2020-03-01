@@ -1,0 +1,98 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[i] is the house succeeding to the ith house (itself if not part of the route)" size="[15]"> 0..14 </array>
+    <array id="f" note="f[i] is the fuel consumed at each step (from house i to its successor)" size="[15]">
+      <domain for="f[0]"> 0 13 18 86 217 221 274 322 670 677 808 921 943 969 </domain>
+      <domain for="f[1]"> 0 83 242 246 335 451 528 529 679 702 712 719 813 906 </domain>
+      <domain for="f[2]"> 0 5 72 73 110 127 161 274 430 523 664 686 702 799 835 </domain>
+      <domain for="f[3]"> 0 31 71 80 83 127 248 467 668 683 717 753 808 826 916 </domain>
+      <domain for="f[4]"> 0 13 101 110 280 294 414 551 579 593 706 717 813 951 </domain>
+      <domain for="f[5]"> 0 12 72 80 138 146 222 225 262 571 677 679 907 938 951 </domain>
+      <domain for="f[6]"> 0 27 31 189 226 262 287 454 501 558 593 670 835 906 977 </domain>
+      <domain for="f[7]"> 0 5 12 38 71 118 189 221 226 246 314 483 504 579 921 </domain>
+      <domain for="f[8]"> 0 138 161 167 267 335 393 420 504 558 683 706 721 943 949 </domain>
+      <domain for="f[9]"> 0 27 221 222 430 528 529 579 589 668 747 757 949 969 980 </domain>
+      <domain for="f[10]"> 0 13 101 146 248 287 334 393 483 492 633 686 719 757 859 </domain>
+      <domain for="f[11]"> 0 18 33 226 375 528 551 571 633 664 721 747 826 977 981 </domain>
+      <domain for="f[12]"> 0 33 38 217 226 267 280 334 451 491 799 824 907 916 980 </domain>
+      <domain for="f[13]"> 0 86 143 167 225 242 314 414 454 467 492 523 589 824 981 </domain>
+      <domain for="f[14]"> 0 73 118 143 294 322 375 420 491 501 528 712 753 859 938 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <block note="fuel consumption at each step">
+      <extension>
+        <list> s[0] f[0] </list>
+        <supports> (0,0)(1,221)(2,274)(3,808)(4,13)(5,677)(6,670)(7,921)(8,943)(9,969)(10,13)(11,18)(12,217)(13,86)(14,322) </supports>
+      </extension>
+      <extension>
+        <list> s[1] f[1] </list>
+        <supports> (0,0)(1,0)(2,702)(3,83)(4,813)(5,679)(6,906)(7,246)(8,335)(9,529)(10,719)(11,528)(12,451)(13,242)(14,712) </supports>
+      </extension>
+      <extension>
+        <list> s[2] f[2] </list>
+        <supports> (0,274)(1,702)(2,0)(3,127)(4,110)(5,72)(6,835)(7,5)(8,161)(9,430)(10,686)(11,664)(12,799)(13,523)(14,73) </supports>
+      </extension>
+      <extension>
+        <list> s[3] f[3] </list>
+        <supports> (0,808)(1,83)(2,127)(3,0)(4,717)(5,80)(6,31)(7,71)(8,683)(9,668)(10,248)(11,826)(12,916)(13,467)(14,753) </supports>
+      </extension>
+      <extension>
+        <list> s[4] f[4] </list>
+        <supports> (0,13)(1,813)(2,110)(3,717)(4,0)(5,951)(6,593)(7,579)(8,706)(9,579)(10,101)(11,551)(12,280)(13,414)(14,294) </supports>
+      </extension>
+      <extension>
+        <list> s[5] f[5] </list>
+        <supports> (0,677)(1,679)(2,72)(3,80)(4,951)(5,0)(6,262)(7,12)(8,138)(9,222)(10,146)(11,571)(12,907)(13,225)(14,938) </supports>
+      </extension>
+      <extension>
+        <list> s[6] f[6] </list>
+        <supports> (0,670)(1,906)(2,835)(3,31)(4,593)(5,262)(6,0)(7,189)(8,558)(9,27)(10,287)(11,977)(12,226)(13,454)(14,501) </supports>
+      </extension>
+      <extension>
+        <list> s[7] f[7] </list>
+        <supports> (0,921)(1,246)(2,5)(3,71)(4,579)(5,12)(6,189)(7,0)(8,504)(9,221)(10,483)(11,226)(12,38)(13,314)(14,118) </supports>
+      </extension>
+      <extension>
+        <list> s[8] f[8] </list>
+        <supports> (0,943)(1,335)(2,161)(3,683)(4,706)(5,138)(6,558)(7,504)(8,0)(9,949)(10,393)(11,721)(12,267)(13,167)(14,420) </supports>
+      </extension>
+      <extension>
+        <list> s[9] f[9] </list>
+        <supports> (0,969)(1,529)(2,430)(3,668)(4,579)(5,222)(6,27)(7,221)(8,949)(9,0)(10,757)(11,747)(12,980)(13,589)(14,528) </supports>
+      </extension>
+      <extension>
+        <list> s[10] f[10] </list>
+        <supports> (0,13)(1,719)(2,686)(3,248)(4,101)(5,146)(6,287)(7,483)(8,393)(9,757)(10,0)(11,633)(12,334)(13,492)(14,859) </supports>
+      </extension>
+      <extension>
+        <list> s[11] f[11] </list>
+        <supports> (0,18)(1,528)(2,664)(3,826)(4,551)(5,571)(6,977)(7,226)(8,721)(9,747)(10,633)(11,0)(12,33)(13,981)(14,375) </supports>
+      </extension>
+      <extension>
+        <list> s[12] f[12] </list>
+        <supports> (0,217)(1,451)(2,799)(3,916)(4,280)(5,907)(6,226)(7,38)(8,267)(9,980)(10,334)(11,33)(12,0)(13,824)(14,491) </supports>
+      </extension>
+      <extension>
+        <list> s[13] f[13] </list>
+        <supports> (0,86)(1,242)(2,523)(3,467)(4,414)(5,225)(6,454)(7,314)(8,167)(9,589)(10,492)(11,981)(12,824)(13,0)(14,143) </supports>
+      </extension>
+      <extension>
+        <list> s[14] f[14] </list>
+        <supports> (0,322)(1,712)(2,73)(3,753)(4,294)(5,938)(6,501)(7,118)(8,420)(9,528)(10,859)(11,375)(12,491)(13,143)(14,0) </supports>
+      </extension>
+    </block>
+    <sum note="we cannot consume more than the available fuel">
+      <list> f[] </list>
+      <condition> (le,2000) </condition>
+    </sum>
+    <circuit note="Mario must make a tour (not necessarily complete)"> s[] </circuit>
+    <intension note="Mario's house succeeds to Luigi's house"> eq(s[1],0) </intension>
+  </constraints>
+  <objectives>
+    <maximize note="maximizing collected gold" type="sum">
+      <list> ne(s[2],2) ne(s[3],3) ne(s[4],4) ne(s[5],5) ne(s[6],6) ne(s[7],7) ne(s[8],8) ne(s[9],9) ne(s[10],10) ne(s[11],11) ne(s[12],12) ne(s[13],13) ne(s[14],14) </list>
+      <coeffs> 40 67 89 50 6 19 47 68 94 86 34 14 14 </coeffs>
+    </maximize>
+  </objectives>
+</instance>

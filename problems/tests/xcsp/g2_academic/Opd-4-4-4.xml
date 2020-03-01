@@ -1,0 +1,49 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <var id="z" note="objective variable"> 4 </var>
+    <array id="x" note="x[i][j] is the value at row i and column j" size="[4][4]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <group>
+      <sum>
+        <list> %... </list>
+        <condition> (eq,4) </condition>
+      </sum>
+      <args> x[0][] </args>
+      <args> x[1][] </args>
+      <args> x[2][] </args>
+      <args> x[3][] </args>
+    </group>
+    <group>
+      <sum>
+        <list> x[0][] </list>
+        <coeffs> %... </coeffs>
+        <condition> (le,z) </condition>
+      </sum>
+      <args> x[1][] </args>
+      <args> x[2][] </args>
+      <args> x[3][] </args>
+    </group>
+    <group>
+      <sum>
+        <list> x[1][] </list>
+        <coeffs> %... </coeffs>
+        <condition> (le,z) </condition>
+      </sum>
+      <args> x[2][] </args>
+      <args> x[3][] </args>
+    </group>
+    <sum>
+      <list> x[2][] </list>
+      <coeffs> x[3][] </coeffs>
+      <condition> (le,z) </condition>
+    </sum>
+    <lex class="symmetry-breaking">
+      <matrix> x[][] </matrix>
+      <operator> le </operator>
+    </lex>
+  </constraints>
+  <objectives>
+    <minimize> z </minimize>
+  </objectives>
+</instance>

@@ -1,0 +1,153 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the x-coordinate of the ith rectangle" size="[16]"> 0..19 </array>
+    <array id="y" note="y[i] is the y-coordinate of the ith rectangle" size="[16]"> 0..19 </array>
+    <array id="w" note="w[i] is the width of the ith rectangle" size="[16]">
+      <domain for="w[0]"> 2 12 </domain>
+      <domain for="w[1]"> 7 12 </domain>
+      <domain for="w[2]"> 6 8 </domain>
+      <domain for="w[3]"> 3 6 </domain>
+      <domain for="w[4]"> 3 5 </domain>
+      <domain for="w[5]"> 5 </domain>
+      <domain for="w[6]"> 3 12 </domain>
+      <domain for="w[7]"> 3 7 </domain>
+      <domain for="w[8]"> 5 7 </domain>
+      <domain for="w[9]"> 2 6 </domain>
+      <domain for="w[10]"> 2 3 </domain>
+      <domain for="w[11]"> 2 4 </domain>
+      <domain for="w[12]"> 3 4 </domain>
+      <domain for="w[13]"> 4 </domain>
+      <domain for="w[14]"> 2 9 </domain>
+      <domain for="w[15]"> 2 11 </domain>
+    </array>
+    <array id="h" note="h[i] is the height of the ith rectangle" size="[16]">
+      <domain for="h[0]"> 2 12 </domain>
+      <domain for="h[1]"> 7 12 </domain>
+      <domain for="h[2]"> 6 8 </domain>
+      <domain for="h[3]"> 3 6 </domain>
+      <domain for="h[4]"> 3 5 </domain>
+      <domain for="h[5]"> 5 </domain>
+      <domain for="h[6]"> 3 12 </domain>
+      <domain for="h[7]"> 3 7 </domain>
+      <domain for="h[8]"> 5 7 </domain>
+      <domain for="h[9]"> 2 6 </domain>
+      <domain for="h[10]"> 2 3 </domain>
+      <domain for="h[11]"> 2 4 </domain>
+      <domain for="h[12]"> 3 4 </domain>
+      <domain for="h[13]"> 4 </domain>
+      <domain for="h[14]"> 2 9 </domain>
+      <domain for="h[15]"> 2 11 </domain>
+    </array>
+    <array id="r" note="r[i] is 1 iff the ith rectangle is rotated by 90 degrees" size="[16]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <group note="horizontal control">
+      <intension> le(add(%0,%1),20) </intension>
+      <args> x[0] w[0] </args>
+      <args> x[1] w[1] </args>
+      <args> x[2] w[2] </args>
+      <args> x[3] w[3] </args>
+      <args> x[4] w[4] </args>
+      <args> x[5] w[5] </args>
+      <args> x[6] w[6] </args>
+      <args> x[7] w[7] </args>
+      <args> x[8] w[8] </args>
+      <args> x[9] w[9] </args>
+      <args> x[10] w[10] </args>
+      <args> x[11] w[11] </args>
+      <args> x[12] w[12] </args>
+      <args> x[13] w[13] </args>
+      <args> x[14] w[14] </args>
+      <args> x[15] w[15] </args>
+    </group>
+    <group note="vertical control">
+      <intension> le(add(%0,%1),20) </intension>
+      <args> y[0] h[0] </args>
+      <args> y[1] h[1] </args>
+      <args> y[2] h[2] </args>
+      <args> y[3] h[3] </args>
+      <args> y[4] h[4] </args>
+      <args> y[5] h[5] </args>
+      <args> y[6] h[6] </args>
+      <args> y[7] h[7] </args>
+      <args> y[8] h[8] </args>
+      <args> y[9] h[9] </args>
+      <args> y[10] h[10] </args>
+      <args> y[11] h[11] </args>
+      <args> y[12] h[12] </args>
+      <args> y[13] h[13] </args>
+      <args> y[14] h[14] </args>
+      <args> y[15] h[15] </args>
+    </group>
+    <block note="managing rotation">
+      <extension>
+        <list> r[0] w[0] h[0] </list>
+        <supports> (0,2,12)(1,12,2) </supports>
+      </extension>
+      <extension>
+        <list> r[1] w[1] h[1] </list>
+        <supports> (0,7,12)(1,12,7) </supports>
+      </extension>
+      <extension>
+        <list> r[2] w[2] h[2] </list>
+        <supports> (0,8,6)(1,6,8) </supports>
+      </extension>
+      <extension>
+        <list> r[3] w[3] h[3] </list>
+        <supports> (0,3,6)(1,6,3) </supports>
+      </extension>
+      <extension>
+        <list> r[4] w[4] h[4] </list>
+        <supports> (0,3,5)(1,5,3) </supports>
+      </extension>
+      <extension>
+        <list> r[5] w[5] h[5] </list>
+        <supports> (0,5,5)(1,5,5) </supports>
+      </extension>
+      <extension>
+        <list> r[6] w[6] h[6] </list>
+        <supports> (0,3,12)(1,12,3) </supports>
+      </extension>
+      <extension>
+        <list> r[7] w[7] h[7] </list>
+        <supports> (0,3,7)(1,7,3) </supports>
+      </extension>
+      <extension>
+        <list> r[8] w[8] h[8] </list>
+        <supports> (0,5,7)(1,7,5) </supports>
+      </extension>
+      <extension>
+        <list> r[9] w[9] h[9] </list>
+        <supports> (0,2,6)(1,6,2) </supports>
+      </extension>
+      <extension>
+        <list> r[10] w[10] h[10] </list>
+        <supports> (0,3,2)(1,2,3) </supports>
+      </extension>
+      <extension>
+        <list> r[11] w[11] h[11] </list>
+        <supports> (0,4,2)(1,2,4) </supports>
+      </extension>
+      <extension>
+        <list> r[12] w[12] h[12] </list>
+        <supports> (0,3,4)(1,4,3) </supports>
+      </extension>
+      <extension>
+        <list> r[13] w[13] h[13] </list>
+        <supports> (0,4,4)(1,4,4) </supports>
+      </extension>
+      <extension>
+        <list> r[14] w[14] h[14] </list>
+        <supports> (0,9,2)(1,2,9) </supports>
+      </extension>
+      <extension>
+        <list> r[15] w[15] h[15] </list>
+        <supports> (0,11,2)(1,2,11) </supports>
+      </extension>
+    </block>
+    <noOverlap note="no overlapping between rectangles">
+      <origins> (x[0],y[0])(x[1],y[1])(x[2],y[2])(x[3],y[3])(x[4],y[4])(x[5],y[5])(x[6],y[6])(x[7],y[7])(x[8],y[8])(x[9],y[9])(x[10],y[10])(x[11],y[11])(x[12],y[12])(x[13],y[13])(x[14],y[14])(x[15],y[15]) </origins>
+      <lengths> (w[0],h[0])(w[1],h[1])(w[2],h[2])(w[3],h[3])(w[4],h[4])(w[5],h[5])(w[6],h[6])(w[7],h[7])(w[8],h[8])(w[9],h[9])(w[10],h[10])(w[11],h[11])(w[12],h[12])(w[13],h[13])(w[14],h[14])(w[15],h[15]) </lengths>
+    </noOverlap>
+  </constraints>
+</instance>

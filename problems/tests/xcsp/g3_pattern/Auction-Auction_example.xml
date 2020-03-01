@@ -1,0 +1,24 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="b" note="b[i] is 1 iff the ith bid is selected" size="[5]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <group note="avoiding intersection of bids">
+      <count>
+        <list> %... </list>
+        <values> 1 </values>
+        <condition> (le,1) </condition>
+      </count>
+      <args> b[0..1] b[4] </args>
+      <args> b[0] b[2..3] </args>
+      <args> b[1] b[3] </args>
+      <args> b[2] b[3] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <maximize note="maximizing summed value of selected bids" type="sum">
+      <list> b[] </list>
+      <coeffs> 10 20 30 40 14 </coeffs>
+    </maximize>
+  </objectives>
+</instance>

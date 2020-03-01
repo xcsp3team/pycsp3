@@ -1,0 +1,233 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[c] is the period (schedule) for course c" size="[50]"> 0..9 </array>
+    <array id="co" note="co[p] is the number of courses at period p" size="[10]"> 2..10 </array>
+    <array id="cr" note="cr[p] is the number of credits at period p" size="[10]"> 2..100 </array>
+    <array id="cp" note="cp[c][p] is 0 if the course c is not planned at period p, the number of credits for c otherwise" size="[50][10]">
+      <domain for="cp[0][] cp[1][] cp[3][] cp[5][] cp[27][] cp[40][] cp[42][] cp[46][]"> 0 2 </domain>
+      <domain for="cp[2][] cp[10][] cp[12][] cp[16][] cp[21][] cp[22][] cp[28][] cp[37][] cp[47][]"> 0 4 </domain>
+      <domain for="cp[4][] cp[23][] cp[35][] cp[44][] cp[45][] cp[48][]"> 0 1 </domain>
+      <domain for="cp[6][] cp[11][] cp[25][] cp[26][]"> 0 6 </domain>
+      <domain for="cp[7][] cp[20][] cp[30][] cp[32][]"> 0 8 </domain>
+      <domain for="cp[8][] cp[14][] cp[17][] cp[18][] cp[19][] cp[24][] cp[34][]"> 0 9 </domain>
+      <domain for="cp[9][] cp[13][] cp[29][] cp[31][] cp[36][] cp[39][] cp[43][]"> 0 7 </domain>
+      <domain for="cp[15][] cp[33][] cp[41][]"> 0 3 </domain>
+      <domain for="cp[38][] cp[49][]"> 0 10 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <block note="channeling between arrays cp and s">
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,0,0,0,0,0,0,2,9)(0,0,0,0,0,0,0,0,2,0,8)(0,0,0,0,0,0,0,2,0,0,7)(0,0,0,0,0,0,2,0,0,0,6)(0,0,0,0,0,2,0,0,0,0,5)(0,0,0,0,2,0,0,0,0,0,4)(0,0,0,2,0,0,0,0,0,0,3)(0,0,2,0,0,0,0,0,0,0,2)(0,2,0,0,0,0,0,0,0,0,1)(2,0,0,0,0,0,0,0,0,0,0) </supports>
+        </extension>
+        <args> cp[0][] s[0] </args>
+        <args> cp[1][] s[1] </args>
+        <args> cp[3][] s[3] </args>
+        <args> cp[5][] s[5] </args>
+        <args> cp[27][] s[27] </args>
+        <args> cp[40][] s[40] </args>
+        <args> cp[42][] s[42] </args>
+        <args> cp[46][] s[46] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,0,0,0,0,0,0,4,9)(0,0,0,0,0,0,0,0,4,0,8)(0,0,0,0,0,0,0,4,0,0,7)(0,0,0,0,0,0,4,0,0,0,6)(0,0,0,0,0,4,0,0,0,0,5)(0,0,0,0,4,0,0,0,0,0,4)(0,0,0,4,0,0,0,0,0,0,3)(0,0,4,0,0,0,0,0,0,0,2)(0,4,0,0,0,0,0,0,0,0,1)(4,0,0,0,0,0,0,0,0,0,0) </supports>
+        </extension>
+        <args> cp[2][] s[2] </args>
+        <args> cp[10][] s[10] </args>
+        <args> cp[12][] s[12] </args>
+        <args> cp[16][] s[16] </args>
+        <args> cp[21][] s[21] </args>
+        <args> cp[22][] s[22] </args>
+        <args> cp[28][] s[28] </args>
+        <args> cp[37][] s[37] </args>
+        <args> cp[47][] s[47] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,0,0,0,0,0,0,1,9)(0,0,0,0,0,0,0,0,1,0,8)(0,0,0,0,0,0,0,1,0,0,7)(0,0,0,0,0,0,1,0,0,0,6)(0,0,0,0,0,1,0,0,0,0,5)(0,0,0,0,1,0,0,0,0,0,4)(0,0,0,1,0,0,0,0,0,0,3)(0,0,1,0,0,0,0,0,0,0,2)(0,1,0,0,0,0,0,0,0,0,1)(1,0,0,0,0,0,0,0,0,0,0) </supports>
+        </extension>
+        <args> cp[4][] s[4] </args>
+        <args> cp[23][] s[23] </args>
+        <args> cp[35][] s[35] </args>
+        <args> cp[44][] s[44] </args>
+        <args> cp[45][] s[45] </args>
+        <args> cp[48][] s[48] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,0,0,0,0,0,0,6,9)(0,0,0,0,0,0,0,0,6,0,8)(0,0,0,0,0,0,0,6,0,0,7)(0,0,0,0,0,0,6,0,0,0,6)(0,0,0,0,0,6,0,0,0,0,5)(0,0,0,0,6,0,0,0,0,0,4)(0,0,0,6,0,0,0,0,0,0,3)(0,0,6,0,0,0,0,0,0,0,2)(0,6,0,0,0,0,0,0,0,0,1)(6,0,0,0,0,0,0,0,0,0,0) </supports>
+        </extension>
+        <args> cp[6][] s[6] </args>
+        <args> cp[11][] s[11] </args>
+        <args> cp[25][] s[25] </args>
+        <args> cp[26][] s[26] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,0,0,0,0,0,0,8,9)(0,0,0,0,0,0,0,0,8,0,8)(0,0,0,0,0,0,0,8,0,0,7)(0,0,0,0,0,0,8,0,0,0,6)(0,0,0,0,0,8,0,0,0,0,5)(0,0,0,0,8,0,0,0,0,0,4)(0,0,0,8,0,0,0,0,0,0,3)(0,0,8,0,0,0,0,0,0,0,2)(0,8,0,0,0,0,0,0,0,0,1)(8,0,0,0,0,0,0,0,0,0,0) </supports>
+        </extension>
+        <args> cp[7][] s[7] </args>
+        <args> cp[20][] s[20] </args>
+        <args> cp[30][] s[30] </args>
+        <args> cp[32][] s[32] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,0,0,0,0,0,0,9,9)(0,0,0,0,0,0,0,0,9,0,8)(0,0,0,0,0,0,0,9,0,0,7)(0,0,0,0,0,0,9,0,0,0,6)(0,0,0,0,0,9,0,0,0,0,5)(0,0,0,0,9,0,0,0,0,0,4)(0,0,0,9,0,0,0,0,0,0,3)(0,0,9,0,0,0,0,0,0,0,2)(0,9,0,0,0,0,0,0,0,0,1)(9,0,0,0,0,0,0,0,0,0,0) </supports>
+        </extension>
+        <args> cp[8][] s[8] </args>
+        <args> cp[14][] s[14] </args>
+        <args> cp[17][] s[17] </args>
+        <args> cp[18][] s[18] </args>
+        <args> cp[19][] s[19] </args>
+        <args> cp[24][] s[24] </args>
+        <args> cp[34][] s[34] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,0,0,0,0,0,0,7,9)(0,0,0,0,0,0,0,0,7,0,8)(0,0,0,0,0,0,0,7,0,0,7)(0,0,0,0,0,0,7,0,0,0,6)(0,0,0,0,0,7,0,0,0,0,5)(0,0,0,0,7,0,0,0,0,0,4)(0,0,0,7,0,0,0,0,0,0,3)(0,0,7,0,0,0,0,0,0,0,2)(0,7,0,0,0,0,0,0,0,0,1)(7,0,0,0,0,0,0,0,0,0,0) </supports>
+        </extension>
+        <args> cp[9][] s[9] </args>
+        <args> cp[13][] s[13] </args>
+        <args> cp[29][] s[29] </args>
+        <args> cp[31][] s[31] </args>
+        <args> cp[36][] s[36] </args>
+        <args> cp[39][] s[39] </args>
+        <args> cp[43][] s[43] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,0,0,0,0,0,0,3,9)(0,0,0,0,0,0,0,0,3,0,8)(0,0,0,0,0,0,0,3,0,0,7)(0,0,0,0,0,0,3,0,0,0,6)(0,0,0,0,0,3,0,0,0,0,5)(0,0,0,0,3,0,0,0,0,0,4)(0,0,0,3,0,0,0,0,0,0,3)(0,0,3,0,0,0,0,0,0,0,2)(0,3,0,0,0,0,0,0,0,0,1)(3,0,0,0,0,0,0,0,0,0,0) </supports>
+        </extension>
+        <args> cp[15][] s[15] </args>
+        <args> cp[33][] s[33] </args>
+        <args> cp[41][] s[41] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,0,0,0,0,0,0,10,9)(0,0,0,0,0,0,0,0,10,0,8)(0,0,0,0,0,0,0,10,0,0,7)(0,0,0,0,0,0,10,0,0,0,6)(0,0,0,0,0,10,0,0,0,0,5)(0,0,0,0,10,0,0,0,0,0,4)(0,0,0,10,0,0,0,0,0,0,3)(0,0,10,0,0,0,0,0,0,0,2)(0,10,0,0,0,0,0,0,0,0,1)(10,0,0,0,0,0,0,0,0,0,0) </supports>
+        </extension>
+        <args> cp[38][] s[38] </args>
+        <args> cp[49][] s[49] </args>
+      </group>
+    </block>
+    <group note="counting the number of courses in each period">
+      <count>
+        <list> s[] </list>
+        <values> %0 </values>
+        <condition> (eq,%1) </condition>
+      </count>
+      <args> 0 co[0] </args>
+      <args> 1 co[1] </args>
+      <args> 2 co[2] </args>
+      <args> 3 co[3] </args>
+      <args> 4 co[4] </args>
+      <args> 5 co[5] </args>
+      <args> 6 co[6] </args>
+      <args> 7 co[7] </args>
+      <args> 8 co[8] </args>
+      <args> 9 co[9] </args>
+    </group>
+    <group note="counting the number of credits in each period">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> cr[0] cp[][0] </args>
+      <args> cr[1] cp[][1] </args>
+      <args> cr[2] cp[][2] </args>
+      <args> cr[3] cp[][3] </args>
+      <args> cr[4] cp[][4] </args>
+      <args> cr[5] cp[][5] </args>
+      <args> cr[6] cp[][6] </args>
+      <args> cr[7] cp[][7] </args>
+      <args> cr[8] cp[][8] </args>
+      <args> cr[9] cp[][9] </args>
+    </group>
+    <group note="handling prerequisites">
+      <intension> lt(%0,%1) </intension>
+      <args> s[4] s[1] </args>
+      <args> s[7] s[2] </args>
+      <args> s[8] s[2] </args>
+      <args> s[9] s[3] </args>
+      <args> s[11] s[3] </args>
+      <args> s[6] s[4] </args>
+      <args> s[8] s[4] </args>
+      <args> s[7] s[5] </args>
+      <args> s[8] s[5] </args>
+      <args> s[9] s[5] </args>
+      <args> s[10] s[5] </args>
+      <args> s[11] s[5] </args>
+      <args> s[13] s[6] </args>
+      <args> s[14] s[6] </args>
+      <args> s[13] s[7] </args>
+      <args> s[14] s[7] </args>
+      <args> s[16] s[7] </args>
+      <args> s[17] s[7] </args>
+      <args> s[17] s[8] </args>
+      <args> s[17] s[9] </args>
+      <args> s[18] s[9] </args>
+      <args> s[13] s[10] </args>
+      <args> s[13] s[11] </args>
+      <args> s[17] s[11] </args>
+      <args> s[18] s[11] </args>
+      <args> s[19] s[13] </args>
+      <args> s[22] s[13] </args>
+      <args> s[23] s[14] </args>
+      <args> s[22] s[15] </args>
+      <args> s[22] s[16] </args>
+      <args> s[21] s[18] </args>
+      <args> s[22] s[18] </args>
+      <args> s[25] s[20] </args>
+      <args> s[27] s[20] </args>
+      <args> s[29] s[20] </args>
+      <args> s[25] s[21] </args>
+      <args> s[27] s[21] </args>
+      <args> s[30] s[21] </args>
+      <args> s[25] s[22] </args>
+      <args> s[26] s[22] </args>
+      <args> s[26] s[23] </args>
+      <args> s[31] s[25] </args>
+      <args> s[33] s[25] </args>
+      <args> s[31] s[26] </args>
+      <args> s[33] s[26] </args>
+      <args> s[31] s[27] </args>
+      <args> s[32] s[27] </args>
+      <args> s[32] s[29] </args>
+      <args> s[33] s[29] </args>
+      <args> s[33] s[30] </args>
+      <args> s[37] s[31] </args>
+      <args> s[34] s[32] </args>
+      <args> s[36] s[32] </args>
+      <args> s[37] s[32] </args>
+      <args> s[34] s[33] </args>
+      <args> s[41] s[34] </args>
+      <args> s[42] s[34] </args>
+      <args> s[43] s[34] </args>
+      <args> s[41] s[36] </args>
+      <args> s[41] s[37] </args>
+      <args> s[39] s[38] </args>
+      <args> s[49] s[39] </args>
+      <args> s[45] s[41] </args>
+      <args> s[46] s[42] </args>
+      <args> s[46] s[43] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the maximum number of credits in periods" type="maximum"> cr[] </minimize>
+  </objectives>
+  <annotations>
+    <decision> s[] </decision>
+  </annotations>
+</instance>

@@ -1,0 +1,19 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" size="[10][6]"> 0..3 </array>
+  </variables>
+  <constraints>
+    <allDifferent>
+      <list> x[0][] </list>
+      <list> x[1][] </list>
+      <list> x[2][] </list>
+      <list> x[3][] </list>
+      <list> x[4][] </list>
+      <list> x[5][] </list>
+      <list> x[6][] </list>
+      <list> x[7][] </list>
+      <list> x[8][] </list>
+      <list> x[9][] </list>
+    </allDifferent>
+  </constraints>
+</instance>

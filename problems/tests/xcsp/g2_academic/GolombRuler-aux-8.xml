@@ -1,0 +1,53 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i] is the position of the ith tick" size="[8]"> 0..64 </array>
+    <array id="y" note="y[i][j] is the distance between x[i] and x[j], for i strictly less than j" size="[8][8]"> 1..64 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all distances are different"> y[0][1..7] y[1][2..7] y[2][3..7] y[3][4..7] y[4][5..7] y[5][6..7] y[6][7] </allDifferent>
+    <group note="linking variables from both arrays">
+      <intension> eq(%0,add(%1,%2)) </intension>
+      <args> x[1] x[0] y[0][1] </args>
+      <args> x[2] x[0] y[0][2] </args>
+      <args> x[3] x[0] y[0][3] </args>
+      <args> x[4] x[0] y[0][4] </args>
+      <args> x[5] x[0] y[0][5] </args>
+      <args> x[6] x[0] y[0][6] </args>
+      <args> x[7] x[0] y[0][7] </args>
+      <args> x[2] x[1] y[1][2] </args>
+      <args> x[3] x[1] y[1][3] </args>
+      <args> x[4] x[1] y[1][4] </args>
+      <args> x[5] x[1] y[1][5] </args>
+      <args> x[6] x[1] y[1][6] </args>
+      <args> x[7] x[1] y[1][7] </args>
+      <args> x[3] x[2] y[2][3] </args>
+      <args> x[4] x[2] y[2][4] </args>
+      <args> x[5] x[2] y[2][5] </args>
+      <args> x[6] x[2] y[2][6] </args>
+      <args> x[7] x[2] y[2][7] </args>
+      <args> x[4] x[3] y[3][4] </args>
+      <args> x[5] x[3] y[3][5] </args>
+      <args> x[6] x[3] y[3][6] </args>
+      <args> x[7] x[3] y[3][7] </args>
+      <args> x[5] x[4] y[4][5] </args>
+      <args> x[6] x[4] y[4][6] </args>
+      <args> x[7] x[4] y[4][7] </args>
+      <args> x[6] x[5] y[5][6] </args>
+      <args> x[7] x[5] y[5][7] </args>
+      <args> x[7] x[6] y[6][7] </args>
+    </group>
+    <block class="symmetry-breaking">
+      <intension> eq(x[0],0) </intension>
+      <ordered>
+        <list> x[] </list>
+        <operator> lt </operator>
+      </ordered>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the position of the rightmost tick" type="maximum"> x[] </minimize>
+  </objectives>
+  <annotations>
+    <decision> x[] </decision>
+  </annotations>
+</instance>

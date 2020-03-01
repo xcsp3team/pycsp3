@@ -1,7 +1,6 @@
 from pycsp3 import *
 
-letters = VarArray(size=8, dom=range(10))
-s, e, n, d, m, o, r, y = letters
+s, e, n, d, m, o, r, y = letters = VarArray(size=8, dom=range(10))
 
 satisfy(
     AllDifferent(letters),

@@ -1,0 +1,73 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the value of k, meaning that j = pref[i][k] is the paired agent" size="[6]"> 0..4 </array>
+  </variables>
+  <constraints>
+    <group>
+      <intension> imp(gt(%0,%1),lt(%2,%3)) </intension>
+      <args> x[0] 0 x[2] 3 </args>
+      <args> x[0] 1 x[3] 4 </args>
+      <args> x[0] 2 x[1] 3 </args>
+      <args> x[0] 3 x[5] 1 </args>
+      <args> x[0] 4 x[4] 1 </args>
+      <args> x[1] 0 x[5] 4 </args>
+      <args> x[1] 1 x[4] 2 </args>
+      <args> x[1] 2 x[3] 1 </args>
+      <args> x[1] 3 x[0] 2 </args>
+      <args> x[1] 4 x[2] 0 </args>
+      <args> x[2] 0 x[1] 4 </args>
+      <args> x[2] 1 x[3] 2 </args>
+      <args> x[2] 2 x[4] 0 </args>
+      <args> x[2] 3 x[0] 0 </args>
+      <args> x[2] 4 x[5] 2 </args>
+      <args> x[3] 0 x[4] 3 </args>
+      <args> x[3] 1 x[1] 2 </args>
+      <args> x[3] 2 x[2] 1 </args>
+      <args> x[3] 3 x[5] 3 </args>
+      <args> x[3] 4 x[0] 1 </args>
+      <args> x[4] 0 x[2] 2 </args>
+      <args> x[4] 1 x[0] 4 </args>
+      <args> x[4] 2 x[1] 1 </args>
+      <args> x[4] 3 x[3] 0 </args>
+      <args> x[4] 4 x[5] 0 </args>
+      <args> x[5] 0 x[4] 4 </args>
+      <args> x[5] 1 x[0] 3 </args>
+      <args> x[5] 2 x[2] 4 </args>
+      <args> x[5] 3 x[3] 3 </args>
+      <args> x[5] 4 x[1] 0 </args>
+    </group>
+    <group>
+      <intension> imp(eq(%0,%1),eq(%2,%3)) </intension>
+      <args> x[0] 0 x[2] 3 </args>
+      <args> x[0] 1 x[3] 4 </args>
+      <args> x[0] 2 x[1] 3 </args>
+      <args> x[0] 3 x[5] 1 </args>
+      <args> x[0] 4 x[4] 1 </args>
+      <args> x[1] 0 x[5] 4 </args>
+      <args> x[1] 1 x[4] 2 </args>
+      <args> x[1] 2 x[3] 1 </args>
+      <args> x[1] 3 x[0] 2 </args>
+      <args> x[1] 4 x[2] 0 </args>
+      <args> x[2] 0 x[1] 4 </args>
+      <args> x[2] 1 x[3] 2 </args>
+      <args> x[2] 2 x[4] 0 </args>
+      <args> x[2] 3 x[0] 0 </args>
+      <args> x[2] 4 x[5] 2 </args>
+      <args> x[3] 0 x[4] 3 </args>
+      <args> x[3] 1 x[1] 2 </args>
+      <args> x[3] 2 x[2] 1 </args>
+      <args> x[3] 3 x[5] 3 </args>
+      <args> x[3] 4 x[0] 1 </args>
+      <args> x[4] 0 x[2] 2 </args>
+      <args> x[4] 1 x[0] 4 </args>
+      <args> x[4] 2 x[1] 1 </args>
+      <args> x[4] 3 x[3] 0 </args>
+      <args> x[4] 4 x[5] 0 </args>
+      <args> x[5] 0 x[4] 4 </args>
+      <args> x[5] 1 x[0] 3 </args>
+      <args> x[5] 2 x[2] 4 </args>
+      <args> x[5] 3 x[3] 3 </args>
+      <args> x[5] 4 x[1] 0 </args>
+    </group>
+  </constraints>
+</instance>
