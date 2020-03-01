@@ -46,7 +46,7 @@ def cursing():
         if isinstance(other, Variable) and len(self) > 0 and is_containing(self, int):  # this is a unary table constraint
             queue_in.append((list(self), other))
             return True
-        if isinstance(other, (PartialConstraint, Variable)):
+        if isinstance(other, (PartialConstraint, Variable)) or is_containing(self, Variable) and isinstance(other, (int,str)):
             queue_in.append((self, other))
             return True
         if is_1d_tuple(other, Variable) or is_1d_list(other, Variable):  # this is a non-unary table constraint

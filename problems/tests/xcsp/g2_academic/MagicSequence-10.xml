@@ -1,0 +1,23 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the ith value of the sequence" size="[10]"> 0..9 </array>
+  </variables>
+  <constraints>
+    <cardinality note="each value i occurs exactly x[i] times in the sequence">
+      <list> x[] </list>
+      <values> 0 1 2 3 4 5 6 7 8 9 </values>
+      <occurs> x[] </occurs>
+    </cardinality>
+    <block class="redundant-constraints">
+      <sum>
+        <list> x[] </list>
+        <condition> (eq,10) </condition>
+      </sum>
+      <sum>
+        <list> x[] </list>
+        <coeffs> -1 0 1 2 3 4 5 6 7 8 </coeffs>
+        <condition> (eq,0) </condition>
+      </sum>
+    </block>
+  </constraints>
+</instance>

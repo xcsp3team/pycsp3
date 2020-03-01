@@ -24,11 +24,14 @@ class _Star(float):
     def __init__(self, val):
         super().__init__()
 
+    def __repr__(self):
+        return "*"
+
     def __str__(self):
         return "*"
 
 
-ANY = _Star("inf")
+ANY = _Star("Inf")
 
 
 class DefaultListOrderedDict(OrderedDict):

@@ -1,0 +1,49 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i][j] is the value put at row i and column j" size="[6][6]"> 1..9 </array>
+  </variables>
+  <constraints>
+    <group>
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> 14 x[1][2..4] </args>
+      <args> 27 x[2][1..4] </args>
+      <args> 17 x[3][1] x[3][2] </args>
+      <args> 4 x[3][4] x[3][5] </args>
+      <args> 21 x[4][2..5] </args>
+      <args> 23 x[5][2..4] </args>
+    </group>
+    <group>
+      <allDifferent> %... </allDifferent>
+      <args> x[1][2..4] </args>
+      <args> x[2][1..4] </args>
+      <args> x[3][1] x[3][2] </args>
+      <args> x[3][4] x[3][5] </args>
+      <args> x[4][2..5] </args>
+      <args> x[5][2..4] </args>
+    </group>
+    <group>
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> 35 x[1..5][2] </args>
+      <args> 17 x[1][3] x[2][3] </args>
+      <args> 16 x[1..5][4] </args>
+      <args> 17 x[2][1] x[3][1] </args>
+      <args> 4 x[3][5] x[4][5] </args>
+      <args> 17 x[4][3] x[5][3] </args>
+    </group>
+    <group>
+      <allDifferent> %... </allDifferent>
+      <args> x[1..5][2] </args>
+      <args> x[1][3] x[2][3] </args>
+      <args> x[1..5][4] </args>
+      <args> x[2][1] x[3][1] </args>
+      <args> x[3][5] x[4][5] </args>
+      <args> x[4][3] x[5][3] </args>
+    </group>
+  </constraints>
+</instance>

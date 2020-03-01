@@ -1,0 +1,8 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="p" note="p[i] is the hole where is put the ith pigeon" size="[6]"> 0..4 </array>
+  </variables>
+  <constraints>
+    <allDifferent> p[] </allDifferent>
+  </constraints>
+</instance>

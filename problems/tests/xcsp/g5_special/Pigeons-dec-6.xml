@@ -1,0 +1,25 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="p" note="p[i] is the hole where is put the ith pigeon" size="[6]"> 0..4 </array>
+  </variables>
+  <constraints>
+    <group>
+      <intension> ne(%0,%1) </intension>
+      <args> p[0] p[1] </args>
+      <args> p[0] p[2] </args>
+      <args> p[0] p[3] </args>
+      <args> p[0] p[4] </args>
+      <args> p[0] p[5] </args>
+      <args> p[1] p[2] </args>
+      <args> p[1] p[3] </args>
+      <args> p[1] p[4] </args>
+      <args> p[1] p[5] </args>
+      <args> p[2] p[3] </args>
+      <args> p[2] p[4] </args>
+      <args> p[2] p[5] </args>
+      <args> p[3] p[4] </args>
+      <args> p[3] p[5] </args>
+      <args> p[4] p[5] </args>
+    </group>
+  </constraints>
+</instance>

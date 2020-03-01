@@ -207,9 +207,8 @@ class Tester:
                     self.check()
             elif mode == 2:  # comparison with recorded XCSP files
                 if os.name != 'nt':
-                    print(self.xml_path_xcsp(), self.xml_path_jv())
                     #shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simualte a comparison with JvCSP
-                    print("| Comparing outcome of PyCSP with the XCSP3 file in " + self.dir_xcsp)
+                    print("| Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
                     self.check(True)
             else:
                 with open(self.xml_path_py(), "r") as f:
@@ -233,14 +232,14 @@ class Tester:
             else:
                 print("=> Several differences (" + str(len(lines)) + ") in " + self.name_xml)
                 self.counters["diff"] += 1
-                self.print_differences(lines, limit=20 if len(lines) > 200 else None)
+                self.print_differences(lines, limit=20 if len(lines) > 200 else None, xcsp=xcsp)
                 if options.wait:
                     input("Press Enter to continue...")
         print("\n" + WHITE_BOLD + "[Currently] " + str(self.counters["diff"]) + " difference(s) on " + str(self.counters["total"]) + " test(s) (" + RED + str(
             self.counters["err"]) + WHITE + " error(s))\n")
 
-    def print_differences(self, lines, limit):
-        print(COLOR_PY + "PyCSP" + WHITE + " vs. " + COLOR_JV + "JvCSP" + WHITE + " differences:\n")
+    def print_differences(self, lines, limit, xcsp=False):
+        print(COLOR_PY + "PyCSP" + WHITE + " vs. " + COLOR_JV + ("JvCSP" if not xcsp else "XCSP")+ WHITE + " differences:\n")
         if limit is None:
             for line in lines:
                 if line[0] in {'>', '<'}:

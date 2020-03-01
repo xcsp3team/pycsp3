@@ -1,0 +1,186 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[i][j] is the start time of the jth operation for the ith job" size="[5][5]"> 0..1134 </array>
+    <array id="d" note="d[i][j] is the duration of the jth operation of the ith job" size="[5][5]">
+      <domain for="d[0][]"> 19 32 38 81 83 </domain>
+      <domain for="d[1][]"> 6 22 52 64 90 </domain>
+      <domain for="d[2][]"> 1 8 15 35 83 </domain>
+      <domain for="d[3][]"> 21 33 40 71 87 </domain>
+      <domain for="d[4][]"> 15 42 55 86 </domain>
+    </array>
+    <array id="mc" note="mc[i][j] is the machine used for the jth operation of the ith job" size="[5][5]"> 0..4 </array>
+    <array id="sd" note="sd[i][k] is the start (dual) time of the kth machine when used for the ith job" size="[5][5]"> 0..1134 </array>
+  </variables>
+  <constraints>
+    <group note="operations must be ordered on each job">
+      <ordered>
+        <list> %0 %1 %2 %3 %4 </list>
+        <lengths> %... </lengths>
+        <operator> le </operator>
+      </ordered>
+      <args> s[0][] d[0][0..3] </args>
+      <args> s[1][] d[1][0..3] </args>
+      <args> s[2][] d[2][0..3] </args>
+      <args> s[3][] d[3][0..3] </args>
+      <args> s[4][] d[4][0..3] </args>
+    </group>
+    <group note="each machine must be used for each job">
+      <allDifferent> %... </allDifferent>
+      <args> mc[0][] </args>
+      <args> mc[1][] </args>
+      <args> mc[2][] </args>
+      <args> mc[3][] </args>
+      <args> mc[4][] </args>
+    </group>
+    <group>
+      <extension>
+        <list> %0 %1 </list>
+        <supports> (0,19)(1,38)(2,81)(3,83)(4,32) </supports>
+      </extension>
+      <args> mc[0][0] d[0][0] </args>
+      <args> mc[0][1] d[0][1] </args>
+      <args> mc[0][2] d[0][2] </args>
+      <args> mc[0][3] d[0][3] </args>
+      <args> mc[0][4] d[0][4] </args>
+    </group>
+    <group>
+      <extension>
+        <list> %0 %1 </list>
+        <supports> (0,6)(1,22)(2,64)(3,90)(4,52) </supports>
+      </extension>
+      <args> mc[1][0] d[1][0] </args>
+      <args> mc[1][1] d[1][1] </args>
+      <args> mc[1][2] d[1][2] </args>
+      <args> mc[1][3] d[1][3] </args>
+      <args> mc[1][4] d[1][4] </args>
+    </group>
+    <group>
+      <extension>
+        <list> %0 %1 </list>
+        <supports> (0,8)(1,83)(2,15)(3,1)(4,35) </supports>
+      </extension>
+      <args> mc[2][0] d[2][0] </args>
+      <args> mc[2][1] d[2][1] </args>
+      <args> mc[2][2] d[2][2] </args>
+      <args> mc[2][3] d[2][3] </args>
+      <args> mc[2][4] d[2][4] </args>
+    </group>
+    <group>
+      <extension>
+        <list> %0 %1 </list>
+        <supports> (0,71)(1,87)(2,40)(3,21)(4,33) </supports>
+      </extension>
+      <args> mc[3][0] d[3][0] </args>
+      <args> mc[3][1] d[3][1] </args>
+      <args> mc[3][2] d[3][2] </args>
+      <args> mc[3][3] d[3][3] </args>
+      <args> mc[3][4] d[3][4] </args>
+    </group>
+    <group>
+      <extension>
+        <list> %0 %1 </list>
+        <supports> (0,86)(1,15)(2,55)(3,55)(4,42) </supports>
+      </extension>
+      <args> mc[4][0] d[4][0] </args>
+      <args> mc[4][1] d[4][1] </args>
+      <args> mc[4][2] d[4][2] </args>
+      <args> mc[4][3] d[4][3] </args>
+      <args> mc[4][4] d[4][4] </args>
+    </group>
+    <block class="channeling">
+      <group>
+        <element>
+          <list> sd[0][] </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> mc[0][0] s[0][0] </args>
+        <args> mc[0][1] s[0][1] </args>
+        <args> mc[0][2] s[0][2] </args>
+        <args> mc[0][3] s[0][3] </args>
+        <args> mc[0][4] s[0][4] </args>
+      </group>
+      <group>
+        <element>
+          <list> sd[1][] </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> mc[1][0] s[1][0] </args>
+        <args> mc[1][1] s[1][1] </args>
+        <args> mc[1][2] s[1][2] </args>
+        <args> mc[1][3] s[1][3] </args>
+        <args> mc[1][4] s[1][4] </args>
+      </group>
+      <group>
+        <element>
+          <list> sd[2][] </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> mc[2][0] s[2][0] </args>
+        <args> mc[2][1] s[2][1] </args>
+        <args> mc[2][2] s[2][2] </args>
+        <args> mc[2][3] s[2][3] </args>
+        <args> mc[2][4] s[2][4] </args>
+      </group>
+      <group>
+        <element>
+          <list> sd[3][] </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> mc[3][0] s[3][0] </args>
+        <args> mc[3][1] s[3][1] </args>
+        <args> mc[3][2] s[3][2] </args>
+        <args> mc[3][3] s[3][3] </args>
+        <args> mc[3][4] s[3][4] </args>
+      </group>
+      <group>
+        <element>
+          <list> sd[4][] </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> mc[4][0] s[4][0] </args>
+        <args> mc[4][1] s[4][1] </args>
+        <args> mc[4][2] s[4][2] </args>
+        <args> mc[4][3] s[4][3] </args>
+        <args> mc[4][4] s[4][4] </args>
+      </group>
+    </block>
+    <block note="no overlap on resources">
+      <noOverlap>
+        <origins> sd[][0] </origins>
+        <lengths> 19 6 8 71 86 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> sd[][1] </origins>
+        <lengths> 38 22 83 87 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> sd[][2] </origins>
+        <lengths> 81 64 15 40 55 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> sd[][3] </origins>
+        <lengths> 83 90 1 21 55 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> sd[][4] </origins>
+        <lengths> 32 52 35 33 42 </lengths>
+      </noOverlap>
+    </block>
+    <group class="redundant-constraints">
+      <intension> ge(add(%0,%1),%2) </intension>
+      <args> s[0][4] d[0][4] 253 </args>
+      <args> s[1][4] d[1][4] 234 </args>
+      <args> s[2][4] d[2][4] 142 </args>
+      <args> s[3][4] d[3][4] 252 </args>
+      <args> s[4][4] d[4][4] 253 </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the makespan" type="maximum"> add(s[0][4],d[0][4]) add(s[1][4],d[1][4]) add(s[2][4],d[2][4]) add(s[3][4],d[3][4]) add(s[4][4],d[4][4]) </minimize>
+  </objectives>
+</instance>

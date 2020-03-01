@@ -1,0 +1,132 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="h" note="h[w][p] is the home team at week w and period p" size="[9][5]"> 0..9 </array>
+    <array id="a" note="a[w][p] is the away team at week w and period p" size="[9][5]"> 0..9 </array>
+    <array id="m" note="m[w][p] is the number of the match at week w and period p" size="[9][5]"> 0..44 </array>
+    <array id="hd" class="dummy-week" note="hd[p] is the home team for the dummy match of period p" size="[5]"> 0..9 </array>
+    <array id="ad" class="dummy-week" note="ad[p] is the away team for the dummy match of period p" size="[5]"> 0..9 </array>
+  </variables>
+  <constraints>
+    <group note="linking variables through ternary table constraints">
+      <extension>
+        <list> %0 %1 %2 </list>
+        <supports> (0,1,0)(0,2,1)(0,3,2)(0,4,3)(0,5,4)(0,6,5)(0,7,6)(0,8,7)(0,9,8)(1,2,9)(1,3,10)(1,4,11)(1,5,12)(1,6,13)(1,7,14)(1,8,15)(1,9,16)(2,3,17)(2,4,18)(2,5,19)(2,6,20)(2,7,21)(2,8,22)(2,9,23)(3,4,24)(3,5,25)(3,6,26)(3,7,27)(3,8,28)(3,9,29)(4,5,30)(4,6,31)(4,7,32)(4,8,33)(4,9,34)(5,6,35)(5,7,36)(5,8,37)(5,9,38)(6,7,39)(6,8,40)(6,9,41)(7,8,42)(7,9,43)(8,9,44) </supports>
+      </extension>
+      <args> h[0][0] a[0][0] m[0][0] </args>
+      <args> h[0][1] a[0][1] m[0][1] </args>
+      <args> h[0][2] a[0][2] m[0][2] </args>
+      <args> h[0][3] a[0][3] m[0][3] </args>
+      <args> h[0][4] a[0][4] m[0][4] </args>
+      <args> h[1][0] a[1][0] m[1][0] </args>
+      <args> h[1][1] a[1][1] m[1][1] </args>
+      <args> h[1][2] a[1][2] m[1][2] </args>
+      <args> h[1][3] a[1][3] m[1][3] </args>
+      <args> h[1][4] a[1][4] m[1][4] </args>
+      <args> h[2][0] a[2][0] m[2][0] </args>
+      <args> h[2][1] a[2][1] m[2][1] </args>
+      <args> h[2][2] a[2][2] m[2][2] </args>
+      <args> h[2][3] a[2][3] m[2][3] </args>
+      <args> h[2][4] a[2][4] m[2][4] </args>
+      <args> h[3][0] a[3][0] m[3][0] </args>
+      <args> h[3][1] a[3][1] m[3][1] </args>
+      <args> h[3][2] a[3][2] m[3][2] </args>
+      <args> h[3][3] a[3][3] m[3][3] </args>
+      <args> h[3][4] a[3][4] m[3][4] </args>
+      <args> h[4][0] a[4][0] m[4][0] </args>
+      <args> h[4][1] a[4][1] m[4][1] </args>
+      <args> h[4][2] a[4][2] m[4][2] </args>
+      <args> h[4][3] a[4][3] m[4][3] </args>
+      <args> h[4][4] a[4][4] m[4][4] </args>
+      <args> h[5][0] a[5][0] m[5][0] </args>
+      <args> h[5][1] a[5][1] m[5][1] </args>
+      <args> h[5][2] a[5][2] m[5][2] </args>
+      <args> h[5][3] a[5][3] m[5][3] </args>
+      <args> h[5][4] a[5][4] m[5][4] </args>
+      <args> h[6][0] a[6][0] m[6][0] </args>
+      <args> h[6][1] a[6][1] m[6][1] </args>
+      <args> h[6][2] a[6][2] m[6][2] </args>
+      <args> h[6][3] a[6][3] m[6][3] </args>
+      <args> h[6][4] a[6][4] m[6][4] </args>
+      <args> h[7][0] a[7][0] m[7][0] </args>
+      <args> h[7][1] a[7][1] m[7][1] </args>
+      <args> h[7][2] a[7][2] m[7][2] </args>
+      <args> h[7][3] a[7][3] m[7][3] </args>
+      <args> h[7][4] a[7][4] m[7][4] </args>
+      <args> h[8][0] a[8][0] m[8][0] </args>
+      <args> h[8][1] a[8][1] m[8][1] </args>
+      <args> h[8][2] a[8][2] m[8][2] </args>
+      <args> h[8][3] a[8][3] m[8][3] </args>
+      <args> h[8][4] a[8][4] m[8][4] </args>
+    </group>
+    <allDifferent note="all matches are different (no team can play twice against another team)"> m[][] </allDifferent>
+    <group note="each week, all teams are different (each team plays each week)">
+      <allDifferent> %... </allDifferent>
+      <args> h[0][] a[0][] </args>
+      <args> h[1][] a[1][] </args>
+      <args> h[2][] a[2][] </args>
+      <args> h[3][] a[3][] </args>
+      <args> h[4][] a[4][] </args>
+      <args> h[5][] a[5][] </args>
+      <args> h[6][] a[6][] </args>
+      <args> h[7][] a[7][] </args>
+      <args> h[8][] a[8][] </args>
+    </group>
+    <group note="each team plays at most two times in each period">
+      <cardinality>
+        <list> %... </list>
+        <values> 0 1 2 3 4 5 6 7 8 9 </values>
+        <occurs> 1..2 1..2 1..2 1..2 1..2 1..2 1..2 1..2 1..2 1..2 </occurs>
+      </cardinality>
+      <args> h[][0] a[][0] </args>
+      <args> h[][1] a[][1] </args>
+      <args> h[][2] a[][2] </args>
+      <args> h[][3] a[][3] </args>
+      <args> h[][4] a[][4] </args>
+    </group>
+    <block class="symmetry-breaking">
+      <group note="the match '0 versus t' (with t strictly greater than 0) appears at week t-1">
+        <count>
+          <list> %0 %1 %2 %3 %4 </list>
+          <values> %5 </values>
+          <condition> (eq,1) </condition>
+        </count>
+        <args> m[0][] 0 </args>
+        <args> m[1][] 1 </args>
+        <args> m[2][] 2 </args>
+        <args> m[3][] 3 </args>
+        <args> m[4][] 4 </args>
+        <args> m[5][] 5 </args>
+        <args> m[6][] 6 </args>
+        <args> m[7][] 7 </args>
+        <args> m[8][] 8 </args>
+      </group>
+      <instantiation note="the first week is set : 0 vs 1, 2 vs 3, 4 vs 5, etc.">
+        <list> m[0][] </list>
+        <values> 0 17 30 39 44 </values>
+      </instantiation>
+    </block>
+    <block class="dummy-week" note="handling dummy week (variables and constraints)">
+      <allDifferent note="all teams are different in the dummy week"> hd[] ad[] </allDifferent>
+      <group note="each team plays two times in each period">
+        <cardinality>
+          <list> %... </list>
+          <values> 0 1 2 3 4 5 6 7 8 9 </values>
+          <occurs> 2 2 2 2 2 2 2 2 2 2 </occurs>
+        </cardinality>
+        <args> h[][0] a[][0] hd[0] ad[0] </args>
+        <args> h[][1] a[][1] hd[1] ad[1] </args>
+        <args> h[][2] a[][2] hd[2] ad[2] </args>
+        <args> h[][3] a[][3] hd[3] ad[3] </args>
+        <args> h[][4] a[][4] hd[4] ad[4] </args>
+      </group>
+      <group>
+        <intension> lt(%0,%1) </intension>
+        <args> hd[0] ad[0] </args>
+        <args> hd[1] ad[1] </args>
+        <args> hd[2] ad[2] </args>
+        <args> hd[3] ad[3] </args>
+        <args> hd[4] ad[4] </args>
+      </group>
+    </block>
+  </constraints>
+</instance>
