@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 049 at CSPLib
+"""
+ Problem 049 at CSPLib
+"""
 
 n = data.n
 assert n % 2 == 0, "The value of n must be even"

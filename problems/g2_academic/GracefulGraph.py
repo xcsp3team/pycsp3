@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 053 at CSPLib
+"""
+ Problem 053 at CSPLib
+"""
 
 k = data.k  # size of each clique K (number of nodes)
 p = data.p  # size of each path P (or equivalently, number of cliques)

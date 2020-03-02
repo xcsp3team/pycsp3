@@ -1,11 +1,13 @@
 from pycsp3 import *
 
 '''
-A Latin square of order n is an n by n array filled with n different symbols (for example, values between 1 and n),
-each occurring exactly once in each row and exactly once in each column.
-Two latin squares of the same order n are orthogonal if each pair of elements in the same position occurs exactly once.
-The most easy way to see this is by concatenating elements in the same position and verify that no pair appears twice.
-There are orthogonal latin squares of any size except 1, 2, and 6.
+ See https://en.wikipedia.org/wiki/Graeco-Latin_square
+
+ A Latin square of order n is an n by n array filled with n different symbols (for example, values between 1 and n),
+ each occurring exactly once in each row and exactly once in each column.
+ Two latin squares of the same order n are orthogonal if each pair of elements in the same position occurs exactly once.
+ The most easy way to see this is by concatenating elements in the same position and verify that no pair appears twice.
+ There are orthogonal latin squares of any size except 1, 2, and 6.
 '''
 
 n = data.n
@@ -27,6 +29,9 @@ satisfy(
 
     # ensuring that y is a Latin square
     AllDifferent(y, matrix=True),
+
+    # ensuring that values on diagonals are different  tag(diagonals)
+    [AllDifferent(t) for t in [diagonal_down(x), diagonal_up(x), diagonal_down(y), diagonal_up(y)]],
 
     # ensuring orthogonality of x and y through z
     AllDifferent(z),

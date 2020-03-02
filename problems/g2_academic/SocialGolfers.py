@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 010 at CSPLib
+"""
+ Problem 010 at CSPLib
+"""
 
 nGroups, size, nWeeks = data.nGroups, data.groupSize, data.nWeeks
 nPlayers = nGroups * size

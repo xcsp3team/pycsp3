@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- The Dreadsbury Mansion Mystery
+ The Dreadsbury Mansion Mystery (4 solutions)
  F. J. Pelletier, "Seventy-five problems for testing automatic theorem provers",
  Journal of Automated Reasoning, 2: 191 216, 1986.
 
@@ -13,7 +13,6 @@ from pycsp3 import *
   - The butler hates everyone not richer than Aunt Agatha.
   - The butler hates everyone Agatha hates.
   - No one hates everyone.
-  - Agatha is not the butler.
 """
 
 persons = agatha, butler, charles = 0, 1, 2
@@ -21,7 +20,7 @@ persons = agatha, butler, charles = 0, 1, 2
 # killer is the person who kills Agatha
 killer = Var(dom=persons)
 
-# hating[i][j] is 1 iff person i is hating person j
+# hating[i][j] is 1 iff person i hates person j
 hating = VarArray(size=[3, 3], dom={0, 1})
 
 # richer[i][j] is 1 iff person i is richer than person j

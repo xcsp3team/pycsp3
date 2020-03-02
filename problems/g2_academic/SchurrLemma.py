@@ -1,11 +1,11 @@
 from pycsp3 import *
 
-# Problem 015 at CSPLib
+"""
+ Problem 015 at CSPLib
 
-'''
-  Schurr's lemma problem.
-  One variant corresponds to the one proposed by [Bessiere Meseguer Freuder Larrosa, On forward checking for non-binary constraint satisfaction, 2002].
-'''
+ Schurr's lemma problem.
+ One variant corresponds to the one proposed by [Bessiere Meseguer Freuder Larrosa, On forward checking for non-binary constraint satisfaction, 2002].
+"""
 
 n, d = data.nBalls, data.nBoxes
 

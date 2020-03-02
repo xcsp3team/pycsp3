@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 007 at CSPLib
+"""
+ Problem 007 at CSPLib (296 solutions for n=10 if symmetry-breaking constraints are discarded)
+"""
 
 n = data.n
 
@@ -8,7 +10,6 @@ n = data.n
 x = VarArray(size=n, dom=range(n))
 
 if not variant():
-
     satisfy(
         # notes must occur once, and so form a permutation
         AllDifferent(x),
@@ -21,7 +22,6 @@ if not variant():
     )
 
 elif variant("aux"):
-
     # y[i] is the distance between x[i] and x[i+1]
     y = VarArray(size=n - 1, dom=range(1, n))
 

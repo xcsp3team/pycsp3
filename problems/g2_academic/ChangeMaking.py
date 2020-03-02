@@ -5,7 +5,6 @@ from pycsp3 import *
 k = data.amount
 
 if not variant():
-
     # c1 is the number of coins of 1 cent
     c1 = Var(range(50))
 
@@ -38,7 +37,6 @@ if not variant():
     )
 
 elif variant("compact"):
-
     # coins[i] is the number of coins of the ith type
     c1, c5, c10, c20, c50, e1, e2 = coins = VarArray(size=7, dom=range(50))
 

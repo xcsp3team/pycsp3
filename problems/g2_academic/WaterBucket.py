@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 018 at CSPLib
+"""
+ Problem 018 at CSPLib
+"""
 
 c1, c2, c3 = data.c1, data.c2, data.c3
 t1, t2, t3 = data.t1, data.t2, data.t3

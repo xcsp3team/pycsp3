@@ -406,7 +406,6 @@ class Node(Entity):
         if type is TypeNode.SET:
             assert len(args) == 1
             sorted_sons= sorted(args[0], key=lambda v: str(v))
-            #print("hhhhh",args[0], sorted_sons)
             return Node(type, Node._create_sons(*sorted_sons))  #*sorted(args[0])))
         args = flatten(Node.build(TypeNode.SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args)
         assert type.is_valid_arity(len(args)), "Problem: Bad arity for node " + type.name + ". It is " + str(

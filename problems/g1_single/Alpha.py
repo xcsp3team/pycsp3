@@ -1,7 +1,9 @@
 from pycsp3 import *
 
+"""
+ Well-known crypto-arithmetic puzzle of unknown origin (e.g., a model is present in Gecode)
+"""
 
-# Well-known crypto-arithmetic puzzle of unknown origin (e.g., a model is present in Gecode)
 
 def of(word):
     return [x[i] for i in alphabet_positions(word)]

@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ Problem 065 at CSPLib
+"""
+
 v, b, r = data.v, data.b, data.r
 
 
@@ -41,4 +45,6 @@ satisfy(
     LexIncreasing(x, matrix=True)
 )
 
-minimize(z)
+minimize(
+    z
+)

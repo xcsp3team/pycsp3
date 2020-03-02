@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+See https://en.wikipedia.org/wiki/Knight%27s_tour
+"""
+
 n = data.n
 
 # x[i] is the cell number where the ith knight is put

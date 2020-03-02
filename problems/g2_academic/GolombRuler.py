@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 006 at CSPLib
+"""
+ Problem 006 at CSPLib
+"""
 
 n = data.n
 ub = n * n + 1  # a trivial upper-bound of an optimal ruler length

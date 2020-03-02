@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 023 at CSPLib
+"""
+ Problem 023 at CSPLib
+"""
 
 n, s = data.n, data.s
 gap = 3 * n * n - 3 * n + 1

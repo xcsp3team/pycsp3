@@ -20,16 +20,13 @@ satisfy(
     [y != 0 for y in [x1[-1], x2[-1], x3[-1]]]
 )
 
-
 if not variant():
-
     satisfy(
         # ensuring the crypto-arithmetic sum
-        Sum((x1[i] + x2[i]) * 10 ** i for i in range(n)) - Sum(x3[i] * 10 ** i for i in range(len(x3))) == 0
+        Sum((x1[i] + x2[i]) * 10 ** i for i in range(n)) == Sum(x3[i] * 10 ** i for i in range(len(x3)))
     )
 
 elif variant("carry"):
-
     # c[i] is the ith carry
     c = VarArray(size=n + 1, dom={0, 1})
 
@@ -38,7 +35,7 @@ elif variant("carry"):
         c[0] == 0,
 
         # managing the most significant carry
-        c[n] == (0 if len(word3) == n else x3[n]),  # NB: the parentheses are required
+        c[n] == (0 if len(x3) == n else x3[n]),  # NB: the parentheses are required
 
         # managing remainders
         [(c[i] + x1[i] + x2[i]) % 10 == x3[i] for i in range(n)],

@@ -1,9 +1,11 @@
 from pycsp3 import *
 
-# See Constraint Solving and Planning with Picat (page 43)
-# From Tony Hurlimann, A coin puzzle, SVOR-contest 2007
-# some data: (8,4) (8,5) (9,4) (10,4) (31,14)
-# TODO: variants in Hurlimann's paper
+"""
+ See 'Constraint Solving and Planning with Picat' (page 43)
+ From Tony Hurlimann, A coin puzzle, SVOR-contest 2007
+
+ Some data: (8,4) (8,5) (9,4) (10,4) (31,14)
+"""
 
 n, c = data.n, data.c
 
@@ -19,3 +21,6 @@ satisfy(
 minimize(
     Sum(x[i][j] * abs(i - j) ** 2 for i in range(n) for j in range(n))
 )
+
+
+#  TODO: other variants in Hurlimann's paper
