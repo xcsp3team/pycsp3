@@ -1,0 +1,21 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <var id="c1"> 0..49 </var>
+    <var id="c5"> 0..49 </var>
+    <var id="c10"> 0..49 </var>
+    <var id="c20"> 0..49 </var>
+    <var id="c50"> 0..49 </var>
+    <var id="e1"> 0..49 </var>
+    <var id="e2"> 0..49 </var>
+  </variables>
+  <constraints>
+    <sum note="the given change must be correct">
+      <list> c1 c5 c10 c20 c50 e1 e2 </list>
+      <coeffs> 1 5 10 20 50 100 200 </coeffs>
+      <condition> (eq,10) </condition>
+    </sum>
+  </constraints>
+  <objectives>
+    <minimize note="the given change must have the minimum number of coins" type="sum"> c1 c5 c10 c20 c50 e1 e2 </minimize>
+  </objectives>
+</instance>

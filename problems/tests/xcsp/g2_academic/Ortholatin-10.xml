@@ -11,6 +11,13 @@
     <allDifferent note="ensuring that y is a Latin square">
       <matrix> y[][] </matrix>
     </allDifferent>
+    <group class="diagonals" note="ensuring that values on diagonals are different">
+      <allDifferent> %... </allDifferent>
+      <args> x[0][0] x[1][1] x[2][2] x[3][3] x[4][4] x[5][5] x[6][6] x[7][7] x[8][8] x[9][9] </args>
+      <args> x[0][9] x[1][8] x[2][7] x[3][6] x[4][5] x[5][4] x[6][3] x[7][2] x[8][1] x[9][0] </args>
+      <args> y[0][0] y[1][1] y[2][2] y[3][3] y[4][4] y[5][5] y[6][6] y[7][7] y[8][8] y[9][9] </args>
+      <args> y[0][9] y[1][8] y[2][7] y[3][6] y[4][5] y[5][4] y[6][3] y[7][2] y[8][1] y[9][0] </args>
+    </group>
     <allDifferent note="ensuring orthogonality of x and y through z"> z[] </allDifferent>
     <group note="computing z from x and y">
       <extension>

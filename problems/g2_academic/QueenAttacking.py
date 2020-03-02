@@ -1,7 +1,8 @@
 from pycsp3 import *
 
-
-# Problem 029 at CSPLib
+"""
+ Problem 029 at CSPLib
+"""
 
 def primes(limit):
     """ Returns a list of primes < limit """

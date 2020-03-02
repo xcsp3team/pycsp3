@@ -1,7 +1,7 @@
 <instance format="XCSP3" type="CSP">
   <variables>
     <var id="killer" note="killer is the person who kills Agatha"> 0 1 2 </var>
-    <array id="hating" note="hating[i][j] is 1 iff person i is hating person j" size="[3][3]"> 0 1 </array>
+    <array id="hating" note="hating[i][j] is 1 iff person i hates person j" size="[3][3]"> 0 1 </array>
     <array id="richer" note="richer[i][j] is 1 iff person i is richer than person j" size="[3][3]"> 0 1 </array>
   </variables>
   <constraints>

@@ -1,7 +1,9 @@
 from pycsp3 import *
 from math import factorial
 
-# Pb045 in CSPLib
+"""
+ Problem 045 at CSPLib
+"""
 
 t, k, g, b = data.t, data.k, data.g, data.b
 n = factorial(k) // factorial(t) // factorial(k - t)

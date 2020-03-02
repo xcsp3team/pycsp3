@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 110 at CSPLib
+"""
+ Problem 110 at CSPLib
+"""
 
 n = data.n  # order
 

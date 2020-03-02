@@ -27,6 +27,11 @@ from pycsp3.tools.utilities import flatten, is_1d_list, is_matrix, is_square_mat
 ''' Global Variables '''
 
 absPython, maxPython, minPython = abs, max, min
+combinationsPython = combinations
+
+
+def combinations(n, r):
+    return combinationsPython(n, r) if not isinstance(n, int) else combinationsPython(range(n), r)
 
 
 def protect():

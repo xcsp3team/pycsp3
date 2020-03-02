@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# See Ian P. Gent, Christopher Jefferson, Ian Miguel: Watched Literals for Constraint Propagation in Minion. CP 2006: 182-197
+"""
+ See Ian P. Gent, Christopher Jefferson, Ian Miguel: Watched Literals for Constraint Propagation in Minion. CP 2006: 182-197
+"""
 
 n = data.n
 

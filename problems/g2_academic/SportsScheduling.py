@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 026 at CSPLib
+"""
+ Problem 026 at CSPLib
+"""
 
 nTeams = data.nTeams
 nWeeks, nPeriods, nMatches = nTeams - 1, nTeams // 2, (nTeams - 1) * nTeams // 2

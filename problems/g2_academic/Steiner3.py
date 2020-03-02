@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 044 at CSPLib
+"""
+ Problem 044 at CSPLib
+"""
 
 n = data.n
 nTriples = (n * (n - 1)) // 6

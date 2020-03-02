@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 003 at CSPLib
+"""
+ Problem 003 at CSPLib
+"""
 
 n = data.n
 

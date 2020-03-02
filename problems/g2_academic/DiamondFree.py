@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 050 at CSPLib
+"""
+ Problem 050 at CSPLib
+"""
 
 n = data.n
 
@@ -31,8 +33,4 @@ satisfy(
 )
 
 
-
-
-
 #  for i in range(n) for j in range(i + 1, n) for k in range(j + 1, n) for l in     range(k + 1, n)],
-
