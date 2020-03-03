@@ -4,13 +4,14 @@ from pycsp3 import *
  Problem 018 at CSPLib
 """
 
-c1, c2, c3 = data.c1, data.c2, data.c3
-t1, t2, t3 = data.t1, data.t2, data.t3
-h = data.h
+c1, c2, c3 = data.c1, data.c2, data.c3  # capacities of the three buckets
+g1, g2, g3 = data.t1, data.t2, data.t3  # goal (which quantities must be present in the three buckets after transfers)
+h = data.h  # horizon (maximal number of possible rounds)
 
 assert c1 >= c2 >= c3 > 0, "Bucket capacities must be in decreasing order"
+assert g1 + g2 + g3 == c1, "water from bucket 1 must be split into the three buckets to reach the goal"
 
-#  x[i][j] is the volume of water in bucket j at time (round) i
+# x[t][i] is the volume of water in bucket i at time (round) t
 x = VarArray(size=[h, 3], dom=[[range(c1 + 1), range(c2 + 1), range(c3 + 1)]] * h)
 
 # k is the number of transfers of water in order to reach the goal
@@ -21,13 +22,9 @@ def tables():
     def related(tuple1, tuple2):
         a1, a2, a3 = tuple1
         b1, b2, b3 = tuple2
-        if (a1, a2, a3) == (t1, t2, t3):
-            return b1 == b2 == b3 == 0
-        if a1 == a2 == a3 == 0:
-            return b1 == b2 == b3 == 0
-        if b1 == b2 == b3 == 0:
-            return False
-        if all(tuple1[i] != tuple2[i] for i in range(3)):
+        if (a1, a2, a3) == (g1, g2, g3):
+            return (b1, b2, b3) == (g1, g2, g3)  # when the goal is reached, buckets are kept as they are
+        if a1 != b1 and a2 != b2 and a3 != b3:  # not a possible transition if three buckets are impacted
             return False
         if a1 != b1 and a2 != b2:
             return b1 in {0, c1} or b2 in {0, c2}
@@ -35,32 +32,28 @@ def tables():
             return b1 in {0, c1} or b3 in {0, c3}
         if a2 != b2 and a3 != b3:
             return b2 in {0, c2} or b3 in {0, c3}
-        return False
+        return False  # not related in other cases
 
-    table_capacities = {(0, 0, 0)} | {(i, j, k) for i in range(c1 + 1) for j in range(c2 + 1) for k in range(c3 + 1) if i + j + k == c1}
-    table_dual = {(*cap1, *cap2) for cap1 in table_capacities for cap2 in table_capacities if related(cap1, cap2)}
-    table_goal = set()
-    for i in range(h):
-        t = [0] * (h * 3 + 1)
-        t[0] = i
-        for j in range(1, (i * 3) + 1):
-            t[j] = ANY
-        t[i * 3 + 1], t[i * 3 + 2], t[i * 3 + 3] = t1, t2, t3
-        table_goal.add(tuple(t))
-    return table_capacities, table_dual, table_goal
+    table_capacities = {(i, j, k) for i in range(c1 + 1) for j in range(c2 + 1) for k in range(c3 + 1) if i + j + k == c1}
+    table_tr = {(*cap1, *cap2) for cap1 in table_capacities for cap2 in table_capacities if related(cap1, cap2)}
+    table_hr = {(t,) + (ANY,) * (t * 3) + (g1, g2, g3) * (h - t) for t in range(h)}
+    return table_tr, table_hr
 
 
-table1, table2, table3 = tables()
+table_transitions, table_horizon = tables()
 
 satisfy(
-    # Initially, only water in bucket 1
+    # Initially, at round 0, the bucket 1 is full of water while the other buckets are empty
     x[0] == [c1, 0, 0],
 
-    [x[i] in table1 for i in range(h)],
+    # only some transfers are possible between two successive rounds
+    [(x[t] + x[t + 1]) in table_transitions for t in range(h - 1)],  # or (*x[t], *x[t + 1])
 
-    [(x[i] + x[i + 1]) in table2 for i in range(h - 1)],  # or (*x[i], *x[i + 1])
-
-    (k, *flatten(x)) in table3
+    # computing the number of transfers
+    (k, *flatten(x)) in table_horizon
 )
 
-minimize(k)
+minimize(
+    # minimizing the number of transfers
+    k
+)
