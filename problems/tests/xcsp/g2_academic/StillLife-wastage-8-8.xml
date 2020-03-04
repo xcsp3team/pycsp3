@@ -3,7 +3,6 @@
     <array id="x" note="x[i][j] is 1 iff the cell at row i and col j is alive (note that there is a border)" size="[10][10]"> 0 1 </array>
     <array id="w" note="w[i][j] is the wastage for the cell at row i and col j" size="[10][10]"> 0 1 2 </array>
     <array id="ws" note="ws[i] is the wastage sum for cells at row i" size="[10]"> 0..200 </array>
-    <var id="z" note="z is the number of alive cells"> 0..64 </var>
   </variables>
   <constraints>
     <instantiation note="cells at the border are assumed to be dead">
@@ -161,11 +160,6 @@
       <args> ws[8] ws[7] w[8][] </args>
       <args> ws[9] ws[8] w[9][] </args>
     </group>
-    <sum note="setting the value of the objective">
-      <list> z ws[9] </list>
-      <coeffs> 4 1 </coeffs>
-      <condition> (eq,160) </condition>
-    </sum>
     <group class="redundant-constraints">
       <intension> ge(sub(ws[9],%0),%1) </intension>
       <args> ws[0] 6 </args>
@@ -180,6 +174,6 @@
     </group>
   </constraints>
   <objectives>
-    <maximize note="maximizing the number of alive cells"> z </maximize>
+    <maximize note="maximizing the number of alive cells"> div(sub(160,ws[9]),4) </maximize>
   </objectives>
 </instance>

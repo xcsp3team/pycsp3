@@ -35,8 +35,14 @@
     <intension> ne(cheese,Sabrina) </intension>
     <intension> in(jetski,set(beer,soda)) </intension>
     <intension> in(Mindy,set(beer,soda)) </intension>
-    <intension> in(bread,set(Mindy,Sabrina,Tanya)) </intension>
-    <intension> in(juice,set(Mindy,Sabrina,Tanya)) </intension>
+    <extension>
+      <list> bread </list>
+      <supports> Mindy Sabrina Tanya </supports>
+    </extension>
+    <extension>
+      <list> juice </list>
+      <supports> Mindy Sabrina Tanya </supports>
+    </extension>
     <intension> eq(bread,juice) </intension>
     <intension> notin(sailboat,set(cookies,soda)) </intension>
     <intension> ne(soda,cookies) </intension>

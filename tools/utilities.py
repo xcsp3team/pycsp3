@@ -40,24 +40,24 @@ class DefaultListOrderedDict(OrderedDict):
         return self[k]
 
 
-def is_1d_list(l, type=None):
-    return isinstance(l, list) and all(isinstance(v, type) if type else not isinstance(v, list) for v in l)
+def is_1d_list(l, types=None):
+    return isinstance(l, list) and all(isinstance(v, types) if types else not isinstance(v, list) for v in l)
 
 
-def is_1d_tuple(l, type):
-    return isinstance(l, tuple) and all(isinstance(v, type) for v in l)
+def is_1d_tuple(l, types):
+    return isinstance(l, tuple) and all(isinstance(v, types) for v in l)
 
 
-def is_2d_list(m, type=None):
-    return isinstance(m, list) and all(is_1d_list(l, type) for l in m)
+def is_2d_list(m, types=None):
+    return isinstance(m, list) and all(is_1d_list(l, types) for l in m)
 
 
-def is_matrix(m, type=None):
-    return is_2d_list(m, type) and all(len(l) == len(m[0]) for l in m)
+def is_matrix(m, types=None):
+    return is_2d_list(m, types) and all(len(l) == len(m[0]) for l in m)
 
 
-def is_square_matrix(m, type=None):
-    return is_matrix(m, type) and len(m) == len(m[0])
+def is_square_matrix(m, types=None):
+    return is_matrix(m, types) and len(m) == len(m[0])
 
 
 def transpose(m):
@@ -96,6 +96,21 @@ def is_containing(l, types, *, check_first_only=False):
         return True if found else None
     else:
         return isinstance(l, types)
+
+
+def unique_type_in(l, tpe=None):
+    if isinstance(l, (list, tuple, set, frozenset)):
+        if len(l) == 0:
+            return None
+        for v in l:
+            t = unique_type_in(v, tpe)
+            if t is False:
+                return False
+            if tpe is None:
+                tpe = t
+        return tpe
+    else:
+        return None if l is None else type(l) if tpe is None else tpe if isinstance(l, tpe) else False
 
 
 def alphabet_positions(s):

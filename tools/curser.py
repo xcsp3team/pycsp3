@@ -6,7 +6,7 @@ from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, Co
 from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import flatten, is_containing, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY
+from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -43,14 +43,20 @@ def cursing():
     def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
-        if isinstance(other, Variable) and len(self) > 0 and is_containing(self, int):  # this is a unary table constraint
+        tself = unique_type_in(self)
+        # if isinstance(other, Variable) and len(self) > 0 and is_containing(self, int):  # unary table constraint
+        if isinstance(other, Variable) and tself in {int, str}:  # unary table constraint
             queue_in.append((list(self), other))
             return True
-        if isinstance(other, (PartialConstraint, Variable)) or is_containing(self, Variable) and isinstance(other, (int,str)):
+        # if isinstance(other, (Variable, PartialConstraint)) or isinstance(other, (int, str)) and is_containing(self, Variable):  # intension constraint
+        if isinstance(other, (Variable, PartialConstraint)) or isinstance(other, (int, str)) and tself and issubclass(tself, Variable):  # intension constraint
             queue_in.append((self, other))
             return True
-        if is_1d_tuple(other, Variable) or is_1d_list(other, Variable):  # this is a non-unary table constraint
-            queue_in.append((list(self), other))
+        # if is_1d_tuple(other, Variable) or is_1d_list(other, Variable):  # non-unary table constraint
+        #     queue_in.append((list(self), other))
+        #     return True
+        if is_containing(other, Variable):  # non-unary table constraint
+            queue_in.append((list(self), flatten(other)))
             return True
         return self.__contains__(other)
 
@@ -256,7 +262,7 @@ class OpOverrider:
                 values = [values[0]] * len(variables)
             return ConstraintInstantiation(variables, values)
 
-        if isinstance(other, list) and any(isinstance(v, int) for v in other):
+        if isinstance(other, (list, tuple)) and any(isinstance(v, int) for v in other):
             return ECtr(Instantiation(variables=self, values=other))
         return list.__eq__(self, other)
 

@@ -5,7 +5,7 @@
       <domain for="x[][1]"> 0..5 </domain>
       <domain for="x[][2]"> 0..3 </domain>
     </array>
-    <var id="k" note="k is the number of transfers of water in order to reach the goal"> 0..7 </var>
+    <var id="z" note="z is the number of transfers of water in order to reach the goal"> 0..7 </var>
   </variables>
   <constraints>
     <instantiation note="Initially, at round 0, the bucket 1 is full of water while the other buckets are empty">
@@ -26,11 +26,11 @@
       <args> x[6..7][] </args>
     </group>
     <extension note="computing the number of transfers">
-      <list> k x[][] </list>
+      <list> z x[][] </list>
       <supports> (0,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0)(1,*,*,*,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0)(2,*,*,*,*,*,*,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0)(3,*,*,*,*,*,*,*,*,*,4,4,0,4,4,0,4,4,0,4,4,0,4,4,0)(4,*,*,*,*,*,*,*,*,*,*,*,*,4,4,0,4,4,0,4,4,0,4,4,0)(5,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,4,4,0,4,4,0,4,4,0)(6,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,4,4,0,4,4,0)(7,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,4,4,0) </supports>
     </extension>
   </constraints>
   <objectives>
-    <minimize note="minimizing the number of transfers"> k </minimize>
+    <minimize note="minimizing the number of transfers"> z </minimize>
   </objectives>
 </instance>

@@ -7,18 +7,18 @@ from pycsp3 import *
 n, m = data.n, data.m
 
 if not variant():
-    # x[i][j] is 1 iff the cell at row i and col j is alive
-    x = VarArray(size=[n, m], dom={0, 1})
-
-    # a[i][j] is the number of alive neighbours
-    a = VarArray(size=[n, m], dom=range(9))
-
     table = {(v, 0) for v in range(9) if v != 3} | {(2, 1), (3, 1)}
 
 
     def scope(i, j):
         return [x[k][l] for k in range(n) for l in range(m) if i - 1 <= k <= i + 1 and j - 1 <= l <= j + 1 and (k, l) != (i, j)]
 
+
+    # x[i][j] is 1 iff the cell at row i and col j is alive
+    x = VarArray(size=[n, m], dom={0, 1})
+
+    # a[i][j] is the number of alive neighbours
+    a = VarArray(size=[n, m], dom=range(9))
 
     satisfy(
         # computing the numbers of alive neighbours
@@ -29,10 +29,10 @@ if not variant():
 
         # imposing rules for ensuring valid dead cells around the board
         [
-            Slide(x[0][i:i + 3] not in [(1, 1, 1)] for i in range(m - 2)),
-            Slide(x[n - 1][i: i + 3] not in [(1, 1, 1)] for i in range(m - 2)),
-            Slide(x[i:i + 3, 0] not in [(1, 1, 1)] for i in range(n - 2)),
-            Slide(x[i:i + 3, m - 1] not in [(1, 1, 1)] for i in range(n - 2))
+            Slide(x[0][i:i + 3] not in {(1, 1, 1)} for i in range(m - 2)),
+            Slide(x[- 1][i: i + 3] not in {(1, 1, 1)} for i in range(m - 2)),
+            Slide(x[i:i + 3, 0] not in {(1, 1, 1)} for i in range(n - 2)),
+            Slide(x[i:i + 3, - 1] not in {(1, 1, 1)} for i in range(n - 2))
         ],
 
         # tag(symmetry-breaking)
@@ -44,7 +44,23 @@ if not variant():
     )
 
 elif variant("wastage"):
+    def condition_for_tuple(t0, t1, t2, t3, t4, t5, t6, t7, t8, wa):
+        s3 = t1 + t3 + t5 + t7
+        s1 = t0 + t2 + t6 + t8 + s3
+        s2 = t0 * t2 + t2 * t8 + t8 * t6 + t6 * t0 + s3
+        return (t4 != 1 or (2 <= s1 <= 3 and (s2 > 0 or wa >= 2) and (s2 > 1 or wa >= 1))) and \
+               (t4 != 0 or (s1 != 3 and (0 < s3 < 4 or wa >= 2)) and (s3 > 1 or wa >= 1))
+
+
+    table = {(*t, i) for t in product(range(2), repeat=9) for i in range(3) if condition_for_tuple(*t, i)}
+
+
+    def neighbors(i, j):
+        return [x[k][l] for k in range(i - 1, i + 2) for l in range(j - 1, j + 2)]
+
+
     assert n == m
+
     #  x[i][j] is 1 iff the cell at row i and col j is alive (note that there is a border)
     x = VarArray(size=[n + 2, n + 2], dom={0, 1})
 
@@ -54,41 +70,21 @@ elif variant("wastage"):
     # ws[i] is the wastage sum for cells at row i
     ws = VarArray(size=n + 2, dom=range(2 * (n + 2) * (n + 2) + 1))
 
-    # z is the number of alive cells
-    z = Var(dom=range(n * n + 1))
-
-
-    def condition_for_tuple(t):
-        s1 = t[0] + t[1] + t[2] + t[3] + t[5] + t[6] + t[7] + t[8]
-        s2 = t[0] * t[2] + t[2] * t[8] + t[8] * t[6] + t[6] * t[0] + t[1] + t[3] + t[5] + t[7]
-        s3 = t[1] + t[3] + t[5] + t[7]
-        return (t[4] != 1 or s1 >= 2) and (t[4] != 1 or s1 <= 3) and (t[4] != 0 or s1 != 3) and (t[4] != 1 or s2 > 1 or t[9] >= 1) and \
-               (t[4] != 1 or s2 > 0 or t[9] >= 2) and (t[4] != 0 or s3 < 4 or t[9] >= 2) and (t[4] != 0 or s3 > 1 or t[9] >= 1) and \
-               (t[4] != 0 or s3 > 0 or t[9] >= 2)
-
-
-    table = {(*t, i) for t in product(range(2), repeat=9) for i in range(3) if condition_for_tuple((*t, i))}
-
-
-    def neighbors(i, j):
-        return [x[k][l] for k in range(i - 1, i + 2) for l in range(j - 1, j + 2)]
-
-
     satisfy(
         # cells at the border are assumed to be dead
         [
             [x[0][j] == 0 for j in range(n + 2)],
-            [x[n + 1][j] == 0 for j in range(n + 2)],
+            [x[- 1][j] == 0 for j in range(n + 2)],
             [x[i][0] == 0 for i in range(n + 2)],
-            [x[i][n + 1] == 0 for i in range(n + 2)]
+            [x[i][- 1] == 0 for i in range(n + 2)]
         ],
 
         # ensuring that cells at the border remain dead
         [
-            Slide([x[1][j], x[1][j + 1], x[1][j + 2]] not in [(1, 1, 1)] for j in range(n)),
-            Slide([x[n][j], x[n][j + 1], x[n][j + 2]] not in [(1, 1, 1)] for j in range(n)),
-            Slide([x[i][1], x[i + 1][1], x[i + 2][1]] not in [(1, 1, 1)] for i in range(n)),
-            Slide([x[i][n], x[i + 1][n], x[i + 2][n]] not in [(1, 1, 1)] for i in range(n))
+            Slide(x[1][j:j + 3] not in {(1, 1, 1)} for j in range(n)),
+            Slide(x[n][j:j + 3] not in {(1, 1, 1)} for j in range(n)),
+            Slide(x[i:i + 3, 1] not in {(1, 1, 1)} for i in range(n)),
+            Slide(x[i:i + 3, n] not in {(1, 1, 1)} for i in range(n))
         ],
 
         # still life + wastage constraints
@@ -105,14 +101,11 @@ elif variant("wastage"):
         # summing wastage
         [Sum(w[0] if i == 0 else [ws[i - 1], w[i]]) == ws[i] for i in range(n + 2)],
 
-        # setting the value of the objective
-        Sum([z, ws[-1]] * [4, 1]) == 2 * n * n + 4 * n,
-
         # tag(redundant-constraints)
-        [(ws[n + 1] - ws[i]) >= 2 * ((n - i) // 3) + n // 3 for i in range(n + 1)]
+        [ws[n + 1] - ws[i] >= 2 * ((n - i) // 3) + n // 3 for i in range(n + 1)]
     )
 
     maximize(
-        #  maximizing the number of alive cells
-        z
+        # maximizing the number of alive cells
+        (2 * n * n + 4 * n - ws[-1]) // 4
     )

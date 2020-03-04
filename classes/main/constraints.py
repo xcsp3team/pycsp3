@@ -162,20 +162,22 @@ class ConstraintExtension(Constraint):
     def caching(table):
         if len(table) == 0:
             return None
-        arity = 1 if is_1d_list(table, int) else len(table[0])
+        arity = 1 if is_1d_list(table, (int, str)) else len(table[0])
         h = hash(tuple(table))
         if h not in ConstraintExtension.cache:
             if arity > 1:
                 table.sort()
                 ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
-            else:
+            elif isinstance(table[0], int):
                 ConstraintExtension.cache[h] = integers_to_string(table)
+            else:
+                ConstraintExtension.cache[h] = " ".join(v for v in sorted(table))
         return ConstraintExtension.cache[h]
 
     def __init__(self, scope, table, positive=True):
         super().__init__(TypeCtr.EXTENSION)
         assert is_1d_list(scope, Variable)
-        assert len(table) == 0 or (len(scope) == 1 and is_1d_list(table, int)) or (len(scope) > 1 and len(scope) == len(table[0]))
+        assert len(table) == 0 or (len(scope) == 1 and (is_1d_list(table, int) or is_1d_list(table, str))) or (len(scope) > 1 and len(scope) == len(table[0]))
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)
         self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, ConstraintExtension.caching(table), content_compressible=False)
 
