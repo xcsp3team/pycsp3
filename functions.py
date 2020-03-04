@@ -257,9 +257,10 @@ def Extension(*, scope, table, positive=True):
     checkType(scope, [Variable])
     checkType(table, [str, int, float])
     checkType(positive, bool)
-    assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples (or integers)"
-    assert isinstance(table[0], (tuple, int)), "Elements of tables are tuples or integers"
-    assert isinstance(table[0], int) or len(scope) == len(table[0]), "The length of each tuple must be the same as the arity"
+    assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
+    assert isinstance(table[0], (tuple, int, str)), "Elements of tables are tuples or integers (or symbols)"
+    assert isinstance(table[0], (int, str)) or len(scope) == len(table[0]), (
+    "The length of each tuple must be the same as the arity" + "maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
     # TODO: this ckecking don't pass on Waterbucket.py, but the xml file is the same that the java version !
     # if options.checker:
     #    if id(table) not in checked_tables:

@@ -5,21 +5,15 @@ from pycsp3 import *
 """
 
 c1, c2, c3 = data.c1, data.c2, data.c3  # capacities of the three buckets
-g1, g2, g3 = data.t1, data.t2, data.t3  # goal (which quantities must be present in the three buckets after transfers)
-h = data.h  # horizon (maximal number of possible rounds)
+g1, g2, g3 = data.g1, data.g2, data.g3  # goal (which quantities must be present in the three buckets after all transfers)
+h = data.h  # horizon (maximal number of rounds/transfers)
 
 assert c1 >= c2 >= c3 > 0, "Bucket capacities must be in decreasing order"
 assert g1 + g2 + g3 == c1, "water from bucket 1 must be split into the three buckets to reach the goal"
 
-# x[t][i] is the volume of water in bucket i at time (round) t
-x = VarArray(size=[h, 3], dom=[[range(c1 + 1), range(c2 + 1), range(c3 + 1)]] * h)
-
-# k is the number of transfers of water in order to reach the goal
-k = Var(dom=range(h))
-
 
 def tables():
-    def related(tuple1, tuple2):
+    def nearby_states(tuple1, tuple2):
         a1, a2, a3 = tuple1
         b1, b2, b3 = tuple2
         if (a1, a2, a3) == (g1, g2, g3):
@@ -34,26 +28,32 @@ def tables():
             return b2 in {0, c2} or b3 in {0, c3}
         return False  # not related in other cases
 
-    table_capacities = {(i, j, k) for i in range(c1 + 1) for j in range(c2 + 1) for k in range(c3 + 1) if i + j + k == c1}
-    table_tr = {(*cap1, *cap2) for cap1 in table_capacities for cap2 in table_capacities if related(cap1, cap2)}
+    states = {(i, j, k) for i in range(c1 + 1) for j in range(c2 + 1) for k in range(c3 + 1) if i + j + k == c1}
+    table_tr = {(*state1, *state2) for state1 in states for state2 in states if nearby_states(state1, state2)}
     table_hr = {(t,) + (ANY,) * (t * 3) + (g1, g2, g3) * (h - t) for t in range(h)}
     return table_tr, table_hr
 
 
 table_transitions, table_horizon = tables()
 
+# x[t][i] is the volume of water in bucket i at time (round) t
+x = VarArray(size=[h, 3], dom=[[range(c1 + 1), range(c2 + 1), range(c3 + 1)]] * h)
+
+# z is the number of transfers of water in order to reach the goal
+z = Var(dom=range(h))
+
 satisfy(
     # Initially, at round 0, the bucket 1 is full of water while the other buckets are empty
-    x[0] == [c1, 0, 0],
+    x[0] == (c1, 0, 0),
 
     # only some transfers are possible between two successive rounds
     [(x[t] + x[t + 1]) in table_transitions for t in range(h - 1)],  # or (*x[t], *x[t + 1])
 
     # computing the number of transfers
-    (k, *flatten(x)) in table_horizon
+    (z, *flatten(x)) in table_horizon
 )
 
 minimize(
     # minimizing the number of transfers
-    k
+    z
 )
