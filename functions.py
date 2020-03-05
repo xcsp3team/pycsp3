@@ -22,12 +22,11 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data.dataparser import DataDict
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns, queue_in
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing, ANY
+from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing, ANY
 
 ''' Global Variables '''
 
-absPython, maxPython, minPython = abs, max, min
-combinationsPython = combinations
+absPython, maxPython, minPython, combinationsPython = abs, max, min, combinations
 
 
 def combinations(n, r):
@@ -145,6 +144,8 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         ctr = Regular(scope=left_operand, automaton=right_operand)
     elif isinstance(right_operand, MDD):  # it is a MDD constraint
         ctr = Mdd(scope=left_operand, mdd=right_operand)
+    elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
+        ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.EQ, 1))  # TODO to be replaced by a member/element constraint ?
     else:  #  It is a table constraint
         if not hasattr(left_operand, '__iter__'):
             left_operand = [left_operand]
@@ -260,7 +261,7 @@ def Extension(*, scope, table, positive=True):
     assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
     assert isinstance(table[0], (tuple, int, str)), "Elements of tables are tuples or integers (or symbols)"
     assert isinstance(table[0], (int, str)) or len(scope) == len(table[0]), (
-    "The length of each tuple must be the same as the arity" + "maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
+        "The length of each tuple must be the same as the arity." + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
     # TODO: this ckecking don't pass on Waterbucket.py, but the xml file is the same that the java version !
     # if options.checker:
     #    if id(table) not in checked_tables:

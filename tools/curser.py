@@ -1,7 +1,8 @@
 from collections import deque
 
 from pycsp3.classes.entities import Node, TypeNode
-from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix, \
+from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintAllDifferent, ConstraintSum, ConstraintCount, ConstraintElement, \
+    ConstraintElementMatrix, \
     ConstraintInstantiation, ECtr
 from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
 from pycsp3.libs.forbiddenfruit import curse
@@ -30,12 +31,18 @@ def cursing():
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
             queue_in.append((list(self), other))
             return True
+        if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member/element constraint
+            queue_in.append((self, other))
+            return True
         return self.__contains__(other)
 
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
+            queue_in.append((self, other))
+            return True
+        if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member/element constraint
             queue_in.append((self, other))
             return True
         return self.__contains__(other)
@@ -360,6 +367,12 @@ class ListVar(list):
     def __mul__(self, other):
         assert is_containing(self, (Variable, Node))
         return ScalarProduct(self, other)
+
+    def __contains__(self, other):
+        if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member constraint
+            queue_in.append((self, other))
+            return True
+        return list.__contains__(self, other)
 
     # def __rmul__(self, other): return ListVar.__mul__(other, self)
 
