@@ -45,7 +45,7 @@ satisfy(
     # tag(symmetry-breaking)
     [
         # the match '0 versus t' (with t strictly greater than 0) appears at week t-1
-        [match_number(0, w + 1) in m[w] for w in range(nWeeks)],
+        [Count(m[w], value=match_number(0, w + 1)) == 1 for w in range(nWeeks)],
 
         # the first week is set : 0 vs 1, 2 vs 3, 4 vs 5, etc.
         [m[0][p] == match_number(2 * p, 2 * p + 1) for p in range(nPeriods)]
@@ -85,6 +85,3 @@ satisfy(
 # b.add(exactlyOne(columnOf(m, w), assignedTo=matchNumber(0, w + 1)).note("the match '0 versus t' (with t strictly greater than 0) appears at week t-1") for w in
 #      range(nWeeks))
 
-
-# the match '0 versus t' (with t strictly greater than 0) appears at week t-1
-# [Count(m[w], value=match_number(0, w + 1)) == 1 for w in range(nWeeks)]
