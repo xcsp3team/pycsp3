@@ -122,10 +122,10 @@ def comment_and_tags_of(*, function_name):
 def _remove_matching_brackets(line):
     bracket = None
     for i, c in enumerate(line):
-        if c in {'(', '[', '{'}:
+        if c in {'(', '[', '{'}:  # todo add 'for'?
             left = i
             bracket = c
-        elif (c, bracket) in {(')', '('), (']', '['), ('}', '{')}:
+        elif (c, bracket) in {(')', '('), (']', '['), ('}', '{')}:  # todo add ('for', 'in') ?
             right = i + 1
             break
     else:  # no break
@@ -135,10 +135,10 @@ def _remove_matching_brackets(line):
 
 # Delete ( ) parts and [ ] parts of each line excepts for comment lines
 def _delete_bracket_part(code, nb_parameters):
-    if nb_parameters == 1:
-        code = [line.strip() if is_comment_line(line) else line.replace(",", "").strip() for line in code]
-    else:
-        code = [line.strip() if is_comment_line(line) else _remove_matching_brackets(line).strip() for line in code]
+    # if nb_parameters == 1 and len(code) == 1:  # TODO  code for case like variant aux-v7 in Quasigroup (remonving ,)
+    #     code = [line.strip() if is_comment_line(line) else line.replace(",", "").strip() for line in code]
+    # else:
+    code = [line.strip() if is_comment_line(line) else _remove_matching_brackets(line).strip() for line in code]
     if len(code) > 0 and len(code[-1]) > 0 and code[-1][-1] == ',':  # removing useless trailing comma of specify() if any
         code[-1] = code[:-1]
     return code
@@ -194,14 +194,15 @@ def comments_and_tags_of_parameters_of(*, function_name, args):
             code[i] = "" if level != 1 else new_line
 
         if found and level == 2 and is_comment_line(line):
-            comments2[i1][i2] += ("" if len(comments2[i1][i2]) == 0 else " - ") + _prepare(line)
+            s = _prepare(line)
+            comments2[i1][i2] += ("" if len(comments2[i1][i2]) == 0 else " - ") + ("" if s is None else s)
             tags = _find_tags(line)
             if tags:
                 tags2[i1][i2] += ("" if len(tags2[i1][i2]) == 0 else " ") + tags
             code[i] = ""
 
-    n_commas = sum(s.count(',') for s in code if not is_comment_line(s))
-    assert len(args) == n_commas + 1, "Inspector error: numbers of commas incorrect in satisfy():" + str(n_commas) + " in " + str(code)
+    # n_commas = sum(s.count(',') for s in code if not is_comment_line(s))  # TODO problem with subvariant aux-v7 of Quasigroup
+    # assert len(args) == n_commas + 1, "Inspector error: numbers of commas incorrect in satisfy():" + str(n_commas) + " in " + str(code)
 
     # collecting comments and tags for each parameter (i.e., at level 1)
     i1 = 0

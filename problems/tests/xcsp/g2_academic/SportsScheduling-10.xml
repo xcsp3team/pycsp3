@@ -3,8 +3,6 @@
     <array id="h" note="h[w][p] is the home team at week w and period p" size="[9][5]"> 0..9 </array>
     <array id="a" note="a[w][p] is the away team at week w and period p" size="[9][5]"> 0..9 </array>
     <array id="m" note="m[w][p] is the number of the match at week w and period p" size="[9][5]"> 0..44 </array>
-    <array id="hd" class="dummy-week" note="hd[p] is the home team for the dummy match of period p" size="[5]"> 0..9 </array>
-    <array id="ad" class="dummy-week" note="ad[p] is the away team for the dummy match of period p" size="[5]"> 0..9 </array>
   </variables>
   <constraints>
     <group note="linking variables through ternary table constraints">
@@ -104,29 +102,6 @@
         <list> m[0][] </list>
         <values> 0 17 30 39 44 </values>
       </instantiation>
-    </block>
-    <block class="dummy-week" note="handling dummy week (variables and constraints)">
-      <allDifferent note="all teams are different in the dummy week"> hd[] ad[] </allDifferent>
-      <group note="each team plays two times in each period">
-        <cardinality>
-          <list> %... </list>
-          <values> 0 1 2 3 4 5 6 7 8 9 </values>
-          <occurs> 2 2 2 2 2 2 2 2 2 2 </occurs>
-        </cardinality>
-        <args> h[][0] a[][0] hd[0] ad[0] </args>
-        <args> h[][1] a[][1] hd[1] ad[1] </args>
-        <args> h[][2] a[][2] hd[2] ad[2] </args>
-        <args> h[][3] a[][3] hd[3] ad[3] </args>
-        <args> h[][4] a[][4] hd[4] ad[4] </args>
-      </group>
-      <group>
-        <intension> lt(%0,%1) </intension>
-        <args> hd[0] ad[0] </args>
-        <args> hd[1] ad[1] </args>
-        <args> hd[2] ad[2] </args>
-        <args> hd[3] ad[3] </args>
-        <args> hd[4] ad[4] </args>
-      </group>
     </block>
   </constraints>
 </instance>
