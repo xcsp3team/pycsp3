@@ -9,7 +9,7 @@ n = data.n  # order
 if variant("m1"):
 
     def less_equal(i1, j1, i2, j2):
-        if i1 == i2 and j1 == j2:
+        if (i1, j1) == (i2, j2):
             return b[i1][j1] + w[i1][j1] <= 1
         if i1 < i2 or (i1 == i2 and j1 < j2):
             if i1 == i2 or j1 == j2 or abs(i1 - i2) == abs(j1 - j2):  # maybe we can simplify something here

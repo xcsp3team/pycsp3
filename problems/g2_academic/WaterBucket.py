@@ -13,9 +13,7 @@ assert g1 + g2 + g3 == c1, "water from bucket 1 must be split into the three buc
 
 
 def tables():
-    def nearby_states(tuple1, tuple2):
-        a1, a2, a3 = tuple1
-        b1, b2, b3 = tuple2
+    def nearby_states(a1, a2, a3, b1, b2, b3):
         if (a1, a2, a3) == (g1, g2, g3):
             return (b1, b2, b3) == (g1, g2, g3)  # when the goal is reached, buckets are kept as they are
         if a1 != b1 and a2 != b2 and a3 != b3:  # not a possible transition if three buckets are impacted
@@ -29,7 +27,7 @@ def tables():
         return False  # not related in other cases
 
     states = {(i, j, k) for i in range(c1 + 1) for j in range(c2 + 1) for k in range(c3 + 1) if i + j + k == c1}
-    table_tr = {(*state1, *state2) for state1 in states for state2 in states if nearby_states(state1, state2)}
+    table_tr = {(*state1, *state2) for state1 in states for state2 in states if nearby_states(*state1, *state2)}
     table_hr = {(t,) + (ANY,) * (t * 3) + (g1, g2, g3) * (h - t) for t in range(h)}
     return table_tr, table_hr
 

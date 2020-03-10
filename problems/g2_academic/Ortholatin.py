@@ -40,8 +40,12 @@ satisfy(
     [(x[i][j], y[i][j], z[i * n + j]) in table for i in range(n) for j in range(n)],
 
     # tag(symmetry-breaking)
-    [
-        [x[0][j] == j for j in range(n)],
-        [y[0][j] == j for j in range(n)]
-    ]
+    [(x[0][j] == j, y[0][j] == j) for j in range(n)]
 )
+
+
+# # tag(symmetry-breaking)
+#     [
+#         [x[0][j] == j for j in range(n)],
+#         [y[0][j] == j for j in range(n)]
+#     ],

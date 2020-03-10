@@ -1,14 +1,13 @@
 <instance format="XCSP3" type="COP">
   <variables>
-    <array id="x" note="x[i][j] is 1 iff the cell at row i and col j is alive (note that there is a border)" size="[10][10]"> 0 1 </array>
+    <array id="x" note="x[i][j] is 1 iff the cell at row i and col j is alive (note that there is a border)" size="[10][10]">
+      <domain for="x[0][] x[1][0] x[1][9] x[2][0] x[2][9] x[3][0] x[3][9] x[4][0] x[4][9] x[5][0] x[5][9] x[6][0] x[6][9] x[7][0] x[7][9] x[8][0] x[8][9] x[9][]"> 0 </domain>
+      <domain for="x[1..8][1..8]"> 0 1 </domain>
+    </array>
     <array id="w" note="w[i][j] is the wastage for the cell at row i and col j" size="[10][10]"> 0 1 2 </array>
     <array id="ws" note="ws[i] is the wastage sum for cells at row i" size="[10]"> 0..200 </array>
   </variables>
   <constraints>
-    <instantiation note="cells at the border are assumed to be dead">
-      <list> x[0][] x[9][] x[][0] x[][9] </list>
-      <values> 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 </values>
-    </instantiation>
     <block note="ensuring that cells at the border remain dead">
       <slide>
         <list> x[1][] </list>

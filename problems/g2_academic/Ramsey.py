@@ -3,7 +3,7 @@ from pycsp3 import *
  Problem 017 at CSPLib
 
  Ramsey problem.
- It is to colour the edges of a complete graph with n nodes using at most k colours.
+ The edges of a complete graph with n nodes must be coloured using at most k colours.
  There must be no monochromatic triangle in the graph, i.e. in any triangle at most two edges have the same colour.
  With 3 colours, the problem has a solution if n < 17.
 """
