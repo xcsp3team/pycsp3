@@ -36,7 +36,7 @@ if not variant():
         ],
 
         # tag(symmetry-breaking)
-        [x[0][0] >= x[n - 1][n - 1], x[0][n - 1] >= x[n - 1][0]] if n == m else None
+        (x[0][0] >= x[n - 1][n - 1], x[0][n - 1] >= x[n - 1][0]) if n == m else None
     )
 
     maximize(
@@ -44,25 +44,24 @@ if not variant():
     )
 
 elif variant("wastage"):
-    def condition_for_tuple(t0, t1, t2, t3, t4, t5, t6, t7, t8, wa):
-        s3 = t1 + t3 + t5 + t7
-        s1 = t0 + t2 + t6 + t8 + s3
-        s2 = t0 * t2 + t2 * t8 + t8 * t6 + t6 * t0 + s3
-        return (t4 != 1 or (2 <= s1 <= 3 and (s2 > 0 or wa >= 2) and (s2 > 1 or wa >= 1))) and \
-               (t4 != 0 or (s1 != 3 and (0 < s3 < 4 or wa >= 2)) and (s3 > 1 or wa >= 1))
-
-
-    table = {(*t, i) for t in product(range(2), repeat=9) for i in range(3) if condition_for_tuple(*t, i)}
-
-
-    def neighbors(i, j):
-        return [x[k][l] for k in range(i - 1, i + 2) for l in range(j - 1, j + 2)]
-
-
     assert n == m
 
+
+    def table():
+        def condition_for_tuple(t0, t1, t2, t3, t4, t5, t6, t7, t8, wa):
+            s3 = t1 + t3 + t5 + t7
+            s1 = t0 + t2 + t6 + t8 + s3
+            s2 = t0 * t2 + t2 * t8 + t8 * t6 + t6 * t0 + s3
+            return (t4 != 1 or (2 <= s1 <= 3 and (s2 > 0 or wa >= 2) and (s2 > 1 or wa >= 1))) and \
+                   (t4 != 0 or (s1 != 3 and (0 < s3 < 4 or wa >= 2)) and (s3 > 1 or wa >= 1))
+
+        if not hasattr(table, "cache"):
+            table.cache = {(*t, i) for t in product(range(2), repeat=9) for i in range(3) if condition_for_tuple(*t, i)}
+        return table.cache
+
+
     #  x[i][j] is 1 iff the cell at row i and col j is alive (note that there is a border)
-    x = VarArray(size=[n + 2, n + 2], dom={0, 1})
+    x = VarArray(size=[n + 2, n + 2], dom=lambda i, j: {0} if i in {0, n + 1} or j in {0, n + 1} else {0, 1})
 
     #  w[i][j] is the wastage for the cell at row i and col j
     w = VarArray(size=[n + 2, n + 2], dom={0, 1, 2})
@@ -71,14 +70,6 @@ elif variant("wastage"):
     ws = VarArray(size=n + 2, dom=range(2 * (n + 2) * (n + 2) + 1))
 
     satisfy(
-        # cells at the border are assumed to be dead
-        [
-            [x[0][j] == 0 for j in range(n + 2)],
-            [x[- 1][j] == 0 for j in range(n + 2)],
-            [x[i][0] == 0 for i in range(n + 2)],
-            [x[i][- 1] == 0 for i in range(n + 2)]
-        ],
-
         # ensuring that cells at the border remain dead
         [
             Slide(x[1][j:j + 3] not in {(1, 1, 1)} for j in range(n)),
@@ -88,14 +79,12 @@ elif variant("wastage"):
         ],
 
         # still life + wastage constraints
-        [neighbors(i, j) + [w[i][j]] in table for i in range(1, n + 1) for j in range(1, n + 1)],
+        [(x[i - 1:i + 2, j - 1:j + 2], w[i][j]) in table() for i in range(1, n + 1) for j in range(1, n + 1)],
 
         # managing wastage on the border
         [
-            [w[0][j] + x[1][j] == 1 for j in range(1, n + 1)],
-            [w[n + 1][j] + x[n][j] == 1 for j in range(1, n + 1)],
-            [w[i][0] + x[i][1] == 1 for i in range(1, n + 1)],
-            [w[i][n + 1] + x[i][n] == 1 for i in range(1, n + 1)]
+            [(w[0][j] + x[1][j] == 1, w[n + 1][j] + x[n][j] == 1) for j in range(1, n + 1)],
+            [(w[i][0] + x[i][1] == 1, w[i][n + 1] + x[i][n] == 1) for i in range(1, n + 1)],
         ],
 
         # summing wastage
@@ -109,3 +98,11 @@ elif variant("wastage"):
         # maximizing the number of alive cells
         (2 * n * n + 4 * n - ws[-1]) // 4
     )
+
+
+
+    # # cells at the border are assumed to be dead
+    # [
+    #     [(x[0][j] == 0, x[- 1][j] == 0) for j in range(n + 2)],
+    #     [(x[i][0] == 0, x[i][- 1] == 0) for i in range(n + 2)],
+    # ],

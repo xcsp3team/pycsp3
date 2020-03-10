@@ -87,6 +87,7 @@ def cursing():
                 return True
         return self.__contains__(other)
 
+
     curse(dict, "__add__", _dict_add)
     curse(list, "__mul__", _list_mul)
     curse(tuple, "__contains__", _tuple_contains)

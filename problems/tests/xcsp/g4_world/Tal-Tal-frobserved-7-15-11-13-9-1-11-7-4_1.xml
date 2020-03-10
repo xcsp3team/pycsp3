@@ -133,18 +133,18 @@
     <group>
       <intension> eq(%0,%1) </intension>
       <args> x[2][0] 0 </args>
-      <args> l[2][0] l[1][0] </args>
       <args> x[4][0] 0 </args>
-      <args> l[4][0] l[3][0] </args>
       <args> x[6][0] 0 </args>
-      <args> l[6][0] l[5][0] </args>
       <args> x[8][0] 0 </args>
-      <args> l[8][0] l[7][0] </args>
       <args> x[10][0] 0 </args>
-      <args> l[10][0] l[9][0] </args>
       <args> x[12][0] 0 </args>
-      <args> l[12][0] l[11][0] </args>
       <args> x[14][0] 0 </args>
+      <args> l[2][0] l[1][0] </args>
+      <args> l[4][0] l[3][0] </args>
+      <args> l[6][0] l[5][0] </args>
+      <args> l[8][0] l[7][0] </args>
+      <args> l[10][0] l[9][0] </args>
+      <args> l[12][0] l[11][0] </args>
       <args> l[14][0] l[13][0] </args>
     </group>
     <group>

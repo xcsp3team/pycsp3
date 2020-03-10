@@ -210,11 +210,31 @@ def satisfy(*args):
         checkType(entities, [ECtr, ECtrs])
         return EBlock(_reorder(entities))
 
+    def _reorder(l):  # if constraints are given in (sub-)lists inside tuples; we flatten and reorder them to hopefully improve compactness
+        d = dict()
+        for tp in l:
+            if isinstance(tp, tuple):
+                for i, v in enumerate(tp):
+                    d.setdefault(i, []).append(v)
+            else:
+                d.setdefault(0, []).append(tp)
+        r = []
+        for i in range(len(d)):
+            r.extend(d[i])
+        return r
+
     no_parameter_satisfy = 0
     nb_parameter_satisfy = len(args)
     comments1, comments2, tags1, tags2 = comments_and_tags_of_parameters_of(function_name="satisfy", args=args)
     t = []
     for i, arg in enumerate(args):
+        if isinstance(arg, list) and len(arg) > 0:
+            if isinstance(arg[0], tuple):
+                arg = _reorder(arg)
+            elif isinstance(arg[0], list):
+                for j, l in enumerate(arg):
+                    if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
+                        arg[j] = _reorder(l)
         no_parameter_satisfy = i
         assert isinstance(arg, (ECtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), "non authorized type " + str(type(arg))
         if arg is None:

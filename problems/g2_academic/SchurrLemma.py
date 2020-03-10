@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 015 at CSPLib
 
  Schurr's lemma problem.
- One variant corresponds to the one proposed by [Bessiere Meseguer Freuder Larrosa, On forward checking for non-binary constraint satisfaction, 2002].
+ The variant 'mod' corresponds to the one proposed in [Bessiere Meseguer Freuder Larrosa, On forward checking for non-binary constraint satisfaction, 2002].
 """
 
 n, d = data.nBalls, data.nBoxes
