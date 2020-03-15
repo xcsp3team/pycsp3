@@ -15,7 +15,7 @@ if not variant():
         AllDifferent(x),
 
         # intervals between neighbouring notes must form a permutation
-        AllDifferent(abs(x[i] - x[i + 1]) for i in range(n - 1)),
+        AllDifferent(abs(x[i + 1] - x[i]) for i in range(n - 1)),
 
         # tag(symmetry-breaking)
         x[0] < x[n - 1]
@@ -33,7 +33,7 @@ elif variant("aux"):
         AllDifferent(y),
 
         # computing distances
-        [y[i] == abs(x[i] - x[i + 1]) for i in range(n - 1)],
+        [y[i] == abs(x[i + 1] - x[i]) for i in range(n - 1)],
 
         # tag(symmetry-breaking)
         [x[0] < x[n - 1], y[0] < y[1]]

@@ -109,6 +109,8 @@ def _constraint(entity, *, possible_simplified_form=False):
 
 
 def _group(elt, group, *, including_args=True):
+    # res = _identify_slide(group)
+
     if isinstance(group.entities[0].constraint, ConstraintIntension):
         elt.append(_element(TypeCtr.INTENSION, text=group.abstraction))
     else:

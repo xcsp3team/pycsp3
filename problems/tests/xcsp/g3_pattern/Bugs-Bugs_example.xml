@@ -1,11 +1,11 @@
 <instance format="XCSP3" type="COP">
   <variables>
-    <array id="x" note="one variable per square in the grid, whose domain is -1..nbBugs-1" size="[4][6]"> -1..9 </array>
-    <array id="n1" note="n1[i] corresponds to the number of squares in x with value i" size="[10]"> 0..10 </array>
-    <array id="n2" note="n2[i] corresponds to the number of squares in x with a bug on it and with value i" size="[10]"> 0..24 </array>
+    <array id="x" note="x[i][j] is the index of a bug (or -1)" size="[4][6]"> -1..9 </array>
+    <array id="n1" note="n1[i] is the number of cells with value i" size="[10]"> 0..24 </array>
+    <array id="n2" note="n2[i] is the number of cells with with value i and a bug on it" size="[10]"> 0..10 </array>
   </variables>
   <constraints>
-    <block note="each bug square can either take its bug index for value or take the one of another bug of the same type">
+    <block note="each bug cell can take either its bug index for value or the one of another bug of the same type">
       <group>
         <extension>
           <list> %0 </list>
@@ -29,7 +29,7 @@
         <args> x[2][5] </args>
       </group>
     </block>
-    <group note="symmetry breaking: a bug's square's value is smaller or equal to the bug's index">
+    <group class="symmetry-breaking" note="a bug cell value is smaller or equal to the bug index">
       <intension> le(%0,%1) </intension>
       <args> x[0][2] 0 </args>
       <args> x[0][3] 1 </args>
@@ -44,26 +44,28 @@
     </group>
     <group>
       <intension> le(%0,%1) </intension>
+      <args> n1[2] 12 </args>
       <args> n1[3] 9 </args>
       <args> n1[5] 6 </args>
       <args> n1[7] 3 </args>
+      <args> n1[0] 12 </args>
       <args> n1[1] 10 </args>
       <args> n1[4] 8 </args>
       <args> n1[6] 6 </args>
       <args> n1[8] 4 </args>
       <args> n1[9] 2 </args>
     </group>
-    <cardinality>
+    <cardinality note="computing values of n1">
       <list> x[][] </list>
       <values> 0 1 2 3 4 5 6 7 8 9 </values>
       <occurs> n1[] </occurs>
     </cardinality>
-    <cardinality>
+    <cardinality note="computing values of n2">
       <list> x[0][2..3] x[1][0..2] x[1][5] x[2][2] x[2][5] x[3][4..5] </list>
       <values> 0 1 2 3 4 5 6 7 8 9 </values>
       <occurs> n2[] </occurs>
     </cardinality>
-    <group>
+    <group note="linking variables of n1 and n2">
       <intension> eq(mul(%0,%1),%2) </intension>
       <args> n2[0] 2 n1[0] </args>
       <args> n2[1] 2 n1[1] </args>
@@ -76,8 +78,8 @@
       <args> n2[8] 2 n1[8] </args>
       <args> n2[9] 2 n1[9] </args>
     </group>
-    <group note="if two squares have the same value, then all the squares in the rectangle they delimit must take this value">
-      <intension> or(ne(%0,%1),eq(%0,%2)) </intension>
+    <group note="if two cells have the same value, then all cells in the rectangle they delimit must take this value">
+      <intension> imp(eq(%0,%1),eq(%0,%2)) </intension>
       <args> x[0][0] x[0][2] x[0][1] </args>
       <args> x[0][0] x[0][3] x[0][1] </args>
       <args> x[0][0] x[0][3] x[0][2] </args>

@@ -13,12 +13,12 @@ x = VarArray(size=n, dom=range(ub))
 if not variant():
     satisfy(
         # all distances are different
-        AllDifferent(abs(x[i] - x[j]) for i in range(n) for j in range(i + 1, n))
+        AllDifferent(abs(x[i] - x[j]) for i, j in combinations(range(n), 2))
     )
 elif variant("dec"):
     satisfy(
         # all distances are different
-        [abs(x[i] - x[j]) != abs(x[k] - x[l]) for i in range(n) for j in range(i + 1, n) for k in range(i + 1, n) for l in range(k + 1, n)]
+        abs(x[i] - x[j]) != abs(x[k] - x[l]) for i, j in combinations(range(n), 2) for k, l in combinations(range(i + 1, n), 2)
     )
 elif variant("aux"):
     # y[i][j] is the distance between x[i] and x[j], for i strictly less than j
@@ -29,7 +29,7 @@ elif variant("aux"):
         AllDifferent(y),
 
         # linking variables from both arrays
-        [x[j] == x[i] + y[i][j] for i in range(n) for j in range(i + 1, n)]
+        [x[j] == x[i] + y[i][j] for i, j in combinations(range(n), 2)]
     )
     annotate(decision=x)
 

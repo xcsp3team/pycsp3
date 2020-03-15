@@ -1,11 +1,11 @@
 <instance format="XCSP3" type="COP">
   <variables>
-    <var id="z" note="objective variable"> 3..6 </var>
     <array id="x" note="x[i][j] is the value at row i and column j" size="[4][6]"> 0 1 </array>
-    <array id="s" note="scalar variables" size="[4][4][6]"> 0 1 </array>
+    <array id="s" note="s[i][j][k] is the scalar variable for the product of x[i][k] and x[j][k]" size="[4][4][6]"> 0 1 </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[6]"> 0..6 </array>
   </variables>
   <constraints>
-    <group>
+    <group note="each row sums to 4">
       <sum>
         <list> %... </list>
         <condition> (eq,4) </condition>
@@ -15,7 +15,7 @@
       <args> x[2][] </args>
       <args> x[3][] </args>
     </group>
-    <group>
+    <group note="computing scalar variables">
       <intension> eq(%0,mul(%1,%2)) </intension>
       <args> s[0][1][0] x[0][0] x[1][0] </args>
       <args> s[0][1][1] x[0][1] x[1][1] </args>
@@ -54,17 +54,17 @@
       <args> s[2][3][4] x[2][4] x[3][4] </args>
       <args> s[2][3][5] x[2][5] x[3][5] </args>
     </group>
-    <group note="at most lambda">
+    <group>
       <sum>
         <list> %... </list>
-        <condition> (le,z) </condition>
+        <condition> (eq,%0) </condition>
       </sum>
-      <args> s[0][1][] </args>
-      <args> s[0][2][] </args>
-      <args> s[0][3][] </args>
-      <args> s[1][2][] </args>
-      <args> s[1][3][] </args>
-      <args> s[2][3][] </args>
+      <args> aux_gb[0] s[0][1][] </args>
+      <args> aux_gb[1] s[0][2][] </args>
+      <args> aux_gb[2] s[0][3][] </args>
+      <args> aux_gb[3] s[1][2][] </args>
+      <args> aux_gb[4] s[1][3][] </args>
+      <args> aux_gb[5] s[2][3][] </args>
     </group>
     <lex class="symmetry-breaking">
       <matrix> x[][] </matrix>
@@ -72,6 +72,6 @@
     </lex>
   </constraints>
   <objectives>
-    <minimize> z </minimize>
+    <minimize note="minimizing the maximum value of dot products between all pairs of distinct rows" type="maximum"> aux_gb[] </minimize>
   </objectives>
 </instance>

@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ see BPPLIB – A Bin Packing Problem Library
+"""
+
 capacity = data.binCapacity
 weights = sorted(data.itemWeights)
 nItems = len(weights)
@@ -28,7 +32,7 @@ def max_items_per_bin():
 def occurrences_of_weights():
     pairs = []
     cnt = 1
-    for i in range(1, len(weights)):
+    for i in range(1, nItems):
         if weights[i] != weights[i - 1]:
             pairs.append((weights[i - 1], cnt))
             cnt = 0
@@ -39,37 +43,33 @@ def occurrences_of_weights():
 
 nBins, maxPerBin = n_bins(), max_items_per_bin()
 
-
-# w[i][j] indicates the weight of the jth object put in the ith bin. It is 0 if there is no object at this place.
-w = VarArray(size=[nBins, maxPerBin], dom={0} | set(weights))
+# w[i][j] is the weight of the jth object put in the ith bin. It is 0 if less than j objects are present in the bin.
+w = VarArray(size=[nBins, maxPerBin], dom={0, *weights})
 
 if not variant():
     satisfy(
         # not exceeding the capacity of each bin
-        [Sum(row) <= capacity for row in w],
+        [Sum(w[i]) <= capacity for i in range(nBins)],
 
         # items are stored decreasingly in each bin according to their weights
-        [Decreasing(row) for row in w]
+        [Decreasing(w[i]) for i in range(nBins)]
     )
 elif variant("table"):
     def table():
         def table_recursive(n_stored, i, curr):
-            if len(tuples) > 200000000:  # hard coding (value)
-                raise Exception("impossible to build a table of moderate size")
+            assert len(tuples) < 200000000, "impossible to build a table of moderate size"  # hard coding (value)
             assert curr + weights[i] <= capacity
             tmp[n_stored] = weights[i]
-            n_stored += 1
             curr += weights[i]
-            tuples.add(tuple(tmp[j] if j < n_stored else 0 for j in range(len(tmp))))
+            tuples.add(tuple(tmp[j] if j < n_stored + 1 else 0 for j in range(maxPerBin)))
             for j in range(i):
                 if curr + weights[j] > capacity:
                     break
                 if j == i - 1 or weights[j] != weights[j + 1]:
-                    table_recursive(n_stored, j, curr)
+                    table_recursive(n_stored + 1, j, curr)
 
-        tuples = set()
         tmp = [0] * maxPerBin
-        tuples.add(tuple(tmp))
+        tuples = {tuple(tmp)}
         for i in range(nItems):
             if i == nItems - 1 or weights[i] != weights[i + 1]:
                 table_recursive(0, i, 0)
@@ -78,12 +78,12 @@ elif variant("table"):
 
     table = table()
     satisfy(
-        row in table for row in w
+        w[i] in table for i in range(nBins)
     )
 
 satisfy(
     # ensuring that each item is stored in a bin
-    Cardinality(w, occurrences={0: nBins * maxPerBin - nItems} + {weight: occ for (weight, occ) in occurrences_of_weights()}),
+    Cardinality(w, occurrences={0: nBins * maxPerBin - nItems} + {wgt: occ for (wgt, occ) in occurrences_of_weights()}),
 
     # tag(symmetry-breaking)
     LexDecreasing(w)

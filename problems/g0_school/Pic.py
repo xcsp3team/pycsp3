@@ -13,6 +13,5 @@ z = Var(a, b)
 satisfy(
     (x, y) in {(a, a), (b, b)},
     (x, z) in {(a, a), (b, b)},
-    (y, z) in {(a, b), (b, a)},
-    [(x == a, y == b) for _ in range(3)]
+    (y, z) in {(a, b), (b, a)}
 )

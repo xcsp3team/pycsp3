@@ -5,8 +5,8 @@ nRows, nCols, nValues = len(grid), len(grid[0]), len(grid)
 
 
 def adjacency(d1, d2):
-    va = (d1 == d2 + nCols) | (d2 == d1 + nCols)  # vertical adjacency
-    ha = (d1 == d2 + 1) & (d1 % nCols != 0) | (d2 == d1 + 1) & (d2 % nCols != 0)  # horizontal adjacency
+    va = abs(d1 - d2) == nCols  # vertical adjacency
+    ha = (abs(d1 - d2) == 1) & (d1 // nCols == d2 // nCols)  # horizontal adjacency
     return va | ha
 
 
