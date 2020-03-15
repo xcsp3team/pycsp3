@@ -19,14 +19,14 @@ cp = VarArray(size=[p - 1, k], dom=range(1, nEdges + 1))
 
 satisfy(
     # all nodes are colored differently
-    AllDifferent(x for x in cn),
+    AllDifferent(cn),
 
     # all edges are colored differently
-    AllDifferent(x for x in ce + cp),
+    AllDifferent(ce + cp),
 
     # computing colors of edges from colors of nodes
     [
-        [ce[i][j1][j2] == dist(cn[i][j1], cn[i][j2]) for i in range(p) for j1 in range(k) for j2 in range(j1 + 1, k)],
+        [ce[i][j1][j2] == dist(cn[i][j1], cn[i][j2]) for i in range(p) for j1, j2 in combinations(range(k), 2)],
 
         [cp[i][j] == dist(cn[i][j], cn[i + 1][j]) for i in range(p - 1) for j in range(k)]
     ]

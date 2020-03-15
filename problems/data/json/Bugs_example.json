@@ -53,26 +53,5 @@
       "type": 1
     }
   ],
-  "bugTypes": [
-    {
-      "length": 3,
-      "cells": [
-        2,
-        3,
-        5,
-        7
-      ]
-    },
-    {
-      "length": 2,
-      "cells": [
-        0,
-        1,
-        4,
-        6,
-        8,
-        9
-      ]
-    }
-  ]
+  "bugTypeLengths": [3, 2]
 }

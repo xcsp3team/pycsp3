@@ -8,15 +8,15 @@
     <allDifferent note="intervals between neighbouring notes must form a permutation"> y[] </allDifferent>
     <group note="computing distances">
       <intension> eq(%0,abs(sub(%1,%2))) </intension>
-      <args> y[0] x[0] x[1] </args>
-      <args> y[1] x[1] x[2] </args>
-      <args> y[2] x[2] x[3] </args>
-      <args> y[3] x[3] x[4] </args>
-      <args> y[4] x[4] x[5] </args>
-      <args> y[5] x[5] x[6] </args>
-      <args> y[6] x[6] x[7] </args>
-      <args> y[7] x[7] x[8] </args>
-      <args> y[8] x[8] x[9] </args>
+      <args> y[0] x[1] x[0] </args>
+      <args> y[1] x[2] x[1] </args>
+      <args> y[2] x[3] x[2] </args>
+      <args> y[3] x[4] x[3] </args>
+      <args> y[4] x[5] x[4] </args>
+      <args> y[5] x[6] x[5] </args>
+      <args> y[6] x[7] x[6] </args>
+      <args> y[7] x[8] x[7] </args>
+      <args> y[8] x[9] x[8] </args>
     </group>
     <group class="symmetry-breaking">
       <intension> lt(%0,%1) </intension>

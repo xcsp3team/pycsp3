@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 028 at CSPLib
+"""
+ Problem 028 at CSPLib
+"""
 
 v, b, r, k, l = data.v, data.b, data.r, data.k, data.l
 b = (l * v * (v - 1)) // (k * (k - 1)) if b == 0 else b
@@ -18,7 +20,7 @@ if not variant():
         [Sum(col) == k for col in columns(x)],
 
         # scalar constraints with respect to lambda
-        [row1 * row2 == l for (row1, row2) in combinations(x, 2)]
+        [row1 * row2 == l for row1, row2 in combinations(x, 2)]
     )
 
 elif variant("aux"):
@@ -33,10 +35,10 @@ elif variant("aux"):
         [Sum(x[:, j]) == k for j in range(b)],
 
         # computing scalar variables
-        [s[i][j][k] == x[i][k] * x[j][k] for i in range(v) for j in range(i + 1, v) for k in range(b)],
+        [s[i][j][k] == x[i][k] * x[j][k] for i, j in combinations(range(v), 2) for k in range(b)],
 
         # scalar constraints with respect to lambda
-        [Sum(s[i][j]) == l for i in range(v) for j in range(i + 1, v)]
+        [Sum(s[i][j]) == l for i, j in combinations(range(v), 2)]
     )
 
 satisfy(

@@ -2,6 +2,7 @@ import sys
 import types
 from collections import OrderedDict
 from collections.abc import Iterable
+from decimal import Decimal
 from multiprocessing import cpu_count, Pool
 from time import time
 
@@ -126,6 +127,20 @@ def value_in_base(decimal_value, length, base):
         decimal_value = decimal_value // base
     assert decimal_value == 0, "The given array is too small to contain all the digits of the conversion"
     return value
+
+
+def integer_scaling(values):  # convert all (possibly decimal) specified values into integers by means of scaling
+    values = list(values) if isinstance(values, types.GeneratorType) else values
+    scale = 0
+    for v in values:
+        pos = v.find('.')
+        if pos >= 0:
+            i = len(v) - 1
+            while v[i] == '0':
+                i -= 1
+            if i - pos > scale:
+                scale = i - pos
+    return [int(w * (10 ** scale)) for w in [Decimal(v) for v in values]]
 
 
 def matrix_to_string(m):

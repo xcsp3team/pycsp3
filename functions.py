@@ -22,15 +22,15 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data.dataparser import DataDict
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns, queue_in
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, transpose, is_containing, ANY
+from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, transpose, integer_scaling, is_containing, ANY
 
 ''' Global Variables '''
 
 absPython, maxPython, minPython, combinationsPython = abs, max, min, combinations
 
 
-def combinations(n, r):
-    return combinationsPython(n, r) if not isinstance(n, int) else combinationsPython(range(n), r)
+def combinations(n, size):
+    return combinationsPython(n, size) if not isinstance(n, int) else combinationsPython(range(n), size)
 
 
 def protect():
@@ -177,7 +177,7 @@ def IfThenElse(*args):
 
 
 def Slide(*args):
-    entities = _wrap_intension_constraints(flatten(*args))  # we cannot directly complete partial forms (because it may be called by the user?)
+    entities = _wrap_intension_constraints(flatten(*args))  # we cannot directly complete partial forms (because it is executed before the anlaysi of the paparemeters of satisfy
     checkType(entities, [ECtr, bool])
     return ESlide([EToGather(entities)])
 
@@ -188,6 +188,7 @@ def satisfy(*args):
     def _group(*_args):
         entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
         checkType(entities, [ECtr, ECtrs])
+        #return ESlide([EToGather(entities)])  # to force sliding (but could be done at another place instead; todo)
         return EToGather(entities)
 
     def _block(*_args):
@@ -264,6 +265,8 @@ def satisfy(*args):
             to_post = _group(arg)
         if to_post:
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
+            # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
+            #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
     t.append(_group(pc == var for (pc, var) in auxiliary.collected()))
     return EToSatisfy(t)
 
@@ -502,11 +505,8 @@ def Sum(term, *others, condition=None):
             OpOverrider.enable()
         return terms, coeffs
 
-    term = list(term) if isinstance(term, types.GeneratorType) else term
-    checkType(term, ([Variable], [Node], [PartialConstraint], Variable, Node, PartialConstraint, ScalarProduct)), type(term)
-    for other in others:
-        checkType(other, ([Variable], [Node], [PartialConstraint], Variable, Node, PartialConstraint, ScalarProduct))
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary.add(t)
@@ -575,8 +575,13 @@ def Cardinality(term, *others, occurrences, closed=False):
 
 
 def _extremum(term, others, index, start_index, type_rank, condition, maximum):
-    terms = flatten(term, others)
-    checkType(terms, ([Variable], [Node]))
+    terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
+    for i, t in enumerate(terms):
+        if isinstance(t, ScalarProduct):
+            t = Sum(t)  # to get a PartialConstraint
+        if isinstance(t, PartialConstraint):
+            terms[i] = auxiliary.add(t)
     checkType(index, (Variable, type(None)))
     checkType(start_index, int)
     checkType(type_rank, TypeRank)
@@ -799,4 +804,4 @@ def cp_array(l):
 
 
 def _pycharm_security():
-    _ = (permutations, alphabet_positions, transpose, is_containing, DataDict, columns)
+    _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, DataDict, columns)

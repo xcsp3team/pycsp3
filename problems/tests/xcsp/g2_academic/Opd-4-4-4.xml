@@ -1,10 +1,10 @@
 <instance format="XCSP3" type="COP">
   <variables>
-    <var id="z" note="objective variable"> 4 </var>
     <array id="x" note="x[i][j] is the value at row i and column j" size="[4][4]"> 0 1 </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[6]"> 0..4 </array>
   </variables>
   <constraints>
-    <group>
+    <group note="each row sums to 4">
       <sum>
         <list> %... </list>
         <condition> (eq,4) </condition>
@@ -18,25 +18,25 @@
       <sum>
         <list> x[0][] </list>
         <coeffs> %... </coeffs>
-        <condition> (le,z) </condition>
+        <condition> (eq,%0) </condition>
       </sum>
-      <args> x[1][] </args>
-      <args> x[2][] </args>
-      <args> x[3][] </args>
+      <args> aux_gb[0] x[1][] </args>
+      <args> aux_gb[1] x[2][] </args>
+      <args> aux_gb[2] x[3][] </args>
     </group>
     <group>
       <sum>
         <list> x[1][] </list>
         <coeffs> %... </coeffs>
-        <condition> (le,z) </condition>
+        <condition> (eq,%0) </condition>
       </sum>
-      <args> x[2][] </args>
-      <args> x[3][] </args>
+      <args> aux_gb[3] x[2][] </args>
+      <args> aux_gb[4] x[3][] </args>
     </group>
     <sum>
       <list> x[2][] </list>
       <coeffs> x[3][] </coeffs>
-      <condition> (le,z) </condition>
+      <condition> (eq,aux_gb[5]) </condition>
     </sum>
     <lex class="symmetry-breaking">
       <matrix> x[][] </matrix>
@@ -44,6 +44,6 @@
     </lex>
   </constraints>
   <objectives>
-    <minimize> z </minimize>
+    <minimize note="minimizing the maximum value of dot products between all pairs of distinct rows" type="maximum"> aux_gb[] </minimize>
   </objectives>
 </instance>

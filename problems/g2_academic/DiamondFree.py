@@ -17,10 +17,10 @@ s = Var(dom={i for i in range(n, n * (n - 1) + 1) if i % 12 == 0})
 
 satisfy(
     # ensuring the absence of diamond in the graph
-    [Sum(x[i][j], x[i][k], x[i][l], x[j][k], x[j][l], x[k][l]) <= 4 for (i, j, k, l) in combinations(range(n), 4)],
+    [Sum(x[i][j], x[i][k], x[i][l], x[j][k], x[j][l], x[k][l]) <= 4 for i, j, k, l in combinations(range(n), 4)],
 
     # ensuring that the graph is undirected (symmetric)
-    [x[i][j] == x[j][i] for i in range(n) for j in range(n) if i != j],
+    [x[i][j] == x[j][i] for i, j in combinations(range(n), 2)],
 
     # computing node degrees
     [Sum(x[i]) == y[i] for i in range(n)],
@@ -31,6 +31,3 @@ satisfy(
     # tag(symmetry-breaking)
     [Decreasing(y), LexIncreasing(x)]
 )
-
-
-#  for i in range(n) for j in range(i + 1, n) for k in range(j + 1, n) for l in     range(k + 1, n)],

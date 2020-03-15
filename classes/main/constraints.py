@@ -277,8 +277,8 @@ class ConstraintLexMatrix(ConstraintUnmergeable):
 class ConstraintSum(ConstraintWithCondition):
     def __init__(self, lst, coefficients, condition):
         super().__init__(TypeCtr.SUM)
-        self.arg(TypeCtrArg.LIST, lst, content_ordered=True)  # coefficients is not None)
-        if coefficients is not None and any(v != 1 for v in coefficients):
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
+        if coefficients is not None and any(not isinstance(v, int) or v != 1 for v in coefficients):
             self.arg(TypeCtrArg.COEFFS, coefficients, content_ordered=True)
         self.arg(TypeCtrArg.CONDITION, condition)
 
@@ -287,17 +287,32 @@ class ConstraintSum(ConstraintWithCondition):
         cs = self.arguments[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in self.arguments else None
         if cs is None:
             return sum(x.dom.smallest_value() for x in vs)
-        else:
-            return sum(min(x.dom.smallest_value() * cs[i], x.dom.greatest_value() * cs[i]) for i, x in vs)
+        assert len(vs) == len(cs)
+        t = []
+        for i, x in enumerate(vs):
+            xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
+            if isinstance(cs[i], int):
+                t.append(min(xmin * cs[i], xmax * cs[i]))
+            else:
+                cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
+                t.append(min(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
+        return sum(t)
 
     def max_possible_value(self):
         vs = self.arguments[TypeCtrArg.LIST].content
         cs = self.arguments[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in self.arguments else None
         if cs is None:
             return sum(x.dom.greatest_value() for x in vs)
-        else:
-            return sum(max(x.dom.smallest_value() * cs[i], x.dom.greatest_value() * cs[i]) for i, x in vs)
-
+        assert len(vs) == len(cs)
+        t = []
+        for i, x in enumerate(vs):
+            xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
+            if isinstance(cs[i], int):
+                t.append(max(xmin * cs[i], xmax * cs[i]))
+            else:
+                cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
+                t.append(max(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
+        return sum(t)
 
 class ConstraintCount(ConstraintWithCondition):
     def __init__(self, lst, values, condition):

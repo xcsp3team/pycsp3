@@ -1,6 +1,6 @@
 <instance format="XCSP3" type="COP">
   <variables>
-    <array id="w" note="w[i][j] indicates the weight of the jth object put in the ith bin. It is 0 if there is no object at this place." size="[40][3]"> 0 30 31 32 34 35 40 41 44 47 49 50 51 52 53 56 60 63 64 65 69 72 76 77 79 80 84 85 88 89 91 92 93 95 99 </array>
+    <array id="w" note="w[i][j] is the weight of the jth object put in the ith bin. It is 0 if less than j objects are present in the bin." size="[40][3]"> 0 30 31 32 34 35 40 41 44 47 49 50 51 52 53 56 60 63 64 65 69 72 76 77 79 80 84 85 88 89 91 92 93 95 99 </array>
   </variables>
   <constraints>
     <group>

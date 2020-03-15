@@ -6,45 +6,35 @@ from pycsp3 import *
 
 v, b, r = data.v, data.b, data.r
 
-
-def lb():
-    rv = r * v
-    floor_rv, ceil_rv = rv // b, rv // b + (1 if rv % b != 0 else 0)
-    num, den = (ceil_rv * ceil_rv * (rv % b) + floor_rv * floor_rv * (b - rv % b) - rv), v * (v - 1)
-    return num // den + (1 if num % den != 0 else 0)
-
-
-# objective variable
-z = Var(dom=range(lb(), b + 1))
-
 # x[i][j] is the value at row i and column j
 x = VarArray(size=[v, b], dom={0, 1})
 
 satisfy(
+    # each row sums to 'r'
     Sum(x[i]) == r for i in range(v)
 )
 
 if not variant():
-    satisfy(
-        x[i] * x[j] <= z for i in range(v) for j in range(i + 1, v)
+    minimize(
+        # minimizing the maximum value of dot products between all pairs of distinct rows
+        Maximum(x[i] * x[j] for i, j in combinations(range(v), 2))
     )
 
 elif variant("aux"):
-    # scalar variables
+    # s[i][j][k] is the scalar variable for the product of x[i][k] and x[j][k]
     s = VarArray(size=[v, v, b], dom=lambda i, j, k: {0, 1} if i < j else None)
 
     satisfy(
-        [s[i][j][k] == x[i][k] * x[j][k] for i in range(v) for j in range(i + 1, v) for k in range(b)],
+        # computing scalar variables
+        s[i][j][k] == x[i][k] * x[j][k] for i, j in combinations(range(v), 2) for k in range(b)
+    )
 
-        # at most lambda
-        [Sum(s[i][j]) <= z for i in range(v) for j in range(i + 1, v)]
+    minimize(
+        # minimizing the maximum value of dot products between all pairs of distinct rows
+        Maximum(Sum(s[i][j]) for i, j in combinations(range(v), 2))
     )
 
 satisfy(
     # tag(symmetry-breaking)
     LexIncreasing(x, matrix=True)
-)
-
-minimize(
-    z
 )

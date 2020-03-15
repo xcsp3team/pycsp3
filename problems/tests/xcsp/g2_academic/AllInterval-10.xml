@@ -4,7 +4,7 @@
   </variables>
   <constraints>
     <allDifferent note="notes must occur once, and so form a permutation"> x[] </allDifferent>
-    <allDifferent note="intervals between neighbouring notes must form a permutation"> abs(sub(x[0],x[1])) abs(sub(x[1],x[2])) abs(sub(x[2],x[3])) abs(sub(x[3],x[4])) abs(sub(x[4],x[5])) abs(sub(x[5],x[6])) abs(sub(x[6],x[7])) abs(sub(x[7],x[8])) abs(sub(x[8],x[9])) </allDifferent>
+    <allDifferent note="intervals between neighbouring notes must form a permutation"> abs(sub(x[1],x[0])) abs(sub(x[2],x[1])) abs(sub(x[3],x[2])) abs(sub(x[4],x[3])) abs(sub(x[5],x[4])) abs(sub(x[6],x[5])) abs(sub(x[7],x[6])) abs(sub(x[8],x[7])) abs(sub(x[9],x[8])) </allDifferent>
     <intension class="symmetry-breaking"> lt(x[0],x[9]) </intension>
   </constraints>
 </instance>

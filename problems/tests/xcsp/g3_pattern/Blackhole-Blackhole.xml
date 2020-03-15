@@ -1,10 +1,10 @@
 <instance format="XCSP3" type="CSP">
   <variables>
-    <array id="x" note="x[i] is the value j of the card at the ith position of the built stack." size="[16]"> 0..15 </array>
+    <array id="x" note="x[i] is the value j of the card at the ith position of the built stack" size="[16]"> 0..15 </array>
     <array id="y" note="y[j] is the position i of the card whose value is j" size="[16]"> 0..15 </array>
   </variables>
   <constraints>
-    <channel>
+    <channel note="linking variables of x and y">
       <list> x[] </list>
       <list> y[] </list>
     </channel>
@@ -20,7 +20,7 @@
       <args> y[7..8] y[5] </args>
       <args> y[11] y[10] y[3] </args>
     </group>
-    <slide note="each new card put on the stack must be at a rank higher or lower than the previous one.">
+    <slide note="each new card put on the stack must be at a rank higher or lower than the previous one">
       <list> x[] </list>
       <extension>
         <list> %0 %1 </list>

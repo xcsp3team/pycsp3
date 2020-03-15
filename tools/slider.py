@@ -47,7 +47,7 @@ def _identify_slide(group):
 
     ''' trying to recognize a slide with an offset not equal to 1'''
     offset = _possible_offset(group)
-    if offset is None or offset == 1:
+    if offset is None or offset <= 1:
         return None
     sliding_scope = [[x for x in scope[i:i + arity]] for i in range(0, len(scope) - arity + 1, offset)]
     if sliding_scope == group.all_args:

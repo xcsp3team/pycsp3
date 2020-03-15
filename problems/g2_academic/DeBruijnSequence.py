@@ -4,7 +4,6 @@ from pycsp3 import *
  See http://mathworld.wolfram.com/deBruijnSequence.html and http://www.hakank.org/comb/debruijn.cgi#info
 """
 
-
 b, n, m = data.base, data.n, data.base ** data.n
 powers = [b ** i for i in range(n - 1, -1, -1)]
 

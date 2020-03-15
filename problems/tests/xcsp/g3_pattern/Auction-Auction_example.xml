@@ -16,7 +16,7 @@
     </group>
   </constraints>
   <objectives>
-    <maximize note="maximizing summed value of selected bids" type="sum">
+    <maximize note="maximizing summed values of selected bids" type="sum">
       <list> b[] </list>
       <coeffs> 10 20 30 40 14 </coeffs>
     </maximize>
