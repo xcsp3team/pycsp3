@@ -22,7 +22,7 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data.dataparser import DataDict
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns, queue_in
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, transpose, integer_scaling, is_containing, ANY
+from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, dicts_values, transpose, integer_scaling, is_containing, ANY
 
 ''' Global Variables '''
 
@@ -804,4 +804,4 @@ def cp_array(l):
 
 
 def _pycharm_security():
-    _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, DataDict, columns)
+    _ = (permutations, alphabet_positions, transpose, integer_scaling, dicts_values, is_containing, DataDict, columns)

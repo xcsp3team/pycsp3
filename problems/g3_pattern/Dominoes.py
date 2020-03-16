@@ -1,17 +1,14 @@
 from pycsp3 import *
 
-grid = data.grid
-nRows, nCols, nValues = len(grid), len(grid[0]), len(grid)
+nRows, nCols, nValues = len(data.grid), len(data.grid[0]), len(data.grid)
+
+positions = [[i * nCols + j for i in range(nRows) for j in range(nCols) if data.grid[i][j] == value] for value in range(nValues)]
 
 
 def adjacency(d1, d2):
     va = abs(d1 - d2) == nCols  # vertical adjacency
     ha = (abs(d1 - d2) == 1) & (d1 // nCols == d2 // nCols)  # horizontal adjacency
     return va | ha
-
-
-def positions(value):
-    return [i * nCols + j for i in range(nRows) for j in range(nCols) if grid[i][j] == value]
 
 
 # x[i][j] concerns the domino (having values) i-j; this is the position of the value i in the grid for this domino
@@ -25,7 +22,7 @@ satisfy(
     AllDifferent(x + y),
 
     # unary constraints
-    [(x[i][j] in positions(i), y[i][j] in positions(j)) for i in range(nValues) for j in range(i, nValues)],
+    [(x[i][j] in positions[i], y[i][j] in positions[j]) for i in range(nValues) for j in range(i, nValues)],
 
     # adjacency constraints
     [adjacency(x[i][j], y[i][j]) for i in range(nValues) for j in range(i, nValues)]

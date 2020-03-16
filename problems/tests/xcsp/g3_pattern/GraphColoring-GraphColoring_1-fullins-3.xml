@@ -108,6 +108,6 @@
     </group>
   </constraints>
   <objectives>
-    <minimize type="maximum"> c[] </minimize>
+    <minimize note="minimizing the number of used colors" type="maximum"> c[] </minimize>
   </objectives>
 </instance>

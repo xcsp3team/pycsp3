@@ -1,4 +1,12 @@
-import ast, inspect, json, lzma, os, os.path, sys, datetime
+import ast
+import datetime
+import inspect
+import json
+import lzma
+import os
+import os.path
+import sys
+from collections import OrderedDict
 from importlib import util
 
 from lxml import etree
@@ -91,7 +99,8 @@ def _load_data():
         assert os.path.exists(data), "The file " + data + " does not exist (in the specified directory)."
         if os.path.exists(data):
             with open(data) as f:
-                compilation_data = dataparser.DataDict(json.loads(f.read()))
+                # compilation_data = dataparser.DataDict(json.loads(f.read()))
+                compilation_data = dataparser.DataDict(json.loads(f.read(), object_pairs_hook=OrderedDict))
                 string_data = "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
     else:
         #  if '{' in data and '}' in data:

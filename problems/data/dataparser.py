@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import ListInt
@@ -9,12 +10,13 @@ _data_file = None
 _dataParser = None
 
 
-class DataDict(dict):
+class DataDict(OrderedDict):
     def __init__(self, element=None):
+        # assert isinstance(element, (OrderedDict, type(None)))
         if element:
             DataDict._transfer_to(element, self)
             DataDict._browse(self)
-    
+
     @staticmethod
     def __secured_getattribute__(self, name):
         try:
@@ -24,7 +26,7 @@ class DataDict(dict):
                 print()
                 if options.data:
                     print("We need a value for a data (piece) called " + name + " .Please check the option -data.")
-                elif isinstance(options.data,str) and len(options.data.strip()) == 0:
+                elif isinstance(options.data, str) and len(options.data.strip()) == 0:
                     print("You have to set a value for the data (piece) called " + name + " .Please check the option -data.")
                 else:
                     print("You need to use the option -data since we need a value for " + name)
@@ -51,7 +53,7 @@ class DataDict(dict):
 
     @staticmethod
     def _browse(element, parent=None, parent_index=None):
-        if hasattr(element, "__dict__"):
+        if isinstance(element, DataDict):        #if hasattr(element, "__dict__"):
             for key, value in element.__dict__.items():
                 if isinstance(value, (list, tuple)):
                     if is_containing(value, int):
