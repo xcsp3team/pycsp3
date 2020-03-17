@@ -19,11 +19,11 @@ satisfy(
     Channel(x, y),
 
     # linking primal and distance variables
-    [d[i][j] == dist(x[i], x[j]) for i in range(n) for j in range(i + 1, n) if a[i][j] == 1],
+    [d[i][j] == dist(x[i], x[j]) for i, j in combinations(range(n), 2) if a[i][j] == 1],
 
     # triangle constraints: distance(i,j) <= distance(i,k) + distance(k,j)  tag(redundant-constraints)
-    [d[i][j] <= d[min(i, k)][max(i, k)] + d[min(j, k)][max(j, k)] for i in range(n) for j in range(i + 1, n) if a[i][j] == 1 for k in range(n)
-     if a[i][k] == a[j][k] == 1]
+    [d[i][j] <= d[min(i, k)][max(i, k)] + d[min(j, k)][max(j, k)] for i, j in combinations(range(n), 2) if a[i][j] == 1 for k in range(n) if
+     a[i][k] == a[j][k] == 1]
 )
 
 minimize(

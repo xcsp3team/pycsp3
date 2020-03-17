@@ -10,7 +10,7 @@ satisfy(
     AllDifferent(x, matrix=True),
 
     # tag(clues)
-    [x[clue.x][clue.y] == clue.value for clue in clues],
+    [x[i][j] == v for (i, j, v) in clues],
 
     # tag(diagonals)
     [AllDifferent(dgn) for dgn in diagonals_down(x, broken=True) + diagonals_up(x, broken=True)]

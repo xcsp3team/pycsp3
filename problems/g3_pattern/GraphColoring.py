@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-n, colorings = data.nNodes, dicts_values(data.colorings) if data.colorings else []  # multi-coloring not taken into account for the moment
+n, colorings = data.nNodes, data.colorings if data.colorings else []  # multi-coloring not taken into account for the moment
 
 # c[i] is the color assigned to the ith node
 c = VarArray(size=n, dom=range(n))
@@ -17,7 +17,7 @@ satisfy(
 
 if not variant():
     minimize(
-        # minimizing the number of used colors
+        # minimizing the greatest used color index (and, consequently, the number of colors)
         Maximum(c)
     )
 elif variant("sum"):

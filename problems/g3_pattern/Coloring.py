@@ -12,7 +12,7 @@ satisfy(
 
 if not variant():
     minimize(
-        # minimizing the maximum used color index (and, consequently, the number of colors)
+        # minimizing the greatest used color index (and, consequently, the number of colors)
         Maximum(x)
     )
 

@@ -9,6 +9,8 @@ from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY
 
+from collections import OrderedDict, namedtuple
+
 queue_in = deque()  # To store partial constraints when using the IN operator
 
 
@@ -86,7 +88,6 @@ def cursing():
                 queue_in.append((tmp, other))
                 return True
         return self.__contains__(other)
-
 
     curse(dict, "__add__", _dict_add)
     curse(list, "__mul__", _list_mul)
@@ -367,7 +368,7 @@ class ListVar(list):
 
     def __mul__(self, other):
         assert is_containing(self, (Variable, Node))
-        return ScalarProduct(self, other)
+        return ScalarProduct(self, list(other))
 
     def __contains__(self, other):
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member constraint
@@ -379,3 +380,16 @@ class ListVar(list):
 
     def columns(self):
         return columns(self)
+
+
+def dicts_values(ds):
+    def value_for(v):
+        return ListInt(v) if is_1d_list(v, int) else ListVar(v) if is_1d_list(v, Variable) else dicts_values(v) if is_1d_list(v, OrderedDict) else v
+
+    assert is_1d_list(ds, OrderedDict)
+    if not hasattr(dicts_values, "cnt"):
+        dicts_values.cnt = 0
+    nt = namedtuple("ds" + str(dicts_values.cnt), ds[0].keys())
+    dicts_values.cnt += 1
+    # return [nt(*(v for (k, v) in d.items())) for d in ds]
+    return [nt(*(value_for(v) for (k, v) in d.items())) for d in ds]

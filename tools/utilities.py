@@ -143,11 +143,6 @@ def integer_scaling(values):  # convert all (possibly decimal) specified values 
     return [int(w * (10 ** scale)) for w in [Decimal(v) for v in values]]
 
 
-def dicts_values(ds):
-    assert is_1d_list(ds, OrderedDict)
-    return [tuple(v for (k, v) in d.items()) for d in ds]
-
-
 def matrix_to_string(m):
     return "".join(["(" + ",".join([str(v) for v in t]) + ")" for t in m])
     # return "\n" + "\n".join(["\t(" + ",".join([str(v) for v in t]) + ")" for t in m]) + "\n"

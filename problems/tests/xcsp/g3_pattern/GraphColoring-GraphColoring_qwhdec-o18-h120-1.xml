@@ -5646,6 +5646,6 @@
     </group>
   </constraints>
   <objectives>
-    <minimize note="minimizing the number of used colors" type="maximum"> c[] </minimize>
+    <minimize note="minimizing the greatest used color index (and, consequently, the number of colors)" type="maximum"> c[] </minimize>
   </objectives>
 </instance>

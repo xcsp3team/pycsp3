@@ -1,18 +1,18 @@
 <instance format="XCSP3" type="COP">
   <variables>
     <array id="m" note="m[i] is the model used for the ith rack" size="[10]"> 0..2 </array>
+    <array id="p" note="p[i] is the power of the model used for the ith rack" size="[10]"> 0 150 200 </array>
+    <array id="s" note="s[i] is the size (number of connectors) of the model used for the ith rack" size="[10]"> 0 8 16 </array>
+    <array id="c" note="c[i] is the cost (price) of the model used for the ith rack" size="[10]"> 0 150 200 </array>
     <array id="nc" note="nc[i][j] is the number of cards of type j put in the ith rack" size="[10][4]">
       <domain for="nc[][0]"> 0..16 </domain>
       <domain for="nc[][1]"> 0..8 </domain>
       <domain for="nc[][2]"> 0..4 </domain>
       <domain for="nc[][3]"> 0..2 </domain>
     </array>
-    <array id="p" note="p[i] is the power of the ith rack" size="[10]"> 0 150 200 </array>
-    <array id="s" note="s[i] is the size of the ith rack" size="[10]"> 0 8 16 </array>
-    <array id="c" note="c[i] is the cost of the ith rack" size="[10]"> 0 150 200 </array>
   </variables>
   <constraints>
-    <group note="linking model with power, size and cost of the ith rack">
+    <group note="linking rack models with powers, sizes and costs">
       <extension>
         <list> %... </list>
         <supports> (0,0,0,0)(1,150,8,150)(2,200,16,200) </supports>
@@ -76,10 +76,10 @@
         <list> m[] </list>
         <operator> ge </operator>
       </ordered>
-      <intension> or(ne(m[0],m[1]),ge(nc[0][0],nc[1][0])) </intension>
+      <intension> imp(eq(m[0],m[1]),ge(nc[0][0],nc[1][0])) </intension>
     </block>
   </constraints>
   <objectives>
-    <minimize note="minimizing the total cost paid for all racks" type="sum"> c[] </minimize>
+    <minimize note="minimizing the total cost being paid for all racks" type="sum"> c[] </minimize>
   </objectives>
 </instance>
