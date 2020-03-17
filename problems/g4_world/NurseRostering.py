@@ -1,6 +1,7 @@
 from pycsp3 import *
 
-data.shifts.append(DataDict({"id": "_off", "length": 0, "forbiddenFollowingShifts": None}))  # we add first a dummy off shift
+data.shifts.append(data.shifts[0].__class__("_off", 0, None))  # we add first a dummy off shift
+# data.shifts.append(DataDict({"id": "_off", "length": 0, "forbiddenFollowingShifts": None}))  # we add first a dummy off shift
 off = len(data.shifts) - 1  # value for _off
 
 nDays, nWeeks = data.nDays, data.nDays // 7

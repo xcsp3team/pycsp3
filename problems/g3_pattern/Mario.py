@@ -5,7 +5,7 @@ from pycsp3 import *
 marioHouse, luigiHouse = data.marioHouse, data.luigiHouse
 fuelLimit = data.fuelLimit
 houses = data.houses
-fuels = [house.fuelConsumption for house in houses]  # using cp_array is not necessary since intern arrays have the right type
+fuels = [house.fuelConsumption for house in houses]  # using cp_array is not necessary since intern arrays have the right type (for the constraint Element)
 nHouses = len(houses)
 
 # s[i] is the house succeeding to the ith house (itself if not part of the route)

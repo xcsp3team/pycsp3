@@ -1,7 +1,6 @@
 from pycsp3 import *
 
 nRows, nCols, nValues = len(data.grid), len(data.grid[0]), len(data.grid)
-
 positions = [[i * nCols + j for i in range(nRows) for j in range(nCols) if data.grid[i][j] == value] for value in range(nValues)]
 
 

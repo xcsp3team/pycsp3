@@ -43,16 +43,16 @@ def occurrences_of_weights():
 
 nBins, maxPerBin = n_bins(), max_items_per_bin()
 
-# w[i][j] is the weight of the jth object put in the ith bin. It is 0 if less than j objects are present in the bin.
-w = VarArray(size=[nBins, maxPerBin], dom={0, *weights})
+# x[i][j] is the weight of the jth object put in the ith bin. It is 0 if less than j objects are present in the bin.
+x = VarArray(size=[nBins, maxPerBin], dom={0, *weights})
 
 if not variant():
     satisfy(
         # not exceeding the capacity of each bin
-        [Sum(w[i]) <= capacity for i in range(nBins)],
+        [Sum(x[i]) <= capacity for i in range(nBins)],
 
         # items are stored decreasingly in each bin according to their weights
-        [Decreasing(w[i]) for i in range(nBins)]
+        [Decreasing(x[i]) for i in range(nBins)]
     )
 elif variant("table"):
     def table():
@@ -78,18 +78,18 @@ elif variant("table"):
 
     table = table()
     satisfy(
-        w[i] in table for i in range(nBins)
+        x[i] in table for i in range(nBins)
     )
 
 satisfy(
     # ensuring that each item is stored in a bin
-    Cardinality(w, occurrences={0: nBins * maxPerBin - nItems} + {wgt: occ for (wgt, occ) in occurrences_of_weights()}),
+    Cardinality(x, occurrences={0: nBins * maxPerBin - nItems} + {wgt: occ for (wgt, occ) in occurrences_of_weights()}),
 
     # tag(symmetry-breaking)
-    LexDecreasing(w)
+    LexDecreasing(x)
 )
 
 maximize(
     # maximizing the number of unused bins
-    Sum(w[i][0] == 0 for i in range(nBins))
+    Sum(x[i][0] == 0 for i in range(nBins))
 )

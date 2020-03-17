@@ -3,7 +3,7 @@
     <array id="x" note="x[i] is 1 iff the ith shift is selected" size="[2503]"> 0 1 </array>
   </variables>
   <constraints>
-    <group note="Each task is covered by exactly one shift">
+    <group note="each task is covered by exactly one shift">
       <count>
         <list> %... </list>
         <values> 1 </values>
@@ -65,6 +65,6 @@
     </group>
   </constraints>
   <objectives>
-    <minimize type="sum"> x[] </minimize>
+    <minimize note="minimizing the number of shifts" type="sum"> x[] </minimize>
   </objectives>
 </instance>

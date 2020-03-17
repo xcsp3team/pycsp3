@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-n, numHints, opHints = data.size, dicts_values(data.numHints), dicts_values(data.opHints)
+n, numHints, opHints = data.size, data.numHints, data.opHints
 
 
 def operator_ctr(i, j, lt, hr):

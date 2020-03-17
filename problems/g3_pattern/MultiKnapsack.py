@@ -7,7 +7,7 @@ n = len(weights)
 x = VarArray(size=n, dom={0, 1})
 
 satisfy(
-    x * c.coeffs <= c.limit for c in data.constraints
+    x * t <= k for (t, k) in data.constraints
 )
 
 maximize(

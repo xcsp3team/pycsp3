@@ -20,9 +20,10 @@ from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
 from pycsp3.dashboard import options
 from pycsp3.problems.data.dataparser import DataDict
-from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns, queue_in
+from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns, queue_in, dicts_values
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, dicts_values, transpose, integer_scaling, is_containing, ANY
+from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, transpose, integer_scaling, is_containing, \
+    ANY
 
 ''' Global Variables '''
 
@@ -177,7 +178,8 @@ def IfThenElse(*args):
 
 
 def Slide(*args):
-    entities = _wrap_intension_constraints(flatten(*args))  # we cannot directly complete partial forms (because it is executed before the anlaysi of the paparemeters of satisfy
+    entities = _wrap_intension_constraints(
+        flatten(*args))  # we cannot directly complete partial forms (because it is executed before the anlaysi of the paparemeters of satisfy
     checkType(entities, [ECtr, bool])
     return ESlide([EToGather(entities)])
 
@@ -188,7 +190,7 @@ def satisfy(*args):
     def _group(*_args):
         entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
         checkType(entities, [ECtr, ECtrs])
-        #return ESlide([EToGather(entities)])  # to force sliding (but could be done at another place instead; todo)
+        # return ESlide([EToGather(entities)])  # to force sliding (but could be done at another place instead; todo)
         return EToGather(entities)
 
     def _block(*_args):

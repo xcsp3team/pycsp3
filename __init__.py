@@ -1,6 +1,6 @@
 import atexit
 import os, sys
-
+from collections import OrderedDict
 from pycsp3.functions import *  # keep it at first position (before Compilation)
 from pycsp3.compiler import Compilation
 

@@ -6,9 +6,12 @@ domains = [data.domains[route.domain] for route in data.routes]  # we discard th
 polarizations = [route.polarization for route in data.routes]
 n = len(data.routes)
 
-for c in data.softs:  # To speed up calculations
-    c['neRelaxations'] = tuple(c['neRelaxations'])
-    c['eqRelaxations'] = tuple(c['eqRelaxations'])
+# To speed up calculations
+neRelaxations = [tuple(c.neRelaxations) for c in data.softs]
+eqRelaxations = [tuple(c.eqRelaxations) for c in data.softs]
+# for c in data.softs:  # To speed up calculations
+#     c.ner = tuple(c['neRelaxations'])
+#     c.eqRelaxations = tuple(c['eqRelaxations'])
 hards, softs = data.hards, data.softs
 nSofts = len(data.softs)
 
@@ -20,7 +23,7 @@ def expr_hard(scp, equality, gap):
     return dist(x, y) == gap if equality else dist(x, y) != c.gap
 
 
-def table_soft(c, short_table=True):
+def table_soft(l, c, short_table=True):
     def calculate_size():
         size = 0
         for l in range(kl - 1):
@@ -41,7 +44,7 @@ def table_soft(c, short_table=True):
                 p2 = 1 if pol in {1, 3} else 0
                 if (polarizations[i], p1) in [(1, 0), (-1, 1)] or (polarizations[j], p2) in [(1, 0), (-1, 1)]:
                     continue
-                t = c.eqRelaxations if p1 == p2 else c.neRelaxations
+                t = softs[l].eqRelaxations if p1 == p2 else softs[l].neRelaxations
                 for kl in range(12):
                     if kl == 11 or distance >= t[kl]:  # for kl=11, we suppose t[kl] = 0
                         suffix = (p1, p2, kl, 0 if kl == 0 or distance >= t[kl - 1] else 1, 0 if kl <= 1 else calculate_size())
@@ -74,7 +77,7 @@ satisfy(
 if not variant():
     satisfy(
         # soft radio-electric compatibility constraints
-        (f[i], f[j], p[i], p[j], k, v1[l], v2[l]) in table_soft(s, False) for i, j, l, s in ((s.route1, s.route2, l, s) for l, s in enumerate(softs))
+        (f[i], f[j], p[i], p[j], k, v1[l], v2[l]) in table_soft(l, s, False) for i, j, l, s in ((s.route1, s.route2, l, s) for l, s in enumerate(softs))
 
     )
 
@@ -91,7 +94,7 @@ elif variant("short"):
         [d[i][j] == dist(f[i], f[j]) for i in range(n) for j in range(i + 1, n) if d[i][j]],
 
         # soft radio-electric compatibility constraints
-        [(d[min(i, j)][max(i, j)], p[i], p[j], k, v1[l], v2[l]) in table_soft(s) for i, j, l, s in ((s.route1, s.route2, l, s) for l, s in enumerate(softs))]
+        [(d[min(i, j)][max(i, j)], p[i], p[j], k, v1[l], v2[l]) in table_soft(l,s) for i, j, l, s in ((s.route1, s.route2, l, s) for l, s in enumerate(softs))]
     )
 
 minimize(

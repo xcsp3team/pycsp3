@@ -15,9 +15,9 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data import dataparser
 from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
-from pycsp3.tools.curser import OpOverrider, ListInt
+from pycsp3.tools.curser import OpOverrider, ListInt, dicts_values
 from pycsp3.tools.slider import handle_slides
-from pycsp3.tools.utilities import Stopwatch
+from pycsp3.tools.utilities import Stopwatch, is_1d_list
 from pycsp3.tools.xcsp import build_document
 
 
@@ -156,6 +156,11 @@ def _load(*, console=False):
         else:
             Compilation.data, Compilation.string_data = _load_data()
             # functions.data = Compilation.data
+        # below, we change lists of OrderedDict into lists of named tuples
+        if isinstance(Compilation.data, dict):
+            for k, v in dict.items(Compilation.data):
+                if is_1d_list(v, OrderedDict):
+                    setattr(Compilation.data, k, dicts_values(v))
     else:
         Compilation.string_model = "Console"
         Compilation.string_data = ""

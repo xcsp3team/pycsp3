@@ -3,7 +3,7 @@ from pycsp3 import *
 height, width = data.height, data.width
 bugs, lengths = data.bugs, data.bugTypeLengths
 nBugs, nTypes = len(bugs), len(lengths)
-parts = [[i for i in range(nBugs) if bugs[i].type == k] for k in range(nTypes)]
+groups = [[i for i in range(nBugs) if data.bugs[i].type == k] for k in range(nTypes)]  # groups[k] is the group of bugs of type k
 
 # x[i][j] is the index of a bug (or -1)
 x = VarArray(size=[height, width], dom=range(-1, nBugs))
@@ -21,12 +21,12 @@ def neighbors(i, j, k, l):
 
 satisfy(
     # each bug cell can take either its bug index for value or the one of another bug of the same type
-    [(x[bug.row][bug.col]) in parts[bug.type] for bug in bugs],
+    [(x[bug.row][bug.col]) in groups[bug.type] for bug in bugs],
 
     # a bug cell value is smaller or equal to the bug index  tag(symmetry-breaking)
     [x[bug.row][bug.col] <= i for i, bug in enumerate(bugs)],
 
-    [n1[part[j]] <= (len(part) - j) * lengths[i] for i, part in enumerate(parts) for j in range(len(part))],
+    [n1[group[j]] <= (len(group) - j) * lengths[i] for i, group in enumerate(groups) for j in range(len(group))],
 
     # computing values of n1
     Cardinality(x, occurrences={i: n1[i] for i in range(nBugs)}),
