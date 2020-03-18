@@ -17,7 +17,7 @@ from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
 from pycsp3.tools.curser import OpOverrider, ListInt, dicts_values
 from pycsp3.tools.slider import handle_slides
-from pycsp3.tools.utilities import Stopwatch, is_1d_list
+from pycsp3.tools.utilities import Stopwatch
 from pycsp3.tools.xcsp import build_document
 
 
@@ -44,16 +44,17 @@ class DataVisitor(ast.NodeVisitor):
         self.raw_data = raw_data  # raw data under the form [x,y,z] with x, y, z values
         self.ordered_data = []
         self.cnt = 0
-        self.compilation_data = dataparser.DataDict()  # the object used for recording the data, available in the model
+        self.compilation_data = OrderedDict()  # the object used for recording the data, available in the model
 
     def visit(self, node):
-        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "data" and not hasattr(self.compilation_data, node.attr):
-            assert self.cnt < len(
-                self.raw_data), "The number of fields in the object data must be equal to the number of values specified with the option -data "
+        if isinstance(node, ast.Attribute) and isinstance(node.value,
+                                                          ast.Name) and node.value.id == "data" and node.attr not in self.compilation_data:  # not hasattr(self.compilation_data, node.attr):
+            assert self.cnt < len(self.raw_data), \
+                "The number of fields in the object data must be equal to the number of values specified with the option -data "
             value = int(self.raw_data[self.cnt]) if self.raw_data[self.cnt] is not None and self.raw_data[self.cnt].isdigit() else self.raw_data[self.cnt]
             if options.debug:
                 print("Load data", value, "in", node.attr)
-            setattr(self.compilation_data, node.attr, value)
+            self.compilation_data[node.attr] = value
             self.ordered_data.append(value)
             self.cnt += 1
         ast.NodeVisitor.visit(self, node)
@@ -81,7 +82,6 @@ def _load_model():
         specification = util.spec_from_file_location("", name)
         model = util.module_from_spec(specification)
         # model.specification = specification
-
         return model, model_string
     except:
         usage("It was not possible to read the file: " + sys.argv[0])
@@ -90,23 +90,19 @@ def _load_model():
 
 def _load_data():
     data = options.data
-    compilation_data = dataparser.DataDict()  # the object used for recording the data, available in the model
+    compilation_data = OrderedDict()  # the object used for recording the data, available in the model
     if data is None:
-        compilation_data.secured_getattribute()
         return compilation_data, ""
-
     if data.endswith(".json"):
         assert os.path.exists(data), "The file " + data + " does not exist (in the specified directory)."
         if os.path.exists(data):
             with open(data) as f:
-                # compilation_data = dataparser.DataDict(json.loads(f.read()))
-                compilation_data = dataparser.DataDict(json.loads(f.read(), object_pairs_hook=OrderedDict))
+                compilation_data = json.loads(f.read(), object_pairs_hook=OrderedDict)
                 string_data = "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
     else:
         #  if '{' in data and '}' in data:
         #    compilation_data = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()), object_pairs_hook=OrderedDict)
-        #    for k, v in compilation_data.items(): setattr(compilation_data, k, v)
-        #    ordered_data = list(compilation_data.values())
+        #    for k, v in compilation_data.items(): setattr(compilation_data, k, v)  ordered_data = list(compilation_data.values())
         if '[' in data and ']' in data:
             args = [arg if arg != 'None' else None for arg in data[1:-1].split(",")]
             if '=' in data:
@@ -115,19 +111,16 @@ def _load_data():
                 for arg in args:
                     t = arg.split('=')
                     value = int(t[1]) if t[1].isdigit() else None if t[1] == 'None' else t[1]
-                    setattr(compilation_data, t[0], value)
+                    compilation_data[t[0]] = value
                     ordered_data.append(value)
             else:
                 compilation_data, ordered_data = _load_data_names(args)
         else:
             compilation_data, ordered_data = _load_data_names([data if data != 'None' else None])
         string_data = "-" + "-".join(str(v) for v in ordered_data)
-
     if options.debug is True:
         print("Compilation data:", compilation_data)
         print("String data:", string_data)
-
-    compilation_data.secured_getattribute()
     return compilation_data, string_data
 
 
@@ -139,7 +132,7 @@ def _load_dataparser(parser_file, data_file):
         string_data = "-" + options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.data else None
         if string_data is None:
             string_data = Compilation.string_data if Compilation.string_data else ""  # in case data are recorded through the dataparser (after asking the user)
-        return dataparser.make_clean(compilation_data), string_data
+        return compilation_data, string_data
     except:
         usage("It was not possible to correctly read the file: " + parser_file)
         raise
@@ -155,12 +148,7 @@ def _load(*, console=False):
             Compilation.data, Compilation.string_data = _load_dataparser(options.dataparser, options.data)
         else:
             Compilation.data, Compilation.string_data = _load_data()
-            # functions.data = Compilation.data
-        # below, we change lists of OrderedDict into lists of named tuples
-        if isinstance(Compilation.data, dict):
-            for k, v in dict.items(Compilation.data):
-                if is_1d_list(v, OrderedDict):
-                    setattr(Compilation.data, k, dicts_values(v))
+        Compilation.data = dicts_values(Compilation.data)
     else:
         Compilation.string_model = "Console"
         Compilation.string_data = ""
