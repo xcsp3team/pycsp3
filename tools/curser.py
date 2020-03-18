@@ -1,15 +1,13 @@
-from collections import deque
+from collections import deque, namedtuple
 
 from pycsp3.classes.entities import Node, TypeNode
-from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintAllDifferent, ConstraintSum, ConstraintCount, ConstraintElement, \
+from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, \
     ConstraintElementMatrix, \
     ConstraintInstantiation, ECtr
 from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY
-
-from collections import OrderedDict, namedtuple
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -368,7 +366,7 @@ class ListVar(list):
 
     def __mul__(self, other):
         assert is_containing(self, (Variable, Node))
-        return ScalarProduct(self, list(other))
+        return ScalarProduct(self, list(other) if isinstance(other,tuple) else other)
 
     def __contains__(self, other):
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member constraint
@@ -382,14 +380,23 @@ class ListVar(list):
         return columns(self)
 
 
-def dicts_values(ds):
-    def value_for(v):
-        return ListInt(v) if is_1d_list(v, int) else ListVar(v) if is_1d_list(v, Variable) else dicts_values(v) if is_1d_list(v, OrderedDict) else v
-
-    assert is_1d_list(ds, OrderedDict)
+def dicts_values(obj):
     if not hasattr(dicts_values, "cnt"):
         dicts_values.cnt = 0
-    nt = namedtuple("ds" + str(dicts_values.cnt), ds[0].keys())
-    dicts_values.cnt += 1
-    # return [nt(*(v for (k, v) in d.items())) for d in ds]
-    return [nt(*(value_for(v) for (k, v) in d.items())) for d in ds]
+
+    if isinstance(obj, list):
+        if is_1d_list(obj, int):
+            return ListInt(obj)
+        if is_1d_list(obj, Variable):
+            return ListVar(obj)
+        if is_1d_list(obj, dict):
+            nt = namedtuple("nt" + str(dicts_values.cnt), obj[0].keys())
+            dicts_values.cnt += 1
+            return [nt(*(dicts_values(v) for (k, v) in d.items())) for d in obj]
+        t = [dicts_values(v) for v in obj]
+        return ListInt(t) if isinstance(t[0], ListInt) else ListVar(t) if isinstance(t[0], ListVar) else t
+    if isinstance(obj, dict):
+        nt = namedtuple("nt" + str(dicts_values.cnt), obj.keys())
+        dicts_values.cnt += 1
+        return nt(*(dicts_values(v) for (k, v) in obj.items()))
+    return obj

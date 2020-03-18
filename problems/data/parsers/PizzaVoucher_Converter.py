@@ -1,19 +1,21 @@
-from pycsp3.problems.data.dataparser import *
 import json
-from pycsp3.compiler import Compilation
 
+from pycsp3.compiler import Compilation
+from pycsp3.problems.data.dataparser import *
 
 # illustrating how to convert from a JSON format to another one.
+# For example python3 PizzaVoucher.py -data=zn06-oldformat.json -dataparser=PizzaVoucher_Converter.py -dataexport
 
-name = ask_string("Name of the JSON file")
+
+name = options.data  # the name of the JSON file whose format must be converted")
 with open(name) as f:
     d = json.load(f)
 
 pp, fp = d.get("voucherPayPart"), d.get("voucherFreePart")
 assert len(pp) == len(fp)
 
-data.pizzaPrices = d.get("pizzaPrices")
-data.vouchers = [DataDict({"payPart": pp[i], "freePart": fp[i]}) for i in range(len(pp))]
+data["pizzaPrices"] = d.get("pizzaPrices")
+data["vouchers"] = [OrderedDict([("payPart", pp[i]), ("freePart", fp[i])]) for i in range(len(pp))]
 
 pos = name.rfind("/")
 Compilation.string_data = "-" + name[pos + 1:] if pos != -1 else name

@@ -4,5 +4,6 @@ from pycsp3.problems.data.dataparser import *
 
 nRows = next_int()
 next_int()  # nCols
-data.minIngredients, data.maxSize = next_int(), next_int()
-data.pizza = [[0 if c == "M" else 1 for c in line if c != '\n'] for line in remaining_lines()]
+data["minIngredients"] = next_int()
+data["maxSize"] = next_int()
+data["pizza"] = [[0 if c == "M" else 1 for c in line if c != '\n'] for line in remaining_lines()]

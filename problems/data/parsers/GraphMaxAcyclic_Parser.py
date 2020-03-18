@@ -6,13 +6,13 @@ while line()[0] == '%':
 t = numbers_in(line())
 assert len(t) == 3 and t[2] == 1
 
-data.nNodes = t[0]
-data.arcs = [[0 for _ in range(data.nNodes)] for _ in range(data.nNodes)]
+data["nNodes"] = t[0]
+data["arcs"] = [[0 for _ in range(t[0])] for _ in range(t[0])]
 
-for i in range(data.nNodes):
+for i in range(t[0]):
     t = numbers_in(next_line())
     for j in range(0, len(t), 2):
-        data.arcs[i][t[j] - 1] = t[j + 1]
+        data["arcs"][i][t[j] - 1] = t[j + 1]
 
 
 

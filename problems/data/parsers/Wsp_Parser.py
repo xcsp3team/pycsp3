@@ -1,7 +1,7 @@
 from pycsp3.problems.data.dataparser import *
 
-data.nSteps = number_in(line())
-data.nUsers = number_in(next_line())
+data["nSteps"] = number_in(line())
+data["nUsers"] = number_in(next_line())
 nConstraints = number_in(next_line())
 
 
@@ -10,10 +10,8 @@ def auth(line):
     return [i for i in range(len(s)) if s[i] == '1']
 
 
-print(data.nSteps, " ", data.nUsers, " ", nConstraints)
 next_line()
-data.auths = [auth(next_line()) for _ in range(data.nUsers)]
-print(data.auths)
+data["auths"] = [auth(next_line()) for _ in range(data["nUsers"])]
 next_line()
 am, al = [], []
 for _ in range(nConstraints):
@@ -25,14 +23,8 @@ for _ in range(nConstraints):
         am.append((t[0], t[1:]))
     else:
         raise AssertionError
-data.atMost = am
-data.atLeast = al
-
-print(am)
-print(al)
-
-
-
+data["atMost"] = am
+data["atLeast"] = al
 
 
 

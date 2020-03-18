@@ -3,6 +3,8 @@ from pycsp3 import *
 weights = data.coefficients
 n = len(weights)
 
+print(data.constraints)
+
 # x[i] is 1 iff the ith item is selected
 x = VarArray(size=n, dom={0, 1})
 
