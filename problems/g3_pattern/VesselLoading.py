@@ -2,7 +2,7 @@ from pycsp3 import *
 
 width, height = data.containerWidth, data.containerHeight
 containers = data.containers
-separations = data.separations
+# separations = data.separations
 nContainers = len(containers)
 
 # x[i] is the x-coordinate of the ith container

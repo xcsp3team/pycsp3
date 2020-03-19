@@ -380,9 +380,9 @@ class ListVar(list):
         return columns(self)
 
 
-def dicts_values(obj):
-    if not hasattr(dicts_values, "cnt"):
-        dicts_values.cnt = 0
+def convert_to_namedtuples(obj):
+    if not hasattr(convert_to_namedtuples, "cnt"):
+        convert_to_namedtuples.cnt = 0
 
     if isinstance(obj, list):
         if is_1d_list(obj, int):
@@ -390,13 +390,13 @@ def dicts_values(obj):
         if is_1d_list(obj, Variable):
             return ListVar(obj)
         if is_1d_list(obj, dict):
-            nt = namedtuple("nt" + str(dicts_values.cnt), obj[0].keys())
-            dicts_values.cnt += 1
-            return [nt(*(dicts_values(v) for (k, v) in d.items())) for d in obj]
-        t = [dicts_values(v) for v in obj]
+            nt = namedtuple("nt" + str(convert_to_namedtuples.cnt), obj[0].keys())
+            convert_to_namedtuples.cnt += 1
+            return [nt(*(convert_to_namedtuples(v) for (k, v) in d.items())) for d in obj]
+        t = [convert_to_namedtuples(v) for v in obj]
         return ListInt(t) if isinstance(t[0], ListInt) else ListVar(t) if isinstance(t[0], ListVar) else t
     if isinstance(obj, dict):
-        nt = namedtuple("nt" + str(dicts_values.cnt), obj.keys())
-        dicts_values.cnt += 1
-        return nt(*(dicts_values(v) for (k, v) in obj.items()))
+        nt = namedtuple("nt" + str(convert_to_namedtuples.cnt), obj.keys())
+        convert_to_namedtuples.cnt += 1
+        return nt(*(convert_to_namedtuples(v) for (k, v) in obj.items()))
     return obj

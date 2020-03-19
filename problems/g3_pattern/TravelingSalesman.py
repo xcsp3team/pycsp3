@@ -7,7 +7,7 @@ nCities = len(distances)
 c = VarArray(size=nCities, dom=range(nCities))
 
 # d[i] is the distance between the cities i and i+1
-d = VarArray(size=nCities, dom={d for row in distances for d in row})
+d = VarArray(size=nCities, dom={v for row in distances for v in row})
 
 satisfy(
     # Visiting each city only once
