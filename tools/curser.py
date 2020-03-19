@@ -228,22 +228,34 @@ class OpOverrider:
         return Node.build(TypeNode.DIV, other, self)
 
     def __lt__(self, other):
-        return object.__lt__(self, other) if None in {self, other} else Node.build(TypeNode.LT, self, other)
+        if self is None or other is None:
+            return object.__lt__(self, other)
+        return PartialConstraint.__gt__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.LT, self, other)
 
     def __le__(self, other):
-        return object.__le__(self, other) if None in {self, other} else Node.build(TypeNode.LE, self, other)
+        if self is None or other is None:
+            return object.__le__(self, other)
+        return PartialConstraint.__ge__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.LE, self, other)
 
     def __ge__(self, other):
-        return object.__ge__(self, other) if None in {self, other} else Node.build(TypeNode.GE, self, other)
+        if self is None or other is None:
+            return object.__ge__(self, other)
+        return PartialConstraint.__le__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.GE, self, other)
 
     def __gt__(self, other):
-        return object.__gt__(self, other) if None in {self, other} else Node.build(TypeNode.GT, self, other)
+        if self is None or other is None:
+            return object.__gt__(self, other)
+        return PartialConstraint.__lt__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.GT, self, other)
 
     def __eq__(self, other):
-        return object.__eq__(self, other) if None in {self, other} else Node.build(TypeNode.EQ, self, other)
+        if self is None or other is None:
+            return object.__eq__(self, other)
+        return PartialConstraint.__eq__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.EQ, self, other)
 
     def __ne__(self, other):
-        return object.__ne__(self, other) if None in {self, other} else Node.build(TypeNode.NE, self, other)
+        if self is None or other is None:
+            return object.__ne__(self, other)
+        return PartialConstraint.__ne__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
         return object.__or__(self, other) if None in {self, other} else Node.disjunction(self, other)
@@ -366,7 +378,7 @@ class ListVar(list):
 
     def __mul__(self, other):
         assert is_containing(self, (Variable, Node))
-        return ScalarProduct(self, list(other) if isinstance(other,tuple) else other)
+        return ScalarProduct(self, list(other) if isinstance(other, tuple) else other)
 
     def __contains__(self, other):
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member constraint

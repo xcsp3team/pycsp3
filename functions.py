@@ -1,5 +1,6 @@
 import inspect
 import types
+from collections import namedtuple
 from itertools import combinations, product, permutations
 
 from pycsp3.classes.auxiliary.conditions import Condition
@@ -805,4 +806,4 @@ def cp_array(l):
 
 
 def _pycharm_security():
-    _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, columns)
+    _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, columns, namedtuple)
