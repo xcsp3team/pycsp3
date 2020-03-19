@@ -15,7 +15,7 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data import dataparser
 from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
-from pycsp3.tools.curser import OpOverrider, ListInt, dicts_values
+from pycsp3.tools.curser import OpOverrider, ListInt, convert_to_namedtuples
 from pycsp3.tools.slider import handle_slides
 from pycsp3.tools.utilities import Stopwatch
 from pycsp3.tools.xcsp import build_document
@@ -47,11 +47,10 @@ class DataVisitor(ast.NodeVisitor):
         self.compilation_data = OrderedDict()  # the object used for recording the data, available in the model
 
     def visit(self, node):
-        if isinstance(node, ast.Attribute) and isinstance(node.value,
-                                                          ast.Name) and node.value.id == "data" and node.attr not in self.compilation_data:  # not hasattr(self.compilation_data, node.attr):
+        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "data" and node.attr not in self.compilation_data:
             assert self.cnt < len(self.raw_data), \
-                "The number of fields in the object data must be equal to the number of values specified with the option -data "
-            value = int(self.raw_data[self.cnt]) if self.raw_data[self.cnt] is not None and self.raw_data[self.cnt].isdigit() else self.raw_data[self.cnt]
+                "The number of fields in the object 'data' must be equal to the number of values specified with the option -data "
+            value = int(self.raw_data[self.cnt]) if self.raw_data[self.cnt] and self.raw_data[self.cnt].isdigit() else self.raw_data[self.cnt]
             if options.debug:
                 print("Load data", value, "in", node.attr)
             self.compilation_data[node.attr] = value
@@ -89,38 +88,37 @@ def _load_model():
 
 
 def _load_data():
+    None_Values = ['None', '']  # adding 'none' and 'null'?
     data = options.data
     compilation_data = OrderedDict()  # the object used for recording the data, available in the model
     if data is None:
         return compilation_data, ""
     if data.endswith(".json"):
         assert os.path.exists(data), "The file " + data + " does not exist (in the specified directory)."
-        if os.path.exists(data):
-            with open(data) as f:
-                compilation_data = json.loads(f.read(), object_pairs_hook=OrderedDict)
-                string_data = "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
+        with open(data) as f:
+            compilation_data = json.loads(f.read(), object_pairs_hook=OrderedDict)
+            string_data = "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
     else:
         #  if '{' in data and '}' in data:
         #    compilation_data = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()), object_pairs_hook=OrderedDict)
         #    for k, v in compilation_data.items(): setattr(compilation_data, k, v)  ordered_data = list(compilation_data.values())
         if '[' in data and ']' in data:
-            args = [arg if arg != 'None' else None for arg in data[1:-1].split(",")]
+            args = [None if arg in None_Values else arg for arg in data[1:-1].split(",")]
             if '=' in data:
                 assert data.count('=') == data.count(',') + 1, "badly formed string of data " + data
                 ordered_data = []
                 for arg in args:
                     t = arg.split('=')
-                    value = int(t[1]) if t[1].isdigit() else None if t[1] == 'None' else t[1]
+                    value = int(t[1]) if t[1].isdigit() else None if t[1] in None_Values else t[1]
                     compilation_data[t[0]] = value
                     ordered_data.append(value)
             else:
                 compilation_data, ordered_data = _load_data_names(args)
         else:
-            compilation_data, ordered_data = _load_data_names([data if data != 'None' else None])
+            compilation_data, ordered_data = _load_data_names([data if data not in None_Values else None])
         string_data = "-" + "-".join(str(v) for v in ordered_data)
-    if options.debug is True:
-        print("Compilation data:", compilation_data)
-        print("String data:", string_data)
+    if options.debug:
+        print("Compilation data:", compilation_data, "\nString data:", string_data)
     return compilation_data, string_data
 
 
@@ -148,7 +146,7 @@ def _load(*, console=False):
             Compilation.data, Compilation.string_data = _load_dataparser(options.dataparser, options.data)
         else:
             Compilation.data, Compilation.string_data = _load_data()
-        Compilation.data = dicts_values(Compilation.data)
+        Compilation.data = convert_to_namedtuples(Compilation.data)
     else:
         Compilation.string_model = "Console"
         Compilation.string_data = ""
@@ -174,8 +172,9 @@ def _compile():
     OpOverrider.disable()
     if options.debug or options.display:
         print("\n", sys.argv, "\n")
-        with open(sys.argv[1], 'r') as f:
-            print(f.read())
+        if sys.argv[1].endswith(".json"):
+            with open(sys.argv[1], 'r') as f:
+                print(f.read())
 
     if options.time:
         print("\tWall time to put the model in memory:", Compilation.stopwatch1.elapsed_time(reset=True), "seconds")
