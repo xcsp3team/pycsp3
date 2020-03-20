@@ -150,6 +150,9 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     else:  #  It is a table constraint
         if not hasattr(left_operand, '__iter__'):
             left_operand = [left_operand]
+        if not bool_value and len(right_operand) == 0:
+            return None
+        # TODO what to do if the table is empy and bool_value is true? an error message ?
         ctr = Extension(scope=list(left_operand), table=right_operand, positive=bool_value)
     return ctr
 
