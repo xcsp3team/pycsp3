@@ -32,7 +32,7 @@ elif variant("dual"):  # dual construction [Bacchus, Extending forward checking,
     def dual_table(i, j):
         def base_value(decimal_value, length, base):
             value = []
-            for i in range(length):
+            for _ in range(length):
                 value = [decimal_value % base] + value
                 decimal_value = decimal_value // base
             assert decimal_value == 0, "The given array is too small to contain all the digits of the conversion"
@@ -53,5 +53,5 @@ elif variant("dual"):  # dual construction [Bacchus, Extending forward checking,
     x = VarArray(size=e, dom=lambda i: range(1, 2 ** len(clauses[i])))
 
     satisfy(
-        (x[i], x[j]) in dual_table(i, j) for i in range(e) for j in range(i + 1, e) if dual_table(i, j)
+        (x[i], x[j]) in dual_table(i, j) for i, j in combinations(range(e), 2) if dual_table(i, j)
     )

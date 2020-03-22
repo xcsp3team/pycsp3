@@ -1,4 +1,5 @@
 from collections import deque, namedtuple
+import types
 
 from pycsp3.classes.entities import Node, TypeNode
 from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, \
@@ -39,6 +40,8 @@ def cursing():
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, types.GeneratorType):
+            other = list(other)
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
             queue_in.append((self, other))
             return True
@@ -50,6 +53,8 @@ def cursing():
     def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, types.GeneratorType):
+            other = list(other)
         tself = unique_type_in(self)
         # if isinstance(other, Variable) and len(self) > 0 and is_containing(self, int):  # unary table constraint
         if isinstance(other, Variable) and tself in {int, str}:  # unary table constraint

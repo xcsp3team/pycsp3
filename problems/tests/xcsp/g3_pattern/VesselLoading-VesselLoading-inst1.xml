@@ -41,7 +41,7 @@
         <supports> (0,3,4)(1,4,3) </supports>
       </extension>
     </block>
-    <noOverlap note="no overlapping between rectangles">
+    <noOverlap note="no overlapping between containers">
       <origins> (x[0],y[0])(x[1],y[1])(x[2],y[2]) </origins>
       <lengths> (w[0],h[0])(w[1],h[1])(w[2],h[2]) </lengths>
     </noOverlap>

@@ -25,7 +25,7 @@ elif variant("table"):
 
     satisfy(
         # computing the distance between any two successive cities in the tour
-        [(c[i], c[(i + 1) % nCities], d[i]) in table for i in range(nCities)]
+        (c[i], c[(i + 1) % nCities], d[i]) in table for i in range(nCities)
     )
 
 minimize(

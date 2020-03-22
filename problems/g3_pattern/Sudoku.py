@@ -2,7 +2,7 @@ from pycsp3 import *
 
 import math
 
-n, base = data.n, int(math.sqrt(data.n))  # n (order of the grid) is typically 9
+n, base = data.n, int(math.sqrt(data.n))  # n (order of the grid); typically 9
 assert base * base == n
 clues = data.clues  # if not 0, clues[i][j] is a value imposed at row i and col j
 

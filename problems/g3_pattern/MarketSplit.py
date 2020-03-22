@@ -5,5 +5,5 @@ n = data.n
 x = VarArray(size=n, dom={0, 1})
 
 satisfy(
-    x * t == k for (t, k) in data.ctrs
+    x * coeffs == k for (coeffs, k) in data.ctrs
 )

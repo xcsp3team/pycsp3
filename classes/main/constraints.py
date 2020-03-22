@@ -589,7 +589,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
         elif isinstance(obj2, ScalarProduct):
             obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))
         elif not isinstance(obj2, PartialConstraint):
-            error("The type of the operand of the partial constraint Sum is wrong as it is " + str(type(obj2)))
+            error("The type of the operand of the partial constraint is wrong as it is " + str(type(obj2)))
         obj1, obj2 = (obj1, obj2) if not inverted else (obj2, obj1)  # we invert back
         assert isinstance(obj1, PartialConstraint) and isinstance(obj2, PartialConstraint)
         assert isinstance(obj1.constraint, ConstraintSum) and isinstance(obj2.constraint, ConstraintSum)
