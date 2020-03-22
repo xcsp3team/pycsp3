@@ -21,10 +21,10 @@
     </array>
     <array id="r" note="r[i][t] is 1 iff the product made at time t concerns customer i" size="[50][50]"> 0 1 </array>
     <array id="o" note="o[i][t] is 1 iff the stack is open for customer i at time t" size="[50][50]"> 0 1 </array>
-    <array id="ns" note="ns[t] is the number of open stacks at time t" size="[50]"> 0..50 </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[50]"> 0..50 </array>
   </variables>
   <constraints>
-    <allDifferent> p[] </allDifferent>
+    <allDifferent note="all products are scheduled at different times"> p[] </allDifferent>
     <group>
       <element>
         <list> 0 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 0 1 1 1 1 0 1 1 0 1 1 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 </list>
@@ -7982,59 +7982,59 @@
         <list> %... </list>
         <condition> (eq,%0) </condition>
       </sum>
-      <args> ns[0] o[][0] </args>
-      <args> ns[1] o[][1] </args>
-      <args> ns[2] o[][2] </args>
-      <args> ns[3] o[][3] </args>
-      <args> ns[4] o[][4] </args>
-      <args> ns[5] o[][5] </args>
-      <args> ns[6] o[][6] </args>
-      <args> ns[7] o[][7] </args>
-      <args> ns[8] o[][8] </args>
-      <args> ns[9] o[][9] </args>
-      <args> ns[10] o[][10] </args>
-      <args> ns[11] o[][11] </args>
-      <args> ns[12] o[][12] </args>
-      <args> ns[13] o[][13] </args>
-      <args> ns[14] o[][14] </args>
-      <args> ns[15] o[][15] </args>
-      <args> ns[16] o[][16] </args>
-      <args> ns[17] o[][17] </args>
-      <args> ns[18] o[][18] </args>
-      <args> ns[19] o[][19] </args>
-      <args> ns[20] o[][20] </args>
-      <args> ns[21] o[][21] </args>
-      <args> ns[22] o[][22] </args>
-      <args> ns[23] o[][23] </args>
-      <args> ns[24] o[][24] </args>
-      <args> ns[25] o[][25] </args>
-      <args> ns[26] o[][26] </args>
-      <args> ns[27] o[][27] </args>
-      <args> ns[28] o[][28] </args>
-      <args> ns[29] o[][29] </args>
-      <args> ns[30] o[][30] </args>
-      <args> ns[31] o[][31] </args>
-      <args> ns[32] o[][32] </args>
-      <args> ns[33] o[][33] </args>
-      <args> ns[34] o[][34] </args>
-      <args> ns[35] o[][35] </args>
-      <args> ns[36] o[][36] </args>
-      <args> ns[37] o[][37] </args>
-      <args> ns[38] o[][38] </args>
-      <args> ns[39] o[][39] </args>
-      <args> ns[40] o[][40] </args>
-      <args> ns[41] o[][41] </args>
-      <args> ns[42] o[][42] </args>
-      <args> ns[43] o[][43] </args>
-      <args> ns[44] o[][44] </args>
-      <args> ns[45] o[][45] </args>
-      <args> ns[46] o[][46] </args>
-      <args> ns[47] o[][47] </args>
-      <args> ns[48] o[][48] </args>
-      <args> ns[49] o[][49] </args>
+      <args> aux_gb[0] o[][0] </args>
+      <args> aux_gb[1] o[][1] </args>
+      <args> aux_gb[2] o[][2] </args>
+      <args> aux_gb[3] o[][3] </args>
+      <args> aux_gb[4] o[][4] </args>
+      <args> aux_gb[5] o[][5] </args>
+      <args> aux_gb[6] o[][6] </args>
+      <args> aux_gb[7] o[][7] </args>
+      <args> aux_gb[8] o[][8] </args>
+      <args> aux_gb[9] o[][9] </args>
+      <args> aux_gb[10] o[][10] </args>
+      <args> aux_gb[11] o[][11] </args>
+      <args> aux_gb[12] o[][12] </args>
+      <args> aux_gb[13] o[][13] </args>
+      <args> aux_gb[14] o[][14] </args>
+      <args> aux_gb[15] o[][15] </args>
+      <args> aux_gb[16] o[][16] </args>
+      <args> aux_gb[17] o[][17] </args>
+      <args> aux_gb[18] o[][18] </args>
+      <args> aux_gb[19] o[][19] </args>
+      <args> aux_gb[20] o[][20] </args>
+      <args> aux_gb[21] o[][21] </args>
+      <args> aux_gb[22] o[][22] </args>
+      <args> aux_gb[23] o[][23] </args>
+      <args> aux_gb[24] o[][24] </args>
+      <args> aux_gb[25] o[][25] </args>
+      <args> aux_gb[26] o[][26] </args>
+      <args> aux_gb[27] o[][27] </args>
+      <args> aux_gb[28] o[][28] </args>
+      <args> aux_gb[29] o[][29] </args>
+      <args> aux_gb[30] o[][30] </args>
+      <args> aux_gb[31] o[][31] </args>
+      <args> aux_gb[32] o[][32] </args>
+      <args> aux_gb[33] o[][33] </args>
+      <args> aux_gb[34] o[][34] </args>
+      <args> aux_gb[35] o[][35] </args>
+      <args> aux_gb[36] o[][36] </args>
+      <args> aux_gb[37] o[][37] </args>
+      <args> aux_gb[38] o[][38] </args>
+      <args> aux_gb[39] o[][39] </args>
+      <args> aux_gb[40] o[][40] </args>
+      <args> aux_gb[41] o[][41] </args>
+      <args> aux_gb[42] o[][42] </args>
+      <args> aux_gb[43] o[][43] </args>
+      <args> aux_gb[44] o[][44] </args>
+      <args> aux_gb[45] o[][45] </args>
+      <args> aux_gb[46] o[][46] </args>
+      <args> aux_gb[47] o[][47] </args>
+      <args> aux_gb[48] o[][48] </args>
+      <args> aux_gb[49] o[][49] </args>
     </group>
   </constraints>
   <objectives>
-    <minimize type="maximum"> ns[] </minimize>
+    <minimize note="minimizing the number of stacks that are simultaneously open" type="maximum"> aux_gb[] </minimize>
   </objectives>
 </instance>

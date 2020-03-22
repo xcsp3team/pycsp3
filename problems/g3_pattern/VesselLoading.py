@@ -1,9 +1,15 @@
 from pycsp3 import *
 
-width, height = data.containerWidth, data.containerHeight
+"""
+  Problem 008 on CSPLib
+"""
+
+width, height = data.deckWidth, data.deckHeight
 containers = data.containers
-# separations = data.separations
 nContainers = len(containers)
+
+groups = [[i for i, container in enumerate(containers) if container.type == k] for k in range(max(container.type for container in containers) + 1)]
+t = [(i, j, separation.distance) for separation in data.separations for i in groups[separation.type1] for j in groups[separation.type2]]
 
 # x[i] is the x-coordinate of the ith container
 x = VarArray(size=nContainers, dom=range(width))
@@ -30,21 +36,9 @@ satisfy(
     # managing rotation
     [(r[i], w[i], h[i]) in {(0, container.width, container.height), (1, container.height, container.width)} for i, container in enumerate(containers)],
 
-    # no overlapping between rectangles
-    NoOverlap(origins=[(x[i], y[i]) for i in range(nContainers)], lengths=[(w[i], h[i]) for i in range(nContainers)])
+    # no overlapping between containers
+    NoOverlap(origins=[(x[i], y[i]) for i in range(nContainers)], lengths=[(w[i], h[i]) for i in range(nContainers)]),
+
+    # respecting separations between classes
+    [(x[i] + w[i] + sep <= x[j]) | (x[j] + w[j] + sep <= x[i]) | (y[i] + h[i] + sep <= y[j]) | (y[j] + h[j] + sep <= y[i]) for (i, j, sep) in t]
 )
-
-
-# TODO model complet ? a voir avec la short table...
-
-def table(i, j, separation):
-    tuples = []
-    # horizontal, i before j
-    mini = min(containers[i].width, containers[i].height)
-    maxi = max(containers[i].width, containers[i].height)
-    for xi in range(width - mini):
-        for k in range(mini, maxi):
-            tuples.append(tuple(xi, mini, xi + k + separation, ANY, ANY, ANY, ANY, ANY))
-        for xj in range(xi + maxi + separation, width):
-            tuples.append(tuple(xi, ANY, xj, ANY, ANY, ANY, ANY, ANY))
-    return tuples

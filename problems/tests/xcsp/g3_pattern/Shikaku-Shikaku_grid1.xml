@@ -6,75 +6,71 @@
     <array id="b" note="b[i] is the position of the bottom border of the ith room" size="[14]"> 0..10 </array>
   </variables>
   <constraints>
-    <group>
-      <intension> le(%0,%1) </intension>
-      <args> l[0] 0 </args>
-      <args> l[1] 4 </args>
-      <args> l[2] 7 </args>
-      <args> l[3] 9 </args>
-      <args> l[4] 0 </args>
-      <args> l[5] 2 </args>
-      <args> l[6] 4 </args>
-      <args> l[7] 5 </args>
-      <args> l[8] 7 </args>
-      <args> l[9] 9 </args>
-      <args> l[10] 0 </args>
-      <args> l[11] 2 </args>
-      <args> l[12] 5 </args>
-      <args> l[13] 9 </args>
-    </group>
-    <group>
-      <intension> gt(%0,%1) </intension>
-      <args> r[0] 0 </args>
-      <args> r[1] 4 </args>
-      <args> r[2] 7 </args>
-      <args> r[3] 9 </args>
-      <args> r[4] 0 </args>
-      <args> r[5] 2 </args>
-      <args> r[6] 4 </args>
-      <args> r[7] 5 </args>
-      <args> r[8] 7 </args>
-      <args> r[9] 9 </args>
-      <args> r[10] 0 </args>
-      <args> r[11] 2 </args>
-      <args> r[12] 5 </args>
-      <args> r[13] 9 </args>
-    </group>
-    <group>
-      <intension> le(%0,%1) </intension>
-      <args> t[0] 0 </args>
-      <args> t[1] 0 </args>
-      <args> t[2] 0 </args>
-      <args> t[3] 2 </args>
-      <args> t[4] 3 </args>
-      <args> t[5] 3 </args>
-      <args> t[6] 3 </args>
-      <args> t[7] 6 </args>
-      <args> t[8] 6 </args>
-      <args> t[9] 6 </args>
-      <args> t[10] 7 </args>
-      <args> t[11] 9 </args>
-      <args> t[12] 9 </args>
-      <args> t[13] 9 </args>
-    </group>
-    <group>
-      <intension> gt(%0,%1) </intension>
-      <args> b[0] 0 </args>
-      <args> b[1] 0 </args>
-      <args> b[2] 0 </args>
-      <args> b[3] 2 </args>
-      <args> b[4] 3 </args>
-      <args> b[5] 3 </args>
-      <args> b[6] 3 </args>
-      <args> b[7] 6 </args>
-      <args> b[8] 6 </args>
-      <args> b[9] 6 </args>
-      <args> b[10] 7 </args>
-      <args> b[11] 9 </args>
-      <args> b[12] 9 </args>
-      <args> b[13] 9 </args>
-    </group>
-    <group>
+    <block note="each room must be surrounded by its borders">
+      <group>
+        <intension> le(%0,%1) </intension>
+        <args> l[0] 0 </args>
+        <args> l[1] 4 </args>
+        <args> l[2] 7 </args>
+        <args> l[3] 9 </args>
+        <args> l[4] 0 </args>
+        <args> l[5] 2 </args>
+        <args> l[6] 4 </args>
+        <args> l[7] 5 </args>
+        <args> l[8] 7 </args>
+        <args> l[9] 9 </args>
+        <args> l[10] 0 </args>
+        <args> l[11] 2 </args>
+        <args> l[12] 5 </args>
+        <args> l[13] 9 </args>
+        <args> t[0] 0 </args>
+        <args> t[1] 0 </args>
+        <args> t[2] 0 </args>
+        <args> t[3] 2 </args>
+        <args> t[4] 3 </args>
+        <args> t[5] 3 </args>
+        <args> t[6] 3 </args>
+        <args> t[7] 6 </args>
+        <args> t[8] 6 </args>
+        <args> t[9] 6 </args>
+        <args> t[10] 7 </args>
+        <args> t[11] 9 </args>
+        <args> t[12] 9 </args>
+        <args> t[13] 9 </args>
+      </group>
+      <group>
+        <intension> gt(%0,%1) </intension>
+        <args> r[0] 0 </args>
+        <args> r[1] 4 </args>
+        <args> r[2] 7 </args>
+        <args> r[3] 9 </args>
+        <args> r[4] 0 </args>
+        <args> r[5] 2 </args>
+        <args> r[6] 4 </args>
+        <args> r[7] 5 </args>
+        <args> r[8] 7 </args>
+        <args> r[9] 9 </args>
+        <args> r[10] 0 </args>
+        <args> r[11] 2 </args>
+        <args> r[12] 5 </args>
+        <args> r[13] 9 </args>
+        <args> b[0] 0 </args>
+        <args> b[1] 0 </args>
+        <args> b[2] 0 </args>
+        <args> b[3] 2 </args>
+        <args> b[4] 3 </args>
+        <args> b[5] 3 </args>
+        <args> b[6] 3 </args>
+        <args> b[7] 6 </args>
+        <args> b[8] 6 </args>
+        <args> b[9] 6 </args>
+        <args> b[10] 7 </args>
+        <args> b[11] 9 </args>
+        <args> b[12] 9 </args>
+        <args> b[13] 9 </args>
+      </group>
+    </block>
+    <group note="respecting the surface of each room">
       <intension> eq(mul(sub(%0,%1),sub(%2,%3)),%4) </intension>
       <args> r[0] l[0] b[0] t[0] 9 </args>
       <args> r[1] l[1] b[1] t[1] 12 </args>

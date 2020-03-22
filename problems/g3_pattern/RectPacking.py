@@ -3,11 +3,11 @@ import math
 from pycsp3 import *
 
 """
-    Rectangle packing problem. See Simonis and O'Sullivan. Search strategies for rectangle packing. 
-    In Proceedings of CP 2008. Also used in short supports papers."
+ Rectangle packing problem. See Simonis and O'Sullivan. Search strategies for rectangle packing.
+ In Proceedings of CP 2008. Also used in short supports papers."
 """
 
-width, height = data.container.width, data.container.height
+width, height = data.container
 boxes = data.boxes
 nBoxes = len(boxes)
 
