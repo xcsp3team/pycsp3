@@ -98,10 +98,13 @@ xcsp = (Tester(NAME)
         .add("PeacableArmies", data="10", variant="m2")
         .add("QuasiGroup", data="10", variant="base-v3")
         .add("QuasiGroup", data="10", variant="base-v4")
+        .add("QuasiGroup", data="8", variant="base-v5")  # 720 sols
+        .add("QuasiGroup", data="8", variant="base-v6")  # 1440 sols
+        .add("QuasiGroup", data="9", variant="base-v7")  # 5040 sols
         .add("QuasiGroup", data="10", variant="aux-v3")
         .add("QuasiGroup", data="10", variant="aux-v4")
-        .add("QuasiGroup", data="10", variant="aux-v5")
-        .add("QuasiGroup", data="10", variant="aux-v7")
+        .add("QuasiGroup", data="8", variant="aux-v5")  # 720 sols
+        .add("QuasiGroup", data="9", variant="aux-v7")  # 5040 sols
         .add("QueenAttacking", data="10")
         .add("Queens", data="10")
         .add("Queens", data="10", variant="v1")

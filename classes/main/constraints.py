@@ -1,16 +1,14 @@
 import os
 from collections import OrderedDict
 
+from pycsp3 import functions
 from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.auxiliary.types import TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import ECtr, TypeNode, Node
 from pycsp3.classes.main.variables import Variable
-from pycsp3.classes.main.domains import Domain
-from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error
 from pycsp3.tools.compactor import compact
-
-from pycsp3 import functions
+from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error
 
 
 class Diffs:
@@ -314,6 +312,7 @@ class ConstraintSum(ConstraintWithCondition):
                 t.append(max(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
         return sum(t)
 
+
 class ConstraintCount(ConstraintWithCondition):
     def __init__(self, lst, values, condition):
         super().__init__(TypeCtr.COUNT)
@@ -500,16 +499,16 @@ class PartialConstraint:  # constraint whose condition is missing initially
         if not isinstance(other, PartialConstraint) or isinstance(self.constraint, ConstraintSum) and isinstance(other.constraint, ConstraintSum):
             return None
         assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition)
-        return functions.auxiliary.add(self), functions.auxiliary.add(other)
+        return functions.auxiliary.replace_partial_constraint(self), functions.auxiliary.replace_partial_constraint(other)
 
     def _simplify_operation(self, other):
         assert isinstance(self.constraint, ConstraintWithCondition)
         if isinstance(self.constraint, ConstraintSum) and (not isinstance(other, PartialConstraint) or isinstance(other.constraint, ConstraintSum)):
             return None  # we can combine partial sums and terms
         if not isinstance(self.constraint, ConstraintSum) and not isinstance(other, PartialConstraint):
-            return functions.auxiliary.add(self), other
+            return functions.auxiliary.replace_partial_constraint(self), other
         assert isinstance(other.constraint, ConstraintWithCondition)
-        return functions.auxiliary.add(self), functions.auxiliary.add(other)
+        return functions.auxiliary.replace_partial_constraint(self), functions.auxiliary.replace_partial_constraint(other)
 
     def __eq__(self, other):
         if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)) and isinstance(other, (int, Variable)):

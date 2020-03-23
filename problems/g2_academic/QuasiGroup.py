@@ -28,17 +28,14 @@ if variant("base"):
         )
     elif subvariant("v5"):
         satisfy(
-            # TODO
             x[x[x[j, i], j], j] == i for i in range(n) for j in range(n)
         )
     elif subvariant("v6"):
         satisfy(
-            # TODO
             x[x[i, j], j] == x[i, x[i, j]] for i in range(n) for j in range(n)
         )
     elif subvariant("v7"):
         satisfy(
-            # TODO
             x[x[j, i], j] == x[i, x[j, i]] for i in range(n) for j in range(n)
         )
 elif variant("aux"):
