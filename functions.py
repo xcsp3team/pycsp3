@@ -109,7 +109,8 @@ class _Auxiliary:
         self._collected_constraints = []
         self.prefix = "aux_gb"
 
-    def add(self, pc):
+    def replace_partial_constraint(self, pc):
+        assert isinstance(pc, PartialConstraint)
         dom = Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1))
         assert dom.get_type() == TypeVar.INTEGER
         index = len(self._introduced_variables)
@@ -122,6 +123,15 @@ class _Auxiliary:
             self._introduced_variables.extend_with(var)
         self._collected_constraints.append((pc, var))
         return var
+
+    def replace_partial_constraints(self, terms, scalar_to_sum=False):
+        assert isinstance(terms, list)
+        for i, t in enumerate(terms):
+            if scalar_to_sum and isinstance(t, ScalarProduct):
+                t = Sum(t)  # to get a PartialConstraint
+            if isinstance(t, PartialConstraint):
+                terms[i] = self.replace_partial_constraint(t)
+        return terms
 
     def collected(self):
         t = self._collected_constraints
@@ -512,9 +522,7 @@ def Sum(term, *others, condition=None):
 
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
-    for i, t in enumerate(terms):
-        if isinstance(t, PartialConstraint):
-            terms[i] = auxiliary.add(t)
+    auxiliary.replace_partial_constraints(terms)
 
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
@@ -582,11 +590,7 @@ def Cardinality(term, *others, occurrences, closed=False):
 def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
-    for i, t in enumerate(terms):
-        if isinstance(t, ScalarProduct):
-            t = Sum(t)  # to get a PartialConstraint
-        if isinstance(t, PartialConstraint):
-            terms[i] = auxiliary.add(t)
+    auxiliary.replace_partial_constraints(terms, scalar_to_sum=True)
     checkType(index, (Variable, type(None)))
     checkType(start_index, int)
     checkType(type_rank, TypeRank)

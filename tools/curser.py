@@ -1,6 +1,6 @@
 from collections import deque, namedtuple
 import types
-
+from pycsp3 import functions
 from pycsp3.classes.entities import Node, TypeNode
 from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, \
     ConstraintElementMatrix, \
@@ -291,16 +291,23 @@ class OpOverrider:
         return list.__eq__(self, other)
 
     def __getitem__lv(self, indexes):
+        if isinstance(indexes, PartialConstraint):
+            indexes = functions.auxiliary.replace_partial_constraint(indexes)
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
+            indexes = functions.auxiliary.replace_partial_constraints(list(indexes))
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
                     return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
-                    assert isinstance(indexes[0], Variable) and isinstance(indexes[1], int)
-                    return PartialConstraint(ConstraintElement(self[:, indexes[1]], indexes[0]))
+                    if isinstance(indexes[0], Variable) and isinstance(indexes[1], int):
+                        return PartialConstraint(ConstraintElement(self[:, indexes[1]], indexes[0]))
+                    elif isinstance(indexes[0], int) and isinstance(indexes[1], Variable):
+                        return PartialConstraint(ConstraintElement(self[indexes[0]], indexes[1]))
+                    else:
+                        assert False
             result = OpOverrider.project_recursive(self, indexes, 0)
             try:
                 return ListVar(result)  # TODO are sublists also guaranteed to be ListVar?
@@ -313,16 +320,23 @@ class OpOverrider:
             return result
 
     def __getitem__li(self, indexes):  # li for ListInt
+        if isinstance(indexes, PartialConstraint):
+            indexes = functions.auxiliary.replace_partial_constraint(indexes)
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
+            indexes = functions.auxiliary.replace_partial_constraints(list(indexes))
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
                     return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
-                    assert isinstance(indexes[0], Variable) and isinstance(indexes[1], int)
-                    return PartialConstraint(ConstraintElement(self[:, indexes[1]], indexes[0]))
+                    if isinstance(indexes[0], Variable) and isinstance(indexes[1], int):
+                        return PartialConstraint(ConstraintElement(self[:, indexes[1]], indexes[0]))
+                    elif isinstance(indexes[0], int) and isinstance(indexes[1], Variable):
+                        return PartialConstraint(ConstraintElement(self[indexes[0]], indexes[1]))
+                    else:
+                        assert False
             result = OpOverrider.project_recursive(self, indexes, 0)
             try:
                 return ListVar(result)  # TODO is it ListVar or ListInt ?

@@ -1,15 +1,15 @@
 <instance format="XCSP3" type="CSP">
   <variables>
-    <array id="x" note="x[i][j] is the value at row i and column j of the quasi-group" size="[10][10]"> 0..9 </array>
-    <array id="y" size="[10][10]"> 0..9 </array>
+    <array id="x" note="x[i][j] is the value at row i and column j of the quasi-group" size="[9][9]"> 0..8 </array>
+    <array id="y" size="[9][9]"> 0..8 </array>
   </variables>
   <constraints>
     <allDifferent note="ensuring a Latin square">
       <matrix> x[][] </matrix>
     </allDifferent>
     <instantiation class="idempotence" note="ensuring idempotence (x[i][i] = i)">
-      <list> x[0][0] x[1][1] x[2][2] x[3][3] x[4][4] x[5][5] x[6][6] x[7][7] x[8][8] x[9][9] </list>
-      <values> 0 1 2 3 4 5 6 7 8 9 </values>
+      <list> x[0][0] x[1][1] x[2][2] x[3][3] x[4][4] x[5][5] x[6][6] x[7][7] x[8][8] </list>
+      <values> 0 1 2 3 4 5 6 7 8 </values>
     </instantiation>
     <group>
       <element>
@@ -81,15 +81,6 @@
         <value> y[0][8] </value>
       </element>
       <args> x[][8] </args>
-      <args> x[0][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[9][0] </index>
-        <value> y[0][9] </value>
-      </element>
-      <args> x[][9] </args>
       <args> x[0][] </args>
     </group>
     <group>
@@ -167,15 +158,6 @@
     <group>
       <element>
         <list> %... </list>
-        <index> x[9][1] </index>
-        <value> y[1][9] </value>
-      </element>
-      <args> x[][9] </args>
-      <args> x[1][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
         <index> x[0][2] </index>
         <value> y[2][0] </value>
       </element>
@@ -243,15 +225,6 @@
         <value> y[2][8] </value>
       </element>
       <args> x[][8] </args>
-      <args> x[2][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[9][2] </index>
-        <value> y[2][9] </value>
-      </element>
-      <args> x[][9] </args>
       <args> x[2][] </args>
     </group>
     <group>
@@ -329,15 +302,6 @@
     <group>
       <element>
         <list> %... </list>
-        <index> x[9][3] </index>
-        <value> y[3][9] </value>
-      </element>
-      <args> x[][9] </args>
-      <args> x[3][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
         <index> x[0][4] </index>
         <value> y[4][0] </value>
       </element>
@@ -405,15 +369,6 @@
         <value> y[4][8] </value>
       </element>
       <args> x[][8] </args>
-      <args> x[4][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[9][4] </index>
-        <value> y[4][9] </value>
-      </element>
-      <args> x[][9] </args>
       <args> x[4][] </args>
     </group>
     <group>
@@ -491,15 +446,6 @@
     <group>
       <element>
         <list> %... </list>
-        <index> x[9][5] </index>
-        <value> y[5][9] </value>
-      </element>
-      <args> x[][9] </args>
-      <args> x[5][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
         <index> x[0][6] </index>
         <value> y[6][0] </value>
       </element>
@@ -567,15 +513,6 @@
         <value> y[6][8] </value>
       </element>
       <args> x[][8] </args>
-      <args> x[6][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[9][6] </index>
-        <value> y[6][9] </value>
-      </element>
-      <args> x[][9] </args>
       <args> x[6][] </args>
     </group>
     <group>
@@ -653,15 +590,6 @@
     <group>
       <element>
         <list> %... </list>
-        <index> x[9][7] </index>
-        <value> y[7][9] </value>
-      </element>
-      <args> x[][9] </args>
-      <args> x[7][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
         <index> x[0][8] </index>
         <value> y[8][0] </value>
       </element>
@@ -730,96 +658,6 @@
       </element>
       <args> x[][7] </args>
       <args> x[8][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[9][8] </index>
-        <value> y[8][9] </value>
-      </element>
-      <args> x[][9] </args>
-      <args> x[8][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[0][9] </index>
-        <value> y[9][0] </value>
-      </element>
-      <args> x[][0] </args>
-      <args> x[9][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[1][9] </index>
-        <value> y[9][1] </value>
-      </element>
-      <args> x[][1] </args>
-      <args> x[9][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[2][9] </index>
-        <value> y[9][2] </value>
-      </element>
-      <args> x[][2] </args>
-      <args> x[9][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[3][9] </index>
-        <value> y[9][3] </value>
-      </element>
-      <args> x[][3] </args>
-      <args> x[9][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[4][9] </index>
-        <value> y[9][4] </value>
-      </element>
-      <args> x[][4] </args>
-      <args> x[9][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[5][9] </index>
-        <value> y[9][5] </value>
-      </element>
-      <args> x[][5] </args>
-      <args> x[9][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[6][9] </index>
-        <value> y[9][6] </value>
-      </element>
-      <args> x[][6] </args>
-      <args> x[9][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[7][9] </index>
-        <value> y[9][7] </value>
-      </element>
-      <args> x[][7] </args>
-      <args> x[9][] </args>
-    </group>
-    <group>
-      <element>
-        <list> %... </list>
-        <index> x[8][9] </index>
-        <value> y[9][8] </value>
-      </element>
-      <args> x[][8] </args>
-      <args> x[9][] </args>
     </group>
   </constraints>
 </instance>
