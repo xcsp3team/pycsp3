@@ -2,6 +2,7 @@ from pycsp3 import *
 
 """
  See https://en.wikipedia.org/wiki/Shikaku
+     "Shikaku as a Constraint Problem" by Helmut Simonis
 """
 
 nRows, nCols = data.nRows, data.nCols

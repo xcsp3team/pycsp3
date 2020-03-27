@@ -1,7 +1,9 @@
 from pycsp3 import *
 
 """
- Problem 076 at CSPLib, and NumberJack example (2160 solutions for n=10 with no symmetry-breaking constraints)
+ Problem 076 on CSPLib, and NumberJack example
+
+ 2160 solutions for n=10 (with no symmetry-breaking constraints)
 """
 
 n = data.n

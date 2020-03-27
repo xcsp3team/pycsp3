@@ -43,7 +43,7 @@
     <intension> eq(doctor,milk) </intension>
     <intension> eq(japan,diplomat) </intension>
     <intension> eq(norway,zebra) </intension>
-    <intension> eq(abs(sub(green,white)),1) </intension>
+    <intension> eq(dist(green,white),1) </intension>
     <intension> in(horse,set(add(diplomat,1),sub(diplomat,1))) </intension>
     <intension> in(italy,set(green,red,white)) </intension>
   </constraints>

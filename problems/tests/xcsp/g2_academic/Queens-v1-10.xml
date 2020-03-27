@@ -5,7 +5,7 @@
   <constraints>
     <allDifferent> q[] </allDifferent>
     <group>
-      <intension> ne(abs(sub(%0,%1)),%2) </intension>
+      <intension> ne(dist(%0,%1),%2) </intension>
       <args> q[0] q[1] 1 </args>
       <args> q[0] q[2] 2 </args>
       <args> q[0] q[3] 3 </args>

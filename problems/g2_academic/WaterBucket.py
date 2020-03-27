@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- Problem 018 at CSPLib
+ Problem 018 on CSPLib
 """
 
 c1, c2, c3 = data.c1, data.c2, data.c3  # capacities of the three buckets

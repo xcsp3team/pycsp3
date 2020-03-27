@@ -141,7 +141,7 @@ xcsp = (Tester(NAME)
         .add("Sudoku", data="Sudoku_example.txt", prs_py="Sudoku_Parser", prs_jv="Sudoku_Parser")
         .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json")
         .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json", variant="table")
-        .add("VesselLoading", data="VesselLoading-inst1.json")
+        .add("VesselLoading", data="VesselLoading-inst1.json")  # 8 solutions
         )
 
 run(diff, same, xcsp)

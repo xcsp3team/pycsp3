@@ -44,6 +44,7 @@ satisfy(
 )
 
 
+# a less compact way of posting symmetry_breaking constraints below:
 # # tag(symmetry-breaking)
 #     [
 #         [x[0][j] == j for j in range(n)],

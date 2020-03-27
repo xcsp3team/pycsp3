@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- Problem 010 at CSPLib
+ Problem 010 on CSPLib
 """
 
 nGroups, size, nWeeks = data.nGroups, data.groupSize, data.nWeeks

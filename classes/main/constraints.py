@@ -496,10 +496,14 @@ class PartialConstraint:  # constraint whose condition is missing initially
         return ECtr(pc.constraint.replace_condition(operator, 0))
 
     def _simplify_with_auxiliary_variables(self, other):
-        if not isinstance(other, PartialConstraint) or isinstance(self.constraint, ConstraintSum) and isinstance(other.constraint, ConstraintSum):
-            return None
+        if isinstance(other, (int, Variable)):
+            return other
+        if isinstance(self.constraint, ConstraintSum) and (isinstance(other, ScalarProduct) or isinstance(other.constraint, ConstraintSum)):
+            return other
+        if isinstance(other, Node):
+            return functions.auxiliary.replace_node(other)
         assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition)
-        return functions.auxiliary.replace_partial_constraint(self), functions.auxiliary.replace_partial_constraint(other)
+        return functions.auxiliary.replace_partial_constraint(other)
 
     def _simplify_operation(self, other):
         assert isinstance(self.constraint, ConstraintWithCondition)
@@ -511,33 +515,30 @@ class PartialConstraint:  # constraint whose condition is missing initially
         return functions.auxiliary.replace_partial_constraint(self), functions.auxiliary.replace_partial_constraint(other)
 
     def __eq__(self, other):
+        other = self._simplify_with_auxiliary_variables(other)
         if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)) and isinstance(other, (int, Variable)):
             if isinstance(self.constraint, ConstraintElement):
                 arg = self.constraint.arguments[TypeCtrArg.LIST]
                 arg.content = flatten(arg.content)  # we need to flatten now because it has not been done before
             return ECtr(self.constraint.replace_value(other))  # only value must be replaced for these constraints
-        pair = self._simplify_with_auxiliary_variables(other)
-        return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
+        return self.add_condition(TypeConditionOperator.EQ, other)
+        # pair = self._simplify_with_auxiliary_variables(other)
+        # return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
 
     def __ne__(self, other):
-        pair = self._simplify_with_auxiliary_variables(other)
-        return Node.build(TypeNode.NE, pair) if pair else  self.add_condition(TypeConditionOperator.NE, other)
+        return self.add_condition(TypeConditionOperator.NE, self._simplify_with_auxiliary_variables(other))
 
     def __lt__(self, other):
-        pair = self._simplify_with_auxiliary_variables(other)
-        return Node.build(TypeNode.LT, pair) if pair else self.add_condition(TypeConditionOperator.LT, other)
+        return self.add_condition(TypeConditionOperator.LT, self._simplify_with_auxiliary_variables(other))
 
     def __le__(self, other):
-        pair = self._simplify_with_auxiliary_variables(other)
-        return Node.build(TypeNode.LE, pair) if pair else self.add_condition(TypeConditionOperator.LE, other)
+        return self.add_condition(TypeConditionOperator.LE, self._simplify_with_auxiliary_variables(other))
 
     def __ge__(self, other):
-        pair = self._simplify_with_auxiliary_variables(other)
-        return Node.build(TypeNode.GE, pair) if pair else self.add_condition(TypeConditionOperator.GE, other)
+        return self.add_condition(TypeConditionOperator.GE, self._simplify_with_auxiliary_variables(other))
 
     def __gt__(self, other):
-        pair = self._simplify_with_auxiliary_variables(other)
-        return Node.build(TypeNode.GT, pair) if pair else self.add_condition(TypeConditionOperator.GT, other)
+        return self.add_condition(TypeConditionOperator.GT, self._simplify_with_auxiliary_variables(other))
 
     def __add__(self, other):
         pair = self._simplify_operation(other)

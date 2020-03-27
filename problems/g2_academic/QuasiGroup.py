@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- Problem 003 at CSPLib
+ Problem 003 on CSPLib
 """
 
 n = data.n
@@ -13,7 +13,7 @@ satisfy(
     # ensuring a Latin square
     AllDifferent(x, matrix=True),
 
-    # ensuring idempotence (x[i][i] = i)  tag(idempotence)
+    # ensuring idempotence  tag(idempotence)
     [x[i][i] == i for i in range(n)]
 )
 

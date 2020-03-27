@@ -4,7 +4,7 @@
   </variables>
   <constraints>
     <group note="all distances are different">
-      <intension> ne(abs(sub(%0,%1)),abs(sub(%2,%3))) </intension>
+      <intension> ne(dist(%0,%1),dist(%2,%3)) </intension>
       <args> x[0..1] x[1..2] </args>
       <args> x[0..1] x[1] x[3] </args>
       <args> x[0..1] x[1] x[4] </args>

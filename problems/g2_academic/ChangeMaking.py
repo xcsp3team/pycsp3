@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# See https://en.wikipedia.org/wiki/Change-making_problem
+"""
+ See https://en.wikipedia.org/wiki/Change-making_problem
+"""
 
 k = data.amount
 

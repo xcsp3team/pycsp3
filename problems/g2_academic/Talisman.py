@@ -12,14 +12,12 @@ satisfy(
 
     [Sum(col) == limit for col in columns(x)],
 
-    Sum(diagonal_down(x)) == limit,
-
-    Sum(diagonal_up(x)) == limit,
+    [Sum(dgn) == limit for dgn in [diagonal_down(x), diagonal_up(x)]],
 
     [
-        [dist(x[i][j], x[i][j + 1]) > k for i in range(n) for j in range(n - 1)],
-        [dist(x[i][j], x[i + 1][j]) > k for j in range(n) for i in range(n - 1)],
-        [dist(t[i], t[i + 1]) > k for t in diagonals_down(x) for i in range(len(t) - 1)],
-        [dist(t[i], t[i + 1]) > k for t in diagonals_up(x) for i in range(len(t) - 1)]
+        [abs(x[i][j] - x[i][j + 1]) > k for i in range(n) for j in range(n - 1)],
+        [abs(x[i][j] - x[i + 1][j]) > k for j in range(n) for i in range(n - 1)],
+        [abs(dgn[i] - dgn[i + 1]) > k for dgn in diagonals_down(x) for i in range(len(dgn) - 1)],
+        [abs(dgn[i] - dgn[i + 1]) > k for dgn in diagonals_up(x) for i in range(len(dgn) - 1)]
     ]
 )

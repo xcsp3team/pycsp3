@@ -1,7 +1,11 @@
 from pycsp3 import *
 
 """
- Problem 007 on CSPLib (296 solutions for n=10 if symmetry-breaking constraints are discarded)
+ Problem 007 on CSPLib
+
+ For n=10:
+ - 296 solutions if symmetry-breaking constraints are discarded
+ - 148 and 104 solutions for the main and aux variants otherwise
 """
 
 n = data.n

@@ -13,9 +13,9 @@ n, c = data.n, data.c
 x = VarArray(size=[n, n], dom={0, 1})
 
 satisfy(
-    [Sum(row) == c for row in x],
+    [Sum(x[i]) == c for i in range(n)],
 
-    [Sum(col) == c for col in columns(x)]
+    [Sum(x[:, j]) == c for j in range(n)]
 )
 
 minimize(

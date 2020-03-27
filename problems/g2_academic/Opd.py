@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- Problem 065 at CSPLib
+ Problem 065 on CSPLib
 """
 
 v, b, r = data.v, data.b, data.r

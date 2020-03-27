@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- Problem 026 at CSPLib
+ Problem 026 on CSPLib
 """
 
 nTeams = data.nTeams
@@ -66,27 +66,3 @@ if variant("dummy"):
             [hd[p] < ad[p] for p in range(nPeriods)]
         ]
     )
-
-
-
-
-# group(extension([h[p][w], a[p][w], m[p][w]], table=table) for p in range(nPeriods) for w in range(nWeeks)).note(
-#    "linking variables through ternary table constraints")
-
-# allDifferent(m).note("all matches are different (no team can play twice against another team)")
-
-# group(allDifferent([columnOf(h, w), columnOf(a, w)]) for w in range(nWeeks)).note("each week, all teams are different (each team plays each week)")
-# group(cardinality([h[p], a[p]], values=allTeams, occurs=rangeClosed(1, 2)) for p in range(nPeriods)).note("each team plays at most two times in each period")
-
-# b2 = block().note("handling dummy week (variables and constraints)").tag("dummyWeek")
-# b2.add(allDifferent([hd, ad]).note("all teams are different in the dummy week"))
-# b2.add(lessThan(hd[p], ad[p]) for p in range(nPeriods))
-# b2.add(cardinality([h[p], hd[p], ad[p], a[p]], values=allTeams, occurs=2).note("each team plays two times in each period") for p in range(nPeriods))
-
-
-# b = block().tag(SYMMETRY_BREAKING)
-# b.add(
-#    instantiation(columnOf(m, 0), values=[matchNumber(2 * p, 2 * p + 1) for p in range(nPeriods)]).note("the first week is set : 0 vs 1, 2 vs 3, 4 vs 5, etc."))
-# b.add(exactlyOne(columnOf(m, w), assignedTo=matchNumber(0, w + 1)).note("the match '0 versus t' (with t strictly greater than 0) appears at week t-1") for w in
-#      range(nWeeks))
-

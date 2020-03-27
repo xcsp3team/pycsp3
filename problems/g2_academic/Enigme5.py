@@ -47,4 +47,3 @@ satisfy(
 )
 
 
-# for i in range(4) for j in range(4) if i != j for k in range(4) if k not in {i, j} for l in range(4) if l not in {i, j, k}]
