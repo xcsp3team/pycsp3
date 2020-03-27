@@ -3,8 +3,8 @@ import math
 from pycsp3 import *
 
 """
- Rectangle packing problem. See Simonis and O'Sullivan. Search strategies for rectangle packing.
- In Proceedings of CP 2008. Also used in short supports papers."
+ See "Search strategies for rectangle packing" by H. Simonis and B. O'Sullivan, CP 2008.
+      also papers on short supports
 """
 
 width, height = data.container

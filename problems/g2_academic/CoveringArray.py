@@ -2,7 +2,7 @@ from pycsp3 import *
 from math import factorial
 
 """
- Problem 045 at CSPLib
+ Problem 045 on CSPLib
 
  It is possible to get the covering array from v. For example, v[0][0] gives the t most significant bits of the first column
  (because the first t-combination is for the first t lines)

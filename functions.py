@@ -109,9 +109,7 @@ class _Auxiliary:
         self._collected_constraints = []
         self.prefix = "aux_gb"
 
-    def replace_partial_constraint(self, pc):
-        assert isinstance(pc, PartialConstraint)
-        dom = Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1))
+    def __replace(self, obj, dom):
         assert dom.get_type() == TypeVar.INTEGER
         index = len(self._introduced_variables)
         name = self.prefix + "[" + str(index) + "]"
@@ -121,8 +119,13 @@ class _Auxiliary:
             self._introduced_variables = EVarArray([var], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
         else:
             self._introduced_variables.extend_with(var)
-        self._collected_constraints.append((pc, var))
+        self._collected_constraints.append((obj, var))
         return var
+
+    def replace_partial_constraint(self, pc):
+        assert isinstance(pc, PartialConstraint)
+        dom = Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1))
+        return self.__replace(pc, dom)
 
     def replace_partial_constraints(self, terms, scalar_to_sum=False):
         assert isinstance(terms, list)
@@ -132,6 +135,11 @@ class _Auxiliary:
             if isinstance(t, PartialConstraint):
                 terms[i] = self.replace_partial_constraint(t)
         return terms
+
+    def replace_node(self, node):
+        assert isinstance(node, Node)
+        dom = Domain(node.possible_values())
+        return self.__replace(node, dom)
 
     def collected(self):
         t = self._collected_constraints
@@ -162,7 +170,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             left_operand = [left_operand]
         if not bool_value and len(right_operand) == 0:
             return None
-        # TODO what to do if the table is empy and bool_value is true? an error message ?
+        # TODO what to do if the table is empty and bool_value is true? an error message ?
         ctr = Extension(scope=list(left_operand), table=right_operand, positive=bool_value)
     return ctr
 
@@ -322,6 +330,8 @@ def Intension(node):
 
 
 def abs(*args):
+    if len(args) == 1 and isinstance(args[0], Node) and args[0].type == TypeNode.SUB:
+        return Node.build(TypeNode.DIST, *args[0].sons)
     return Node.build(TypeNode.ABS, *args) if len(args) == 1 and isinstance(args[0], (Node, Variable)) else absPython(*args)
 
 

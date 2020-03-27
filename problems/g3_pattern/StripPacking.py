@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ See https://en.wikipedia.org/wiki/Strip_packing_problem
+"""
+
 width, height = data.container
 rectangles = data.rectangles
 nRectangles = len(rectangles)

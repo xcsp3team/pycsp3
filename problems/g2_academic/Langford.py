@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- Problem 024 at CSPLib
+ Problem 024 on CSPLib
 """
 
 k = data.k  # number of occurrences for a value

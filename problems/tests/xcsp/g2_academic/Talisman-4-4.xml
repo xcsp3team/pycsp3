@@ -24,14 +24,14 @@
       <args> x[][2] </args>
       <args> x[][3] </args>
     </group>
-    <sum>
-      <list> x[0][0] x[1][1] x[2][2] x[3][3] </list>
-      <condition> (eq,34) </condition>
-    </sum>
-    <sum>
-      <list> x[3][0] x[2][1] x[1][2] x[0][3] </list>
-      <condition> (eq,34) </condition>
-    </sum>
+    <group>
+      <sum>
+        <list> %... </list>
+        <condition> (eq,34) </condition>
+      </sum>
+      <args> x[0][0] x[1][1] x[2][2] x[3][3] </args>
+      <args> x[3][0] x[2][1] x[1][2] x[0][3] </args>
+    </group>
     <group>
       <intension> gt(dist(%0,%1),4) </intension>
       <args> x[0][0] x[0][1] </args>

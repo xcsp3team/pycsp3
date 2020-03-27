@@ -4,7 +4,7 @@
   </variables>
   <constraints>
     <group>
-      <intension> and(ne(%0,%1),ne(abs(sub(%0,%1)),%2)) </intension>
+      <intension> and(ne(%0,%1),ne(dist(%0,%1),%2)) </intension>
       <args> q[0] q[1] 1 </args>
       <args> q[0] q[2] 2 </args>
       <args> q[0] q[3] 3 </args>

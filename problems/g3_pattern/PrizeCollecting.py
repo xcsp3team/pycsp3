@@ -1,56 +1,83 @@
 from pycsp3 import *
 
+
+# TODO : in progress
+
 n, prizes = data.n, data.prizes
+prizes = cp_array(row + [0] for row in prizes)  # we add 0 for unused nodes; note that cp_array is required so as to be able to use the constraint 'element'
 
-# s[i] is the node that succeeds to node i in tour (0 for last edge and -1 for unused)
-s = VarArray(size=n, dom=range(-1, n))
+# s[i] is the node that succeeds to the ith node in the tour ('n' if unused)
+s = VarArray(size=n, dom=range(n + 1))
 
-# p[i] is the position of node i in the tour (-1 if not in the tour)
-p = VarArray(size=n, dom=range(-1, n))
+# p[i] is the position of the ith node in the tour ('n' if unused)
+p = VarArray(size=n + 1 if not variant() else n, dom=range(n + 1))
 
-# g[i] is the gain obtained from node i in the tour
+# g[i] is the gain collected when going from the ith node to its successor in the tour
 g = VarArray(size=n, dom=lambda i: set(prizes[i]))
 
-
-def table(pos):
-    # we build the short table for 'vector[index] = value + offset' where index and value are both variables and value assumed to be in vector
-    def short_table_for_element(vector, index, value, offset):
-        position = protect().execute(next((i for i, x in enumerate(vector) if x == value), -1))  # is value present in the vector?
-        assert position != -1  # this current version assumes that fact. Should be generalized in the future
-        arity = len(vector) + 1  # since the assumption just above
-        tuples = []
-        for vi in (v for v in index.dom if 0 <= v < len(vector)):
-            if vi == position:
-                if offset == 0:  # only case for a support
-                    tuples.append(tuple(vi if i == 0 else ANY for i in range(arity)))
-            else:
-                for vv in (v for v in vector[vi].dom if v - offset in value.dom):
-                    tuples.append(tuple(vi if i == 0 else vv if i == 1 + vi else vv - offset if i == 1 + position else ANY for i in range(arity)))
-        return tuples
-
-    tbl = short_table_for_element(p, s[pos], p[pos], 1)
-    t1, t2 = (-1, *(ANY,) * n), (0, *(ANY,) * n)  # tuple([-1] + [ANY] * n), tuple([0] + [ANY] * n)
-    return [t1, t2] + (tbl if pos == 0 else [t for t in tbl[2:] if t[0] != 0])
-
-
 satisfy(
+    # node 0 is the first node of the tour
     p[0] == 0,
 
-    # If used, the next position in tour is not -1
-    [iff(p[i] > -1, s[i] > -1) for i in range(n)],
+    # managing unused nodes
+    [iff(p[i] != n, s[i] != n) for i in range(n)],
 
-    # Linking s and p
-    [[x] + p in table(i) for i, x in enumerate(s)],
-
-    # [imply(s[i] > 0, p[s[i]] == p[i]+1) for i in range(n)],  # TODO alternative to the short table above. How to do that ? meta-constraint ifThen ? reification ?
-
-    # at most one node with i (different from 0) as its successor
+    # each node appears at most once during the tour
     [Count(s, value=i) <= 1 for i in range(n)],
 
-    # managing gains
+    # computing gains
     [prizes[i][s[i]] == g[i] for i in range(n)]
 )
 
+if not variant():
+    # z[i] is the position of the successor of the ith node in the tour
+    z = VarArray(size=n, dom=range(n + 1))
+
+
+    def tab():
+        return {(0, ANY, 0), (n, n, n)} | {(i, j, j + 1) for i in range(1, n) for j in range(0, n - 1)}
+
+
+    print(sorted(list(tab())))
+
+    satisfy(
+        p[n] == n,
+
+        #        [(s[i], p[i], z[i]) in tab() for i in range(n)],
+
+        [imply(p[i] == n - 1, z[i] != n) for i in range(n)],
+
+        [z[i] == ift(s[i] == 0, 0, ift(s[i] == n, n, p[i] + 1)) for i in range(n)],
+
+        [p[s[i]] == z[i] for i in range(n)]
+    )
+
+
+elif variant("table"):
+    def table(pos):
+        tbl = {(0,) + (ANY,) * n, (n,) + (ANY,) * n}  # tuple([-1] + [ANY] * n), tuple([0] + [ANY] * n)
+        for vi in range(n):
+            if vi != pos and (vi != 0 or pos == 0):
+                for vv in range(1, n):
+                    tbl.add((vi,) + tuple(vv if i == vi else vv - 1 if i == pos else ANY for i in range(n)))
+        return tbl
+
+
+    satisfy(
+        s[0] == 1,
+        s[1] == 2,
+        s[2] == 3,
+        s[3] == 4,
+
+        # linking variables from s and p
+        [(s[i], *p) in table(i) for i in range(n)]
+    )
+
 maximize(
+    # maximizing the sum of collected gains
     Sum(g)
 )
+
+
+
+# [imply(s[i] > 0, p[s[i]] == p[i]+1) for i in range(n)],  # TODO alternative to the short table above. How to do that ? meta-constraint ifThen ? reification ?

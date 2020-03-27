@@ -7,7 +7,7 @@
     <allDifferent note="notes must occur once, and so form a permutation"> x[] </allDifferent>
     <allDifferent note="intervals between neighbouring notes must form a permutation"> y[] </allDifferent>
     <group note="computing distances">
-      <intension> eq(%0,abs(sub(%1,%2))) </intension>
+      <intension> eq(%0,dist(%1,%2)) </intension>
       <args> y[0] x[1] x[0] </args>
       <args> y[1] x[2] x[1] </args>
       <args> y[2] x[3] x[2] </args>

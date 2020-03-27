@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ See e.g., "Fast Global Filtering for Eternity II" by Eric Bourreau and Thierry Benoist. Constraint Programming Letters, 2008, 3, pp.036-049
+"""
+
 n, m, pieces = data.n, data.m, data.pieces
 assert n * m == len(pieces), "badly formed data"
 max_value = max(max(piece) for piece in pieces)  # max possible value on pieces

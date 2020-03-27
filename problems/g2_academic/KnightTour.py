@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
-See https://en.wikipedia.org/wiki/Knight%27s_tour
+ See https://en.wikipedia.org/wiki/Knight%27s_tour
 """
 
 n = data.n

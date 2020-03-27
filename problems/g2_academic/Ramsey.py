@@ -1,8 +1,7 @@
 from pycsp3 import *
 """
- Problem 017 at CSPLib
+ Problem 017 on CSPLib
 
- Ramsey problem.
  The edges of a complete graph (with n nodes) must be coloured with the minimum number of colours.
  There must be no monochromatic triangle in the graph, i.e. in any triangle at most two edges have the same colour.
  With 3 colours, the problem has a solution if n < 17.

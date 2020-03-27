@@ -1,9 +1,8 @@
 from pycsp3 import *
 
 """
- Problem 015 at CSPLib
+ Problem 015 on CSPLib
 
- Schurr's lemma problem.
  The variant 'mod' corresponds to the one proposed in [Bessiere Meseguer Freuder Larrosa, On forward checking for non-binary constraint satisfaction, 2002].
 """
 

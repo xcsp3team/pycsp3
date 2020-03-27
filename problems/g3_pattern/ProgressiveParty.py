@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- Problem 013 at CSPLib
+ Problem 013 on CSPLib
 """
 
 nPeriods = data.nPeriods

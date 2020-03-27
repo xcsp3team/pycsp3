@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ See https://turing.cs.hbg.psu.edu/txn131/graphcoloring.html
+"""
+
 n, colorings = data.nNodes, data.colorings if data.colorings else []  # multi-coloring not taken into account for the moment
 
 # c[i] is the color assigned to the ith node
@@ -26,5 +30,3 @@ elif variant("sum"):
         Sum(c)
     )
 
-# if we have data.colorings instead of  dicts_values(data.colorings), we have to write:
-# [c[coloring.node] == coloring.colors[0] for coloring in colorings if len(coloring.colors) == 1],

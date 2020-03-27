@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- Problem 049 at CSPLib
+ Problem 049 on CSPLib
 """
 
 n = data.n

@@ -1,4 +1,6 @@
 import types
+import itertools
+import numpy
 
 from enum import Enum, unique
 from functools import reduce
@@ -89,9 +91,8 @@ class EVarArray(Entity):
     def extend_with(self, var):  # used when building auxiliary variables (to be used with global constraints)
         self.variables.append(var)
         self.flatVars.append(var)
-        self.size[0] +=1
+        self.size[0] += 1
         VarEntities.varToEVarArray[var] = self
-
 
     def get_type(self):
         return self.flatVars[0].dom.get_type()
@@ -110,6 +111,7 @@ class EVarArray(Entity):
 
     def size_to_string(self):
         return "".join("[" + str(v) + "]" for v in self.size)
+
 
 """ Class to represent stand-alone constraints """
 
@@ -241,6 +243,9 @@ class TypeNode(Enum):
     def __str__(self):
         return self.lowercase_name
 
+    ''' 0-ary '''
+    VAR, PAR, INT, RATIONAL, DECIMAL, SYMBOL, PARTIAL = ((id, 0, 0) for id in auto(7))
+
     ''' Unary'''
     NEG, ABS, SQR, NOT, CARD, HULL, CONVEX, SQRT, EXP, LN, SIN, COS, TAN, ASIN, ACOS, ATAN, SINH, COSH, TANH = ((id, 1, 1) for id in auto(19))
 
@@ -255,9 +260,6 @@ class TypeNode(Enum):
 
     SET = (auto(), 0, float("inf"))
 
-    ''' 0-ary '''
-    VAR, PAR, INT, RATIONAL, DECIMAL, SYMBOL, PARTIAL = ((id, 0, 0) for id in auto(7))
-
     SPECIAL = (auto(), 0, float("inf"))
 
     def is_leaf(self):
@@ -265,6 +267,15 @@ class TypeNode(Enum):
 
     def is_valid_arity(self, k):
         return self.min_arity <= k <= self.max_arity
+
+    def is_logical_operator(self):
+        return self in {TypeNode.NOT, TypeNode.AND, TypeNode.OR, TypeNode.XOR, TypeNode.IFF, TypeNode.IMP}
+
+    def is_relational_operator(self):
+        return self in {TypeNode.LT, TypeNode.LE, TypeNode.GE, TypeNode.GT, TypeNode.EQ, TypeNode.NE}
+
+    def is_predicate_operator(self):
+        return self.is_logical_operator() or self.is_relational_operator() or self in {TypeNode.IN, TypeNode.NOTIN}
 
 
 class Node(Entity):
@@ -280,11 +291,37 @@ class Node(Entity):
         self.abstractTree = None
         self.abstractValues = None
 
-    # def __eq__(self, other):
-    #     return False
-
     def __str__(self):
         return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
+
+    def possible_values(self):
+        if self.type == TypeNode.VAR:
+            return self.sons.dom.all_values()
+        if self.type == TypeNode.INT:
+            return [self.sons]
+        if self.type.is_predicate_operator():
+            return 0, 1
+        if self.type == TypeNode.ABS:
+            return {abs(v) for v in self.sons[0].possible_values()}
+        if self.type == TypeNode.ADD:
+            return {sum(p) for p in itertools.product(*(n.possible_values() for n in self.sons))}
+        if self.type == TypeNode.MUL:
+            return {numpy.prod(p) for p in itertools.product(*(n.possible_values() for n in self.sons))}
+        if self.type == TypeNode.MIN:
+            return {min(p) for p in itertools.product(*(n.possible_values() for n in self.sons))}
+        if self.type == TypeNode.MAX:
+            return {max(p) for p in itertools.product(*(n.possible_values() for n in self.sons))}
+        if self.type == TypeNode.SUB:
+            return {v1 - v2 for v1 in self.sons[0].possible_values() for v2 in self.sons[1].possible_values()}
+        if self.type == TypeNode.DIV:
+            return {v1 // v2 for v1 in self.sons[0].possible_values() for v2 in self.sons[1].possible_values()}
+        if self.type == TypeNode.MOD:
+            return {v1 % v2 for v1 in self.sons[0].possible_values() for v2 in self.sons[1].possible_values()}
+        if self.type == TypeNode.DIST:
+            return {abs(v1 - v2) for v1 in self.sons[0].possible_values() for v2 in self.sons[1].possible_values()}
+        if self.type == TypeNode.IF:
+            return {self.sons[1].possible_values()} | {self.sons[1].possible_values()}
+        assert False, "some operators currently not implemented"
 
     def mark_as_used(self):
         self.used = True
@@ -405,8 +442,8 @@ class Node(Entity):
     def build(type, *args):
         if type is TypeNode.SET:
             assert len(args) == 1
-            sorted_sons= sorted(args[0], key=lambda v: str(v))
-            return Node(type, Node._create_sons(*sorted_sons))  #*sorted(args[0])))
+            sorted_sons = sorted(args[0], key=lambda v: str(v))
+            return Node(type, Node._create_sons(*sorted_sons))  # *sorted(args[0])))
         args = flatten(Node.build(TypeNode.SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args)
         assert type.is_valid_arity(len(args)), "Problem: Bad arity for node " + type.name + ". It is " + str(
             len(args)) + " but it should be between " + str(type.arityMin) + " and " + str(type.arityMax)

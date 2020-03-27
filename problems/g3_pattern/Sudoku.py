@@ -1,6 +1,10 @@
+import math
+
 from pycsp3 import *
 
-import math
+"""
+ See e.g., "Sudoku as a Constraint Problem" by Helmut Simonis
+"""
 
 n, base = data.n, int(math.sqrt(data.n))  # n (order of the grid); typically 9
 assert base * base == n
