@@ -17,7 +17,7 @@ satisfy(
 
     y in range(50),
     y not in range(50),
-    y in {1, 2, 3},
+    y in {1, 2, 3, 3},
     y not in {1, 2, 3},
     y <= 5,
     y < 5,

@@ -138,7 +138,8 @@ class _Auxiliary:
 
     def replace_node(self, node):
         assert isinstance(node, Node)
-        dom = Domain(node.possible_values())
+        values = sorted(list(node.possible_values()))
+        dom = Domain(range(values[0], values[-1] + 1) if all(values[i] + 1 == values[i + 1] for i in range(len(values) - 1)) else values)
         return self.__replace(node, dom)
 
     def collected(self):
@@ -158,7 +159,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         # it is a unary constraint of the form x in/not in set/range
         ctr = Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
-        ctr = ECtr(left_operand.constraint.replace_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
+        ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
     elif isinstance(right_operand, Automaton):  #  it is a regular constraint
         ctr = Regular(scope=left_operand, automaton=right_operand)
     elif isinstance(right_operand, MDD):  # it is a MDD constraint

@@ -442,7 +442,8 @@ class Node(Entity):
     def build(type, *args):
         if type is TypeNode.SET:
             assert len(args) == 1
-            sorted_sons = sorted(args[0], key=lambda v: str(v))
+            elements = list(args[0])
+            sorted_sons = sorted(elements, key=lambda v: str(v)) if len(elements) > 0 and not isinstance(elements[0], int) else sorted(elements)
             return Node(type, Node._create_sons(*sorted_sons))  # *sorted(args[0])))
         args = flatten(Node.build(TypeNode.SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args)
         assert type.is_valid_arity(len(args)), "Problem: Bad arity for node " + type.name + ". It is " + str(
@@ -461,19 +462,31 @@ class Node(Entity):
         return Node.build(TypeNode.SET, *args)
 
     @staticmethod
-    def conjunction(*args):
+    def _and_or(t, *args):
+        assert t in {TypeNode.AND, TypeNode.OR}
         if len(args) == 1:
             if isinstance(args[0], list):
                 args = tuple(args[0])
             if isinstance(args[0], types.GeneratorType):
                 args = tuple(list(args[0]))
-        return Node.build(TypeNode.AND, *args) if len(args) > 1 else args[0]
+        return Node.build(t, *args) if len(args) > 1 else args[0]
+
+    @staticmethod
+    def conjunction(*args):
+        return Node._and_or(TypeNode.AND, *args)
+        # if len(args) == 1:
+        #     if isinstance(args[0], list):
+        #         args = tuple(args[0])
+        #     if isinstance(args[0], types.GeneratorType):
+        #         args = tuple(list(args[0]))
+        # return Node.build(TypeNode.AND, *args) if len(args) > 1 else args[0]
 
     @staticmethod
     def disjunction(*args):
-        if len(args) == 1:
-            if isinstance(args[0], list):
-                args = tuple(args[0])
-            if isinstance(args[0], types.GeneratorType):
-                args = tuple(list(args[0]))
-        return Node.build(TypeNode.OR, *args) if len(args) > 1 else args[0]
+        return Node._and_or(TypeNode.OR, *args)
+        # if len(args) == 1:
+        #     if isinstance(args[0], list):
+        #         args = tuple(args[0])
+        #     if isinstance(args[0], types.GeneratorType):
+        #         args = tuple(list(args[0]))
+        # return Node.build(TypeNode.OR, *args) if len(args) > 1 else args[0]

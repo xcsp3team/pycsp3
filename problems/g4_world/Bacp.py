@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ Problem 030 on CSPLib
+"""
+
 nPeriods = data.nPeriods
 minCourses, maxCourses = data.minCourses, data.maxCourses
 minCredits, maxCredits = data.minCredits, data.maxCredits * maxCourses if subvariant("d") else data.maxCredits

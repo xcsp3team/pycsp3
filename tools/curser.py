@@ -8,7 +8,7 @@ from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, Co
 from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY
+from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY, error_if
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -45,6 +45,8 @@ def cursing():
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
             queue_in.append((self, other))
             return True
+        error_if(is_containing(other, Variable),
+                 "It seems that you should use a set and not a list, as in x in {...}." + " Your arguments are " + str(other) + " " + str(self))
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member/element constraint
             queue_in.append((self, other))
             return True
@@ -77,7 +79,10 @@ def cursing():
             return range.__contains__(other)
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))  # functions.Sum(other)
-        if isinstance(other, (PartialConstraint, Variable)):
+        if isinstance(other, Variable):  # unary table constraint (based on a range)
+            queue_in.append((list(self), other))
+            return True
+        if isinstance(other, PartialConstraint):
             queue_in.append((self, other))
             return True
         return range.__contains__(self, other)
@@ -397,7 +402,7 @@ class ListVar(list):
 
     def __mul__(self, other):
         assert is_containing(self, (Variable, Node))
-        return ScalarProduct(self, list(other) if isinstance(other, tuple) else other)
+        return ScalarProduct(self, list(other) if isinstance(other, (tuple, range)) else other)
 
     def __contains__(self, other):
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member constraint
@@ -414,7 +419,6 @@ class ListVar(list):
 def convert_to_namedtuples(obj):
     if not hasattr(convert_to_namedtuples, "cnt"):
         convert_to_namedtuples.cnt = 0
-
     if isinstance(obj, list):
         if is_1d_list(obj, int):
             return ListInt(obj)
@@ -431,3 +435,11 @@ def convert_to_namedtuples(obj):
         convert_to_namedtuples.cnt += 1
         return nt(*(convert_to_namedtuples(v) for (k, v) in obj.items()))
     return obj
+
+
+def is_namedtuple(obj):  # imperfect way of checking, but must be enough for our use (when JSON dumping Compilation.data)
+    t = type(obj)
+    if len(t.__bases__) != 1 or t.__bases__[0] != tuple:
+        return False
+    fields = getattr(t, '_fields', None)
+    return isinstance(fields, tuple) and all(type(field) == str for field in fields)

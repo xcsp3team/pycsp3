@@ -3,10 +3,10 @@ from pycsp3.problems.tests.tester import Tester, run
 NAME = "g4_world"
 
 diff = (Tester(NAME)
-        .add("Bacp", data="Bacp_inst0.json", variant="m1")
-        .add("Bacp", data="Bacp_inst0.json", variant="m2")
-        .add("Bacp", data="Bacp_inst0.json", variant="m1-d")
-        .add("Bacp", data="Bacp_inst0.json", variant="m2-d")
+        .add("Bacp", data="Bacp_10.json", variant="m1")
+        .add("Bacp", data="Bacp_10.json", variant="m2")
+        .add("Bacp", data="Bacp_10.json", variant="m1-d")
+        .add("Bacp", data="Bacp_10.json", variant="m2-d")
         .add("Bacp", data="Bacp_10.mzn", variant="m1", prs_py="Bacp_ParserZ", prs_jv="Bacp_ParserZ")  # m1 is enough to test parsing
         .add("CarSequencing", data="CarSequencing_dingbas.json")
         .add("CarSequencing", data="CarSequencing_dingbas.json", variant="table")
@@ -58,11 +58,11 @@ same = (Tester(NAME)
         )
 
 xcsp = (Tester(NAME)
-        .add("Bacp", data="Bacp_inst0.json", variant="m1")
-        .add("Bacp", data="Bacp_inst0.json", variant="m2")
-        .add("Bacp", data="Bacp_inst0.json", variant="m1-d")
-        .add("Bacp", data="Bacp_inst0.json", variant="m2-d")
-        .add("Bacp", data="Bacp_10.mzn", variant="m1", prs_py="Bacp_ParserZ", prs_jv="Bacp_ParserZ")  # m1 is enough to test parsing
+        .add("Bacp", data="Bacp_10.json", variant="m1")  # optimum 26
+        .add("Bacp", data="Bacp_10.json", variant="m2")  # optimum 26
+        .add("Bacp", data="Bacp_10.json", variant="m1-d")  # optimum 1
+        .add("Bacp", data="Bacp_10.json", variant="m2-d")  # optimum 1
+        .add("Bacp", data="Bacp_10.mzn", variant="m1", prs_py="Bacp_ParserZ", prs_jv="Bacp_ParserZ")  # m1 is enough to test parsing; optimum 26
         .add("CarSequencing", data="CarSequencing_dingbas.json")
         .add("CarSequencing", data="CarSequencing_dingbas.json", variant="table")
         .add("Crossword", data="Crossword_vg6-7-ogd.json")

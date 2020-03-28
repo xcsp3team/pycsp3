@@ -226,3 +226,8 @@ def error(s):
         raise TypeError(s)
     else:
         sys.exit(0)
+
+
+def error_if(test, s):
+    if test:
+        error(s)
