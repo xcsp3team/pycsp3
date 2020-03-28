@@ -40,6 +40,7 @@ class Diffs:
 
 class ConstraintArgument:
     def __init__(self, name, content, attributes=[], content_compressible=True, content_ordered=False, lifted=False):
+        assert isinstance(name, (TypeCtrArg, TypeXML)), str(name) + " " + str(type(name))
         self.name = name  # name of the argument
         self.attributes = attributes  # list of pairs (key, value) representing the attributes
         self.content = content  # content of the argument
@@ -60,6 +61,13 @@ class Constraint:
 
     def arg(self, name, content, *, attributes=[], content_compressible=True, content_ordered=False, lifted=False):
         self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted)
+        return self
+
+    def set_condition(self, operator, right_operand):
+        return self.arg(TypeCtrArg.CONDITION, Condition.build_condition((operator, right_operand)))
+
+    def set_value(self, new_value):
+        return self.arg(TypeCtrArg.VALUE, new_value)
 
     def similar_structure(self, other):
         if type(self) != type(other) or self.attributes != other.attributes:
@@ -93,17 +101,6 @@ class Constraint:
         if len([flag for flag in diffs.argument_flags if flag]) > 1:
             return False  # two arguments of different size cannot be currently abstracted
         return diffs
-
-    def replace_arg(self, arg_name, arg_value):
-        assert isinstance(arg_name, TypeCtrArg)
-        self.arg(arg_name, arg_value)
-        return self
-
-    def replace_condition(self, operator, right_operand):
-        return self.replace_arg(TypeCtrArg.CONDITION, Condition.build_condition((operator, right_operand)))
-
-    def replace_value(self, new_value):
-        return self.replace_arg(TypeCtrArg.VALUE, new_value)
 
     def parameter_form(self, p):
         length = len(p) if isinstance(p, list) else 1
@@ -484,24 +481,26 @@ class ConstraintInstantiation(Constraint):
 ''' PartialConstraints and ScalarProduct '''
 
 
-class PartialConstraint:  # constraint whose condition is missing initially
+class PartialConstraint:  # constraint whose condition has not been given such as 'Sum', 'Count', 'Element', 'maximum', etc.
     def __init__(self, constraint):
         self.constraint = constraint
 
     def add_condition(self, operator, right_operand):
         if isinstance(right_operand, (int, Variable)):
-            return ECtr(self.constraint.replace_condition(operator, right_operand))
+            return ECtr(self.constraint.set_condition(operator, right_operand))
         # TODO : which kind of right operand is authorized? just a partial sum?
+        assert isinstance(self.constraint, ConstraintSum)
         pc = PartialConstraint.combine_partial_objects(self, TypeNode.SUB, right_operand)  # the 'complex' right operand is moved to the left
-        return ECtr(pc.constraint.replace_condition(operator, 0))
+        return ECtr(pc.constraint.set_condition(operator, 0))
 
     def _simplify_with_auxiliary_variables(self, other):
         if isinstance(other, (int, Variable)):
             return other
-        if isinstance(self.constraint, ConstraintSum) and (isinstance(other, ScalarProduct) or isinstance(other.constraint, ConstraintSum)):
-            return other
         if isinstance(other, Node):
             return functions.auxiliary.replace_node(other)
+        assert isinstance(other, (ScalarProduct, PartialConstraint))
+        if isinstance(self.constraint, ConstraintSum) and (isinstance(other, ScalarProduct) or isinstance(other.constraint, ConstraintSum)):
+            return other
         assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition)
         return functions.auxiliary.replace_partial_constraint(other)
 
@@ -520,7 +519,7 @@ class PartialConstraint:  # constraint whose condition is missing initially
             if isinstance(self.constraint, ConstraintElement):
                 arg = self.constraint.arguments[TypeCtrArg.LIST]
                 arg.content = flatten(arg.content)  # we need to flatten now because it has not been done before
-            return ECtr(self.constraint.replace_value(other))  # only value must be replaced for these constraints
+            return ECtr(self.constraint.set_value(other))  # only value must be replaced for these constraints
         return self.add_condition(TypeConditionOperator.EQ, other)
         # pair = self._simplify_with_auxiliary_variables(other)
         # return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
@@ -552,7 +551,10 @@ class PartialConstraint:  # constraint whose condition is missing initially
         assert isinstance(self.constraint, ConstraintSum) and isinstance(other, int)
         args = self.constraint.arguments
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-        self.constraint.replace_arg(TypeCtrArg.COEFFS, [c * other for c in cs])
+        value = args[TypeCtrArg.CONDITION]
+        del args[TypeCtrArg.CONDITION]  # we delete and put back below this argument so as to have arguments in the right order
+        self.constraint.arg(TypeCtrArg.COEFFS, [c * other for c in cs])
+        args[TypeCtrArg.CONDITION] = value
         return self
 
     def __rmul__(self, other):
@@ -607,7 +609,7 @@ class ScalarProduct:
         assert isinstance(variables, list) and isinstance(coefficients, (int, list, range)), variables
         self.variables = flatten(variables)  # for example, in order to remove None occurrences
         self.coeffs = flatten([coefficients] * len(variables) if isinstance(coefficients, int) else coefficients)
-        assert len(self.variables) == len(self.coeffs)
+        assert len(self.variables) == len(self.coeffs), str(self.variables) + " " + str(self.coeffs)
 
     def _combine_with(self, operator, right_operand):
         return PartialConstraint(ConstraintSum(self.variables, self.coeffs, None)).add_condition(operator, right_operand)

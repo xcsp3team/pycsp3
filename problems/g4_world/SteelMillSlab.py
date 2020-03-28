@@ -29,8 +29,6 @@ if not variant():
 
         # no more than two colors for each slab 
         [Sum(disjunction(sb[i] == j for i in g) for g in colorGroups) <= 2 for j in range(nSlabs)]
-        # TODO si je fais disjunction()*2 pour tester le xml est mauvais
-        # il doit manquer un str quelque part pour les args
     )
 
 elif variant("01"):

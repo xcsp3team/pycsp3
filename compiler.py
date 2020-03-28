@@ -6,7 +6,7 @@ import lzma
 import os
 import os.path
 import sys
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple, Mapping
 from importlib import util
 
 from lxml import etree
@@ -15,7 +15,7 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data import dataparser
 from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
-from pycsp3.tools.curser import OpOverrider, ListInt, convert_to_namedtuples
+from pycsp3.tools.curser import OpOverrider, ListInt, convert_to_namedtuples, is_namedtuple
 from pycsp3.tools.slider import handle_slides
 from pycsp3.tools.utilities import Stopwatch
 from pycsp3.tools.xcsp import build_document
@@ -156,18 +156,16 @@ def _load(*, console=False):
 def _compile():
     # used to save data in jSON
     def prepare_for_json(obj):
-        if hasattr(obj, "__dict__") and not isinstance(obj, ListInt):
-            d = obj.__dict__
-            for k, v in d.items():
-                d[k] = prepare_for_json(v)
-            return d
-        else:
-            if isinstance(obj, datetime.time):
-                return str(obj)
-            if hasattr(obj, "__getitem__") and hasattr(obj, "__setitem__") and hasattr(obj, "__iter__"):  # TODO do we need all three tests?
-                for i, v in enumerate(obj):
-                    obj[i] = prepare_for_json(v)
+        if is_namedtuple(obj):
+            r = obj._asdict()
+            for k in r:
+                r[k] = prepare_for_json(r[k])
+            return r
+        if isinstance(obj, list):
+            for i in range(len(obj)):
+                obj[i] = prepare_for_json(obj[i])
             return obj
+        return obj
 
     OpOverrider.disable()
     if options.debug or options.display:
@@ -213,7 +211,7 @@ def _compile():
         else:
             json_prefix = str(options.dataexport)
         with open(json_prefix + '.json', 'w') as f:
-            json.dump(prepare_for_json(Compilation.data), f, separators=(',', ':'))
+            json.dump(prepare_for_json(Compilation.data), f)
         print("  Generation for data saving of the file " + json_prefix + '.json' + " completed.")
 
     if options.time is True:

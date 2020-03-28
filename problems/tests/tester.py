@@ -208,7 +208,7 @@ class Tester:
             elif mode == 2:  # comparison with recorded XCSP files
                 if os.name != 'nt':
                     #shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simualte a comparison with JvCSP
-                    print("| Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
+                    print("  Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
                     self.check(True)
             else:
                 with open(self.xml_path_py(), "r") as f:
@@ -228,9 +228,9 @@ class Tester:
         else:
             lines = self.diff_files(self.xml_path_py(), f, self.tmpDiff)
             if len(lines) == 0:
-                print("=> No difference for " + self.name_xml)
+                print("  => No difference for " + self.name_xml)
             else:
-                print("=> Several differences (" + str(len(lines)) + ") in " + self.name_xml)
+                print("  => Several differences (" + str(len(lines)) + ") in " + self.name_xml)
                 self.counters["diff"] += 1
                 self.print_differences(lines, limit=20 if len(lines) > 200 else None, xcsp=xcsp)
                 if options.wait:
