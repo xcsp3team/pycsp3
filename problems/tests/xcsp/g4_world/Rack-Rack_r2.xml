@@ -15,7 +15,7 @@
     <group note="linking rack models with powers, sizes and costs">
       <extension>
         <list> %... </list>
-        <supports> (0,0,0,0)(1,150,8,150)(2,200,16,200) </supports>
+        <supports> (0,150,8,150)(1,200,16,200)(2,0,0,0) </supports>
       </extension>
       <args> m[0] p[0] s[0] c[0] </args>
       <args> m[1] p[1] s[1] c[1] </args>

@@ -5,9 +5,8 @@ from pycsp3 import *
 """
 
 nRacks, models, cardTypes = data.nRacks, data.rackModels, data.cardTypes
-
-# we add first a dummy model (0,0,0)
-models = [models[0].__class__(0, 0, 0)] + models
+# we add first a dummy model (0,0,0) (not saved with the option -dataexport because we don't modify data.rackModels)
+models.append(models[0].__class__(0, 0, 0))
 nModels, nTypes = len(models), len(cardTypes)
 
 powers, sizes, costs = zip(*models)

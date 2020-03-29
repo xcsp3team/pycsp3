@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ See Problem freepizza in MiniZinc
+"""
+
 prices, vouchers = data.pizzaPrices, data.vouchers
 nPizzas, nVouchers = len(prices), len(vouchers)
 

@@ -1,17 +1,15 @@
 from pycsp3 import *
 
-from pycsp3.tools.curser import OpOverrider
+"""
+ See Challenge ROADEF 2001 (FAPP: Problème d'affectation de fréquences avec polarization)
+"""
 
-domains = [data.domains[route.domain] for route in data.routes]  # we discard the indirection
+domains = [data.domains[route.domain] for route in data.routes]  # we skip the indirection
 polarizations = [route.polarization for route in data.routes]
 n = len(data.routes)
 
-# To speed up calculations
-neRelaxations = [tuple(c.neRelaxations) for c in data.softs]
-eqRelaxations = [tuple(c.eqRelaxations) for c in data.softs]
-# for c in data.softs:  # To speed up calculations
-#     c.ner = tuple(c['neRelaxations'])
-#     c.eqRelaxations = tuple(c['eqRelaxations'])
+# To speed up calculations, we use tuples
+neRelaxations, eqRelaxations = [tuple(c.neRelaxations) for c in data.softs], [tuple(c.eqRelaxations) for c in data.softs]
 hards, softs = data.hards, data.softs
 nSofts = len(data.softs)
 
@@ -23,7 +21,7 @@ def expr_hard(scp, equality, gap):
     return dist(x, y) == gap if equality else dist(x, y) != c.gap
 
 
-def table_soft(l, c, short_table=True):
+def table_soft(i, j, eqr, ner, short_table=True):
     def calculate_size():
         size = 0
         for l in range(kl - 1):
@@ -31,8 +29,6 @@ def table_soft(l, c, short_table=True):
                 size += 1
         return size
 
-    OpOverrider.disable()
-    i, j = c.route1, c.route2
     table, set_short_version = set(), set()
     for f1 in domains[i]:
         for f2 in domains[j]:
@@ -44,13 +40,12 @@ def table_soft(l, c, short_table=True):
                 p2 = 1 if pol in {1, 3} else 0
                 if (polarizations[i], p1) in [(1, 0), (-1, 1)] or (polarizations[j], p2) in [(1, 0), (-1, 1)]:
                     continue
-                t = softs[l].eqRelaxations if p1 == p2 else softs[l].neRelaxations
+                t = eqr if p1 == p2 else ner  # eqRelaxations or neRelaxations
                 for kl in range(12):
                     if kl == 11 or distance >= t[kl]:  # for kl=11, we suppose t[kl] = 0
                         suffix = (p1, p2, kl, 0 if kl == 0 or distance >= t[kl - 1] else 1, 0 if kl <= 1 else calculate_size())
                         table.add((distance, *suffix) if short_table else (f1, f2, *suffix))
                         # set_short_version.add(distance)  # not possible to use that because parallel computation?
-    OpOverrider.enable()
     return table
 
 
@@ -71,14 +66,13 @@ v2 = VarArray(size=nSofts, dom=range(11))
 
 satisfy(
     # imperative constraints
-    expr_hard((f[i], f[j]) if fq else (p[i], p[j]), eq, gap) for i, j, fq, eq, gap in ((h.route1, h.route2, h.frequency, h.equality, h.gap) for h in hards)
+    expr_hard((f[i], f[j]) if fq else (p[i], p[j]), eq, gap) for (i, j, fq, eq, gap) in hards
 )
 
 if not variant():
     satisfy(
         # soft radio-electric compatibility constraints
-        (f[i], f[j], p[i], p[j], k, v1[l], v2[l]) in table_soft(l, s, False) for i, j, l, s in ((s.route1, s.route2, l, s) for l, s in enumerate(softs))
-
+        (f[i], f[j], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, eqr, ner, False) for l, (i, j, eqr, ner) in enumerate(softs)
     )
 
 elif variant("short"):
@@ -91,10 +85,10 @@ elif variant("short"):
 
     satisfy(
         # computing intermediary distances
-        [d[i][j] == dist(f[i], f[j]) for i in range(n) for j in range(i + 1, n) if d[i][j]],
+        [d[i][j] == abs(f[i] - f[j]) for i, j in combinations(range(n), 2) if d[i][j]],
 
         # soft radio-electric compatibility constraints
-        [(d[min(i, j)][max(i, j)], p[i], p[j], k, v1[l], v2[l]) in table_soft(l,s) for i, j, l, s in ((s.route1, s.route2, l, s) for l, s in enumerate(softs))]
+        [(d[min(i, j)][max(i, j)], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, eqr, ner) for l, (i, j, eqr, ner) in enumerate(softs)]
     )
 
 minimize(

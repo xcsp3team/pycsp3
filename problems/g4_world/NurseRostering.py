@@ -1,7 +1,11 @@
 from pycsp3 import *
 
-data.shifts.append(data.shifts[0].__class__("_off", 0, None))  # we add first a dummy off shift
-# data.shifts.append(DataDict({"id": "_off", "length": 0, "forbiddenFollowingShifts": None}))  # we add first a dummy off shift
+"""
+ See http://www.schedulingbenchmarks.org/nurseinstances1_24.html
+"""
+
+if data.shifts[-1].id != "_off":  # if not present, we add first a dummy 'off' shift (a named tuple of the right class)
+    data.shifts.append(data.shifts[0].__class__("_off", 0, None))
 off = len(data.shifts) - 1  # value for _off
 
 nDays, nWeeks = data.nDays, data.nDays // 7
@@ -21,8 +25,10 @@ table = {(sp[s1.id], sp[s2]) for s1 in shifts if s1.forbiddenFollowingShifts for
 
 
 def costs(day, shift):
-    c = None if shift == off else data.covers[day][shift]
-    return [0 if c is None else abs(c.requirement - i) * (c.weightIfUnder if i <= c.requirement else c.weightIfOver) for i in range(nStaffs + 1)]
+    if shift == off:
+        return [0] * (nStaffs + 1)
+    r, wu, wo = data.covers[day][shift]
+    return [abs(r - i) * (wu if i <= r else wo) for i in range(nStaffs + 1)]
 
 
 def automaton_min_consecutive(k, for_shifts):
@@ -68,7 +74,7 @@ satisfy(
     [Count(x[d], value=s) == np[d][s] for d in range(nDays) for s in range(nShifts)],
 
     # computing worked week-ends
-    [[imply(x[w * 7 + 5][p] != off, wk[p][w]), imply(x[w * 7 + 6][p] != off, wk[p][w])] for p in range(nStaffs) for w in range(nWeeks)],
+    [(imply(x[w * 7 + 5][p] != off, wk[p][w]), imply(x[w * 7 + 6][p] != off, wk[p][w])) for p in range(nStaffs) for w in range(nWeeks)],
 
     # rotation shifts
     [Slide((x[i][p], x[i + 1][p]) not in table for i in range(nDays - 1)) for p in range(nStaffs)] if len(table) > 0 else None,
@@ -86,7 +92,7 @@ satisfy(
     [x[i: i + kmin[p] + 1, p] in automaton_min_consecutive(kmin[p], True) for p in range(nStaffs) for i in range(nDays - kmin[p])],
 
     # managing off days on schedule ends
-    [[imply(x[0][p] != off, x[i][p] != off), imply(x[- 1][p] != off, x[- 1 - i][p] != off)] for p in range(nStaffs) if kmin[p] > 1 for i in range(1, kmin[p])],
+    [(imply(x[0][p] != off, x[i][p] != off), imply(x[- 1][p] != off, x[- 1 - i][p] != off)) for p in range(nStaffs) if kmin[p] > 1 for i in range(1, kmin[p])],
 
     # minimum consecutive days off
     [x[i: i + kday[p] + 1, p] in automaton_min_consecutive(kday[p], False) for p in range(nStaffs) for i in range(nDays - kday[p])],

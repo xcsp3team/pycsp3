@@ -5,9 +5,7 @@ from pycsp3 import *
 """
 
 nRacks, models, cardTypes = data.nRacks, data.models, data.cardTypes
-
-# we add first a dummy model (0,0,0)
-models = [(0, 0, 0)] + [tuple(model) for model in models]
+models.append([0, 0, 0])  # we add first a dummy model (0,0,0)
 nModels, nTypes = len(models), len(cardTypes)
 
 powers, sizes, costs = [row[0] for row in models], [row[1] for row in models], [row[2] for row in models]

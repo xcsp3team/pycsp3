@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ See, e.g., "Constraint programming lessons learned from crossword puzzles" by A. Beacham, X. Chen, J. Sillito, and P. van Beek. 2001
+"""
+
 
 def find_holes(matrix, transposed):
     class Hole:
@@ -73,8 +77,8 @@ elif variant("alt"):
 
     satisfy(
         # words must intersect correctly
-        [(w[i], w[j]) in table_compatible_words(holes[i], holes[j]) for i in range(nHoles) for j in range(i + 1, nHoles) if holes[i].offset(holes[j])],
+        [(w[i], w[j]) in table_compatible_words(holes[i], holes[j]) for i, j in combinations(range(nHoles), 2) if holes[i].offset(holes[j])],
 
         # tag(distinct-words)
-        [w[i] != w[j] for i in range(nHoles) for j in range(i + 1, nHoles) if holes[i].size == holes[j].size]
+        [w[i] != w[j] for i, j in combinations(range(nHoles), 2) if holes[i].size == holes[j].size]
     )

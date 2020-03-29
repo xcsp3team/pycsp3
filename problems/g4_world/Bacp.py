@@ -8,7 +8,7 @@ nPeriods = data.nPeriods
 minCourses, maxCourses = data.minCourses, data.maxCourses
 minCredits, maxCredits = data.minCredits, data.maxCredits * maxCourses if subvariant("d") else data.maxCredits
 credits, prerequisites = data.credits, data.prerequisites
-nCourses, nPrerequisites = len(credits), len(prerequisites)
+nCourses = len(credits)
 
 # s[c] is the period (schedule) for course c
 s = VarArray(size=nCourses, dom=range(nPeriods))
@@ -73,24 +73,3 @@ else:
     )
 
 annotate(decision=s)
-
-
-
-# mincr is the minimum number of credits over the periods
-# mincr = Var(dom=range(minCredits, maxCredits + 1))
-#
-# # maxcr is the maximum number of credits over the periods
-# maxcr = Var(dom=range(minCredits, maxCredits + 1))
-#
-# satisfy(
-#     Minimum(cr) == mincr,
-#     Maximum(cr) == maxcr
-# )
-#
-# minimize(
-#     # minimizing the maximal distance in term of credits
-#     maxcr - mincr
-# )
-# distcr is the maximal distance in term of credits
-# distcr = Var(dom=range(maxCredits + 1))
-# distcr == maxcr - mincr
