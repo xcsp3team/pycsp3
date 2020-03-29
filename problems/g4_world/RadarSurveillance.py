@@ -1,10 +1,12 @@
-#  This is a Radar surveillance instance where " + nRadars + " radars are on a geographic area of size " + mapSize + "*" + mapSize + " and must cover all cells."
-#  There are " + nInsignificantCells + " insignificant cells that must not be covered by any radar. All other cells must be covered by exactly " +
-#  maxCoverage + " radars." + " This instance has been generated using a seed equal to " + seed . This instance follows the description given by the
-#  Swedish Institute of Computer Science (SICS).
+from enum import Enum
 
 from pycsp3 import *
-from enum import Enum
+
+"""
+ This is a Radar surveillance instance where some radars must be put on a geographic area of a specified size and must cover all cells.
+ There are some insignificant cells that must not be covered by any radar. All other cells must be covered by exactly a specified number of radars.
+ Instances of this problem follow the description given by the Swedish Institute of Computer Science (SICS).
+"""
 
 mapSize, maxCoverage = data.mapSize, data.maxCoverage
 radars = data.radars

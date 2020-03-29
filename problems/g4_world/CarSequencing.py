@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+""""
+ Problem 001 on CSPLib
+"""
+
 classes, limits = data.classes, data.limits
 demands = [cl.demand for cl in classes]
 nCars, nOptions, nClasses = sum(demands), len(limits), len(classes)
@@ -8,10 +12,10 @@ allClasses = range(nClasses)
 
 def redu(k, i):
     # i stands for the number of blocks set to the maximal capacity
-    nOptionsRemainingToSet = sum(cl.options[k] * cl.demand for cl in classes) - i * limits[k].num
-    nOptionsPossibleToSet = nCars - i * limits[k].den
-    if nOptionsRemainingToSet > 0 and nOptionsPossibleToSet > 0:
-        return Sum(o[j][k] for j in range(nOptionsPossibleToSet)) >= nOptionsRemainingToSet
+    remaining = sum(options[k] * demand for (demand, options) in classes) - i * limits[k].num
+    possible = nCars - i * limits[k].den
+    if remaining > 0 and possible > 0:
+        return Sum(o[j][k] for j in range(possible)) >= remaining
 
 
 # c[i] is the class of the ith assembled car
@@ -28,17 +32,17 @@ satisfy(
 if not variant():
     satisfy(
         # constraints about options
-        imply(c[i] == j, o[i][k] == cl.options[k]) for i in range(nCars) for j, cl in enumerate(classes) for k in range(nOptions)
+        imply(c[i] == j, o[i][k] == options[k]) for i in range(nCars) for j, (_, options) in enumerate(classes) for k in range(nOptions)
     )
 elif variant("table"):
     satisfy(
         # constraints about options
-        (c[i], *o[i]) in {(j, *cl.options) for j, cl in enumerate(classes)} for i in range(nCars)
+        (c[i], *o[i]) in {(j, *options) for j, (_, options) in enumerate(classes)} for i in range(nCars)
     )
 
 satisfy(
     # constraints about option frequencies
-    [Sum(o[j][k] for j in range(i, i + limit.den)) <= limit.num for k, limit in enumerate(limits) for i in range(nCars) if i <= nCars - limit.den],
+    [Sum(o[i:i + den, k]) <= num for k, (num, den) in enumerate(limits) for i in range(nCars) if i <= nCars - den],
 
     # tag(redundant-constraints)
     [redu(k, i) for k in range(nOptions) for i in range(nCars)]

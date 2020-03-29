@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ See QAPLib and https://en.wikipedia.org/wiki/Quadratic_assignment_problem
+"""
+
 w = data.weights  # facility weights
 distances = data.distances  # location distances
 all_distances = {d for row in distances for d in row}
@@ -18,10 +22,10 @@ satisfy(
     AllDifferent(x),
 
     # computing the distances
-    [(x[i], x[j], d[i][j]) in table for i in range(n) for j in range(i + 1, n) if w[i][j] != 0]
+    [(x[i], x[j], d[i][j]) in table for i, j in combinations(range(n), 2) if w[i][j] != 0]
 )
 
 minimize(
     #  minimizing summed up distances multiplied by flows
-    Sum(w[i][j] * d[i][j] for i in range(n) for j in range(i + 1, n) if w[i][j] != 0)
+    Sum(w[i][j] * d[i][j] for i, j in combinations(range(n), 2) if w[i][j] != 0)
 )

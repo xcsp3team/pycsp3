@@ -63,24 +63,24 @@ xcsp = (Tester(NAME)
         .add("Bacp", data="Bacp_10.json", variant="m1-d")  # optimum 1
         .add("Bacp", data="Bacp_10.json", variant="m2-d")  # optimum 1
         .add("Bacp", data="Bacp_10.mzn", variant="m1", prs_py="Bacp_ParserZ", prs_jv="Bacp_ParserZ")  # m1 is enough to test parsing; optimum 26
-        .add("CarSequencing", data="CarSequencing_dingbas.json")
-        .add("CarSequencing", data="CarSequencing_dingbas.json", variant="table")
-        .add("Crossword", data="Crossword_vg6-7-ogd.json")
-        .add("Crossword", data="Crossword_h1501-lex.json")
+        .add("CarSequencing", data="CarSequencing_dingbas.json")  # 6 solutions
+        .add("CarSequencing", data="CarSequencing_dingbas.json", variant="table")  # 6 solutions
+        .add("Crossword", data="Crossword_vg6-7-ogd.json")  # sat
+        .add("Crossword", data="Crossword_h1501-lex.json")  # sat
         .add("Crossword", data="Crossword_h0504-lex.json", variant="alt")
-        .add("Fapp", data="Fapp_ex2.json")
-        .add("Fapp", data="Fapp_ex2.json", variant="short")
+        .add("Fapp", data="Fapp_ex2.json")  # optimum 13871
+        .add("Fapp", data="Fapp_ex2.json", variant="short")  # optimum 13871
         # .add("Fapp", data="Fapp_01-0200.json")  # TODO too long (and seems to crash)
         # .add("Fapp", data="Fapp_01-0200.json", variant="short")
-        .add("League", data="League_010-03-04.json")
+        .add("League", data="League_010-03-04.json")  # optimum 92
         .add("MisteryShopper", data="MisteryShopper_04.json")
-        .add("NurseRostering", data="NurseRostering_00.json")
+        .add("NurseRostering", data="NurseRostering_00.json")  # optimum 1202
         .add("NurseRostering", data="NurseRostering_18.json")
-        .add("PizzaVoucher", data="PizzaVoucher_pizza6.json")
-        .add("QuadraticAssignment", data="QuadraticAssignment_qap.json")
-        .add("QuadraticAssignment", data="QuadraticAssignment_example.txt", prs_py="QuadraticAssignment_Parser", prs_jv="QuadraticAssignment_Parser")
-        .add("Rack", data="Rack_r2.json")
-        .add("Rack2", data="Rack_r2b.json")
+        .add("PizzaVoucher", data="PizzaVoucher_pizza6.json")  # optimum 210
+        .add("QuadraticAssignment", data="QuadraticAssignment_qap.json")  # optimum 4776
+        .add("QuadraticAssignment", data="QuadraticAssignment_example.txt", prs_py="QuadraticAssignment_Parser", prs_jv="QuadraticAssignment_Parser")  # optimum 4776
+        .add("Rack", data="Rack_r2.json")  # optimum 1100
+        .add("Rack2", data="Rack_r2b.json")  # optimum 1100
         .add("RadarSurveillance", data="RadarSurveillance_8-24-3-2-00.json")
         .add("Rcpsp", data="Rcpsp_j30-01-01.json")
         .add("Rlfap", data="Rlfap_card-scen-04.json", variant="card")

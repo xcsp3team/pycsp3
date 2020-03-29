@@ -165,7 +165,7 @@ def _compile():
             for i in range(len(obj)):
                 obj[i] = prepare_for_json(obj[i])
             return obj
-        return obj
+        return str(obj) if isinstance(obj, datetime.time) else obj
 
     OpOverrider.disable()
     if options.debug or options.display:

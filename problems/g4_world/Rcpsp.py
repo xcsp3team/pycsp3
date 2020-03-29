@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 061 at CSPLib
+"""
+ Problem 061 at CSPLib
+"""
 
 horizon = data.horizon
 capacities = data.resourceCapacities
