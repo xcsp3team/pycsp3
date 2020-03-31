@@ -4,7 +4,7 @@ from pycsp3 import *
  See Problem freepizza in MiniZinc
 """
 
-prices, vouchers = data.pizzaPrices, data.vouchers
+prices, vouchers = data
 nPizzas, nVouchers = len(prices), len(vouchers)
 
 # v[i] is the voucher used for the ith pizza. 0 means that no voucher is used.
@@ -28,7 +28,7 @@ satisfy(
     [iff(f[i] == 0, p[i] != vouchers[i].payPart) for i in range(nVouchers)],
 
     # a free pizza obtained with a voucher must be cheaper than any pizza paid wrt this voucher
-    [(v[i] >= v[j]) | (v[i] != -v[j]) for i in range(nPizzas) for j in range(nPizzas) if i != j and prices[i] < prices[j]]
+    [imply(v[i] < 0, v[i] != -v[j]) for i in range(nPizzas) for j in range(nPizzas) if i != j and prices[i] < prices[j]]
 )
 
 minimize(
@@ -37,3 +37,6 @@ minimize(
 )
 
 annotate(decision=v)
+
+
+#  [(f[i] == 0) == (p[i] != vouchers[i].payPart) for i in range(nVouchers)],  is this clearer?
