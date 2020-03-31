@@ -60,7 +60,7 @@
       <args> f[8] p[8] 3 </args>
     </group>
     <group note="a free pizza obtained with a voucher must be cheaper than any pizza paid wrt this voucher">
-      <intension> or(ge(%0,%1),ne(%0,neg(%1))) </intension>
+      <intension> imp(lt(%0,0),ne(%0,neg(%1))) </intension>
       <args> v[0] v[1] </args>
       <args> v[0] v[2] </args>
       <args> v[0] v[3] </args>

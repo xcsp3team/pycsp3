@@ -67,7 +67,10 @@ def transpose(m):
 
 
 def flatten(*args):
-    assert isinstance(args, tuple), "Arguments in flatten represent a tuple of arguments"
+    # if not hasattr(flatten, "cache"):  # cannot work (changing to TupleInt and TupleVar instead of ListInt and ListVar while guaranteeing the lifetime? how?)
+    #     flatten.cache = {}
+    # elif len(args) == 1 and id(args[0]) in flatten.cache:
+    #     return flatten.cache[id(args[0])]
     output = []
     for arg in args:
         if isinstance(arg, type(None)):
@@ -80,6 +83,8 @@ def flatten(*args):
             output.extend(flatten(*list(arg)))
         else:
             output.append(arg)
+    # if len(args) == 1:
+    #     flatten.cache[id(args[0])] = output
     return output
 
 

@@ -82,7 +82,7 @@ def VarArray(*, size, dom, comment=None):
     size = [size] if isinstance(size, int) else size
     assert all(dimension != 0 for dimension in size), "No dimension must not be equal to 0"
     checkType(size, [int])
-    checkType(dom, (int, range, Domain, [int, range, str, Domain, type(None)], type(lambda: 0)))
+    checkType(dom, (range, Domain, [int, range, str, Domain, type(None)], type(lambda: 0)))
     name = extract_declaration_for("VarArray")
     if comment is None and not isinstance(name, list):
         comment, tags = comment_and_tags_of(function_name="VarArray")

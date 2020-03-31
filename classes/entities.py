@@ -449,8 +449,10 @@ class Node(Entity):
         assert type.is_valid_arity(len(args)), "Problem: Bad arity for node " + type.name + ". It is " + str(
             len(args)) + " but it should be between " + str(type.arityMin) + " and " + str(type.arityMax)
         node = Node(type, Node._create_sons(*args))
+        if type == TypeNode.EQ and all(son.type.is_predicate_operator() for son in node.sons):
+            node = Node(TypeNode.IFF, node.sons)
         # Reducing the node
-        for t in {TypeNode.ADD, TypeNode.MUL, TypeNode.OR, TypeNode.AND, TypeNode.EQ}:
+        for t in {TypeNode.ADD, TypeNode.MUL, TypeNode.OR, TypeNode.AND, TypeNode.EQ, TypeNode.IFF}:
             node.flatten_by_associativity(t)
         node.reduce_integers()
         if options.debug:
@@ -474,19 +476,7 @@ class Node(Entity):
     @staticmethod
     def conjunction(*args):
         return Node._and_or(TypeNode.AND, *args)
-        # if len(args) == 1:
-        #     if isinstance(args[0], list):
-        #         args = tuple(args[0])
-        #     if isinstance(args[0], types.GeneratorType):
-        #         args = tuple(list(args[0]))
-        # return Node.build(TypeNode.AND, *args) if len(args) > 1 else args[0]
 
     @staticmethod
     def disjunction(*args):
         return Node._and_or(TypeNode.OR, *args)
-        # if len(args) == 1:
-        #     if isinstance(args[0], list):
-        #         args = tuple(args[0])
-        #     if isinstance(args[0], types.GeneratorType):
-        #         args = tuple(list(args[0]))
-        # return Node.build(TypeNode.OR, *args) if len(args) > 1 else args[0]

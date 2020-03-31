@@ -362,13 +362,13 @@ class OpOverrider:
 
 class ListInt(list):
     def __init__(self, integers):
-        self.extend(integers)
+        super().__init__(integers)  #self.extend(integers)
 
     def __getslice__(self, i, j):
-        return ListInt(list.__getslice__(self, i, j))
+        return ListInt(super().__getslice__(i, j))
 
     def __add__(self, other):
-        return ListInt(list.__add__(self, other))
+        return ListInt(super().__add__(other))
 
     def __mul__(self, other):
         if is_containing(other, (Variable, Node)):
@@ -391,14 +391,17 @@ def columns(m):
 
 
 class ListVar(list):
+    # def __new__(self, variables):  # if we subclass tuple instead of list (while removing __init__)
+    #     return super().__new__(ListVar, variables)
+
     def __init__(self, variables):
-        self.extend(variables)
+        super().__init__(variables)
 
     def __getslice__(self, i, j):
-        return ListVar(list.__getslice__(self, i, j))
+        return ListVar(super().__getslice__(i, j))
 
     def __add__(self, other):
-        return ListVar(list.__add__(self, other))
+        return ListVar(super().__add__(other))
 
     def __mul__(self, other):
         assert is_containing(self, (Variable, Node))
