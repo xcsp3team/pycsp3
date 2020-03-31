@@ -4,12 +4,11 @@ from pycsp3 import *
  Problem 031 on CSPLib
 """
 
-nRacks, models, cardTypes = data.nRacks, data.models, data.cardTypes
+nRacks, models, cardTypes = data
 models.append([0, 0, 0])  # we add first a dummy model (0,0,0)
+powers, sizes, costs = zip(*models)
+cardPowers, cardDemands = zip(*cardTypes)
 nModels, nTypes = len(models), len(cardTypes)
-
-powers, sizes, costs = [row[0] for row in models], [row[1] for row in models], [row[2] for row in models]
-cardPowers, cardDemands = [row[0] for row in cardTypes], [row[1] for row in cardTypes]
 
 table = {(i, powers[i], sizes[i], costs[i]) for i in range(nModels)}
 
@@ -50,15 +49,17 @@ minimize(
     Sum(c)
 )
 
+# Note that:
 
+# a)  using zip is compacter than writing:
+#   powers, sizes, costs = [row[0] for row in models], [row[1] for row in models], [row[2] for row in models]
+#   cardPowers, cardDemands =[row[0] for row in cardTypes], [row[1] for row in cardTypes]
 
-# note that we use a quaternary table constraint instead of three binary table constraints, as below
+# b) using a quaternary table constraint is simpler than using three binary table constraints, as below:
+#   linking model and power of the ith rack
+#   [(m[i], p[i]) in enumerate(powers) for i in range(nRacks)],
+#   linking model and size of the ith rack
+#   [(m[i], s[i]) in enumerate(sizes) for i in range(nRacks)],
+#   linking model and cost of the ith rack
+#   [(m[i], c[i]) in enumerate(costs) for i in range(nRacks)],
 
-# linking model and power of the ith rack
-# [(m[i], p[i]) in enumerate(powers) for i in range(nRacks)],
-
-# linking model and size of the ith rack
-# [(m[i], s[i]) in enumerate(sizes) for i in range(nRacks)],
-
-# linking model and cost of the ith rack
-# [(m[i], c[i]) in enumerate(costs) for i in range(nRacks)],

@@ -3,13 +3,12 @@ from enum import Enum, unique
 
 def auto(n_occurrences=1):
     def _auto():  # To be replaced by auto() in python 3.6 ?
-        auto.counter += 1
-        return auto.counter
+        if not hasattr(auto, "cnt"):
+            auto.cnt = 0
+        auto.cnt += 1
+        return auto.cnt
 
     return _auto() if n_occurrences == 1 else (_auto() for _ in range(n_occurrences))
-
-
-auto.counter = 0
 
 
 @unique

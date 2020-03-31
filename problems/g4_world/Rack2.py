@@ -4,13 +4,11 @@ from pycsp3 import *
  Problem 031 on CSPLib
 """
 
-nRacks, models, cardTypes = data.nRacks, data.rackModels, data.cardTypes
-# we add first a dummy model (0,0,0) (not saved with the option -dataexport because we don't modify data.rackModels)
-models.append(models[0].__class__(0, 0, 0))
-nModels, nTypes = len(models), len(cardTypes)
-
+nRacks, models, cardTypes = data
+models.append(models[0].__class__(0, 0, 0))  # we add first a dummy model (0,0,0) ; we get the class of the used named tuples to build a new one
 powers, sizes, costs = zip(*models)
 cardPowers, cardDemands = zip(*cardTypes)
+nModels, nTypes = len(models), len(cardTypes)
 
 table = {(i, powers[i], sizes[i], costs[i]) for i in range(nModels)}
 
@@ -51,6 +49,10 @@ minimize(
     Sum(c)
 )
 
+
+# Note that:
+
+# a) the introduced dummy model is not saved when using the option -dataexport because here we don't modify data.rackModels
 
 # models = [{'power': 0, 'nConnectors': 0, 'price': 0}] + models
 # [model.power for model in models], [model.nConnectors for model in models], [model.price for model in models]

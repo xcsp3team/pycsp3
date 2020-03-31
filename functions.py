@@ -823,5 +823,5 @@ def cp_array(l):
 #    return [(i, *v) if isinstance(v, (tuple, list)) else (i, v) for i, v in enumerate(l)]
 
 
-def _pycharm_security():
+def _pycharm_security():  # for avoiding that imports are removed when reformatting code
     _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, columns, namedtuple)

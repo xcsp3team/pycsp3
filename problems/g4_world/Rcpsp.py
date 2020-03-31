@@ -1,19 +1,15 @@
 from pycsp3 import *
 
 """
- Problem 061 at CSPLib
+ Problem 061 on CSPLib
 """
 
-horizon = data.horizon
-capacities = data.resourceCapacities
-jobs, nJobs = data.jobs, len(data.jobs)
+horizon, capacities, jobs = data
+nJobs = len(jobs)
 
 
 def cumulative_for(k):
-    indexes = [i for i in range(nJobs) if jobs[i].requiredQuantities[k] > 0]
-    origins = [s[i] for i in indexes]
-    lengths = [jobs[i].duration for i in indexes]
-    heights = [jobs[i].requiredQuantities[k] for i in indexes]
+    origins, lengths, heights = zip(*[(s[i], duration, quantities[k]) for i, (duration, _, quantities) in enumerate(jobs) if quantities[k] > 0])
     return Cumulative(origins=origins, lengths=lengths, heights=heights)
 
 
@@ -31,3 +27,15 @@ satisfy(
 minimize(
     s[- 1]
 )
+
+
+# Note that:
+
+# a) using zip is compacter than writing something like:
+#   indexes = [i for i in range(nJobs) if jobs[i].requiredQuantities[k] > 0]
+#   origins = [s[i] for i in indexes]
+#   lengths = [jobs[i].duration for i in indexes]
+#   heights = [jobs[i].requiredQuantities[k] for i in indexes]
+
+# b) using namedtuple facility allows us to get directly fields of the tuples. Instead, we could write:
+#   origins, lengths, heights = zip(*[(s[i], job.duration, job.requiredQuantities[k]) for i, job in enumerate(jobs) if job.requiredQuantities[k] > 0])

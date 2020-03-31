@@ -83,8 +83,8 @@ xcsp = (Tester(NAME)
         .add("Rack2", data="Rack_r2b.json")  # optimum 1100
         .add("RadarSurveillance", data="RadarSurveillance_8-24-3-2-00.json")
         .add("Rcpsp", data="Rcpsp_j30-01-01.json")
-        .add("Rlfap", data="Rlfap_card-scen-04.json", variant="card")
-        .add("Rlfap", data="Rlfap_span-scen-05.json", variant="span")
+        .add("Rlfap", data="Rlfap_card-scen-04.json", variant="card")  # optimum 46
+        .add("Rlfap", data="Rlfap_span-scen-05.json", variant="span")  # optimum 792
         .add("SchedulingFS", data="Taillard-fs-020-05-1.json")
         .add("SchedulingFS", data="SchedulingFS-Taillard-os-04-04-0.json")
         .add("SchedulingJS", data="Taillard-js-015-15-1.json")
