@@ -8,32 +8,26 @@ from pycsp3 import *
  Instances of this problem follow the description given by the Swedish Institute of Computer Science (SICS).
 """
 
-mapSize, maxCoverage = data.mapSize, data.maxCoverage
-radars = data.radars
-insignificantCells = data.insignificantCells
+mapSize, maxCoverage, radars, insignificantCells = data
+nRadars = len(radars)
 
 
 class Sector(Enum):
-    NEAST = 0  # north east
-    EAST = 1
-    SEAST = 2  # south east
-    SWEST = 3  # south west
-    WEST = 4
-    NWEST = 5  # north west
+    NORTH_EAST, EAST, SOUTH_EAST, SOUTH_WEST, WEST, NORTH_WEST = range(6)
 
     def row_right_cell(self, i):
-        return i + (-1 if self in {Sector.NEAST, Sector.NWEST} else 0 if self in {Sector.EAST, Sector.WEST} else 1)
+        return i + (-1 if self in {Sector.NORTH_EAST, Sector.NORTH_WEST} else 0 if self in {Sector.EAST, Sector.WEST} else 1)
 
     def row_left_cell(self, i):
-        return i + (-1 if self in {Sector.NEAST, Sector.EAST} else 0 if self in {Sector.SEAST, Sector.NWEST} else 1)
+        return i + (-1 if self in {Sector.NORTH_EAST, Sector.EAST} else 0 if self in {Sector.SOUTH_EAST, Sector.NORTH_WEST} else 1)
 
     def col_right_cell(self, i, j):
         ro = 0 if i % 2 == 1 else 1
-        return j + (1 if self == Sector.EAST else -1 if self == Sector.WEST else ro if self in {Sector.NEAST, Sector.SEAST} else ro - 1)
+        return j + (1 if self == Sector.EAST else -1 if self == Sector.WEST else ro if self in {Sector.NORTH_EAST, Sector.SOUTH_EAST} else ro - 1)
 
     def col_left_cell(self, i, j):
         ro = 0 if i % 2 == 1 else 1
-        return j + (1 if self == Sector.SEAST else -1 if self == Sector.NWEST else ro if self in {Sector.EAST, Sector.SWEST} else ro - 1)
+        return j + (1 if self == Sector.SOUTH_EAST else -1 if self == Sector.NORTH_WEST else ro if self in {Sector.EAST, Sector.SOUTH_WEST} else ro - 1)
 
     def distance(self, i, j, k, l, curr_distance):
         if curr_distance > maxCoverage:
@@ -41,9 +35,7 @@ class Sector(Enum):
         if (i, j) == (k, l):
             return curr_distance
         d = self.distance(i, j, self.row_right_cell(k), self.col_right_cell(k, l), curr_distance + 1)
-        if d != -1:
-            return d
-        return self.distance(i, j, self.row_left_cell(k), self.col_left_cell(k, l), curr_distance + 1)
+        return d if d != -1 else self.distance(i, j, self.row_left_cell(k), self.col_left_cell(k, l), curr_distance + 1)
 
 
 def cell_constraint(i, j):
@@ -64,7 +56,7 @@ def cell_constraint(i, j):
 
 
 # x[i][j] is the power of the ith radar in the jth sector
-x = VarArray(size=[len(radars), len(Sector)], dom=range(maxCoverage + 1))
+x = VarArray(size=[nRadars, len(Sector)], dom=range(maxCoverage + 1))
 
 satisfy(
     cell_constraint(i, j) for i in range(mapSize) for j in range(mapSize)
