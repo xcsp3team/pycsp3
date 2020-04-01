@@ -606,6 +606,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 class ScalarProduct:
     def __init__(self, variables, coefficients):
         variables = list(variables) if isinstance(variables, tuple) else variables
+        coefficients = list(coefficients) if isinstance(coefficients, tuple) else coefficients
         assert isinstance(variables, list) and isinstance(coefficients, (int, list, range)), variables
         self.variables = flatten(variables)  # for example, in order to remove None occurrences
         self.coeffs = flatten([coefficients] * len(variables) if isinstance(coefficients, int) else coefficients)

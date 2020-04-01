@@ -1,6 +1,8 @@
 from pycsp3 import *
 
-# Problem 068 at CSPLib
+"""
+ Problem 068 on CSPLib
+"""
 
 predefinedVenues = data.predefinedVenues
 nTeams, nRounds = data.nTeams, data.nTeams - 1
