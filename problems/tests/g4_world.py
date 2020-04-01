@@ -97,11 +97,11 @@ xcsp = (Tester(NAME)
         .add("SteelMillSlab", data="SteelMillSlab_bench_2_0.json")
         .add("SteelMillSlab", data="SteelMillSlab_bench_2_0.json", variant="01")
         .add("Tal", data="Tal-frobserved-7-15-11-13-9-1-11-7-4_1.json")  # optimum 142
-        .add("TemplateDesign", data="TemplateDesign_catfood_2.json")
+        .add("TemplateDesign", data="TemplateDesign_catfood_2.json")  # optimum 2 ; java AbsCon TemplateDesign-catfood_2.xml -valh=Rand -p=SAC3 -sop
         .add("TemplateDesign", data="TemplateDesign_catfood_2.json", variant="aux")
-        .add("TravelingPurchaser", data="TravelingPurchaser-7-5-30-1.json")
-        .add("TravelingTournament", data="TravelingTournament_galaxy04.json", variant="a2")
-        .add("TravelingTournament", data="TravelingTournament_galaxy04.json", variant="a3")
+        .add("TravelingPurchaser", data="TravelingPurchaser-7-5-30-1.json")  # optimum 124
+        .add("TravelingTournament", data="TravelingTournament_galaxy04.json", variant="a2")  # optimum 517
+        .add("TravelingTournament", data="TravelingTournament_galaxy04.json", variant="a3")  # optimum 416
         .add("TravelingTournamentWithPredefinedVenues", data="Ttppv_circ8bbal.json", variant="a2")
         .add("TravelingTournamentWithPredefinedVenues", data="Ttppv_circ8bbal.json", variant="a3")
         .add("Vrp", data="Vrp_P-n16-k8.json")

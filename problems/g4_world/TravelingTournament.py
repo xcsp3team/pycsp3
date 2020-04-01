@@ -1,5 +1,9 @@
 from pycsp3 import *
 
+"""
+ See https://www.researchgate.net/publication/220270875_The_Traveling_Tournament_Problem_Description_and_Benchmarks
+"""
+
 distances = data.distances
 nTeams, nRounds = len(distances), len(distances) * 2 - 2
 assert nTeams % 2 == 0, "An even number of teams is expected"
@@ -11,7 +15,7 @@ def table_end(i):
     return {(1, ANY, 0)} | {(0, j, distances[i][j]) for j in range(nTeams) if j != i}
 
 
-def table_other(i):
+def table_intern(i):
     return ({(1, 1, ANY, ANY, 0)} |
             {(0, 1, j, ANY, distances[i][j]) for j in range(nTeams) if j != i} |
             {(1, 0, ANY, j, distances[i][j]) for j in range(nTeams) if j != i} |
@@ -26,12 +30,10 @@ def automaton():
     return Automaton(start="q", final=fi2 if variant("a2") else fi2 | fi3, transitions=tr2 if variant("a2") else tr2 + tr3)
 
 
-automaton = automaton()
-
-#  o[i][k] is the opponent (team) of the ith team  at the kth round
+# o[i][k] is the opponent (team) of the ith team  at the kth round
 o = VarArray(size=[nTeams, nRounds], dom=range(nTeams))
 
-#  h[i][k] is 1 iff the ith team plays at home at the kth round
+# h[i][k] is 1 iff the ith team plays at home at the kth round
 h = VarArray(size=[nTeams, nRounds], dom={0, 1})
 
 # a[i][k] is 0 iff the ith team plays away at the kth round
@@ -55,7 +57,7 @@ satisfy(
     [h[o[i][k]][k] == a[i][k] for i in range(nTeams) for k in range(nRounds)],
 
     # playing against the same team must be done once at home and once away
-    [imply(o[i][k1] == o[i][k2], h[i][k1] != h[i][k2]) for i in range(nTeams) for k1 in range(nRounds) for k2 in range(k1 + 2, nRounds)],
+    [imply(o[i][k1] == o[i][k2], h[i][k1] != h[i][k2]) for i in range(nTeams) for k1, k2 in combinations(range(nRounds), 2)],
 
     # at each round, opponents are all different  tag(redundant-constraints)
     [AllDifferent(o[:, k]) for k in range(nRounds)],
@@ -64,7 +66,7 @@ satisfy(
     o[0][0] < o[0][- 1],
 
     # at most 'nConsecutiveGames' consecutive games at home, or consecutive games away
-    [h[i] in automaton for i in range(nTeams)],
+    [h[i] in automaton() for i in range(nTeams)],
 
     # handling travelling for the first game
     [(h[i][0], o[i][0], t[i][0]) in table_end(i) for i in range(nTeams)],
@@ -73,7 +75,7 @@ satisfy(
     [(h[i][- 1], o[i][- 1], t[i][-1]) in table_end(i) for i in range(nTeams)],
 
     # handling travelling for two successive games
-    [(h[i][k], h[i][k + 1], o[i][k], o[i][k + 1], t[i][k + 1]) in table_other(i) for i in range(nTeams) for k in range(nRounds - 1)]
+    [(h[i][k], h[i][k + 1], o[i][k], o[i][k + 1], t[i][k + 1]) in table_intern(i) for i in range(nTeams) for k in range(nRounds - 1)]
 
 )
 
@@ -81,5 +83,3 @@ minimize(
     # minimizing summed up travelled distance
     Sum(t)
 )
-
-# TODO changer en channel ? (chriss)

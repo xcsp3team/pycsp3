@@ -34,8 +34,6 @@ def automaton():
     return Automaton(start="q", final=fi2 if variant("a2") else fi2 | fi3, transitions=tr2 if variant("a2") else tr2 + tr3)
 
 
-automaton = automaton()
-
 # o[i][k] is the opponent (team) of the ith team  at the kth round
 o = VarArray(size=[nTeams, nRounds], dom=range(nTeams))
 
@@ -59,7 +57,7 @@ satisfy(
     [AllDifferent(row) for row in o],
 
     # at most 'nConsecutiveGames' consecutive games at home, or consecutive games away
-    [h[i] in automaton for i in range(nTeams)],
+    [h[i] in automaton() for i in range(nTeams)],
 
     # handling travelling for the first game
     [(h[i][0], o[i][0], t[i][0]) in table_end(i) for i in range(nTeams)],

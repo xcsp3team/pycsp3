@@ -1,8 +1,11 @@
 from pycsp3 import *
 
-# similar model (called ttp) proposed by Kathryn Francis for the 2012 Minizinc Competition
+"""
+ See, e.g., "Solving the asymmetric traveling purchaser problem" by J. Riera-Ledesma, J. Salazar González, Annals OR 144(1): 83-97 (2006)
+ Similar model (called ttp) proposed by Kathryn Francis for the 2012 Minizinc Competition
+"""
 
-distances, prices = data.cityDistances, data.productPrices
+distances, prices = data
 nCities, nProducts = len(distances), len(prices)
 
 # s[i] is the city succeeding to the ith city (itself if not part of the route)

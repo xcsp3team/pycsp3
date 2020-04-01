@@ -1,8 +1,6 @@
 from pycsp3 import *
 import math
 
-print(data)
-
 maxArity, maxHeight, sentence, grammar, tokens, costs = data
 nWords, nLevels, nTokens = len(sentence), len(sentence) * 2, len(tokens)
 lengths = [nWords] + [nWords - math.floor((i + 1) / 2) + 1 for i in range(1, nLevels)]
