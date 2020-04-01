@@ -1,19 +1,23 @@
 from pycsp3 import *
 from math import ceil, floor
 
-nSlots = data.nSlots
-nTemplates = nVariations = len(data.demands)
+"""
+ See Problem 002 on CSPLib
+"""
+
+nSlots, demands = data
+nTemplates = nVariations = len(demands)
 
 
 def variation_interval(v):
-    return range(ceil(data.demands[v] * 0.95), floor(data.demands[v] * 1.1) + 1)
+    return range(ceil(demands[v] * 0.95), floor(demands[v] * 1.1) + 1)
 
 
 # d[i][j] is the number of occurrences of the jth variation on the ith template
 d = VarArray(size=[nTemplates, nVariations], dom=range(nSlots + 1))
 
 # p[i] is the number of printings of the ith template
-p = VarArray(size=nTemplates, dom=range(max(data.demands) + 1))
+p = VarArray(size=nTemplates, dom=range(max(demands) + 1))
 
 satisfy(
     # all slots of all templates are used
