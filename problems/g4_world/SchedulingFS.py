@@ -1,8 +1,12 @@
 from pycsp3 import *
 
+"""
+ See https://en.wikipedia.org/wiki/Flow_shop_scheduling
+"""
+
 durations = data.durations  # durations[i][j] is the duration of operation/machine j for job i
-n, m = len(durations), len(durations[0])
 horizon = sum(sum(t) for t in durations) + 1
+n, m = len(durations), len(durations[0])
 
 # s[i][j] is the start time of the jth operation for the ith job
 s = VarArray(size=[n, m], dom=range(horizon))

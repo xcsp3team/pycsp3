@@ -6,7 +6,7 @@ from pycsp3 import *
 
 domains, variables, constraints, interferenceCosts, mobilityCosts = data
 domains = [domains[variable.domain] for variable in variables]  # we skip the indirection
-d = dict((variable.number, i) for i, variable in enumerate(variables))  # dictionary to get variables (their indexes) from their numbers
+d = dict((variable.number, i) for i, variable in enumerate(variables))  # dictionary to get variables (their indexes) from their original numbers
 n = len(variables)
 
 
@@ -17,43 +17,27 @@ def hard(x, y, eq, k):
 # f[i] is the frequency of the ith radio link
 f = VarArray(size=n, dom=lambda i: set(domains[i]))
 
-if variant("span") or variant("card"):  # all constraints are considered to be hard for these problems
-    satisfy(
-        #  managing pre-assigned frequencies
-        [f[d[nb]] == v for (nb, _, v, _) in variables if v],
+satisfy(
+    #  managing pre-assigned frequencies
+    [f[d[num]] == val for (num, _, val, mob) in variables if val and not (variant("max") and mob)],
 
-        # hard constraints on radio-links
-        [abs(f[d[nb1]] - f[d[nb2]]) == k if eq else abs(f[d[nb1]] - f[d[nb2]]) > k for (nb1, nb2, eq, k, _) in constraints]
-    )
+    # hard constraints on radio-links
+    [hard(f[d[num1]], f[d[num2]], eq, k) for (num1, num2, eq, k, wgt) in constraints if not (variant("max") and wgt)]
+)
 
 if variant("span"):
     minimize(
         # minimizing the largest frequency
         Maximum(f)
     )
-
-if variant("card"):
+elif variant("card"):
     minimize(
         # minimizing the number of used frequencies
         NValues(f)
     )
-
-if variant("max"):
-    satisfy(
-        #  managing pre-assigned frequencies
-        [f[d[nb]] == v for (nb, _, v, mobility) in variables if v and not mobility],
-
-        # hard constraints on radio-links
-        [hard(f[d[nb1]], f[d[nb2]], eq, k) for (nb1, nb2, eq, k, weight) in constraints if not weight]
-
-    )
-
+elif variant("max"):
     minimize(
         # minimizing the sum of violation costs
-        Sum(ift(f[d[nb]] == v, 0, mobilityCosts[mobility]) for (nb, _, v, mobility) in variables if v and mobility)
-        + Sum(ift(hard(f[d[nb1]], f[d[nb2]], eq, k), 0, interferenceCosts[weight]) for (nb1, nb2, eq, k, weight) in constraints if weight)
+        Sum(ift(f[d[num]] == val, 0, mobilityCosts[mob]) for (num, _, val, mob) in variables if val and mob)
+        + Sum(ift(hard(f[d[num1]], f[d[num2]], eq, k), 0, interferenceCosts[wgt]) for (num1, num2, eq, k, wgt) in constraints if wgt)
     )
-
-
-
-# [abs(f[d[nb1]] - f[d[nb2]]) == k if eq else abs(f[d[nb1]] - f[d[nb2]]) > k for (nb1, nb2, eq, k, weight) in constraints if not weight]

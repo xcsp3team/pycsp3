@@ -1,17 +1,10 @@
 from pycsp3 import *
 import math
 
-maxArity = data.maxArity
-maxHeight = data.maxHeight
-sentence = data.sentence
-grammar = data.grammar  # grammar[i] gives the grammar tuples of arity i
-tokens = data.tokens
-costs = data.costs
+print(data)
 
-nWords = len(sentence)
-nLevels = nWords * 2
-nTokens = len(tokens)
-
+maxArity, maxHeight, sentence, grammar, tokens, costs = data
+nWords, nLevels, nTokens = len(sentence), len(sentence) * 2, len(tokens)
 lengths = [nWords] + [nWords - math.floor((i + 1) / 2) + 1 for i in range(1, nLevels)]
 
 # c[i][j] is the cost of the jth word at the ith level

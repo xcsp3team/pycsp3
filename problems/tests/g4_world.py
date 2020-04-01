@@ -85,17 +85,18 @@ xcsp = (Tester(NAME)
         .add("Rcpsp", data="Rcpsp_j30-01-01.json")
         .add("Rlfap", data="Rlfap_card-scen-04.json", variant="card")  # optimum 46
         .add("Rlfap", data="Rlfap_span-scen-05.json", variant="span")  # optimum 792
+        .add("Rlfap", data="Rlfap_max-graph-05.json", variant="max")  # optimum 221  (use -ub=222 with AbsCon to prove it)
+        .add("SchedulingFS", data="SchedulingFS-Taillard-os-04-04-0.json")  # optimum 302
         .add("SchedulingFS", data="Taillard-fs-020-05-1.json")
-        .add("SchedulingFS", data="SchedulingFS-Taillard-os-04-04-0.json")
-        .add("SchedulingJS", data="Taillard-js-015-15-1.json")
         .add("SchedulingJS", data="Sadeh-js-e0ddr1-0.json")
+        .add("SchedulingJS", data="Taillard-js-015-15-1.json")
         .add("SchedulingOS", data="Taillard-os-05-05-1.json")
         .add("SchedulingOS", data="GP-os-01.json")
-        .add("SolitaireBattleship", data="SolitaireBattleship_sb-12-12-5-0.json")  # 54 solutions
-        .add("SolitaireBattleship", data="SolitaireBattleship-battleship_instances-00113.json")
+        .add("SolitaireBattleship", data="SolitaireBattleship_sb-12-12-5-0.json")  # 51 solutions
+        .add("SolitaireBattleship", data="SolitaireBattleship-battleship_instances-00113.json")  # 1 solution
         .add("SteelMillSlab", data="SteelMillSlab_bench_2_0.json")
         .add("SteelMillSlab", data="SteelMillSlab_bench_2_0.json", variant="01")
-        .add("Tal", data="Tal-frobserved-7-15-11-13-9-1-11-7-4_1.json")
+        .add("Tal", data="Tal-frobserved-7-15-11-13-9-1-11-7-4_1.json")  # optimum 142
         .add("TemplateDesign", data="TemplateDesign_catfood_2.json")
         .add("TemplateDesign", data="TemplateDesign_catfood_2.json", variant="aux")
         .add("TravelingPurchaser", data="TravelingPurchaser-7-5-30-1.json")
