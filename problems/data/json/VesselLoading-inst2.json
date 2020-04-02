@@ -1,0 +1,19 @@
+{
+    "deckWidth": 16,
+    "deckHeight": 16,
+    "containers" : [
+	{"width": 6, "height": 8, "type": 0},
+	{"width": 4, "height": 6, "type": 0},
+	{"width": 4, "height": 4, "type": 0},
+	{"width": 4, "height": 4, "type": 1},
+	{"width": 4, "height": 4, "type": 1},
+	{"width": 4, "height": 6, "type": 1},
+	{"width": 4, "height": 8, "type": 2},
+	{"width": 4, "height": 8, "type": 2},
+	{"width": 4, "height": 6, "type": 2},
+	{"width": 4, "height": 6, "type": 2}
+    ],
+    "separations": [
+	{ "type1": 1, "type2": 2, "distance": 2} 
+    ]
+}

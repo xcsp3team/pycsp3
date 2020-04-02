@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 032 on CSPLib
 """
 
-n, m = data.n, data.m
+n, m = data
 
 if not variant():
     table = {(v, 0) for v in range(9) if v != 3} | {(2, 1), (3, 1)}

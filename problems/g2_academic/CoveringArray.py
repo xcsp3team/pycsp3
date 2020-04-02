@@ -8,7 +8,7 @@ from math import factorial
  (because the first t-combination is for the first t lines)
 """
 
-t, k, g, b = data.t, data.k, data.g, data.b
+t, k, g, b = data
 n = factorial(k) // factorial(t) // factorial(k - t)
 d = g ** t
 

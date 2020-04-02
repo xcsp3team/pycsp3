@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 003 on CSPLib
 """
 
-n = data.n
+n = data
 
 #  x[i][j] is the value at row i and column j of the quasi-group
 x = VarArray(size=[n, n], dom=range(n))

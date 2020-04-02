@@ -4,8 +4,7 @@ from pycsp3 import *
  Problem 024 on CSPLib
 """
 
-k = data.k  # number of occurrences for a value
-n = data.n  # number of values
+k, n = data  # k is the number of occurrences for a value -- n is the number of values
 
 # x[i][j] is the position in the sequence of the ith occurrence of j+1
 x = VarArray(size=[k, n], dom=range(k * n))

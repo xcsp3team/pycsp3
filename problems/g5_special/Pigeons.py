@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-n = data.n  # number of pigeons
+n = data  # number of pigeons
 
 # p[i] is the hole where is put the ith pigeon
 p = VarArray(size=n, dom=range(n - 1))

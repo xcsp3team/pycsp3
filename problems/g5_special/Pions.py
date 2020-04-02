@@ -1,8 +1,7 @@
 from pycsp3 import *
 
 
-n = data.n  # board size
-p = data.p  # number of pions
+n, p = data  # n is the board size -- p is the number of pions
 
 x = VarArray(size=p, dom=range(n * n))
 

@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 054 on CSPLib
 """
 
-n = data.n
+n = data
 
 # q[i] is the column where is put the ith queen (at row i)
 q = VarArray(size=n, dom=range(n))

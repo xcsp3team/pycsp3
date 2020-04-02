@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 026 on CSPLib
 """
 
-nTeams = data.nTeams
+nTeams = data
 nWeeks, nPeriods, nMatches = nTeams - 1, nTeams // 2, (nTeams - 1) * nTeams // 2
 
 

@@ -1,15 +1,17 @@
 from pycsp3 import *
 
-cost = data.fixedCost  # for each open warehouse
-capacities = data.warehouseCapacities
-costs = data.storeSupplyCosts
+"""
+ See Problem 034 on CSPLib
+"""
+
+cost, capacities, costs = data  # cost is the fixed cost when opening a warehouse
 nWarehouses, nStores = len(capacities), len(costs)
 
 # w[i] is the warehouse supplying the ith store
 w = VarArray(size=nStores, dom=range(nWarehouses))
 
 # c[i] is the cost of supplying the ith store
-c = VarArray(size=nStores, dom=lambda i: set(costs[i]))
+c = VarArray(size=nStores, dom=lambda i: costs[i])
 
 # o[j] is 1 if the jth warehouse is open
 o = VarArray(size=nWarehouses, dom={0, 1})

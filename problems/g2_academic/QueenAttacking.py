@@ -14,7 +14,7 @@ def primes(limit):
     return [2] + [i for i in range(3, limit, 2) if sieve[i]]
 
 
-n = data.n
+n = data
 primes = primes(n * n)
 m = len(primes)
 

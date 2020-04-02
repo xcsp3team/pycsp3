@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-n = data.n
+n = data
 k, m = n, n  # k : Number of times round the loop ; m : m^2 propagators per change of loop ; n : Number of iterations of change per loop
 
 x = VarArray(size=m + 1, dom=range(k * n + 1))

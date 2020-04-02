@@ -7,7 +7,7 @@ from pycsp3 import *
  With 3 colours, the problem has a solution if n < 17.
 """
 
-n = data.n
+n = data
 
 # x[i][j] is the color of the edge between nodes i and j
 x = VarArray(size=[n, n], dom=lambda i, j: range((n * (n - 1)) // 2) if i < j else None)

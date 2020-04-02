@@ -4,7 +4,7 @@ from pycsp3 import *
  See Ian P. Gent, Christopher Jefferson, Ian Miguel: Watched Literals for Constraint Propagation in Minion. CP 2006: 182-197
 """
 
-n = data.n
+n = data
 
 # v[i] is the ith value of the Langford's sequence
 v = VarArray(size=2 * n, dom=range(1, n + 1))

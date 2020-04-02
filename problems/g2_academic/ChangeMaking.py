@@ -4,7 +4,7 @@ from pycsp3 import *
  See https://en.wikipedia.org/wiki/Change-making_problem
 """
 
-k = data.amount
+k = data
 
 if not variant():
     # c1 is the number of coins of 1 cent

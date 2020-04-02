@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-order, nQueens, nPions= data.order, data.nQueens, data.nPions
+order, nQueens, nPions= data
 
 q = VarArray(size=nQueens, dom=range(order))
 

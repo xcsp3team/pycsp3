@@ -4,13 +4,13 @@
       <domain for="x[0][0] x[1][1] x[2][2] x[3][3] x[4][4] x[5][5] x[6][6] x[7][7] x[8][8] x[9][9] x[10][10] x[11][11] x[12][12] x[13][13] x[14][14] x[15][15]"> 0 </domain>
       <domain for="x[0][1..15] x[1][0] x[1][2..15] x[2][0..1] x[2][3..15] x[3][0..2] x[3][4..15] x[4][0..3] x[4][5..15] x[5][0..4] x[5][6..15] x[6][0..5] x[6][7..15] x[7][0..6] x[7][8..15] x[8][0..7] x[8][9..15] x[9][0..8] x[9][10..15] x[10][0..9] x[10][11..15] x[11][0..10] x[11][12..15] x[12][0..11] x[12][13..15] x[13][0..12] x[13][14..15] x[14][0..13] x[14][15] x[15][0..14]"> 0 1 </domain>
     </array>
-    <array id="u" note="u[i] is the load of vehicle after visiting node i (used for subtour elimination)" size="[16]">
+    <array id="u" note="u[i] is the vehicle load after visiting the ith node (used for subtour elimination)" size="[16]">
       <domain for="u[0]"> 0 </domain>
       <domain for="u[1..15]"> 0..35 </domain>
     </array>
   </variables>
   <constraints>
-    <group note="exactly one incoming arc for each node j other than depot (node 0)">
+    <group note="exactly one incoming arc for each node j other than the depot (node 0)">
       <count>
         <list> %... </list>
         <values> 1 </values>
@@ -32,7 +32,7 @@
       <args> x[][14] </args>
       <args> x[][15] </args>
     </group>
-    <group note="exactly one outgoing arc for each node i other than depot (node 0)">
+    <group note="exactly one outgoing arc for each node i other than the depot (node 0)">
       <count>
         <list> %... </list>
         <values> 1 </values>
@@ -271,7 +271,7 @@
       <args> u[15] u[13] x[15][13] 29 </args>
       <args> u[15] u[14] x[15][14] 16 </args>
     </group>
-    <group>
+    <group note="satisfying demand at each node">
       <intension> ge(%0,%1) </intension>
       <args> u[1] 19 </args>
       <args> u[2] 30 </args>

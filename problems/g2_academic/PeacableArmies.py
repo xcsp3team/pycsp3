@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 110 on CSPLib
 """
 
-n = data.n  # order
+n = data
 
 if variant("m1"):
 

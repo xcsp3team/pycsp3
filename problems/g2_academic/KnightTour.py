@@ -4,7 +4,7 @@ from pycsp3 import *
  See https://en.wikipedia.org/wiki/Knight%27s_tour
 """
 
-n = data.n
+n = data
 
 # x[i] is the cell number where the ith knight is put
 x = VarArray(size=n * n, dom=range(n * n))

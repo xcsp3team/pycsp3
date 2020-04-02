@@ -1,7 +1,7 @@
 <instance format="XCSP3" type="COP">
   <variables>
     <array id="c" note="c[i] is the ith city of the tour" size="[10]"> 0..9 </array>
-    <array id="d" note="d[i] is the distance between the cities i and i+1" size="[10]"> 0 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 </array>
+    <array id="d" note="d[i] is the distance between the cities i and i+1 chosen in the tour" size="[10]"> 0 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 </array>
   </variables>
   <constraints>
     <allDifferent note="Visiting each city only once"> c[] </allDifferent>
@@ -23,6 +23,6 @@
     </group>
   </constraints>
   <objectives>
-    <minimize type="sum"> d[] </minimize>
+    <minimize note="minimizing the travelled distance" type="sum"> d[] </minimize>
   </objectives>
 </instance>

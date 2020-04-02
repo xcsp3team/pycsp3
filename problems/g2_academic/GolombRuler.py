@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 006 on CSPLib
 """
 
-n = data.n
+n = data
 ub = n * n + 1  # a trivial upper-bound of an optimal ruler length
 
 # x[i] is the position of the ith tick

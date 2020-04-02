@@ -102,12 +102,12 @@ xcsp = (Tester(NAME)
         .add("TravelingPurchaser", data="TravelingPurchaser-7-5-30-1.json")  # optimum 124
         .add("TravelingTournament", data="TravelingTournament_galaxy04.json", variant="a2")  # optimum 517
         .add("TravelingTournament", data="TravelingTournament_galaxy04.json", variant="a3")  # optimum 416
-        .add("TravelingTournamentWithPredefinedVenues", data="Ttppv_circ8bbal.json", variant="a2")
-        .add("TravelingTournamentWithPredefinedVenues", data="Ttppv_circ8bbal.json", variant="a3")
+        .add("TravelingTournamentWithPredefinedVenues", data="Ttppv_circ8bbal.json", variant="a2")  # optimum 94
+        .add("TravelingTournamentWithPredefinedVenues", data="Ttppv_circ8bbal.json", variant="a3")  # optimum 80
         .add("Vrp", data="Vrp_P-n16-k8.json")
-        .add("Warehouse", data="Warehouse_example.txt", prs_py="Warehouse_Parser", prs_jv="Warehouse_Parser")
-        .add("Wwtpp", data="Wwtpp_ex04400.json")
-        .add("Wwtpp", data="Wwtpp_ex04400.json", variant="short")
+        .add("Warehouse", data="Warehouse_example.txt", prs_py="Warehouse_Parser", prs_jv="Warehouse_Parser")  # optimum 383
+        .add("Wwtpp", data="Wwtpp_ex04400.json")  # unsat
+        .add("Wwtpp", data="Wwtpp_ex04400.json", variant="short")  # unsat
         )
 
 run(diff, same, xcsp)

@@ -4,7 +4,7 @@ from pycsp3 import *
  See https://www.researchgate.net/publication/220270875_The_Traveling_Tournament_Problem_Description_and_Benchmarks
 """
 
-distances = data.distances
+distances = data
 nTeams, nRounds = len(distances), len(distances) * 2 - 2
 assert nTeams % 2 == 0, "An even number of teams is expected"
 nConsecutiveGames = 2 if variant("a2") else 3  # used in one comment

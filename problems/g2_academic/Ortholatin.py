@@ -10,7 +10,7 @@ from pycsp3 import *
  There are orthogonal latin squares of any size except 1, 2, and 6.
 '''
 
-n = data.n
+n = data
 
 # x is the first Latin square
 x = VarArray(size=[n, n], dom=range(n))

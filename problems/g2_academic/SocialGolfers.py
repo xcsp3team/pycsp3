@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 010 on CSPLib
 """
 
-nGroups, size, nWeeks = data.nGroups, data.groupSize, data.nWeeks
+nGroups, size, nWeeks = data  # size is the size of the groups
 nPlayers = nGroups * size
 
 if not variant():

@@ -4,7 +4,7 @@ from pycsp3 import *
  See https://en.wikipedia.org/wiki/Open-shop_scheduling
 """
 
-durations = data.durations  # durations[i][j] is the duration of operation/machine j for job i
+durations = data  # durations[i][j] is the duration of operation/machine j for job i
 horizon = sum(sum(t) for t in durations) + 1
 n, m = len(durations), len(durations[0])
 

@@ -7,7 +7,7 @@ from pycsp3 import *
  See Tom Kelsey, Steve Linton, Colva M. Roney-Dougal: New Developments in Symmetry Breaking in Search Using Computational Group Theory. AISC 2004: 199-210.
 '''
 
-n = data.n
+n = data
 
 # x[i][j] is the color at row i and column j
 x = VarArray(size=[n, n], dom=range(n))

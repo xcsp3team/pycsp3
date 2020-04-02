@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 068 on CSPLib
 """
 
-predefinedVenues = data.predefinedVenues
+venues = data.predefinedVenues
 nTeams, nRounds = data.nTeams, data.nTeams - 1
 assert nTeams % 2 == 0, "an even number of teams is expected"
 nConsecutiveGames = 2 if variant("a2") else 3  # used in one comment
@@ -48,7 +48,7 @@ satisfy(
     [o[i][k] != i for i in range(nTeams) for k in range(nRounds)],
 
     # ensuring predefined venues  
-    [predefinedVenues[i][o[i][k]] == h[i][k] for i in range(nTeams) for k in range(nRounds)],
+    [venues[i][o[i][k]] == h[i][k] for i in range(nTeams) for k in range(nRounds)],
 
     # ensuring symmetry of games: if team i plays against j, then team j plays against i
     [o[:, k][o[i][k]] == i for i in range(nTeams) for k in range(nRounds)],

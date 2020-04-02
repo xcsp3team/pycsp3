@@ -5,7 +5,7 @@ from pycsp3 import *
  The four corners of any rectangle inside the board must not be assigned the same color.
 """
 
-n, m = data.nRows, data.nCols
+n, m = data
 
 # x[i][j] is the color at row i and column j
 x = VarArray(size=[n, m], dom=range(n * m))

@@ -1,22 +1,22 @@
 from pycsp3 import *
 
-nIndustries, nPeriods = data.nIndustries, data.nPeriods
-plantCapacity = data.plantCapacity
-tankFlow, tankCapacity = data.tankFlow, data.tankCapacity
-sd = data.sd  # schedule flow of discharge
-spans = data.spans
+"""
+ See "Solving the Wastewater Treatment Plant Problem with SMT", by Miquel Bofill, Víctor Muñoz, Javier Murillo. CoRR abs/1609.05367 (2016)
+"""
+
+nIndustries, nPeriods, plantCapacity, tankFlow, tankCapacity, sd, spans = data  # sd for schedule flow of discharge
 
 
-def compatibility(i, j):
-    scp = [d[i][j], b[i][j - 1]]
+def table_compatibility(i, j):
     if j in {nPeriods - 1, nPeriods} or (j - 1 == 0 and sd[i][0] == 0):
-        return scp in [(0, 0)]
-    flow, capacity = tankFlow[i], tankCapacity[i]
-    table = [(0, ANY)] + [(flow, v) for v in range(flow, capacity + 1)] + [(v, v) for v in range(1, min(flow, capacity + 1))]
-    if not variant():
-        return scp in to_ordinary_table(table, [flow + 1, capacity + 1])
-    elif variant("short"):
-        return scp in table
+        return {(0, 0)}
+    tf, tc = tankFlow[i], tankCapacity[i]
+    tbl = {(0, ANY)} | {(tf, v) for v in range(tf, tc + 1)} | {(v, v) for v in range(1, min(tf, tc + 1))}
+    return tbl if variant("short") else to_ordinary_table(tbl, [tf + 1, tc + 1])
+
+
+def table_spanning(i, start, stop):
+    return {tuple([0] * (stop - start)), tuple(sd[i][start:stop])}
 
 
 # b[i][j] is the flow stored in buffer i at the end of period j
@@ -39,9 +39,16 @@ satisfy(
     [[b[i][j], b[i][j - 1], d[i][j], c[i][j]] * ([1, -1, 1] + ([1] if c[i][j] else [])) == sd[i][j] for i in range(nIndustries) for j in
      range(1, nPeriods)],
 
-    #  ensuring compatibility between stored and discharge flows
-    [compatibility(i, j) for i in range(nIndustries) for j in range(1, nPeriods)],
+    # ensuring compatibility between stored and discharge flows
+    [(d[i][j], b[i][j - 1]) in table_compatibility(i, j) for i in range(nIndustries) for j in range(1, nPeriods)],
 
     # spanning constraints
-    [c[i][start:end] in {tuple([0] * (end - start)), tuple(sd[i][start:end])} for (i, start, end) in spans]
+    [c[i][start:stop] in table_spanning(i, start, stop) for (i, start, stop) in spans]
 )
+
+
+# Note that:
+
+# a) when managing scheduled discharge flows, we have a list with four cells for variables and list with three or four integers.
+# However, when there are only three integers, it means that the fourth cell for variables contains None. Consequently,
+# the list will be automatically reduced to three cells.

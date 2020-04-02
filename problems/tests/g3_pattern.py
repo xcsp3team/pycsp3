@@ -135,13 +135,14 @@ xcsp = (Tester(NAME)
         .add("Sonet", data="Sonet_sonet3-4.json")
         .add("StripPacking", data="StripPacking_C1P1.json")
         .add("Subisomorphism", data="Subisomorphism_A-01.json")
-        .add("Sudoku", data="[9,None]")
-        .add("Sudoku", data="Sudoku_s13a.json")
-        .add("Sudoku", data="Sudoku_s13a.json", variant="table")
+        .add("Sudoku", data="[9,None]")  # None can be replaced by null (but not by an empty string in this context)
+        .add("Sudoku", data="Sudoku_s13a.json")  # 1 solution
+        .add("Sudoku", data="Sudoku_s13a.json", variant="table")  # 1 solution
         .add("Sudoku", data="Sudoku_example.txt", prs_py="Sudoku_Parser", prs_jv="Sudoku_Parser")
-        .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json")
-        .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json", variant="table")
+        .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json")  # optimum 47
+        .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json", variant="table")  # optimum 47
         .add("VesselLoading", data="VesselLoading-inst1.json")  # 8 solutions
+        .add("VesselLoading", data="VesselLoading-inst2.json")
         )
 
 run(diff, same, xcsp)
