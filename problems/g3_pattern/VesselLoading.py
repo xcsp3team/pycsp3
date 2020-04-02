@@ -4,11 +4,14 @@ from pycsp3 import *
   Problem 008 on CSPLib
 """
 
-deckWidth, deckHeight = data.deckWidth, data.deckHeight
-containers, nContainers = data.containers, len(data.containers)
+deckWidth, deckHeight, containers, separations = data
+nContainers = len(containers)
 
-groups = [[i for i, container in enumerate(containers) if container.type == k] for k in range(max(container.type for container in containers) + 1)]
-sep_pairs = [(i, j, separation.distance) for separation in data.separations for i in groups[separation.type1] for j in groups[separation.type2]]
+
+def sep_pairs():
+    groups = [[i for i, container in enumerate(containers) if container.type == k] for k in range(max(container.type for container in containers) + 1)]
+    return [(i, j, distance) for (type1, type2, distance) in separations for i in groups[type1] for j in groups[type2]]
+
 
 # x[i] is the x-coordinate of the ith container
 x = VarArray(size=nContainers, dom=range(deckWidth))
@@ -39,5 +42,5 @@ satisfy(
     NoOverlap(origins=[(x[i], y[i]) for i in range(nContainers)], lengths=[(w[i], h[i]) for i in range(nContainers)]),
 
     # respecting separations between containers according to their types
-    [(x[i] + w[i] + sep <= x[j]) | (x[j] + w[j] + sep <= x[i]) | (y[i] + h[i] + sep <= y[j]) | (y[j] + h[j] + sep <= y[i]) for (i, j, sep) in sep_pairs]
+    [(x[i] + w[i] + sep <= x[j]) | (x[j] + w[j] + sep <= x[i]) | (y[i] + h[i] + sep <= y[j]) | (y[j] + h[j] + sep <= y[i]) for (i, j, sep) in sep_pairs()]
 )

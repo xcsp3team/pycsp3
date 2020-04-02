@@ -4,8 +4,7 @@ from pycsp3 import *
  Problem 053 on CSPLib
 """
 
-k = data.k  # size of each clique K (number of nodes)
-p = data.p  # size of each path P (or equivalently, number of cliques)
+k, p = data  # k is the size of each clique K (number of nodes) -- p is the size of each path P (or equivalently, number of cliques)
 nEdges = int(((k * (k - 1)) * p) / 2 + k * (p - 1))
 
 # cn[i][j] is the color of the jth node of the ith clique

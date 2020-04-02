@@ -8,7 +8,7 @@ from pycsp3 import *
  - 148 and 104 solutions for the main and aux variants otherwise
 """
 
-n = data.n
+n = data
 
 # x[i] is the ith note of the series
 x = VarArray(size=n, dom=range(n))

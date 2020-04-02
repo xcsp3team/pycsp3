@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 023 on CSPLib
 """
 
-n, s = data.n, data.s
+n, s = data
 gap = 3 * n * n - 3 * n + 1
 sum_gap = sum(range(s, s + gap))
 assert sum_gap % (2 * n - 1) == 0, "No magic hexagon for order=" + str(n) + " and start=" + str(s)

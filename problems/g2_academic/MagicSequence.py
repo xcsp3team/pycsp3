@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 019 on CSPLib
 """
 
-n = data.n
+n = data
 
 # x[i] is the ith value of the sequence
 x = VarArray(size=n, dom=range(n))

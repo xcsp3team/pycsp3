@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-n, k = data.n, data.k
+n, k = data
 limit = (n * (n * n + 1)) // 2
 
 x = VarArray(size=[n, n], dom=range(1, n * n + 1))

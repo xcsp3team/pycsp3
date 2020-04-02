@@ -1,7 +1,8 @@
 from pycsp3 import *
 from pycsp3.tools.utilities import value_in_base
 
-nDisks, nTowers = data.nDisks, 3
+nDisks = data
+nTowers = 3
 nStates, nSteps = nTowers ** nDisks, 2 ** nDisks - 1
 
 x = VarArray(size=nSteps - 1, dom=range(nStates))

@@ -8,7 +8,7 @@ from pycsp3 import *
  each of them having 3 literals.
 """
 
-n = data.n
+n = data
 
 table1 = {(0, 0, 1), (0, 1, 0), (1, 0, 0), (1, 1, 1)}
 table2 = {(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)}

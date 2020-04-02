@@ -6,8 +6,9 @@ from pycsp3 import *
      "Dominoes as a Constraint Problem" by Helmut Simonis
 """
 
-nRows, nCols, nValues = len(data.grid), len(data.grid[0]), len(data.grid)
-positions = [[i * nCols + j for i in range(nRows) for j in range(nCols) if data.grid[i][j] == value] for value in range(nValues)]
+grid = data
+nRows, nCols, nValues = len(grid), len(grid[0]), len(grid)
+positions = [[i * nCols + j for i in range(nRows) for j in range(nCols) if grid[i][j] == value] for value in range(nValues)]
 
 
 def adjacency(d1, d2):

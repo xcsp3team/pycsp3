@@ -1,12 +1,10 @@
-import ast
 import datetime
-import inspect
 import json
 import lzma
 import os
 import os.path
-import sys
-from collections import OrderedDict, namedtuple, Mapping
+import sys  # for DataVisitor import ast, inspect
+from collections import OrderedDict
 from importlib import util
 
 from lxml import etree
@@ -15,10 +13,12 @@ from pycsp3.dashboard import options
 from pycsp3.problems.data import dataparser
 from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
-from pycsp3.tools.curser import OpOverrider, ListInt, convert_to_namedtuples, is_namedtuple
+from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtuple
 from pycsp3.tools.slider import handle_slides
 from pycsp3.tools.utilities import Stopwatch
 from pycsp3.tools.xcsp import build_document
+
+None_Values = ['None', '', 'null']  # adding 'none'?
 
 
 class Compilation:
@@ -39,29 +39,25 @@ class Compilation:
         return _compile()
 
 
-class DataVisitor(ast.NodeVisitor):
-    def __init__(self, raw_data):
-        self.raw_data = raw_data  # raw data under the form [x,y,z] with x, y, z values
-        self.ordered_data = []
-        self.cnt = 0
-        self.compilation_data = OrderedDict()  # the object used for recording the data, available in the model
-
-    def visit(self, node):
-        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "data" and node.attr not in self.compilation_data:
-            assert self.cnt < len(self.raw_data), \
-                "The number of fields in the object 'data' must be equal to the number of values specified with the option -data "
-            value = int(self.raw_data[self.cnt]) if self.raw_data[self.cnt] and self.raw_data[self.cnt].isdigit() else self.raw_data[self.cnt]
-            if options.debug:
-                print("Load data", value, "in", node.attr)
-            self.compilation_data[node.attr] = value
-            self.ordered_data.append(value)
-            self.cnt += 1
-        ast.NodeVisitor.visit(self, node)
-        return self.compilation_data, self.ordered_data
-
-
-def _load_data_names(raw_data):
-    return DataVisitor(raw_data).visit(ast.parse(inspect.getsource(Compilation.model)))
+# class DataVisitor(ast.NodeVisitor):
+#     def __init__(self, raw_data):
+#         self.raw_data = raw_data  # raw data under the form [x,y,z] with x, y, z values
+#         self.ordered_data = []
+#         self.cnt = 0
+#         self.compilation_data = OrderedDict()  # the object used for recording the data, available in the model
+#
+#     def visit(self, node):
+#         if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "data" and node.attr not in self.compilation_data:
+#             assert self.cnt < len(self.raw_data), \
+#                 "The number of fields in the object 'data' must be equal to the number of values specified with the option -data "
+#             value = int(self.raw_data[self.cnt]) if self.raw_data[self.cnt] and self.raw_data[self.cnt].isdigit() else self.raw_data[self.cnt]
+#             if options.debug:
+#                 print("Load data", value, "in", node.attr)
+#             self.compilation_data[node.attr] = value
+#             self.ordered_data.append(value)
+#             self.cnt += 1
+#         ast.NodeVisitor.visit(self, node)
+#         return self.compilation_data, self.ordered_data
 
 
 def _load_options():
@@ -88,7 +84,11 @@ def _load_model():
 
 
 def _load_data():
-    None_Values = ['None', '']  # adding 'none' and 'null'?
+    def _load_data_sequence(raw_data):
+        od = [None if v in None_Values else int(v) if v and v.isdigit() else v for v in raw_data]
+        return OrderedDict([("f" + str(i), od[i]) for i, v in enumerate(raw_data)]), od
+        # return DataVisitor(raw_data).visit(ast.parse(inspect.getsource(Compilation.model)))
+
     data = options.data
     compilation_data = OrderedDict()  # the object used for recording the data, available in the model
     if data is None:
@@ -103,19 +103,19 @@ def _load_data():
         #    compilation_data = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()), object_pairs_hook=OrderedDict)
         #    for k, v in compilation_data.items(): setattr(compilation_data, k, v)  ordered_data = list(compilation_data.values())
         if '[' in data and ']' in data:
-            args = [None if arg in None_Values else arg for arg in data[1:-1].split(",")]
+            args = data[1:-1].split(",")
             if '=' in data:
                 assert data.count('=') == data.count(',') + 1, "badly formed string of data " + data
                 ordered_data = []
                 for arg in args:
                     t = arg.split('=')
-                    value = int(t[1]) if t[1].isdigit() else None if t[1] in None_Values else t[1]
+                    value = None if t[1] in None_Values else int(t[1]) if t[1].isdigit() else t[1]
                     compilation_data[t[0]] = value
                     ordered_data.append(value)
             else:
-                compilation_data, ordered_data = _load_data_names(args)
+                compilation_data, ordered_data = _load_data_sequence(args)
         else:
-            compilation_data, ordered_data = _load_data_names([data if data not in None_Values else None])
+            compilation_data, ordered_data = _load_data_sequence([data])
         string_data = "-" + "-".join(str(v) for v in ordered_data)
     if options.debug:
         print("Compilation data:", compilation_data, "\nString data:", string_data)
@@ -147,6 +147,8 @@ def _load(*, console=False):
         else:
             Compilation.data, Compilation.string_data = _load_data()
         Compilation.data = convert_to_namedtuples(Compilation.data)
+        if len(Compilation.data) == 1:
+            Compilation.data = Compilation.data[0]  # the value instead of a tuple of size 1
     else:
         Compilation.string_model = "Console"
         Compilation.string_data = ""

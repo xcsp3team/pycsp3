@@ -7,7 +7,7 @@ from pycsp3 import *
  Some data: (8,4) (8,5) (9,4) (10,4) (31,14)
 """
 
-n, c = data.n, data.c
+n, c = data
 
 #  x[i][j] is 1 if a coin is placed at row i and column j
 x = VarArray(size=[n, n], dom={0, 1})

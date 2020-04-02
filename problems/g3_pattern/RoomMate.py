@@ -4,7 +4,7 @@ from pycsp3 import *
  See https://en.wikipedia.org/wiki/Stable_roommates_problem
 """
 
-preferences = data.preferences
+preferences = data
 n = len(preferences)
 
 

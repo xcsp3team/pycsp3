@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-p, a, d = data.p, data.a, data.d
+p, a, d = data
 
 x = VarArray(size=[p, a], dom=range(d))
 

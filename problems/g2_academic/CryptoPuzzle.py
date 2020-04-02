@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-word1, word2, word3 = data.word1.lower(), data.word2.lower(), data.word3.lower()
+word1, word2, word3 = words = [w.lower() for w in data]
 n = len(word1)
 assert len(word2) == n and len(word3) in {n, n + 1}
 
@@ -8,7 +8,7 @@ assert len(word2) == n and len(word3) in {n, n + 1}
 x = VarArray(size=26, dom=lambda i: range(10) if i in alphabet_positions(word1 + word2 + word3) else None)
 
 # auxiliary lists of variables associated with the three words
-x1, x2, x3 = [[x[i] for i in reversed(alphabet_positions(word))] for word in [word1, word2, word3]]
+x1, x2, x3 = [[x[i] for i in reversed(alphabet_positions(word))] for word in words]
 
 satisfy(
     # all letters must be assigned different values

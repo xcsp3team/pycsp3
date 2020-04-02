@@ -4,7 +4,7 @@ from pycsp3 import *
  See https://en.wikipedia.org/wiki/Job_shop_scheduling
 """
 
-jobs = data.jobs
+jobs = data
 horizon = max(job.dueDate for job in jobs) if all(job.dueDate != -1 for job in jobs) else sum(sum(job.durations) for job in jobs)
 durations = [job.durations for job in jobs]
 indexes = [[job.resources.index(j) for j in range(len(job.durations))] for job in jobs]

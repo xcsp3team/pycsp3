@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 065 on CSPLib
 """
 
-v, b, r = data.v, data.b, data.r
+v, b, r = data
 
 # x[i][j] is the value at row i and column j
 x = VarArray(size=[v, b], dom={0, 1})

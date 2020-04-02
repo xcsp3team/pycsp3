@@ -4,9 +4,10 @@ from pycsp3 import *
  Problem 018 on CSPLib
 """
 
-c1, c2, c3 = data.c1, data.c2, data.c3  # capacities of the three buckets
-g1, g2, g3 = data.g1, data.g2, data.g3  # goal (which quantities must be present in the three buckets after all transfers)
-h = data.h  # horizon (maximal number of rounds/transfers)
+# ci for capacities of the three buckets
+# gi for goal (which quantities must be present in the three buckets after all transfers)
+# h for horizon (maximal number of rounds/transfers)
+c1, c2, c3, g1, g2, g3, h = data
 
 assert c1 >= c2 >= c3 > 0, "Bucket capacities must be in decreasing order"
 assert g1 + g2 + g3 == c1, "water from bucket 1 must be split into the three buckets to reach the goal"

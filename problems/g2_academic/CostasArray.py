@@ -6,7 +6,7 @@ from pycsp3 import *
  2160 solutions for n=10 (with no symmetry-breaking constraints)
 """
 
-n = data.n
+n = data
 
 # x[i] is the row where is put the ith mark (on the ith column)
 x = VarArray(size=n, dom=range(1, n + 1))

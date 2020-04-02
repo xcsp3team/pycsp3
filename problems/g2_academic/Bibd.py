@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 028 on CSPLib
 """
 
-v, b, r, k, l = data.v, data.b, data.r, data.k, data.l
+v, b, r, k, l = data
 b = (l * v * (v - 1)) // (k * (k - 1)) if b == 0 else b
 r = (l * (v - 1)) // (k - 1) if r == 0 else r
 

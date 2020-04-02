@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 049 on CSPLib
 """
 
-n = data.n
+n = data
 assert n % 2 == 0, "The value of n must be even"
 
 # x[i] is the ith value of the first set

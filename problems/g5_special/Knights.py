@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-n, k = data.n, data.nKnights  # n is the order(board width)
+n, k = data  # n is the order(board width)  -- k is the number of knights
 
 #  x[i] is the cell number of the board where is put the ith knight
 x = VarArray(size=k, dom=range(n * n))

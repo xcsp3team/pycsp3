@@ -3,12 +3,13 @@ import math
 from pycsp3 import *
 
 """
- See e.g., "Sudoku as a Constraint Problem" by Helmut Simonis
+ See, e.g., "Sudoku as a Constraint Problem" by Helmut Simonis
 """
+print(data)
 
-n, base = data.n, int(math.sqrt(data.n))  # n (order of the grid); typically 9
+n, clues = data  # n (order of the grid) is typically 9 -- if not 0, clues[i][j] is a value imposed at row i and col j
+base = int(math.sqrt(n))
 assert base * base == n
-clues = data.clues  # if not 0, clues[i][j] is a value imposed at row i and col j
 
 # x[i][j] is the value in cell at row i and col j.
 x = VarArray(size=[n, n], dom=range(1, n + 1))
@@ -36,3 +37,8 @@ satisfy(
     # imposing clues  tag(clues)
     x[i][j] == clues[i][j] for i in range(n) for j in range(n) if clues and clues[i][j] > 0
 )
+
+
+# Note that :
+
+# a) using set(permutations(range(1, n + 1))) instead of list(permutations(range(1, n + 1))) is far less time efficient

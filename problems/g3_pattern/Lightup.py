@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-grid = data.grid
+grid = data
 nRows, nCols = len(grid), len(grid[0])
 
 

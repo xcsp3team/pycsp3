@@ -6,7 +6,7 @@ from pycsp3 import *
  The variant 'mod' corresponds to the one proposed in [Bessiere Meseguer Freuder Larrosa, On forward checking for non-binary constraint satisfaction, 2002].
 """
 
-n, d = data.nBalls, data.nBoxes
+n, d = data  # n is the number of balls -- d is the number of boxes
 
 # x[i] is the box where the ith ball is put
 x = VarArray(size=n, dom=range(d))

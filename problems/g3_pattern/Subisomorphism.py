@@ -1,7 +1,7 @@
 from pycsp3 import *
 
 """
- See e.g. "AllDifferent-based filtering for subgraph isomorphism"  by Christine Solnon, Artificial Intelligence, 174(12-13): 850-864 (2010)
+ See, e.g., "AllDifferent-based filtering for subgraph isomorphism"  by Christine Solnon, Artificial Intelligence, 174(12-13): 850-864 (2010)
 """
 
 n, m = data.nPatternNodes, data.nTargetNodes

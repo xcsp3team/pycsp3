@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-n, d = data.nDominos, data.nValues
+n, d = data  # number of dominos -- number of values
 
 # x[i] is the value of the ith domino
 x = VarArray(size=n, dom=range(d))

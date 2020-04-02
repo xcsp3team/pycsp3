@@ -4,7 +4,7 @@ from pycsp3 import *
  Problem 044 on CSPLib
 """
 
-n = data.n
+n = data
 nTriples = (n * (n - 1)) // 6
 
 table = {(i1, i2, i3, j1, j2, j3) for (i1, i2, i3, j1, j2, j3) in product(range(1, n + 1), repeat=6) if

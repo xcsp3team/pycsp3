@@ -4,7 +4,7 @@ from pycsp3 import *
  See https://ipg.host.cs.st-andrews.ac.uk/challenge/
 """
 
-orders = data.orders
+orders = data
 n, m = len(orders), len(orders[0])  # n orders (customers), m possible products
 
 if variant("m1"):

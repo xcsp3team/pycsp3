@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-limit, value = data.limit, data.value
+limit, value = data
 
 
 def decompositions():

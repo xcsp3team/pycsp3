@@ -1,12 +1,16 @@
 from pycsp3 import *
 
-distances = data.distances
+"""
+ See https://en.wikipedia.org/wiki/Travelling_salesman_problem
+"""
+
+distances = data
 nCities = len(distances)
 
 # c[i] is the ith city of the tour
 c = VarArray(size=nCities, dom=range(nCities))
 
-# d[i] is the distance between the cities i and i+1
+# d[i] is the distance between the cities i and i+1 chosen in the tour
 d = VarArray(size=nCities, dom={v for row in distances for v in row})
 
 satisfy(
@@ -29,5 +33,6 @@ elif variant("table"):
     )
 
 minimize(
+    # minimizing the travelled distance
     Sum(d)
 )
