@@ -1,6 +1,6 @@
 from types import GeneratorType
 
-from pycsp3.classes.auxiliary.types import TypeConditionOperator
+from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 

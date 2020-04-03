@@ -5,7 +5,7 @@ from itertools import combinations, product, permutations
 
 from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
-from pycsp3.classes.auxiliary.types import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
+from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EIfThenElse, EObjective, EAnnotation, AnnEntities, TypeNode, Node)
 from pycsp3.classes.main.annotations import (
@@ -15,12 +15,13 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintSum,
     ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
-    ConstraintCumulative, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct)
+    ConstraintCumulative, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
 from pycsp3.dashboard import options
-from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns, queue_in
+from pycsp3.tools import curser
+from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, transpose, integer_scaling, is_containing, \
     ANY
@@ -42,6 +43,9 @@ def protect():
 
 
 def variant(name=None):
+    """"
+       test
+    """
     pos = -1 if not options.variant else options.variant.find("-")  # position of dash ('-') in options.variant
     if not name:
         return options.variant[0:pos] if pos != -1 else options.variant
@@ -103,53 +107,6 @@ def VarArray(*, size, dom, comment=None):
         return ListVar(var_objects)
 
 
-class _Auxiliary:
-    def __init__(self):
-        self._introduced_variables = []
-        self._collected_constraints = []
-        self.prefix = "aux_gb"
-
-    def __replace(self, obj, dom):
-        assert dom.get_type() == TypeVar.INTEGER
-        index = len(self._introduced_variables)
-        name = self.prefix + "[" + str(index) + "]"
-        var = VariableInteger(name, dom)
-        Variable.name2obj[name] = var
-        if index == 0:
-            self._introduced_variables = EVarArray([var], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
-        else:
-            self._introduced_variables.extend_with(var)
-        self._collected_constraints.append((obj, var))
-        return var
-
-    def replace_partial_constraint(self, pc):
-        assert isinstance(pc, PartialConstraint)
-        dom = Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1))
-        return self.__replace(pc, dom)
-
-    def replace_partial_constraints(self, terms, scalar_to_sum=False):
-        assert isinstance(terms, list)
-        for i, t in enumerate(terms):
-            if scalar_to_sum and isinstance(t, ScalarProduct):
-                t = Sum(t)  # to get a PartialConstraint
-            if isinstance(t, PartialConstraint):
-                terms[i] = self.replace_partial_constraint(t)
-        return terms
-
-    def replace_node(self, node):
-        assert isinstance(node, Node)
-        values = sorted(list(node.possible_values()))
-        dom = Domain(range(values[0], values[-1] + 1) if all(values[i] + 1 == values[i + 1] for i in range(len(values) - 1)) else values)
-        return self.__replace(node, dom)
-
-    def collected(self):
-        t = self._collected_constraints
-        self._collected_constraints = []
-        return t
-
-
-auxiliary = _Auxiliary()
-
 ''' Posting constraints (through satisfy()) '''
 
 
@@ -179,8 +136,8 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
 def _complete_partial_forms_of_constraints(entities):
     for i, c in enumerate(entities):
         if isinstance(c, bool):
-            assert len(queue_in) > 0, "A boolean that does not represent a constraint is in the list of constraints in satisfy(): " + str(entities)
-            right_operand, left_operand = queue_in.popleft()
+            assert len(curser.queue_in) > 0, "A boolean that does not represent a constraint is in the list of constraints in satisfy(): " + str(entities)
+            right_operand, left_operand = curser.queue_in.popleft()
             entities[i] = _bool_interpretation_for_in(left_operand, right_operand, c)
         elif isinstance(c, ESlide):
             for ent in c.entities:
@@ -271,10 +228,10 @@ def satisfy(*args):
         elif isinstance(arg, Node):  # a predicate to be wrapped by a constraint (intension)
             to_post = Intension(arg)
         elif isinstance(arg, bool):  # a Boolean representing the case of a partial constraint or a node with operator in {IN, NOT IN}
-            assert queue_in, "An argument of satisfy() before position " + str(i) + " is badly formed"
+            assert curser.queue_in, "An argument of satisfy() before position " + str(i) + " is badly formed"
             # assert queue_in, "A boolean that do not represents a constraint is in the list of constraints in satisfy(): " \
             #                 + str(args) + " " + str(i) + ".\nA constraint is certainly badly formed"
-            other, partial = queue_in.popleft()
+            other, partial = curser.queue_in.popleft()
             to_post = _bool_interpretation_for_in(partial, other, arg)
         elif any(isinstance(ele, ESlide) for ele in arg):  #  Case: Slide
             to_post = _block(arg)
@@ -291,13 +248,11 @@ def satisfy(*args):
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
             #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
-    t.append(_group(pc == var for (pc, var) in auxiliary.collected()))
+    t.append(_group(pc == var for (pc, var) in auxiliary().collected()))
     return EToSatisfy(t)
 
 
 ''' Generic Constraints (intension, extension) '''
-
-checked_tables = set()
 
 
 def Extension(*, scope, table, positive=True):
@@ -311,6 +266,8 @@ def Extension(*, scope, table, positive=True):
         "The length of each tuple must be the same as the arity." + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
     # TODO: this ckecking don't pass on Waterbucket.py, but the xml file is the same that the java version !
     # if options.checker:
+    #    if not hasattr(Extension, "checked_tables"):
+    #        Extension.checked_tables = set()
     #    if id(table) not in checked_tables:
     #        for t in table:
     #            for i, v in enumerate(t):
@@ -533,7 +490,7 @@ def Sum(term, *others, condition=None):
 
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
-    auxiliary.replace_partial_constraints(terms)
+    auxiliary().replace_partial_constraints(terms)
 
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
@@ -600,8 +557,9 @@ def Cardinality(term, *others, occurrences, closed=False):
 
 def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
-    checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
-    auxiliary.replace_partial_constraints(terms, scalar_to_sum=True)
+    terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have PartialConstraints
+    checkType(terms, ([Variable], [Node], [PartialConstraint]))
+    auxiliary().replace_partial_constraints(terms)
     checkType(index, (Variable, type(None)))
     checkType(start_index, int)
     checkType(type_rank, TypeRank)
@@ -694,12 +652,9 @@ def _optimize(term, minimization):
     if isinstance(term, ScalarProduct):
         term = Sum(term)  # to have a PartialConstraint
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"
-
-    satisfy(pc == var for (pc, var) in auxiliary.collected())
-
+    satisfy(pc == var for (pc, var) in auxiliary().collected())
     comment, _, tag, _ = comments_and_tags_of_parameters_of(function_name="minimize" if minimization else "maximize", args=[term])
     type = TypeCtr.MINIMIZE if minimization else TypeCtr.MAXIMIZE
-
     if isinstance(term, (Variable, Node)):
         if isinstance(term, Node):
             term.mark_as_used()
@@ -792,14 +747,14 @@ def different_values(*args):
 
 
 def to_ordinary_table(table, domain_sizes):
-    tb = set()
+    tbl = set()
     for t in table:
         if ANY in t:
             for otuple in product(*(range(v, v + 1) if v != ANY else range(domain_sizes[i]) for i, v in enumerate(t))):
-                tb.add(otuple)
+                tbl.add(otuple)
         else:
-            tb.add(t)
-    return tb
+            tbl.add(t)
+    return tbl
 
 
 def cp_array(l):
@@ -816,11 +771,6 @@ def cp_array(l):
         return ListVar(l)
     else:
         raise NotImplemented
-
-
-# def indexing(l):
-#    assert isinstance(l, list)
-#    return [(i, *v) if isinstance(v, (tuple, list)) else (i, v) for i, v in enumerate(l)]
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code

@@ -1,12 +1,12 @@
 import os
 from collections import OrderedDict
 
-from pycsp3 import functions
 from pycsp3.classes.auxiliary.conditions import Condition
-from pycsp3.classes.auxiliary.types import TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
+from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
-from pycsp3.classes.entities import ECtr, TypeNode, Node
-from pycsp3.classes.main.variables import Variable
+from pycsp3.classes.entities import EVarArray, ECtr, TypeNode, Node
+from pycsp3.classes.main.domains import Domain
+from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error
 
@@ -497,21 +497,21 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         if isinstance(other, (int, Variable)):
             return other
         if isinstance(other, Node):
-            return functions.auxiliary.replace_node(other)
+            return auxiliary().replace_node(other)
         assert isinstance(other, (ScalarProduct, PartialConstraint))
         if isinstance(self.constraint, ConstraintSum) and (isinstance(other, ScalarProduct) or isinstance(other.constraint, ConstraintSum)):
             return other
         assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition)
-        return functions.auxiliary.replace_partial_constraint(other)
+        return auxiliary().replace_partial_constraint(other)
 
     def _simplify_operation(self, other):
         assert isinstance(self.constraint, ConstraintWithCondition)
         if isinstance(self.constraint, ConstraintSum) and (not isinstance(other, PartialConstraint) or isinstance(other.constraint, ConstraintSum)):
             return None  # we can combine partial sums and terms
         if not isinstance(self.constraint, ConstraintSum) and not isinstance(other, PartialConstraint):
-            return functions.auxiliary.replace_partial_constraint(self), other
+            return auxiliary().replace_partial_constraint(self), other
         assert isinstance(other.constraint, ConstraintWithCondition)
-        return functions.auxiliary.replace_partial_constraint(self), functions.auxiliary.replace_partial_constraint(other)
+        return auxiliary().replace_partial_constraint(self), auxiliary().replace_partial_constraint(other)
 
     def __eq__(self, other):
         other = self._simplify_with_auxiliary_variables(other)
@@ -638,3 +638,52 @@ class ScalarProduct:
 
     def __sub__(self, other):
         return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
+
+
+class _Auxiliary:
+    def __init__(self):
+        self._introduced_variables = []
+        self._collected_constraints = []
+        self.prefix = "aux_gb"
+
+    def __replace(self, obj, dom):
+        assert dom.get_type() == TypeVar.INTEGER
+        index = len(self._introduced_variables)
+        name = self.prefix + "[" + str(index) + "]"
+        var = VariableInteger(name, dom)
+        Variable.name2obj[name] = var
+        if index == 0:
+            self._introduced_variables = EVarArray([var], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
+        else:
+            self._introduced_variables.extend_with(var)
+        self._collected_constraints.append((obj, var))
+        return var
+
+    def replace_partial_constraint(self, pc):
+        assert isinstance(pc, PartialConstraint)
+        dom = Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1))
+        return self.__replace(pc, dom)
+
+    def replace_partial_constraints(self, terms):
+        assert isinstance(terms, list)
+        for i, t in enumerate(terms):
+            if isinstance(t, PartialConstraint):
+                terms[i] = self.replace_partial_constraint(t)
+        return terms
+
+    def replace_node(self, node):
+        assert isinstance(node, Node)
+        values = sorted(list(node.possible_values()))
+        dom = Domain(range(values[0], values[-1] + 1) if all(values[i] + 1 == values[i + 1] for i in range(len(values) - 1)) else values)
+        return self.__replace(node, dom)
+
+    def collected(self):
+        t = self._collected_constraints
+        self._collected_constraints = []
+        return t
+
+
+def auxiliary():
+    if not hasattr(auxiliary, "obj"):
+        auxiliary.obj = _Auxiliary()
+    return auxiliary.obj

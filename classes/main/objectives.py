@@ -1,4 +1,4 @@
-from pycsp3.classes.auxiliary.types import TypeCtr, TypeCtrArg
+from pycsp3.classes.auxiliary.ptypes import TypeCtr, TypeCtrArg
 from pycsp3.classes.main.constraints import ConstraintUnmergeable
 
 

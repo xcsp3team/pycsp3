@@ -1,10 +1,9 @@
-from collections import deque, namedtuple
 import types
-from pycsp3 import functions
+from collections import deque, namedtuple
+
 from pycsp3.classes.entities import Node, TypeNode
-from pycsp3.classes.main.constraints import ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, \
-    ConstraintElementMatrix, \
-    ConstraintInstantiation, ECtr
+from pycsp3.classes.main.constraints import (
+    ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation, ECtr, auxiliary)
 from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
@@ -297,11 +296,11 @@ class OpOverrider:
 
     def __getitem__lv(self, indexes):
         if isinstance(indexes, PartialConstraint):
-            indexes = functions.auxiliary.replace_partial_constraint(indexes)
+            indexes = auxiliary().replace_partial_constraint(indexes)
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
-            indexes = functions.auxiliary.replace_partial_constraints(list(indexes))
+            indexes = auxiliary().replace_partial_constraints(list(indexes))
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
@@ -326,11 +325,11 @@ class OpOverrider:
 
     def __getitem__li(self, indexes):  # li for ListInt
         if isinstance(indexes, PartialConstraint):
-            indexes = functions.auxiliary.replace_partial_constraint(indexes)
+            indexes = auxiliary().replace_partial_constraint(indexes)
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
-            indexes = functions.auxiliary.replace_partial_constraints(list(indexes))
+            indexes = auxiliary().replace_partial_constraints(list(indexes))
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
@@ -362,7 +361,7 @@ class OpOverrider:
 
 class ListInt(list):
     def __init__(self, integers):
-        super().__init__(integers)  #self.extend(integers)
+        super().__init__(integers)  # self.extend(integers)
 
     def __getslice__(self, i, j):
         return ListInt(super().__getslice__(i, j))

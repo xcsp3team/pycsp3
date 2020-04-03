@@ -32,7 +32,7 @@ class _Star(float):
         return "*"
 
 
-ANY = _Star("Inf")
+ANY = _Star("Inf")  #: used to represent * in short tables
 
 
 class DefaultListOrderedDict(OrderedDict):

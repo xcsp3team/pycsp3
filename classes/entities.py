@@ -5,7 +5,7 @@ import numpy
 from enum import Enum, unique
 from functools import reduce
 
-from pycsp3.classes.auxiliary.types import auto
+from pycsp3.classes.auxiliary.ptypes import auto
 from pycsp3.classes.main.variables import Variable, NotVariable, NegVariable
 from pycsp3.classes import main
 from pycsp3.dashboard import options
