@@ -1,6 +1,6 @@
 import re
 
-from pycsp3.classes.auxiliary.types import TypeVar
+from pycsp3.classes.auxiliary.ptypes import TypeVar
 from pycsp3.classes.main.domains import Domain
 
 

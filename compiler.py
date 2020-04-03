@@ -39,27 +39,6 @@ class Compilation:
         return _compile()
 
 
-# class DataVisitor(ast.NodeVisitor):
-#     def __init__(self, raw_data):
-#         self.raw_data = raw_data  # raw data under the form [x,y,z] with x, y, z values
-#         self.ordered_data = []
-#         self.cnt = 0
-#         self.compilation_data = OrderedDict()  # the object used for recording the data, available in the model
-#
-#     def visit(self, node):
-#         if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "data" and node.attr not in self.compilation_data:
-#             assert self.cnt < len(self.raw_data), \
-#                 "The number of fields in the object 'data' must be equal to the number of values specified with the option -data "
-#             value = int(self.raw_data[self.cnt]) if self.raw_data[self.cnt] and self.raw_data[self.cnt].isdigit() else self.raw_data[self.cnt]
-#             if options.debug:
-#                 print("Load data", value, "in", node.attr)
-#             self.compilation_data[node.attr] = value
-#             self.ordered_data.append(value)
-#             self.cnt += 1
-#         ast.NodeVisitor.visit(self, node)
-#         return self.compilation_data, self.ordered_data
-
-
 def _load_options():
     options.set_values("dataparser", "data", "dataexport", "variant", "output", "checker")
     options.set_flags("dataexport", "ev", "compress", "debug", "display", "time", "nocomment", "solve")
@@ -72,11 +51,10 @@ def _load_options():
 def _load_model():
     try:
         name = sys.argv[0]
-        assert name.strip().endswith(".py"), "The first argument has to be a python file."
+        assert name.strip().endswith(".py"), "The first argument has to be a python file." + str(name)
         model_string = name[name.rfind(os.sep) + 1:name.rfind(".")]
         specification = util.spec_from_file_location("", name)
         model = util.module_from_spec(specification)
-        # model.specification = specification
         return model, model_string
     except:
         usage("It was not possible to read the file: " + sys.argv[0])
@@ -234,5 +212,5 @@ def usage(message):
     print(message)
     print("\nThe PyCSP3 Compiler allows us to generate XCSP3 files.")
     print("\n\nUsage: python3.5 <model> <data>")
-    print("  - <model> is the name of a Python file containing a PyCSP3 model (i.e., a Python file with code to post variables/constraints/objectives)")
+    print("  - <model> is the name of a Python file containing a PyCSP3 model (i.e., a Python file with code posting variables/constraints/objectives)")
     print("  - <data> is either a fixed list of elementary data or the name of a JSON file")

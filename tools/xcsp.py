@@ -1,6 +1,6 @@
 from lxml import etree
 
-from pycsp3.classes.auxiliary.types import TypeFramework, TypeXML, TypeVar, TypeCtr, TypeCtrArg
+from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeXML, TypeVar, TypeCtr, TypeCtrArg
 from pycsp3.classes.entities import Entity, EVar, EVarArray, ECtr, EObjective, EAnnotation, EGroup, \
     EBlock, ESlide, EIfThenElse, EToGather, EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities
 from pycsp3.classes.main.constraints import ConstraintIntension

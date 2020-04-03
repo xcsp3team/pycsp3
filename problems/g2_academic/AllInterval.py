@@ -1,14 +1,15 @@
+"""
+Problem 007 on CSPLib
+
+Illustration:
+ - python3 AllInterval
+ - python3 AllInterval -data=10
+ - python3 AllInterval -data=10 -variant=aux
+"""
+
 from pycsp3 import *
 
-"""
- Problem 007 on CSPLib
-
- For n=10:
- - 296 solutions if symmetry-breaking constraints are discarded
- - 148 and 104 solutions for the main and aux variants otherwise
-"""
-
-n = data
+n = data or 8
 
 # x[i] is the ith note of the series
 x = VarArray(size=n, dom=range(n))

@@ -5,8 +5,8 @@ from pycsp3 import *
 """
 
 v, b, r, k, l = data
-b = (l * v * (v - 1)) // (k * (k - 1)) if b == 0 else b
-r = (l * (v - 1)) // (k - 1) if r == 0 else r
+b = (l * v * (v - 1)) // (k * (k - 1)) if b == 0 else b  # when specified at 0, b is automatically computed
+r = (l * (v - 1)) // (k - 1) if r == 0 else r  # when specified at 0, r is automatically computed
 
 # x[i][j] is the value of the matrix at row i and column j
 x = VarArray(size=[v, b], dom={0, 1})
