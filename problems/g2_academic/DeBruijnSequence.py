@@ -1,10 +1,14 @@
+"""
+See http://mathworld.wolfram.com/deBruijnSequence.html and http://www.hakank.org/comb/debruijn.cgi#info
+
+Illustration:
+ - python3 DeBruijnSequence
+ - python3 DeBruijnSequence -data=[2,5]
+"""
+
 from pycsp3 import *
 
-"""
- See http://mathworld.wolfram.com/deBruijnSequence.html and http://www.hakank.org/comb/debruijn.cgi#info
-"""
-
-b, n = data
+b, n = data or (3, 4)
 m = b ** n
 powers = [b ** i for i in range(n - 1, -1, -1)]
 

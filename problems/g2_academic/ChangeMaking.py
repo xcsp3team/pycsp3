@@ -1,10 +1,15 @@
+"""
+See https://en.wikipedia.org/wiki/Change-making_problem
+
+Illustration:
+ - python3 ChangeMaking
+ - python3 ChangeMaking -data=10
+ - python3 ChangeMaking -data=10 -variant=compact
+"""
+
 from pycsp3 import *
 
-"""
- See https://en.wikipedia.org/wiki/Change-making_problem
-"""
-
-k = data
+k = data or 13
 
 if not variant():
     # c1 is the number of coins of 1 cent

@@ -1,10 +1,14 @@
+"""
+Problem 050 on CSPLib
+
+Illustration:
+ - python3 DiamondFree
+ - python3 DiamondFree -data=10
+"""
+
 from pycsp3 import *
 
-"""
- Problem 050 on CSPLib
-"""
-
-n = data
+n = data or 8
 
 # x is the adjacency matrix
 x = VarArray(size=[n, n], dom=lambda i, j: {0, 1} if i != j else {0})

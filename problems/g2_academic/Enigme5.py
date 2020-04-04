@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-limit, value = data
+limit, value = data or (364, 55440)
 
 
 def decompositions():
@@ -45,5 +45,3 @@ satisfy(
     ([x[3], x[22], x[41], x[60]]) in table,
     (x[12], x[25], x[38], x[51]) in table
 )
-
-

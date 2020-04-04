@@ -1,10 +1,15 @@
+"""
+Problem 065 on CSPLib
+
+Illustration:
+ - python3 Opd
+ - python3 Opd -data=[4,6,4]
+ - python3 Opd -data=[4,6,4] -variant=aux
+"""
+
 from pycsp3 import *
 
-"""
- Problem 065 on CSPLib
-"""
-
-v, b, r = data
+v, b, r = data or (4, 4, 4)
 
 # x[i][j] is the value at row i and column j
 x = VarArray(size=[v, b], dom={0, 1})

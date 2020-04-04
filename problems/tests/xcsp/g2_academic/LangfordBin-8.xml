@@ -1,7 +1,7 @@
 <instance format="XCSP3" type="CSP">
   <variables>
-    <array id="v" note="v[i] is the ith value of the Langford's sequence" size="[32]"> 1..16 </array>
-    <array id="p" note="p[j] is the first (resp., second) position of 1+j/2 in v if j is even (resp., odd)" size="[32]"> 0..31 </array>
+    <array id="v" note="v[i] is the ith value of the Langford's sequence" size="[16]"> 1..8 </array>
+    <array id="p" note="p[j] is the first (resp., second) position of 1+j/2 in v if j is even (resp., odd)" size="[16]"> 0..15 </array>
   </variables>
   <constraints>
     <group>
@@ -18,14 +18,6 @@
       <args> p[10] 6 </args>
       <args> p[12] 7 </args>
       <args> p[14] 8 </args>
-      <args> p[16] 9 </args>
-      <args> p[18] 10 </args>
-      <args> p[20] 11 </args>
-      <args> p[22] 12 </args>
-      <args> p[24] 13 </args>
-      <args> p[26] 14 </args>
-      <args> p[28] 15 </args>
-      <args> p[30] 16 </args>
     </group>
     <group>
       <element>
@@ -41,14 +33,6 @@
       <args> p[11] 6 </args>
       <args> p[13] 7 </args>
       <args> p[15] 8 </args>
-      <args> p[17] 9 </args>
-      <args> p[19] 10 </args>
-      <args> p[21] 11 </args>
-      <args> p[23] 12 </args>
-      <args> p[25] 13 </args>
-      <args> p[27] 14 </args>
-      <args> p[29] 15 </args>
-      <args> p[31] 16 </args>
     </group>
     <group>
       <intension> eq(%0,add(%1,%2)) </intension>
@@ -60,14 +44,6 @@
       <args> p[10] 7 p[11] </args>
       <args> p[12] 8 p[13] </args>
       <args> p[14] 9 p[15] </args>
-      <args> p[16] 10 p[17] </args>
-      <args> p[18] 11 p[19] </args>
-      <args> p[20] 12 p[21] </args>
-      <args> p[22] 13 p[23] </args>
-      <args> p[24] 14 p[25] </args>
-      <args> p[26] 15 p[27] </args>
-      <args> p[28] 16 p[29] </args>
-      <args> p[30] 17 p[31] </args>
     </group>
   </constraints>
 </instance>

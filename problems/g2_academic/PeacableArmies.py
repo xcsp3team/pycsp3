@@ -1,10 +1,14 @@
+"""
+Problem 110 on CSPLib
+
+Illustration:
+ - python3 PeacableArmies -data=10 -variant=m1
+ - python3 PeacableArmies -data=10 -variant=m2
+"""
+
 from pycsp3 import *
 
-"""
- Problem 110 on CSPLib
-"""
-
-n = data
+n = data or 6
 
 if variant("m1"):
 

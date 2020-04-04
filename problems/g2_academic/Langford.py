@@ -1,10 +1,14 @@
+"""
+Problem 024 on CSPLib
+
+Illustration:
+ - python3 Langford
+ - python3 Langford -data=[3,10]
+"""
+
 from pycsp3 import *
 
-"""
- Problem 024 on CSPLib
-"""
-
-k, n = data  # k is the number of occurrences for a value -- n is the number of values
+k, n = data or (3, 12)  # k is the number of occurrences for a value -- n is the number of values
 
 # x[i][j] is the position in the sequence of the ith occurrence of j+1
 x = VarArray(size=[k, n], dom=range(k * n))

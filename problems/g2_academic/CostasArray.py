@@ -1,12 +1,15 @@
+"""
+Problem 076 on CSPLib, and NumberJack example
+
+
+Illustration:
+ - python3 CostasArray
+ - python3 CostasArray -data=10
+"""
+
 from pycsp3 import *
 
-"""
- Problem 076 on CSPLib, and NumberJack example
-
- 2160 solutions for n=10 (with no symmetry-breaking constraints)
-"""
-
-n = data
+n = data or 8
 
 # x[i] is the row where is put the ith mark (on the ith column)
 x = VarArray(size=n, dom=range(1, n + 1))

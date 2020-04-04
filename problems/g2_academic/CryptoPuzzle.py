@@ -1,12 +1,17 @@
+"""
+See https://en.wikipedia.org/wiki/Verbal_arithmetic
+
+Example of data: (no,no,yes) (two,two,four) (send,more,money) (cross,road,danger) (donald,gerarld,robert)
+
+Illustration:
+ - python3 CryptoPuzzle
+ - python3 CryptoPuzzle -data=[send,more,money]
+ - python3 CryptoPuzzle -data=[send,more,money] -variant=carry
+"""
+
 from pycsp3 import *
 
-"""
- See https://en.wikipedia.org/wiki/Verbal_arithmetic
-
- Example of data: (no,no,yes) (two,two,four) (send,more,money) (cross,road,danger) (donald,gerarld,robert)
-"""
-
-word1, word2, word3 = words = [w.lower() for w in data]
+word1, word2, word3 = words = [w.lower() for w in data] if data else ("no", "no", "yes")
 n = len(word1)
 assert len(word2) == n and len(word3) in {n, n + 1}
 

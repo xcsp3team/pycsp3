@@ -1,10 +1,16 @@
+"""
+Problem 006 on CSPLib
+
+Illustration:
+ - python3 GolombRuler
+ - python3 GolombRuler -data=10
+ - python3 GolombRuler -data=10 -variant=dec
+ - python3 GolombRuler -data=10 -variant=aux
+"""
+
 from pycsp3 import *
 
-"""
- Problem 006 on CSPLib
-"""
-
-n = data
+n = data or 8
 ub = n * n + 1  # a trivial upper-bound of an optimal ruler length
 
 # x[i] is the position of the ith tick

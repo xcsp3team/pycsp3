@@ -1,10 +1,14 @@
+"""
+Problem 053 on CSPLib
+
+Illustration:
+ - python3 GracefulGraph
+ - python3 GracefulGraph -data=[3,5]
+"""
+
 from pycsp3 import *
 
-"""
- Problem 053 on CSPLib
-"""
-
-k, p = data  # k is the size of each clique K (number of nodes) -- p is the size of each path P (or equivalently, number of cliques)
+k, p = data or (2, 4)  # k is the size of each clique K (number of nodes) -- p is the size of each path P (or equivalently, number of cliques)
 nEdges = int(((k * (k - 1)) * p) / 2 + k * (p - 1))
 
 # cn[i][j] is the color of the jth node of the ith clique

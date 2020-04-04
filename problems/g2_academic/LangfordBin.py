@@ -1,10 +1,14 @@
+"""
+See Ian P. Gent, Christopher Jefferson, Ian Miguel: Watched Literals for Constraint Propagation in Minion. CP 2006: 182-197
+
+Illustration:
+ - python3 LangfordBin
+ - python3 LangfordBin -data=10
+"""
+
 from pycsp3 import *
 
-"""
- See Ian P. Gent, Christopher Jefferson, Ian Miguel: Watched Literals for Constraint Propagation in Minion. CP 2006: 182-197
-"""
-
-n = data
+n = data or 8
 
 # v[i] is the ith value of the Langford's sequence
 v = VarArray(size=2 * n, dom=range(1, n + 1))
