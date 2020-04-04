@@ -1,14 +1,16 @@
+"""
+This problem has been conceived by Olivier Dubois, and submitted to the second DIMACS Implementation Challenge.
+Dubois's generator produces contradictory 3-SAT instances that seem very difficult to be solved by any general method.
+Given an integer n, called the degree, Dubois's process allows us to construct a 3-SAT contradictory instance with 3 * n variables and 2 * n clauses,
+each of them having 3 literals.
+
+Illustration:
+ - python3 Dubois
+ - python3 Dubois -data=10
+"""
 from pycsp3 import *
 
-"""
- This problem has been conceived by Olivier Dubois, and submitted to the second DIMACS Implementation Challenge.
- Dubois's generator produces contradictory 3-SAT instances that seem very difficult to be solved by any general method.
-
- Given an integer n, called the degree, Dubois's process allows us to construct a 3-SAT contradictory instance with 3 * n variables and 2 * n clauses,
- each of them having 3 literals.
-"""
-
-n = data
+n = data or 8
 
 table1 = {(0, 0, 1), (0, 1, 0), (1, 0, 0), (1, 1, 1)}
 table2 = {(0, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0)}

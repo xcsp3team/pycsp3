@@ -1,10 +1,14 @@
+"""
+Problem 005 on CSPLib
+
+Illustration:
+ - python3 LowAutocorrelation
+ - python3 LowAutocorrelation -data=16
+"""
+
 from pycsp3 import *
 
-"""
- Problem 005 on CSPLib
-"""
-
-n = data
+n = data or 8
 
 # x[i] is the ith value of the sequence to be built.
 x = VarArray(size=n, dom={-1, 1})

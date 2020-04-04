@@ -80,7 +80,7 @@ def _load_data():
         #  if '{' in data and '}' in data:
         #    compilation_data = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()), object_pairs_hook=OrderedDict)
         #    for k, v in compilation_data.items(): setattr(compilation_data, k, v)  ordered_data = list(compilation_data.values())
-        if '[' in data and ']' in data:
+        if data[0] == '[' and data[-1] == ']' or data[0] == '(' and data[-1] == ')':  # NB: these characters may be needed to be escaped as in \[2,3\]
             args = data[1:-1].split(",")
             if '=' in data:
                 assert data.count('=') == data.count(',') + 1, "badly formed string of data " + data

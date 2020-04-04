@@ -406,7 +406,7 @@ class ConstraintElementMatrix(Constraint):
         self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst,
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
                      [(TypeCtrArg.START_COL_INDEX, start_col_index)] if start_col_index else []))
-        self.arg(TypeCtrArg.INDEX, [index1, index2])
+        self.arg(TypeCtrArg.INDEX, [index1, index2], content_ordered=True)
         self.arg(TypeCtrArg.VALUE, value)
 
 

@@ -1,10 +1,16 @@
+"""
+See https://en.wikipedia.org/wiki/Knight%27s_tour
+
+Illustration:
+ - python3 KnightTour
+ - python3 KnightTour -data=16
+ - python3 KnightTour -data=16 -variant=table-2
+ - python3 KnightTour -data=16 -variant=table-3
+"""
+
 from pycsp3 import *
 
-"""
- See https://en.wikipedia.org/wiki/Knight%27s_tour
-"""
-
-n = data
+n = data or 8
 
 # x[i] is the cell number where the ith knight is put
 x = VarArray(size=n * n, dom=range(n * n))

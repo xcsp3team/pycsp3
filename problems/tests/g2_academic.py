@@ -61,48 +61,49 @@ same = (Tester(NAME)
 
 xcsp = (Tester(NAME)
         .add("AllInterval", data="10")  # 148 solutions (296 without symmetry-breaking)
-        .add("AllInterval", data="10", variant="aux")  # 104 solutions  296 without symmetry-breaking)
-        .add("Bibd", data="[9,0,0,3,9]")
-        .add("Bibd", data="[9,0,0,3,9]", variant="aux")
-        .add("BoardColoration", data="[8,10]")
-        .add("ChangeMaking", data="10")
-        .add("ChangeMaking", data="10", variant="compact")
-        .add("CoinsGrid", data="[10,4]")
-        .add("ColouredQueens", data="10")
-        .add("CostasArray", data="10")
-        .add("CoveringArray", data="[3,5,2,10]")
-        .add("CryptoPuzzle", data="[SEND,MORE,MONEY]")
-        .add("CryptoPuzzle", data="[SEND,MORE,MONEY]", variant="carry")
-        .add("CryptoPuzzle", data="[DONALD,GERALD,ROBERT]")
-        .add("DeBruijnSequence", data="[2,5]")
-        .add("DiamondFree", data="10")
-        .add("Dubois", data="10")
+        .add("AllInterval", data="10", variant="aux")  # 104 solutions  (296 without symmetry-breaking)
+        .add("Bibd", data="[6,0,0,3,8]")  # 494 solutions
+        .add("Bibd", data="[6,0,0,3,8]", variant="aux")  # 494 solutions
+        .add("BoardColoration", data="[8,10]")  # optimum 2
+        .add("ChangeMaking", data="10")  # optimum 1
+        .add("ChangeMaking", data="10", variant="compact")  # optimum 1
+        .add("CoinsGrid", data="[10,4]")  # optimum 98
+        .add("ColouredQueens", data="6")  # unsat
+        .add("CostasArray", data="10")  # 2160 solutions
+        .add("CoveringArray", data="[3,5,2,10]")  # sat
+        .add("CryptoPuzzle", data="[SEND,MORE,MONEY]")  # 1 solution
+        .add("CryptoPuzzle", data="[SEND,MORE,MONEY]", variant="carry")  # 1 solution
+        .add("CryptoPuzzle", data="[DONALD,GERALD,ROBERT]")  # 1 solution
+        .add("DeBruijnSequence", data="[2,5]")  # 2048 solutions
+        .add("DiamondFree", data="8")  # 17 solutions
+        .add("Dubois", data="10")  # unsat
         .add("Enigme5", data="[364,55440]")
-        .add("GolombRuler", data="8")
-        .add("GolombRuler", data="8", variant="dec")
-        .add("GolombRuler", data="8", variant="aux")
-        .add("GracefulGraph", data="[3,5]")
+        .add("GolombRuler", data="8")  # optimum 34
+        .add("GolombRuler", data="8", variant="dec")  # optimum 34
+        .add("GolombRuler", data="8", variant="aux")  # optimum 34
+        .add("GracefulGraph", data="[3,5]")  # sat
         .add("KnightTour", data="16")
         .add("KnightTour", data="16", variant="table-2")
         .add("KnightTour", data="16", variant="table-3")
-        .add("Langford", data="[16,4]")
-        .add("LangfordBin", data="16")
-        .add("LowAutocorrelation", data="16")
-        .add("MagicHexagon", data="[4,10]")
-        .add("MagicSequence", data="10")
-        .add("NumberPartitioning", data="10")
-        .add("Opd", data="[4,4,4]")
-        .add("Opd", data="[4,6,4]", variant="aux")
-        .add("Ortholatin", data="10")
-        .add("PeacableArmies", data="10", variant="m1")
-        .add("PeacableArmies", data="10", variant="m2")
-        .add("QuasiGroup", data="10", variant="base-v3")
-        .add("QuasiGroup", data="10", variant="base-v4")
+        .add("Langford", data="[3,10]")  # 10 solutions
+        .add("LangfordBin", data="8")  # 300 solutions
+        .add("LowAutocorrelation", data="16")  # optimum 24
+        .add("MagicHexagon", data="[4,3]")  # sat
+        .add("MagicSequence", data="10")  # 1 solution
+        .add("NumberPartitioning", data="8")  # 1 solution
+        .add("NumberPartitioning", data="10")  # unsat
+        .add("Opd", data="[4,4,4]")  # optimum 4
+        .add("Opd", data="[4,6,4]", variant="aux")  # optimum 3
+        .add("Ortholatin", data="5")  # 4 solutions
+        .add("PeacableArmies", data="6", variant="m1")  # optimum 5
+        .add("PeacableArmies", data="6", variant="m2")  # optimum 5
+        .add("QuasiGroup", data="8", variant="base-v3")  # 12960 solutions
+        .add("QuasiGroup", data="5", variant="base-v4")  # 12 solutions
         .add("QuasiGroup", data="8", variant="base-v5")  # 720 sols
         .add("QuasiGroup", data="8", variant="base-v6")  # 1440 sols
         .add("QuasiGroup", data="9", variant="base-v7")  # 5040 sols
-        .add("QuasiGroup", data="10", variant="aux-v3")
-        .add("QuasiGroup", data="10", variant="aux-v4")
+        .add("QuasiGroup", data="8", variant="aux-v3")  # 12960 solutions
+        .add("QuasiGroup", data="5", variant="aux-v4")  # 12 solutions
         .add("QuasiGroup", data="8", variant="aux-v5")  # 720 sols
         .add("QuasiGroup", data="9", variant="aux-v7")  # 5040 sols
         .add("QueenAttacking", data="10")

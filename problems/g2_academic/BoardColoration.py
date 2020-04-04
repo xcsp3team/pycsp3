@@ -1,11 +1,15 @@
+"""
+All squares of a board of a specified size (specified numbers of rows and columns) must be colored with the minimum number of colors.
+The four corners of any rectangle inside the board must not be assigned the same color.
+
+Illustration:
+ - python3 BoardColoration
+ - python3 BoardColoration -data=[8,10]
+"""
+
 from pycsp3 import *
 
-"""
- All squares of a board of a specified size (specified numbers of rows and columns) must be colored with the minimum number of colors.
- The four corners of any rectangle inside the board must not be assigned the same color.
-"""
-
-n, m = data
+n, m = data or (6, 5)
 
 # x[i][j] is the color at row i and column j
 x = VarArray(size=[n, m], dom=range(n * m))

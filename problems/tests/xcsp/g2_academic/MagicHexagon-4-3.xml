@@ -1,13 +1,13 @@
 <instance format="XCSP3" type="CSP">
   <variables>
-    <array id="x" note="x represents the hexagon; on row x[i], only the first n - |n/2 - i| cells are useful (here, n = 7)." size="[7][7]"> 10..46 </array>
+    <array id="x" note="x represents the hexagon; on row x[i], only the first n - |n/2 - i| cells are useful (here, n = 7)." size="[7][7]"> 3..39 </array>
   </variables>
   <constraints>
     <allDifferent> x[0][0..3] x[1][0..4] x[2][0..5] x[3][] x[4][0..5] x[5][0..4] x[6][0..3] </allDifferent>
     <group note="all rows sum to the magic value">
       <sum>
         <list> %... </list>
-        <condition> (eq,148) </condition>
+        <condition> (eq,111) </condition>
       </sum>
       <args> x[0][0..3] </args>
       <args> x[1][0..4] </args>
@@ -20,7 +20,7 @@
     <group note="all right-sloping diagonals sum to the magic value">
       <sum>
         <list> %... </list>
-        <condition> (eq,148) </condition>
+        <condition> (eq,111) </condition>
       </sum>
       <args> x[3..6][0] </args>
       <args> x[2][0] x[3..6][1] </args>
@@ -33,7 +33,7 @@
     <group note="all left-sloping diagonals sum to the magic value">
       <sum>
         <list> %... </list>
-        <condition> (eq,148) </condition>
+        <condition> (eq,111) </condition>
       </sum>
       <args> x[0..3][0] </args>
       <args> x[0..3][1] x[4][0] </args>

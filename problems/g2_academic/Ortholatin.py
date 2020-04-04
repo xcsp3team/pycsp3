@@ -1,16 +1,20 @@
+"""
+See https://en.wikipedia.org/wiki/Graeco-Latin_square
+
+A Latin square of order n is an n by n array filled with n different symbols (for example, values between 1 and n),
+each occurring exactly once in each row and exactly once in each column.
+Two latin squares of the same order n are orthogonal if each pair of elements in the same position occurs exactly once.
+The most easy way to see this is by concatenating elements in the same position and verify that no pair appears twice.
+There are orthogonal latin squares of any size except 1, 2, and 6.
+
+Illustration:
+ - python3 OrthoLatin
+ - python3 OrthoLatin -data=7
+"""
+
 from pycsp3 import *
 
-'''
- See https://en.wikipedia.org/wiki/Graeco-Latin_square
-
- A Latin square of order n is an n by n array filled with n different symbols (for example, values between 1 and n),
- each occurring exactly once in each row and exactly once in each column.
- Two latin squares of the same order n are orthogonal if each pair of elements in the same position occurs exactly once.
- The most easy way to see this is by concatenating elements in the same position and verify that no pair appears twice.
- There are orthogonal latin squares of any size except 1, 2, and 6.
-'''
-
-n = data
+n = data or 5
 
 # x is the first Latin square
 x = VarArray(size=[n, n], dom=range(n))
@@ -44,9 +48,9 @@ satisfy(
 )
 
 
-# a less compact way of posting symmetry_breaking constraints below:
+# Note that a less compact way of posting symmetry_breaking constraints is:
 # # tag(symmetry-breaking)
-#     [
-#         [x[0][j] == j for j in range(n)],
-#         [y[0][j] == j for j in range(n)]
-#     ],
+# [
+#     [x[0][j] == j for j in range(n)],
+#     [y[0][j] == j for j in range(n)]
+# ],

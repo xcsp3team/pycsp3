@@ -1,10 +1,14 @@
+"""
+Problem 049 on CSPLib
+
+Illustration:
+ - python3 NumberPartitioning
+ - python3 NumberPartitioning -data=10
+"""
+
 from pycsp3 import *
 
-"""
- Problem 049 on CSPLib
-"""
-
-n = data
+n = data or 8
 assert n % 2 == 0, "The value of n must be even"
 
 # x[i] is the ith value of the first set

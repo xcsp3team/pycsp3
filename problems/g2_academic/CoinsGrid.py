@@ -1,13 +1,17 @@
+"""
+See 'Constraint Solving and Planning with Picat' (page 43)
+From Tony Hurlimann, A coin puzzle, SVOR-contest 2007
+
+Some data: (8,4) (8,5) (9,4) (10,4) (31,14)
+
+Illustration:
+ - python3 CoinsGrid
+ - python3 CoinsGrid -data=[10,4]
+"""
+
 from pycsp3 import *
 
-"""
- See 'Constraint Solving and Planning with Picat' (page 43)
- From Tony Hurlimann, A coin puzzle, SVOR-contest 2007
-
- Some data: (8,4) (8,5) (9,4) (10,4) (31,14)
-"""
-
-n, c = data
+n, c = data or (8, 4)
 
 #  x[i][j] is 1 if a coin is placed at row i and column j
 x = VarArray(size=[n, n], dom={0, 1})
