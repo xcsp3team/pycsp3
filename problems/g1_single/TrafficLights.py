@@ -1,6 +1,11 @@
-from pycsp3 import *
+"""
+Problem 016 on CSPLib
 
-# Problem 016 at CSPLib
+Illustration:
+ - python3 TrafficLights
+"""
+
+from pycsp3 import *
 
 R, RY, G, Y = "red", "red-yellow", "green", "yellow"
 

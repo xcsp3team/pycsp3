@@ -1,13 +1,17 @@
-from pycsp3 import *
+"""
+Problem 018 on CSPLib
 
+Illustration:
+ - python3 WaterBucket
+ - python3 WaterBucket -data=[8,5,3,4,4,0,8]
 """
- Problem 018 on CSPLib
-"""
+
+from pycsp3 import *
 
 # ci for capacities of the three buckets
 # gi for goal (which quantities must be present in the three buckets after all transfers)
 # h for horizon (maximal number of rounds/transfers)
-c1, c2, c3, g1, g2, g3, h = data
+c1, c2, c3, g1, g2, g3, h = data or (8, 5, 3, 4, 4, 0, 8)
 
 assert c1 >= c2 >= c3 > 0, "Bucket capacities must be in decreasing order"
 assert g1 + g2 + g3 == c1, "water from bucket 1 must be split into the three buckets to reach the goal"

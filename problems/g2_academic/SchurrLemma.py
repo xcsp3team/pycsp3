@@ -1,12 +1,17 @@
+"""
+Problem 015 on CSPLib
+
+The variant 'mod' corresponds to the one proposed in [Bessiere Meseguer Freuder Larrosa, On forward checking for non-binary constraint satisfaction, 2002].
+
+Illustration:
+ - python3 SchurrLemma
+ - python3 SchurrLemma -data=[10,10]
+ - python3 SchurrLemma -data=[10,10] -variant=mod
+"""
+
 from pycsp3 import *
 
-"""
- Problem 015 on CSPLib
-
- The variant 'mod' corresponds to the one proposed in [Bessiere Meseguer Freuder Larrosa, On forward checking for non-binary constraint satisfaction, 2002].
-"""
-
-n, d = data  # n is the number of balls -- d is the number of boxes
+n, d = data or (8, 8)  # n is the number of balls -- d is the number of boxes
 
 # x[i] is the box where the ith ball is put
 x = VarArray(size=n, dom=range(d))

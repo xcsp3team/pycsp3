@@ -1,10 +1,15 @@
+"""
+Problem 026 on CSPLib
+
+Illustration:
+ - python3 SportsScheduling
+ - python3 SportsScheduling -data=10
+ - python3 SportsScheduling -data=10 -variant=dummy
+"""
+
 from pycsp3 import *
 
-"""
- Problem 026 on CSPLib
-"""
-
-nTeams = data
+nTeams = data or 8
 nWeeks, nPeriods, nMatches = nTeams - 1, nTeams // 2, (nTeams - 1) * nTeams // 2
 
 

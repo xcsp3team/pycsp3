@@ -50,7 +50,4 @@ satisfy(
 
 # Note that a less compact way of posting symmetry_breaking constraints is:
 # # tag(symmetry-breaking)
-# [
-#     [x[0][j] == j for j in range(n)],
-#     [y[0][j] == j for j in range(n)]
-# ],
+# [[x[0][j] == j for j in range(n)], [y[0][j] == j for j in range(n)]],

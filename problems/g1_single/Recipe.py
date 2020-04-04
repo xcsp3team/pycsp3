@@ -1,6 +1,11 @@
-from pycsp3 import *
+"""
+From the Minizinc tutorial
 
-# From the Minizinc tutorial
+Illustration:
+ - python3 Recipe
+"""
+
+from pycsp3 import *
 
 # b is the number of banana cakes
 b = Var(range(100))

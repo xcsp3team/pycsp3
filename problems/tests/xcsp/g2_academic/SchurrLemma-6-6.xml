@@ -1,0 +1,19 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the box where the ith ball is put" size="[6]"> 0..5 </array>
+  </variables>
+  <constraints>
+    <group>
+      <nValues>
+        <list> %0 %1 %2 </list>
+        <condition> (gt,1) </condition>
+      </nValues>
+      <args> x[0..2] </args>
+      <args> x[0] x[2..3] </args>
+      <args> x[0] x[3..4] </args>
+      <args> x[0] x[4..5] </args>
+      <args> x[1..2] x[4] </args>
+      <args> x[1] x[3] x[5] </args>
+    </group>
+  </constraints>
+</instance>
