@@ -1,6 +1,11 @@
-from pycsp3 import *
+"""
+Problem 041 on CSPLib
 
-# Problem 041 at CSPLib (22 solutions)
+Illustration:
+ - python3 NFractions
+"""
+
+from pycsp3 import *
 
 digits = VarArray(size=9, dom=range(1, 10))
 a, b, c, d, e, f, g, h, i = digits

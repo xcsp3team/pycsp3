@@ -1,10 +1,16 @@
+"""
+Problem 054 on CSPLib
+
+Illustration:
+ - python3 Queens
+ - python3 Queens -data=6
+ - python3 Queens -data=6 -variant=v1
+ - python3 Queens -data=6 -variant=v2
+"""
+
 from pycsp3 import *
 
-"""
- Problem 054 on CSPLib
-"""
-
-n = data
+n = data or 8
 
 # q[i] is the column where is put the ith queen (at row i)
 q = VarArray(size=n, dom=range(n))

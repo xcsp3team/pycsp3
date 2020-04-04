@@ -106,22 +106,22 @@ xcsp = (Tester(NAME)
         .add("QuasiGroup", data="5", variant="aux-v4")  # 12 solutions
         .add("QuasiGroup", data="8", variant="aux-v5")  # 720 sols
         .add("QuasiGroup", data="9", variant="aux-v7")  # 5040 sols
-        .add("QueenAttacking", data="10")
-        .add("Queens", data="10")
-        .add("Queens", data="10", variant="v1")
-        .add("Queens", data="10", variant="v2")
-        .add("Ramsey", data="10")
-        .add("SchurrLemma", data="[10,10]")
-        .add("SchurrLemma", data="[10,10]", variant="mod")
-        .add("SocialGolfers", data="[4,4,5]")
-        .add("SocialGolfers", data="[4,4,5]", variant="01")
-        .add("SportsScheduling", data="10")
-        .add("SportsScheduling", data="10", variant="dummy")
-        .add("Steiner3", data="6")
-        .add("StillLife", data="[8,8]")
-        .add("StillLife", data="[8,8]", variant="wastage")
-        .add("Talisman", data="[4,4]")
-        .add("WaterBucket", data="[8,5,3,4,4,0,8]")
+        .add("QueenAttacking", data="6")  # optimum 0
+        .add("Queens", data="10")  # 724 solutions
+        .add("Queens", data="10", variant="v1")  # 724 solutions
+        .add("Queens", data="10", variant="v2")  # 724 solutions
+        .add("Ramsey", data="10")  # optimum 2
+        .add("SchurrLemma", data="[6,6]")  # 39870 solutions
+        .add("SchurrLemma", data="[8,8]", variant="mod")  # 141120 solutions
+        .add("SocialGolfers", data="[4,4,5]")  # 2 solutions
+        .add("SocialGolfers", data="[4,4,5]", variant="01")  # 2 solutions
+        .add("SportsScheduling", data="6")  # 10 solutions
+        .add("SportsScheduling", data="6", variant="dummy")  # 10 solutions
+        .add("Steiner3", data="7")  # 151200 solutions
+        .add("StillLife", data="[7,7]")  # optimum 28
+        .add("StillLife", data="[8,8]", variant="wastage")  # optimum 36
+        .add("Talisman", data="[4,2]")  # 34714 solutions
+        .add("WaterBucket", data="[8,5,3,4,4,0,8]")  # optimum 7
         )
 
 # .add("QuasiGroup", data="10", variant="base-v6")

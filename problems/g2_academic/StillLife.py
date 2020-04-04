@@ -1,10 +1,15 @@
+"""
+Problem 032 on CSPLib
+
+Illustration:
+ - python3 StillLife
+ - python3 StillLife -data=[7,7]
+ - python3 StillLife -data=[7,7] -variant=wastage
+"""
+
 from pycsp3 import *
 
-"""
- Problem 032 on CSPLib
-"""
-
-n, m = data
+n, m = data or (8, 8)
 
 if not variant():
     table = {(v, 0) for v in range(9) if v != 3} | {(2, 1), (3, 1)}

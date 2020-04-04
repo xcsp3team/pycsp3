@@ -1,3 +1,12 @@
+"""
+See https://en.wikipedia.org/wiki/Verbal_arithmetic
+
+A model for a general form of this problem is in CryptoPuzzle.py
+
+Illustration:
+ - python3 SendMore
+"""
+
 from pycsp3 import *
 
 s, e, n, d, m, o, r, y = letters = VarArray(size=8, dom=range(10))

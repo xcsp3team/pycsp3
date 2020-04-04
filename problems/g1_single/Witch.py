@@ -1,3 +1,10 @@
+"""
+A toy problem from my course about CP.
+
+Illustration:
+ - python3 Witch
+"""
+
 from pycsp3 import *
 
 # x is the number of magic potions for love

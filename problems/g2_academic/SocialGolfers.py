@@ -1,10 +1,15 @@
+"""
+Problem 010 on CSPLib
+
+Illustration:
+ - python3 SocialGolfers
+ - python3 SocialGolfers -data=[5,3,6]
+ - python3 SocialGolfers -data=[5,3,6] -variant=01
+"""
+
 from pycsp3 import *
 
-"""
- Problem 010 on CSPLib
-"""
-
-nGroups, size, nWeeks = data  # size is the size of the groups
+nGroups, size, nWeeks = data or (4, 4, 5)  # size is the size of the groups
 nPlayers = nGroups * size
 
 if not variant():

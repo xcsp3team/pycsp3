@@ -1,15 +1,18 @@
+"""
+Well-known crypto-arithmetic puzzle of unknown origin (e.g., a model is present in Gecode)
+
+Illustration:
+ - python3 Alpha
+ - python3 Alpha -variant=var
+"""
+
 from pycsp3 import *
 
-"""
- Well-known crypto-arithmetic puzzle of unknown origin (e.g., a model is present in Gecode)
-"""
-
-
-def of(word):
-    return [x[i] for i in alphabet_positions(word)]
-
-
 if not variant():
+    def of(word):
+        return [x[i] for i in alphabet_positions(word)]
+
+
     # x[i] is the value for the ith letter of the alphabet
     x = VarArray(size=26, dom=range(1, 27))
 

@@ -1,8 +1,12 @@
-from pycsp3 import *
+"""
+Problem 029 on CSPLib
+
+Illustration:
+ - python3 QueenAttacking
+ - python3 QueenAttacking -data=6
 
 """
- Problem 029 on CSPLib
-"""
+from pycsp3 import *
 
 
 def primes(limit):
@@ -14,7 +18,7 @@ def primes(limit):
     return [2] + [i for i in range(3, limit, 2) if sieve[i]]
 
 
-n = data
+n = data or 8
 primes = primes(n * n)
 m = len(primes)
 

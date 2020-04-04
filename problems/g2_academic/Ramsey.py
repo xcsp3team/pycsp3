@@ -1,13 +1,18 @@
+"""
+Problem 017 on CSPLib
+
+The edges of a complete graph (with n nodes) must be coloured with the minimum number of colours.
+There must be no monochromatic triangle in the graph, i.e. in any triangle at most two edges have the same colour.
+With 3 colours, the problem has a solution if n < 17.
+
+Illustration:
+ - python3 Ramsey
+ - python3 Ramsey -data=10
+"""
+
 from pycsp3 import *
-"""
- Problem 017 on CSPLib
 
- The edges of a complete graph (with n nodes) must be coloured with the minimum number of colours.
- There must be no monochromatic triangle in the graph, i.e. in any triangle at most two edges have the same colour.
- With 3 colours, the problem has a solution if n < 17.
-"""
-
-n = data
+n = data or 8
 
 # x[i][j] is the color of the edge between nodes i and j
 x = VarArray(size=[n, n], dom=lambda i, j: range((n * (n - 1)) // 2) if i < j else None)

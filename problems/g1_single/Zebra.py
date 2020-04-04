@@ -1,5 +1,3 @@
-from pycsp3 import *
-
 """
 The Zebra puzzle (sometimes referred to as Einstein's puzzle) is defined as follows.
 There are five houses in a row, numbered from left to right.
@@ -25,7 +23,11 @@ We know that:
  - the green house is next to the white one
  - the horse is owned by the neighbor of the diplomat
  - the Italian either lives in the red, white or green house
+
+Illustration:
+ - python3 Zebra
 """
+from pycsp3 import *
 
 houses = range(5)  # each house has a number from 0 (left) to 4 (right)
 
