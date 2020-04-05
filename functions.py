@@ -25,6 +25,7 @@ from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, transpose, integer_scaling, is_containing, \
     ANY
+from pycsp3.compiler import default_data
 
 ''' Global Variables '''
 
@@ -774,4 +775,4 @@ def cp_array(l):
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, columns, namedtuple)
+    _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, columns, namedtuple, default_data)

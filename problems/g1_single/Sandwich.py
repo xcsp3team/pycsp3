@@ -11,8 +11,7 @@ The witnesses are unanimous about the following facts:
  - Sascha likes everyone that Alice likes.
  - Nobody likes everyone.
 
-Illustration:
- - python3 Sandwich
+Execution: python3 Sandwich
 """
 
 from pycsp3 import *

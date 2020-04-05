@@ -1,7 +1,7 @@
 """
 See http://mathworld.wolfram.com/deBruijnSequence.html and http://www.hakank.org/comb/debruijn.cgi#info
 
-Illustration:
+Execution:
  - python3 DeBruijnSequence
  - python3 DeBruijnSequence -data=[2,5]
 """

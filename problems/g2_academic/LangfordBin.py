@@ -1,7 +1,7 @@
 """
 See Ian P. Gent, Christopher Jefferson, Ian Miguel: Watched Literals for Constraint Propagation in Minion. CP 2006: 182-197
 
-Illustration:
+Execution:
  - python3 LangfordBin
  - python3 LangfordBin -data=10
 """

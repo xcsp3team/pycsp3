@@ -1,8 +1,7 @@
 """
 From the Minizinc tutorial
 
-Illustration:
- - python3 Recipe
+Execution: python3 Recipe
 """
 
 from pycsp3 import *

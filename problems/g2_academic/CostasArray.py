@@ -2,7 +2,7 @@
 Problem 076 on CSPLib, and NumberJack example
 
 
-Illustration:
+Execution:
  - python3 CostasArray
  - python3 CostasArray -data=10
 """

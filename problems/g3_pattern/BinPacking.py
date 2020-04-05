@@ -1,8 +1,11 @@
-from pycsp3 import *
+"""
+See BPPLIB – A Bin Packing Problem Library
 
+Execution:
+ - python3 BinPacking -data=BinPacking_n1c1w4a.json
 """
- see BPPLIB – A Bin Packing Problem Library
-"""
+
+from pycsp3 import *
 
 capacity = data.binCapacity
 weights = sorted(data.itemWeights)

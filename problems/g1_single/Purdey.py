@@ -9,8 +9,7 @@ We know that:
  - one family traded a cured ham for a large sack of flour
  - Purdey only extended credit to regular customers, such as the family that bought the muslin on credit
 
-Illustration:
- - python3 Purdey
+Execution: python3 Purdey
 """
 
 from pycsp3 import *

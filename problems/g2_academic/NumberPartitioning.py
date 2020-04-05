@@ -1,7 +1,7 @@
 """
 Problem 049 on CSPLib
 
-Illustration:
+Execution:
  - python3 NumberPartitioning
  - python3 NumberPartitioning -data=10
 """

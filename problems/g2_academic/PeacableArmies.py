@@ -1,7 +1,7 @@
 """
 Problem 110 on CSPLib
 
-Illustration:
+Execution:
  - python3 PeacableArmies -data=10 -variant=m1
  - python3 PeacableArmies -data=10 -variant=m2
 """

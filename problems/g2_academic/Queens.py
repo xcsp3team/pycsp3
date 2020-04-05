@@ -1,7 +1,7 @@
 """
 Problem 054 on CSPLib
 
-Illustration:
+Execution:
  - python3 Queens
  - python3 Queens -data=6
  - python3 Queens -data=6 -variant=v1

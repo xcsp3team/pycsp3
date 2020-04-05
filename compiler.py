@@ -133,6 +133,19 @@ def _load(*, console=False):
     OpOverrider.enable()
 
 
+def default_data(filename):
+    fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
+    assert fn.endswith(".json")
+    assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
+    with open(fn) as f:
+        Compilation.data = json.loads(f.read(), object_pairs_hook=OrderedDict)
+        Compilation.string_data = "-" + filename.split(os.sep)[-1:][0].split(".")[:1][0]
+    Compilation.data = convert_to_namedtuples(Compilation.data)
+    if len(Compilation.data) == 1:
+        Compilation.data = Compilation.data[0]  # the value instead of a tuple of size 1
+    return Compilation.data
+
+
 def _compile():
     # used to save data in jSON
     def prepare_for_json(obj):

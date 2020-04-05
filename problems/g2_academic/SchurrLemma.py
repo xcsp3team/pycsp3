@@ -3,7 +3,7 @@ Problem 015 on CSPLib
 
 The variant 'mod' corresponds to the one proposed in [Bessiere Meseguer Freuder Larrosa, On forward checking for non-binary constraint satisfaction, 2002].
 
-Illustration:
+Execution:
  - python3 SchurrLemma
  - python3 SchurrLemma -data=[10,10]
  - python3 SchurrLemma -data=[10,10] -variant=mod

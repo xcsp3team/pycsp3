@@ -1,7 +1,7 @@
 """
 Problem 007 on CSPLib
 
-Illustration:
+Execution:
  - python3 AllInterval
  - python3 AllInterval -data=10
  - python3 AllInterval -data=10 -variant=aux

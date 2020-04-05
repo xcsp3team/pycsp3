@@ -1,7 +1,7 @@
 """
 Problem 005 on CSPLib
 
-Illustration:
+Execution:
  - python3 LowAutocorrelation
  - python3 LowAutocorrelation -data=16
 """

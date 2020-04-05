@@ -7,7 +7,7 @@ Two latin squares of the same order n are orthogonal if each pair of elements in
 The most easy way to see this is by concatenating elements in the same position and verify that no pair appears twice.
 There are orthogonal latin squares of any size except 1, 2, and 6.
 
-Illustration:
+Execution:
  - python3 OrthoLatin
  - python3 OrthoLatin -data=7
 """

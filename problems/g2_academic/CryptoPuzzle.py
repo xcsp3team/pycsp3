@@ -3,7 +3,7 @@ See https://en.wikipedia.org/wiki/Verbal_arithmetic
 
 Example of data: (no,no,yes) (two,two,four) (send,more,money) (cross,road,danger) (donald,gerarld,robert)
 
-Illustration:
+Execution:
  - python3 CryptoPuzzle
  - python3 CryptoPuzzle -data=[send,more,money]
  - python3 CryptoPuzzle -data=[send,more,money] -variant=carry

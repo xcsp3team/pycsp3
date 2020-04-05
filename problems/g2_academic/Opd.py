@@ -1,7 +1,7 @@
 """
 Problem 065 on CSPLib
 
-Illustration:
+Execution:
  - python3 Opd
  - python3 Opd -data=[4,6,4]
  - python3 Opd -data=[4,6,4] -variant=aux

@@ -76,14 +76,15 @@ same = (Tester(NAME)
         )
 
 xcsp = (Tester(NAME)
-        .add("Auction", data="Auction_example.json")
-        .add("Auction", data="Auction_example.txt", prs_py="Auction_Parser", prs_jv="Auction_Parser")
-        .add("BinPacking", data="BinPacking_n1c1w4a.json")
-        .add("BinPacking", data="BinPacking_n1c1w4a.json", variant="table")
-        .add("BinPacking", data="BinPacking_example.txt", prs_py="BinPacking_Parser", prs_jv="BinPacking_Parser")
-        .add("Blackhole", data="Blackhole.json")
-        .add("Bugs", data="Bugs_example.json")
-        .add("Bugs", data="Bugs_example.txt", prs_py="Bugs_Parser", prs_jv="Bugs_Parser")
+        .add("Areas", data="Areas-3-3-3.json")  # 7 solutions
+        .add("Auction", data="Auction_example.json")  # optimum 54
+        .add("Auction", data="Auction_example.txt", prs_py="Auction_Parser", prs_jv="Auction_Parser")  # optimum 54
+        .add("BinPacking", data="BinPacking_n1c1w4a.json")  # optimum 5
+        .add("BinPacking", data="BinPacking_n1c1w4a.json", variant="table")  # optimum 5
+        .add("BinPacking", data="BinPacking_example.txt", prs_py="BinPacking_Parser", prs_jv="BinPacking_Parser")  # optimum 5
+        .add("Blackhole", data="Blackhole.json")  # 47232 solutions
+        .add("Bugs", data="Bugs_example.json")  # optimum 5
+        .add("Bugs", data="Bugs_example.txt", prs_py="Bugs_Parser", prs_jv="Bugs_Parser")  # optimum 5
         .add("BusScheduling", data="BusScheduling_c1a.json")
         .add("BusScheduling", data="BusScheduling_r1.json")
         .add("BusScheduling", data="BusScheduling_t1.json")

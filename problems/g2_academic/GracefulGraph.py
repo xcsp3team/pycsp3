@@ -1,7 +1,7 @@
 """
 Problem 053 on CSPLib
 
-Illustration:
+Execution:
  - python3 GracefulGraph
  - python3 GracefulGraph -data=[3,5]
 """

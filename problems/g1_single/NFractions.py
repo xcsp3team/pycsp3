@@ -1,8 +1,7 @@
 """
 Problem 041 on CSPLib
 
-Illustration:
- - python3 NFractions
+Execution: python3 NFractions
 """
 
 from pycsp3 import *

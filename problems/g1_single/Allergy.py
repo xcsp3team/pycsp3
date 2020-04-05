@@ -9,8 +9,7 @@ We know that:
  - Debra is allergic to ragweed
  - Janet (who isn't Lemon) is neither allergic to eggs nor to mold
 
-Illustration:
- - python3 Allergy
+Execution: python3 Allergy
 """
 
 from pycsp3 import *

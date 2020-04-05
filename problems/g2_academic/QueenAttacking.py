@@ -1,7 +1,7 @@
 """
 Problem 029 on CSPLib
 
-Illustration:
+Execution:
  - python3 QueenAttacking
  - python3 QueenAttacking -data=6
 

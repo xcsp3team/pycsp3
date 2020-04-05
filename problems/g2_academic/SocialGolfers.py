@@ -1,7 +1,7 @@
 """
 Problem 010 on CSPLib
 
-Illustration:
+Execution:
  - python3 SocialGolfers
  - python3 SocialGolfers -data=[5,3,6]
  - python3 SocialGolfers -data=[5,3,6] -variant=01
