@@ -1,3 +1,9 @@
+"""
+Problem 022 on CSPLib
+
+Model without the cost parameter, as in Minizinc
+"""
+
 from pycsp3 import *
 
 nTasks, nShifts = data.nTasks, len(data.shifts)

@@ -1,7 +1,7 @@
 """
 Problem 044 on CSPLib
 
-Illustration:
+Execution:
  - python3 Steiner3
  - python3 Steiner3 -data=6
 """

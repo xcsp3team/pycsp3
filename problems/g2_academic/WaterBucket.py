@@ -1,7 +1,7 @@
 """
 Problem 018 on CSPLib
 
-Illustration:
+Execution:
  - python3 WaterBucket
  - python3 WaterBucket -data=[8,5,3,4,4,0,8]
 """

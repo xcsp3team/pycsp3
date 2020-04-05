@@ -1,10 +1,14 @@
+"""
+Problem 063 on CSPLib
+
+Execution:
+ - python3 Auction
+ - python3 Auction -data=Auction_example.json
+"""
+
 from pycsp3 import *
 
-"""
- Problem 063 on CSPLib
-"""
-
-bids = data
+bids = data or default_data("Auction_example.json")
 items = sorted({item for bid in bids for item in bid.items})
 values = integer_scaling(bid.value for bid in bids)
 nBids = len(bids)

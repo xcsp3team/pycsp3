@@ -1,7 +1,7 @@
 """
 See https://en.wikipedia.org/wiki/Knight%27s_tour
 
-Illustration:
+Execution:
  - python3 KnightTour
  - python3 KnightTour -data=16
  - python3 KnightTour -data=16 -variant=table-2

@@ -1,7 +1,7 @@
 """
 Problem 050 on CSPLib
 
-Illustration:
+Execution:
  - python3 DiamondFree
  - python3 DiamondFree -data=10
 """

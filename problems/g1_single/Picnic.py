@@ -12,8 +12,7 @@ We know that:
  - A woman brought bread and juice.
  - The person who arrived by sailboat is not the person who brought the soda and the other person who brought the cookies.
 
-Illustration:
- - python3 Picnic
+Execution: python3 Picnic
 """
 
 from pycsp3 import *

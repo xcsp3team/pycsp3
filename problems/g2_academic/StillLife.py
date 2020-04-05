@@ -1,7 +1,7 @@
 """
 Problem 032 on CSPLib
 
-Illustration:
+Execution:
  - python3 StillLife
  - python3 StillLife -data=[7,7]
  - python3 StillLife -data=[7,7] -variant=wastage

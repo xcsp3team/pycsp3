@@ -3,8 +3,7 @@ See https://en.wikipedia.org/wiki/Verbal_arithmetic
 
 A model for a general form of this problem is in CryptoPuzzle.py
 
-Illustration:
- - python3 SendMore
+Execution: python3 SendMore
 """
 
 from pycsp3 import *

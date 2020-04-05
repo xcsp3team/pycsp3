@@ -1,7 +1,7 @@
 """
 See https://en.wikipedia.org/wiki/Change-making_problem
 
-Illustration:
+Execution:
  - python3 ChangeMaking
  - python3 ChangeMaking -data=10
  - python3 ChangeMaking -data=10 -variant=compact

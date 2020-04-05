@@ -5,7 +5,7 @@ The edges of a complete graph (with n nodes) must be coloured with the minimum n
 There must be no monochromatic triangle in the graph, i.e. in any triangle at most two edges have the same colour.
 With 3 colours, the problem has a solution if n < 17.
 
-Illustration:
+Execution:
  - python3 Ramsey
  - python3 Ramsey -data=10
 """

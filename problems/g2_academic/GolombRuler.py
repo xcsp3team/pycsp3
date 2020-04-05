@@ -1,7 +1,7 @@
 """
 Problem 006 on CSPLib
 
-Illustration:
+Execution:
  - python3 GolombRuler
  - python3 GolombRuler -data=10
  - python3 GolombRuler -data=10 -variant=dec

@@ -1,7 +1,7 @@
 """
 Problem 026 on CSPLib
 
-Illustration:
+Execution:
  - python3 SportsScheduling
  - python3 SportsScheduling -data=10
  - python3 SportsScheduling -data=10 -variant=dummy

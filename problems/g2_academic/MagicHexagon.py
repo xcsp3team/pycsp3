@@ -1,7 +1,7 @@
 """
 Problem 023 on CSPLib
 
-Illustration:
+Execution:
  - python3 MagicHexagon
  - python3 MagicHexagon -data=[4,10]
 """

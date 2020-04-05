@@ -1,7 +1,7 @@
 """
 Problem 019 on CSPLib
 
-Illustration:
+Execution:
  - python3 MagicSequence
  - python3 MagicSequence -data=10
 """

@@ -12,8 +12,7 @@ Agatha, the butler, and Charles live in Dreadsbury Mansion, and are the only peo
  - The butler hates everyone Agatha hates.
  - No one hates everyone.
 
-Illustration:
- - python3 Agatha
+Execution: python3 Agatha
 """
 
 from pycsp3 import *

@@ -1,7 +1,7 @@
 """
 Problem 024 on CSPLib
 
-Illustration:
+Execution:
  - python3 Langford
  - python3 Langford -data=[3,10]
 """

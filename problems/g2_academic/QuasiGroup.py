@@ -1,7 +1,7 @@
 """
 Problem 003 on CSPLib
 
-Illustration:
+Execution:
  - python3 QuasiGroup
  - python3 QuasiGroup -data=8 -variant=base-v3
  - python3 QuasiGroup -data=5 -variant=base-v4

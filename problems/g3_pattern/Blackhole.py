@@ -1,8 +1,11 @@
-from pycsp3 import *
+"""
+Problem 081 on CSPLib
 
+Execution:
+ - python3 Blackhole -data=Blackhole-01.json
 """
- Problem 081 on CSPLib
-"""
+
+from pycsp3 import *
 
 m = data.nCardsPerSuit
 nCards = 4 * m

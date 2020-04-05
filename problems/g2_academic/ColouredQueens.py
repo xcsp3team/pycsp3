@@ -4,7 +4,7 @@ There is an edge between nodes iff they are on the same row, column, or diagonal
 The coloring problem is to color the queens graph with n colors.
 See Tom Kelsey, Steve Linton, Colva M. Roney-Dougal: New Developments in Symmetry Breaking in Search Using Computational Group Theory. AISC 2004: 199-210.
 
-Illustration:
+Execution:
  - python3 ColouredQueens
  - python3 ColouredQueens -data=10
 """

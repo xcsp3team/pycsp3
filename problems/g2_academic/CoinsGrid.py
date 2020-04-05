@@ -4,7 +4,7 @@ From Tony Hurlimann, A coin puzzle, SVOR-contest 2007
 
 Some data: (8,4) (8,5) (9,4) (10,4) (31,14)
 
-Illustration:
+Execution:
  - python3 CoinsGrid
  - python3 CoinsGrid -data=[10,4]
 """

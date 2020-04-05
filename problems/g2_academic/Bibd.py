@@ -1,7 +1,7 @@
 """
 Problem 028 on CSPLib
 
-Illustration:
+Execution:
  - python3 Bibd
  - python3 Bibd -data=[9,0,0,3,9]
  - python3 Bibd -data=[9,0,0,3,9] -variant=aux

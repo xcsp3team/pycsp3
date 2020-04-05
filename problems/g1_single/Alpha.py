@@ -1,7 +1,7 @@
 """
 Well-known crypto-arithmetic puzzle of unknown origin (e.g., a model is present in Gecode)
 
-Illustration:
+Execution:
  - python3 Alpha
  - python3 Alpha -variant=var
 """
