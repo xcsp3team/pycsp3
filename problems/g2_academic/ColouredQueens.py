@@ -4,9 +4,9 @@ There is an edge between nodes iff they are on the same row, column, or diagonal
 The coloring problem is to color the queens graph with n colors.
 See Tom Kelsey, Steve Linton, Colva M. Roney-Dougal: New Developments in Symmetry Breaking in Search Using Computational Group Theory. AISC 2004: 199-210.
 
-Execution:
- - python3 ColouredQueens
- - python3 ColouredQueens -data=10
+Examples of Execution:
+  python3 ColouredQueens.py
+  python3 ColouredQueens.py -data=10
 """
 
 from pycsp3 import *

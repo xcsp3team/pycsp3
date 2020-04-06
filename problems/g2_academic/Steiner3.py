@@ -1,9 +1,9 @@
 """
 Problem 044 on CSPLib
 
-Execution:
- - python3 Steiner3
- - python3 Steiner3 -data=6
+Examples of Execution:
+  python3 Steiner3.py
+  python3 Steiner3.py -data=6
 """
 
 from pycsp3 import *

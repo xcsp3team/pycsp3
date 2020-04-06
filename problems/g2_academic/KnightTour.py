@@ -1,11 +1,11 @@
 """
 See https://en.wikipedia.org/wiki/Knight%27s_tour
 
-Execution:
- - python3 KnightTour
- - python3 KnightTour -data=16
- - python3 KnightTour -data=16 -variant=table-2
- - python3 KnightTour -data=16 -variant=table-3
+Examples of Execution:
+  python3 KnightTour.py
+  python3 KnightTour.py -data=16
+  python3 KnightTour.py -data=16 -variant=table-2
+  python3 KnightTour.py -data=16 -variant=table-3
 """
 
 from pycsp3 import *

@@ -1,9 +1,9 @@
 """
 Problem 024 on CSPLib
 
-Execution:
- - python3 Langford
- - python3 Langford -data=[3,10]
+Examples of Execution:
+  python3 Langford.py
+  python3 Langford.py -data=[3,10]
 """
 
 from pycsp3 import *

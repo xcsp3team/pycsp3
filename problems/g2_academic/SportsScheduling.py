@@ -1,10 +1,10 @@
 """
 Problem 026 on CSPLib
 
-Execution:
- - python3 SportsScheduling
- - python3 SportsScheduling -data=10
- - python3 SportsScheduling -data=10 -variant=dummy
+Examples of Execution:
+  python3 SportsScheduling.py
+  python3 SportsScheduling.py -data=10
+  python3 SportsScheduling.py -data=10 -variant=dummy
 """
 
 from pycsp3 import *

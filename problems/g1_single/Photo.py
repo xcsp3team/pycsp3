@@ -6,9 +6,9 @@ Some of them have preferences next to whom they want to stand:
  - Fred wants to stand next to Mary and Donald.
  - Paul wants to stand next to Fred and Donald.
 
-Execution:
- - python3 Photo
- - python3 Photo -variant=aux
+Examples of Execution:
+  python3 Photo.py
+  python3 Photo.py -variant=aux
 """
 
 from pycsp3 import *

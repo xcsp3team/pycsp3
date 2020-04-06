@@ -5,9 +5,9 @@ An n x n array  of the integers from 1 to n^2 such that the difference between a
 and its neighbor (horizontally, vertically, or diagonally, without wrapping around)
 is greater than or equal to some value k is called a (n,k)-talisman square.
 
-Execution:
- - python3 Talisman
- - python3 Talisman -data=[5,4]
+Examples of Execution:
+  python3 Talisman.py
+  python3 Talisman.py -data=[5,4]
 """
 
 from pycsp3 import *

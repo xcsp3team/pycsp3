@@ -1,9 +1,9 @@
 """
 See http://mathworld.wolfram.com/deBruijnSequence.html and http://www.hakank.org/comb/debruijn.cgi#info
 
-Execution:
- - python3 DeBruijnSequence
- - python3 DeBruijnSequence -data=[2,5]
+Examples of Execution:
+  python3 DeBruijnSequence.py
+  python3 DeBruijnSequence.py -data=[2,5]
 """
 
 from pycsp3 import *

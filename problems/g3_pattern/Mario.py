@@ -1,3 +1,8 @@
+"""
+Problem proposed by A. Ollagnier and J.-G. Fages for the 2013 Minizinc Competition.
+
+
+"""
 from pycsp3 import *
 
 # similar model proposed by A. Ollagnier and J.-G. Fages for the 2013 Minizinc Competition

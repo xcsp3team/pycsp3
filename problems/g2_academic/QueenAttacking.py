@@ -1,11 +1,11 @@
 """
 Problem 029 on CSPLib
 
-Execution:
- - python3 QueenAttacking
- - python3 QueenAttacking -data=6
-
+Examples of Execution:
+  python3 QueenAttacking.py
+  python3 QueenAttacking.py -data=6
 """
+
 from pycsp3 import *
 
 

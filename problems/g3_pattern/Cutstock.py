@@ -1,12 +1,15 @@
+"""
+See "Mathematical methods of organizing and planning production" by L. V. Kantorovich, Management Science, 6(4):366–422, 1960
+See "From High-Level Model to Branch-and-Price Solution in G12", by J. Puchinger, P. Stuckey, M. Wallace, and S. Brand, CPAIOR 2008: 218-232
+
+Example of Execution:
+  python3 Cutstock.py -data=Cutstock_small.json
+"""
+
 from pycsp3 import *
 
-"""
- See "Mathematical methods of organizing and planning production" by L. V. Kantorovich, Management Science, 6(4):366–422, 1960
-     "From High-Level Model to Branch-and-Price Solution in G12", by J. Puchinger, P. Stuckey, M. Wallace, and S. Brand, CPAIOR 2008: 218-232
-"""
-
-nPieces, pieceLength = data.nPieces, data.pieceLength
-lengths, demands = [item.length for item in data.items], [item.demand for item in data.items]  # or zip(*data.items)
+nPieces, pieceLength, items = data
+lengths, demands = zip(*items)
 nItems = len(data.items)
 
 # p[i] is 1 iff the ith piece of the stock is used

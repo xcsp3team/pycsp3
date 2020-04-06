@@ -1,9 +1,9 @@
 """
 Problem 050 on CSPLib
 
-Execution:
- - python3 DiamondFree
- - python3 DiamondFree -data=10
+Examples of Execution:
+  python3 DiamondFree.py
+  python3 DiamondFree.py -data=10
 """
 
 from pycsp3 import *

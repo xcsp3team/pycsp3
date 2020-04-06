@@ -1,10 +1,10 @@
 """
 See https://en.wikipedia.org/wiki/Change-making_problem
 
-Execution:
- - python3 ChangeMaking
- - python3 ChangeMaking -data=10
- - python3 ChangeMaking -data=10 -variant=compact
+Examples of Execution:
+  python3 ChangeMaking.py
+  python3 ChangeMaking.py -data=10
+  python3 ChangeMaking.py -data=10 -variant=compact
 """
 
 from pycsp3 import *

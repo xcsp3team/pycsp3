@@ -1,3 +1,5 @@
+"""
+"""
 from pycsp3 import *
 
 height, width = data.height, data.width

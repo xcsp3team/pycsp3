@@ -1,10 +1,10 @@
 """
 Problem 032 on CSPLib
 
-Execution:
- - python3 StillLife
- - python3 StillLife -data=[7,7]
- - python3 StillLife -data=[7,7] -variant=wastage
+Examples of Execution:
+  python3 StillLife.py
+  python3 StillLife.py -data=[7,7]
+  python3 StillLife.py -data=[7,7] -variant=wastage
 """
 
 from pycsp3 import *

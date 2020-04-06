@@ -1,17 +1,17 @@
 """
 Problem 003 on CSPLib
 
-Execution:
- - python3 QuasiGroup
- - python3 QuasiGroup -data=8 -variant=base-v3
- - python3 QuasiGroup -data=5 -variant=base-v4
- - python3 QuasiGroup -data=8 -variant=base-v5
- - python3 QuasiGroup -data=8 -variant=base-v6
- - python3 QuasiGroup -data=9 -variant=base-v7
- - python3 QuasiGroup -data=8 -variant=aux-v3
- - python3 QuasiGroup -data=5 -variant=aux-v4
- - python3 QuasiGroup -data=8 -variant=aux-v5
- - python3 QuasiGroup -data=9 -variant=aux-v7
+Examples of Execution:
+  python3 QuasiGroup.py
+  python3 QuasiGroup.py -data=8 -variant=base-v3
+  python3 QuasiGroup.py -data=5 -variant=base-v4
+  python3 QuasiGroup.py -data=8 -variant=base-v5
+  python3 QuasiGroup.py -data=8 -variant=base-v6
+  python3 QuasiGroup.py -data=9 -variant=base-v7
+  python3 QuasiGroup.py -data=8 -variant=aux-v3
+  python3 QuasiGroup.py -data=5 -variant=aux-v4
+  python3 QuasiGroup.py -data=8 -variant=aux-v5
+  python3 QuasiGroup.py -data=9 -variant=aux-v7
  """
 
 from pycsp3 import *

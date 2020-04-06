@@ -4,9 +4,9 @@ Dubois's generator produces contradictory 3-SAT instances that seem very difficu
 Given an integer n, called the degree, Dubois's process allows us to construct a 3-SAT contradictory instance with 3 * n variables and 2 * n clauses,
 each of them having 3 literals.
 
-Execution:
- - python3 Dubois
- - python3 Dubois -data=10
+Examples of Execution:
+  python3 Dubois.py
+  python3 Dubois.py -data=10
 """
 from pycsp3 import *
 

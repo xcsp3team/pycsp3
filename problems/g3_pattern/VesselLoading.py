@@ -1,8 +1,9 @@
-from pycsp3 import *
+"""
+See Problem 008 on CSPLib
 
 """
-  Problem 008 on CSPLib
-"""
+
+from pycsp3 import *
 
 deckWidth, deckHeight, containers, separations = data
 nContainers = len(containers)

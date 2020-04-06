@@ -1,6 +1,14 @@
+"""
+See https://en.wikipedia.org/wiki/Kakuro
+See "Kakuro as a Constraint Problem" by Helmut Simonis
+
+Example of Execution:
+  python3 Kakuro.py -data=Kakuro_easy-000.json
+"""
+
 from pycsp3 import *
 
-nRows, nCols, clues = data.nRows, data.nCols, data.clues
+nRows, nCols, clues = data
 
 # x[i][j] is the value put at row i and column j
 x = VarArray(size=[nRows, nCols], dom=lambda i, j: range(1, 10) if clues[i][j].x == clues[i][j].y == 0 else None)

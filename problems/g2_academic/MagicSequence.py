@@ -1,9 +1,9 @@
 """
 Problem 019 on CSPLib
 
-Execution:
- - python3 MagicSequence
- - python3 MagicSequence -data=10
+Examples of Execution:
+  python3 MagicSequence.py
+  python3 MagicSequence.py -data=10
 """
 
 from pycsp3 import *

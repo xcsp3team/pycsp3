@@ -1,7 +1,8 @@
 """
 Problem 016 on CSPLib
 
-Execution: python3 TrafficLights
+Execution:
+  python3 TrafficLights.py
 """
 
 from pycsp3 import *

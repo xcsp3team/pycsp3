@@ -24,7 +24,8 @@ We know that:
  - the horse is owned by the neighbor of the diplomat
  - the Italian either lives in the red, white or green house
 
-Execution: python3 Zebra
+Execution:
+  python3 Zebra.py
 """
 
 from pycsp3 import *

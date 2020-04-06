@@ -1,11 +1,13 @@
+"""
+See "Search strategies for rectangle packing" by H. Simonis and B. O'Sullivan, CP 2008.
+See CP papers on short supports.
+
+
+"""
+
 import math
 
 from pycsp3 import *
-
-"""
- See "Search strategies for rectangle packing" by H. Simonis and B. O'Sullivan, CP 2008.
-      also papers on short supports
-"""
 
 width, height = data.container
 boxes = data.boxes

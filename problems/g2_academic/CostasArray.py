@@ -2,9 +2,9 @@
 Problem 076 on CSPLib, and NumberJack example
 
 
-Execution:
- - python3 CostasArray
- - python3 CostasArray -data=10
+Examples of Execution:
+  python3 CostasArray.py
+  python3 CostasArray.py -data=10
 """
 
 from pycsp3 import *

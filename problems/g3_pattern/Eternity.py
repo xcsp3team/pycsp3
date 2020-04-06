@@ -1,14 +1,17 @@
+"""
+See, e.g., "Fast Global Filtering for Eternity II" by Eric Bourreau and Thierry Benoist. Constraint Programming Letters, 2008, 3, pp.036-049
+
+Example of Execution:
+  python3 Eternity.py -data=Eternity_07x05.json
+"""
+
 from pycsp3 import *
 
-"""
- See e.g., "Fast Global Filtering for Eternity II" by Eric Bourreau and Thierry Benoist. Constraint Programming Letters, 2008, 3, pp.036-049
-"""
-
-n, m, pieces = data.n, data.m, data.pieces
+n, m, pieces = data
 assert n * m == len(pieces), "badly formed data"
 max_value = max(max(piece) for piece in pieces)  # max possible value on pieces
 
-table = {(i, pieces[i][r % 4], pieces[i][(r + 1) % 4], pieces[i][(r + 2) % 4], pieces[i][(r + 3) % 4]) for i in range(n * m) for r in range(4)}
+table = {(i, piece[r % 4], piece[(r + 1) % 4], piece[(r + 2) % 4], piece[(r + 3) % 4]) for i, piece in enumerate(pieces) for r in range(4)}
 
 # x[i][j] is the index of the piece at row i and column j
 x = VarArray(size=[n, m], dom=range(n * m))

@@ -1,10 +1,10 @@
 """
 Problem 010 on CSPLib
 
-Execution:
- - python3 SocialGolfers
- - python3 SocialGolfers -data=[5,3,6]
- - python3 SocialGolfers -data=[5,3,6] -variant=01
+Examples of Execution:
+  python3 SocialGolfers.py
+  python3 SocialGolfers.py -data=[5,3,6]
+  python3 SocialGolfers.py -data=[5,3,6] -variant=01
 """
 
 from pycsp3 import *

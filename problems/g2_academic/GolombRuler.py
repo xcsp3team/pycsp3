@@ -1,11 +1,11 @@
 """
 Problem 006 on CSPLib
 
-Execution:
- - python3 GolombRuler
- - python3 GolombRuler -data=10
- - python3 GolombRuler -data=10 -variant=dec
- - python3 GolombRuler -data=10 -variant=aux
+Examples of Execution:
+  python3 GolombRuler.py
+  python3 GolombRuler.py -data=10
+  python3 GolombRuler.py -data=10 -variant=dec
+  python3 GolombRuler.py -data=10 -variant=aux
 """
 
 from pycsp3 import *

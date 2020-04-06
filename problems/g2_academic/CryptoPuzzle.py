@@ -3,10 +3,10 @@ See https://en.wikipedia.org/wiki/Verbal_arithmetic
 
 Example of data: (no,no,yes) (two,two,four) (send,more,money) (cross,road,danger) (donald,gerarld,robert)
 
-Execution:
- - python3 CryptoPuzzle
- - python3 CryptoPuzzle -data=[send,more,money]
- - python3 CryptoPuzzle -data=[send,more,money] -variant=carry
+Examples of Execution:
+  python3 CryptoPuzzle.py
+  python3 CryptoPuzzle.py -data=[send,more,money]
+  python3 CryptoPuzzle.py -data=[send,more,money] -variant=carry
 """
 
 from pycsp3 import *

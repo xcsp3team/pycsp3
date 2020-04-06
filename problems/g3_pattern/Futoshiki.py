@@ -1,10 +1,13 @@
+"""
+See https://en.wikipedia.org/wiki/Futoshiki
+
+Example of Execution:
+  python3 Futoshiki.py -data=Futoshiki_futo3_0.json
+"""
+
 from pycsp3 import *
 
-"""
- See https://en.wikipedia.org/wiki/Futoshiki
-"""
-
-n, numHints, opHints = data.size, data.numHints, data.opHints
+n, numHints, opHints = data  # n is the order of the grid
 
 # x[i][j] is the number put at row i and column j
 x = VarArray(size=[n, n], dom=range(1, n + 1))

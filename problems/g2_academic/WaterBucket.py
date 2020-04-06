@@ -1,9 +1,9 @@
 """
 Problem 018 on CSPLib
 
-Execution:
- - python3 WaterBucket
- - python3 WaterBucket -data=[8,5,3,4,4,0,8]
+Examples of Execution:
+  python3 WaterBucket.py
+  python3 WaterBucket.py -data=[8,5,3,4,4,0,8]
 """
 
 from pycsp3 import *

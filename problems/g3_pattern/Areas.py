@@ -1,8 +1,8 @@
 """
 See "Teaching Constraints through Logic Puzzles" by Peter Szeredi
 
-Execution:
- - python3 Auction -data=Areas-3-3-3.json
+Example of Execution:
+  python3 Auction.py -data=Areas-3-3-3.json
 """
 
 from pycsp3 import *

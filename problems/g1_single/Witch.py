@@ -1,7 +1,8 @@
 """
 A toy problem from my course about CP.
 
-Execution: python3 Witch
+Execution:
+  python3 Witch.py
 """
 
 from pycsp3 import *
