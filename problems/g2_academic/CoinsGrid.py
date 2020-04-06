@@ -4,9 +4,9 @@ From Tony Hurlimann, A coin puzzle, SVOR-contest 2007
 
 Some data: (8,4) (8,5) (9,4) (10,4) (31,14)
 
-Execution:
- - python3 CoinsGrid
- - python3 CoinsGrid -data=[10,4]
+Examples of Execution:
+  python3 CoinsGrid.py
+  python3 CoinsGrid.py -data=[10,4]
 """
 
 from pycsp3 import *

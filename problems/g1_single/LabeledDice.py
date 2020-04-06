@@ -6,7 +6,8 @@ The question is: can one assign the 24 letters to 4 different cubes so that the 
 There is one letter from each word on each cube.
 The puzzle was created by Humphrey Dudley.
 
-Execution: python3 LabeledDice
+Execution:
+  python3 LabeledDice.py
 """
 
 from pycsp3 import *

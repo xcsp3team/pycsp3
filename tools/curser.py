@@ -20,6 +20,13 @@ def cursing():
             return d
         raise NotImplementedError  # return save_dict_add(self, other)
 
+    def _tuple_mul(self, other):  # for being able to use scalar products
+        if is_containing(self, (Variable, Node), check_first_only=True):
+            return ScalarProduct(self, other)
+        if is_containing(self, int) and isinstance(other, (list, tuple)) and is_containing(other, (Variable, Node), check_first_only=True):
+            return ScalarProduct(other, self)
+        return tuple.__mul__(self, other)
+
     def _list_mul(self, other):  # for being able to use scalar products
         if is_containing(self, (Variable, Node), check_first_only=True):
             return ScalarProduct(self, other)
@@ -97,6 +104,7 @@ def cursing():
         return self.__contains__(other)
 
     curse(dict, "__add__", _dict_add)
+    curse(tuple, "__mul__", _tuple_mul)
     curse(list, "__mul__", _list_mul)
     curse(tuple, "__contains__", _tuple_contains)
     curse(list, "__contains__", _list_contains)

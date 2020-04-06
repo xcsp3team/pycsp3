@@ -1,9 +1,9 @@
 """
 Problem 053 on CSPLib
 
-Execution:
- - python3 GracefulGraph
- - python3 GracefulGraph -data=[3,5]
+Examples of Execution:
+  python3 GracefulGraph.py
+  python3 GracefulGraph.py -data=[3,5]
 """
 
 from pycsp3 import *

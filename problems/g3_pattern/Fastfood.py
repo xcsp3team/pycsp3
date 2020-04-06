@@ -1,8 +1,18 @@
+"""
+See Problem in Minizinc (Challenge 2012)
+
+Examples of Execution:
+  python3 Fastfood.py -data=Fastfood_ff01.json
+  python3 Fastfood.py -data=Fastfood_ff01.json -variant=table
+  python3 Fastfood.py -data=Fastfood_example.dzn -dataparser=Fastfood_ParserZ.py
+"""
+
 from pycsp3 import *
 
-nDepots, nRestaurants = data.nDepots, len(data.restaurants)
-positions = [restaurant.position for restaurant in data.restaurants]
-# NOTE: below, cp_array is necessary for using the constraint Element in the main variant
+nDepots, restaurants = data
+nRestaurants = len(restaurants)
+positions = [restaurant.position for restaurant in restaurants]
+# NOTE: below, cp_array is necessary for being able to use the constraint Element in the main variant
 distances = cp_array([abs(positions[j] - positions[i]) for j in range(nRestaurants)] for i in range(nRestaurants))
 
 # d[i][j] is the distance between the ith restaurant and the jth depot
@@ -19,7 +29,7 @@ if not variant():
 
 elif variant("table"):
     # x[j] is the position of the jth depot
-    x = VarArray(size=nDepots, dom=set(positions))
+    x = VarArray(size=nDepots, dom=positions)
 
     satisfy(
         # linking positions of depots with their distances to the restaurants

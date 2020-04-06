@@ -1,14 +1,13 @@
 """
 See BPPLIB – A Bin Packing Problem Library
 
-Execution:
- - python3 BinPacking -data=BinPacking_n1c1w4a.json
+Example of Execution:
+  python3 BinPacking.py -data=BinPacking_n1c1w4a.json
 """
 
 from pycsp3 import *
 
-capacity = data.binCapacity
-weights = sorted(data.itemWeights)
+capacity, weights = data  # bin capacity and item weights
 nItems = len(weights)
 
 

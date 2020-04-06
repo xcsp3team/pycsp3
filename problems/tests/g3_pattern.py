@@ -87,28 +87,28 @@ xcsp = (Tester(NAME)
         .add("Bugs", data="Bugs_example.txt", prs_py="Bugs_Parser", prs_jv="Bugs_Parser")  # optimum 5
         .add("BusScheduling", data="BusScheduling_c1a.json")
         .add("BusScheduling", data="BusScheduling_r1.json")
-        .add("BusScheduling", data="BusScheduling_t1.json")
-        .add("Coloring", data="Coloring_rand1.json")
-        .add("Coloring", data="Coloring_rand1.json", variant="csp")
-        .add("Cutstock", data="Cutstock_small.json")
-        .add("Dominoes", data="Dominoes_grid1.json")
-        .add("Eternity", data="Eternity_07x05.json")
-        .add("Eternity", data="Eternity_example.txt", prs_py="Eternity_Parser", prs_jv="Eternity_Parser")
-        .add("Fastfood", data="Fastfood_ff01.json")
-        .add("Fastfood", data="Fastfood_ff01.json", variant="table")
-        .add("Fastfood", data="Fastfood_example.dzn", prs_py="Fastfood_ParserZ", prs_jv="Fastfood_ParserZ")
-        .add("Futoshiki", data="Futoshiki_futo3_0.json")
-        .add("GraphColoring", data="GraphColoring_1-fullins-3.json")
-        .add("GraphColoring", data="GraphColoring_1-fullins-3.json", variant="sum")
-        .add("GraphColoring", data="GraphColoring_qwhdec-o18-h120-1.json")
-        .add("GraphColoring", data="GraphColoring_qwhdec-o18-h120-1.json", variant="sum")
+        .add("BusScheduling", data="BusScheduling_t1.json")  # optimum 7
+        .add("Coloring", data="Coloring_rand1.json")  # optimum 2
+        .add("Coloring", data="Coloring_rand1.json", variant="csp")  # sat
+        .add("Cutstock", data="Cutstock_small.json")  # optimum 4
+        .add("Dominoes", data="Dominoes_grid1.json")  # 128 solutions
+        .add("Eternity", data="Eternity_07x05.json")  # 32 solutions
+        .add("Eternity", data="Eternity_example.txt", prs_py="Eternity_Parser", prs_jv="Eternity_Parser")  # 32 solutions
+        .add("Fastfood", data="Fastfood_ff01.json")  # optimum 3050
+        .add("Fastfood", data="Fastfood_ff01.json", variant="table") # optimum 3050
+        .add("Fastfood", data="Fastfood_example.dzn", prs_py="Fastfood_ParserZ", prs_jv="Fastfood_ParserZ")  # optimum 3050
+        .add("Futoshiki", data="Futoshiki_futo3_0.json")  # 1 solution
+        .add("GraphColoring", data="GraphColoring_1-fullins-3.json")  # optimum 3
+        .add("GraphColoring", data="GraphColoring_1-fullins-3.json", variant="sum")  # optimum 24
+        .add("GraphColoring", data="GraphColoring_qwhdec-o18-h120-1.json")  # optimum 17
+        .add("GraphColoring", data="GraphColoring_qwhdec-o18-h120-1.json", variant="sum")  # optimum 2754
         .add("GraphMaxAcyclic", data="GraphMaxAcyclic_example.txt", prs_py="GraphMaxAcyclic_Parser", prs_jv="GraphMaxAcyclic_Parser")
         .add("GraphMaxAcyclic", data="GraphMaxAcyclic_example.txt", prs_py="GraphMaxAcyclic_Parser", prs_jv="GraphMaxAcyclic_Parser", variant="cnt")
         .add("HCPizza", data="HCPizza_tiny.txt", prs_py="HCPizza_Parser", prs_jv="HCPizza_Parser")
         .add("HCPizza", data="HCPizza_small.txt", prs_py="HCPizza_Parser", prs_jv="HCPizza_Parser")
-        .add("Kakuro", data="Kakuro_easy-000.json")
-        .add("Kakuro", data="Kakuro_easy-000.json", variant="table")
-        .add("Knapsack", data="Knapsack_20-50-00.json")
+        .add("Kakuro", data="Kakuro_easy-000.json")  # 1 solution
+        .add("Kakuro", data="Kakuro_easy-000.json", variant="table")  # 1 solution
+        .add("Knapsack", data="Knapsack_20-50-00.json")  # optimum 583
         .add("LatinSquare", data="LatinSquare_qwh-o030-h320.json")
         .add("LatinSquareB", data="LatinSquareB_7-2-0.json")
         .add("Lightup", data="Lightup_example.txt", prs_py="Lightup_Parser", prs_jv="Lightup_Parser")

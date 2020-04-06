@@ -3,7 +3,7 @@
     <array id="x" note="x[i] is 1 iff the ith item is selected" size="[20]"> 0 1 </array>
   </variables>
   <constraints>
-    <sum>
+    <sum note="not exceeding the capacity of the knapsack">
       <list> x[] </list>
       <coeffs> 1 5 2 12 12 6 12 10 4 3 6 6 6 11 12 9 5 4 6 9 </coeffs>
       <condition> (le,50) </condition>

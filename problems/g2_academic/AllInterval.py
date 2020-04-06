@@ -1,10 +1,10 @@
 """
 Problem 007 on CSPLib
 
-Execution:
- - python3 AllInterval
- - python3 AllInterval -data=10
- - python3 AllInterval -data=10 -variant=aux
+Examples of Execution:
+  python3 AllInterval.py
+  python3 AllInterval.py -data=10
+  python3 AllInterval.py -data=10 -variant=aux
 """
 
 from pycsp3 import *

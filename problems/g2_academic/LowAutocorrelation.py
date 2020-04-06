@@ -1,9 +1,9 @@
 """
 Problem 005 on CSPLib
 
-Execution:
- - python3 LowAutocorrelation
- - python3 LowAutocorrelation -data=16
+Examples of Execution:
+  python3 LowAutocorrelation.py
+  python3 LowAutocorrelation.py -data=16
 """
 
 from pycsp3 import *

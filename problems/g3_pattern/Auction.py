@@ -1,9 +1,9 @@
 """
 Problem 063 on CSPLib
 
-Execution:
- - python3 Auction
- - python3 Auction -data=Auction_example.json
+Examples of Execution:
+  python3 Auction.py
+  python3 Auction.py -data=Auction_example.json
 """
 
 from pycsp3 import *

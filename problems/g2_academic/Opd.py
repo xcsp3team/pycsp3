@@ -1,10 +1,10 @@
 """
 Problem 065 on CSPLib
 
-Execution:
- - python3 Opd
- - python3 Opd -data=[4,6,4]
- - python3 Opd -data=[4,6,4] -variant=aux
+Examples of Execution:
+  python3 Opd.py
+  python3 Opd.py -data=[4,6,4]
+  python3 Opd.py -data=[4,6,4] -variant=aux
 """
 
 from pycsp3 import *

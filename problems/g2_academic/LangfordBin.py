@@ -1,9 +1,9 @@
 """
 See Ian P. Gent, Christopher Jefferson, Ian Miguel: Watched Literals for Constraint Propagation in Minion. CP 2006: 182-197
 
-Execution:
- - python3 LangfordBin
- - python3 LangfordBin -data=10
+Examples of Execution:
+  python3 LangfordBin.py
+  python3 LangfordBin.py -data=10
 """
 
 from pycsp3 import *

@@ -1,11 +1,11 @@
 """
 Problem 054 on CSPLib
 
-Execution:
- - python3 Queens
- - python3 Queens -data=6
- - python3 Queens -data=6 -variant=v1
- - python3 Queens -data=6 -variant=v2
+Examples of Execution:
+  python3 Queens.py
+  python3 Queens.py -data=6
+  python3 Queens.py -data=6 -variant=v1
+  python3 Queens.py -data=6 -variant=v2
 """
 
 from pycsp3 import *

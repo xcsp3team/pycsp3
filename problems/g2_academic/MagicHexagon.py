@@ -1,9 +1,9 @@
 """
 Problem 023 on CSPLib
 
-Execution:
- - python3 MagicHexagon
- - python3 MagicHexagon -data=[4,10]
+Examples of Execution:
+  python3 MagicHexagon.py
+  python3 MagicHexagon.py -data=[4,10]
 """
 
 from pycsp3 import *

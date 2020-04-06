@@ -1,9 +1,9 @@
 """
 Problem 049 on CSPLib
 
-Execution:
- - python3 NumberPartitioning
- - python3 NumberPartitioning -data=10
+Examples of Execution:
+  python3 NumberPartitioning.py
+  python3 NumberPartitioning.py -data=10
 """
 
 from pycsp3 import *

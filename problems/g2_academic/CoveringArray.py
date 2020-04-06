@@ -4,9 +4,9 @@ Problem 045 on CSPLib
 It is possible to get the covering array from v (the array of variables in the model below).
 For example, v[0][0] gives the t most significant bits of the first column (because the first t-combination is for the first t lines).
 
-Execution:
- - python3 CoveringArray
- - python3 CoveringArray -data=[3,5,2,10]
+Examples of Execution:
+  python3 CoveringArray.py
+  python3 CoveringArray.py -data=[3,5,2,10]
 """
 
 from pycsp3 import *

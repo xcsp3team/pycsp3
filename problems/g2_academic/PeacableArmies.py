@@ -1,9 +1,9 @@
 """
 Problem 110 on CSPLib
 
-Execution:
- - python3 PeacableArmies -data=10 -variant=m1
- - python3 PeacableArmies -data=10 -variant=m2
+Examples of Execution:
+  python3 PeacableArmies.py -data=10 -variant=m1
+  python3 PeacableArmies.py -data=10 -variant=m2
 """
 
 from pycsp3 import *
