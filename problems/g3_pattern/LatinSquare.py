@@ -1,7 +1,14 @@
+"""
+See https://en.wikipedia.org/wiki/Latin_square
+
+Examples of Execution:
+  python3 LatinSquare.py -data=[8,]
+  python3 LatinSquare.py -data=LatinSquare_qwh-o030-h320.json
+"""
+
 from pycsp3 import *
 
-n = data.n
-clues = data.clues  # if not -1, clues[i][j] is a value imposed at row i and col j
+n, clues = data  # if not -1, clues[i][j] is a value imposed at row i and col j
 
 # x[i][j] is the value at row i and col j of the Latin Square
 x = VarArray(size=[n, n], dom=range(n))

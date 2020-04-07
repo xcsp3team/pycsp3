@@ -1,8 +1,10 @@
-from pycsp3 import *
+"""
+See https://en.wikipedia.org/wiki/Flow_shop_scheduling
+
 
 """
- See https://en.wikipedia.org/wiki/Flow_shop_scheduling
-"""
+
+from pycsp3 import *
 
 durations = data  # durations[i][j] is the duration of operation/machine j for job i
 horizon = sum(sum(t) for t in durations) + 1
