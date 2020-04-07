@@ -2,15 +2,16 @@
 See Practice Problem for Google Hash Code 2017
 See https://www.academia.edu/31537057/Pizza_Practice_Problem_for_Hash_Code_2017
 
-
+Examples of Execution:
+  python3 HCPizza.py -data=HCPizza_tiny.json
+  python3 HCPizza.py -data=HCPizza_tiny.txt -dataparser=HCPizza_Parser.py
 """
 
 from pycsp3 import *
 
-maxSize, pizza = data.maxSize, data.pizza
+minIngredients, maxSize, pizza = data
 nRows, nCols = len(pizza), len(pizza[0])
-
-patterns = [(i, j) for i in range(1, min(maxSize, nRows) + 1) for j in range(1, min(maxSize, nCols) + 1) if 2 * data.minIngredients <= i * j <= maxSize]
+patterns = [(i, j) for i in range(1, min(maxSize, nRows) + 1) for j in range(1, min(maxSize, nCols) + 1) if 2 * minIngredients <= i * j <= maxSize]
 nPatterns = len(patterns)
 
 
@@ -46,11 +47,14 @@ x = VarArray(size=[nRows, nCols, nPatterns], dom=lambda i, j, k: {0, 1} if slice
 s = VarArray(size=[nRows, nCols, nPatterns], dom=lambda i, j, k: {0, pattern_size(i, j, k)} if slices[i][j][k] else None)
 
 satisfy(
+    # computing sizes of selected slices
     [(x[i][j][k], s[i][j][k]) in {(0, 0), (1, pattern_size(i, j, k))} for i, j, k in product(range(nRows), range(nCols), range(nPatterns)) if slices[i][j][k]],
 
+    # ensuring that no two slices overlap
     [Sum([x[t[0]][t[1]][t[2]] for t in overlaps[i][j]]) <= 1 for i in range(nRows) for j in range(nCols) if len(overlaps[i][j]) > 1]
 )
 
 maximize(
+    # maximizing the number of selected pizza cells
     Sum(s)
 )

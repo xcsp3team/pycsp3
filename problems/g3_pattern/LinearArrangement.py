@@ -1,31 +1,39 @@
+"""
+For a given (undirected) graph G, the problem consists in arranging the nodes of the graph in a line
+in such a way to minimize the sum of distances between adjacent nodes (in G).
+
+Examples of Execution:
+  python3 LinearArrangement.py -data=MinLA01.json
+"""
+
 from pycsp3 import *
 
-n, a = data.n, data.adjacence
+n, edges = data
+edges = [(i, j) for i, j in edges]
 
-# x[i] denotes the 'node' at the i-th position of the stack to be built (primal variables)
+# x[i] denotes the position (in the line) of the ith node
 x = VarArray(size=n, dom=range(n))
 
-# y[i] denotes the position of the 'node' whose value is i (dual variables)
-y = VarArray(size=n, dom=range(n))  # TODO This array is irrelevant/useless ?
-
-# d[i][j] denotes the distance between the ith and jth nodes (if they are adjacent)
-d = VarArray(size=[n, n], dom=lambda i, j: range(1, n) if i < j and a[i][j] == 1 else None)
+# d[i][j] denotes the distance in the line between the ith and jth nodes (if they are adjacent in the graph)
+d = VarArray(size=[n, n], dom=lambda i, j: range(1, n) if (i, j) in edges else None)
 
 satisfy(
+    # putting nodes at different positions
     AllDifferent(x),
 
-    AllDifferent(y),
-
-    Channel(x, y),
-
-    # linking primal and distance variables
-    [d[i][j] == dist(x[i], x[j]) for i, j in combinations(range(n), 2) if a[i][j] == 1],
+    # computing distances
+    [d[i][j] == abs(x[i] - x[j]) for (i, j) in edges],
 
     # triangle constraints: distance(i,j) <= distance(i,k) + distance(k,j)  tag(redundant-constraints)
-    [d[i][j] <= d[min(i, k)][max(i, k)] + d[min(j, k)][max(j, k)] for i, j in combinations(range(n), 2) if a[i][j] == 1 for k in range(n) if
-     a[i][k] == a[j][k] == 1]
+    [d[i][j] <= d[min(i, k)][max(i, k)] + d[min(j, k)][max(j, k)] for (i, j) in edges
+     for k in range(n) if (min(i, k), max(i, k)) in edges and (min(j, k), max(j, k)) in edges]
 )
 
 minimize(
+    # minimizing the sum of distances between adjacent nodes
     Sum(d)
 )
+
+
+# Note that for large instances, one may think about using an adjacency matrix, as with:
+# a = [[1 if (i, j) in e or (j, i) in e else 0 for j in range(n)] for i in range(n)]

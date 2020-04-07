@@ -47,7 +47,7 @@ same = (Tester(NAME)
         .add("Kakuro", data="Kakuro_easy-000.json", variant="table")
         .add("Knapsack", data="Knapsack_20-50-00.json")
         .add("LatinSquare", data="LatinSquare_qwh-o030-h320.json")
-        .add("LatinSquareB", data="LatinSquareB_7-2-0.json")
+        .add("LatinSquareB", data="LatinSquare2_7-2-0.json")
         .add("LinearArrangement", data="LinearArrangement_04.json")
         .add("MagicSquare", data="MagicSquare_example0.txt", prs_py="MagicSquare_Parser", prs_jv="MagicSquare_Parser")
         .add("MagicSquare", data="MagicSquare_example1.txt", prs_py="MagicSquare_Parser", prs_jv="MagicSquare_Parser")
@@ -102,17 +102,20 @@ xcsp = (Tester(NAME)
         .add("GraphColoring", data="GraphColoring_1-fullins-3.json", variant="sum")  # optimum 24
         .add("GraphColoring", data="GraphColoring_qwhdec-o18-h120-1.json")  # optimum 17
         .add("GraphColoring", data="GraphColoring_qwhdec-o18-h120-1.json", variant="sum")  # optimum 2754
-        .add("GraphMaxAcyclic", data="GraphMaxAcyclic_example.txt", prs_py="GraphMaxAcyclic_Parser", prs_jv="GraphMaxAcyclic_Parser")
-        .add("GraphMaxAcyclic", data="GraphMaxAcyclic_example.txt", prs_py="GraphMaxAcyclic_Parser", prs_jv="GraphMaxAcyclic_Parser", variant="cnt")
-        .add("HCPizza", data="HCPizza_tiny.txt", prs_py="HCPizza_Parser", prs_jv="HCPizza_Parser")
+        .add("GraphMaxAcyclic", data="GraphMaxAcyclic_example.json")  # optimum 44
+        .add("GraphMaxAcyclic", data="GraphMaxAcyclic_example.txt", prs_py="GraphMaxAcyclic_Parser", prs_jv="GraphMaxAcyclic_Parser")  # optimum 44
+        .add("GraphMaxAcyclic", data="GraphMaxAcyclic_example.txt", prs_py="GraphMaxAcyclic_Parser", prs_jv="GraphMaxAcyclic_Parser", variant="cnt")  # optimum 44
+        .add("HCPizza", data="HCPizza_tiny.json")  # optimum 15
+        .add("HCPizza", data="HCPizza_tiny.txt", prs_py="HCPizza_Parser", prs_jv="HCPizza_Parser")  # optimum 15
         .add("HCPizza", data="HCPizza_small.txt", prs_py="HCPizza_Parser", prs_jv="HCPizza_Parser")
         .add("Kakuro", data="Kakuro_easy-000.json")  # 1 solution
         .add("Kakuro", data="Kakuro_easy-000.json", variant="table")  # 1 solution
         .add("Knapsack", data="Knapsack_20-50-00.json")  # optimum 583
         .add("LatinSquare", data="LatinSquare_qwh-o030-h320.json")
-        .add("LatinSquareB", data="LatinSquareB_7-2-0.json")
-        .add("Lightup", data="Lightup_example.txt", prs_py="Lightup_Parser", prs_jv="Lightup_Parser")
-        .add("LinearArrangement", data="LinearArrangement_04.json")
+        .add("LatinSquare2", data="LatinSquare2_7-2-0.json")  # 480 solutions
+        .add("Lightup", data="Lightup_example.json")  # 1 solution
+        .add("Lightup", data="Lightup_example.txt", prs_py="Lightup_Parser", prs_jv="Lightup_Parser")  # 1 solution
+        .add("LinearArrangement", data="MinLA01.json")
         .add("MagicSquare", data="MagicSquare_example0.txt", prs_py="MagicSquare_Parser", prs_jv="MagicSquare_Parser")
         .add("MagicSquare", data="MagicSquare_example1.txt", prs_py="MagicSquare_Parser", prs_jv="MagicSquare_Parser")
         .add("Mario", data="Mario_easy-2.json")

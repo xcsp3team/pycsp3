@@ -1,8 +1,8 @@
-from pycsp3 import *
+"""
+Problem 013 on CSPLib
+"""
 
-"""
- Problem 013 on CSPLib
-"""
+from pycsp3 import *
 
 nPeriods = data.nPeriods
 boats, nBoats = data.boats, len(data.boats)
