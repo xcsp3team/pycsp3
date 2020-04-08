@@ -1,6 +1,15 @@
+"""
+See https://en.wikipedia.org/wiki/Nonogram
+
+Examples of Execution:
+  python3 Nonogram.py -data=Nonogram_example.json
+  python3 Nonogram.py -data=Nonogram_example.json -variant=table
+  python3 Nonogram.py -data=Nonogram_example.txt -dataparser=Nonogram_Parser.py
+"""
+
 from pycsp3 import *
 
-rows, cols = data.rowPatterns, data.colPatterns
+rows, cols = data  # patterns for row and columns
 nRows, nCols = len(rows), len(cols)
 
 #  x[i][j] is 1 iff the cell at row i and col j is colored in black

@@ -116,33 +116,33 @@ xcsp = (Tester(NAME)
         .add("Lightup", data="Lightup_example.json")  # 1 solution
         .add("Lightup", data="Lightup_example.txt", prs_py="Lightup_Parser", prs_jv="Lightup_Parser")  # 1 solution
         .add("LinearArrangement", data="MinLA01.json")
-        .add("MagicSquare", data="MagicSquare_example0.txt", prs_py="MagicSquare_Parser", prs_jv="MagicSquare_Parser")
+        .add("MagicSquare", data="[4,None]")  # 7040 solutions
         .add("MagicSquare", data="MagicSquare_example1.txt", prs_py="MagicSquare_Parser", prs_jv="MagicSquare_Parser")
-        .add("Mario", data="Mario_easy-2.json")
-        .add("Mario", data="Mario_easy-2.json", variant="table")
-        .add("MarketSplit", data="MarketSplit_04.json")
+        .add("Mario", data="Mario_easy-2.json")  # optimum 628
+        .add("Mario", data="Mario_easy-2.json", variant="table")  # optimum 628
+        .add("MarketSplit", data="MarketSplit_04.json")  # 1 solution
         .add("MultiKnapsack", data="MultiKnapsack_example.txt", prs_py="MultiKnapsack_Parser", prs_jv="MultiKnapsack_Parser")
-        .add("Nonogram", data="Nonogram_example.txt", prs_py="Nonogram_Parser", prs_jv="Nonogram_Parser")
-        .add("Nonogram", data="Nonogram_example.txt", prs_py="Nonogram_Parser", prs_jv="Nonogram_Parser", variant="table")
-        .add("OpenStacks", data="OpenStacks_example.dzn", prs_py="OpenStacks_ParserZ", prs_jv="OpenStacks_ParserZ", variant="m1")
-        .add("OpenStacks", data="OpenStacks_example.dzn", prs_py="OpenStacks_ParserZ", prs_jv="OpenStacks_ParserZ", variant="m2")
+        .add("Nonogram", data="Nonogram_example.txt", prs_py="Nonogram_Parser", prs_jv="Nonogram_Parser")  # 1 solution
+        .add("Nonogram", data="Nonogram_example.txt", prs_py="Nonogram_Parser", prs_jv="Nonogram_Parser", variant="table")  # 1 solution
+        .add("OpenStacks", data="OpenStacks_example.dzn", prs_py="OpenStacks_ParserZ", prs_jv="OpenStacks_ParserZ", variant="m1")  # optimum 45
+        .add("OpenStacks", data="OpenStacks_example.dzn", prs_py="OpenStacks_ParserZ", prs_jv="OpenStacks_ParserZ", variant="m2")  # optimum 45
         .add("PrizeCollecting", data="PrizeCollecting_example.dzn", prs_py="PrizeCollecting_ParserZ", prs_jv="PrizeCollecting_ParserZ", special=True)
-        .add("ProgressiveParty", data="ProgressiveParty_example.txt", prs_py="ProgressiveParty_Parser", prs_jv="ProgressiveParty_Parser", special=True)
-        .add("PseudoBoolean", data="PseudoBoolean_example.opb", prs_py="PseudoBoolean_Parser", prs_jv="PseudoBoolean_Parser")
+        .add("ProgressiveParty", data="ProgressiveParty_example.txt", prs_py="ProgressiveParty_Parser", prs_jv="ProgressiveParty_Parser", special=True) # optimum 5
+        .add("PseudoBoolean", data="PseudoBoolean_example.opb", prs_py="PseudoBoolean_Parser", prs_jv="PseudoBoolean_Parser")  # optimum 20
         .add("RectPacking", data="RectPacking_perfect-001.json", special=True)
-        .add("RoomMate", data="RoomMate_sr0006.json")
-        .add("Sat", data="Sat_flat30-16.json", variant="sum")
-        .add("Sat", data="Sat_flat30-16.json", variant="dual")
-        .add("Sat", data="Sat_flat30-16.json", variant="clause")
-        .add("Shikaku", data="Shikaku_grid1.json")
-        .add("Sonet", data="Sonet_sonet1.json")
-        .add("Sonet", data="Sonet_sonet3-4.json")
+        .add("RoomMate", data="RoomMate_sr0006.json")  # 2 solutions
+        .add("Sat", data="Sat_flat30-16.json", variant="clause")  # 1482 solutions
+        .add("Sat", data="Sat_flat30-16.json", variant="sum")  # 1482 solutions
+        .add("Sat", data="Sat_flat30-16.json", variant="dual")  # 1482 solutions
+        .add("Shikaku", data="Shikaku_grid1.json")  # 1 solution
+        .add("Sonet", data="Sonet_sonet1.json")  # optimum 8
+        .add("Sonet", data="Sonet_sonet3-4.json")  # optimum 12
         .add("StripPacking", data="StripPacking_C1P1.json")
-        .add("Subisomorphism", data="Subisomorphism_A-01.json")
+        .add("Subisomorphism", data="Subisomorphism_A-01.json")  # 1 solution
         .add("Sudoku", data="[9,None]")  # None can be replaced by null (but not by an empty string in this context)
         .add("Sudoku", data="Sudoku_s13a.json")  # 1 solution
         .add("Sudoku", data="Sudoku_s13a.json", variant="table")  # 1 solution
-        .add("Sudoku", data="Sudoku_example.txt", prs_py="Sudoku_Parser", prs_jv="Sudoku_Parser")
+        .add("Sudoku", data="Sudoku_example.txt", prs_py="Sudoku_Parser", prs_jv="Sudoku_Parser")  # 1 solution
         .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json")  # optimum 47
         .add("TravelingSalesman", data="TravelingSalesman_10-20-0.json", variant="table")  # optimum 47
         .add("VesselLoading", data="VesselLoading-inst1.json")  # 8 solutions

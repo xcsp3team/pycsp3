@@ -2,14 +2,14 @@
 For a given (undirected) graph G, the problem consists in arranging the nodes of the graph in a line
 in such a way to minimize the sum of distances between adjacent nodes (in G).
 
-Examples of Execution:
+Example of Execution:
   python3 LinearArrangement.py -data=MinLA01.json
 """
 
 from pycsp3 import *
 
 n, edges = data
-edges = [(i, j) for i, j in edges]
+edges = [(i, j) for i, j in edges]  # to be sure to have tuples
 
 # x[i] denotes the position (in the line) of the ith node
 x = VarArray(size=n, dom=range(n))

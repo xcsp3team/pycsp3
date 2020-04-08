@@ -1,12 +1,15 @@
 """
 Problem 013 on CSPLib
+
+Example of Execution:
+  python3 ProgressiveParty.py -data=ProgressiveParty_example.json
 """
 
 from pycsp3 import *
 
-nPeriods = data.nPeriods
-boats, nBoats = data.boats, len(data.boats)
-crews = [boat.crewSize for boat in boats]
+nPeriods, boats = data
+nBoats = len(data.boats)
+capacities, crews = zip(*boats)
 
 # h[b] indicates if the boat b is a host boat
 h = VarArray(size=nBoats, dom={0, 1})
@@ -28,7 +31,7 @@ satisfy(
     [Channel(g[b][p], s[b][p]) for b in range(nBoats) for p in range(nPeriods)],
 
     # boat capacities must be respected
-    [g[:, p, b] * crews <= boats[b].capacity for b in range(nBoats) for p in range(nPeriods)],
+    [g[:, p, b] * crews <= capacities[b] for b in range(nBoats) for p in range(nPeriods)],
 
     # a guest boat cannot revisit a host
     [AllDifferent(s[b], excepting=b) for b in range(nBoats)],

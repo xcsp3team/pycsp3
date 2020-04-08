@@ -1,8 +1,11 @@
-from pycsp3 import *
+"""
+See https://en.wikipedia.org/wiki/Strip_packing_problem
 
+Example of Execution:
+  python3 StripPacking.py -data=StripPacking_C1P1.json
 """
- See https://en.wikipedia.org/wiki/Strip_packing_problem
-"""
+
+from pycsp3 import *
 
 width, height = data.container
 rectangles = data.rectangles
@@ -31,7 +34,7 @@ satisfy(
     [y[i] + h[i] <= height for i in range(nRectangles)],
 
     # managing rotation
-    [(r[i], w[i], h[i]) in {(0, rect.width, rect.height), (1, rect.height, rect.width)} for i, rect in enumerate(rectangles)],
+    [(r[i], w[i], h[i]) in {(0, wgt, hgt), (1, hgt, wgt)} for i, (wgt, hgt) in enumerate(rectangles)],
 
     # no overlapping between rectangles
     NoOverlap(origins=[(x[i], y[i]) for i in range(nRectangles)], lengths=[(w[i], h[i]) for i in range(nRectangles)])

@@ -1,12 +1,13 @@
-from pycsp3 import *
-
 """
 See "Teaching Constraints through Logic Puzzles" by Peter Szeredi
+
 """
 
-n, m = data.n, data.m
-assert 0 < m <= n
-clues = data.clues
+from pycsp3 import *
+
+n, m = 7, 4  # data.n, data.m
+# assert 0 < m <= n
+# clues = data.clues
 nSegments = ((n - 3) // 2) * 4  # it is correct for n = 7, but for other orders?
 
 value_sequences = [tuple(1 + (i + j) % m for j in range(m)) for i in range(m)]

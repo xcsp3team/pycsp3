@@ -7,7 +7,7 @@ Example of Execution:
 
 from pycsp3 import *
 
-n, clues = data
+n, clues = data  # clues are given by tuples of the form (row, col, value)
 
 # x[i][j] is the value at row i and col j of the Latin Square
 x = VarArray(size=[n, n], dom=range(n))
