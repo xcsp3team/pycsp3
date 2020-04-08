@@ -1,8 +1,12 @@
-from pycsp3 import *
+"""
+See https://en.wikipedia.org/wiki/Stable_roommates_problem
+See "Stable Roommates and Constraint Programming" by Patrick Prosser. CPAIOR 2014: 15-28
 
+Example of Execution:
+  python3 RoomMate.py -data=RoomMate_sr0006.json
 """
- See https://en.wikipedia.org/wiki/Stable_roommates_problem
-"""
+
+from pycsp3 import *
 
 preferences = data
 n = len(preferences)
@@ -27,7 +31,7 @@ pref, rank = pref_rank()
 x = VarArray(size=n, dom=lambda i: range(len(preferences[i])))
 
 satisfy(
-    [imply(x[i] > rank[i][k], x[k] < rank[k][i]) for i in range(n) for k in [pref[i][l] for l in range(len(preferences[i]))]],
-
-    [imply(x[i] == rank[i][k], x[k] == rank[k][i]) for i in range(n) for k in [pref[i][l] for l in range(len(preferences[i]))]]
+    (imply(x[i] > rank[i][k], x[k] < rank[k][i]), imply(x[i] == rank[i][k], x[k] == rank[k][i])) for i in range(n) for k in pref[i] if k != i
 )
+
+

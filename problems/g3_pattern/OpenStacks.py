@@ -1,8 +1,12 @@
-from pycsp3 import *
-
 """"
- See https://ipg.host.cs.st-andrews.ac.uk/challenge/
+See https://ipg.host.cs.st-andrews.ac.uk/challenge/
+
+Examples of Execution:
+  python3 OpenStacks.py -data=OpenStacks_example.json -variant=m1
+  python3 OpenStacks.py -data=OpenStacks_example.json -variant=m2
 """
+
+from pycsp3 import *
 
 orders = data
 n, m = len(orders), len(orders[0])  # n orders (customers), m possible products

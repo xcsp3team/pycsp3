@@ -1,11 +1,17 @@
+"""
+See https://en.wikipedia.org/wiki/Sudoku
+See, e.g., "Sudoku as a Constraint Problem" by Helmut Simonis
+
+Example of Execution:
+  python3 Sudoku.py -data=[9,None]
+  python3 Sudoku.py -data=Sudoku_s13a.json
+  python3 Sudoku.py -data=Sudoku_s13a.json -variant=table
+  python3 Sudoku.py -data=Sudoku_example.txt -dataparser=Sudoku_Parser.py
+"""
+
 import math
 
 from pycsp3 import *
-
-"""
- See, e.g., "Sudoku as a Constraint Problem" by Helmut Simonis
-"""
-print(data)
 
 n, clues = data  # n (order of the grid) is typically 9 -- if not 0, clues[i][j] is a value imposed at row i and col j
 base = int(math.sqrt(n))

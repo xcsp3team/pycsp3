@@ -1,15 +1,14 @@
 """
 Problem proposed by A. Ollagnier and J.-G. Fages for the 2013 Minizinc Competition.
 
-
+Examples of Execution:
+  python3 Mario.py -data=Mario_easy-2.json
+  python3 Mario.py -data=Mario_easy-2.json -variant=table
 """
+
 from pycsp3 import *
 
-# similar model proposed by A. Ollagnier and J.-G. Fages for the 2013 Minizinc Competition
-
-marioHouse, luigiHouse = data.marioHouse, data.luigiHouse
-fuelLimit = data.fuelLimit
-houses = data.houses
+marioHouse, luigiHouse, fuelLimit, houses = data
 fuels = [house.fuelConsumption for house in houses]  # using cp_array is not necessary since intern arrays have the right type (for the constraint Element)
 nHouses = len(houses)
 
@@ -17,7 +16,7 @@ nHouses = len(houses)
 s = VarArray(size=nHouses, dom=range(nHouses))
 
 # f[i] is the fuel consumed at each step (from house i to its successor)
-f = VarArray(size=nHouses, dom=lambda i: set(fuels[i]))
+f = VarArray(size=nHouses, dom=lambda i: fuels[i])
 
 if not variant():
     satisfy(

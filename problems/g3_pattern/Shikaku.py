@@ -1,12 +1,14 @@
+"""
+See https://en.wikipedia.org/wiki/Shikaku
+See "Shikaku as a Constraint Problem" by Helmut Simonis
+
+Example of Execution:
+  python3 Shikaku.py -data=Shikaku_grid1.json
+"""
+
 from pycsp3 import *
 
-"""
- See https://en.wikipedia.org/wiki/Shikaku
-     "Shikaku as a Constraint Problem" by Helmut Simonis
-"""
-
-nRows, nCols = data.nRows, data.nCols
-rooms = data.rooms
+nRows, nCols, rooms = data
 nRooms = len(rooms)
 
 
@@ -38,7 +40,7 @@ satisfy(
     [(l[i] <= col, r[i] > col, t[i] <= row, b[i] > row) for i, (row, col, _) in enumerate(rooms)],
 
     # respecting the surface of each room
-    [(r[i] - l[i]) * (b[i] - t[i]) == rooms[i].value for i in range(nRooms)],
+    [(r[i] - l[i]) * (b[i] - t[i]) == val for i, (_, _, val) in enumerate(rooms)],
 
     # rooms must not overlap
     [no_overlapping(i, j) for i, j in combinations(range(nRooms), 2)]
