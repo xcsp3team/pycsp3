@@ -1,14 +1,18 @@
+"""
+Problem 030 on CSPLib
+
+Examples of Execution:
+  python3 Bacp.py -data=Bacp_10.json -variant=m1
+  python3 Bacp.py -data=Bacp_10.json -variant=m2
+  python3 Bacp.py -data=Bacp_10.json -variant=m1-d
+  python3 Bacp.py -data=Bacp_10.json -variant=m2-d
+"""
+
 from pycsp3 import *
 
-"""
- Problem 030 on CSPLib
-"""
-
-nPeriods = data.nPeriods
-minCourses, maxCourses = data.minCourses, data.maxCourses
-minCredits, maxCredits = data.minCredits, data.maxCredits * maxCourses if subvariant("d") else data.maxCredits
-credits, prerequisites = data.credits, data.prerequisites
-nCourses = len(credits)
+nCourses, nPeriods, minCredits, maxCredits, minCourses, maxCourses, credits, prerequisites = data
+maxCredits = maxCredits * maxCourses if subvariant("d") else maxCredits
+assert nCourses == len(credits)
 
 # s[c] is the period (schedule) for course c
 s = VarArray(size=nCourses, dom=range(nPeriods))

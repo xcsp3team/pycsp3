@@ -113,6 +113,8 @@ def VarArray(*, size, dom, comment=None):
 
 def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     assert type(bool_value) is bool
+    if isinstance(left_operand, Variable) and isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
+        return None
     if isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
         ctr = Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))

@@ -5,7 +5,7 @@ import sys
 
 from pycsp3.dashboard import options
 from pycsp3.solvers.solver import class_path_abscon
-from pycsp3.tools.utilities import PURPLE, BLUE, ORANGE, RED, WHITE, WHITE_BOLD
+from pycsp3.tools.utilities import PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
@@ -235,8 +235,9 @@ class Tester:
                 self.print_differences(lines, limit=20 if len(lines) > 200 else None, xcsp=xcsp)
                 if options.wait:
                     input("Press Enter to continue...")
-        print("\n" + WHITE_BOLD + "[Currently] " + str(self.counters["diff"]) + " difference(s) on " + str(self.counters["total"]) + " test(s) (" + RED + str(
-            self.counters["err"]) + WHITE + " error(s))\n")
+        diff = (RED if self.counters["diff"] > 0 else GREEN) + str(self.counters["diff"])
+        err = (RED if self.counters["err"] > 0 else GREEN) + str(self.counters["err"])
+        print("\n" + WHITE_BOLD + "[Currently] " + diff + WHITE + " difference(s) on " + str(self.counters["total"]) + " test(s) (" + err + WHITE + " error(s))\n")
 
     def print_differences(self, lines, limit, xcsp=False):
         print(COLOR_PY + "PyCSP" + WHITE + " vs. " + COLOR_JV + ("JvCSP" if not xcsp else "XCSP")+ WHITE + " differences:\n")

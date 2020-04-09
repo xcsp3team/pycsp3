@@ -1,13 +1,15 @@
-from pycsp3 import *
-
 """"
- Problem 001 on CSPLib
+Problem 001 on CSPLib
+
+Examples of Execution:
+  python3 CarSequencing.py -data=CarSequencing_dingbas.json
+  python3 CarSequencing.py -data=CarSequencing_dingbas.json -variant=table
 """
 
-classes, limits = data.classes, data.limits
-demands = [cl.demand for cl in classes]
-nCars, nOptions, nClasses = sum(demands), len(limits), len(classes)
-allClasses = range(nClasses)
+from pycsp3 import *
+
+classes, limits = data
+nCars, nClasses, nOptions = sum(cl.demand for cl in classes), len(classes), len(limits)
 
 
 def redu(k, i):
@@ -26,7 +28,7 @@ o = VarArray(size=[nCars, nOptions], dom={0, 1})
 
 satisfy(
     # building the right numbers of cars per class
-    Cardinality(c, occurrences={i: demands[i] for i in range(nClasses)})
+    Cardinality(c, occurrences={i: classes[i].demand for i in range(nClasses)})
 )
 
 if not variant():

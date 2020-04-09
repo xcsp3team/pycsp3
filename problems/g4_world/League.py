@@ -1,11 +1,11 @@
+"""
+See Problem in MiniZinc
+
+"""
+
 from pycsp3 import *
 
-"""
- See Problem in MiniZinc
-"""
-
-nPlayers, leagueSize = data.nPlayers, data.leagueSize
-rankings, countries = data.playerRankings, data.playerCountries
+nPlayers, leagueSize, rankings, countries = data  # rankings and countries of players
 nLeagues = nPlayers // leagueSize + (1 if nPlayers % leagueSize != 0 else 0)
 nFullLeagues = nLeagues if nPlayers % leagueSize == 0 else nLeagues - (leagueSize - nPlayers % leagueSize)
 sizes = [leagueSize + (0 if i < nFullLeagues else -1) for i in range(nLeagues)]

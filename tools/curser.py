@@ -51,6 +51,8 @@ def cursing():
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
             queue_in.append((self, other))
             return True
+        if is_containing(other, Variable) and len(self) == 0:
+            return other in set(self)
         error_if(is_containing(other, Variable),
                  "It seems that you should use a set and not a list, as in x in {...}." + " Your arguments are " + str(other) + " " + str(self))
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member/element constraint
