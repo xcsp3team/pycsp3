@@ -1,8 +1,12 @@
-from pycsp3 import *
+"""
+See, e.g., "Constraint programming lessons learned from crossword puzzles" by A. Beacham, X. Chen, J. Sillito, and P. van Beek. 2001
 
+Examples of Execution:
+  python3 Crossword.py -data=Crossword_vg6-7-ogd.json
+  python3 Crossword.py -data=Crossword_vg6-7-ogd.json -variant=alt
 """
- See, e.g., "Constraint programming lessons learned from crossword puzzles" by A. Beacham, X. Chen, J. Sillito, and P. van Beek. 2001
-"""
+
+from pycsp3 import *
 
 
 def find_holes(matrix, transposed):
@@ -26,38 +30,37 @@ def find_holes(matrix, transposed):
                 ofs1, ofs2 = self.col - other.col, other.row - self.row
                 return (ofs1, ofs2) if 0 <= ofs1 < other.size and 0 <= ofs2 < self.size else None
 
-        def __repr__(self, *args, **kwargs):
+        def __str__(self):
             return str(self.row) + " " + str(self.col) + " " + str(self.size) + " " + str(self.horizontal)
 
-    n, m = len(matrix), len(matrix[0])
+    p, q = len(matrix), len(matrix[0])
     t = []
-    for i in range(n):
+    for i in range(p):
         start = -1
-        for j in range(m):
+        for j in range(q):
             if matrix[i][j] == 1:
                 if start != -1 and j - start >= 2:
                     t.append(Hole(i, start, j - start, not transposed))
                 start = -1
-            else:
-                if start == -1:
-                    start = j
-                elif j == m - 1 and m - start >= 2:
-                    t.append(Hole(i, start, m - start, not transposed))
+            elif start == -1:
+                start = j
+            elif j == q - 1 and q - start >= 2:
+                t.append(Hole(i, start, q - start, not transposed))
     return t
 
 
-nRows, nCols = len(data.spots), len(data.spots[0])
-holes = find_holes(data.spots, False) + find_holes(transpose(data.spots), True)
-nHoles = len(holes)
+spots, dict_name = data
+holes = find_holes(spots, False) + find_holes(transpose(spots), True)
+n, m, nHoles = len(spots), len(spots[0]), len(holes)
 
 words = dict()
-for line in open(data.dictFileName):
+for line in open(dict_name):
     code = alphabet_positions(line.strip().lower())
     words.setdefault(len(code), []).append(code)
 
 if not variant():
     #  x[i][j] is the letter, number from 0 to 25, at row i and column j (when no spot)
-    x = VarArray(size=[nRows, nCols], dom=lambda i, j: range(26) if data.spots[i][j] == 0 else None)
+    x = VarArray(size=[n, m], dom=lambda i, j: range(26) if spots[i][j] == 0 else None)
 
     satisfy(
         # fill the grid with words

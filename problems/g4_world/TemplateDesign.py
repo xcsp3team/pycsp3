@@ -1,9 +1,10 @@
-from pycsp3 import *
-from math import ceil, floor
+"""
+See Problem 002 on CSPLib
 
 """
- See Problem 002 on CSPLib
-"""
+
+from pycsp3 import *
+from math import ceil, floor
 
 nSlots, demands = data
 nTemplates = nVariations = len(demands)

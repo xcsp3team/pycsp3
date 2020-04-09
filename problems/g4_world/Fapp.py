@@ -1,17 +1,17 @@
+"""
+See Challenge ROADEF 2001 (FAPP: Problème d'affectation de fréquences avec polarization)
+
+Examples of Execution:
+  python3 Fapp.py -data=Fapp_ex2.json
+  python3 Fapp.py -data=Fapp_ex2.json -variant=short
+"""
+
 from pycsp3 import *
 
-"""
- See Challenge ROADEF 2001 (FAPP: Problème d'affectation de fréquences avec polarization)
-"""
-
-domains = [data.domains[route.domain] for route in data.routes]  # we skip the indirection
-polarizations = [route.polarization for route in data.routes]
-n = len(data.routes)
-
-# To speed up calculations, we use tuples
-neRelaxations, eqRelaxations = [tuple(c.neRelaxations) for c in data.softs], [tuple(c.eqRelaxations) for c in data.softs]
-hards, softs = data.hards, data.softs
-nSofts = len(data.softs)
+domains, routes, hards, softs = data
+domains = [domains[route.domain] for route in routes]  # we skip the indirection
+polarizations = [route.polarization for route in routes]
+n, nSofts= len(routes), len(data.softs)
 
 
 def expr_hard(scp, equality, gap):
@@ -72,7 +72,7 @@ satisfy(
 if not variant():
     satisfy(
         # soft radio-electric compatibility constraints
-        (f[i], f[j], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, eqr, ner, False) for l, (i, j, eqr, ner) in enumerate(softs)
+        (f[i], f[j], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, tuple(eqr), tuple(ner), False) for l, (i, j, eqr, ner) in enumerate(softs)
     )
 
 elif variant("short"):
@@ -88,9 +88,13 @@ elif variant("short"):
         [d[i][j] == abs(f[i] - f[j]) for i, j in combinations(range(n), 2) if d[i][j]],
 
         # soft radio-electric compatibility constraints
-        [(d[min(i, j)][max(i, j)], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, eqr, ner) for l, (i, j, eqr, ner) in enumerate(softs)]
+        [(d[min(i, j)][max(i, j)], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, tuple(eqr), tuple(ner)) for l, (i, j, eqr, ner) in enumerate(softs)]
     )
 
 minimize(
     k * (10 * nSofts ** 2) + Sum(v1) * (10 * nSofts) + Sum(v2)
 )
+
+
+# Note that
+# a) we transform lists in tuples of relaxation arrays for speeding up calculations
