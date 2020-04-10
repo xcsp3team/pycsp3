@@ -259,21 +259,29 @@ class OpOverrider:
     def __ge__(self, other):
         if self is None or other is None:
             return object.__ge__(self, other)
+        if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
+            return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
         return PartialConstraint.__le__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.GE, self, other)
 
     def __gt__(self, other):
         if self is None or other is None:
             return object.__gt__(self, other)
+        if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
+            return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
         return PartialConstraint.__lt__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.GT, self, other)
 
     def __eq__(self, other):
         if self is None or other is None:
             return object.__eq__(self, other)
+        if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
+            return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
         return PartialConstraint.__eq__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.EQ, self, other)
 
     def __ne__(self, other):
         if self is None or other is None:
             return object.__ne__(self, other)
+        if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
+            return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
         return PartialConstraint.__ne__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):

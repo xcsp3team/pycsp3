@@ -1,16 +1,17 @@
+"""
+See http://www.schedulingbenchmarks.org/nurseinstances1_24.html
+
+Example of Execution:
+  python3 NurseRostering.py -data=NurseRostering_00.json
+"""
+
 from pycsp3 import *
 
-"""
- See http://www.schedulingbenchmarks.org/nurseinstances1_24.html
-"""
-
-if data.shifts[-1].id != "_off":  # if not present, we add first a dummy 'off' shift (a named tuple of the right class)
-    data.shifts.append(data.shifts[0].__class__("_off", 0, None))
-off = len(data.shifts) - 1  # value for _off
-
-nDays, nWeeks = data.nDays, data.nDays // 7
-shifts, staffs = data.shifts, data.staffs
-nShifts, nStaffs = len(shifts), len(staffs)
+nDays, shifts, staffs, covers = data
+if shifts[-1].id != "_off":  # if not present, we add first a dummy 'off' shift (a named tuple of the right class)
+    shifts.append(shifts[0].__class__("_off", 0, None))
+off = len(shifts) - 1  # value for _off
+nWeeks, nShifts, nStaffs = nDays // 7, len(shifts), len(staffs)
 
 on_r = [[next((r for r in staff.onRequests if r.day == day), None) if staff.onRequests else None for day in range(nDays)] for staff in staffs]
 off_r = [[next((r for r in staff.offRequests if r.day == day), None) if staff.offRequests else None for day in range(nDays)] for staff in staffs]
@@ -27,7 +28,7 @@ table = {(sp[s1.id], sp[s2]) for s1 in shifts if s1.forbiddenFollowingShifts for
 def costs(day, shift):
     if shift == off:
         return [0] * (nStaffs + 1)
-    r, wu, wo = data.covers[day][shift]
+    r, wu, wo = covers[day][shift]
     return [abs(r - i) * (wu if i <= r else wo) for i in range(nStaffs + 1)]
 
 

@@ -11,14 +11,7 @@ from pycsp3 import *
 domains, routes, hards, softs = data
 domains = [domains[route.domain] for route in routes]  # we skip the indirection
 polarizations = [route.polarization for route in routes]
-n, nSofts= len(routes), len(data.softs)
-
-
-def expr_hard(scp, equality, gap):
-    x, y = scp
-    if gap == 0:
-        return x == y if equality else x != y
-    return dist(x, y) == gap if equality else dist(x, y) != c.gap
+n, nSofts = len(routes), len(data.softs)
 
 
 def table_soft(i, j, eqr, ner, short_table=True):
@@ -66,7 +59,7 @@ v2 = VarArray(size=nSofts, dom=range(11))
 
 satisfy(
     # imperative constraints
-    expr_hard((f[i], f[j]) if fq else (p[i], p[j]), eq, gap) for (i, j, fq, eq, gap) in hards
+    dst == gap if eq else dst != gap for (dst, eq, gap) in [(abs(f[i] - f[j]) if fq else abs(p[i] - p[j]), eq, gap) for (i, j, fq, eq, gap) in hards]
 )
 
 if not variant():
@@ -98,3 +91,4 @@ minimize(
 
 # Note that
 # a) we transform lists in tuples of relaxation arrays for speeding up calculations
+# b) when gap is 0, abs(x - y) == gap (resp., abs(x - y) != gap) is automatically simplified into x == y (resp., x != y)

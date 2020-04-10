@@ -1,1 +1,1 @@
-{"nPlayers":10,"leagueSize":3,"playerRankings":[1,1,1,1,2,3,3,3,3,3],"playerCountries":[4,3,4,4,2,4,2,1,1,1]}
+{"leagueSize":3,"players":[{"ranking":1,"country":4},{"ranking":1,"country":3},{"ranking":1,"country":4},{"ranking":1,"country":4},{"ranking":2,"country":2},{"ranking":3,"country":4},{"ranking":3,"country":2},{"ranking":3,"country":1},{"ranking":3,"country":1},{"ranking":3,"country":1}]}

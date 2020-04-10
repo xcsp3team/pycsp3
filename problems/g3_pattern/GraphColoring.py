@@ -15,7 +15,7 @@ colorings = colorings if colorings else []
 c = VarArray(size=n, dom=range(n))
 
 satisfy(
-    [c[i] != c[j] if d == 1 else abs(c[i] - c[j]) >= d for (i, j, d) in edges],
+    [abs(c[i] - c[j]) >= d for (i, j, d) in edges],
 
     # nodes with preassigned colors
     [c[i] == colors[0] for (i, colors) in colorings if len(colors) == 1],
@@ -34,3 +34,7 @@ elif variant("sum"):
         # minimizing the sum of colors assigned to nodes
         Sum(c)
     )
+
+
+# Note that
+# a) when d is 1, abs(x - y) >= d is automatically simplified into x != y

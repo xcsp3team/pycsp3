@@ -1,8 +1,11 @@
-from pycsp3 import *
+"""
+See Problem freepizza in MiniZinc
 
+Example of Execution:
+  python3 PizzaVoucher.py -data=PizzaVoucher_pizza6.json
 """
- See Problem freepizza in MiniZinc
-"""
+
+from pycsp3 import *
 
 prices, vouchers = data
 nPizzas, nVouchers = len(prices), len(vouchers)

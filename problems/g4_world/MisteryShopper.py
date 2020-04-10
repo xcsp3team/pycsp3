@@ -1,8 +1,11 @@
-from pycsp3 import *
+"""
+Problem 004 on CSPLib
 
+Example of Execution:
+  python3 MisteryShopper.py -data=MisteryShopper_04.json
 """
- Problem 004 on CSPLib
-"""
+
+from pycsp3 import *
 
 vr_sizes = data.visitorGroups  # vr_sizes[i] gives the size of the ith visitor group
 ve_sizes = data.visiteeGroups  # ve_sizes[i] gives the size of the ith visitee group

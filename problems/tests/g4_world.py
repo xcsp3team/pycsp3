@@ -73,7 +73,7 @@ xcsp = (Tester(NAME)
         # .add("Fapp", data="Fapp_01-0200.json")  # TODO too long (and seems to crash)
         # .add("Fapp", data="Fapp_01-0200.json", variant="short")
         .add("League", data="League_010-03-04.json")  # optimum 92
-        .add("MisteryShopper", data="MisteryShopper_04.json")
+        .add("MisteryShopper", data="MisteryShopper_04.json")  # 501552 solutions
         .add("NurseRostering", data="NurseRostering_00.json")  # optimum 1202
         .add("NurseRostering", data="NurseRostering_18.json")
         .add("PizzaVoucher", data="PizzaVoucher_pizza6.json")  # optimum 210

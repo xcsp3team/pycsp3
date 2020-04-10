@@ -117,7 +117,6 @@ class SolverProcess:
                     for x in item.flatVars:
                         if item.name in token:
                             variables.append(x)
-
                 if isinstance(item, EVar):
                     if item.variable.id in token:
                         variables.append(item.variable)
