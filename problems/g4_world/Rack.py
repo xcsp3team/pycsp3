@@ -1,8 +1,12 @@
-from pycsp3 import *
+"""
+Problem 031 on CSPLib
+
 
 """
- Problem 031 on CSPLib
-"""
+
+from pycsp3 import *
+
+
 
 nRacks, models, cardTypes = data
 models.append([0, 0, 0])  # we add first a dummy model (0,0,0)

@@ -34,6 +34,10 @@ class Variable:
             return None
         if isinstance(domain, Domain):
             return domain
+        if isinstance(domain, type(lambda: 0)):
+            domain = domain(*indexes)
+            if domain is None:
+                return None
         if isinstance(domain, (tuple, list)):
             if all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain):  # possible, even if using a set is recommended
                 return Domain(set(domain))
@@ -41,10 +45,6 @@ class Variable:
             for i in indexes:
                 assert i < len(domain), "The number of domains is less than the specified index " + name + " - " + str(domain)
                 domain = domain[i]
-        if isinstance(domain, type(lambda: 0)):
-            domain = domain(*indexes)
-            if domain is None:
-                return None
         if isinstance(domain, Domain):
             return domain
         if isinstance(domain, list) and (all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)):

@@ -138,9 +138,8 @@ def default_data(filename):
     assert fn.endswith(".json")
     assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
     with open(fn) as f:
-        Compilation.data = json.loads(f.read(), object_pairs_hook=OrderedDict)
+        Compilation.data = convert_to_namedtuples(json.loads(f.read(), object_pairs_hook=OrderedDict))
         Compilation.string_data = "-" + filename.split(os.sep)[-1:][0].split(".")[:1][0]
-    Compilation.data = convert_to_namedtuples(Compilation.data)
     if len(Compilation.data) == 1:
         Compilation.data = Compilation.data[0]  # the value instead of a tuple of size 1
     return Compilation.data

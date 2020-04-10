@@ -1,11 +1,15 @@
 """
 See Problem in MiniZinc
 
+Example of Execution:
+  python3 League.py -data=League_010-03-04.json
 """
 
 from pycsp3 import *
 
-nPlayers, leagueSize, rankings, countries = data  # rankings and countries of players
+leagueSize, players = data  # rankings and countries of players
+rankings, countries = zip(*players)
+nPlayers = len(players)
 nLeagues = nPlayers // leagueSize + (1 if nPlayers % leagueSize != 0 else 0)
 nFullLeagues = nLeagues if nPlayers % leagueSize == 0 else nLeagues - (leagueSize - nPlayers % leagueSize)
 sizes = [leagueSize + (0 if i < nFullLeagues else -1) for i in range(nLeagues)]
@@ -14,10 +18,10 @@ sizes = [leagueSize + (0 if i < nFullLeagues else -1) for i in range(nLeagues)]
 p = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: range(nPlayers) if j < sizes[i] else None)
 
 # r[i][j] is the ranking of the jth player of the ith league
-r = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: set(rankings) if j < sizes[i] else None)
+r = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: rankings if j < sizes[i] else None)
 
 # c[i][j] is the country of the jth player of the ith league
-c = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: set(countries) if j < sizes[i] else None)
+c = VarArray(size=[nLeagues, leagueSize], dom=lambda i, j: countries if j < sizes[i] else None)
 
 table = {(i, rankings[i], countries[i]) for i in range(nPlayers)}
 
