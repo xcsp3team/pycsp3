@@ -1,8 +1,12 @@
-from pycsp3 import *
+"""
+See "Solving the Wastewater Treatment Plant Problem with SMT", by Miquel Bofill, Víctor Muñoz, Javier Murillo. CoRR abs/1609.05367 (2016)
 
+Examples of Execution:
+  python3 Wwtpp.py -data=Wwtpp_ex04400.json
+  python3 Wwtpp.py -data=Wwtpp_ex04400.json -variant=short
 """
- See "Solving the Wastewater Treatment Plant Problem with SMT", by Miquel Bofill, Víctor Muñoz, Javier Murillo. CoRR abs/1609.05367 (2016)
-"""
+
+from pycsp3 import *
 
 nIndustries, nPeriods, plantCapacity, tankFlow, tankCapacity, sd, spans = data  # sd for schedule flow of discharge
 

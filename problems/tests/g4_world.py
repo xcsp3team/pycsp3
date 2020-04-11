@@ -81,11 +81,11 @@ xcsp = (Tester(NAME)
         .add("QuadraticAssignment", data="QuadraticAssignment_example.txt", prs_py="QuadraticAssignment_Parser", prs_jv="QuadraticAssignment_Parser")  # optimum 4776
         .add("Rack", data="Rack_r2.json")  # optimum 1100
         .add("Rack2", data="Rack_r2b.json")  # optimum 1100
-        .add("RadarSurveillance", data="RadarSurveillance_8-24-3-2-00.json")
+        .add("RadarSurveillance", data="RadarSurveillance_8-24-3-2-00.json")  # sat
         .add("Rcpsp", data="Rcpsp_j30-01-01.json")
         .add("Rlfap", data="Rlfap_card-scen-04.json", variant="card")  # optimum 46
         .add("Rlfap", data="Rlfap_span-scen-05.json", variant="span")  # optimum 792
-        .add("Rlfap", data="Rlfap_max-graph-05.json", variant="max")  # optimum 221  (use -ub=222 with AbsCon to prove it)
+        .add("Rlfap", data="Rlfap_max-graph-05.json", variant="max")  # optimum 221  (use -ub=222 with AbsCon to prove it, or -os=increasing)
         .add("SchedulingFS", data="SchedulingFS-Taillard-os-04-04-0.json")  # optimum 302
         .add("SchedulingFS", data="Taillard-fs-020-05-1.json")
         .add("SchedulingJS", data="Sadeh-js-e0ddr1-0.json")

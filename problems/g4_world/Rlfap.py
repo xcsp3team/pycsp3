@@ -1,8 +1,13 @@
-from pycsp3 import *
+"""
+See "Radio Link Frequency Assignment", by B. Cabon, S. de Givry, L. Lobjois, T. Schiex, J. Warners, Constraints An Int. J. 4(1): 79-89 (1999)
 
+Examples of Execution:
+  python3 Rlfap.py -data=Rlfap_card-scen-04.json -variant=card
+  python3 Rlfap.py -data=Rlfap_span-scen-05.json -variant=span
+  python3 Rlfap.py -data=Rlfap_max-graph-05.json -variant=max
 """
- See "Radio Link Frequency Assignment", by B. Cabon, S. de Givry, L. Lobjois, T. Schiex, J. Warners, Constraints An Int. J. 4(1): 79-89 (1999)
-"""
+
+from pycsp3 import *
 
 domains, variables, constraints, interferenceCosts, mobilityCosts = data
 domains = [domains[variable.domain] for variable in variables]  # we skip the indirection

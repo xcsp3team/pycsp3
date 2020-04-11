@@ -1,11 +1,16 @@
-from pycsp3 import *
-
 """
  Problem 068 on CSPLib
+
+Examples of Execution:
+  python3 TravelingTournamentWithPredefinedVenues.py -data=Ttppv_circ8bbal.json -variant=a2
+  python3 TravelingTournamentWithPredefinedVenues.py -data=Ttppv_circ8bbal.json -variant=a3
+python3 pycsp3/problems/g4_world/TravelingTournamentWithPredefinedVenues.py -data=pycsp3/problems/data/json/Ttppv_circ8bbal.json -variant=a2
 """
 
-venues = data.predefinedVenues
-nTeams, nRounds = data.nTeams, data.nTeams - 1
+from pycsp3 import *
+
+nTeams, venues = data
+nRounds = nTeams - 1
 assert nTeams % 2 == 0, "an even number of teams is expected"
 nConsecutiveGames = 2 if variant("a2") else 3  # used in one comment
 

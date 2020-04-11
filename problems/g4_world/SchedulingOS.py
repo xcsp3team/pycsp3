@@ -1,8 +1,11 @@
-from pycsp3 import *
+"""
+See https://en.wikipedia.org/wiki/Open-shop_scheduling
 
+Example of Execution:
+  python3 SchedulingOS.py -data=GP-os-01.json
 """
- See https://en.wikipedia.org/wiki/Open-shop_scheduling
-"""
+
+from pycsp3 import *
 
 durations = data  # durations[i][j] is the duration of operation/machine j for job i
 horizon = sum(sum(t) for t in durations) + 1

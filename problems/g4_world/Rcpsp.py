@@ -1,8 +1,11 @@
-from pycsp3 import *
+"""
+Problem 061 on CSPLib
 
+Example of Execution:
+  python3 Rcpsp.py -data=Rcpsp_j30-01-01.json
 """
- Problem 061 on CSPLib
-"""
+
+from pycsp3 import *
 
 horizon, capacities, jobs = data
 nJobs = len(jobs)
@@ -18,7 +21,7 @@ s = VarArray(size=nJobs, dom=lambda i: {0} if i == 0 else range(horizon))
 
 satisfy(
     # precedence constraints
-    [s[i] + job.duration <= s[j] for i, job in enumerate(jobs) for j in job.successors],
+    [s[i] + duration <= s[j] for i, (duration, successors, _) in enumerate(jobs) for j in successors],
 
     # resource constraints
     [cumulative_for(k) <= capacity for k, capacity in enumerate(capacities)]

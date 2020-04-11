@@ -1,8 +1,12 @@
-from pycsp3 import *
+"""
+See Problem 034 on CSPLib
 
+Examples of Execution:
+  python3 Warehouse.py -data=Warehouse_example.json
+  python3 Warehouse.py -data=Warehouse_example.txt -dataparser=Warehouse_Parser.py
 """
- See Problem 034 on CSPLib
-"""
+
+from pycsp3 import *
 
 cost, capacities, costs = data  # cost is the fixed cost when opening a warehouse
 nWarehouses, nStores = len(capacities), len(costs)
