@@ -1,8 +1,12 @@
-from pycsp3 import *
+"""
+See Problem 038 on CSPLib
 
+Examples of Execution:
+  python3 SteelMillSlab.py -data=SteelMillSlab_bench_2_0.json
+  python3 SteelMillSlab.py -data=SteelMillSlab_bench_2_0.json -variant=01
 """
- See Problem 038 on CSPLib
-"""
+
+from pycsp3 import *
 
 capacities, orders = data
 possibleLosses = [min(v for v in [0] + capacities if v >= i) - i for i in range(max(capacities) + 1)]

@@ -1,8 +1,11 @@
-from pycsp3 import *
-
 """"
- See Problem 014 on CSPLib
+See Problem 014 on CSPLib
+
+Examples of Execution:
+  python3 SolitaireBattleship.py -data=SolitaireBattleship_sb-12-12-5-0.json
 """
+
+from pycsp3 import *
 
 fleet, rowSums, colSums, hints = data
 surfaces = [ship.size * ship.cnt for ship in fleet]

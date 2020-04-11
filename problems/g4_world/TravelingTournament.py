@@ -1,8 +1,12 @@
-from pycsp3 import *
+"""
+See https://www.researchgate.net/publication/220270875_The_Traveling_Tournament_Problem_Description_and_Benchmarks
 
+Examples of Execution:
+  python3 TravelingTournament.py -data=TravelingTournament_galaxy04.json -variant=a2
+  python3 TravelingTournament.py -data=TravelingTournament_galaxy04.json -variant=a3
 """
- See https://www.researchgate.net/publication/220270875_The_Traveling_Tournament_Problem_Description_and_Benchmarks
-"""
+
+from pycsp3 import *
 
 distances = data
 nTeams, nRounds = len(distances), len(distances) * 2 - 2
