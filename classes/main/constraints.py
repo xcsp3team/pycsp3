@@ -34,8 +34,7 @@ class Diffs:
             for i, name in enumerate(self.argument_names):
                 index = Diffs.fusion.argument_names.index(name)  # note that self.argument_names must be be included in Diffs.fusion.argument_names
                 Diffs.fusion.argument_flags[index] |= self.argument_flags[i]
-                # for i in range(len(Diffs.fusion.argument_flags)):
-                #     Diffs.fusion.argument_flags[i] |= self.argument_flags[i]
+                # for i in range(len(Diffs.fusion.argument_flags)): Diffs.fusion.argument_flags[i] |= self.argument_flags[i]
 
 
 class ConstraintArgument:

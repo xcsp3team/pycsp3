@@ -42,9 +42,8 @@ class Domain:
                                                                                                    IntegerInterval) else self.original_values.__iter__()
 
     def __getitem__(self, item):
-        return self.original_values[0].__getitem__(item) if len(self.original_values) == 1 and isinstance(self.original_values[0],
-                                                                                                          IntegerInterval) else self.original_values.__getitem__(
-            item)
+        return self.original_values[0].__getitem__(item) if len(self.original_values) == 1 and isinstance(self.original_values[0], IntegerInterval) \
+            else self.original_values.__getitem__(item)
 
     def __hash__(self):
         return super().__hash__()
