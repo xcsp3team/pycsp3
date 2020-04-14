@@ -3,7 +3,7 @@ import types
 from collections import namedtuple
 from itertools import combinations, product, permutations
 
-from pycsp3.classes.auxiliary.conditions import Condition
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionValue, ne
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.entities import (
@@ -258,15 +258,28 @@ def satisfy(*args):
 ''' Generic Constraints (intension, extension) '''
 
 
+def is_smart(table):
+    for t in table:
+        for v in t:
+            if isinstance(v, ConditionValue):
+                return True
+    return False
+
+
 def Extension(*, scope, table, positive=True):
     scope = flatten(scope)
     checkType(scope, [Variable])
+    assert isinstance(table, list)
+    if any(isinstance(v, ConditionValue) for t in table for v in t):  # if smart table
+        table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
+
     checkType(table, [str, int, float])
     checkType(positive, bool)
     assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
     assert isinstance(table[0], (tuple, int, str)), "Elements of tables are tuples or integers (or symbols)"
+    #print(table)
     assert isinstance(table[0], (int, str)) or len(scope) == len(table[0]), (
-        "The length of each tuple must be the same as the arity." + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
+         "The length of each tuple must be the same as the arity." + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
     # TODO: this ckecking don't pass on Waterbucket.py, but the xml file is the same that the java version !
     # if options.checker:
     #    if not hasattr(Extension, "checked_tables"):
@@ -749,14 +762,23 @@ def different_values(*args):
     return all(a != b for (a, b) in combinations(args, 2))
 
 
-def to_ordinary_table(table, domain_sizes):
+def to_ordinary_table(table, domains, *, keep_any=False):
+    doms = [range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]
     tbl = set()
-    for t in table:
-        if ANY in t:
-            for otuple in product(*(range(v, v + 1) if v != ANY else range(domain_sizes[i]) for i, v in enumerate(t))):
-                tbl.add(otuple)
-        else:
-            tbl.add(t)
+    if keep_any:
+        for t in table:
+            if any(isinstance(v, ConditionValue) for v in t):  # v may be a ConditionValue (with method 'filtering')
+                for otuple in product(*({v} if isinstance(v, int) or v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))):
+                    tbl.add(otuple)
+            else:
+                tbl.add(t)
+    else:
+        for t in table:
+            if any(v == ANY or isinstance(v, ConditionValue) for v in t):  # v may be a ConditionValue (with method 'filtering')
+                for otuple in product(*({v} if isinstance(v, int) else doms[i] if v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))):
+                    tbl.add(otuple)
+            else:
+                tbl.add(t)
     return tbl
 
 
@@ -777,4 +799,4 @@ def cp_array(l):
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, columns, namedtuple, default_data)
+    _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, columns, namedtuple, default_data, ne)

@@ -45,6 +45,19 @@ class ConditionValue(Condition):
     def right_operand(self):
         return self.value
 
+    def filtering(self, values):
+        if self.operator == TypeConditionOperator.NE:
+            return (v for v in values if v != self.value)
+        if self.operator == TypeConditionOperator.LT:
+            return (v for v in values if v < self.value)
+        if self.operator == TypeConditionOperator.LE:
+            return (v for v in values if v <= self.value)
+        if self.operator == TypeConditionOperator.GE:
+            return (v for v in values if v >= self.value)
+        if self.operator == TypeConditionOperator.GT:
+            return (v for v in values if v > self.value)
+        assert False
+
 
 class ConditionVariable(Condition):
     def __init__(self, operator, variable):
@@ -72,3 +85,7 @@ class ConditionSet(Condition):
 
     def right_operand(self):
         return "{" + ",".join(str(v) for v in self.t) + "}"
+
+
+def ne(v):
+    return ConditionValue(TypeConditionOperator.NE, v)

@@ -9,6 +9,8 @@ Examples of Execution:
 
 from pycsp3 import *
 
+print(data)
+
 n, m = data or (6, 5)
 
 # x[i][j] is the color at row i and column j
@@ -23,5 +25,6 @@ satisfy(
 )
 
 minimize(
+    # minimizing the greatest used color index (and, consequently, the number of colors)
     Maximum(x)
 )
