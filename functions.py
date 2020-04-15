@@ -270,16 +270,16 @@ def Extension(*, scope, table, positive=True):
     scope = flatten(scope)
     checkType(scope, [Variable])
     assert isinstance(table, list)
-    if any(isinstance(v, ConditionValue) for t in table for v in t):  # if smart table
+    if len(scope) > 1 and any(isinstance(v, ConditionValue) for t in table for v in t):  # if smart table
         table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
 
     checkType(table, [str, int, float])
     checkType(positive, bool)
     assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
     assert isinstance(table[0], (tuple, int, str)), "Elements of tables are tuples or integers (or symbols)"
-    #print(table)
+    # print(table)
     assert isinstance(table[0], (int, str)) or len(scope) == len(table[0]), (
-         "The length of each tuple must be the same as the arity." + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
+        "The length of each tuple must be the same as the arity." + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
     # TODO: this ckecking don't pass on Waterbucket.py, but the xml file is the same that the java version !
     # if options.checker:
     #    if not hasattr(Extension, "checked_tables"):
