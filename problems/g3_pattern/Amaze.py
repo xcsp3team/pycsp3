@@ -18,7 +18,7 @@ satisfy(
 
     # each empty cell either contains 0 or has exactly two neighbours with the same value
     [(x[i][j], x[i - 1][j], x[i + 1][j], x[i][j - 1], x[i][j + 1]) in table for i in range(1, n + 1) for j in range(1, m + 1) if
-     [i, j] not in points1 + points2]
+     (i, j) not in [p for p in points1 + points2]]
 )
 
 minimize(
@@ -26,8 +26,9 @@ minimize(
 )
 
 
-# Note that the table use (smart) conditions, which make code more compact than:
+# Note that
 
+# a) the table contains (smart) conditions, which makes code more compact than:
 # table = ({(0, ANY, ANY, ANY, ANY)}
 #          | {(v, v, v, ne(v), ne(v)) for v in range(1, nPairs + 1)}
 #          | {(v, v, ne(v), v, ne(v)) for v in range(1, nPairs + 1)}
@@ -35,3 +36,7 @@ minimize(
 #          | {(v, ne(v), v, v, ne(v)) for v in range(1, nPairs + 1)}
 #          | {(v, ne(v), v, ne(v), v) for v in range(1, nPairs + 1)}
 #          | {(v, ne(v), ne(v), v, v) for v in range(1, nPairs + 1)})
+
+# b) according to the place data is coming (json file or via the parser) points may be lists or tuples
+#    which makes us writting (i, j) not in [p for p in points1 + points2]
+#    TODO : a reflection is necessary here

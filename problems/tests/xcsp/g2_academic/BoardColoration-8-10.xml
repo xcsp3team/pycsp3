@@ -1275,6 +1275,6 @@
     </lex>
   </constraints>
   <objectives>
-    <minimize type="maximum"> x[][] </minimize>
+    <minimize note="minimizing the greatest used color index (and, consequently, the number of colors)" type="maximum"> x[][] </minimize>
   </objectives>
 </instance>
