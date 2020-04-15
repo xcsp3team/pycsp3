@@ -1,0 +1,251 @@
+diff --git a/compiler.py b/compiler.py
+index 0fe7644..82f850f 100644
+--- a/compiler.py
++++ b/compiler.py
+@@ -26,6 +26,7 @@ class Compilation:
+     string_data = None
+     model = None
+     data = None
++    solve = None
+     stopwatch1 = None
+     stopwatch2 = None
+     done = False
+@@ -40,8 +41,8 @@ class Compilation:
+ 
+ 
+ def _load_options():
+-    options.set_values("dataparser", "data", "dataexport", "variant", "output", "checker")
+-    options.set_flags("dataexport", "ev", "compress", "debug", "display", "time", "nocomment", "solve")
++    options.set_values("dataparser", "data", "dataexport", "variant", "output", "checker", "solve")
++    options.set_flags("dataexport", "ev", "compress", "debug", "display", "time", "nocomment")
+     if options.checker is None:
+         options.checker = "fast"
+     assert options.checker in {"complete", "fast", "none"}
+@@ -211,9 +212,14 @@ def _compile():
+ 
+     Compilation.done = True
+ 
+-    if options.solve is True:
+-        from pycsp3.solvers.abscon import AbsConProcess
+-        solution = AbsConProcess().solve(filename)
++    if options.solve:
++        if options.solve == "choco":
++            from pycsp3.solvers.chocosolver import ChocoProcess
++            solution = ChocoProcess().solve(filename)
++        else: # Fallback case => options.solve == "abscon":
++            from pycsp3.solvers.abscon import AbsConProcess
++            solution = AbsConProcess().solve(filename)
++
+         print()
+         print(solution)
+ 
+diff --git a/problems/g6_tests/TestChoco.py b/problems/g6_tests/TestChoco.py
+new file mode 100644
+index 0000000..59b2a41
+--- /dev/null
++++ b/problems/g6_tests/TestChoco.py
+@@ -0,0 +1,32 @@
++from pycsp3 import *
++from pycsp3.solvers.chocosolver import ChocoProcess, ChocoPy4J
++
++n = 8
++
++# x[i] is the ith note of the series
++x = VarArray(size=n, dom=range(n))
++
++satisfy(
++    # notes must occur once, and so form a permutation
++    AllDifferent(x),
++
++    # intervals between neighbouring notes must form a permutation
++    AllDifferent(abs(x[i + 1] - x[i]) for i in range(n - 1)),
++
++    # tag(symmetry-breaking)
++    x[0] < x[n - 1]
++)
++
++
++print("Compile:\n")
++instance = compile()
++
++print("\nStatic solving:\n")
++solution = ChocoProcess().solve(instance)
++print("solution:", solution)
++
++print("\nPy4j solving:\n")
++solver = ChocoPy4J()
++solver.loadXCSP3(instance)
++
++print("in progress")
+diff --git a/solvers/abscon/Stack.class b/solvers/abscon/Stack.class
+deleted file mode 100644
+index 1e31b31..0000000
+Binary files a/solvers/abscon/Stack.class and /dev/null differ
+diff --git a/solvers/abscon/Stack.java b/solvers/abscon/Stack.java
+deleted file mode 100644
+index e6d0beb..0000000
+--- a/solvers/abscon/Stack.java
++++ /dev/null
+@@ -1,25 +0,0 @@
+-
+-import java.util.LinkedList;
+-import java.util.List;
+-
+-public class Stack {
+-    private List<String> internalList = new LinkedList<String>();
+-
+-    public void push(String element) {
+-        internalList.add(0, element);
+-    }
+-
+-    public String pop() {
+-        return internalList.remove(0);
+-    }
+-
+-    public List<String> getInternalList() {
+-        return internalList;
+-    }
+-
+-    public void pushAll(List<String> elements) {
+-        for (String element : elements) {
+-            this.push(element);
+-        }
+-    }
+-}
+\ No newline at end of file
+diff --git a/solvers/abscon/StackEntryPoint.class b/solvers/abscon/StackEntryPoint.class
+deleted file mode 100644
+index 91bf8c8..0000000
+Binary files a/solvers/abscon/StackEntryPoint.class and /dev/null differ
+diff --git a/solvers/abscon/StackEntryPoint.java b/solvers/abscon/StackEntryPoint.java
+deleted file mode 100644
+index cccaacd..0000000
+--- a/solvers/abscon/StackEntryPoint.java
++++ /dev/null
+@@ -1,23 +0,0 @@
+-
+-import py4j.GatewayServer;
+-
+-public class StackEntryPoint {
+-
+-    private Stack stack;
+-
+-    public StackEntryPoint() {
+-      stack = new Stack();
+-      stack.push("Initial Item");
+-    }
+-
+-    public Stack getStack() {
+-        return stack;
+-    }
+-
+-    public static void main(String[] args) {
+-        GatewayServer gatewayServer = new GatewayServer(new StackEntryPoint());
+-        gatewayServer.start();
+-        System.out.println("Gateway Server Started");
+-    }
+-
+-}
+\ No newline at end of file
+diff --git a/solvers/chocosolver/ChocoSolverPy4J.class b/solvers/chocosolver/ChocoSolverPy4J.class
+new file mode 100644
+index 0000000..be6680f
+Binary files /dev/null and b/solvers/chocosolver/ChocoSolverPy4J.class differ
+diff --git a/solvers/chocosolver/ChocoSolverPy4J.java b/solvers/chocosolver/ChocoSolverPy4J.java
+new file mode 100644
+index 0000000..2005ce3
+--- /dev/null
++++ b/solvers/chocosolver/ChocoSolverPy4J.java
+@@ -0,0 +1,35 @@
++import org.chocosolver.parser.xcsp.XCSP;
++import org.chocosolver.parser.xcsp.BaseXCSPListener;
++import org.chocosolver.pf4cs.SetUpException;
++import py4j.GatewayServer;
++
++public class ChocoSolverPy4J {
++
++    public void loadXCSP3(String xml) {
++        System.out.println(xml);
++        XCSP xscp = new XCSP();
++        //xscp.addListener(new BaseXCSPListener(xscp));
++        String[] args = new String[]{xml};
++        try{
++            xscp.setUp(args);
++        }catch (SetUpException sx){
++            throw new RuntimeException(sx.getCause());
++        }
++        xscp.createSolver();
++        xscp.buildModel();
++        xscp.configureSearch();
++        xscp.solve();
++    }
++
++    public ChocoSolverPy4J() {}
++
++    public ChocoSolverPy4J getSolver() {
++        return this;
++    }
++
++    public static void main(String[] argv) {
++        GatewayServer gatewayServer = new GatewayServer(new ChocoSolverPy4J());
++        gatewayServer.start();
++        System.out.println("ChocoSolverPy4J Gateway Server Started");
++    }
++}
+\ No newline at end of file
+diff --git a/solvers/chocosolver/__init__.py b/solvers/chocosolver/__init__.py
+new file mode 100644
+index 0000000..1721e9f
+--- /dev/null
++++ b/solvers/chocosolver/__init__.py
+@@ -0,0 +1,18 @@
++import os
++
++from pycsp3.solvers.solver import SolverProcess, SolverPy4J, directory_of_solver, class_path_chocosolver
++
++
++class ChocoProcess(SolverProcess):
++    def __init__(self):
++        c = class_path_chocosolver()
++        super().__init__(name="Choco-solver", command="java -cp " + c + " org.chocosolver.parser.xcsp.ChocoXCSP")
++
++
++class ChocoPy4J(SolverPy4J):
++    def __init__(self):
++        d = directory_of_solver("chocosolver")
++        c = class_path_chocosolver()
++        super().__init__(name="Choco-solver", command="java -cp " + c + os.pathsep + d + "py4j0.10.8.1.jar" + os.pathsep + d + " ChocoSolverPy4J")
++
++# command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAbsCon/ StackEntryPoint"
+diff --git a/solvers/chocosolver/choco-parsers-4.10.3-SNAPSHOT-jar-with-dependencies.jar b/solvers/chocosolver/choco-parsers-4.10.3-SNAPSHOT-jar-with-dependencies.jar
+new file mode 100644
+index 0000000..6f9afda
+Binary files /dev/null and b/solvers/chocosolver/choco-parsers-4.10.3-SNAPSHOT-jar-with-dependencies.jar differ
+diff --git a/solvers/chocosolver/py4j0.10.8.1.jar b/solvers/chocosolver/py4j0.10.8.1.jar
+new file mode 100644
+index 0000000..caeb45d
+Binary files /dev/null and b/solvers/chocosolver/py4j0.10.8.1.jar differ
+diff --git a/solvers/solver.py b/solvers/solver.py
+index 982c42c..c1455e1 100644
+--- a/solvers/solver.py
++++ b/solvers/solver.py
+@@ -11,7 +11,7 @@ from pycsp3.tools.utilities import Stopwatch
+ 
+ 
+ def directory_of_solver(name):
+-    assert name == "abscon", "for the moment, only one embedded solver (abscon)"
++    #assert name == "abscon", "for the moment, only one embedded solver (abscon)"
+     return os.sep.join(__file__.split(os.sep)[:-1]) + os.sep + name + os.sep
+ 
+ 
+@@ -19,6 +19,10 @@ def class_path_abscon():
+     d = directory_of_solver("abscon")
+     return d + "AbsCon-20-01.jar" + os.pathsep + d + "xcsp3-tools-1.1.1-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
+ 
++def class_path_chocosolver():
++    d = directory_of_solver("chocosolver")
++    return d + "choco-parsers-4.10.3-SNAPSHOT-jar-with-dependencies.jar"
++
+ 
+ class Instantiation:
+     def __init__(self, pretty_solution, variables, values):
