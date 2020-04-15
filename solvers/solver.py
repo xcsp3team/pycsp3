@@ -8,16 +8,18 @@ from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
 from pycsp3.classes.entities import VarEntities, EVarArray, EVar
 from pycsp3.tools.utilities import Stopwatch
+from pycsp3.dashboard import options
 
 
 def directory_of_solver(name):
-    #assert name == "abscon", "for the moment, only one embedded solver (abscon)"
+    # assert name == "abscon", "for the moment, only one embedded solver (abscon)"
     return os.sep.join(__file__.split(os.sep)[:-1]) + os.sep + name + os.sep
 
 
 def class_path_abscon():
     d = directory_of_solver("abscon")
     return d + "AbsCon-20-01.jar" + os.pathsep + d + "xcsp3-tools-1.1.1-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
+
 
 def class_path_chocosolver():
     d = directory_of_solver("chocosolver")
@@ -112,6 +114,12 @@ class SolverProcess:
     def solution(self):
         if self.stdout.find("<unsatisfiable") != -1 or self.stdout.find("s UNSATISFIABLE") != -1:
             return Instantiation("unsatisfiable", None, None)
+        if self.stdout.find("<instantiation") == -1 or self.stdout.find("</instantiation>") == -1:
+            print("  actually, the instance was not solved (add the option -ev to have more details")
+            if options.ev:
+                print("\n", self.stdout)
+            return None
+
         left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
         root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))
         variables = []
