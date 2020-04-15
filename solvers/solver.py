@@ -11,13 +11,17 @@ from pycsp3.tools.utilities import Stopwatch
 
 
 def directory_of_solver(name):
-    assert name == "abscon", "for the moment, only one embedded solver (abscon)"
+    #assert name == "abscon", "for the moment, only one embedded solver (abscon)"
     return os.sep.join(__file__.split(os.sep)[:-1]) + os.sep + name + os.sep
 
 
 def class_path_abscon():
     d = directory_of_solver("abscon")
     return d + "AbsCon-20-01.jar" + os.pathsep + d + "xcsp3-tools-1.1.1-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
+
+def class_path_chocosolver():
+    d = directory_of_solver("chocosolver")
+    return d + "choco-parsers-4.10.3-SNAPSHOT-jar-with-dependencies.jar"
 
 
 class Instantiation:
