@@ -8,7 +8,7 @@ public class ChocoSolverPy4J {
     public void loadXCSP3(String xml) {
         System.out.println(xml);
         XCSP xscp = new XCSP();
-        //xscp.addListener(new BaseXCSPListener(xscp));
+        xscp.addListener(new BaseXCSPListener(xscp));
         String[] args = new String[]{xml};
         try{
             xscp.setUp(args);
