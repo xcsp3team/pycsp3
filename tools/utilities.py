@@ -66,21 +66,22 @@ def transpose(m):
     return [[m[j][i] for j in range(len(m))] for i in range(len(m[0]))]
 
 
-def flatten(*args):
+def flatten(*args, keep_none=False):
     # if not hasattr(flatten, "cache"):  # cannot work (changing to TupleInt and TupleVar instead of ListInt and ListVar while guaranteeing the lifetime? how?)
     #     flatten.cache = {}
     # elif len(args) == 1 and id(args[0]) in flatten.cache:
     #     return flatten.cache[id(args[0])]
     output = []
     for arg in args:
-        if isinstance(arg, type(None)):
-            pass
+        if arg is None:
+            if keep_none:
+                output.append(arg)
         elif isinstance(arg, (str, range, Domain)):  # Iterable but must be appended, not extended
             output.append(arg)
         elif isinstance(arg, Iterable):
-            output.extend(flatten(*arg))
+            output.extend(flatten(*arg, keep_none=keep_none))
         elif isinstance(arg, types.GeneratorType):
-            output.extend(flatten(*list(arg)))
+            output.extend(flatten(*list(arg), keep_none=keep_none))
         else:
             output.append(arg)
     # if len(args) == 1:

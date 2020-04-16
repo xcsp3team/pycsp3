@@ -12,7 +12,7 @@ tests = (Tester(NAME)
          .add("TestSlices")
          .add("TestUnaryConditions")
          .add("TestSumConditions")
-         .add("TestSolver")
+         .add("TestAbscon")
          )
 
 run(tests, tests=True)

@@ -8,13 +8,13 @@ Examples of Execution:
 
 from pycsp3 import *
 
-domains, routes, hards, softs = data
+domains, routes, hard_constraints, soft_constraints = data
 domains = [domains[route.domain] for route in routes]  # we skip the indirection
 polarizations = [route.polarization for route in routes]
 n, nSofts = len(routes), len(data.softs)
 
 
-def table_soft(i, j, eqr, ner, short_table=True):
+def table_soft(i, j, eq_relaxation, ne_relaxation, short_table=True):
     def calculate_size():
         size = 0
         for l in range(kl - 1):
@@ -33,7 +33,7 @@ def table_soft(i, j, eqr, ner, short_table=True):
                 p2 = 1 if pol in {1, 3} else 0
                 if (polarizations[i], p1) in [(1, 0), (-1, 1)] or (polarizations[j], p2) in [(1, 0), (-1, 1)]:
                     continue
-                t = eqr if p1 == p2 else ner  # eqRelaxations or neRelaxations
+                t = eq_relaxation if p1 == p2 else ne_relaxation  # eqRelaxations or neRelaxations
                 for kl in range(12):
                     if kl == 11 or distance >= t[kl]:  # for kl=11, we suppose t[kl] = 0
                         suffix = (p1, p2, kl, 0 if kl == 0 or distance >= t[kl - 1] else 1, 0 if kl <= 1 else calculate_size())
@@ -59,13 +59,13 @@ v2 = VarArray(size=nSofts, dom=range(11))
 
 satisfy(
     # imperative constraints
-    dst == gap if eq else dst != gap for (dst, eq, gap) in [(abs(f[i] - f[j]) if fq else abs(p[i] - p[j]), eq, gap) for (i, j, fq, eq, gap) in hards]
+    dst == gap if eq else dst != gap for (dst, eq, gap) in [(abs(f[i] - f[j] if fq else p[i] - p[j]), eq, gap) for (i, j, fq, eq, gap) in hard_constraints]
 )
 
 if not variant():
     satisfy(
         # soft radio-electric compatibility constraints
-        (f[i], f[j], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, tuple(eqr), tuple(ner), False) for l, (i, j, eqr, ner) in enumerate(softs)
+        (f[i], f[j], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, tuple(eqr), tuple(ner), False) for l, (i, j, eqr, ner) in enumerate(soft_constraints)
     )
 
 elif variant("short"):
@@ -81,7 +81,7 @@ elif variant("short"):
         [d[i][j] == abs(f[i] - f[j]) for i, j in combinations(range(n), 2) if d[i][j]],
 
         # soft radio-electric compatibility constraints
-        [(d[min(i, j)][max(i, j)], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, tuple(eqr), tuple(ner)) for l, (i, j, eqr, ner) in enumerate(softs)]
+        [(d[min(i, j)][max(i, j)], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, tuple(er), tuple(nr)) for l, (i, j, er, nr) in enumerate(soft_constraints)]
     )
 
 minimize(
