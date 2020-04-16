@@ -1,6 +1,7 @@
 import types
 import itertools
 import numpy
+import re
 
 from enum import Enum, unique
 from functools import reduce
@@ -9,7 +10,7 @@ from pycsp3.classes.auxiliary.ptypes import auto
 from pycsp3.classes.main.variables import Variable, NotVariable, NegVariable
 from pycsp3.classes import main
 from pycsp3.dashboard import options
-from pycsp3.tools.utilities import flatten
+from pycsp3.tools.utilities import flatten, is_containing
 from pycsp3.tools.inspector import checkType
 
 
@@ -76,6 +77,7 @@ class EVarArray(Entity):
         self.variables = X
         self.flatVars = flatten(X)
         assert len(self.flatVars) != 0, "Array of variable empty !"
+        self.containing_hole = None  # undefined until we ask  #flatVarsKeepingNone = flatten(X, keep_none=True)
         self.size = []
         curr = self.variables
         while isinstance(curr, list):
@@ -88,9 +90,15 @@ class EVarArray(Entity):
         if options.debug:
             print("New VarArray entity: ", self)
 
+    def is_containing_hole(self):
+        if self.containing_hole is None:
+            self.containing_hole = is_containing(self.variables, type(None), check_first_only=True)
+        return self.containing_hole  # len(self.flatVars) != len(self.flatVarsKeepingNone)
+
     def extend_with(self, var):  # used when building auxiliary variables (to be used with global constraints)
         self.variables.append(var)
         self.flatVars.append(var)
+        # self.flatVarsKeepingNone.append(var)
         self.size[0] += 1
         VarEntities.varToEVarArray[var] = self
 
@@ -217,6 +225,28 @@ class VarEntities:
     varToEVar = dict()
     varToEVarArray = dict()
     prefixToEVarArray = dict()
+
+    @staticmethod
+    def get_item_with_name(s):
+        if '[' in s:  # we need to look for arrays
+            pos = s.index("[")
+            prefix, suffix = s[:pos], s[pos:]
+            assert prefix in VarEntities.prefixToEVarArray
+            va = VarEntities.prefixToEVarArray[prefix]
+            indexes = [int(v) if len(v) > 0 else None for v in re.split("\]\[", suffix[1:-1])]
+            if is_containing(indexes, int):
+                res = va.variables
+                for v in indexes:
+                    res = res[v]
+                return res
+            else:
+                assert is_containing(indexes, type(None))
+                return va
+        else:
+            for item in VarEntities.items:
+                if isinstance(item, EVar) and item.name == s:
+                    return item
+        return None
 
 
 class CtrEntities:

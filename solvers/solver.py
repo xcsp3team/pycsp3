@@ -6,8 +6,9 @@ from io import IOBase
 from lxml import etree
 from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
+from pycsp3.classes.main.variables import VariableInteger
 from pycsp3.classes.entities import VarEntities, EVarArray, EVar
-from pycsp3.tools.utilities import Stopwatch
+from pycsp3.tools.utilities import Stopwatch, flatten
 from pycsp3.dashboard import options
 
 
@@ -96,7 +97,7 @@ class SolverProcess:
         model += " -cm -valh=Last"
         print("  command: ", self.command + " " + model)
         result = self.execute(self.command + " " + model)
-        print("Solved by " + self.name + " in %.3f" % stopwatch.elapsed_time() + " seconds.")
+        print("Solved by " + self.name + " in %.3f" % stopwatch.elapsed_time() + " seconds (add the option -ev to see totally the output of the solver).")
         return self.solution() if result else None
 
     def execute(self, command):
@@ -119,22 +120,21 @@ class SolverProcess:
             if options.ev:
                 print("\n", self.stdout)
             return None
-
         left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
         root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))
         variables = []
         for token in root[0].text.split():
-            for item in VarEntities.items:
-                if isinstance(item, EVarArray):
-                    for x in item.flatVars:
-                        if item.name in token:
-                            variables.append(x)
-                if isinstance(item, EVar):
-                    if item.variable.id in token:
-                        variables.append(item.variable)
-
+            r = VarEntities.get_item_with_name(token)
+            if isinstance(r, VariableInteger):
+                variables.append(r)
+            else:
+                for x in flatten(r.variables, keep_none=True):
+                    variables.append(x)
         values = root[1].text.split()  # a list with all values given as strings (possibly '*')
+        assert len(variables) == len(values)
         for i, v in enumerate(values):
-            variables[i].value = v  # we add new field (may be useful)
+            if variables[i]:
+                variables[i].value = v  # we add new field (may be useful)
+
         pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
         return Instantiation(pretty_solution, variables, values)

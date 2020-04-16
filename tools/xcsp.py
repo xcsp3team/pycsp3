@@ -72,7 +72,7 @@ def _variables():
                 if x is not None:
                     dom2vars[str(x.dom)].append(x)
             dom2vars = DefaultListOrderedDict(sorted(dom2vars.items(), key=lambda item: [y.indexes for y in item[1]]))
-            if len(dom2vars) == 1:
+            if len(dom2vars) == 1:  # and not va.is_containing_hole():  # TODO do we keep the second part of the condition?
                 elt.append(_simple_var(va, str(va.flatVars[0].dom), dom2var))
             else:
                 elt.append(_complex_var(va, dom2vars))

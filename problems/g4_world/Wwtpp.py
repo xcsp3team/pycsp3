@@ -40,8 +40,7 @@ satisfy(
     [Sum(b[i][0], c[i][0]) == sd[i][0] for i in range(nIndustries) if sd[i][0] != 0],
 
     # managing scheduled discharge flows at all periods except 0
-    [[b[i][j], b[i][j - 1], d[i][j], c[i][j]] * ([1, -1, 1] + ([1] if c[i][j] else [])) == sd[i][j] for i in range(nIndustries) for j in
-     range(1, nPeriods)],
+    [[b[i][j], b[i][j - 1], d[i][j], c[i][j]] * [1, -1, 1, 1 if c[i][j] else None] == sd[i][j] for i in range(nIndustries) for j in range(1, nPeriods)],
 
     # ensuring compatibility between stored and discharge flows
     [(d[i][j], b[i][j - 1]) in table_compatibility(i, j) for i in range(nIndustries) for j in range(1, nPeriods)],
@@ -53,6 +52,5 @@ satisfy(
 
 # Note that:
 
-# a) when managing scheduled discharge flows, we have a list with four cells for variables and list with three or four integers.
-# However, when there are only three integers, it means that the fourth cell for variables contains None. Consequently,
-# the list will be automatically reduced to three cells.
+# a) when managing scheduled discharge flows, we have a list with four cells for variables and integers.
+# However, when there is the special value None (at the fourth position in both lists), the two lists will be automatically reduced to three cells.
