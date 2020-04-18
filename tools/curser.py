@@ -11,6 +11,8 @@ from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
+unsafe_cache = False  # see for example Pic since the table is released as it occurs as a parameter
+
 
 def cursing():
     def _dict_add(self, other):  # for being able to merge dictionaries
@@ -78,7 +80,12 @@ def cursing():
         #     queue_in.append((list(self), other))
         #     return True
         if is_containing(other, Variable):  # non-unary table constraint
-            queue_in.append((list(self), flatten(other)))
+            if unsafe_cache:
+                if not hasattr(_set_contains, "cache"):
+                    _set_contains.cache = {}
+                if id(self) not in _set_contains.cache:
+                    _set_contains.cache[id(self)] = list({tuple(v) if isinstance(v, types.GeneratorType) else v for v in self})
+            queue_in.append((_set_contains.cache[id(self)] if unsafe_cache else list(self), flatten(other)))
             return True
         return self.__contains__(other)
 
@@ -439,6 +446,8 @@ class ListVar(list):
 def convert_to_namedtuples(obj):
     if not hasattr(convert_to_namedtuples, "cnt"):
         convert_to_namedtuples.cnt = 0
+    if isinstance(obj, tuple):
+        obj = list(obj)  # because if data come from a text file (and not from a JSON file), we have different structures, which leads to problems
     if isinstance(obj, list):
         if is_1d_list(obj, int):
             return ListInt(obj)

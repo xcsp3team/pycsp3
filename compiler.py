@@ -126,7 +126,9 @@ def _load(*, console=False):
         else:
             Compilation.data, Compilation.string_data = _load_data()
         Compilation.data = convert_to_namedtuples(Compilation.data)
-        if len(Compilation.data) == 1:
+        if len(Compilation.data) == 0:
+            Compilation.data = None
+        elif len(Compilation.data) == 1:
             Compilation.data = Compilation.data[0]  # the value instead of a tuple of size 1
     else:
         Compilation.string_model = "Console"

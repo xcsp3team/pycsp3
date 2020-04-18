@@ -1,6 +1,17 @@
+""""
+See https://en.wikipedia.org/wiki/Sudoku
+See, e.g., "Sudoku as a Constraint Problem" by Helmut Simonis
+
+Example of Execution:
+  python3 Sudoku.py
+  python3 Sudoku.py -data=null
+  python3 Sudoku.py -data=None
+  python3 Sudoku.py -data=Sudoku9-test.json
+"""
+
 from pycsp3 import *
 
-clues = data.clues  # if not 0, clues[i][j] is a value imposed at row i and col j
+clues = data  # if not 0, clues[i][j] is a value imposed at row i and col j
 
 # x[i][j] is the value in cell at row i and col j.
 x = VarArray(size=[9, 9], dom=range(1, 10))

@@ -93,12 +93,11 @@ class EVarArray(Entity):
     def is_containing_hole(self):
         if self.containing_hole is None:
             self.containing_hole = is_containing(self.variables, type(None), check_first_only=True)
-        return self.containing_hole  # len(self.flatVars) != len(self.flatVarsKeepingNone)
+        return self.containing_hole
 
     def extend_with(self, var):  # used when building auxiliary variables (to be used with global constraints)
         self.variables.append(var)
         self.flatVars.append(var)
-        # self.flatVarsKeepingNone.append(var)
         self.size[0] += 1
         VarEntities.varToEVarArray[var] = self
 
