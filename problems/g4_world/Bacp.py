@@ -25,7 +25,7 @@ cr = VarArray(size=nPeriods, dom=range(minCredits, maxCredits + 1))
 
 if variant("m1"):
     def table(c):
-        return {tuple(credits[c] if j == p else p if j == nPeriods else 0 for j in range(nPeriods + 1)) for p in range(nPeriods)}
+        return {(0,) * p + (credits[c],) + (0,) * (nPeriods - p - 1) + (p,) for p in range(nPeriods)}
 
 
     # cp[c][p] is 0 if the course c is not planned at period p, the number of credits for c otherwise
@@ -77,3 +77,9 @@ else:
     )
 
 annotate(decision=s)
+
+
+# Note that:
+
+# a) the way we build the table could also be written as:
+# return {tuple(credits[c] if j == p else p if j == nPeriods else 0 for j in range(nPeriods + 1)) for p in range(nPeriods)}

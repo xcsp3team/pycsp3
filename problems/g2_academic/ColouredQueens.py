@@ -13,8 +13,6 @@ from pycsp3 import *
 
 n = data or 8
 
-print(data)
-
 # x[i][j] is the color at row i and column j
 x = VarArray(size=[n, n], dom=range(n))
 
