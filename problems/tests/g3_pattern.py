@@ -76,6 +76,8 @@ same = (Tester(NAME)
         )
 
 xcsp = (Tester(NAME)
+        .add("Amaze", data="Amaze_simple.json")  #
+        .add("Amaze", data="Amaze_2012-03-07.dzn", prs_py="Amaze_ParserZ.py", prs_jv="")  #
         .add("Areas", data="Areas-3-3-3.json")  # 7 solutions
         .add("Auction", data="Auction_example.json")  # optimum 54
         .add("Auction", data="Auction_example.txt", prs_py="Auction_Parser", prs_jv="Auction_Parser")  # optimum 54

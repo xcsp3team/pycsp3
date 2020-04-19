@@ -13,6 +13,9 @@ from pycsp3 import *
 
 clues = data  # if not 0, clues[i][j] is a value imposed at row i and col j
 
+
+
+
 # x[i][j] is the value in cell at row i and col j.
 x = VarArray(size=[9, 9], dom=range(1, 10))
 

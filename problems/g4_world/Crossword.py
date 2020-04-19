@@ -8,31 +8,18 @@ Examples of Execution:
 
 from pycsp3 import *
 
+spots, dict_name = data
+words = dict()
+for line in open(dict_name):
+    code = alphabet_positions(line.strip().lower())
+    words.setdefault(len(code), []).append(code)
+
 
 def find_holes(matrix, transposed):
-    class Hole:
-        def __init__(self, row, col, size, horizontal):
-            self.row = row if horizontal else col
-            self.col = col if horizontal else row
-            self.size = size
-            self.horizontal = horizontal
+    def build_hole(row, col, size, horizontal):
+        return Hole(row, slice(col, col + size), size) if horizontal else Hole(slice(col, col + size), row, size)
 
-        def scope(self):
-            return [x[self.row][self.col + k] if self.horizontal else x[self.row + k][self.col] for k in range(self.size)]
-
-        def offset(self, other):
-            if self.horizontal == other.horizontal:
-                return None
-            if self.horizontal:
-                ofs1, ofs2 = other.col - self.col, self.row - other.row
-                return (ofs1, ofs2) if 0 <= ofs1 < self.size and 0 <= ofs2 < other.size else None
-            else:
-                ofs1, ofs2 = self.col - other.col, other.row - self.row
-                return (ofs1, ofs2) if 0 <= ofs1 < other.size and 0 <= ofs2 < self.size else None
-
-        def __str__(self):
-            return str(self.row) + " " + str(self.col) + " " + str(self.size) + " " + str(self.horizontal)
-
+    Hole = namedtuple("Hole", "i j r")  # i and j are indexes (possibly, slice) and r is the size
     p, q = len(matrix), len(matrix[0])
     t = []
     for i in range(p):
@@ -40,23 +27,18 @@ def find_holes(matrix, transposed):
         for j in range(q):
             if matrix[i][j] == 1:
                 if start != -1 and j - start >= 2:
-                    t.append(Hole(i, start, j - start, not transposed))
+                    t.append(build_hole(i, start, j - start, not transposed))
                 start = -1
             elif start == -1:
                 start = j
             elif j == q - 1 and q - start >= 2:
-                t.append(Hole(i, start, q - start, not transposed))
+                t.append(build_hole(i, start, q - start, not transposed))
     return t
 
 
-spots, dict_name = data
 holes = find_holes(spots, False) + find_holes(transpose(spots), True)
+arities = sorted(set(size for (_, _, size) in holes))
 n, m, nHoles = len(spots), len(spots[0]), len(holes)
-
-words = dict()
-for line in open(dict_name):
-    code = alphabet_positions(line.strip().lower())
-    words.setdefault(len(code), []).append(code)
 
 if not variant():
     #  x[i][j] is the letter, number from 0 to 25, at row i and column j (when no spot)
@@ -64,24 +46,41 @@ if not variant():
 
     satisfy(
         # fill the grid with words
-        [hole.scope() in words[hole.size] for hole in holes],
+        [x[i, j] in words[r] for (i, j, r) in holes],
 
         # tag(distinct-words)
-        [AllDifferentList(hole.scope() for hole in holes if hole.size == arity) for arity in sorted(set(hole.size for hole in holes))]
+        [AllDifferentList(x[i, j] for (i, j, r) in holes if r == arity) for arity in arities]
     )
+
 elif variant("alt"):
+    def offset(hole1, hole2):
+        if type(hole1.i) == type(hole2.i):  # it means that they are both horizontal or vertical
+            return None
+        if isinstance(hole1.i, int):  # if hole1 is horizontal (and so hole2 is vertical)
+            ofs1, ofs2 = hole2.j - hole1.j.start, hole1.i - hole2.i.start
+            return (ofs1, ofs2) if 0 <= ofs1 < hole1.r and 0 <= ofs2 < hole2.r else None
+        else:  # if hole1 is vertical (and so hole2 is horizontal)
+            ofs1, ofs2 = hole1.j - hole2.j.start, hole2.i - hole1.i.start
+            return (ofs1, ofs2) if 0 <= ofs1 < hole2.r and 0 <= ofs2 < hole1.r else None
+
+
     def table_compatible_words(hole1, hole2):
-        ofs1, ofs2 = hole1.offset(hole2)
-        return {(i1, i2) for i1, word1 in enumerate(words[hole1.size]) for i2, word2 in enumerate(words[hole2.size]) if word1[ofs1] == word2[ofs2]}
+        ofs1, ofs2 = offset(hole1, hole2)
+        return {(i1, i2) for i1, word1 in enumerate(words[hole1.r]) for i2, word2 in enumerate(words[hole2.r]) if word1[ofs1] == word2[ofs2]}
 
 
     # w[i] is the ith word to be put in the grid
-    w = VarArray(size=nHoles, dom=lambda i: range(len(words[holes[i].size])))
+    w = VarArray(size=nHoles, dom=lambda i: range(len(words[holes[i].r])))
 
     satisfy(
         # words must intersect correctly
-        [(w[i], w[j]) in table_compatible_words(holes[i], holes[j]) for i, j in combinations(range(nHoles), 2) if holes[i].offset(holes[j])],
+        [(w[i], w[j]) in table_compatible_words(holes[i], holes[j]) for i, j in combinations(range(nHoles), 2) if offset(holes[i], holes[j])],
 
         # tag(distinct-words)
-        [w[i] != w[j] for i, j in combinations(range(nHoles), 2) if holes[i].size == holes[j].size]
+        [w[i] != w[j] for i, j in combinations(range(nHoles), 2) if holes[i].r == holes[j].r]
     )
+
+
+    # Note that:
+
+    # it is not possible to write x[i][j] when i is a slice; this must be x[i, j]
