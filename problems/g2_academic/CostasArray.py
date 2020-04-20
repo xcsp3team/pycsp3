@@ -12,13 +12,14 @@ from pycsp3 import *
 n = data or 8
 
 # x[i] is the row where is put the ith mark (on the ith column)
-x = VarArray(size=n, dom=range(1, n + 1))
+x = VarArray(size=n, dom=range(n))
 
 satisfy(
+    # all marks are on different rows (and columns)
     AllDifferent(x),
 
-    # all vectors between the marks must be different
-    [AllDifferent(x[j] - x[j + i + 1] for j in range(n - i - 1)) for i in range(n - 2)]
+    # all displacement vectors between the marks must be different
+    [AllDifferent(x[i] - x[i + d] for i in range(n - d)) for d in range(1, n - 1)]
 )
 
 # TODO how to break all symmetries?  x[0] <= math.ceil(n / 2), x[0] < x[-1], ... ?
