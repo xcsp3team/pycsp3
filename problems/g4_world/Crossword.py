@@ -19,7 +19,7 @@ def find_holes(matrix, transposed):
     def build_hole(row, col, size, horizontal):
         return Hole(row, slice(col, col + size), size) if horizontal else Hole(slice(col, col + size), row, size)
 
-    Hole = namedtuple("Hole", "i j r")  # i and j are indexes (possibly, slice) and r is the size
+    Hole = namedtuple("Hole", "i j r")  # i and j are indexes (one of them being a slice) and r is the size
     p, q = len(matrix), len(matrix[0])
     t = []
     for i in range(p):

@@ -309,6 +309,10 @@ def abs(*args):
     return Node.build(TypeNode.ABS, *args) if len(args) == 1 and isinstance(args[0], (Node, Variable)) else absPython(*args)
 
 
+def expr(operator, *args):
+    return Node.build(operator, *args)
+
+
 def min(*args):
     return Node.build(TypeNode.MIN, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 
@@ -377,6 +381,8 @@ def Mdd(*, scope, mdd):
 
 def AllDifferent(term, *others, excepting=None, matrix=None):
     terms = flatten(term, others)
+    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (int, Variable, Node))):
+        return None
     if matrix is not None:
         assert excepting is None, "excepting values are currently not supported for AllDifferentMatrix"
         matrix = [flatten(row) for row in terms]
@@ -389,12 +395,12 @@ def AllDifferent(term, *others, excepting=None, matrix=None):
     return ECtr(ConstraintAllDifferent(terms, excepting))
 
 
-def AllDifferentList(lists, *others, excepting=None):
-    if isinstance(lists, types.GeneratorType):
-        lists = [l for l in lists]
+def AllDifferentList(term, *others, excepting=None):
+    if isinstance(term, types.GeneratorType):
+        term = [l for l in term]
     elif len(others) > 0:
-        lists = list((lists,) + others)
-    lists = [flatten(l) for l in lists]
+        term = list((term,) + others)
+    lists = [flatten(l) for l in term]
     assert all(checkType(l, [Variable]) for l in lists)
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else excepting
     checkType(excepting, ([int], type(None)))

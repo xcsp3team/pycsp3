@@ -469,6 +469,21 @@ class Node(Entity):
 
     @staticmethod
     def build(type, *args):
+        if isinstance(type, str):
+            if type == "<":
+                type = TypeNode.LT
+            elif type == "<=":
+                type = TypeNode.LE
+            elif type == ">=":
+                type = TypeNode.GE
+            elif type == ">":
+                type = TypeNode.GT
+            elif type in {"=", "=="}:
+                type = TypeNode.EQ
+            elif type == "!=":
+                type = TypeNode.NE
+            else:
+                type = TypeNode[type.upper()]
         if type is TypeNode.SET:
             assert len(args) == 1
             elements = list(args[0])
