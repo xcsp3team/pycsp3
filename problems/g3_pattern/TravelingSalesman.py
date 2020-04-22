@@ -8,7 +8,6 @@ Examples of Execution:
 
 from pycsp3 import *
 
-
 distances = data
 nCities = len(distances)
 

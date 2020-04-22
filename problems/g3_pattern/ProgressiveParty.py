@@ -37,7 +37,7 @@ satisfy(
     [AllDifferent(s[b], excepting=b) for b in range(nBoats)],
 
     # guest crews cannot meet more than once
-    [Sum(s[b1][p] == s[b2][p] for p in range(nPeriods)) <= 2 for b1 in range(nBoats) for b2 in range(b1 + 1, nBoats)]
+    [Sum(s[b1][p] == s[b2][p] for p in range(nPeriods)) <= 2 for b1, b2 in combinations(range(nBoats), 2)]
 )
 
 minimize(
