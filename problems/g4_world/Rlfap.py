@@ -16,7 +16,7 @@ n = len(variables)
 f = VarArray(size=n, dom=lambda i: domains[variables[i].domain])
 
 satisfy(
-    #  managing pre-assigned frequencies
+    # managing pre-assigned frequencies
     [f[i] == v for i, (_, v, mob) in enumerate(variables) if v and not (variant("max") and mob)],
 
     # hard constraints on radio-links

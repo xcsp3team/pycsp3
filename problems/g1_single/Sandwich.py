@@ -17,7 +17,7 @@ Execution:
 
 from pycsp3 import *
 
-persons = alice, bob, sascha = 0, 1, 2
+alice, bob, sascha = persons = 0, 1, 2
 
 # culprit is among alice (0), bob (1) and sascha (2)
 culprit = Var(persons)
@@ -38,7 +38,7 @@ satisfy(
     # nobody is taller than himself
     [taller[p][p] == 0 for p in persons],
 
-    # the ith guy is taller than the jth guy iff the jth guy is not taller than the ith guy
+    # the ith guy is taller than the jth guy iff the reverse is not true
     [taller[p1][p2] != taller[p2][p1] for p1 in persons for p2 in persons if p1 != p2],
 
     # Bob likes no one that Alice likes

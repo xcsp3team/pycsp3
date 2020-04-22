@@ -18,7 +18,7 @@ from pycsp3 import *
 
 n = data or 8
 
-#  x[i][j] is the value at row i and column j of the quasi-group
+# x[i][j] is the value at row i and column j of the quasi-group
 x = VarArray(size=[n, n], dom=range(n))
 
 satisfy(

@@ -17,7 +17,7 @@ def match_number(t1, t2):
     return nMatches - ((nTeams - t1) * (nTeams - t1 - 1)) // 2 + (t2 - t1 - 1)
 
 
-table = {(t1, t2, match_number(t1, t2)) for t1 in range(nTeams) for t2 in range(t1 + 1, nTeams)}
+table = {(t1, t2, match_number(t1, t2)) for t1, t2 in combinations(range(nTeams),2)}
 
 # h[w][p] is the home team at week w and period p
 h = VarArray(size=[nWeeks, nPeriods], dom=range(nTeams))
