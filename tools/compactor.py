@@ -269,6 +269,7 @@ def _compact_constraint_group(group):
         preserve_order = True
     if cnt > 1:
         preserve_order = True
+    group.original_all_args = [aa for aa in group.all_args]  # useful when reasoning to build the meta-constraint 'slide'
     for i in range(len(group.all_args)):
         group.all_args[i] = compact(group.all_args[i], preserve_order=preserve_order, group_args=True)
 

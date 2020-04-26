@@ -1,6 +1,6 @@
 from pycsp3 import *
 
-n, d = data  # number of dominos -- number of values
+n, d = data  # number of dominoes -- number of values
 
 # x[i] is the value of the ith domino
 x = VarArray(size=n, dom=range(d))
@@ -14,9 +14,9 @@ if not variant():
 
 elif variant("table"):
     satisfy(
-        [(x[i], x[i + 1]) in {(a, a) for a in range(d)} for i in range(n - 1)],
+        [(x[i], x[i + 1]) in {(v, v) for v in range(d)} for i in range(n - 1)],
 
-        (x[0], x[- 1]) in {(a + 1, a) for a in range(d - 1)} | {(d - 1, d - 1)}
+        (x[0], x[- 1]) in {(v + 1, v) for v in range(d - 1)} | {(d - 1, d - 1)}
     )
 
 

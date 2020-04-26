@@ -660,8 +660,7 @@ class _Auxiliary:
 
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
-        dom = Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1))
-        return self.__replace(pc, dom)
+        return self.__replace(pc, Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
 
     def replace_partial_constraints(self, terms):
         assert isinstance(terms, list)

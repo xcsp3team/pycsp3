@@ -24,44 +24,43 @@ def detect_slides_recursively(ctr_entities):
 
 
 def _identify_slide(group):
+    def _possible_offset(all_args):  # attempt to find a simple offset
+        for arg1 in all_args[1]:
+            for i, arg0 in enumerate(all_args[0]):
+                if arg0 == arg1:
+                    return i
+        return None
+
     if isinstance(group.abstraction, dict) and len([v for v in group.abstraction.values() if "%" in str(v)]) != 1:
         return None  # if more than one difference, we currently don't know how to slide (compute it automatically)
 
-    # group.all_args = [[v for v in args] for args in group.all_args]  # removing DELETED
+    all_args = group.original_all_args if hasattr(group, "original_all_args") else group.all_args
 
     # we compute the global scope
-    t = [x for args in group.all_args for x in args]
+    t = [x for args in all_args for x in args]
     if any(not isinstance(x, Variable) for x in t):
         return None
     scope = [x for i, x in enumerate(t) if x not in t[0:i]]  # in O(n^2) but should not be a big deal here
 
     ''' trying to recognize a normal slide '''
-    arity = len(group.all_args[0])
+    arity = len(all_args[0])
     sliding_scope = [[x for x in scope[i:i + arity]] for i in range(0, len(scope) - arity + 1, 1)]  # OFFSET 1
-    if sliding_scope == group.all_args:
+    if sliding_scope == all_args:
         return scope, 1, False
 
     ''' trying to recognize a circular Slide '''
-    if sliding_scope + [[scope[i] for i in range(len(scope) - arity + 1, len(scope))] + [scope[0]]] == group.all_args:
+    if sliding_scope + [[scope[i] for i in range(len(scope) - arity + 1, len(scope))] + [scope[0]]] == all_args:
         return scope, 1, True
 
     ''' trying to recognize a slide with an offset not equal to 1'''
-    offset = _possible_offset(group)
+    offset = _possible_offset(all_args)
     if offset is None or offset <= 1:
         return None
     sliding_scope = [[x for x in scope[i:i + arity]] for i in range(0, len(scope) - arity + 1, offset)]
-    if sliding_scope == group.all_args:
+    if sliding_scope == all_args:
         return scope, offset, False
-    if sliding_scope + [[scope[i] for i in range(len(scope) - arity + 1, len(scope))] + [scope[0]]] == group.all_args:
+    if sliding_scope + [[scope[i] for i in range(len(scope) - arity + 1, len(scope))] + [scope[0]]] == all_args:
         return scope, offset, True
-    return None
-
-
-def _possible_offset(group):  # attempt to find a simple offset
-    for arg1 in group.all_args[1]:
-        for i, arg0 in enumerate(group.all_args[0]):
-            if arg0 == arg1:
-                return i
     return None
 
 
