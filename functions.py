@@ -23,8 +23,8 @@ from pycsp3.dashboard import options
 from pycsp3.tools import curser
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, alphabet_positions, transpose, integer_scaling, is_containing, \
-    ANY
+from pycsp3.tools.utilities import ANY, flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, \
+    integer_scaling
 from pycsp3.compiler import default_data
 
 ''' Global Variables '''
@@ -161,7 +161,7 @@ def IfThenElse(*args):
 
 def Slide(*args):
     entities = _wrap_intension_constraints(
-        flatten(*args))  # we cannot directly complete partial forms (because it is executed before the anlaysi of the paparemeters of satisfy
+        flatten(*args))  # we cannot directly complete partial forms (because it is executed before the analysis of the parameters of satisfy
     checkType(entities, [ECtr, bool])
     return ESlide([EToGather(entities)])
 
@@ -258,12 +258,12 @@ def satisfy(*args):
 ''' Generic Constraints (intension, extension) '''
 
 
-def is_smart(table):
-    for t in table:
-        for v in t:
-            if isinstance(v, ConditionValue):
-                return True
-    return False
+# def is_smart(table):
+#     for t in table:
+#         for v in t:
+#             if isinstance(v, ConditionValue):
+#                 return True
+#     return False
 
 
 def Extension(*, scope, table, positive=True):
@@ -352,11 +352,6 @@ def disjunction(*args):
 def knight_attack(x, y, order):
     d1, d2 = dist(x // order, y // order), dist(x % order, y % order)  # distances between rows and columns
     return (d1 == 1) & (d2 == 2) | (d1 == 2) & (d2 == 1)
-
-
-def queen_attack(x, y, order):
-    d1, d2 = dist(x // order, y // order), dist(x % order, y % order)  # distances between rows and columns
-    return (x != y) & ((x % order == y % order) | (x // order == y // order) | (d1 == d2))
 
 
 ''' Language-based Constraints '''
@@ -774,15 +769,13 @@ def to_ordinary_table(table, domains, *, keep_any=False):
     if keep_any:
         for t in table:
             if any(isinstance(v, ConditionValue) for v in t):  # v may be a ConditionValue (with method 'filtering')
-                for otuple in product(*({v} if isinstance(v, int) or v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))):
-                    tbl.add(otuple)
+                tbl.update(product(*({v} if isinstance(v, int) or v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
                 tbl.add(t)
     else:
         for t in table:
             if any(v == ANY or isinstance(v, ConditionValue) for v in t):  # v may be a ConditionValue (with method 'filtering')
-                for otuple in product(*({v} if isinstance(v, int) else doms[i] if v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))):
-                    tbl.add(otuple)
+                tbl.update(product(*({v} if isinstance(v, int) else doms[i] if v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
                 tbl.add(t)
     return tbl
@@ -805,4 +798,4 @@ def cp_array(l):
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, alphabet_positions, transpose, integer_scaling, is_containing, columns, namedtuple, default_data, ne)
+    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, columns, namedtuple, default_data, ne)

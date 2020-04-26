@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from lxml import etree
 
 from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeXML, TypeVar, TypeCtr, TypeCtrArg
@@ -6,9 +8,15 @@ from pycsp3.classes.entities import Entity, EVar, EVarArray, ECtr, EObjective, E
 from pycsp3.classes.main.constraints import ConstraintIntension
 from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
-from pycsp3.tools.utilities import DefaultListOrderedDict
+from pycsp3.tools.slider import _identify_slide
 
 SIZE_LIMIT_FOR_USING_AS = 12  # when building domains of variables of arrays of variables (and using the attribute 'as')
+
+
+class DefaultListOrderedDict(OrderedDict):
+    def __missing__(self, k):
+        self[k] = []
+        return self[k]
 
 
 def _text(elt, s):
@@ -108,32 +116,44 @@ def _constraint(entity, *, possible_simplified_form=False):
     return elt
 
 
-def _group(elt, group, *, including_args=True):
-    # res = _identify_slide(group)
-
+def _constraint_template(group):
     if isinstance(group.entities[0].constraint, ConstraintIntension):
-        elt.append(_element(TypeCtr.INTENSION, text=group.abstraction))
+        return _element(TypeCtr.INTENSION, text=group.abstraction)
     else:
         first = group.entities[0]
         arguments = [(k, v) for k, v in group.abstraction.items() if v is not None]  # we keep only valid (non null) arguments
-        subelt = _element(first.constraint.name, first, attributes=first.constraint.attributes)
+        elt = _element(first.constraint.name, first, attributes=first.constraint.attributes)
         if len(arguments) == 1 and TypeCtrArg.LIST in group.abstraction:
-            _text(subelt, group.abstraction[TypeCtrArg.LIST])
+            _text(elt, group.abstraction[TypeCtrArg.LIST])
         else:
             for k, v in arguments:
-                _argument(subelt, first.constraint.arguments[k], k, v)
-        elt.append(subelt)
-    if including_args is True:
-        for arg in group.all_args:
-            elt.append(_element(TypeXML.ARGS, text=arg))
+                _argument(elt, first.constraint.arguments[k], k, v)
+        return elt
+
+
+def _slide(entity, scope, offset, circular, group):
+    elt = _element(TypeCtr.SLIDE, entity, attributes=(TypeXML.CIRCULAR, "true") if circular else [])
+    elt.append(_element(TypeCtrArg.LIST, text=scope, attributes=(TypeXML.OFFSET, offset) if offset > 1 else []))
+    elt.append(_constraint_template(group))
     return elt
 
 
-def _slide(ctrToSlide):
-    slide = _element(TypeCtr.SLIDE, ctrToSlide, attributes=(TypeXML.CIRCULAR, "true") if ctrToSlide.circular else [])
-    slide.append(_element(TypeCtrArg.LIST, text=ctrToSlide.scope, attributes=(TypeXML.OFFSET, ctrToSlide.offset) if ctrToSlide.offset > 1 else []))
-    _group(slide, ctrToSlide.entities[0].entities[0], including_args=False)
-    return slide
+recognize_slide = False  # todo: using an option
+
+
+def _group(entity):
+    if recognize_slide:
+        all_args = entity.original_all_args if hasattr(entity, "original_all_args") else entity.all_args
+        if len(all_args) > 3 and len(all_args[0]) > 1:
+            res = _identify_slide(entity)
+            if res:
+                scope, offset, circular = res
+                return _slide(entity, compact(scope, preserve_order=True), offset, circular, entity)
+    elt = _element(TypeXML.GROUP, entity)
+    elt.append(_constraint_template(entity))
+    for arg in entity.all_args:
+        elt.append(_element(TypeXML.ARGS, text=arg))
+    return elt
 
 
 def _constraints_recursive(elt, entity):
@@ -148,9 +168,9 @@ def _constraints_recursive(elt, entity):
         if len(entity.scope) == 0:
             _constraints_iterative(elt, entity.entities)
         else:
-            son = _slide(entity)
+            son = _slide(entity, entity.scope, entity.offset, entity.circular, entity.entities[0].entities[0])
     elif isinstance(entity, EGroup):
-        son = _group(_element(TypeXML.GROUP, entity), entity)
+        son = _group(entity)
     elif isinstance(entity, EBlock):
         if len(entity.entities) != 0:
             son = _constraints_iterative(_element(TypeXML.BLOCK, entity), entity.entities)

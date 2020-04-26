@@ -26,5 +26,5 @@ table = table()
 satisfy(
     x[0] in {1, 2},
 
-    Slide((x[i], x[i + 1]) in table for i in range(nSteps - 2))
+    [(x[i], x[i + 1]) in table for i in range(nSteps - 2)]
 )

@@ -29,5 +29,5 @@ satisfy(
     [Increasing([y[j] for j in pile], strict=True) for pile in piles],
 
     # each new card put on the stack must be at a rank higher or lower than the previous one
-    Slide((x[i], x[i + 1]) in table for i in range(nCards - 1))
+    [(x[i], x[i + 1]) in table for i in range(nCards - 1)]
 )

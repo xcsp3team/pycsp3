@@ -1,6 +1,5 @@
 import sys
 import types
-from collections import OrderedDict
 from collections.abc import Iterable
 from decimal import Decimal
 from multiprocessing import cpu_count, Pool
@@ -33,37 +32,6 @@ class _Star(float):
 
 
 ANY = _Star("Inf")  #: used to represent * in short tables
-
-
-class DefaultListOrderedDict(OrderedDict):
-    def __missing__(self, k):
-        self[k] = []
-        return self[k]
-
-
-def is_1d_list(l, types=None):
-    return isinstance(l, list) and all(isinstance(v, types) if types else not isinstance(v, list) for v in l)
-
-
-def is_1d_tuple(l, types):
-    return isinstance(l, tuple) and all(isinstance(v, types) for v in l)
-
-
-def is_2d_list(m, types=None):
-    return isinstance(m, list) and all(is_1d_list(l, types) for l in m)
-
-
-def is_matrix(m, types=None):
-    return is_2d_list(m, types) and all(len(l) == len(m[0]) for l in m)
-
-
-def is_square_matrix(m, types=None):
-    return is_matrix(m, types) and len(m) == len(m[0])
-
-
-def transpose(m):
-    assert is_matrix(m)
-    return [[m[j][i] for j in range(len(m))] for i in range(len(m[0]))]
 
 
 def flatten(*args, keep_none=False):
@@ -120,9 +88,43 @@ def unique_type_in(l, tpe=None):
         return None if l is None else type(l) if tpe is None else tpe if isinstance(l, tpe) else False
 
 
+def is_1d_list(l, types=None):
+    return isinstance(l, list) and all(isinstance(v, types) if types else not isinstance(v, list) for v in l)
+
+
+def is_1d_tuple(l, types):
+    return isinstance(l, tuple) and all(isinstance(v, types) for v in l)
+
+
+def is_2d_list(m, types=None):
+    return isinstance(m, list) and all(is_1d_list(l, types) for l in m)
+
+
+def is_matrix(m, types=None):
+    return is_2d_list(m, types) and all(len(l) == len(m[0]) for l in m)
+
+
+def is_square_matrix(m, types=None):
+    return is_matrix(m, types) and len(m) == len(m[0])
+
+
+def transpose(m):
+    assert is_matrix(m)
+    return [[m[j][i] for j in range(len(m))] for i in range(len(m[0]))]
+
+
 def alphabet_positions(s):
     assert isinstance(s, str)
     return tuple(ord(c) - ord('a') for c in s.lower())
+
+
+def all_primes(limit):
+    """ Returns a list of primes < limit """
+    sieve = [True] * limit
+    for i in range(3, int(limit ** 0.5) + 1, 2):
+        if sieve[i]:
+            sieve[i * i::2 * i] = [False] * ((limit - i * i - 1) // (2 * i) + 1)
+    return [2] + [i for i in range(3, limit, 2) if sieve[i]]
 
 
 def value_in_base(decimal_value, length, base):

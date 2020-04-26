@@ -79,13 +79,18 @@ def cursing():
         # if is_1d_tuple(other, Variable) or is_1d_list(other, Variable):  # non-unary table constraint
         #     queue_in.append((list(self), other))
         #     return True
-        if is_containing(other, Variable):  # non-unary table constraint
+        if isinstance(other, (tuple, list)) and is_containing(other, (Variable, Node)):  # non-unary table constraint
+            ll = flatten(other)
+            for i in range(len(ll)):  # we replace nodes by auxiliary variables if present
+                if isinstance(ll[i], Node):
+                    ll[i] = auxiliary().replace_node(ll[i])
+                    # if is_containing(other, Variable):  # non-unary table constraint
             if unsafe_cache:
                 if not hasattr(_set_contains, "cache"):
                     _set_contains.cache = {}
                 if id(self) not in _set_contains.cache:
                     _set_contains.cache[id(self)] = list({tuple(v) if isinstance(v, types.GeneratorType) else v for v in self})
-            queue_in.append((_set_contains.cache[id(self)] if unsafe_cache else list(self), flatten(other)))
+            queue_in.append((_set_contains.cache[id(self)] if unsafe_cache else list(self), ll))  # flatten(other)))
             return True
         return self.__contains__(other)
 
