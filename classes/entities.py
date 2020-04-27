@@ -60,8 +60,6 @@ class EVar(Entity):
         self.variable = x
         VarEntities.items.append(self)
         VarEntities.varToEVar[x] = self
-        if options.debug:
-            print("New stand-alone variable (entity): ", self)
 
     def get_type(self):
         return self.variable.dom.get_type()
@@ -87,8 +85,6 @@ class EVarArray(Entity):
         for x in self.flatVars:
             VarEntities.varToEVarArray[x] = self
         VarEntities.prefixToEVarArray[name] = self
-        if options.debug:
-            print("New VarArray entity: ", self)
 
     def is_containing_hole(self):
         if self.containing_hole is None:
@@ -132,8 +128,6 @@ class ECtr(Entity):
         else:
             self.constraint = c
             # CtrEntities.allEntities.append(self)
-            if options.debug is True:
-                print("New CtrEntity ", type(self), " ", str(c))
 
 
 class ECtrs(Entity):
@@ -143,8 +137,6 @@ class ECtrs(Entity):
         super().__init__(None)  # no need to have an id here
         assert constraints is not None and isinstance(constraints, list)
         self.entities = [c for c in constraints if c is not None]
-        if options.debug is True:
-            print("New CtrArray entity: ", type(self), " ", self)
 
 
 class EToGather(ECtrs):
@@ -203,8 +195,6 @@ class EObjective(Entity):
         super().__init__(None)  # no need to have an id here
         self.constraint = c
         ObjEntities.items.append(self)
-        if options.debug is True:
-            print("New CtrObjective ", type(self), " ", str(c))
 
 
 class EAnnotation(Entity):
@@ -215,8 +205,6 @@ class EAnnotation(Entity):
         self.constraint = c
         AnnEntities.items.append(self)
         AnnEntities.items_types.append(type(c))
-        if options.debug is True:
-            print("New CtrAnnotation ", type(self), " ", str(c))
 
 
 class VarEntities:
@@ -499,8 +487,6 @@ class Node(Entity):
         for t in {TypeNode.ADD, TypeNode.MUL, TypeNode.OR, TypeNode.AND, TypeNode.EQ, TypeNode.IFF}:
             node.flatten_by_associativity(t)
         node.reduce_integers()
-        if options.debug:
-            print("New node:", node)
         return node
 
     @staticmethod

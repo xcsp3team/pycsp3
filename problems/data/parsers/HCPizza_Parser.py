@@ -1,4 +1,4 @@
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 # python3 pycsp3/problems/g3_pattern/HCPizza.py -data=pycsp3/problems/data/raw/HCPizza_tiny.txt -dataparser=pycsp3/problems/data/parsers/HCPizza_Parser.py -variant=sum
 

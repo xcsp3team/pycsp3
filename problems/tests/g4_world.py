@@ -110,4 +110,4 @@ xcsp = (Tester(NAME)
         .add("Wwtpp", data="Wwtpp_ex04400.json", variant="short")  # unsat
         )
 
-run(diff, same, xcsp)
+run(xcsp,diff, same)

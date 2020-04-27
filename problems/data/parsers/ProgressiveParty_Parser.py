@@ -1,4 +1,4 @@
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 nBoats = next_int()
 data["nPeriods"] = next_int()

@@ -97,7 +97,7 @@ class SolverProcess:
         model += " -cm -valh=Last"
         print("  command: ", self.command + " " + model)
         result = self.execute(self.command + " " + model)
-        print("Solved by " + self.name + " in %.3f" % stopwatch.elapsed_time() + " seconds (add the option -ev to see totally the output of the solver).")
+        print("Solved by " + self.name + " in " + stopwatch.elapsed_time() + " seconds (add the option -ev to see totally the output of the solver).")
         return self.solution() if result else None
 
     def execute(self, command):

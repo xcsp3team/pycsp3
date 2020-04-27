@@ -32,7 +32,7 @@ def _element(name, entity=None, *, id=None, attributes=[], text=None):
         assert isinstance(entity, Entity)
         if len(entity.tags) > 0:
             elt.set(str(TypeXML.CLASS), ' '.join(tag for tag in entity.tags))
-        if entity.comment and options.nocomment is False:
+        if entity.comment and options.noComments is False:
             elt.set(str(TypeXML.NOTE), entity.comment)
     attributes = attributes if isinstance(attributes, list) else [attributes]
     for (k, v) in attributes:
@@ -138,11 +138,8 @@ def _slide(entity, scope, offset, circular, group):
     return elt
 
 
-recognize_slide = False  # todo: using an option
-
-
 def _group(entity):
-    if recognize_slide:
+    if options.recognizeSlides:
         all_args = entity.original_all_args if hasattr(entity, "original_all_args") else entity.all_args
         if len(all_args) > 3 and len(all_args[0]) > 1:
             res = _identify_slide(entity)

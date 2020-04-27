@@ -1,4 +1,4 @@
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 data["n"] = number_in(line())
 data["m"] = number_in(next_line())

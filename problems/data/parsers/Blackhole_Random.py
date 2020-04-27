@@ -1,7 +1,7 @@
 import random
 
 from pycsp3.compiler import Compilation
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 nCardsPerSuit = ask_number("Number of cards per suit (e.g., 13)")
 nCardsPerPile = ask_number("Number of cards per pile (e.g., 3)")
