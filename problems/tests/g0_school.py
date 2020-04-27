@@ -21,4 +21,4 @@ xcsp = (Tester(NAME)
         .add(same.instances)
         )
 
-run(diff, same, xcsp)
+run(xcsp, diff, same)

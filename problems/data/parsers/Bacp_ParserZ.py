@@ -1,4 +1,4 @@
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 data["nCourses"] = number_in(next_line())
 data["nPeriods"] = number_in(next_line())

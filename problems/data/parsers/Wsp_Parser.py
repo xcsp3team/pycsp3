@@ -1,4 +1,4 @@
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 data["nSteps"] = number_in(line())
 data["nUsers"] = number_in(next_line())

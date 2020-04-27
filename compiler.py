@@ -10,7 +10,7 @@ from importlib import util
 from lxml import etree
 
 from pycsp3.dashboard import options
-from pycsp3.problems.data import dataparser
+from pycsp3.problems.data import parsing
 from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
 from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtuple
@@ -27,7 +27,7 @@ class Compilation:
     model = None
     data = None
     solve = None
-    stopwatch1 = None
+    stopwatch = None
     stopwatch2 = None
     done = False
 
@@ -41,8 +41,8 @@ class Compilation:
 
 
 def _load_options():
-    options.set_values("dataparser", "data", "dataexport", "variant", "output", "checker", "solve")
-    options.set_flags("dataexport", "ev", "compress", "debug", "display", "time", "nocomment")
+    options.set_values("data", "dataparser", "dataexport", "variant", "checker", "solve")
+    options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -96,14 +96,12 @@ def _load_data():
         else:
             compilation_data, ordered_data = _load_data_sequence([data])
         string_data = "-" + "-".join(str(v) for v in ordered_data)
-    if options.debug:
-        print("Compilation data:", compilation_data, "\nString data:", string_data)
     return compilation_data, string_data
 
 
 def _load_dataparser(parser_file, data_file):
     try:
-        compilation_data = dataparser.register_fields(data_file)  # the object used for recording data is returned, available in the model
+        compilation_data = parsing.register_fields(data_file)  # the object used for recording data is returned, available in the model
         specification = util.spec_from_file_location("", parser_file)
         specification.loader.exec_module(util.module_from_spec(specification))
         string_data = "-" + options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.data else None
@@ -116,9 +114,8 @@ def _load_dataparser(parser_file, data_file):
 
 
 def _load(*, console=False):
+    Compilation.stopwatch = Stopwatch()
     _load_options()
-    if options.time:
-        Compilation.stopwatch1, Compilation.stopwatch2 = Stopwatch(), Stopwatch()
     if console is False:
         Compilation.model, Compilation.string_model = _load_model()
         if options.dataparser:
@@ -134,6 +131,7 @@ def _load(*, console=False):
         Compilation.string_model = "Console"
         Compilation.string_data = ""
     OpOverrider.enable()
+    options.time and print("\tWCK for loading model and data:", Compilation.stopwatch.elapsed_time(), "seconds")
 
 
 def default_data(filename):
@@ -163,23 +161,19 @@ def _compile():
         return str(obj) if isinstance(obj, datetime.time) else obj
 
     OpOverrider.disable()
-    if options.debug or options.display:
-        print("\n", sys.argv, "\n")
+    if options.display:
+        # print("\n", sys.argv, "\n")
         if sys.argv[1].endswith(".json"):
             with open(sys.argv[1], 'r') as f:
                 print(f.read())
 
-    if options.time:
-        print("\tWall time to put the model in memory:", Compilation.stopwatch1.elapsed_time(reset=True), "seconds")
+    stopwatch = Stopwatch()
     build_similar_constraints()
-    if options.time:
-        print("\tWall time for creating groups:", Compilation.stopwatch1.elapsed_time(reset=True), "seconds")
+    options.time and print("\tWCK for generating groups:", stopwatch.elapsed_time(reset=True), "seconds")
     handle_slides()
-    if options.time:
-        print("\tWall time for creating slides:", Compilation.stopwatch1.elapsed_time(reset=True), "seconds")
+    options.time and print("\tWCK for handling slides:", stopwatch.elapsed_time(reset=True), "seconds")
     build_compact_forms()
-    if options.time:
-        print("\tWall time for creating compact forms:", Compilation.stopwatch1.elapsed_time(reset=True), "seconds")
+    options.time and print("\tWCK for compacting forms:", stopwatch.elapsed_time(reset=True), "seconds")
 
     filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
 
@@ -194,10 +188,9 @@ def _compile():
             with lzma.open(filename + ".lzma", "w") as f:
                 f.write(bytes(pretty_text, 'utf-8'))
                 print("\tGeneration of the file " + filename + ".lzma completed.")
-        if options.debug or options.display:
+        if options.display:
             print("\n", pretty_text)
-        if options.time is True:
-            print("\tWall time for creating the XML file:", Compilation.stopwatch1.elapsed_time(reset=True), "seconds")
+        options.time and print("\tWCK for generating files:", stopwatch.elapsed_time(reset=True), "seconds")
 
     if options.dataexport:
         if isinstance(options.dataexport, bool):
@@ -209,8 +202,7 @@ def _compile():
             json.dump(prepare_for_json(Compilation.data), f)
         print("  Generation for data saving of the file " + json_prefix + '.json' + " completed.")
 
-    if options.time is True:
-        print("\tTotal wall clock time:", Compilation.stopwatch2.elapsed_time(), "seconds")
+    print("\tTotal wall clock time:", Compilation.stopwatch.elapsed_time(), "seconds")
 
     Compilation.done = True
 
@@ -218,7 +210,7 @@ def _compile():
         if options.solve == "choco":
             from pycsp3.solvers.chocosolver import ChocoProcess
             solution = ChocoProcess().solve(filename)
-        else: # Fallback case => options.solve == "abscon":
+        else:  # Fallback case => options.solve == "abscon":
             from pycsp3.solvers.abscon import AbsConProcess
             solution = AbsConProcess().solve(filename)
 

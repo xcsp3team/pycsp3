@@ -1,4 +1,4 @@
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 data["mapSize"] = next_int()
 nRadars = next_int()

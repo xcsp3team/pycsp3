@@ -5,44 +5,10 @@
   </variables>
   <constraints>
     <allDifferent note="all values are put in different cells"> x[] </allDifferent>
-    <group note="ensuring a knight move between two successive values">
+    <slide note="ensuring a knight move between two successive values">
+      <list> x[] </list>
       <intension> or(and(eq(dist(div(%0,6),div(%1,6)),1),eq(dist(mod(%0,6),mod(%1,6)),2)),and(eq(dist(div(%0,6),div(%1,6)),2),eq(dist(mod(%0,6),mod(%1,6)),1))) </intension>
-      <args> x[0] x[1] </args>
-      <args> x[1] x[2] </args>
-      <args> x[2] x[3] </args>
-      <args> x[3] x[4] </args>
-      <args> x[4] x[5] </args>
-      <args> x[5] x[6] </args>
-      <args> x[6] x[7] </args>
-      <args> x[7] x[8] </args>
-      <args> x[8] x[9] </args>
-      <args> x[9] x[10] </args>
-      <args> x[10] x[11] </args>
-      <args> x[11] x[12] </args>
-      <args> x[12] x[13] </args>
-      <args> x[13] x[14] </args>
-      <args> x[14] x[15] </args>
-      <args> x[15] x[16] </args>
-      <args> x[16] x[17] </args>
-      <args> x[17] x[18] </args>
-      <args> x[18] x[19] </args>
-      <args> x[19] x[20] </args>
-      <args> x[20] x[21] </args>
-      <args> x[21] x[22] </args>
-      <args> x[22] x[23] </args>
-      <args> x[23] x[24] </args>
-      <args> x[24] x[25] </args>
-      <args> x[25] x[26] </args>
-      <args> x[26] x[27] </args>
-      <args> x[27] x[28] </args>
-      <args> x[28] x[29] </args>
-      <args> x[29] x[30] </args>
-      <args> x[30] x[31] </args>
-      <args> x[31] x[32] </args>
-      <args> x[32] x[33] </args>
-      <args> x[33] x[34] </args>
-      <args> x[34] x[35] </args>
-    </group>
+    </slide>
   </constraints>
   <objectives>
     <minimize note="minimizing the number of free primes" type="sum"> or(eq(q,x[1]),and(ne(div(q,6),div(x[1],6)),ne(mod(q,6),mod(x[1],6)),ne(dist(div(q,6),div(x[1],6)),dist(mod(q,6),mod(x[1],6))))) or(eq(q,x[2]),and(ne(div(q,6),div(x[2],6)),ne(mod(q,6),mod(x[2],6)),ne(dist(div(q,6),div(x[2],6)),dist(mod(q,6),mod(x[2],6))))) or(eq(q,x[4]),and(ne(div(q,6),div(x[4],6)),ne(mod(q,6),mod(x[4],6)),ne(dist(div(q,6),div(x[4],6)),dist(mod(q,6),mod(x[4],6))))) or(eq(q,x[6]),and(ne(div(q,6),div(x[6],6)),ne(mod(q,6),mod(x[6],6)),ne(dist(div(q,6),div(x[6],6)),dist(mod(q,6),mod(x[6],6))))) or(eq(q,x[10]),and(ne(div(q,6),div(x[10],6)),ne(mod(q,6),mod(x[10],6)),ne(dist(div(q,6),div(x[10],6)),dist(mod(q,6),mod(x[10],6))))) or(eq(q,x[12]),and(ne(div(q,6),div(x[12],6)),ne(mod(q,6),mod(x[12],6)),ne(dist(div(q,6),div(x[12],6)),dist(mod(q,6),mod(x[12],6))))) or(eq(q,x[16]),and(ne(div(q,6),div(x[16],6)),ne(mod(q,6),mod(x[16],6)),ne(dist(div(q,6),div(x[16],6)),dist(mod(q,6),mod(x[16],6))))) or(eq(q,x[18]),and(ne(div(q,6),div(x[18],6)),ne(mod(q,6),mod(x[18],6)),ne(dist(div(q,6),div(x[18],6)),dist(mod(q,6),mod(x[18],6))))) or(eq(q,x[22]),and(ne(div(q,6),div(x[22],6)),ne(mod(q,6),mod(x[22],6)),ne(dist(div(q,6),div(x[22],6)),dist(mod(q,6),mod(x[22],6))))) or(eq(q,x[28]),and(ne(div(q,6),div(x[28],6)),ne(mod(q,6),mod(x[28],6)),ne(dist(div(q,6),div(x[28],6)),dist(mod(q,6),mod(x[28],6))))) or(eq(q,x[30]),and(ne(div(q,6),div(x[30],6)),ne(mod(q,6),mod(x[30],6)),ne(dist(div(q,6),div(x[30],6)),dist(mod(q,6),mod(x[30],6))))) </minimize>

@@ -3,9 +3,8 @@ import shutil
 import subprocess
 import sys
 
-from pycsp3.dashboard import options
 from pycsp3.solvers.solver import class_path_abscon
-from pycsp3.tools.utilities import PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
+from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
@@ -13,26 +12,16 @@ DATA_PATH = "pycsp3" + os.sep + "problems" + os.sep + "data" + os.sep
 XCSP_PATH = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "xcsp" + os.sep
 
 
-def run(tests1, tests2=None, tests3=None, *, tests=False):
-    options.set_flags("wait", "time", "diff", "same", "xcsp")
-    options.parse(sys.argv[1:])
+def run(xcsp, diff=None, same=None):
+    if len(sys.argv) == 1 or sys.argv[1] == "-xcsp":
+        xcsp.load(mode=2)
+    elif sys.argv[1] == "-same":
+        same.load()
+    elif sys.argv[1] == "-diff":
+        diff.load()
 
-    print(PURPLE + "|================================================================|")
-    for flag in options.flags:
-        print(PURPLE + "| " + WHITE + str(flag) + " option :" + (" enabled" if options.get(flag) else " disabled"))
-    print(PURPLE + "|================================================================|" + WHITE + "\n")
 
-    if tests is True:
-        tests1.load(mode=2)
-    else:
-        if options.diff:
-            tests1.load()
-        elif options.same:
-            tests2.load()
-        elif options.xcsp:
-            tests3.load(mode=2)
-        else:
-            print("You need to use one option among {-diff, -same, -xcsp}")
+waiting = False
 
 
 class Tester:
@@ -148,7 +137,7 @@ class Tester:
     def data_jv(self, data):
         return None if data is None else DATA_PATH + "json" + os.sep + data if data.endswith(".json") else data
 
-    def _command_py(self, model, data, variant, prs_py):
+    def _command_py(self, model, data, variant, prs_py, options_py):
         cmd = "python3 " + self.dir_pbs_py + model + ".py"
         if self.data_py(data):
             cmd += " -data=" + ("" if prs_py is None else DATA_PATH + "raw" + os.sep) + self.data_py(data)
@@ -156,8 +145,8 @@ class Tester:
             cmd += " -dataparser=" + self.dir_prs_py + prs_py
         if variant:
             cmd += " -variant=" + variant
-        if options.time:
-            cmd += " -time"
+        if options_py:
+            cmd += " " + options_py
         return cmd
 
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
@@ -174,20 +163,20 @@ class Tester:
             cmd += " -variant=" + variant
         return cmd
 
-    def add(self, model, *, data=None, variant=None, prs_py=None, prs_jv=None, special=None, dataSpecial=None, nameXML=None):
+    def add(self, model, *, data=None, variant=None, prs_py=None, prs_jv=None, special=None, dataSpecial=None, nameXML=None, options_py=None):
         if isinstance(model, list):
-            assert data == variant == prs_py == prs_jv == special == dataSpecial == nameXML is None
+            assert data == variant == prs_py == prs_jv == special == dataSpecial == nameXML == options_py is None
             for m in model:
                 self.instances.append(m)
         else:
-            self.instances.append((model, data, variant, prs_py, prs_jv, special, dataSpecial, nameXML))
+            self.instances.append((model, data, variant, prs_py, prs_jv, special, dataSpecial, nameXML, options_py))
         return self
 
     def load(self, *, mode=1):
-        for model, data, variant, prs_py, prs_jv, special, dataSpecial, nameXML in self.instances:
-            assert self.dir_pbs_py, "Call the __init__() function of g6_tests (constructor) before execute()"
-            assert self.dir_pbs_jv, "Call the __init__() function of g6_tests (constructor) before execute()"
-            assert self.dir_xml_py, "Call the __init__() function of g6_tests (constructor) before execute()"
+        for model, data, variant, prs_py, prs_jv, special, dataSpecial, nameXML, options_py in self.instances:
+            assert self.dir_pbs_py, "Call the __init__() function of g6_testing (constructor) before execute()"
+            assert self.dir_pbs_jv, "Call the __init__() function of g6_testing (constructor) before execute()"
+            assert self.dir_xml_py, "Call the __init__() function of g6_testing (constructor) before execute()"
 
             self.name_xml = self.xml_name(model, data, variant, prs_py, prs_jv, nameXML)  # name of the XML file that will be generated
             if os.path.isfile(self.xml_path_py()):
@@ -196,7 +185,7 @@ class Tester:
                 os.remove(self.xml_path_jv())
             self.print_information(model, data, variant, prs_py, prs_jv)
 
-            self.execute_compiler("PyCSP", self._command_py(model, data, variant, prs_py if not prs_py or prs_py[-1] == 'y' else prs_py + ".py"))
+            self.execute_compiler("PyCSP", self._command_py(model, data, variant, prs_py if not prs_py or prs_py[-1] == 'y' else prs_py + ".py", options_py))
             shutil.move(self.name_xml, self.xml_path_py())
             if mode == 1:  # comparison with jv
                 self.execute_compiler("JvCSP", self._command_jv(model, data, variant, prs_jv, special, dataSpecial))
@@ -207,7 +196,7 @@ class Tester:
                     self.check()
             elif mode == 2:  # comparison with recorded XCSP files
                 if os.name != 'nt':
-                    #shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simualte a comparison with JvCSP
+                    # shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simualte a comparison with JvCSP
                     print("  Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
                     self.check(True)
             else:
@@ -223,7 +212,7 @@ class Tester:
         if not os.path.isfile(self.xml_path_py()) or not os.path.isfile(f):
             print("error: files not found " + self.xml_path_py() + " or " + f)
             self.counters["err"] += 1
-            if options.wait:
+            if waiting:
                 input("Press Enter to continue...")
         else:
             lines = self.diff_files(self.xml_path_py(), f, self.tmpDiff)
@@ -233,14 +222,15 @@ class Tester:
                 print("  => Several differences (" + str(len(lines)) + ") in " + self.name_xml)
                 self.counters["diff"] += 1
                 self.print_differences(lines, limit=20 if len(lines) > 200 else None, xcsp=xcsp)
-                if options.wait:
+                if waiting:
                     input("Press Enter to continue...")
         diff = (RED if self.counters["diff"] > 0 else GREEN) + str(self.counters["diff"])
         err = (RED if self.counters["err"] > 0 else GREEN) + str(self.counters["err"])
-        print("\n" + WHITE_BOLD + "[Currently] " + diff + WHITE + " difference(s) on " + str(self.counters["total"]) + " test(s) (" + err + WHITE + " error(s))\n")
+        print("\n" + WHITE_BOLD + "[Currently] " + diff + WHITE + " difference(s) on " + str(
+            self.counters["total"]) + " test(s) (" + err + WHITE + " error(s))\n")
 
     def print_differences(self, lines, limit, xcsp=False):
-        print(COLOR_PY + "PyCSP" + WHITE + " vs. " + COLOR_JV + ("JvCSP" if not xcsp else "XCSP")+ WHITE + " differences:\n")
+        print(COLOR_PY + "PyCSP" + WHITE + " vs. " + COLOR_JV + ("JvCSP" if not xcsp else "XCSP") + WHITE + " differences:\n")
         if limit is None:
             for line in lines:
                 if line[0] in {'>', '<'}:

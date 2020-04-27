@@ -106,7 +106,7 @@ xcsp = (Tester(NAME)
         .add("QuasiGroup", data="5", variant="aux-v4")  # 12 solutions
         .add("QuasiGroup", data="8", variant="aux-v5")  # 720 sols
         .add("QuasiGroup", data="9", variant="aux-v7")  # 5040 sols
-        .add("QueenAttacking", data="6")  # optimum 0
+        .add("QueenAttacking", data="6", options_py="-recognizeSlides")  # optimum 0
         .add("Queens", data="10")  # 724 solutions
         .add("Queens", data="10", variant="v1")  # 724 solutions
         .add("Queens", data="10", variant="v2")  # 724 solutions
@@ -127,4 +127,4 @@ xcsp = (Tester(NAME)
 # .add("QuasiGroup", data="10", variant="base-v6")
 
 
-run(diff, same, xcsp)
+run(xcsp, diff, same)

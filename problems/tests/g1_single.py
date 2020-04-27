@@ -37,4 +37,4 @@ xcsp = (Tester(NAME)
         .add("Zebra")
         )
 
-run(diff, same, xcsp)
+run(xcsp, diff, same)

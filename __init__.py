@@ -15,7 +15,7 @@ if sys.argv:
         problems = os.sep.join(pycsp3.__file__.split(os.sep)[:-1]) + os.sep + "problems" + os.sep
         target = os.getcwd() + os.sep + "problems" + os.sep
         print("Source of files found: ", problems)
-        shutil.copytree(problems, target, ignore=shutil.ignore_patterns('g6_tests', 'g7_todo', 'tests', '__init__.py', '__pycache__*'))
+        shutil.copytree(problems, target, ignore=shutil.ignore_patterns('g6_testing', 'g7_todo', 'tests', '__init__.py', '__pycache__*'))
         print("Successfully created the directory " + target + " containing the problems !")
         exit(0)
     elif sys.argv[0] == '':

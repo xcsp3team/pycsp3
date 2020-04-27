@@ -1,4 +1,4 @@
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 n = next_int()  # number of variables
 e = next_int()  # number rof constraints

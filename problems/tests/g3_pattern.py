@@ -84,7 +84,7 @@ xcsp = (Tester(NAME)
         .add("BinPacking", data="BinPacking_n1c1w4a.json")  # optimum 5
         .add("BinPacking", data="BinPacking_n1c1w4a.json", variant="table")  # optimum 5
         .add("BinPacking", data="BinPacking_example.txt", prs_py="BinPacking_Parser", prs_jv="BinPacking_Parser")  # optimum 5
-        .add("Blackhole", data="Blackhole.json")  # 47232 solutions
+        .add("Blackhole", data="Blackhole.json", options_py="-recognizeSlides")  # 47232 solutions
         .add("Bugs", data="Bugs_example.json")  # optimum 5
         .add("Bugs", data="Bugs_example.txt", prs_py="Bugs_Parser", prs_jv="Bugs_Parser")  # optimum 5
         .add("BusScheduling", data="BusScheduling_c1a.json")
@@ -151,4 +151,4 @@ xcsp = (Tester(NAME)
         .add("VesselLoading", data="VesselLoading-inst2.json")
         )
 
-run(diff, same, xcsp)
+run(xcsp,diff, same)

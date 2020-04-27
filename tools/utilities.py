@@ -17,7 +17,7 @@ class Stopwatch:
         elapsed_time = time() - self.initial_time
         if reset:
             self.initial_time = time()
-        return elapsed_time
+        return "{:10.2f}".format(elapsed_time)
 
 
 class _Star(float):
@@ -39,22 +39,22 @@ def flatten(*args, keep_none=False):
     #     flatten.cache = {}
     # elif len(args) == 1 and id(args[0]) in flatten.cache:
     #     return flatten.cache[id(args[0])]
-    output = []
+    t = []
     for arg in args:
         if arg is None:
             if keep_none:
-                output.append(arg)
+                t.append(arg)
         elif isinstance(arg, (str, range, Domain)):  # Iterable but must be appended, not extended
-            output.append(arg)
+            t.append(arg)
         elif isinstance(arg, Iterable):
-            output.extend(flatten(*arg, keep_none=keep_none))
+            t.extend(flatten(*arg, keep_none=keep_none))
         elif isinstance(arg, types.GeneratorType):
-            output.extend(flatten(*list(arg), keep_none=keep_none))
+            t.extend(flatten(*list(arg), keep_none=keep_none))
         else:
-            output.append(arg)
+            t.append(arg)
     # if len(args) == 1:
-    #     flatten.cache[id(args[0])] = output
-    return output
+    #     flatten.cache[id(args[0])] = t
+    return t
 
 
 def is_containing(l, types, *, check_first_only=False):

@@ -1,4 +1,4 @@
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 nWarehouses = number_in(line())
 nStores = number_in(next_line())

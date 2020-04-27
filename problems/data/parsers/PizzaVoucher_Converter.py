@@ -1,7 +1,7 @@
 import json
 
 from pycsp3.compiler import Compilation
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 # illustrating how to convert from a JSON format to another one.
 # For example python3 PizzaVoucher.py -data=zn06-oldformat.json -dataparser=PizzaVoucher_Converter.py -dataexport
