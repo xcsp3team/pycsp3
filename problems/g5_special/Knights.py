@@ -8,5 +8,5 @@ x = VarArray(size=k, dom=range(n * n))
 satisfy(
     [x[i] != x[j] for i in range(k) for j in range(i + 2, k) if i != 0 or j != k - 1],
 
-    Slide(knight_attack(x[i], x[(i + 1) % k], n) for i in range(k))
+    [knight_attack(x[i], x[(i + 1) % k], n) for i in range(k)]
 )

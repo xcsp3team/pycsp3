@@ -4,6 +4,9 @@ Problem 029 on CSPLib
 Examples of Execution:
   python3 QueenAttacking.py
   python3 QueenAttacking.py -data=6
+  python3 QueenAttacking.py -data=6 -variant=aux
+  python3 QueenAttacking.py -data=6 -variant=hybrid
+  python3 QueenAttacking.py -data=6 -variant=table
 """
 
 from pycsp3 import *

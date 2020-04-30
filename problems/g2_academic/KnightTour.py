@@ -21,7 +21,7 @@ satisfy(
 
 if not variant():
     satisfy(
-        Slide(knight_attack(x[i], x[(i + 1) % (n * n)], n) for i in range(n * n))
+        knight_attack(x[i], x[(i + 1) % (n * n)], n) for i in range(n * n)
     )
 
 elif variant("table"):
@@ -72,7 +72,7 @@ elif variant("table"):
         table_recursive(1, [i] + [0] * (r - 1))
 
     satisfy(
-        Slide([x[(i + j) % (n * n)] for j in range(r)] in table for i in range(0, n * n, r - 1))
+        [x[(i + j) % (n * n)] for j in range(r)] in table for i in range(0, n * n, r - 1)
     )
 
 satisfy(
