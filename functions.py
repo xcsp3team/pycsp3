@@ -172,7 +172,6 @@ def satisfy(*args):
     def _group(*_args):
         entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
         checkType(entities, [ECtr, ECtrs])
-        # return ESlide([EToGather(entities)])  # to force sliding (but could be done at another place instead; todo)
         return EToGather(entities)
 
     def _block(*_args):
@@ -216,7 +215,7 @@ def satisfy(*args):
         if isinstance(arg, list) and len(arg) > 0:
             if isinstance(arg[0], tuple):
                 arg = _reorder(arg)
-            elif isinstance(arg[0], list):
+            elif isinstance(arg[0], list):  # do not work if the constraints involve the operator 'in'
                 for j, l in enumerate(arg):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
@@ -781,7 +780,9 @@ def to_ordinary_table(table, domains, *, keep_any=False):
     return tbl
 
 
-def cp_array(l):
+def cp_array(*l):
+    if len(l) == 1:
+        l = l[0]
     if isinstance(l, (tuple, set, types.GeneratorType)):
         l = list(l)
     assert isinstance(l, list) and len(l) > 0

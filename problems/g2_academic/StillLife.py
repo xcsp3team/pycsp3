@@ -11,6 +11,7 @@ from pycsp3 import *
 
 n, m = data or (8, 8)
 
+
 if not variant():
     table = {(v, 0) for v in range(9) if v != 3} | {(2, 1), (3, 1)}
 
@@ -34,10 +35,10 @@ if not variant():
 
         # imposing rules for ensuring valid dead cells around the board
         [
-            Slide(x[0][i:i + 3] not in {(1, 1, 1)} for i in range(m - 2)),
-            Slide(x[- 1][i: i + 3] not in {(1, 1, 1)} for i in range(m - 2)),
-            Slide(x[i:i + 3, 0] not in {(1, 1, 1)} for i in range(n - 2)),
-            Slide(x[i:i + 3, - 1] not in {(1, 1, 1)} for i in range(n - 2))
+            [x[0][i:i + 3] != (1, 1, 1) for i in range(m - 2)],
+            [x[- 1][i: i + 3] != (1, 1, 1) for i in range(m - 2)],
+            [x[i:i + 3, 0] != (1, 1, 1) for i in range(n - 2)],
+            [x[i:i + 3, - 1] != (1, 1, 1) for i in range(n - 2)]
         ],
 
         # tag(symmetry-breaking)
@@ -45,6 +46,7 @@ if not variant():
     )
 
     maximize(
+        # maximizing the number of alive cells
         Sum(x)
     )
 
@@ -52,18 +54,15 @@ elif variant("wastage"):
     assert n == m
 
 
-    def table():
-        def condition_for_tuple(t0, t1, t2, t3, t4, t5, t6, t7, t8, wa):
-            s3 = t1 + t3 + t5 + t7
-            s1 = t0 + t2 + t6 + t8 + s3
-            s2 = t0 * t2 + t2 * t8 + t8 * t6 + t6 * t0 + s3
-            return (t4 != 1 or (2 <= s1 <= 3 and (s2 > 0 or wa >= 2) and (s2 > 1 or wa >= 1))) and \
-                   (t4 != 0 or (s1 != 3 and (0 < s3 < 4 or wa >= 2)) and (s3 > 1 or wa >= 1))
+    def condition_for_tuple(t0, t1, t2, t3, t4, t5, t6, t7, t8, wa):
+        s3 = t1 + t3 + t5 + t7
+        s1 = t0 + t2 + t6 + t8 + s3
+        s2 = t0 * t2 + t2 * t8 + t8 * t6 + t6 * t0 + s3
+        return (t4 != 1 or (2 <= s1 <= 3 and (s2 > 0 or wa >= 2) and (s2 > 1 or wa >= 1))) and \
+               (t4 != 0 or (s1 != 3 and (0 < s3 < 4 or wa >= 2)) and (s3 > 1 or wa >= 1))
 
-        if not hasattr(table, "cache"):
-            table.cache = {(*t, i) for t in product(range(2), repeat=9) for i in range(3) if condition_for_tuple(*t, i)}
-        return table.cache
 
+    table = {(*t, i) for t in product(range(2), repeat=9) for i in range(3) if condition_for_tuple(*t, i)}
 
     #  x[i][j] is 1 iff the cell at row i and col j is alive (note that there is a border)
     x = VarArray(size=[n + 2, n + 2], dom=lambda i, j: {0} if i in {0, n + 1} or j in {0, n + 1} else {0, 1})
@@ -77,14 +76,14 @@ elif variant("wastage"):
     satisfy(
         # ensuring that cells at the border remain dead
         [
-            Slide(x[1][j:j + 3] not in {(1, 1, 1)} for j in range(n)),
-            Slide(x[n][j:j + 3] not in {(1, 1, 1)} for j in range(n)),
-            Slide(x[i:i + 3, 1] not in {(1, 1, 1)} for i in range(n)),
-            Slide(x[i:i + 3, n] not in {(1, 1, 1)} for i in range(n))
+            [x[1][j:j + 3] != (1, 1, 1) for j in range(n)],
+            [x[n][j:j + 3] != (1, 1, 1) for j in range(n)],
+            [x[i:i + 3, 1] != (1, 1, 1) for i in range(n)],
+            [x[i:i + 3, n] != (1, 1, 1) for i in range(n)]
         ],
 
         # still life + wastage constraints
-        [(x[i - 1:i + 2, j - 1:j + 2], w[i][j]) in table() for i in range(1, n + 1) for j in range(1, n + 1)],
+        [(x[i - 1:i + 2, j - 1:j + 2], w[i][j]) in table for i in range(1, n + 1) for j in range(1, n + 1)],
 
         # managing wastage on the border
         [
@@ -104,10 +103,24 @@ elif variant("wastage"):
         (2 * n * n + 4 * n - ws[-1]) // 4
     )
 
+# Note that:
 
+# a) we could have posted unary constraints instead of identifying specific when creating arrays of variables:
+# # cells at the border are assumed to be dead
+# [
+#     [(x[0][j] == 0, x[- 1][j] == 0) for j in range(n + 2)],
+#     [(x[i][0] == 0, x[i][- 1] == 0) for i in range(n + 2)],
+# ],
 
-    # # cells at the border are assumed to be dead
-    # [
-    #     [(x[0][j] == 0, x[- 1][j] == 0) for j in range(n + 2)],
-    #     [(x[i][0] == 0, x[i][- 1] == 0) for i in range(n + 2)],
-    # ],
+# b) in order to generate automatically slide constraints when handling rules for the boarder, we could
+# post groups of constraints separately, i.e., write:
+#
+# # imposing rules for ensuring valid dead cells around the board
+# [x[0][i:i + 3] != (1, 1, 1) for i in range(m - 2)],
+#  ... (while using the option -recognizeSlides)
+
+# c) we could use extension constraints instead of intension constraints, which would give:
+# [x[0][i:i + 3] not in {(1, 1, 1)} for i in range(m - 2)],
+# By the way, note that expressing such intension constraints are possible here because x[0][i:i + 3] has type 'ListVar'
+# If it was not the case, as for example in: (x[0][0], x[0][1], x[0][2]) != (1,1,1), we would have to call cp_array
+# which would give : cp_array(x[0][0], x[0][1], x[0][2]) != (1,1,1)

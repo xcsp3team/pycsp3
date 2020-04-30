@@ -112,6 +112,5 @@ minimize(
     Sum(cn) + Sum(cf) + Sum(cc)
 )
 
-# possible to write ps[p] * lengths or Sum(ps[p] * lengths)
 
 # [iff(x[d][p] == s, cn[p][d] == 0) for (p,d,s) in [(p,d, sp[on_r[p][d].shift]) for p in range(nStaffs) for d in range(nDays) if on_r[p][d]]],

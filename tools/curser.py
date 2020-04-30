@@ -138,6 +138,7 @@ class OpOverrider:
         OpOverrider.activated = True
 
         ListVar.__eq__ = OpOverrider.__eq__lv
+        ListVar.__ne__ = OpOverrider.__ne__lv
         ListVar.__getitem__ = OpOverrider.__getitem__lv
         ListInt.__getitem__ = OpOverrider.__getitem__li
         ListInt.__contains__ = OpOverrider.__contains__li
@@ -170,6 +171,7 @@ class OpOverrider:
         OpOverrider.activated = False
 
         ListVar.__eq__ = list.__eq__
+        ListVar.__ne__ = list.__ne__
         ListVar.__getitem__ = list.__getitem__
         ListInt.__getitem__ = list.__getitem__
         ListInt.__contains__ = list.__contains__
@@ -324,6 +326,11 @@ class OpOverrider:
             return ECtr(Instantiation(variables=self, values=other))
         return list.__eq__(self, other)
 
+    def __ne__lv(self, other):  # lv for ListVar
+        if isinstance(other, (list, tuple)) and any(isinstance(v, int) for v in other):
+            return self not in {tuple(other)}
+        return list.__ne__(self, other)
+
     def __getitem__lv(self, indexes):
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
@@ -410,13 +417,8 @@ class ListInt(list):
 
 
 def columns(m):
-    def column(j):
-        assert is_2d_list(m), "column() can only be called on 2-dimensional lists"
-        assert all(len(row) > j for row in m), "one row has not at least j+1 elements"
-        return ListVar(row[j] for row in m)
-
     assert is_matrix(m), "columns() can only be called on matrices"
-    return ListVar(column(j) for j in range(len(m[0])))
+    return ListVar(ListVar(row[j] for row in m) for j in range(len(m[0])))
 
 
 class ListVar(list):

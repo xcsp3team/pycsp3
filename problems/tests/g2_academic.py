@@ -82,9 +82,9 @@ xcsp = (Tester(NAME)
         .add("GolombRuler", data="8", variant="dec")  # optimum 34
         .add("GolombRuler", data="8", variant="aux")  # optimum 34
         .add("GracefulGraph", data="[3,5]")  # sat
-        .add("KnightTour", data="16")
-        .add("KnightTour", data="16", variant="table-2")
-        .add("KnightTour", data="16", variant="table-3")
+        .add("KnightTour", data="16", options_py="-recognizeSlides")
+        .add("KnightTour", data="16", variant="table-2", options_py="-recognizeSlides")
+        .add("KnightTour", data="16", variant="table-3", options_py="-recognizeSlides")
         .add("Langford", data="[3,10]")  # 10 solutions
         .add("LangfordBin", data="8")  # 300 solutions
         .add("LowAutocorrelation", data="16")  # optimum 24
