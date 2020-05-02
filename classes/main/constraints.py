@@ -671,9 +671,9 @@ class _Auxiliary:
 
     def replace_node(self, node):
         assert isinstance(node, Node)
-        values = sorted(list(node.possible_values()))
-        dom = Domain(range(values[0], values[-1] + 1) if all(values[i] + 1 == values[i + 1] for i in range(len(values) - 1)) else values)
-        return self.__replace(node, dom)
+        values = node.possible_values()
+        values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
+        return self.__replace(node, Domain(values))
 
     def collected(self):
         t = self._collected_constraints

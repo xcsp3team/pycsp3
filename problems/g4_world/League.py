@@ -1,5 +1,9 @@
 """
-See Problem in MiniZinc
+See Problem in MiniZinc -- https://github.com/MiniZinc/minizinc-benchmarks/tree/master/league
+
+Make leagues for some games.
+ - Ranking should be close in each league.
+ - In a league, variety of country (where player comes from) is needed.
 
 Example of Execution:
   python3 League.py -data=League_010-03-04.json

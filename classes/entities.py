@@ -1,10 +1,11 @@
 import types
-import itertools
+# import itertools
 import numpy
 import re
 
 from enum import Enum, unique
 from functools import reduce
+from itertools import product
 
 from pycsp3.classes.auxiliary.ptypes import auto
 from pycsp3.classes.main.variables import Variable, NotVariable, NegVariable
@@ -295,6 +296,27 @@ class TypeNode(Enum):
         return self.is_logical_operator() or self.is_relational_operator() or self in {TypeNode.IN, TypeNode.NOTIN}
 
 
+def neg_range(r):
+    assert isinstance(r, range) and r.step == 1
+    return range(-r.stop + 1, -r.start + 1)
+
+
+def abs_range(r):
+    assert isinstance(r, range) and r.step == 1
+    return range(0 if 0 in r else min(abs(r.start), abs(r.stop - 1)), max(abs(r.start), abs(r.stop - 1)) + 1)
+
+
+def add_range(r1, r2):
+    assert isinstance(r1, range) and r1.step == 1 and isinstance(r2, range) and r2.step == 1
+    return range(r1.start + r2.start, r1.stop + r2.stop - 1)
+
+
+def possible_range(s, control_int=False):
+    assert isinstance(s, set) and (not control_int or all(isinstance(v, int) for v in s))
+    l = sorted(s)
+    return range(l[0], l[-1] + 1) if 1 < l[-1] - l[0] + 1 == len(l) else l
+
+
 class Node(Entity):
     all_nodes = []
 
@@ -304,7 +326,7 @@ class Node(Entity):
         self.used = False
         self.type = type
         self.leaf = type.is_leaf()
-        self.sons = args  # TODO sons is used whatever this is a parent or a leaf node; change the name of this field ??? to content ??
+        self.sons = args  # TODO sons is used whatever this is a parent or a leaf node; not a good choice. change the name of this field ??? to content ??
         self.abstractTree = None
         self.abstractValues = None
 
@@ -312,33 +334,59 @@ class Node(Entity):
         return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
 
     def possible_values(self):
-        if self.type == TypeNode.VAR:
-            return self.sons.dom.all_values()
-        if self.type == TypeNode.INT:
-            return [self.sons]
         if self.type.is_predicate_operator():
-            return 0, 1
-        if self.type == TypeNode.ABS:
-            return {abs(v) for v in self.sons[0].possible_values()}
-        if self.type == TypeNode.ADD:
-            return {sum(p) for p in itertools.product(*(n.possible_values() for n in self.sons))}
-        if self.type == TypeNode.MUL:
-            return {numpy.prod(p) for p in itertools.product(*(n.possible_values() for n in self.sons))}
-        if self.type == TypeNode.MIN:
-            return {min(p) for p in itertools.product(*(n.possible_values() for n in self.sons))}
-        if self.type == TypeNode.MAX:
-            return {max(p) for p in itertools.product(*(n.possible_values() for n in self.sons))}
-        if self.type == TypeNode.SUB:
-            return {v1 - v2 for v1 in self.sons[0].possible_values() for v2 in self.sons[1].possible_values()}
-        if self.type == TypeNode.DIV:
-            return {v1 // v2 for v1 in self.sons[0].possible_values() for v2 in self.sons[1].possible_values()}
-        if self.type == TypeNode.MOD:
-            return {v1 % v2 for v1 in self.sons[0].possible_values() for v2 in self.sons[1].possible_values()}
-        if self.type == TypeNode.DIST:
-            return {abs(v1 - v2) for v1 in self.sons[0].possible_values() for v2 in self.sons[1].possible_values()}
+            return range(0, 2)  # for {0,1}, we use a range because it simplifies computation (see code below)
+        if self.type.min_arity == self.type.max_arity == 0:
+            if self.type == TypeNode.VAR:
+                av = self.sons.dom.all_values()
+                # either a range or a sorted list of integers is returned
+                return range(av[0], av[0] + 1) if len(av) == 1 else range(av[0], av[1] + 1) if len(av) == 2 and av[0] + 1 == av[1] else av
+            if self.type == TypeNode.INT:
+                return range(self.sons, self.sons+1)  # we prefer a range rather than a singleton list because it simplifies computation (see code below)
+            assert False, "no such 0-ary type " + str(self.type) + " is expected"
+        if self.type.min_arity == self.type.max_arity == 1:
+            pv = self.sons[0].possible_values()
+            if self.type == TypeNode.NEG:
+                return neg_range(pv) if isinstance(pv, range) else [-v for v in reversed(pv)]
+            if self.type == TypeNode.ABS:
+                return abs_range(pv) if isinstance(pv, range) else possible_range({abs(v) for v in pv})
+            if self.type == TypeNode.SQR:
+                return possible_range({v * v for v in pv})
+            assert False, "no such 1-ary type " + str(self.type) + " is expected"
+        if self.type.min_arity == self.type.max_arity == 2:
+            pv1, pv2 = self.sons[0].possible_values(), self.sons[1].possible_values()
+            all_ranges = isinstance(pv1, range) and isinstance(pv2, range)
+            if self.type == TypeNode.SUB:
+                return add_range(pv1, neg_range(pv2)) if all_ranges else possible_range({v1 - v2 for v1 in pv1 for v2 in pv2})
+            if self.type == TypeNode.DIV:
+                return possible_range({v1 // v2 for v1 in pv1 for v2 in pv2})
+            if self.type == TypeNode.MOD:
+                return possible_range({v1 % v2 for v1 in pv1 for v2 in pv2})
+            if self.type == TypeNode.POW:
+                return possible_range({v1 ** v2 for v1 in pv1 for v2 in pv2}, control_int=True)
+            if self.type == TypeNode.DIST:
+                return abs_range(add_range(pv1, neg_range(pv2))) if all_ranges else possible_range({abs(v1 - v2) for v1 in pv1 for v2 in pv2})
+            assert False, "no such 2-ary type " + str(self.type) + " is expected"
         if self.type == TypeNode.IF:
-            return {self.sons[1].possible_values()} | {self.sons[1].possible_values()}
-        assert False, "some operators currently not implemented"
+            pv1, pv2 = self.sons[1].possible_values(), self.sons[2].possible_values()  # sons[0] is for the condition
+            if isinstance(pv1, range) and isinstance(pv2, range) and len(range(max(pv1.start, pv2.start), min(pv1.stop, pv2.stop))) > 0:
+                return range(min(pv1.start, pv2.start), max(pv1.stop, pv2.stop))
+            return possible_range({v1 for v1 in pv1} | {v2 for v2 in pv2})
+        if self.type.min_arity == 2 and self.type.max_arity == float("inf"):
+            pvs = [son.possible_values() for son in self.sons]
+            all_ranges = all(isinstance(pv, range) for pv in pvs)
+            if self.type == TypeNode.ADD:
+                return reduce(add_range, pvs) if all_ranges else possible_range({sum(p) for p in product(*(pv for pv in pvs))})
+            if self.type == TypeNode.MUL:
+                return possible_range({numpy.prod(p) for p in product(*(pv for pv in pvs))})
+            # TODO: in case of all_ranges being False, possibility of improving the efficiency of the code below for MIN and MAX
+            if self.type == TypeNode.MIN:
+                return range(min(pv.start for pv in pvs), min(pv.stop for pv in pvs)) if all_ranges \
+                    else possible_range({min(p) for p in product(*(pv for pv in pvs))})
+            if self.type == TypeNode.MAX:
+                return range(max(pv.start for pv in pvs), max(pv.stop for pv in pvs)) if all_ranges \
+                    else possible_range({max(p) for p in product(*(pv for pv in pvs))})
+        assert False, "The operator " + str(self.type) + " currently not implemented"
 
     def mark_as_used(self):
         self.used = True
