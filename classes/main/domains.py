@@ -59,7 +59,10 @@ class Domain:
 
     def all_values(self):
         if len(self.values) == 0:
-            self.values = sorted(v.value if isinstance(v, IntegerValue) else v for v in self)
+            if len(self.original_values) == 1 and isinstance(self.original_values[0], IntegerInterval):
+                self.values = range(self.original_values[0].inf, self.original_values[0].sup + 1)
+            else:
+                self.values = sorted(v.value if isinstance(v, IntegerValue) else v for v in self)
         return self.values
 
     def is_binary(self):

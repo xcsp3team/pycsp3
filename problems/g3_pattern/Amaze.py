@@ -1,3 +1,14 @@
+"""
+See Problem in MiniZinc -- https://github.com/MiniZinc/minizinc-benchmarks/tree/master/amaze
+
+Given a grid containing pairs of numbers (ranging from 1 to a greater value), connect the pairs (e.g. 1 to 1; 2 to 2; etc)
+by drawing a line horizontally and vertically, but not diagonally.
+The lines must never cross.
+
+Example of Execution:
+  python3 Amaze.py -data=Amaze_simple.json
+"""
+
 from pycsp3 import *
 
 n, m, points1, points2 = data
@@ -38,4 +49,4 @@ minimize(
 #          | {(v, ne(v), ne(v), v, v) for v in range(1, nPairs + 1)})
 
 # b) even if  data come from a text file via a parser that builds tuples (and not lists)
-#    we have to write [i, j] not in points1 + points2 because tuples are automatically converted to lists
+#    we have to write [i, j] not in points1 + points2 because tuples (in data) are automatically converted to lists

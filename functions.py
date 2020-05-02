@@ -574,7 +574,7 @@ def Cardinality(term, *others, occurrences, closed=False):
 def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
     terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have PartialConstraints
-    checkType(terms, ([Variable], [Node], [PartialConstraint]))
+    checkType(terms, ([Variable, Node], [PartialConstraint]))
     auxiliary().replace_partial_constraints(terms)
     checkType(index, (Variable, type(None)))
     checkType(start_index, int)
