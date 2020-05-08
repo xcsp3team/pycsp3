@@ -70,15 +70,16 @@ xcsp = (Tester(NAME)
         .add("Crossword", data="Crossword_h0504-lex.json", variant="alt")
         .add("Fapp", data="Fapp_ex2.json")  # optimum 13871
         .add("Fapp", data="Fapp_ex2.json", variant="short")  # optimum 13871
-        # .add("Fapp", data="Fapp_01-0200.json")  # TODO too long (and seems to crash)
-        # .add("Fapp", data="Fapp_01-0200.json", variant="short")
+        # .add("Fapp", data="Fapp_01-0200.json")  # TODO too long
+        # .add("Fapp", data="Fapp_01-0200.json", variant="short")  # around 22 seconds for generating the file
         .add("League", data="League_010-03-04.json")  # optimum 92
         .add("MisteryShopper", data="MisteryShopper_04.json")  # 501552 solutions
         .add("NurseRostering", data="NurseRostering_00.json")  # optimum 1202
         .add("NurseRostering", data="NurseRostering_18.json")
         .add("PizzaVoucher", data="PizzaVoucher_pizza6.json")  # optimum 210
         .add("QuadraticAssignment", data="QuadraticAssignment_qap.json")  # optimum 4776
-        .add("QuadraticAssignment", data="QuadraticAssignment_example.txt", prs_py="QuadraticAssignment_Parser", prs_jv="QuadraticAssignment_Parser")  # optimum 4776
+        .add("QuadraticAssignment", data="QuadraticAssignment_example.txt", prs_py="QuadraticAssignment_Parser",
+             prs_jv="QuadraticAssignment_Parser")  # optimum 4776
         .add("Rack", data="Rack_r2.json")  # optimum 1100
         .add("Rack2", data="Rack_r2b.json")  # optimum 1100
         .add("RadarSurveillance", data="RadarSurveillance_8-24-3-2-00.json")  # sat
@@ -110,4 +111,4 @@ xcsp = (Tester(NAME)
         .add("Wwtpp", data="Wwtpp_ex04400.json", variant="short")  # unsat
         )
 
-run(xcsp,diff, same)
+run(xcsp, diff, same)

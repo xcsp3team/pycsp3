@@ -66,7 +66,7 @@ elif variant("alt"):
 
     def table_compatible_words(hole1, hole2):
         ofs1, ofs2 = offset(hole1, hole2)
-        return {(i1, i2) for i1, word1 in enumerate(words[hole1.r]) for i2, word2 in enumerate(words[hole2.r]) if word1[ofs1] == word2[ofs2]}
+        return [(i1, i2) for i1, word1 in enumerate(words[hole1.r]) for i2, word2 in enumerate(words[hole2.r]) if word1[ofs1] == word2[ofs2]]
 
 
     # w[i] is the ith word to be put in the grid
@@ -81,6 +81,8 @@ elif variant("alt"):
     )
 
 
-    # Note that:
+# Note that:
 
-    # it is not possible to write x[i][j] when i is a slice; this must be x[i, j]
+# a) we use lists instead of sets for tables ([(i1, i2)  ... instead of  {(i1, i2) ..) because it is quite faster to process
+
+# b) it is not possible to write x[i][j] when i is a slice; this must be x[i, j]

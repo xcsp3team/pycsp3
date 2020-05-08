@@ -3,8 +3,8 @@ Problem 028 on CSPLib
 
 Examples of Execution:
   python3 Bibd.py
-  python3 Bibd .py-data=[9,0,0,3,9]
-  python3 Bibd .py-data=[9,0,0,3,9] -variant=aux
+  python3 Bibd.py -data=[9,0,0,3,9]
+  python3 Bibd.py -data=[9,0,0,3,9] -variant=aux
 """
 
 from pycsp3 import *

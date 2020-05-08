@@ -8,10 +8,10 @@ Example of Execution:
 from pycsp3 import *
 
 puzzle = data
-nRows, nCols = len(puzzle), len(puzzle[0])
+n, m = len(puzzle), len(puzzle[0])
 
 Region = namedtuple("Region", "i j size")
-regions = [Region(i + 1, j + 1, puzzle[i][j]) for i in range(nRows) for j in range(nCols) if puzzle[i][j] != 0]  # +1 because a border is inserted
+regions = [Region(i + 1, j + 1, puzzle[i][j]) for i in range(n) for j in range(m) if puzzle[i][j] != 0]  # +1 because a border is inserted
 nRegions = len(regions)
 
 conflicting_regions = {(k1, k2) for k1 in range(nRegions) for k2 in range(nRegions) if k1 != k2 and regions[k1].size == regions[k2].size}
@@ -42,12 +42,12 @@ def scope(i, j):
 
 
 # x[i][j] is the region (number) where the square at row i and column j belongs (borders are inserted for simplicity)
-x = VarArray(size=[nRows + 2, nCols + 2], dom=lambda i, j: {-1} if i in {0, nRows + 1} or j in {0, nCols + 1} else range(nRegions))
+x = VarArray(size=[n + 2, m + 2], dom=lambda i, j: {-1} if i in {0, n + 1} or j in {0, m + 1} else range(nRegions))
 
 # d[i][j] is the distance of the square at row i and column j wrt the starting square of the (same) region
-d = VarArray(size=[nRows + 2, nCols + 2],
-             dom=lambda i, j: {-1} if i in {0, nRows + 1} or j in {0, nCols + 1} else {0} if puzzle[i - 1][j - 1] != 0 else range(1,
-                                                                                                                                  max(r.size for r in regions)))
+d = VarArray(size=[n + 2, m + 2],
+             dom=lambda i, j: {-1} if i in {0, n + 1} or j in {0, m + 1} else {0} if puzzle[i - 1][j - 1] != 0 else range(1,
+                                                                                                                          max(r.size for r in regions)))
 
 satisfy(
     # setting starting squares of regions
@@ -58,13 +58,13 @@ satisfy(
 
     # two regions of the same size cannot have neighbouring squares
     [
-        [(x[i][j], x[i][j + 1]) not in conflicting_regions for i in range(1, nRows + 1) for j in range(1, nCols)],
-        [(x[i][j], x[i + 1][j]) not in conflicting_regions for j in range(1, nCols + 1) for i in range(1, nRows)]
+        [(x[i][j], x[i][j + 1]) not in conflicting_regions for i in range(1, n + 1) for j in range(1, m)],
+        [(x[i][j], x[i + 1][j]) not in conflicting_regions for j in range(1, m + 1) for i in range(1, n)]
     ],
 
     # each starting square of a (non-unit) region must have at least one neighbor at distance 1
     [scope(i, j) in table_start(k) for k, (i, j, s) in enumerate(regions) if s > 1],
 
     # each square must be connected to a neighbour at distance 1
-    [scope(i, j) in table_other() for i in range(1, nRows + 1) for j in range(1, nCols + 1) if puzzle[i - 1][j - 1] == 0]
+    [scope(i, j) in table_other() for i in range(1, n + 1) for j in range(1, m + 1) if puzzle[i - 1][j - 1] == 0]
 )

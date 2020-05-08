@@ -41,8 +41,8 @@ class Compilation:
 
 
 def _load_options():
-    options.set_values("data", "dataparser", "dataexport", "variant", "checker", "solve")
-    options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides")
+    options.set_values("data", "dataparser", "dataexport", "variant", "checker", "solver")
+    options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "solve")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -206,11 +206,11 @@ def _compile():
 
     Compilation.done = True
 
-    if options.solve:
-        if options.solve == "choco":
+    if options.solve or options.solver:
+        if options.solver == "choco":
             from pycsp3.solvers.chocosolver import ChocoProcess
             solution = ChocoProcess().solve(filename)
-        else:  # Fallback case => options.solve == "abscon":
+        else:  # Fallback case => options.solver == "abscon":
             from pycsp3.solvers.abscon import AbsConProcess
             solution = AbsConProcess().solve(filename)
 
