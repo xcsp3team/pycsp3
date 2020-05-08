@@ -16,29 +16,33 @@ n, nSofts = len(routes), len(data.softs)
 
 def table_soft(i, j, eq_relaxation, ne_relaxation, short_table=True):
     def calculate_size():
-        size = 0
         for l in range(kl - 1):
-            if distance < t[l]:
-                size += 1
-        return size
+            if distance >= t[l]:
+                return l
+        return kl - 1
 
-    table, set_short_version = set(), set()
+    table = []  # we use a list instead of a set because is is quite faster to process
+    cache = {}
     for f1 in domains[i]:
         for f2 in domains[j]:
             distance = abs(f1 - f2)
-            if distance in set_short_version:
+            key = str(distance) + " " + str(polarizations[i]) + " " + str(polarizations[j])
+            if key not in cache:
+                suffixes = []
+                for pol in range(4):
+                    p1 = 0 if pol < 2 else 1
+                    p2 = 1 if pol in {1, 3} else 0
+                    if (polarizations[i], p1) in [(1, 0), (-1, 1)] or (polarizations[j], p2) in [(1, 0), (-1, 1)]:
+                        continue
+                    t = eq_relaxation if p1 == p2 else ne_relaxation  # eqRelaxations or neRelaxations
+                    for kl in range(12):
+                        if kl == 11 or distance >= t[kl]:  # for kl=11, we suppose t[kl] = 0
+                            suffixes.append((p1, p2, kl, 0 if kl == 0 or distance >= t[kl - 1] else 1, 0 if kl <= 1 else calculate_size()))
+                cache[key] = suffixes
+            elif short_table:
                 continue
-            for pol in range(4):
-                p1 = 0 if pol < 2 else 1
-                p2 = 1 if pol in {1, 3} else 0
-                if (polarizations[i], p1) in [(1, 0), (-1, 1)] or (polarizations[j], p2) in [(1, 0), (-1, 1)]:
-                    continue
-                t = eq_relaxation if p1 == p2 else ne_relaxation  # eqRelaxations or neRelaxations
-                for kl in range(12):
-                    if kl == 11 or distance >= t[kl]:  # for kl=11, we suppose t[kl] = 0
-                        suffix = (p1, p2, kl, 0 if kl == 0 or distance >= t[kl - 1] else 1, 0 if kl <= 1 else calculate_size())
-                        table.add((distance, *suffix) if short_table else (f1, f2, *suffix))
-                        # set_short_version.add(distance)  # not possible to use that because parallel computation?
+            for suffix in cache[key]:
+                table.append((distance, *suffix) if short_table else (f1, f2, *suffix))
     return table
 
 

@@ -161,6 +161,19 @@ class ConstraintExtension(Constraint):
         if h not in ConstraintExtension.cache:
             if arity > 1:
                 table.sort()
+
+                tbl = None  # we remove redundant tuples, if present
+                for i in range(len(table) - 1):
+                    if table[i] != table[i + 1]:
+                        if tbl:
+                            tbl.append(table[i])
+                    else:
+                        if not tbl:
+                            tbl = table[:i]
+                if tbl:
+                    tbl.append(table[-1])
+                    table = tbl
+
                 ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
             elif isinstance(table[0], int):
                 ConstraintExtension.cache[h] = integers_to_string(table)

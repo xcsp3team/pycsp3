@@ -335,14 +335,15 @@ class Node(Entity):
 
     def possible_values(self):
         if self.type.is_predicate_operator():
-            return range(0, 2)  # for {0,1}, we use a range because it simplifies computation (see code below)
+            return range(0, 2)  # we use a range instead of [0,1] because it simplifies computation (see code below)
         if self.type.min_arity == self.type.max_arity == 0:
             if self.type == TypeNode.VAR:
-                av = self.sons.dom.all_values()
-                # either a range or a sorted list of integers is returned
+                av = self.sons.dom.all_values()  # either a range or a sorted list of integers is returned
+                if isinstance(av, range):
+                    return av
                 return range(av[0], av[0] + 1) if len(av) == 1 else range(av[0], av[1] + 1) if len(av) == 2 and av[0] + 1 == av[1] else av
             if self.type == TypeNode.INT:
-                return range(self.sons, self.sons+1)  # we prefer a range rather than a singleton list because it simplifies computation (see code below)
+                return range(self.sons, self.sons+1)  # we use a range instead of a singleton list because it simplifies computation (see code below)
             assert False, "no such 0-ary type " + str(self.type) + " is expected"
         if self.type.min_arity == self.type.max_arity == 1:
             pv = self.sons[0].possible_values()
