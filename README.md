@@ -1,6 +1,6 @@
-<h1 align="center"> PyCSP3 v1.0.x </h1>
+<h1 align="center"> PyCSP3 v1.1.x </h1>
 
-This is the first (beta) version of PyCSP3, v1.0.x, a library in Python 3 (version 3.5 or later) for modeling constrained combinatorial problems.
+This is the version 1.1.0 of PyCSP3, a library in Python 3 (version 3.5 or later) for modeling constrained combinatorial problems.
 PyCSP3 is inspired from both [JvCSP3](http://www.xcsp.org/modeling) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack); it is also related to [CPpy](https://github.com/tias/cppy).
 
 With PyCSP3, it is possible to generate instances of:
@@ -14,14 +14,17 @@ Note that:
 * a [well-documented guide](https://github.com/xcsp3team/pycsp3/blob/master/guidePyCSP3.pdf) is available
 * PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
 
-**Important**: we plan to post a (hopefully) very stable version, 1.1.0, within a few weeks/months.
+**Important**: another version, 1.2.0, is planned to be published within a few weeks/months.
 Currently, our main goal is :
-* to fix a few problems encountered with python 3.8 (with python 3.5, 3.6 and 3.7, things seem to look good)
+* to fix a few problems encountered with python 3.8 (with python 3.5, 3.6 and 3.7, things look good)
 * to give more helpful messages when the user (modeler) writes something incorrect
 
-At this stage, one can run the constraint solver 'AbsCon' (with the option -solve; see below).
+At this stage, one can run:
+* the constraint solver 'AbsCon', with the option -solve or the option -solver=abscon
+* the constraint solver 'Choco, with the option -solver=choco
+
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-In the medium term, we also plan to develop an interface that will allow users to pilot solvers with Python.
+In the medium/long term, we also plan to develop an interface that will allow users to pilot solvers with Python.
 
 # Installation
 
@@ -62,10 +65,9 @@ Among the options, we find:
 * ```-data=<data_value>```: allows us to specify the data to be used by the model. It can be:
     + elementary: -data=5
     + a simple list: -data=[9,0,0,3,9]
-    + a named list: -data=[v=9,b=0,r=0,k=3,l=9]
     + a JSON file: -data=Bibd-3-4-6.json
 
-    Data can then be directly used in the PyCSP3 model by means of a predefined object `data`.
+    Data can then be directly used in the PyCSP3 model by means of a predefined variable `data`.
 
 
 * ```-dataparser=<file>```: a Python file for reading/parsing data given under any arbitrary form (e.g., by a text file).
@@ -78,6 +80,8 @@ Among the options, we find:
       See Example AllInterval below, for an illustration.
 
 * ```-solve```: attempts to solve the instance with the embedded solver 'AbsCon'. It requires that Java version 8 (at least) is installed.
+
+* ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'abscon' or 'choco'. Important: it requires that Java version 8 (at least) is installed.
 
 
 ## Copying a pool of models
@@ -125,14 +129,20 @@ This is the classical crypto-arithmetic puzzle 'Send+More=Money'.
 ```python
 from pycsp3 import *
 
-letters = VarArray(size=8, dom=range(10))
-s, e, n, d, m, o, r, y = letters
+# letters[i] is the digit of the ith letter involved in the equation
+s, e, n, d, m, o, r, y = letters = VarArray(size=8, dom=range(10))
 
 satisfy(
+    # letters are given different values
     AllDifferent(letters),
-    s > 0,
-    m > 0,
-    [s, e, n, d] * [1000, 100, 10, 1] + [m, o, r, e] * [1000, 100, 10, 1] == [m, o, n, e, y] * [10000, 1000, 100, 10, 1]
+
+    # words cannot start with 0
+    [s > 0, m > 0],
+
+    # respecting the mathematical equation
+    [s, e, n, d] * [1000, 100, 10, 1]
+    + [m, o, r, e] * [1000, 100, 10, 1]
+    == [m, o, n, e, y] * [10000, 1000, 100, 10, 1]
 )
 ```
 
@@ -148,6 +158,11 @@ To generate and solve (with AbsCon) the XCSP3 instance, the command is:
 python3 SendMore.py -solve
 ```
 
+To generate and solve with Choco the XCSP3 instance, the command is:
+
+```console
+python3 SendMore.py -solver=choco
+```
 
 
 ## Example 3: All-Interval Series
@@ -160,7 +175,9 @@ A classical model is:
 #### File **`AllInterval.py`** (version 1)
 
 ```python
-n = data.n
+from pycsp3 import *
+
+n = data
 
 # x[i] is the ith note of the series
 x = VarArray(size=n, dom=range(n))
@@ -190,7 +207,9 @@ This would give:
 #### File **`AllInterval.py`** (version 2)
 
 ```python
-n = data.n
+from pycsp3 import *
+
+n = data
 
 # x[i] is the ith note of the series
 x = VarArray(size=n, dom=range(n))
@@ -219,7 +238,9 @@ In our example, this would give:
 #### File **`AllInterval.py`** (version 3)
 
 ```python
-n = data.n
+from pycsp3 import *
+
+n = data
 
 # x[i] is the ith note of the series
 x = VarArray(size=n, dom=range(n))
@@ -288,7 +309,7 @@ The model is:
 ```python
 from pycsp3 import *
 
-v, b, r, k, l = data.v, data.b, data.r, data.k, data.l
+v, b, r, k, l = data
 b = (l * v * (v - 1)) // (k * (k - 1)) if b == 0 else b
 r = (l * (v - 1)) // (k - 1) if r == 0 else r
 
@@ -319,17 +340,6 @@ With some command interpreters (shells), you may have to escape the characters '
 python3 Bibd.py -data=\[9,0,0,3,9\]
 ```
 
-Certainly, you wonder how values are associated with fields of `data`.
-Actually, the order of occurrences of these fields in the model is automatically used.
-The first occurrence of a field of `data` is `data.v`, then it is `data.b`, and so on.
-So, we have `data.v=9`, `data.b=0`, ...
-
-However, you can relax this requirement by using names when specifying data, as for example, in:
-
-```console
-python3 Bibd.py -data=[k=3,l=9,b=0,r=0,v=9]
-```
-
 
 ## Example 5: Rack Configuration
 
@@ -347,46 +357,39 @@ The data (for a specific instance) are then initially given in a JSON file, as f
 }
 ```
 
-In the following model, we directly use the object `data` whose fields are exactly those of the main object in the JSON file.
+In the following model, we directly unpack the components of the variable `data` (because it is automatically given under the form of a named tuple) whose fields are exactly those of the main object in the JSON file.
 
 #### File **`Rack.py`**
 
 ```python
 from pycsp3 import *
 
-nRacks, models, cardTypes = data.nRacks, data.models, data.cardTypes
-
-# we add first a dummy model (0,0,0)
-models = [(0, 0, 0)] + [tuple(model) for model in models]
+nRacks, models, cardTypes = data
+models.append([0, 0, 0])  # we add first a dummy model (0,0,0)
+powers, sizes, costs = zip(*models)
+cardPowers, cardDemands = zip(*cardTypes)
 nModels, nTypes = len(models), len(cardTypes)
 
-powers, sizes, costs = [row[0] for row in models], [row[1] for row in models], [row[2] for row in models]
-cardPowers, cardDemands = [row[0] for row in cardTypes], [row[1] for row in cardTypes]
+table = {(i, powers[i], sizes[i], costs[i]) for i in range(nModels)}
 
 # m[i] is the model used for the ith rack
 m = VarArray(size=nRacks, dom=range(nModels))
 
+# p[i] is the power of the model used for the ith rack
+p = VarArray(size=nRacks, dom=powers)
+
+# s[i] is the size (number of connectors) of the model used for the ith rack
+s = VarArray(size=nRacks, dom=sizes)
+
+# c[i] is the cost (price) of the model used for the ith rack
+c = VarArray(size=nRacks, dom=costs)
+
 # nc[i][j] is the number of cards of type j put in the ith rack
 nc = VarArray(size=[nRacks, nTypes], dom=lambda i, j: range(min(max(sizes), cardDemands[j]) + 1))
 
-# p[i] is the power of the ith rack
-p = VarArray(size=nRacks, dom=set(powers))
-
-# s[i] is the size of the ith rack
-s = VarArray(size=nRacks, dom=set(sizes))
-
-# c[i] is the cost of the ith rack
-c = VarArray(size=nRacks, dom=set(costs))
-
 satisfy(
-    # linking model and power of the ith rack
-    [(m[i], p[i]) in enumerate(powers) for i in range(nRacks)],
-
-    # linking model and size of the ith rack
-    [(m[i], s[i]) in enumerate(sizes) for i in range(nRacks)],
-
-    # linking model and cost of the ith rack
-    [(m[i], c[i]) in enumerate(costs) for i in range(nRacks)],
+    # linking rack models with powers, sizes and costs
+    [(m[i], p[i], s[i], c[i]) in table for i in range(nRacks)],
 
     # connector-capacity constraints
     [Sum(nc[i]) <= s[i] for i in range(nRacks)],
@@ -398,14 +401,11 @@ satisfy(
     [Sum(nc[:, j]) == cardDemands[j] for j in range(nTypes)],
 
     # tag(symmetry-breaking)
-    [
-        Decreasing(m),
-        (m[0] != m[1]) | (nc[0][0] >= nc[1][0])
-    ]
+    [Decreasing(m), imply(m[0] == m[1], nc[0][0] >= nc[1][0])]
 )
 
 minimize(
-    # minimizing the total cost paid for all racks
+    # minimizing the total cost being paid for all racks
     Sum(c)
 )
 ```
@@ -416,7 +416,7 @@ To generate an XCSP3 instance (file), we execute the command:
 python3 Rack.py -data=Rack_r2.json
 ```
 
-It is important to note that data in JSON can be arbitrarily structured, as for example:
+One might want to have the data in the JSON file with another structure, as for example:
 
 
 #### File **`Rack_r2b.json`**
@@ -437,68 +437,13 @@ It is important to note that data in JSON can be arbitrarily structured, as for 
 }
   ```
 
-The following model uses this new structure of data.
+We only need to modify one line from the previous model:
 
 
 #### File **`Rack2.py`**
 
 ```python
-from pycsp3 import *
-
-nRacks, models, cardTypes = data.nRacks, data.rackModels, data.cardTypes
-
-# we add first a dummy model (0,0,0)
-models = [{'power': 0, 'nConnectors': 0, 'price': 0}] + models
-nModels, nTypes = len(models), len(cardTypes)
-
-powers, sizes, costs = [model['power'] for model in models], [model['nConnectors'] for model in models], [model['price'] for model in models]
-cardPowers, cardDemands = [cardType['power'] for cardType in cardTypes], [cardType['demand'] for cardType in cardTypes]
-
-# m[i] is the model used for the ith rack
-m = VarArray(size=nRacks, dom=range(nModels))
-
-# nc[i][j] is the number of cards of type j put in the ith rack
-nc = VarArray(size=[nRacks, nTypes], dom=lambda i, j: range(min(max(sizes), cardDemands[j]) + 1))
-
-# p[i] is the power of the ith rack
-p = VarArray(size=nRacks, dom=set(powers))
-
-# s[i] is the size of the ith rack
-s = VarArray(size=nRacks, dom=set(sizes))
-
-# c[i] is the cost of the ith rack
-c = VarArray(size=nRacks, dom=set(costs))
-
-satisfy(
-    # linking model and power of the ith rack
-    [(m[i], p[i]) in enumerate(powers) for i in range(nRacks)],
-
-    # linking model and size of the ith rack
-    [(m[i], s[i]) in enumerate(sizes) for i in range(nRacks)],
-
-    # linking model and cost of the ith rack
-    [(m[i], c[i]) in enumerate(costs) for i in range(nRacks)],
-
-    # connector-capacity constraints
-    [Sum(nc[i]) <= s[i] for i in range(nRacks)],
-
-    # power-capacity constraints
-    [nc[i] * cardPowers <= p[i] for i in range(nRacks)],
-
-    # demand constraints
-    [Sum(nc[:, j]) == cardDemands[j] for j in range(nTypes)],
-
-    # tag(symmetry-breaking)
-    [
-        Decreasing(m),
-        (m[0] != m[1]) | (nc[0][0] >= nc[1][0])
-    ]
-)
-
-minimize(
-    # minimizing the total cost paid for all racks
-    Sum(c)
-)
+models.append(models[0].__class__(0, 0, 0))  # we add first a dummy model (0,0,0) ; we get the class of the used named tuples to build a new one
 ```
 
 To generate an XCSP3 instance (file), we execute the command:
@@ -573,23 +518,23 @@ Below, here is an example of such a text file.
 0
 ```
 
-First, we need to write a piece of code in Python for building an object `data` that will be directly used in our model.
-We have first to import everything (*) from `pycsp3.problems.data.dataparser`.
-We can then add any new arbitrary field to the object `data`.
-This is what we do below with two fields called `rowPatterns` and `colPatterns`.
-These two fields are defined as two-dimensional arrays (lists) of integers, defining the sizes of blocks.
+First, we need to write a piece of code in Python for building a dictionary `data` that will be then used in our model (after having been automatically converted to a named tuple).
+We have first to import everything (*) from `pycsp3.problems.data.parsing`.
+We can then add any new arbitrary item to the dictionary `data` (which is initially empty).
+This is what we do below with two items whose keys are called `rowPatterns` and `colPatterns`.
+The values associated with these two keys are defined as two-dimensional arrays (lists) of integers, defining the sizes of blocks.
 The function `next_int()` can be called for reading the next integer in a text file, which will be specified on the command line (see later).
 
 #### File **`Nonogram_Parser.py`**
 ```python
-from pycsp3.problems.data.dataparser import *
+from pycsp3.problems.data.parsing import *
 
 nRows, nCols = next_int(), next_int()
-data.rowPatterns = [[next_int() for _ in range(next_int())] for _ in range(nRows)]
-data.colPatterns = [[next_int() for _ in range(next_int())] for _ in range(nRows)]
+data["rowPatterns"] = [[next_int() for _ in range(next_int())] for _ in range(nRows)]
+data["colPatterns"] = [[next_int() for _ in range(next_int())] for _ in range(nRows)]
 ```
 
-Then, we just write the model by getting data from the object `data`.
+Then, we just write the model by getting data from the variable `data`.
 The model is totally independent of the way data were initially given (from a text file or a JSON file, for example).
 In the code below, note how an object `Automaton` is defined from a specified pattern (list of blocks).
  Also, for a `regular` constraint, we just write something like `scope in automaton`.
@@ -598,6 +543,9 @@ In the code below, note how an object `Automaton` is defined from a specified pa
 #### File **`Nonogram.py`**
 ```python
 from pycsp3 import *
+
+rows, cols = data  # patterns for row and columns 
+nRows, nCols = len(rows), len(cols)
 
 def automaton(pattern):
     q = Automaton.q  # for building state names
@@ -618,9 +566,6 @@ def automaton(pattern):
                 num += 1
         transitions.append((q(num), 0, q(num)))
     return Automaton(start=q(0), final=q(n_states - 1), transitions=transitions)
-
-rows, cols = data.rowPatterns, data.colPatterns
-nRows, nCols = len(rows), len(cols)
 
 #  x[i][j] is 1 iff the cell at row i and col j is colored in black
 x = VarArray(size=[nRows, nCols], dom={0, 1})
