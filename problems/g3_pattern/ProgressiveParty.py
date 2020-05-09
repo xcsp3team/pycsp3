@@ -8,7 +8,7 @@ Example of Execution:
 from pycsp3 import *
 
 nPeriods, boats = data
-nBoats = len(data.boats)
+nBoats = len(boats)
 capacities, crews = zip(*boats)
 
 # h[b] indicates if the boat b is a host boat
