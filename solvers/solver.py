@@ -6,7 +6,7 @@ from io import IOBase
 from lxml import etree
 from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
-from pycsp3.classes.main.variables import VariableInteger
+from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.classes.entities import VarEntities, EVarArray, EVar
 from pycsp3.tools.utilities import Stopwatch, flatten
 from pycsp3.dashboard import options
@@ -125,7 +125,7 @@ class SolverProcess:
         variables = []
         for token in root[0].text.split():
             r = VarEntities.get_item_with_name(token)
-            if isinstance(r, VariableInteger):
+            if isinstance(r, (EVar, Variable)):  # TODO why do we need these two cases?
                 variables.append(r)
             else:
                 for x in flatten(r.variables, keep_none=True):
