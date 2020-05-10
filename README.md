@@ -39,6 +39,12 @@ sudo apt install python3-pip
 sudo pip3 install pycsp3
 ```
 
+For using the -solve or -solver options, you need to install (at least) Java version 8:
+
+```console
+sudo apt-get install openjdk-8-jdk
+```
+
 ## Updating PyCSP3
 
 For updating your version of PyCSP3, simply execute:
