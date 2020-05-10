@@ -232,7 +232,7 @@ class VarEntities:
                 return va
         else:
             for item in VarEntities.items:
-                if isinstance(item, EVar) and item.name == s:
+                if isinstance(item, EVar) and item.id == s:
                     return item
         return None
 
