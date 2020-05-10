@@ -28,9 +28,11 @@ In the medium/long term, we also plan to develop an interface that will allow us
 
 # Installation
 
-## Installing PyCSP3
 
-Installation instructions are currently given for Linux (instructions for Mac and Windows will be inserted soon)
+Installation instructions are currently given for Linux and Windows (instructions for Mac will be inserted soon)
+
+## Installing PyCSP3 (Linux)
+
 
 For installing PyCSP3, you need to execute:
 
@@ -45,12 +47,73 @@ For using the -solve or -solver options, you need to install (at least) Java ver
 sudo apt-get install openjdk-8-jdk
 ```
 
+## Installing PyCSP3 (Windows)
+
+For installing Python, you need to install the version 3.7:
+
+https://www.python.org/downloads/release/python-377/
+
+Do not forget to tick the box 'Add Python 3.7 to PATH' during the installation.
+
+Next, you have to open the console and upgrade pip:
+
+```console
+python -m pip install --upgrade pip
+```
+
+And for installing pycsp3:
+
+```console
+python -m pip install pycsp3
+```
+
+For using the -solve or -solver options, you need to install (at least) Java version 8:
+
+https://www.oracle.com/java/technologies/javase-downloads.html
+
+And add in the PATH the java command, for example, temporally, with the command:
+
+```console
+set path=%path%;C:/Program Files/Java/jdk-14.0.1/bin/
+```
+
+You can check the java command by typing in your console:
+
+```console
+java --version
+```
+
 ## Updating PyCSP3
 
 For updating your version of PyCSP3, simply execute:
 
+For linux:
+
 ```console
 sudo pip3 install --upgrade pycsp3
+```
+
+For Windows:
+
+```console
+python -m pip install --upgrade pycsp3
+```
+
+## Copying a pool of models
+
+PyCSP3 is accompanied by more than 100 models.
+To get them in a subdirectory `problems` of your current directory, execute:
+
+```console
+python3 -m pycsp3 (For linux)
+python -m pycsp3 (For Windows)
+```
+
+And you can test the compilation of one of the models, for example:
+
+```console
+python3 problems/g0_school/Pic.py (For Linux)
+python problems\g0_school\Pic.py (For Windows)
 ```
 
 ## Compiling PyCSP3 Models
@@ -88,16 +151,6 @@ Among the options, we find:
 * ```-solve```: attempts to solve the instance with the embedded solver 'AbsCon'. It requires that Java version 8 (at least) is installed.
 
 * ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'abscon' or 'choco'. Important: it requires that Java version 8 (at least) is installed.
-
-
-## Copying a pool of models
-
-PyCSP3 is accompanied by more than 100 models.
-To get them in a subdirectory `problems` of your current directory, execute:
-
-```console
-python3 -m pycsp3
-```
 
 
 # Some Examples
