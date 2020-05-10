@@ -2,12 +2,12 @@ import atexit
 import os, sys
 #from collections import OrderedDict
 
-__python_version__ = str(sys.version).split('\n')[0].split(' ')[0]
-__message_version__ = os.linesep + " Must be using between Python 3.5 and Python 3.7." + os.linesep \
-                    + " Your version is Python " + __python_version__  + os.linesep\
-                    + " The version of pycsp3 made compatible with Python 3.8 will be released soon."
+__python_version__ = str(sys.version).split(os.linesep)[0].split(' ')[0]
 
 if sys.version_info[0] < 3 or (sys.version_info[1] < 5 or sys.version_info[1] > 7):
+    __message_version__ = os.linesep + " Must be using between Python 3.5 and Python 3.7" + os.linesep \
+                    + " Your version is Python " + __python_version__  + os.linesep \
+                    + " The version of pycsp3 made compatible with Python 3.8 will be released soon."
     raise Exception(__message_version__)
 
 from pycsp3.functions import *  # keep it at first position (before Compilation)
