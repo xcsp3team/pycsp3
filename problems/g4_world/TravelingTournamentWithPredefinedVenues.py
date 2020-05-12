@@ -32,11 +32,10 @@ def table_intern(i):
 
 
 def automaton():
-    tr2 = [("q", 0, "q01"), ("q", 1, "q11"), ("q01", 0, "q02"), ("q01", 1, "q11"), ("q11", 0, "q01"), ("q11", 1, "q12"), ("q02", 1, "q11"), ("q12", 0, "q01")]
-    tr3 = [("q02", 0, "q03"), ("q12", 1, "q13"), ("q03", 1, "q11"), ("q13", 0, "q01")]
-    fi2 = {"q01", "q02", "q11", "q12"}
-    fi3 = {"q03", "q13"}
-    return Automaton(start="q", final=fi2 if variant("a2") else fi2 | fi3, transitions=tr2 if variant("a2") else tr2 + tr3)
+    qi, q01, q02, q03, q11, q12, q13 = states = "q", "q01", "q02", "q03", "q11", "q12", "q13"
+    tr2 = [(qi, 0, q01), (qi, 1, q11), (q01, 0, q02), (q01, 1, q11), (q11, 0, q01), (q11, 1, q12), (q02, 1, q11), (q12, 0, q01)]
+    tr3 = [(q02, 0, q03), (q12, 1, q13), (q03, 1, q11), (q13, 0, q01)]
+    return Automaton(start=qi, final={q for q in states if q != qi}, transitions=tr2 if variant("a2") else tr2 + tr3)
 
 
 # o[i][k] is the opponent (team) of the ith team  at the kth round

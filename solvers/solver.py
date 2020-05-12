@@ -13,7 +13,7 @@ from pycsp3.dashboard import options
 
 
 def directory_of_solver(name):
-    # assert name == "abscon", "for the moment, only one embedded solver (abscon)"
+    # assert name in {"abscon", "choco"}  #  for the moment, two embedded solvers"
     return os.sep.join(__file__.split(os.sep)[:-1]) + os.sep + name + os.sep
 
 
