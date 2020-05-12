@@ -4,6 +4,7 @@ from pycsp3.tools.curser import queue_in
 class Diagram:
     def __init__(self, transitions):
         self.transitions = Diagram._add_transitions(transitions)
+        self.states = sorted({q for (q, _, _) in self.transitions} | {q for (_, _, q) in self.transitions})
 
     def __contains__(self, other):
         queue_in.append((self, other))
@@ -38,7 +39,7 @@ class Automaton(Diagram):
     def __init__(self, *, start, transitions, final):
         super().__init__(transitions)
         self.start = start
-        self.final = [final] if isinstance(final, str) else sorted(set(final))
+        self.final = [final] if isinstance(final, str) else sorted(q for q in set(final) if q in self.states)
         assert isinstance(self.start, str) and all(isinstance(f, str) for f in self.final), Diagram.MSG_STATE
 
 
