@@ -3,7 +3,7 @@ import types
 from collections import namedtuple
 from itertools import combinations, product, permutations
 
-from pycsp3.classes.auxiliary.conditions import Condition, ConditionValue, ne
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionValue, gt, ne, eq
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.entities import (
@@ -799,4 +799,4 @@ def cp_array(*l):
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, columns, namedtuple, default_data, ne)
+    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, columns, namedtuple, default_data, gt, ne, eq)
