@@ -17,7 +17,7 @@ nRegions = len(regions)
 conflicting_regions = {(k1, k2) for k1 in range(nRegions) for k2 in range(nRegions) if k1 != k2 and regions[k1].size == regions[k2].size}
 
 
-def table_start(k):  # to be used with the starting square (where clue is given) of region k
+def table_start(k):  # to be used with the starting square (where clue is given) of (non-unit) region k
     return {(k, k, ANY, ANY, ANY, 0, 1, ANY, ANY, ANY),
             (k, ANY, k, ANY, ANY, 0, ANY, 1, ANY, ANY),
             (k, ANY, ANY, k, ANY, 0, ANY, ANY, 1, ANY),

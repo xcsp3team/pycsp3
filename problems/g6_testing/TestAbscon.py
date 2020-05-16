@@ -1,20 +1,21 @@
 from pycsp3 import *
 from pycsp3.solvers.abscon import AbsConProcess, AbsconPy4J
+from pycsp3.solvers.chocosolver import ChocoProcess
 
-x = VarArray(size=[10, 10], dom=range(150))
-y = VarArray(size=[10, 10], dom=range(150))
-z = VarArray(size=10, dom=range(150))
+x = VarArray(size=10, dom=range(20))
+y = Var(range(20))
 
 satisfy(
-    min(abs(x[0][0]), abs(y[0][0])),
-    max(abs(x[0][0]), min(y[0], z[1]))
+    x[0] == 5,
+    y == Minimum(x),
+    Sum(x) > 100
 )
 
 print("Compile:\n")
 instance = compile()
 
 print("\nStatic solving:\n")
-solution = AbsConProcess().solve(instance)
+solution = ChocoProcess().solve(instance)
 print("solution:", solution)
 
 print("\nPy4j solving:\n")

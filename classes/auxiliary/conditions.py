@@ -87,5 +87,13 @@ class ConditionSet(Condition):
         return "{" + ",".join(str(v) for v in self.t) + "}"
 
 
+def gt(v):
+    return ConditionValue(TypeConditionOperator.GT, v)
+
+
+def eq(v):
+    return ConditionValue(TypeConditionOperator.EQ, v)
+
+
 def ne(v):
     return ConditionValue(TypeConditionOperator.NE, v)
