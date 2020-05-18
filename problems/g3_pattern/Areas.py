@@ -1,6 +1,13 @@
 """
 See "Teaching Constraints through Logic Puzzles" by Peter Szeredi
 
+A rectangular board is given with some squares specified as positive integers.
+Fill in all squares of the board with positive integers so that any maximal contiguous set of squares containing the same integer
+has the area equal to this integer (two squares are contiguous if they share a side).
+
+Important: we assume in the model below that each specified integer delimits its own region
+(i.e., we cannot use two equal specified integers for the same region).
+
 Example of Execution:
   python3 Auction.py -data=Areas-3-3-3.json
 """
@@ -28,30 +35,26 @@ def table_other():
     t = set()
     for k in range(nRegions):
         for v in range(1, regions[k].size):
-            t.update([
-                (k, k, ANY, ANY, ANY, v, v - 1, ANY, ANY, ANY),
-                (k, ANY, k, ANY, ANY, v, ANY, v - 1, ANY, ANY),
-                (k, ANY, ANY, k, ANY, v, ANY, ANY, v - 1, ANY),
-                (k, ANY, ANY, ANY, k, v, ANY, ANY, ANY, v - 1)
-            ])
+            t.add((k, k, ANY, ANY, ANY, v, v - 1, ANY, ANY, ANY))
+            t.add((k, ANY, k, ANY, ANY, v, ANY, v - 1, ANY, ANY))
+            t.add((k, ANY, ANY, k, ANY, v, ANY, ANY, v - 1, ANY))
+            t.add((k, ANY, ANY, ANY, k, v, ANY, ANY, ANY, v - 1))
     return t
 
 
-def scope(i, j):
-    return x[i][j], x[i][j - 1], x[i][j + 1], x[i - 1][j], x[i + 1][j], d[i][j], d[i][j - 1], d[i][j + 1], d[i - 1][j], d[i + 1][j]
+def cross(t, i, j):
+    return t[i][j], t[i][j - 1], t[i][j + 1], t[i - 1][j], t[i + 1][j]
 
 
 # x[i][j] is the region (number) where the square at row i and column j belongs (borders are inserted for simplicity)
 x = VarArray(size=[n + 2, m + 2], dom=lambda i, j: {-1} if i in {0, n + 1} or j in {0, m + 1} else range(nRegions))
 
 # d[i][j] is the distance of the square at row i and column j wrt the starting square of the (same) region
-d = VarArray(size=[n + 2, m + 2],
-             dom=lambda i, j: {-1} if i in {0, n + 1} or j in {0, m + 1} else {0} if puzzle[i - 1][j - 1] != 0 else range(1,
-                                                                                                                          max(r.size for r in regions)))
+d = VarArray(size=[n + 2, m + 2], dom=lambda i, j: {-1} if i in {0, n + 1} or j in {0, m + 1} else range(max(r.size for r in regions)))
 
 satisfy(
     # setting starting squares of regions
-    [x[i][j] == k for k, (i, j, _) in enumerate(regions)],
+    [(x[i][j] == k, d[i][j] == 0) for k, (i, j, _) in enumerate(regions)],
 
     # respecting the size of each region
     [Count(x, value=k) == s for k, (_, _, s) in enumerate(regions)],
@@ -63,8 +66,14 @@ satisfy(
     ],
 
     # each starting square of a (non-unit) region must have at least one neighbor at distance 1
-    [scope(i, j) in table_start(k) for k, (i, j, s) in enumerate(regions) if s > 1],
+    [(cross(x, i, j), cross(d, i, j)) in table_start(k) for k, (i, j, s) in enumerate(regions) if s > 1],
 
     # each square must be connected to a neighbour at distance 1
-    [scope(i, j) in table_other() for i in range(1, n + 1) for j in range(1, m + 1) if puzzle[i - 1][j - 1] == 0]
+    [(cross(x, i, j), cross(d, i, j)) in table_other() for i in range(1, n + 1) for j in range(1, m + 1) if puzzle[i - 1][j - 1] == 0]
 )
+
+#  Note that:
+
+# a) (cross(x, i, j), cross(d, i, j)) is a tuple containing two sub-tuples of variables.
+#    This is automatically flattened. It is also possible to write:
+#    (*cross(x, i, j), *cross(d, i, j))

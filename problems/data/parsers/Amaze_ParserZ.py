@@ -7,6 +7,5 @@ nPairs = number_in(next_line())
 p1 = list(zip(numbers_in(next_line()), numbers_in(next_line())))
 p2 = list(zip(numbers_in(next_line()), numbers_in(next_line())))
 assert nPairs == len(p1) == len(p2)
-data["points1"] = p1
-data["points2"] = p2  #[[p1[i], p2[i]] for i in range(len(p1))]
+data["points"] = [[p1[i], p2[i]] for i in range(len(p1))]
 
