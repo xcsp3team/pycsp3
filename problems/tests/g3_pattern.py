@@ -76,8 +76,8 @@ same = (Tester(NAME)
         )
 
 xcsp = (Tester(NAME)
-        .add("Amaze", data="Amaze_simple.json")  #
-        .add("Amaze", data="Amaze_2012-03-07.dzn", prs_py="Amaze_ParserZ.py", prs_jv="")  #
+        .add("Amaze", data="Amaze_simple.json")  # optimum 12
+        .add("Amaze", data="Amaze_2012-03-07.dzn", prs_py="Amaze_ParserZ.py", prs_jv="")  # optimum 315
         .add("Areas", data="Areas-3-3-3.json")  # 7 solutions
         .add("Auction", data="Auction_example.json")  # optimum 54
         .add("Auction", data="Auction_example.txt", prs_py="Auction_Parser", prs_jv="Auction_Parser")  # optimum 54
@@ -118,6 +118,7 @@ xcsp = (Tester(NAME)
         .add("Lightup", data="Lightup_example.json")  # 1 solution
         .add("Lightup", data="Lightup_example.txt", prs_py="Lightup_Parser", prs_jv="Lightup_Parser")  # 1 solution
         .add("LinearArrangement", data="MinLA01.json")
+        .add("Lits", data="Lits-example.json")  # 1636 solutions
         .add("MagicSquare", data="[4,None]")  # 7040 solutions
         .add("MagicSquare", data="MagicSquare_example1.txt", prs_py="MagicSquare_Parser", prs_jv="MagicSquare_Parser")
         .add("Mario", data="Mario_easy-2.json")  # optimum 628

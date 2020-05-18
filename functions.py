@@ -21,7 +21,7 @@ from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
-from pycsp3.tools.curser import OpOverrider, ListInt, ListVar, columns
+from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import ANY, flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, \
     integer_scaling
@@ -712,15 +712,8 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
 ''' Helpers '''
 
 
-# def column(m, j):
-#     assert is_2d_list(m), "column() can only be called on 2-dimensional lists"
-#     assert all(len(row) > j for row in m), "one row has not at least j+1 elements"
-#     return ListVar(row[j] for row in m)
-#
-#
-# def columns(m):
-#     assert is_matrix(m), "columns() can only be called on matrices"
-#     return ListVar(column(m, j) for j in range(len(m[0])))
+def columns(m):
+    return curser.columns(m)
 
 
 def diagonal_down(m, i=-1, j=-1, check=True):
@@ -799,4 +792,4 @@ def cp_array(*l):
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, columns, namedtuple, default_data, gt, ne, eq)
+    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, gt, ne, eq)
