@@ -12,13 +12,13 @@ from pycsp3 import *
 puzzle = data
 n, m = len(puzzle), len(puzzle[0])
 
-shapes = [  # the offsets for the three other points of the basic shapes of each tetramino
+shapes = [  # the offsets, wrt (0,0), for the three other points of the basic shapes of each tetramino
     [[(1, 0), (2, 0), (2, 1)], [(0, 1), (1, 0), (2, 0)], [(0, 1), (1, 1), (2, 1)], [(0, 1), (0, 2), (-1, 2)]],  # L
     [[(0, 1), (0, 2), (0, 3)]],  # I
     [[(0, 1), (0, 2), (1, 1)], [(1, -1), (1, 0), (1, 1)]],  # T
     [[(0, 1), (-1, 1), (-1, 2)], [(1, 0), (1, 1), (2, 1)]]  # S
 ]
-shapes = [s + [[(j, i) for (i, j) in t] for t in s] for s in shapes]  # adding symmetric shapes (by using the downward diagonal)
+shapes = [s + [[(j, i) for (i, j) in t] for t in s] for s in shapes]  # adding symmetric shapes (by the downward diagonal)
 
 regions = OrderedDict()
 for i in range(n):
