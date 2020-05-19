@@ -3,6 +3,7 @@ from types import GeneratorType
 from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
+from pycsp3.tools.utilities import is_1d_list, is_1d_tuple
 
 
 class Condition:
@@ -31,6 +32,9 @@ class Condition:
             return ConditionSet(operator, right_operand)
 
     def right_operand(self):
+        pass
+
+    def filtering(self, values):
         pass
 
     def __str__(self):
@@ -67,6 +71,9 @@ class ConditionVariable(Condition):
     def right_operand(self):
         return self.variable
 
+    def filtering(self, values):
+        assert False, "Currently not implemented"
+
 
 class ConditionInterval(Condition):
     def __init__(self, operator, min, max):
@@ -77,6 +84,13 @@ class ConditionInterval(Condition):
     def right_operand(self):
         return str(self.min) + ".." + str(self.max)
 
+    def filtering(self, values):
+        if self.operator == TypeConditionOperator.IN:
+            return (v for v in values if self.min <= v <= self.max)
+        if self.operator == TypeConditionOperator.NOTIN:
+            return (v for v in values if v < self.min or self.max < v)
+        assert False
+
 
 class ConditionSet(Condition):
     def __init__(self, operator, t):
@@ -86,14 +100,45 @@ class ConditionSet(Condition):
     def right_operand(self):
         return "{" + ",".join(str(v) for v in self.t) + "}"
 
+    def filtering(self, values):
+        if self.operator == TypeConditionOperator.IN:
+            return (v for v in values if v in self.t)
+        if self.operator == TypeConditionOperator.NOTIN:
+            return (v for v in values if v not in self.t)
+        assert False
+
+
+def ne(v):
+    return ConditionValue(TypeConditionOperator.NE, v)
+
+
+def lt(v):
+    return ConditionValue(TypeConditionOperator.LT, v)
+
+
+def le(v):
+    return ConditionValue(TypeConditionOperator.LE, v)
+
+
+def ge(v):
+    return ConditionValue(TypeConditionOperator.GE, v)
+
 
 def gt(v):
     return ConditionValue(TypeConditionOperator.GT, v)
 
 
-def eq(v):
-    return ConditionValue(TypeConditionOperator.EQ, v)
+def _inside_outside(v, op):
+    v = v if len(v) > 1 else v[0]
+    if isinstance(v, range):
+        return ConditionInterval(op, v.start, v.stop - 1)
+    assert is_1d_list(v, int) or is_1d_tuple(v, int)
+    return ConditionSet(op, set(v))
 
 
-def ne(v):
-    return ConditionValue(TypeConditionOperator.NE, v)
+def inside(*v):
+    return _inside_outside(v, TypeConditionOperator.IN)
+
+
+def outside(*v):
+    return _inside_outside(v, TypeConditionOperator.NOTIN)

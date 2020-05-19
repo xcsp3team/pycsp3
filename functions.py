@@ -3,7 +3,7 @@ import types
 from collections import namedtuple
 from itertools import combinations, product, permutations
 
-from pycsp3.classes.auxiliary.conditions import Condition, ConditionValue, gt, ne, eq
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionValue, lt, le, ge, gt, ne, inside, outside
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.entities import (
@@ -308,10 +308,6 @@ def abs(*args):
     return Node.build(TypeNode.ABS, *args) if len(args) == 1 and isinstance(args[0], (Node, Variable)) else absPython(*args)
 
 
-def expr(operator, *args):
-    return Node.build(operator, *args)
-
-
 def min(*args):
     return Node.build(TypeNode.MIN, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 
@@ -338,6 +334,10 @@ def imply(*args):
 
 def ift(*args):
     return Node.build(TypeNode.IF, *args)
+
+
+def expr(operator, *args):
+    return Node.build(operator, *args)
 
 
 def conjunction(*args):
@@ -760,13 +760,13 @@ def to_ordinary_table(table, domains, *, keep_any=False):
     tbl = set()
     if keep_any:
         for t in table:
-            if any(isinstance(v, ConditionValue) for v in t):  # v may be a ConditionValue (with method 'filtering')
+            if any(isinstance(v, Condition) for v in t):  # v may be a Condition object (with method 'filtering')
                 tbl.update(product(*({v} if isinstance(v, int) or v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
                 tbl.add(t)
     else:
         for t in table:
-            if any(v == ANY or isinstance(v, ConditionValue) for v in t):  # v may be a ConditionValue (with method 'filtering')
+            if any(v == ANY or isinstance(v, Condition) for v in t):  # v may be a ConditionValue object (with method 'filtering')
                 tbl.update(product(*({v} if isinstance(v, int) else doms[i] if v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
                 tbl.add(t)
@@ -792,4 +792,4 @@ def cp_array(*l):
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, gt, ne, eq)
+    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, inside, outside)
