@@ -15,7 +15,7 @@ print("Compile:\n")
 instance = compile()
 
 print("\nStatic solving:\n")
-solution = ChocoProcess().solve(instance)
+solution = AbsConProcess().solve(instance)
 print("solution:", solution)
 
 print("\nPy4j solving:\n")
