@@ -161,7 +161,6 @@ class ConstraintExtension(Constraint):
         if h not in ConstraintExtension.cache:
             if arity > 1:
                 table.sort()
-
                 tbl = None  # we remove redundant tuples, if present
                 for i in range(len(table) - 1):
                     if table[i] != table[i + 1]:
@@ -181,8 +180,10 @@ class ConstraintExtension(Constraint):
                 ConstraintExtension.cache[h] = " ".join(v for v in sorted(table))
         return ConstraintExtension.cache[h]
 
-    def __init__(self, scope, table, positive=True):
+    def __init__(self, scope, table, positive=True, smart=False):
         super().__init__(TypeCtr.EXTENSION)
+        if smart:
+            self.attributes.append((TypeXML.TYPE, "smart"))
         assert is_1d_list(scope, Variable)
         assert len(table) == 0 or (len(scope) == 1 and (is_1d_list(table, int) or is_1d_list(table, str))) or (len(scope) > 1 and len(scope) == len(table[0]))
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)

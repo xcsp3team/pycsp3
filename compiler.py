@@ -42,7 +42,7 @@ class Compilation:
 
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "variant", "checker", "solver")
-    options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "solve")
+    options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "solve")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -180,7 +180,7 @@ def _compile():
     filename = filename_prefix + ".xml"
     root = build_document()
     if root is not None:
-        pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8")
+        pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False, encoding='UTF-8').decode("UTF-8")
         with open(filename, "w") as f:
             f.write(pretty_text)
             print("  Generation of the file " + filename + " completed.")

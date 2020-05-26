@@ -3,7 +3,7 @@ import types
 from collections import namedtuple
 from itertools import combinations, product, permutations
 
-from pycsp3.classes.auxiliary.conditions import Condition, ConditionValue, lt, le, ge, gt, ne, inside, outside
+from pycsp3.classes.auxiliary.conditions import Condition, lt, le, ge, gt, ne, inside, outside
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.entities import (
@@ -257,40 +257,26 @@ def satisfy(*args):
 ''' Generic Constraints (intension, extension) '''
 
 
-# def is_smart(table):
-#     for t in table:
-#         for v in t:
-#             if isinstance(v, ConditionValue):
-#                 return True
-#     return False
-
-
 def Extension(*, scope, table, positive=True):
     scope = flatten(scope)
     checkType(scope, [Variable])
     assert isinstance(table, list)
-    if len(scope) > 1 and any(isinstance(v, ConditionValue) for t in table for v in t):  # if smart table
+    checkType(table, [str, int, float, Condition])
+    checkType(positive, bool)
+    smart_table = len(scope) > 1 and any(isinstance(v, Condition) for t in table for v in t)
+    if not options.keepsmartconditions and smart_table:
         table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
 
-    checkType(table, [str, int, float])
-    checkType(positive, bool)
-    assert isinstance(table, list) and len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
+    assert len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
     assert isinstance(table[0], (tuple, int, str)), "Elements of tables are tuples or integers (or symbols)"
-    # print(table)
     assert isinstance(table[0], (int, str)) or len(scope) == len(table[0]), (
         "The length of each tuple must be the same as the arity." + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
-    # TODO: this ckecking don't pass on Waterbucket.py, but the xml file is the same that the java version !
     # if options.checker:
-    #    if not hasattr(Extension, "checked_tables"):
-    #        Extension.checked_tables = set()
-    #    if id(table) not in checked_tables:
     #        for t in table:
     #            for i, v in enumerate(t):
-    #                if v not in variables[i].dom:
-    #                    raise ValueError(
-    #                        "Problem: Constraint extension : a value of table is not represented in a domain of a variable : " + str(domainElement))
-    #        checked_tables.add(id(table))
-    return ECtr(ConstraintExtension(scope, table, positive))
+    #                if v not in scope[i].dom:
+    #                    raise ValueError("Pb: a value in the table is not present in the domain of the corresponding variable")
+    return ECtr(ConstraintExtension(scope, table, positive, smart_table))
 
 
 def Intension(node):
