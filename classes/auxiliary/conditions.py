@@ -1,14 +1,35 @@
 from types import GeneratorType
+from functools import total_ordering
 
 from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import is_1d_list, is_1d_tuple
+from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
+
+UTF_NE = "\u2260"
+UTF_LT = "\uFE64"  # ""\u227A"
+UTF_LE = "\u2264"
+UTF_GE = "\u2265"
+UTF_GT = "\uFE65"  # "\u227B"
+UTF_LTGT = "\u2276"
 
 
+@total_ordering
 class Condition:
     def __init__(self, operator):
         self.operator = operator
+
+    def _key(self):
+        return str(type(self)), str(self.operator)
+
+    def __hash__(self):
+        return hash(self._key())
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self._key() == other._key()
+
+    def __lt__(self, other):
+        return True if isinstance(other, (int, str)) or other == ANY else self._key() < other._key()
 
     @staticmethod
     def build_condition(condition):
@@ -31,10 +52,13 @@ class Condition:
         if isinstance(right_operand, list):
             return ConditionSet(operator, right_operand)
 
-    def right_operand(self):
+    def filtering(self, values):
         pass
 
-    def filtering(self, values):
+    def str_tuple(self):
+        pass
+
+    def right_operand(self):
         pass
 
     def __str__(self):
@@ -46,8 +70,8 @@ class ConditionValue(Condition):
         super().__init__(operator)
         self.value = value
 
-    def right_operand(self):
-        return self.value
+    def _key(self):
+        return super()._key() + (self.value,)
 
     def filtering(self, values):
         if self.operator == TypeConditionOperator.NE:
@@ -62,17 +86,39 @@ class ConditionValue(Condition):
             return (v for v in values if v > self.value)
         assert False
 
+    def str_tuple(self):
+        if self.operator == TypeConditionOperator.NE:
+            return UTF_NE + str(self.value)
+        if self.operator == TypeConditionOperator.LT:
+            return UTF_LE + str(self.value - 1) if isinstance(self.value, int) else UTF_LT + str(self.value)
+        if self.operator == TypeConditionOperator.LE:
+            return UTF_LE + str(self.value)
+        if self.operator == TypeConditionOperator.GE:
+            return UTF_GE + str(self.value)
+        if self.operator == TypeConditionOperator.GT:
+            return UTF_GE + str(self.value + 1) if isinstance(self.value, int) else UTF_GT + str(self.value)
+        assert False
+
+    def right_operand(self):
+        return self.value
+
 
 class ConditionVariable(Condition):
     def __init__(self, operator, variable):
         super().__init__(operator)
         self.variable = variable
 
-    def right_operand(self):
-        return self.variable
+    def _key(self):
+        return super()._key() + (self.variable,)
 
     def filtering(self, values):
         assert False, "Currently not implemented"
+
+    def str_tuple(self):
+        assert False, "Currently not implemented"
+
+    def right_operand(self):
+        return self.variable
 
 
 class ConditionInterval(Condition):
@@ -81,8 +127,8 @@ class ConditionInterval(Condition):
         self.min = min
         self.max = max
 
-    def right_operand(self):
-        return str(self.min) + ".." + str(self.max)
+    def _key(self):
+        return super()._key() + (self.min, self.max)
 
     def filtering(self, values):
         if self.operator == TypeConditionOperator.IN:
@@ -91,14 +137,24 @@ class ConditionInterval(Condition):
             return (v for v in values if v < self.min or self.max < v)
         assert False
 
+    def str_tuple(self):
+        if self.operator == TypeConditionOperator.IN:
+            return self.right_operand()
+        if self.operator == TypeConditionOperator.NOTIN:
+            return str(self.min) + UTF_LTGT + str(self.max)
+        assert False
+
+    def right_operand(self):
+        return str(self.min) + ".." + str(self.max)
+
 
 class ConditionSet(Condition):
     def __init__(self, operator, t):
         super().__init__(operator)
         self.t = t
 
-    def right_operand(self):
-        return "{" + ",".join(str(v) for v in self.t) + "}"
+    def _key(self):
+        return super()._key() + tuple(self.t)
 
     def filtering(self, values):
         if self.operator == TypeConditionOperator.IN:
@@ -106,6 +162,16 @@ class ConditionSet(Condition):
         if self.operator == TypeConditionOperator.NOTIN:
             return (v for v in values if v not in self.t)
         assert False
+
+    def str_tuple(self):
+        if self.operator == TypeConditionOperator.IN:
+            return self.right_operand()
+        if self.operator == TypeConditionOperator.NOTIN:
+            return "}" + ",".join(str(v) for v in self.t) + "{"  # UTF_NOTIN + self.right_operand()
+        assert False
+
+    def right_operand(self):
+        return "{" + ",".join(str(v) for v in self.t) + "}"
 
 
 def ne(v):

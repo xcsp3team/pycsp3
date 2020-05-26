@@ -160,13 +160,28 @@ def transitions_to_string(ts):
     return "".join(["(" + q1 + "," + str(v) + "," + q2 + ")" for (q1, v, q2) in ts])
 
 
+def _tuple_to_string(t):
+    s = "("
+    for v in t:
+        if isinstance(v, int):
+            s += str(v)
+        elif isinstance(v, str):
+            s += v
+        else:  # must be a condition
+            s += v.str_tuple()
+    s += ")"
+    return s
+
+
 def table_to_string(table, *, parallel=False):
     if not parallel or len(table) < 100000:
         s = []
         previous = ""
         for t in table:  # table is assumed to be sorted (adding an assert?) ; only distinct tuples are kept
             if t != previous:
-                s.append("(" + ",".join(str(v) for v in t) + ")")
+                s.append("(" + ",".join(str(v) if isinstance(v, int) else v if isinstance(v, str) else "*" if v == ANY else v.str_tuple() for v in t) + ")")  # _tuple_to_string(t))
+                # s.append("(" + ",".join(str(v) for v in t) + ")")
+                #  s.append("(" + "\u2260" + ",".join(str(v) for v in t) + ")")
                 previous = t
         return "".join(s)
     else:
