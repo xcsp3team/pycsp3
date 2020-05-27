@@ -276,7 +276,7 @@ def Extension(*, scope, table, positive=True):
     #            for i, v in enumerate(t):
     #                if v not in scope[i].dom:
     #                    raise ValueError("Pb: a value in the table is not present in the domain of the corresponding variable")
-    return ECtr(ConstraintExtension(scope, table, positive, smart_table))
+    return ECtr(ConstraintExtension(scope, table, positive, smart_table and options.keepsmartconditions))
 
 
 def Intension(node):
