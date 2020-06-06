@@ -12,12 +12,14 @@ UTF_LE = "\u2264"
 UTF_GE = "\u2265"
 UTF_GT = "\uFE65"  # "\u227B"
 UTF_LTGT = "\u2276"
-
+UTF_NOT_ELEMENT_OF = "\u00AC"  #""\u2209"
+UTF_COMPLEMENT = "\u2201"
 
 @total_ordering
 class Condition:
     def __init__(self, operator):
         self.operator = operator
+        assert isinstance(operator, TypeConditionOperator), "the operator " + str(operator) + " is not correct (should be of type TypeConditionOperator)"
 
     def _key(self):
         return str(type(self)), str(self.operator)
@@ -38,7 +40,6 @@ class Condition:
         condition = tuple(condition) if isinstance(condition, list) else condition  # we expect a condition to be given as a tuple (or a list)
         assert isinstance(condition, tuple) and len(condition) == 2, "a condition must a pair, given as a tuple (or a list)"
         operator = TypeConditionOperator.value_of(condition[0]) if isinstance(condition[0], str) else condition[0]
-        assert isinstance(operator, TypeConditionOperator), "the operator " + str(operator) + " is not correct (should be of type TypeConditionOperator)"
         right_operand = list(condition[1]) if isinstance(condition[1], (set, frozenset, GeneratorType)) else condition[1]
         checkType(right_operand, (int, Variable, range, [int, Variable]))
         if isinstance(right_operand, range) and right_operand.step != 1:
@@ -141,7 +142,7 @@ class ConditionInterval(Condition):
         if self.operator == TypeConditionOperator.IN:
             return self.right_operand()
         if self.operator == TypeConditionOperator.NOTIN:
-            return str(self.min) + UTF_LTGT + str(self.max)
+            return UTF_COMPLEMENT + self.right_operand()
         assert False
 
     def right_operand(self):
@@ -167,7 +168,7 @@ class ConditionSet(Condition):
         if self.operator == TypeConditionOperator.IN:
             return self.right_operand()
         if self.operator == TypeConditionOperator.NOTIN:
-            return "}" + ",".join(str(v) for v in self.t) + "{"  # UTF_NOTIN + self.right_operand()
+            return UTF_COMPLEMENT + self.right_operand()
         assert False
 
     def right_operand(self):
@@ -202,9 +203,9 @@ def _inside_outside(v, op):
     return ConditionSet(op, set(v))
 
 
-def inside(*v):
-    return _inside_outside(v, TypeConditionOperator.IN)
+# def inside(*v):
+#     return _inside_outside(v, TypeConditionOperator.IN)
 
 
-def outside(*v):
+def complement(*v):
     return _inside_outside(v, TypeConditionOperator.NOTIN)

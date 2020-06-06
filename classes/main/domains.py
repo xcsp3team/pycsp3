@@ -1,15 +1,21 @@
 from pycsp3.classes.auxiliary.ptypes import TypeVar
 from pycsp3.classes.auxiliary.values import IntegerValue, IntegerInterval, SymbolicValue
 
+import math
 
 class Domain:
     def __init__(self, *args):
-        self.type = None
-        self.original_values = []
-        self._add_value(*args)
-        assert self.type
-        self.original_values.sort()
-        self.values = []
+        if len(args) == 1 and args[0] == math.inf:  # special integer variable with an infinite domain
+            self.type = TypeVar.INTEGER
+            self.original_values = [math.inf]
+            self.values = [math.inf]
+        else:
+            self.type = None
+            self.original_values = []
+            self._add_value(*args)
+            assert self.type
+            self.original_values.sort()
+            self.values = []
 
     def set_type(self, type):
         if self.type is None:
@@ -49,6 +55,8 @@ class Domain:
         return super().__hash__()
 
     def __repr__(self):
+        if len(self.original_values) == 1 and self.original_values[0] == math.inf:
+            return "-infinity..+infinity"
         return " ".join(str(v) for v in self.original_values)
 
     def smallest_value(self):

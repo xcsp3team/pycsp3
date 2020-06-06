@@ -30,9 +30,16 @@ def cursing():
         return tuple.__mul__(self, other)
 
     def _list_mul(self, other):  # for being able to use scalar products
+        #print("mmmmm", self, other)
         if is_containing(self, (Variable, Node), check_first_only=True):
             return ScalarProduct(self, other)
+        # if is_containing(self, int) and is_containing(other, (Variable, Node)):
+        #     return ScalarProduct(self, other)
         return list.__mul__(self, other)
+
+    # def _list_rmul(self, other):
+    #     return _list_mul(other, self)
+
 
     def _tuple_contains(self, other):
         if not OpOverrider.activated:
@@ -120,6 +127,7 @@ def cursing():
     curse(dict, "__add__", _dict_add)
     curse(tuple, "__mul__", _tuple_mul)
     curse(list, "__mul__", _list_mul)
+    #curse(list, "__rmul__", _list_rmul)
     curse(tuple, "__contains__", _tuple_contains)
     curse(list, "__contains__", _list_contains)
     curse(set, "__contains__", _set_contains)
@@ -263,40 +271,40 @@ class OpOverrider:
     def __lt__(self, other):
         if self is None or other is None:
             return object.__lt__(self, other)
-        return PartialConstraint.__gt__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.LT, self, other)
+        return other.__gt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LT, self, other)
 
     def __le__(self, other):
         if self is None or other is None:
             return object.__le__(self, other)
-        return PartialConstraint.__ge__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.LE, self, other)
+        return other.__ge__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LE, self, other)
 
     def __ge__(self, other):
         if self is None or other is None:
             return object.__ge__(self, other)
         if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
-        return PartialConstraint.__le__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.GE, self, other)
+        return other.__le__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GE, self, other)
 
     def __gt__(self, other):
         if self is None or other is None:
             return object.__gt__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
-        return PartialConstraint.__lt__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.GT, self, other)
+        return other.__lt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GT, self, other)
 
     def __eq__(self, other):
         if self is None or other is None:
             return object.__eq__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
-        return PartialConstraint.__eq__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.EQ, self, other)
+        return other.__eq__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.EQ, self, other)
 
     def __ne__(self, other):
         if self is None or other is None:
             return object.__ne__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
-        return PartialConstraint.__ne__(other, self) if isinstance(other, PartialConstraint) else Node.build(TypeNode.NE, self, other)
+        return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
         return object.__or__(self, other) if None in {self, other} else Node.disjunction(self, other)
