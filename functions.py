@@ -1,11 +1,12 @@
 import inspect
+import math
 import types
 from collections import namedtuple
 from itertools import combinations, product, permutations
 
-from pycsp3.classes.auxiliary.conditions import Condition, lt, le, ge, gt, ne, inside, outside
-from pycsp3.classes.auxiliary.structures import Automaton, MDD
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, lt, le, ge, gt, ne, complement
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
+from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EIfThenElse, EObjective, EAnnotation, AnnEntities, TypeNode, Node)
 from pycsp3.classes.main.annotations import (
@@ -19,13 +20,13 @@ from pycsp3.classes.main.constraints import (
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
+from pycsp3.compiler import default_data
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import ANY, flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, \
+from pycsp3.tools.utilities import ANY, flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, \
     integer_scaling
-from pycsp3.compiler import default_data
 
 ''' Global Variables '''
 
@@ -64,7 +65,9 @@ def subvariant(name=None):
 
 
 def Var(term=None, *others, dom=None):
-    assert (term is None) != (dom is None)
+    if term is None and dom is None:
+        dom = Domain(math.inf)
+    assert not (term and dom)
     if term is not None:
         dom = flatten(term, others)
     if not isinstance(dom, Domain):
@@ -220,7 +223,8 @@ def satisfy(*args):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
         no_parameter_satisfy = i
-        assert isinstance(arg, (ECtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), "non authorized type " + str(type(arg))
+        assert isinstance(arg, (ECtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), "non authorized type " + str(arg) + " " + str(
+            type(arg))
         if arg is None:
             continue
         arg = list(arg) if isinstance(arg, types.GeneratorType) else arg
@@ -261,16 +265,44 @@ def Extension(*, scope, table, positive=True):
     scope = flatten(scope)
     checkType(scope, [Variable])
     assert isinstance(table, list)
-    checkType(table, [str, int, float, Condition])
+    assert len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
     checkType(positive, bool)
-    smart_table = len(scope) > 1 and any(isinstance(v, Condition) for t in table for v in t)
+
+    smart_table = False
+    if len(scope) == 1:
+        assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
+    elif all(isinstance(x, VariableInteger) for x in scope):
+
+        for i, t in enumerate(table):
+            assert isinstance(t, tuple)
+            assert len(t) == len(scope), ("The length of each tuple must be the same as the arity."
+                                          + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
+            tpl = None
+
+            for j, v in enumerate(t):
+                if isinstance(v, int) or v == ANY:
+                    if tpl:
+                        tpl.append(v)
+                else:
+                    smart_table = True
+                    if isinstance(v, range):
+                        if not tpl:
+                            tpl = list(t[:j])
+                        tpl.append(ConditionInterval(TypeConditionOperator.IN, v.start, v.stop - 1))
+                    elif isinstance(v, (tuple, list, set, frozenset)):
+                        assert all(isinstance(w, int) for w in v)
+                        if not tpl:
+                            tpl = list(t[:j])
+                        tpl.append(ConditionSet(TypeConditionOperator.IN, set(v)))
+                    else:
+                        assert isinstance(v, Condition)
+                        if tpl:
+                            tpl.append(v)
+            if tpl:
+                table[i] = tuple(tpl)
     if not options.keepsmartconditions and smart_table:
         table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
 
-    assert len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
-    assert isinstance(table[0], (tuple, int, str)), "Elements of tables are tuples or integers (or symbols)"
-    assert isinstance(table[0], (int, str)) or len(scope) == len(table[0]), (
-        "The length of each tuple must be the same as the arity." + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
     # if options.checker:
     #        for t in table:
     #            for i, v in enumerate(t):
@@ -778,4 +810,4 @@ def cp_array(*l):
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, inside, outside)
+    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, complement)
