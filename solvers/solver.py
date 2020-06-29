@@ -10,6 +10,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.classes.entities import VarEntities, EVarArray, EVar
 from pycsp3.tools.utilities import Stopwatch, flatten
 from pycsp3.dashboard import options
+from pycsp3.compiler import ABSCON, CHOCO
 
 
 def directory_of_solver(name):
@@ -87,16 +88,20 @@ class SolverProcess:
         self.stdout = None
         self.stderr = None
 
-    def solve(self, model, time_limit=0, n_restarts=0):
+    def solve(self, model, options):
         stopwatch = Stopwatch()
+        args_solver = ""
+        if self.name == ABSCON:
+            if "v" in options:
+                args_solver += " -v=1"
+            # TODO
+        elif self.name == CHOCO:
+            if "-v" in options:
+                pass
+                # TODO
         print("\nSolving by " + self.name + " in progress ... ")
-        if time_limit != 0:
-            model += " -t=" + str(time_limit) + "s"
-        if n_restarts != 0:
-            model += " -r_n=" + str(n_restarts)
-        model += " -cm -valh=Last"
-        print("  command: ", self.command + " " + model)
-        result = self.execute(self.command + " " + model)
+        print("  command: ", self.command + " " + model + " " + args_solver)
+        result = self.execute(self.command + " " + model + " " + args_solver)
         print("Solved by " + self.name + " in " + stopwatch.elapsed_time() + " seconds (add the option -ev to see totally the output of the solver).")
         return self.solution() if result else None
 
@@ -115,10 +120,10 @@ class SolverProcess:
     def solution(self):
         if self.stdout.find("<unsatisfiable") != -1 or self.stdout.find("s UNSATISFIABLE") != -1:
             return Instantiation("unsatisfiable", None, None)
+        if options.ev:
+            print("\n", self.stdout)
         if self.stdout.find("<instantiation") == -1 or self.stdout.find("</instantiation>") == -1:
             print("  actually, the instance was not solved (add the option -ev to have more details")
-            if options.ev:
-                print("\n", self.stdout)
             return None
         left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
         root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))

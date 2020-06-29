@@ -20,6 +20,8 @@ from pycsp3.tools.xcsp import build_document
 
 None_Values = ['None', '', 'null']  # adding 'none'?
 
+ABSCON, CHOCO = SOLVERS = ["AbsCon", "Choco"]
+
 
 class Compilation:
     string_model = None
@@ -206,13 +208,37 @@ def _compile():
 
     Compilation.done = True
 
-    if options.solve or options.solver:
-        if options.solver == "choco":
+    solving = ABSCON if options.solve else options.solver
+    if solving:
+        if solving[0] not in {'[', '('}:
+            assert all(c not in solving for c in [",", ']', ')'])
+            solver = solving
+            args = []
+        else:
+            assert solving[-1] in {']', ')'}
+            t = solving[1:-1].split(",")
+            curr = -1
+            for i in range(len(t)):
+                if curr != -1:
+                    t[curr] += "," + t[i]
+                    if ']' in t[i]:
+                        curr = -1
+                    t[i] = ""
+                elif '[' in t[i] and ']' not in t[i]:
+                    curr = i;
+            t = [v for v in t if v]  # we discard empty cells
+            solver = t[0]
+            args = t[1:]
+        # solver = s if s[0] not in {'[', '('} else s[1:re.search("[,)\]]", s).start()]
+        solver = next(ss for ss in SOLVERS if ss.lower() == solver.lower())
+        print("solver", solver, "args", args)
+
+        if solver == CHOCO:
             from pycsp3.solvers.chocosolver import ChocoProcess
-            solution = ChocoProcess().solve(filename)
+            solution = ChocoProcess().solve(filename, args)
         else:  # Fallback case => options.solver == "abscon":
             from pycsp3.solvers.abscon import AbsConProcess
-            solution = AbsConProcess().solve(filename)
+            solution = AbsConProcess().solve(filename, args)
 
         print()
         print(solution)

@@ -67,7 +67,7 @@ xcsp = (Tester(NAME)
         .add("CarSequencing", data="CarSequencing_dingbas.json", variant="table")  # 6 solutions
         .add("Crossword", data="Crossword_vg6-7-ogd.json")  # sat
         .add("Crossword", data="Crossword_h1501-lex.json")  # sat
-        .add("Crossword", data="Crossword_h0504-lex.json", variant="alt")
+        .add("Crossword", data="Crossword_h0504-lex.json", variant="alt")  # sat
         .add("Fapp", data="Fapp_ex2.json")  # optimum 13871
         .add("Fapp", data="Fapp_ex2.json", variant="short")  # optimum 13871
         # .add("Fapp", data="Fapp_01-0200.json")  # TODO too long
@@ -83,7 +83,7 @@ xcsp = (Tester(NAME)
         .add("Rack", data="Rack_r2.json")  # optimum 1100
         .add("Rack2", data="Rack_r2b.json")  # optimum 1100
         .add("RadarSurveillance", data="RadarSurveillance_8-24-3-2-00.json")  # sat
-        .add("Rcpsp", data="Rcpsp_j30-01-01.json")
+        .add("Rcpsp", data="Rcpsp_j30-01-01.json")  # optimum 43
         .add("Rlfap", data="Rlfap_card-scen-04.json", variant="card")  # optimum 46
         .add("Rlfap", data="Rlfap_span-scen-05.json", variant="span")  # optimum 792
         .add("Rlfap", data="Rlfap_max-graph-05.json", variant="max")  # optimum 221  (use -ub=222 with AbsCon to prove it, or -os=increasing)

@@ -20,13 +20,13 @@ same = (Tester(NAME)
         )
 
 xcsp = (Tester(NAME)
-        .add("DistinctVectors", data="[10,6,4]")
-        .add("Domino", data="[200,200]")
-        .add("Domino", data="[200,200]", variant="table", options_py="-recognizeSlides")
-        .add("Hanoi", data="5", options_py="-recognizeSlides")
-        .add("Knights", data="[16,4]", options_py="-recognizeSlides")
-        .add("Pigeons", data="6")
-        .add("Pigeons", data="6", variant="dec")
+        .add("DistinctVectors", data="[10,6,4]")  # sat
+        .add("Domino", data="[200,200]")  # 1 solution
+        .add("Domino", data="[200,200]", variant="table", options_py="-recognizeSlides")  # 1 solution
+        .add("Hanoi", data="5", options_py="-recognizeSlides")  # sat
+        .add("Knights", data="[16,4]", options_py="-recognizeSlides")  # 8096 solutions
+        .add("Pigeons", data="6")  # unsat
+        .add("Pigeons", data="6", variant="dec")  # unsat
         .add("Pions", data="[6,4]")
         .add("PropStress", data="20")
         .add("QueensPions", data="[6,4,3]")
