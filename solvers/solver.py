@@ -20,7 +20,7 @@ def directory_of_solver(name):
 
 def class_path_abscon():
     d = directory_of_solver("abscon")
-    return d + "AbsCon-20-05.jar" + os.pathsep + d + "xcsp3-tools-1.2.1-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
+    return d + "AbsCon-20-07.jar" + os.pathsep + d + "xcsp3-tools-1.2.1-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
 
 
 def class_path_chocosolver():
@@ -96,7 +96,7 @@ class SolverProcess:
                 args_solver += " -v=1"
             # TODO
         elif self.name == CHOCO:
-            if "-v" in options:
+            if "v" in options:
                 pass
                 # TODO
         print("\nSolving by " + self.name + " in progress ... ")
