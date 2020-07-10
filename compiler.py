@@ -210,13 +210,14 @@ def _compile():
 
     solving = ABSCON if options.solve else options.solver
     if solving:
-        if solving[0] not in {'[', '('}:
-            assert all(c not in solving for c in [",", ']', ')'])
-            solver = solving
-            args = []
-        else:
-            assert solving[-1] in {']', ')'}
-            t = solving[1:-1].split(",")
+        def option_parsing(s, recursive=False):
+            if s is None:
+                return None
+            if s[0] != '[':
+                assert "," not in s and "]" not in s
+                return s
+            assert s[-1] == ']'
+            t = s[1:-1].split(",")
             curr = -1
             for i in range(len(t)):
                 if curr != -1:
@@ -227,21 +228,82 @@ def _compile():
                 elif '[' in t[i] and ']' not in t[i]:
                     curr = i;
             t = [v for v in t if v]  # we discard empty cells
-            solver = t[0]
-            args = t[1:]
-        # solver = s if s[0] not in {'[', '('} else s[1:re.search("[,)\]]", s).start()]
+            t = [(k, None) if j == -1 else (k[:j], k[j + 1:]) for (j, k) in [(s.find("="), s) for s in t]]
+            return {k: v for (k, v) in [(k, option_parsing(v, recursive)) if recursive else (k, v) for (k, v) in t]}
+
+        def simplify_args_recursive():
+            if "limit" in args_recursive:
+                def handle_limit(s):
+                    if s.endswith("sols"):  # keep it at this position (because ends with s)
+                        args_recursive["limit_sols"] = s[:-4]
+                    elif s.endswith("runs"):
+                        args_recursive["limit_runs"] = s[:-4]
+                    elif s.endswith("h"):
+                        args_recursive["limit_time"] = str(int(s[:-1]) * 3600)
+                    elif s.endswith("m"):
+                        args_recursive["limit_time"] = str(int(s[:-1]) * 60)
+                    elif s.endswith("s"):
+                        args_recursive["limit_time"] = s[:-1]
+
+                v = args_recursive["limit"]
+                if isinstance(v, dict):
+                    for key in v:
+                        handle_limit(key)
+                else:
+                    handle_limit(v)
+                del args_recursive["limit"]
+            if "restarts" in args_recursive:
+                v = args_recursive["restarts"]
+                if isinstance(v, dict):
+                    for key in v:
+                        if key in ["monotonic", "geomtric", "luby"]:
+                            args_recursive["restarts_type"] = key
+                        elif key == "cutoff":
+                            args_recursive["restarts_cutoff"] = v[key]
+                        elif key == "factor":
+                            args_recursive["restarts_factor"] = v[key]
+                else:
+                    args_recursive["restarts_type"] = v
+                del args_recursive["restarts"]
+            if "v" in args_recursive:
+                args_recursive["verbose"] = "1"
+                del args_recursive["v"]
+            if "vv" in args_recursive:
+                args_recursive["verbose"] = "2"
+                del args_recursive["vv"]
+            if "vvv" in args_recursive:
+                args_recursive["verbose"] = "3"
+                del args_recursive["vvv"]
+
+        if solving[0] != '[':
+            assert "," not in solving and "]" not in solving
+            solver = solving
+            args = args_recursive = dict()
+        else:
+            assert solving[-1] == "]"
+            if "," not in solving:  # it means that only the name of the solver is between square brackets
+                solver = solving[1:-1]
+                args = args_recursive = dict()
+            else:
+                i = solving.find(",")
+                solver = solving[1:i]
+                args = option_parsing("[" + solving[i + 1:])
+                args_recursive = option_parsing("[" + solving[i + 1:], True)
+
+        simplify_args_recursive()
+
         solver = next(ss for ss in SOLVERS if ss.lower() == solver.lower())
         print("solver", solver, "args", args)
-
         if solver == CHOCO:
             from pycsp3.solvers.chocosolver import ChocoProcess
-            solution = ChocoProcess().solve(filename, args)
+            solution = ChocoProcess().solve(filename, solving, args, args_recursive)
         else:  # Fallback case => options.solver == "abscon":
             from pycsp3.solvers.abscon import AbsConProcess
-            solution = AbsConProcess().solve(filename, args)
+            solution = AbsConProcess().solve(filename, solving, args, args_recursive)
 
         print()
         print(solution)
+
 
     return filename
 
@@ -252,3 +314,5 @@ def usage(message):
     print("\n\nUsage: python3.5 <model> <data>")
     print("  - <model> is the name of a Python file containing a PyCSP3 model (i.e., a Python file with code posting variables/constraints/objectives)")
     print("  - <data> is either a fixed list of elementary data or the name of a JSON file")
+
+# solver = s if s[0] not in {'[', '('} else s[1:re.search("[,)\]]", s).start()]
