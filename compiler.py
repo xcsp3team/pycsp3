@@ -256,12 +256,14 @@ def _compile():
                 v = args_recursive["restarts"]
                 if isinstance(v, dict):
                     for key in v:
-                        if key in ["monotonic", "geomtric", "luby"]:
+                        if key in ["monotonic", "geometric", "luby"]:
                             args_recursive["restarts_type"] = key
                         elif key == "cutoff":
                             args_recursive["restarts_cutoff"] = v[key]
                         elif key == "factor":
                             args_recursive["restarts_factor"] = v[key]
+                        elif key == "gfactor":
+                            args_recursive["restarts_gfactor"] = v[key]
                 else:
                     args_recursive["restarts_type"] = v
                 del args_recursive["restarts"]

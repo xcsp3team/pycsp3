@@ -25,7 +25,7 @@ def class_path_abscon():
 
 def class_path_chocosolver():
     d = directory_of_solver("chocosolver")
-    return d + "choco-parsers-4.10.3-SNAPSHOT-jar-with-dependencies.jar"
+    return d + "choco-parsers-4.10.3-jar-with-dependencies.jar"
 
 
 class Instantiation:
@@ -167,13 +167,88 @@ class SolverProcess:
                 else:
                     args_solver += " -trace"
         elif self.name == CHOCO:
-            if "v" in dict_options:
-                pass
-                # TODO
+            print(string_options, dict_options, dict_simplified_options)
+            tl = -1
+            if "limit_time" in dict_simplified_options:
+                tl = dict_simplified_options["limit_time"]
+            args_solver += " -limit=[" + tl + "s"
+            free = False
+            if "limit_runs" in dict_simplified_options:
+                args_solver += "," + dict_simplified_options["limit_runs"] + "runs"
+                free=True
+            if "limit_sols" in dict_simplified_options:
+                args_solver += "," + dict_simplified_options["limit_sols"] + "sols"
+                free = True
+            args_solver += "]"
+            if "varheuristic" in dict_simplified_options:
+                dict_simplified_options["varh"] = dict_simplified_options["varHeuristic"]
+            if "varh" in dict_simplified_options:
+                v = dict_simplified_options["varh"]
+                if v == "dom/wdeg":
+                    v = "domwdeg"
+                if v not in ["input", "dom", "rand", "ibs", "impact", "abs", "activity", "chs", "domwdeg"]:
+                    print("heuristic " + v + " not implemented in Choco")
+                else:
+                    args_solver += " -varh=" + v
+                    free = True
+            if "valheuristic" in dict_simplified_options:
+                dict_simplified_options["valh"] = dict_simplified_options["valHeuristic"]
+            if "valh" in dict_simplified_options:
+                v = dict_simplified_options["valh"]
+                if v not in ["min", "med", "max", "rand", "best", ]:
+                    print("heuristic " + v + " not implemented in AbsCon")
+                else:
+                    args_solver += " -valh=" + v
+                    free = True
+            if "lastConflict" in dict_simplified_options:
+                dict_simplified_options["lc"] = dict_simplified_options["lastConflict"]
+            if "lc" in dict_simplified_options:
+                args_solver += " -lc=" + (dict_simplified_options["lc"] if dict_simplified_options["lc"] else "1")
+                free = True
+            if "cos" in dict_simplified_options:
+                args_solver += " -cos"
+                free = True
+            if "last" in dict_simplified_options:
+                args_solver += " -last"
+                free = True
+            if "restarts_type" in dict_simplified_options:
+                rt = dict_simplified_options["restarts_type"]
+                args_solver += " -restarts=[" + rt + ","
+                if "restarts_cutoff" in dict_simplified_options:
+                    args_solver += dict_simplified_options["restarts_cutoff"]+","
+                else:
+                    print("Choco needs 'restarts_cutoff' to be set when 'restarts_type' is set.")
+                if rt == "geometric":
+                    if "restarts_factor" in dict_simplified_options:
+                        args_solver += dict_simplified_options["restarts_gfactor"]+","
+                    else:
+                        print("Choco needs 'restarts_gfactor' to be set when 'geometric' is declared.")
+                if "restarts_factor" in dict_simplified_options:
+                    args_solver += dict_simplified_options["restarts_factor"]+","
+                else:
+                    print("Choco needs 'restarts_factor' to be set when 'restarts_type' is set.")
+                free = True
+            else:
+                if "restarts_cutoff" in dict_simplified_options \
+                        or "restarts_factor" in dict_simplified_options \
+                        or "restarts_gfactor" in dict_simplified_options:
+                    print("Choco needs 'restarts_type' to be set when 'restarts_cutoff' "
+                          "or 'restarts_factor' or 'restarts_gfactor' is set.")
+            if "lb" in dict_simplified_options or "ub" in dict_simplified_options:
+                print("Bounding objective not implemented in Choco")
+            if free: # required when some solving options are defined
+                args_solver += " -f"
+            if "seed" in dict_simplified_options:
+                args_solver += " -seed=" + dict_simplified_options["seed"]
+            if "verbose" in dict_simplified_options:
+                print("Verbose log not implemented in Choco")
+            if "trace" in dict_simplified_options:
+                print("Saving trace into a file not implemented in Choco")
         print("\nSolving by " + self.name + " in progress ... ")
         print("  command: ", self.command + " " + model + " " + args_solver)
         result = self.execute(self.command + " " + model + " " + args_solver)
-        print("Solved by " + self.name + " in " + stopwatch.elapsed_time() + " seconds (add the option -ev to see totally the output of the solver).")
+        print(
+            "Solved by " + self.name + " in " + stopwatch.elapsed_time() + " seconds (add the option -ev to see totally the output of the solver).")
         return self.solution() if result else None
 
     def execute(self, command):
@@ -197,7 +272,8 @@ class SolverProcess:
             print("  actually, the instance was not solved (add the option -ev to have more details")
             return None
         left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
-        root = etree.fromstring(self.stdout[left:right + len("</instantiation>")], etree.XMLParser(remove_blank_text=True))
+        root = etree.fromstring(self.stdout[left:right + len("</instantiation>")],
+                                etree.XMLParser(remove_blank_text=True))
         variables = []
         for token in root[0].text.split():
             r = VarEntities.get_item_with_name(token)
