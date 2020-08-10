@@ -213,6 +213,7 @@ def satisfy(*args):
     no_parameter_satisfy = 0
     nb_parameter_satisfy = len(args)
     comments1, comments2, tags1, tags2 = comments_and_tags_of_parameters_of(function_name="satisfy", args=args)
+
     t = []
     for i, arg in enumerate(args):
         if isinstance(arg, list) and len(arg) > 0:
