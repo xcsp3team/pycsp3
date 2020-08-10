@@ -11,8 +11,28 @@ COLOR_PY, COLOR_JV = BLUE, ORANGE
 DATA_PATH = "pycsp3" + os.sep + "problems" + os.sep + "data" + os.sep
 XCSP_PATH = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "xcsp" + os.sep
 
+PYTHON_VERSIONS = []
 
-def run(xcsp, diff=None, same=None):
+def run(xcsp, diff=None, same=None, python_versions=["python3"]):
+    PYTHON_VERSIONS.extend(python_versions)
+    
+    if len(sys.argv) != 1:
+        for i, para in enumerate(sys.argv):
+            if para.startswith("-version"):
+                PYTHON_VERSIONS.append(para.split("=")[1])
+                sys.argv.remove(para)
+                break
+    
+    print(sys.argv)
+        
+    for i, python_exec in enumerate(PYTHON_VERSIONS):
+        cmd = [python_exec, "--version"]
+        out, error = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        version = out.decode('utf-8').strip()
+        PYTHON_VERSIONS[i]=(python_exec, version)
+
+     
+        
     if len(sys.argv) == 1 or sys.argv[1] == "-xcsp":
         xcsp.load(mode=2)
     elif sys.argv[1] == "-same":
@@ -137,8 +157,8 @@ class Tester:
     def data_jv(self, data):
         return None if data is None else DATA_PATH + "json" + os.sep + data if data.endswith(".json") else data
 
-    def _command_py(self, model, data, variant, prs_py, options_py):
-        cmd = "python3 " + self.dir_pbs_py + model + ".py"
+    def _command_py(self, model, data, variant, prs_py, options_py, python_exec="python3"):
+        cmd = python_exec + " " + self.dir_pbs_py + model + ".py"
         if self.data_py(data):
             cmd += " -data=" + ("" if prs_py is None else DATA_PATH + "raw" + os.sep) + self.data_py(data)
         if prs_py:
@@ -174,37 +194,39 @@ class Tester:
 
     def load(self, *, mode=1):
         for model, data, variant, prs_py, prs_jv, special, dataSpecial, nameXML, options_py in self.instances:
-            assert self.dir_pbs_py, "Call the __init__() function of g6_testing (constructor) before execute()"
-            assert self.dir_pbs_jv, "Call the __init__() function of g6_testing (constructor) before execute()"
-            assert self.dir_xml_py, "Call the __init__() function of g6_testing (constructor) before execute()"
+            for python_exec in PYTHON_VERSIONS:
+                assert self.dir_pbs_py, "Call the __init__() function of g6_testing (constructor) before execute()"
+                assert self.dir_pbs_jv, "Call the __init__() function of g6_testing (constructor) before execute()"
+                assert self.dir_xml_py, "Call the __init__() function of g6_testing (constructor) before execute()"
 
-            self.name_xml = self.xml_name(model, data, variant, prs_py, prs_jv, nameXML)  # name of the XML file that will be generated
-            if os.path.isfile(self.xml_path_py()):
-                os.remove(self.xml_path_py())
-            if os.path.isfile(self.xml_path_jv()):
-                os.remove(self.xml_path_jv())
-            self.print_information(model, data, variant, prs_py, prs_jv)
-
-            self.execute_compiler("PyCSP", self._command_py(model, data, variant, prs_py if not prs_py or prs_py[-1] == 'y' else prs_py + ".py", options_py))
-            shutil.move(self.name_xml, self.xml_path_py())
-            if mode == 1:  # comparison with jv
-                self.execute_compiler("JvCSP", self._command_jv(model, data, variant, prs_jv, special, dataSpecial))
+                self.name_xml = self.xml_name(model, data, variant, prs_py, prs_jv, nameXML)  # name of the XML file that will be generated
+                if os.path.isfile(self.xml_path_py()):
+                    os.remove(self.xml_path_py())
+                if os.path.isfile(self.xml_path_jv()):
+                    os.remove(self.xml_path_jv())
+                self.print_information(model, data, variant, prs_py, prs_jv, python_exec)
+                
+                
+                self.execute_compiler("PyCSP", self._command_py(model, data, variant, prs_py if not prs_py or prs_py[-1] == 'y' else prs_py + ".py", options_py, python_exec[0]))
+                shutil.move(self.name_xml, self.xml_path_py())
+                if mode == 1:  # comparison with jv
+                    self.execute_compiler("JvCSP", self._command_jv(model, data, variant, prs_jv, special, dataSpecial))
+                    if os.name != 'nt':
+                        self.xml_indent(self.name_xml)
+                    shutil.move(self.name_xml, self.xml_path_jv())
+                    if os.name != 'nt':
+                        self.check()
+                elif mode == 2:  # comparison with recorded XCSP files
+                    if os.name != 'nt':
+                        # shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simualte a comparison with JvCSP
+                        print("  Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
+                        self.check(True)
+                else:
+                    with open(self.xml_path_py(), "r") as f:
+                        for line in f.readlines():
+                            print(COLOR_PY + line[0:-1])
                 if os.name != 'nt':
-                    self.xml_indent(self.name_xml)
-                shutil.move(self.name_xml, self.xml_path_jv())
-                if os.name != 'nt':
-                    self.check()
-            elif mode == 2:  # comparison with recorded XCSP files
-                if os.name != 'nt':
-                    # shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simualte a comparison with JvCSP
-                    print("  Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
-                    self.check(True)
-            else:
-                with open(self.xml_path_py(), "r") as f:
-                    for line in f.readlines():
-                        print(COLOR_PY + line[0:-1])
-            if os.name != 'nt':
-                os.system("rm -rf *.*~")  # for removing the temporary files
+                    os.system("rm -rf *.*~")  # for removing the temporary files
 
     def check(self, xcsp=False):
         f = self.xml_path_xcsp() if xcsp else self.xml_path_jv()
@@ -253,8 +275,10 @@ class Tester:
             print(WHITE + "Too many differences (" + str(len(lines)) + ") in " + self.name_xml + ": only " + str(limit) + " displayed lines")
         print(WHITE)
 
-    def print_information(self, model, data, variant, prs_py, prs_jv):
+    def print_information(self, model, data, variant, prs_py, prs_jv, python_exec):
         print("\n" + RED + "|================================================================|" + WHITE)
+        print("  Python: " + python_exec[0] + " (" + python_exec[1] + ")")
+        
         print("  Name: " + model + ("    Variant: " + variant if variant else ""))
         if data:
             print("  Data: " + data)
