@@ -11,37 +11,38 @@ COLOR_PY, COLOR_JV = BLUE, ORANGE
 DATA_PATH = "pycsp3" + os.sep + "problems" + os.sep + "data" + os.sep
 XCSP_PATH = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "xcsp" + os.sep
 
-PYTHON_VERSIONS = []
+PYTHON_VERSIONS = ["python3"]
+waiting = False
 
-def run(xcsp, diff=None, same=None, python_versions=["python3"]):
-    PYTHON_VERSIONS.extend(python_versions)
+
+def run(xcsp, diff=None, same=None):
+    global waiting
     
-    if len(sys.argv) != 1:
-        for i, para in enumerate(sys.argv):
-            if para.startswith("-version"):
-                PYTHON_VERSIONS.append(para.split("=")[1])
-                sys.argv.remove(para)
-                break
-    
-    print(sys.argv)
-        
+    # Load parameters
+    mode = "-xcsp"
+    for parameter in sys.argv:
+        if parameter.startswith("-version"):
+            for python_exec in parameter.split("=")[1].split(","):
+                PYTHON_VERSIONS.append(python_exec.replace("[","").replace("]",""))
+        if parameter == "-xcsp" or parameter == "-same" or parameter == "-diff":
+            mode = parameter
+        if parameter == "-waiting":
+            waiting = True
+
+    # Get versions
     for i, python_exec in enumerate(PYTHON_VERSIONS):
         cmd = [python_exec, "--version"]
-        out, error = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        out, _ = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         version = out.decode('utf-8').strip()
         PYTHON_VERSIONS[i]=(python_exec, version)
 
-     
-        
-    if len(sys.argv) == 1 or sys.argv[1] == "-xcsp":
+    # Launch the set of instances
+    if mode == "-xcsp":
         xcsp.load(mode=2)
-    elif sys.argv[1] == "-same":
+    elif mode == "-same":
         same.load()
-    elif sys.argv[1] == "-diff":
+    elif mode == "-diff":
         diff.load()
-
-
-waiting = False
 
 
 class Tester:
