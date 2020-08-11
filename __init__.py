@@ -8,7 +8,7 @@ if sys.version_info[0] < 3 or (sys.version_info[1] < 5 or sys.version_info[1] > 
     __message_version__ = os.linesep + " Must be using between Python 3.5 and Python 3.7" + os.linesep \
                     + " Your version is Python " + __python_version__  + os.linesep \
                     + " The version of pycsp3 made compatible with Python 3.8 will be released soon."
-    raise Exception(__message_version__)
+    #raise Exception(__message_version__) TODO for programming the 3.8 version
 
 from pycsp3.functions import *  # keep it at first position (before Compilation)
 from pycsp3.compiler import Compilation
@@ -32,9 +32,11 @@ if sys.argv:
         data = None
     else:
         # TODO: analysing if we have to compile (e..g, when running the tester, we should not try to do that)
-        Compilation.load()
-        data = Compilation.data
-
+        if not "pycsp3/problems/tests/" in sys.argv[0]: # First try for this TODO
+            Compilation.load()
+            data = Compilation.data
+        else:
+            Compilation.done=True
 
 def compile():
     return Compilation.compile()

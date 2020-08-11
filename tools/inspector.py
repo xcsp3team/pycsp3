@@ -39,30 +39,85 @@ def is_correct_frame(frame, f):
     return frame.function == f or frame.function == "__init__" and f in frame.code_context[0]
 
 
-def _extract_code(function_name):
+# Starts at the end of the function and runs it up until the function name is found
+def browse_code_bottom_to_top(lines, function_name):
+    codes = []
+    function_name_found = False 
+    for line in lines: 
+        if function_name_found is False:
+            codes.append(line)
+            if function_name in line and not is_comment_line(line):
+                function_name_found = True
+        else:
+            if is_continued_line(line) or is_empty_line(line) or is_comment_line(line):
+                codes.append(line)
+            else:
+                break
+    return codes
+    
+def browse_code_top_to_bottom(lines, function_name):
+    codes = []
+    function_name_found = False 
+    level = 0
+    for line in lines: 
+        if function_name in line and not is_comment_line(line):
+            function_name_found = True
+            codes.append(line)
+            line = line.split(function_name)[1]
+        else:    
+            codes.append(line)
+
+        if function_name_found:
+            for letter in line:
+                if letter in {'(', '['}:
+                    level = level + 1
+                if letter in {')', ']'}:
+                    level = level - 1
+        if level == 0:
+            break
+    return list(reversed(codes))
+
+def _extract_correct_frame(function_name):
     stack = list(reversed(inspect.stack(context=1)))
     frame = [(i - 1, stack[i - 1]) for i, frame in enumerate(stack) if is_correct_frame(frame, function_name) and i > 0][0]  # Get the correct frame
-    if frame[1].filename == "<stdin>":  # Console mode
+    return frame
+
+def _extract_code_index_last_line(frame, function_name):
+    lines = list(reversed(frame.code_context[:frame.index + 1]))
+    return browse_code_bottom_to_top(lines, function_name)
+
+def _extract_code_index_first_line(frame, function_name):
+    if function_name == "Var" or function_name == "VarArray":
+        lines = list(reversed(frame.code_context[:frame.index + 1]))
+        return browse_code_bottom_to_top(lines, function_name)
+    else:
+        lines = list(frame.code_context[frame.index:])
+        return browse_code_top_to_bottom(lines, function_name)
+
+def _extract_code(function_name):
+    
+    # Get the good frame
+    frame = _extract_correct_frame(function_name)
+
+    # Console case
+    if frame[1].filename == "<stdin>":  
         if os.name == 'nt':
             assert os.name != 'nt', "Console mode is not available on Windows"
         lines = reversed([readline.get_history_item(i + 1) for i in range(readline.get_current_history_length())])
-    else:  # File mode
-        frame = list(reversed(inspect.stack(context=100)))[frame[0]]  # Get the same frame but with at more 100 line of codes
-        lines = list(reversed(frame.code_context[:frame.index + 1]))
-    # Now, get code attached to the function (empty lines, comment lines, lines continued with '\', and code lines of the function)
-    code = []
-    found = False  # the function name
-    for line in lines:  # note that we process upward
-        if found is False:
-            code.append(line)
-            if function_name in line and not is_comment_line(line):
-                found = True
-        else:
-            if is_continued_line(line) or is_empty_line(line) or is_comment_line(line):
-                code.append(line)
-            else:
-                break
-    return code
+        return browse_code_bottom_to_top(lines, function_name)
+    
+    # The index of the line in the stack of the inspector change between python 3.7 and 3.8:
+    # In 3.8 the index is the line where the function name appears
+    # In 3.7 and lower versions, it is the line of the end of the function
+    # So the algorithms are completely different
+    frame = list(reversed(inspect.stack(context=100)))[frame[0]]
+    if sys.version_info[1] == 8:
+        codes = _extract_code_index_first_line(frame, function_name)
+    else:
+        codes = _extract_code_index_last_line(frame, function_name)
+
+    return codes
+    
 
 
 # returns a pair (left,right) of positions of the first occurrence of the specified separators in the line, or None
@@ -153,10 +208,10 @@ def comments_and_tags_of_parameters_of(*, function_name, args):
     tags1 = [""] * len(args)  # tags at first level
     tags2 = [[""] for _ in args]  # tags at second level
     code = list(reversed(_extract_code(function_name)))
+    
     are_empty_lines = [is_empty_line(line) for line in code]
 
     code = _delete_bracket_part(code, len(args))
-
     level = 0
     i1 = 0  # index indicating the position of the current parameter
     i2 = 0  # index indicating the position of the element of the current list (inside the current parameter)

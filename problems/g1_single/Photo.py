@@ -30,6 +30,8 @@ if not variant():
     )
 
 elif variant("aux"):
+    print("aux")
+
     # costs[i] is the cost of not respecting the ith preference
     costs = VarArray(size=len(preferences), dom={0, 1})
 
