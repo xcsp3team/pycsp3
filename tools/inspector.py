@@ -42,8 +42,8 @@ def is_correct_frame(frame, f):
 # Starts at the end of the function and runs it up until the function name is found
 def browse_code_bottom_to_top(lines, function_name):
     codes = []
-    function_name_found = False 
-    for line in lines: 
+    function_name_found = False
+    for line in lines:
         if function_name_found is False:
             codes.append(line)
             if function_name in line and not is_comment_line(line):
@@ -54,17 +54,18 @@ def browse_code_bottom_to_top(lines, function_name):
             else:
                 break
     return codes
-    
+
+
 def browse_code_top_to_bottom(lines, function_name):
     codes = []
-    function_name_found = False 
+    function_name_found = False
     level = 0
-    for line in lines: 
+    for line in lines:
         if function_name in line and not is_comment_line(line):
             function_name_found = True
             codes.append(line)
             line = line.split(function_name)[1]
-        else:    
+        else:
             codes.append(line)
 
         if function_name_found:
@@ -77,14 +78,17 @@ def browse_code_top_to_bottom(lines, function_name):
             break
     return list(reversed(codes))
 
+
 def _extract_correct_frame(function_name):
     stack = list(reversed(inspect.stack(context=1)))
     frame = [(i - 1, stack[i - 1]) for i, frame in enumerate(stack) if is_correct_frame(frame, function_name) and i > 0][0]  # Get the correct frame
     return frame
 
+
 def _extract_code_index_last_line(frame, function_name):
     lines = list(reversed(frame.code_context[:frame.index + 1]))
     return browse_code_bottom_to_top(lines, function_name)
+
 
 def _extract_code_index_first_line(frame, function_name):
     if function_name == "Var" or function_name == "VarArray":
@@ -94,22 +98,21 @@ def _extract_code_index_first_line(frame, function_name):
         lines = list(frame.code_context[frame.index:])
         return browse_code_top_to_bottom(lines, function_name)
 
+
 def _extract_code(function_name):
-    
-    # Get the good frame
-    frame = _extract_correct_frame(function_name)
+    frame = _extract_correct_frame(function_name)  # getting the good frame
 
     # Console case
-    if frame[1].filename == "<stdin>":  
+    if frame[1].filename == "<stdin>":
         if os.name == 'nt':
             assert os.name != 'nt', "Console mode is not available on Windows"
         lines = reversed([readline.get_history_item(i + 1) for i in range(readline.get_current_history_length())])
         return browse_code_bottom_to_top(lines, function_name)
-    
-    # The index of the line in the stack of the inspector change between python 3.7 and 3.8:
-    # In 3.8 the index is the line where the function name appears
-    # In 3.7 and lower versions, it is the line of the end of the function
-    # So the algorithms are completely different
+
+    # The index of the line in the stack of the inspector changes between python 3.7 and 3.8:
+    #  In 3.8 the index is the line where the function name appears
+    #  In 3.7 and lower versions, it is the line at the end of the function
+    #  So the algorithms are completely different
     frame = list(reversed(inspect.stack(context=100)))[frame[0]]
     if sys.version_info[1] == 8:
         codes = _extract_code_index_first_line(frame, function_name)
@@ -117,7 +120,6 @@ def _extract_code(function_name):
         codes = _extract_code_index_last_line(frame, function_name)
 
     return codes
-    
 
 
 # returns a pair (left,right) of positions of the first occurrence of the specified separators in the line, or None
@@ -177,10 +179,10 @@ def comment_and_tags_of(*, function_name):
 def _remove_matching_brackets(line):
     bracket = None
     for i, c in enumerate(line):
-        if c in {'(', '[', '{'}:  # todo add 'for'?
+        if c in {'(', '[', '{'}:  # todo adding 'for'?
             left = i
             bracket = c
-        elif (c, bracket) in {(')', '('), (']', '['), ('}', '{')}:  # todo add ('for', 'in') ?
+        elif (c, bracket) in {(')', '('), (']', '['), ('}', '{')}:  # todo adding ('for', 'in') ?
             right = i + 1
             break
     else:  # no break
@@ -208,7 +210,7 @@ def comments_and_tags_of_parameters_of(*, function_name, args):
     tags1 = [""] * len(args)  # tags at first level
     tags2 = [[""] for _ in args]  # tags at second level
     code = list(reversed(_extract_code(function_name)))
-    
+
     are_empty_lines = [is_empty_line(line) for line in code]
 
     code = _delete_bracket_part(code, len(args))
