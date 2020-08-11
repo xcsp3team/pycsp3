@@ -17,16 +17,16 @@ waiting = False
 
 def run(xcsp, diff=None, same=None):
     global waiting
-    
+
     # Load parameters
     mode = "-xcsp"
-    for parameter in sys.argv:
-        if parameter.startswith("-version"):
-            for python_exec in parameter.split("=")[1].split(","):
-                PYTHON_VERSIONS.append(python_exec.replace("[","").replace("]",""))
-        if parameter == "-xcsp" or parameter == "-same" or parameter == "-diff":
-            mode = parameter
-        if parameter == "-waiting":
+    for arg in sys.argv:
+        if arg.startswith("-version"):
+            for python_exec in arg.split("=")[1].split(","):
+                PYTHON_VERSIONS.append(python_exec.replace("[", "").replace("]", ""))
+        if arg == "-xcsp" or arg == "-same" or arg == "-diff":
+            mode = arg
+        if arg == "-waiting":
             waiting = True
 
     # Get versions
@@ -34,7 +34,7 @@ def run(xcsp, diff=None, same=None):
         cmd = [python_exec, "--version"]
         out, _ = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         version = out.decode('utf-8').strip()
-        PYTHON_VERSIONS[i]=(python_exec, version)
+        PYTHON_VERSIONS[i] = (python_exec, version)
 
     # Launch the set of instances
     if mode == "-xcsp":
@@ -206,9 +206,9 @@ class Tester:
                 if os.path.isfile(self.xml_path_jv()):
                     os.remove(self.xml_path_jv())
                 self.print_information(model, data, variant, prs_py, prs_jv, python_exec)
-                
-                
-                self.execute_compiler("PyCSP", self._command_py(model, data, variant, prs_py if not prs_py or prs_py[-1] == 'y' else prs_py + ".py", options_py, python_exec[0]))
+
+                self.execute_compiler("PyCSP", self._command_py(model, data, variant, prs_py if not prs_py or prs_py[-1] == 'y' else prs_py + ".py", options_py,
+                                                                python_exec[0]))
                 shutil.move(self.name_xml, self.xml_path_py())
                 if mode == 1:  # comparison with jv
                     self.execute_compiler("JvCSP", self._command_jv(model, data, variant, prs_jv, special, dataSpecial))
@@ -219,7 +219,7 @@ class Tester:
                         self.check()
                 elif mode == 2:  # comparison with recorded XCSP files
                     if os.name != 'nt':
-                        # shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simualte a comparison with JvCSP
+                        # shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simulate a comparison with JvCSP
                         print("  Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
                         self.check(True)
                 else:
@@ -279,7 +279,7 @@ class Tester:
     def print_information(self, model, data, variant, prs_py, prs_jv, python_exec):
         print("\n" + RED + "|================================================================|" + WHITE)
         print("  Python: " + python_exec[0] + " (" + python_exec[1] + ")")
-        
+
         print("  Name: " + model + ("    Variant: " + variant if variant else ""))
         if data:
             print("  Data: " + data)
