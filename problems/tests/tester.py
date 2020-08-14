@@ -17,13 +17,14 @@ waiting = False
 
 def run(xcsp, diff=None, same=None):
     global waiting
+    global PYTHON_VERSIONS
 
     # Load parameters
+    # TODO: regular expression for choose the versions
     mode = "-xcsp"
     for arg in sys.argv:
         if arg.startswith("-version"):
-            for python_exec in arg.split("=")[1].split(","):
-                PYTHON_VERSIONS.append(python_exec.replace("[", "").replace("]", ""))
+            PYTHON_VERSIONS=[python_exec.replace("[", "").replace("]", "") for python_exec in arg.split("=")[1].split(",")]
         if arg == "-xcsp" or arg == "-same" or arg == "-diff":
             mode = arg
         if arg == "-waiting":
@@ -226,6 +227,7 @@ class Tester:
                     with open(self.xml_path_py(), "r") as f:
                         for line in f.readlines():
                             print(COLOR_PY + line[0:-1])
+                # TODO replace rm -rf by os.remove() and check all system command
                 if os.name != 'nt':
                     os.system("rm -rf *.*~")  # for removing the temporary files
 

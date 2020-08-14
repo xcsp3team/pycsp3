@@ -1,14 +1,14 @@
 import os
 from collections import OrderedDict
 
-from pycsp3.classes.auxiliary.conditions import Condition
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import EVarArray, ECtr, TypeNode, Node
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.tools.compactor import compact
-from pycsp3.tools.utilities import is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error
+from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, to_ordinary_table
 
 
 class Diffs:
@@ -152,8 +152,53 @@ class ConstraintIntension(Constraint):
 class ConstraintExtension(Constraint):
     cache = dict()
 
-    @staticmethod
-    def caching(table):
+    def smart(self, scope, table):
+        for i, t in enumerate(table):
+            tbl = None
+            for j, v in enumerate(t):
+                if isinstance(v, int) or v == ANY:
+                    if tbl:
+                        tbl.append(v)
+                else:
+                    
+                    self.is_smart = True
+                    if isinstance(v, range):
+                        if not tbl:
+                            tbl = list(t[:j])
+                        tbl.append(ConditionInterval(TypeConditionOperator.IN, v.start, v.stop - 1))
+                    elif isinstance(v, (tuple, list, set, frozenset)):
+                        assert all(isinstance(w, int) for w in v)
+                        if not tbl:
+                            tbl = list(t[:j])
+                        tbl.append(ConditionSet(TypeConditionOperator.IN, set(v)))
+                    else:
+                        assert isinstance(v, Condition)
+                        if tbl:
+                            tbl.append(v)
+            if tbl:
+                table[i] = tuple(tbl)
+    
+        if not self.keepsmartconditions and self.is_smart:
+            table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
+        
+        return table
+
+    # we remove redundant tuples, if present
+    def remove_redundant(self, table):
+        tbl = None
+        for i in range(len(table) - 1):
+            if table[i] != table[i + 1]:
+                if tbl:
+                    tbl.append(table[i])
+            else:
+                if not tbl:
+                    tbl = table[:i]
+        if tbl:
+            tbl.append(table[-1])
+            table = tbl
+        return table
+                
+    def caching(self, scope, table):
         if len(table) == 0:
             return None
         arity = 1 if is_1d_list(table, (int, str)) else len(table[0])
@@ -161,18 +206,8 @@ class ConstraintExtension(Constraint):
         if h not in ConstraintExtension.cache:
             if arity > 1:
                 table.sort()
-                tbl = None  # we remove redundant tuples, if present
-                for i in range(len(table) - 1):
-                    if table[i] != table[i + 1]:
-                        if tbl:
-                            tbl.append(table[i])
-                    else:
-                        if not tbl:
-                            tbl = table[:i]
-                if tbl:
-                    tbl.append(table[-1])
-                    table = tbl
-
+                table = self.remove_redundant(table)
+                table = self.smart(scope, table)                
                 ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
             elif isinstance(table[0], int):
                 ConstraintExtension.cache[h] = integers_to_string(table)
@@ -180,15 +215,18 @@ class ConstraintExtension(Constraint):
                 ConstraintExtension.cache[h] = " ".join(v for v in sorted(table))
         return ConstraintExtension.cache[h]
 
-    def __init__(self, scope, table, positive=True, smart=False):
+    def __init__(self, scope, table, positive=True, keepsmartconditions=False):
         super().__init__(TypeCtr.EXTENSION)
-        if smart:
-            self.attributes.append((TypeXML.TYPE, "smart"))
+        self.keepsmartconditions = keepsmartconditions
+        self.is_smart = False
+
         assert is_1d_list(scope, Variable)
         assert len(table) == 0 or (len(scope) == 1 and (is_1d_list(table, int) or is_1d_list(table, str))) or (len(scope) > 1 and len(scope) == len(table[0]))
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)
-        self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, ConstraintExtension.caching(table), content_compressible=False)
-
+        self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, self.caching(scope, table), content_compressible=False)
+        if self.keepsmartconditions and self.is_smart:
+            self.attributes.append((TypeXML.TYPE, "smart"))
+        
     def close_to(self, other):
         if not self.similar_structure(other):
             return False

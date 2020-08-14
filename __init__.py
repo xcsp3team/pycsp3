@@ -1,11 +1,13 @@
+
+
 import atexit
 import os, sys
 
 __python_version__ = str(sys.version).split(os.linesep)[0].split(' ')[0]
 
-# if sys.version_info[0] < 3 or (sys.version_info[1] < 5 or sys.version_info[1] > 7):
-# __message_version__ = os.linesep + " Python should be between 3.5 and 3.7" + os.linesep + " Your version is Python " + __python_version__
-# raise Exception(__message_version__)
+if sys.version_info[0] < 3 or sys.version_info[1] < 5:
+    __message_version__ = os.linesep + " Python should be at least 3.5 or later" + os.linesep + " Your version is Python " + __python_version__
+    raise Exception(__message_version__)
 
 from pycsp3.functions import *  # keep it at first position (before Compilation)
 from pycsp3.compiler import Compilation
@@ -30,6 +32,8 @@ if sys.argv:
         data = None
     else:
         # TODO: analysing if we have to compile (e..g, when running the tester, we should not try to do that)
+        # TODO: Try this with the inspector 
+        print(sys.modules[__name__])
         if "pycsp3/problems/tests/" not in sys.argv[0]:  # TODO is it correct?
             Compilation.load()
             data = Compilation.data
