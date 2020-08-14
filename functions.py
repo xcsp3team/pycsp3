@@ -25,8 +25,7 @@ from pycsp3.dashboard import options
 from pycsp3.tools import curser
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import ANY, flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, \
-    integer_scaling
+from pycsp3.tools.utilities import ANY, flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, integer_scaling, to_ordinary_table
 
 ''' Global Variables '''
 
@@ -261,55 +260,33 @@ def satisfy(*args):
 
 ''' Generic Constraints (intension, extension) '''
 
-
+tata = 0
 def Extension(*, scope, table, positive=True):
+    global tata 
+    
+    import time
+
+    
     scope = flatten(scope)
     checkType(scope, [Variable])
     assert isinstance(table, list)
     assert len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
     checkType(positive, bool)
-
-    smart_table = False
+    
     if len(scope) == 1:
         assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
     elif all(isinstance(x, VariableInteger) for x in scope):
-
         for i, t in enumerate(table):
             assert isinstance(t, tuple)
             assert len(t) == len(scope), ("The length of each tuple must be the same as the arity."
-                                          + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
-            tpl = None
-
-            for j, v in enumerate(t):
-                if isinstance(v, int) or v == ANY:
-                    if tpl:
-                        tpl.append(v)
-                else:
-                    smart_table = True
-                    if isinstance(v, range):
-                        if not tpl:
-                            tpl = list(t[:j])
-                        tpl.append(ConditionInterval(TypeConditionOperator.IN, v.start, v.stop - 1))
-                    elif isinstance(v, (tuple, list, set, frozenset)):
-                        assert all(isinstance(w, int) for w in v)
-                        if not tpl:
-                            tpl = list(t[:j])
-                        tpl.append(ConditionSet(TypeConditionOperator.IN, set(v)))
-                    else:
-                        assert isinstance(v, Condition)
-                        if tpl:
-                            tpl.append(v)
-            if tpl:
-                table[i] = tuple(tpl)
-    if not options.keepsmartconditions and smart_table:
-        table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
+                                          + "Maybe a problem with slicing: you must for example write x#[i:i+3,0] instead of x[i:i+3][0]")
 
     # if options.checker:
     #        for t in table:
     #            for i, v in enumerate(t):
     #                if v not in scope[i].dom:
     #                    raise ValueError("Pb: a value in the table is not present in the domain of the corresponding variable")
-    return ECtr(ConstraintExtension(scope, table, positive, smart_table and options.keepsmartconditions))
+    return ECtr(ConstraintExtension(scope, table, positive, options.keepsmartconditions))
 
 
 def Intension(node):
@@ -773,23 +750,6 @@ def different_values(*args):
     assert all(isinstance(arg, int) for arg in args)
     return all(a != b for (a, b) in combinations(args, 2))
 
-
-def to_ordinary_table(table, domains, *, keep_any=False):
-    doms = [range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]
-    tbl = set()
-    if keep_any:
-        for t in table:
-            if any(isinstance(v, Condition) for v in t):  # v may be a Condition object (with method 'filtering')
-                tbl.update(product(*({v} if isinstance(v, int) or v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
-            else:
-                tbl.add(t)
-    else:
-        for t in table:
-            if any(v == ANY or isinstance(v, Condition) for v in t):  # v may be a ConditionValue object (with method 'filtering')
-                tbl.update(product(*({v} if isinstance(v, int) else doms[i] if v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
-            else:
-                tbl.add(t)
-    return tbl
 
 
 def cp_array(*l):

@@ -4,10 +4,12 @@ from collections.abc import Iterable
 from decimal import Decimal
 from multiprocessing import cpu_count, Pool
 from time import time
+from itertools import product
 
 from pycsp3.classes.main.domains import Domain
 from pycsp3.dashboard import options
 
+from pycsp3.classes.auxiliary import conditions
 
 class Stopwatch:
     def __init__(self):
@@ -223,6 +225,23 @@ def integers_to_string(numbers):
             t[-1].append(curr)  # to set the end of the interval
         prev = curr
     return ' '.join(str(i[0]) if len(i) == 1 else str(i[0]) + ('..' if i[0] != i[1] - 1 else ' ') + str(i[1]) for i in t)
+
+def to_ordinary_table(table, domains, *, keep_any=False):
+    doms = [range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]
+    tbl = set()
+    if keep_any:
+        for t in table:
+            if any(isinstance(v, conditions.Condition) for v in t):  # v may be a Condition object (with method 'filtering')
+                tbl.update(product(*({v} if isinstance(v, int) or v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
+            else:
+                tbl.add(t)
+    else:
+        for t in table:
+            if any(v == ANY or isinstance(v, conditions.Condition) for v in t):  # v may be a ConditionValue object (with method 'filtering')
+                tbl.update(product(*({v} if isinstance(v, int) else doms[i] if v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
+            else:
+                tbl.add(t)
+    return tbl
 
 
 def display_constraints(ctr_entities, separator=""):
