@@ -1,5 +1,6 @@
 import os
 from collections import OrderedDict
+from multiprocessing import cpu_count, Pool
 
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
@@ -152,6 +153,27 @@ class ConstraintIntension(Constraint):
 class ConstraintExtension(Constraint):
     cache = dict()
 
+    def is_smart(self, table, *, parallel=False):
+        if not parallel:
+            return any(not(isinstance(v, int) or v == ANY) for t in table for v in t)
+        else:
+            n_threads = cpu_count()
+            size = len(table) // n_threads
+            pool = Pool(n_threads)
+            left, right = 0, size
+            t = []
+
+            #TODO this is as longer as sequential :) see pool.imap or others methods
+            for piece in range(n_threads):
+                # call not in parallel
+                t.append(pool.apply_async(self.is_smart, args=(table[left:right],)))  
+                left += size
+                right = len(table) if piece in {n_threads - 2, n_threads - 1} else right + size
+            results = [r.get() for r in t]
+            pool.close()
+            pool.join()
+            return any(result is True for result in results) 
+
     def smart(self, scope, table):
         for i, t in enumerate(table):
             tbl = None
@@ -160,7 +182,7 @@ class ConstraintExtension(Constraint):
                     if tbl:
                         tbl.append(v)
                 else:
-                    self.is_smart = True
+                    self.issmart = True
                     if isinstance(v, range):
                         if not tbl:
                             tbl = list(t[:j])
@@ -177,7 +199,7 @@ class ConstraintExtension(Constraint):
             if tbl:
                 table[i] = tuple(tbl)
     
-        if not self.keepsmartconditions and self.is_smart:
+        if not self.keepsmartconditions and self.issmart:
             table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
         
         return table
@@ -203,8 +225,9 @@ class ConstraintExtension(Constraint):
         arity = 1 if is_1d_list(table, (int, str)) else len(table[0])
         
         if arity != 1:
+            print("is_smart():", self.is_smart(table, parallel=os.name != 'nt'))
             table = self.smart(scope, table)
-
+            
         h = hash(tuple(table))
         if h not in ConstraintExtension.cache:
             if arity > 1:
@@ -220,13 +243,13 @@ class ConstraintExtension(Constraint):
     def __init__(self, scope, table, positive=True, keepsmartconditions=False):
         super().__init__(TypeCtr.EXTENSION)
         self.keepsmartconditions = keepsmartconditions
-        self.is_smart = False
+        self.issmart = False
 
         assert is_1d_list(scope, Variable)
         assert len(table) == 0 or (len(scope) == 1 and (is_1d_list(table, int) or is_1d_list(table, str))) or (len(scope) > 1 and len(scope) == len(table[0]))
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)
         self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, self.caching(scope, table), content_compressible=False)
-        if self.keepsmartconditions and self.is_smart:
+        if self.keepsmartconditions and self.issmart:
             self.attributes.append((TypeXML.TYPE, "smart"))
         
     def close_to(self, other):
