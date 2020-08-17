@@ -260,13 +260,7 @@ def satisfy(*args):
 
 ''' Generic Constraints (intension, extension) '''
 
-tata = 0
 def Extension(*, scope, table, positive=True):
-    global tata 
-    
-    import time
-
-    
     scope = flatten(scope)
     checkType(scope, [Variable])
     assert isinstance(table, list)
