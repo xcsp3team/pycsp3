@@ -160,7 +160,6 @@ class ConstraintExtension(Constraint):
                     if tbl:
                         tbl.append(v)
                 else:
-                    
                     self.is_smart = True
                     if isinstance(v, range):
                         if not tbl:
@@ -202,12 +201,15 @@ class ConstraintExtension(Constraint):
         if len(table) == 0:
             return None
         arity = 1 if is_1d_list(table, (int, str)) else len(table[0])
+        
+        if arity != 1:
+            table = self.smart(scope, table)
+
         h = hash(tuple(table))
         if h not in ConstraintExtension.cache:
             if arity > 1:
-                table.sort()
+                table.sort()              
                 table = self.remove_redundant(table)
-                table = self.smart(scope, table)                
                 ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
             elif isinstance(table[0], int):
                 ConstraintExtension.cache[h] = integers_to_string(table)
