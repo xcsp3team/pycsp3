@@ -33,7 +33,6 @@ if sys.argv:
     else:
         # TODO: analysing if we have to compile (e..g, when running the tester, we should not try to do that)
         # TODO: Try this with the inspector 
-        print(sys.modules[__name__])
         if "pycsp3/problems/tests/" not in sys.argv[0]:  # TODO is it correct?
             Compilation.load()
             data = Compilation.data

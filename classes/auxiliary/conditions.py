@@ -104,6 +104,8 @@ class ConditionValue(Condition):
         return self.value
 
 
+
+
 class ConditionVariable(Condition):
     def __init__(self, operator, variable):
         super().__init__(operator)
