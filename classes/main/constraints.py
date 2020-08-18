@@ -1,6 +1,6 @@
 import os
 from collections import OrderedDict
-from multiprocessing import cpu_count, Pool
+from multiprocessing import cpu_count, Pool, Value
 
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
@@ -153,104 +153,113 @@ class ConstraintIntension(Constraint):
 class ConstraintExtension(Constraint):
     cache = dict()
 
-    def is_smart(self, table, *, parallel=False):
-        if not parallel:
-            return any(not(isinstance(v, int) or v == ANY) for t in table for v in t)
-        else:
-            n_threads = cpu_count()
-            size = len(table) // n_threads
-            pool = Pool(n_threads)
-            left, right = 0, size
-            t = []
+    # An attempt at parallelization showed no gain.
+    def is_smart(self, table):
+        return any(not(isinstance(v, (int, str)) or v == ANY) for t in table for v in t)
+        
 
-            #TODO this is as longer as sequential :) see pool.imap or others methods
-            for piece in range(n_threads):
-                # call not in parallel
-                t.append(pool.apply_async(self.is_smart, args=(table[left:right],)))  
-                left += size
-                right = len(table) if piece in {n_threads - 2, n_threads - 1} else right + size
-            results = [r.get() for r in t]
-            pool.close()
-            pool.join()
-            return any(result is True for result in results) 
-
-    def smart(self, scope, table):
+    def convert_smart_to_ordinary(self, scope, table):
         for i, t in enumerate(table):
-            tbl = None
+            tpl = None
             for j, v in enumerate(t):
                 if isinstance(v, int) or v == ANY:
-                    if tbl:
-                        tbl.append(v)
+                    if tpl:
+                        tpl.append(v)
                 else:
-                    self.issmart = True
                     if isinstance(v, range):
-                        if not tbl:
-                            tbl = list(t[:j])
-                        tbl.append(ConditionInterval(TypeConditionOperator.IN, v.start, v.stop - 1))
+                        if not tpl:
+                            tpl = list(t[:j])
+                        tpl.append(ConditionInterval(TypeConditionOperator.IN, v.start, v.stop - 1))
                     elif isinstance(v, (tuple, list, set, frozenset)):
                         assert all(isinstance(w, int) for w in v)
-                        if not tbl:
-                            tbl = list(t[:j])
-                        tbl.append(ConditionSet(TypeConditionOperator.IN, set(v)))
+                        if not tpl:
+                            tpl = list(t[:j])
+                        tpl.append(ConditionSet(TypeConditionOperator.IN, set(v)))
                     else:
                         assert isinstance(v, Condition)
-                        if tbl:
-                            tbl.append(v)
-            if tbl:
-                table[i] = tuple(tbl)
+                        if tpl:
+                            tpl.append(v)
+            if tpl:
+                table[i] = tuple(tpl)    
     
-        if not self.keepsmartconditions and self.issmart:
-            table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
-        
+        table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
         return table
 
     # we remove redundant tuples, if present
     def remove_redundant(self, table):
-        tbl = None
+        new_tuple = None
         for i in range(len(table) - 1):
             if table[i] != table[i + 1]:
-                if tbl:
-                    tbl.append(table[i])
+                if new_tuple:
+                    new_tuple.append(table[i])
             else:
-                if not tbl:
-                    tbl = table[:i]
-        if tbl:
-            tbl.append(table[-1])
-            table = tbl
+                if not new_tuple:
+                    new_tuple = table[:i]
+        if new_tuple:
+            new_tuple.append(table[-1])
+            table = new_tuple
         return table
                 
-    def caching(self, scope, table):
+    def process_table(self, scope, table):
         if len(table) == 0:
             return None
+
         arity = 1 if is_1d_list(table, (int, str)) else len(table[0])
-        
         if arity != 1:
-            print("is_smart():", self.is_smart(table, parallel=os.name != 'nt'))
-            table = self.smart(scope, table)
-            
-        h = hash(tuple(table))
-        if h not in ConstraintExtension.cache:
-            if arity > 1:
-                table.sort()              
-                table = self.remove_redundant(table)
-                ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
-            elif isinstance(table[0], int):
+            smart = self.is_smart(table) 
+        else:
+            h = hash(tuple(table))
+            if isinstance(table[0], int):
                 ConstraintExtension.cache[h] = integers_to_string(table)
             else:
                 ConstraintExtension.cache[h] = " ".join(v for v in sorted(table))
-        return ConstraintExtension.cache[h]
+            return ConstraintExtension.cache[h]
+            
+        if not smart:
+            if not self.restrictTablesWrtDomains:
+                # on peut utiliser le caching dans ce cas-là
+                h = hash(tuple(table))
+                if h not in ConstraintExtension.cache:
+                    table.sort()  
+                    table = self.remove_redundant(table)
+                    ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
+                return ConstraintExtension.cache[h]
+            else:
+                # on oublie le caching car les domaines ont un impact
+                table.sort()
+                return table_to_string(table, wrt_dommains=[x.dom for x in scope], parallel=os.name != 'nt')
+        else:    
+            # it is smart
+            if self.keepsmartconditions:
+                self.attributes.append((TypeXML.TYPE, "smart"))
+                h = hash(tuple(table))
+                if h not in ConstraintExtension.cache:
+                    table.sort()
+                    table = self.remove_redundant(table)
+                    ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
+                return ConstraintExtension.cache[h] 
+            else:
+                # on oublie le caching car les domaines ont un impact (lors de la conversion vers toOrdinary)
+                table = self.convert_smart_to_ordinary(scope,table)  
+                table = self.remove_redundant(table)
+                if not self.restrictTablesWrtDomains:
+                    return table_to_string(table, parallel=os.name != 'nt')
+                else:
+                    return table_to_string(table, wrt_dommains=[x.dom for x in scope], parallel=os.name != 'nt')
+                
 
-    def __init__(self, scope, table, positive=True, keepsmartconditions=False):
+    def __init__(self, scope, table, positive=True, keepsmartconditions=False, restrictTablesWrtDomains=False):
         super().__init__(TypeCtr.EXTENSION)
         self.keepsmartconditions = keepsmartconditions
-        self.issmart = False
-
+        self.restrictTablesWrtDomains = restrictTablesWrtDomains
+        
         assert is_1d_list(scope, Variable)
         assert len(table) == 0 or (len(scope) == 1 and (is_1d_list(table, int) or is_1d_list(table, str))) or (len(scope) > 1 and len(scope) == len(table[0]))
+        table = self.process_table(scope, table)
+
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)
-        self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, self.caching(scope, table), content_compressible=False)
-        if self.keepsmartconditions and self.issmart:
-            self.attributes.append((TypeXML.TYPE, "smart"))
+        self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, table, content_compressible=False)
+        
         
     def close_to(self, other):
         if not self.similar_structure(other):
