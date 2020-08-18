@@ -161,29 +161,28 @@ def matrix_to_string(m):
 def transitions_to_string(ts):
     return "".join(["(" + q1 + "," + str(v) + "," + q2 + ")" for (q1, v, q2) in ts])
 
+def is_correct_domains(t, domains):
+    for i, e in enumerate(t):
+        if isinstance(e, str):
+            return True
+        if e != ANY and e not in domains[i].all_values():
+            #print(e, "_", domains[i].all_values())
+            #print(type(e), "_", type(domains[i].all_values()[0]))
+            return False
+    return True
+    #return not any(e != ANY or e not in domains[i].all_values() for i, e in enumerate(t))
 
 def _tuple_to_string(t):
-    s = "("
-    for v in t:
-        if isinstance(v, int):
-            s += str(v)
-        elif isinstance(v, str):
-            s += v
-        else:  # must be a condition
-            s += v.str_tuple()
-    s += ")"
-    return s
+    return "(" + ",".join(str(v) if isinstance(v, int) else v if isinstance(v, str) else "*" if v == ANY else v.str_tuple() for v in t) + ")"
 
-
-def table_to_string(table, *, parallel=False):
+def table_to_string(table, wrt_dommains=None, *, parallel=False):
     if not parallel or len(table) < 100000:
         s = []
         previous = ""
         for t in table:  # table is assumed to be sorted (adding an assert?) ; only distinct tuples are kept
             if t != previous:
-                s.append("(" + ",".join(str(v) if isinstance(v, int) else v if isinstance(v, str) else "*" if v == ANY else v.str_tuple() for v in t) + ")")  # _tuple_to_string(t))
-                # s.append("(" + ",".join(str(v) for v in t) + ")")
-                #  s.append("(" + "\u2260" + ",".join(str(v) for v in t) + ")")
+                if wrt_dommains is None or is_correct_domains(t, wrt_dommains):
+                    s.append(_tuple_to_string(t))
                 previous = t
         return "".join(s)
     else:
@@ -194,7 +193,7 @@ def table_to_string(table, *, parallel=False):
         left, right = 0, size
         t = []
         for piece in range(n_threads):
-            t.append(pool.apply_async(table_to_string, args=(table[left:right],)))  # call not in parallel
+            t.append(pool.apply_async(table_to_string, args=(table[left:right],wrt_dommains)))  # call not in parallel
             left += size
             right = len(table) if piece in {n_threads - 2, n_threads - 1} else right + size
         assert right == len(table)

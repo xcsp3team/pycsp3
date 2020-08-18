@@ -169,6 +169,7 @@ class Tester:
             cmd += " -variant=" + variant
         if options_py:
             cmd += " " + options_py
+        #cmd += " -restrictTablesWrtDomains"
         return cmd
 
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
