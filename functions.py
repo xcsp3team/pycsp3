@@ -25,7 +25,8 @@ from pycsp3.dashboard import options
 from pycsp3.tools import curser
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import ANY, flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, integer_scaling, to_ordinary_table
+from pycsp3.tools.utilities import ANY, flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, \
+    integer_scaling, to_ordinary_table
 
 ''' Global Variables '''
 
@@ -260,26 +261,21 @@ def satisfy(*args):
 
 ''' Generic Constraints (intension, extension) '''
 
+
 def Extension(*, scope, table, positive=True):
     scope = flatten(scope)
     checkType(scope, [Variable])
     assert isinstance(table, list)
     assert len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
     checkType(positive, bool)
-    
+
     if len(scope) == 1:
         assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
-    elif all(isinstance(x, VariableInteger) for x in scope):
+    else:  #if all(isinstance(x, VariableInteger) for x in scope):
         for i, t in enumerate(table):
             assert isinstance(t, tuple)
             assert len(t) == len(scope), ("The length of each tuple must be the same as the arity."
                                           + "Maybe a problem with slicing: you must for example write x#[i:i+3,0] instead of x[i:i+3][0]")
-
-    # if options.checker:
-    #        for t in table:
-    #            for i, v in enumerate(t):
-    #                if v not in scope[i].dom:
-    #                    raise ValueError("Pb: a value in the table is not present in the domain of the corresponding variable")
     return ECtr(ConstraintExtension(scope, table, positive, options.keepsmartconditions, options.restricttableswrtdomains))
 
 
@@ -743,7 +739,6 @@ def diagonals_up(m, *, broken=False):
 def different_values(*args):
     assert all(isinstance(arg, int) for arg in args)
     return all(a != b for (a, b) in combinations(args, 2))
-
 
 
 def cp_array(*l):

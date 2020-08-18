@@ -9,10 +9,9 @@ Examples of Execution:
 from pycsp3 import *
 
 n, s = data or (4, 3)
-gap = 3 * n * n - 3 * n + 1
-sum_gap = sum(range(s, s + gap))
-assert sum_gap % (2 * n - 1) == 0, "No magic hexagon for order=" + str(n) + " and start=" + str(s)
-magic = sum_gap // (2 * n - 1)
+domain = range(s, s + 3 * n * n - 3 * n + 1)
+assert sum(domain) % (2 * n - 1) == 0, "No magic hexagon for order=" + str(n) + " and start=" + str(s)
+magic = sum(domain) // (2 * n - 1)
 d = n + n - 1  # longest diameter
 
 
@@ -23,7 +22,7 @@ def scope(i, right):
 
 
 # x represents the hexagon; on row x[i], only the first n - |n/2 - i| cells are useful (here, n = 'd').
-x = VarArray(size=[d, d], dom=lambda i, j: range(s, s + gap) if j < d - abs(d // 2 - i) else None)
+x = VarArray(size=[d, d], dom=lambda i, j: domain if j < d - abs(d // 2 - i) else None)
 
 satisfy(
     AllDifferent(x),
