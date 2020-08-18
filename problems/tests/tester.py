@@ -17,13 +17,14 @@ waiting = False
 
 def run(xcsp, diff=None, same=None):
     global waiting
+    global PYTHON_VERSIONS
 
     # Load parameters
+    # TODO: regular expression for choose the versions
     mode = "-xcsp"
     for arg in sys.argv:
         if arg.startswith("-version"):
-            for python_exec in arg.split("=")[1].split(","):
-                PYTHON_VERSIONS.append(python_exec.replace("[", "").replace("]", ""))
+            PYTHON_VERSIONS=[python_exec.replace("[", "").replace("]", "") for python_exec in arg.split("=")[1].split(",")]
         if arg == "-xcsp" or arg == "-same" or arg == "-diff":
             mode = arg
         if arg == "-waiting":
@@ -168,6 +169,7 @@ class Tester:
             cmd += " -variant=" + variant
         if options_py:
             cmd += " " + options_py
+        #cmd += " -restrictTablesWrtDomains"
         return cmd
 
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
@@ -226,19 +228,34 @@ class Tester:
                     with open(self.xml_path_py(), "r") as f:
                         for line in f.readlines():
                             print(COLOR_PY + line[0:-1])
+                # TODO replace rm -rf by os.remove() and check all system command
                 if os.name != 'nt':
                     os.system("rm -rf *.*~")  # for removing the temporary files
 
     def check(self, xcsp=False):
-        f = self.xml_path_xcsp() if xcsp else self.xml_path_jv()
+        xml_to_compare = self.xml_path_xcsp() if xcsp else self.xml_path_jv()
         self.counters["total"] += 1
-        if not os.path.isfile(self.xml_path_py()) or not os.path.isfile(f):
-            print("error: files not found " + self.xml_path_py() + " or " + f)
+        
+        # LZMA decompress
+        xml_lzma = None
+        if os.path.isfile(xml_to_compare+".lzma"):
+            xml_lzma = xml_to_compare+".lzma"
+            import lzma
+            with lzma.open(xml_lzma) as f:
+                data = f.read()
+                fp = open(xml_to_compare, "wb")
+                fp.write(data)
+                fp.close()
+            print("Decompress " + xml_lzma + " done.")
+
+        # Show differences    
+        if not os.path.isfile(self.xml_path_py()) or not os.path.isfile(xml_to_compare):
+            print("error: files not found " + self.xml_path_py() + " or " + xml_to_compare)
             self.counters["err"] += 1
             if waiting:
                 input("Press Enter to continue...")
         else:
-            lines = self.diff_files(self.xml_path_py(), f, self.tmpDiff)
+            lines = self.diff_files(self.xml_path_py(), xml_to_compare, self.tmpDiff)
             if len(lines) == 0:
                 print("  => No difference for " + self.name_xml)
             else:
@@ -247,6 +264,12 @@ class Tester:
                 self.print_differences(lines, limit=20 if len(lines) > 200 else None, xcsp=xcsp)
                 if waiting:
                     input("Press Enter to continue...")
+       
+        # LZMA delete the decompress file
+        if xml_lzma is not None:
+            os.remove(xml_to_compare)
+
+        # Count differences
         diff = (RED if self.counters["diff"] > 0 else GREEN) + str(self.counters["diff"])
         err = (RED if self.counters["err"] > 0 else GREEN) + str(self.counters["err"])
         print("\n" + WHITE_BOLD + "[Currently] " + diff + WHITE + " difference(s) on " + str(
