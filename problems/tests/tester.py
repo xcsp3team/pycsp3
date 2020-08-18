@@ -20,7 +20,7 @@ def run(xcsp, diff=None, same=None):
     global PYTHON_VERSIONS
 
     # Load parameters
-    # TODO: regular expression for choose the versions
+    # TODO: regular expression for extracting the versions?
     mode = "-xcsp"
     for arg in sys.argv:
         if arg.startswith("-version"):

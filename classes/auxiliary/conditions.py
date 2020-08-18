@@ -12,8 +12,9 @@ UTF_LE = "\u2264"
 UTF_GE = "\u2265"
 UTF_GT = "\uFE65"  # "\u227B"
 UTF_LTGT = "\u2276"
-UTF_NOT_ELEMENT_OF = "\u00AC"  #""\u2209"
+UTF_NOT_ELEMENT_OF = "\u00AC"  # ""\u2209"
 UTF_COMPLEMENT = "\u2201"
+
 
 @total_ordering
 class Condition:
@@ -102,8 +103,6 @@ class ConditionValue(Condition):
 
     def right_operand(self):
         return self.value
-
-
 
 
 class ConditionVariable(Condition):

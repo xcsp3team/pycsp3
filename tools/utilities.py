@@ -2,14 +2,14 @@ import sys
 import types
 from collections.abc import Iterable
 from decimal import Decimal
+from itertools import product
 from multiprocessing import cpu_count, Pool
 from time import time
-from itertools import product
 
+from pycsp3.classes.auxiliary import conditions
 from pycsp3.classes.main.domains import Domain
 from pycsp3.dashboard import options
 
-from pycsp3.classes.auxiliary import conditions
 
 class Stopwatch:
     def __init__(self):
@@ -161,27 +161,18 @@ def matrix_to_string(m):
 def transitions_to_string(ts):
     return "".join(["(" + q1 + "," + str(v) + "," + q2 + ")" for (q1, v, q2) in ts])
 
-def is_correct_domains(t, domains):
-    for i, e in enumerate(t):
-        if isinstance(e, str):
-            return True
-        if e != ANY and e not in domains[i].all_values():
-            #print(e, "_", domains[i].all_values())
-            #print(type(e), "_", type(domains[i].all_values()[0]))
-            return False
-    return True
-    #return not any(e != ANY or e not in domains[i].all_values() for i, e in enumerate(t))
 
-def _tuple_to_string(t):
-    return "(" + ",".join(str(v) if isinstance(v, int) else v if isinstance(v, str) else "*" if v == ANY else v.str_tuple() for v in t) + ")"
+def table_to_string(table, restricting_domains=None, *, parallel=False):
+    def _tuple_to_string(t):
+        return "(" + ",".join(str(v) if isinstance(v, int) else v if isinstance(v, str) else "*" if v == ANY else v.str_tuple() for v in t) + ")"
 
-def table_to_string(table, wrt_dommains=None, *, parallel=False):
     if not parallel or len(table) < 100000:
         s = []
         previous = ""
         for t in table:  # table is assumed to be sorted (adding an assert?) ; only distinct tuples are kept
             if t != previous:
-                if wrt_dommains is None or is_correct_domains(t, wrt_dommains):
+                if restricting_domains is None or isinstance(t[0], str) \
+                        or all(t[i] == ANY or t[i] in restricting_domains[i].all_values() for i in range(len(t))):
                     s.append(_tuple_to_string(t))
                 previous = t
         return "".join(s)
@@ -193,14 +184,14 @@ def table_to_string(table, wrt_dommains=None, *, parallel=False):
         left, right = 0, size
         t = []
         for piece in range(n_threads):
-            t.append(pool.apply_async(table_to_string, args=(table[left:right],wrt_dommains)))  # call not in parallel
+            t.append(pool.apply_async(table_to_string, args=(table[left:right], restricting_domains)))  # call not in parallel
             left += size
             right = len(table) if piece in {n_threads - 2, n_threads - 1} else right + size
         assert right == len(table)
         pieces = [r.get() for r in t]
         pool.close()
         pool.join()
-        # checking and removing similar tuples before returning the string ?
+        # checking and removing similar tuples at the frontiers before returning the string ?
         previous = None
         for piece in pieces:
             if previous and previous[-1] == piece[0]:
@@ -224,6 +215,7 @@ def integers_to_string(numbers):
             t[-1].append(curr)  # to set the end of the interval
         prev = curr
     return ' '.join(str(i[0]) if len(i) == 1 else str(i[0]) + ('..' if i[0] != i[1] - 1 else ' ') + str(i[1]) for i in t)
+
 
 def to_ordinary_table(table, domains, *, keep_any=False):
     doms = [range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]

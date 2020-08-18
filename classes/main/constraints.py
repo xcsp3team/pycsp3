@@ -1,6 +1,5 @@
 import os
 from collections import OrderedDict
-from multiprocessing import cpu_count, Pool, Value
 
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
@@ -9,7 +8,8 @@ from pycsp3.classes.entities import EVarArray, ECtr, TypeNode, Node
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.tools.compactor import compact
-from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, to_ordinary_table
+from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, \
+    to_ordinary_table
 
 
 class Diffs:
@@ -152,13 +152,10 @@ class ConstraintIntension(Constraint):
 
 class ConstraintExtension(Constraint):
     cache = dict()
+    cache_smart = dict()
 
-    # An attempt at parallelization showed no gain.
-    def is_smart(self, table):
-        return any(not(isinstance(v, (int, str)) or v == ANY) for t in table for v in t)
-        
-
-    def convert_smart_to_ordinary(self, scope, table):
+    @staticmethod
+    def convert_smart_to_ordinary(scope, table):
         for i, t in enumerate(table):
             tpl = None
             for j, v in enumerate(t):
@@ -180,87 +177,79 @@ class ConstraintExtension(Constraint):
                         if tpl:
                             tpl.append(v)
             if tpl:
-                table[i] = tuple(tpl)    
-    
-        table = sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
-        return table
+                table[i] = tuple(tpl)
 
-    # we remove redundant tuples, if present
-    def remove_redundant(self, table):
-        new_tuple = None
+        return sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
+
+    @staticmethod
+    def remove_redundant_tuples(table):
+        tbl = None
         for i in range(len(table) - 1):
             if table[i] != table[i + 1]:
-                if new_tuple:
-                    new_tuple.append(table[i])
+                if tbl:
+                    tbl.append(table[i])
             else:
-                if not new_tuple:
-                    new_tuple = table[:i]
-        if new_tuple:
-            new_tuple.append(table[-1])
-            table = new_tuple
+                if not tbl:
+                    tbl = table[:i]
+        if tbl:
+            tbl.append(table[-1])
+            table = tbl
         return table
-                
+
     def process_table(self, scope, table):
         if len(table) == 0:
             return None
 
-        arity = 1 if is_1d_list(table, (int, str)) else len(table[0])
-        if arity != 1:
-            smart = self.is_smart(table) 
-        else:
+        if len(scope) == 1:  # if arity 1
             h = hash(tuple(table))
-            if isinstance(table[0], int):
-                ConstraintExtension.cache[h] = integers_to_string(table)
-            else:
-                ConstraintExtension.cache[h] = " ".join(v for v in sorted(table))
+            if h not in ConstraintExtension.cache:
+                ConstraintExtension.cache[h] = integers_to_string(table) if isinstance(table[0], int) else " ".join(v for v in sorted(table))
             return ConstraintExtension.cache[h]
-            
+
+        h = hash(tuple(table))
+        if h in ConstraintExtension.cache_smart:
+            smart = ConstraintExtension.cache_smart[h]
+        else:
+            smart = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelisation attempt showed no gain.
+            ConstraintExtension.cache_smart[h] = smart
         if not smart:
             if not self.restrictTablesWrtDomains:
-                # on peut utiliser le caching dans ce cas-là
-                h = hash(tuple(table))
+                # we can use caching here
+                # h = hash(tuple(table))
+                # print("h", h, h in ConstraintExtension.cache)
                 if h not in ConstraintExtension.cache:
-                    table.sort()  
-                    table = self.remove_redundant(table)
+                    table.sort()
+                    table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
                 return ConstraintExtension.cache[h]
             else:
-                # on oublie le caching car les domaines ont un impact
+                # if ever we would want to use caching, we should include domains when computing hashes
                 table.sort()
-                return table_to_string(table, wrt_dommains=[x.dom for x in scope], parallel=os.name != 'nt')
-        else:    
-            # it is smart
-            if self.keepsmartconditions:
+                return table_to_string(table, restricting_domains=[x.dom for x in scope], parallel=os.name != 'nt')
+        else:  # it is smart
+            if self.keepsmartconditions:  # currently, no restriction of tables (wrt domains) in that case
                 self.attributes.append((TypeXML.TYPE, "smart"))
-                h = hash(tuple(table))
+                # h = hash(tuple(table))
                 if h not in ConstraintExtension.cache:
                     table.sort()
-                    table = self.remove_redundant(table)
+                    table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
-                return ConstraintExtension.cache[h] 
+                return ConstraintExtension.cache[h]
             else:
-                # on oublie le caching car les domaines ont un impact (lors de la conversion vers toOrdinary)
-                table = self.convert_smart_to_ordinary(scope,table)  
-                table = self.remove_redundant(table)
-                if not self.restrictTablesWrtDomains:
-                    return table_to_string(table, parallel=os.name != 'nt')
-                else:
-                    return table_to_string(table, wrt_dommains=[x.dom for x in scope], parallel=os.name != 'nt')
-                
+                # if ever we would want to use caching, we should include domains when computing hashes
+                table = ConstraintExtension.convert_smart_to_ordinary(scope, table)
+                table = ConstraintExtension.remove_redundant_tuples(table)
+                return table_to_string(table, restricting_domains=[x.dom for x in scope] if self.restrictTablesWrtDomains else None, parallel=os.name != 'nt')
 
     def __init__(self, scope, table, positive=True, keepsmartconditions=False, restrictTablesWrtDomains=False):
         super().__init__(TypeCtr.EXTENSION)
         self.keepsmartconditions = keepsmartconditions
         self.restrictTablesWrtDomains = restrictTablesWrtDomains
-        
         assert is_1d_list(scope, Variable)
         assert len(table) == 0 or (len(scope) == 1 and (is_1d_list(table, int) or is_1d_list(table, str))) or (len(scope) > 1 and len(scope) == len(table[0]))
-        table = self.process_table(scope, table)
-
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)
-        self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, table, content_compressible=False)
-        
-        
+        self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, self.process_table(scope, table), content_compressible=False)
+
     def close_to(self, other):
         if not self.similar_structure(other):
             return False

@@ -19,6 +19,13 @@ x = VarArray(size=[n + 2, m + 2], dom=lambda i, j: {0} if i in {0, n + 1} or j i
 
 table = ({(0, ANY, ANY, ANY, ANY)}
          | {tuple(ne(v) if k in (i, j) else v for k in range(5)) for i, j in combinations(range(1, 5), 2) for v in range(1, nValues)})
+# for v in range(1,nValues):
+#     for i, j in combinations(range(1, 5), 2):
+#         for vv in range(nValues):
+#             if v !=vv:
+#                  table |=  {tuple(vv if k in (i, j) else v for k in range(5))}
+
+
 
 satisfy(
     # putting two occurrences of each value on the board
