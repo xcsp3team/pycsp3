@@ -271,7 +271,7 @@ class SolverProcess:
         if self.stdout.find("<instantiation") == -1 or self.stdout.find("</instantiation>") == -1:
             print("  actually, the instance was not solved (add the option -ev to have more details")
             return None
-        left, right = self.stdout.find("<instantiation"), self.stdout.find("</instantiation>")
+        left, right = self.stdout.rfind("<instantiation"), self.stdout.rfind("</instantiation>")
         root = etree.fromstring(self.stdout[left:right + len("</instantiation>")],
                                 etree.XMLParser(remove_blank_text=True))
         variables = []
