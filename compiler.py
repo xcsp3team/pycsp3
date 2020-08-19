@@ -3,6 +3,7 @@ import json
 import lzma
 import os
 import os.path
+import platform
 import sys  # for DataVisitor import ast, inspect
 from collections import OrderedDict
 from importlib import util
@@ -44,7 +45,8 @@ class Compilation:
 
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "variant", "checker", "solver")
-    options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "solve", "restrictTablesWrtDomains")
+    options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "solve",
+                      "restrictTablesWrtDomains")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -168,8 +170,8 @@ def _compile():
         if sys.argv[1].endswith(".json"):
             with open(sys.argv[1], 'r') as f:
                 print(f.read())
-
     stopwatch = Stopwatch()
+    print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
     build_similar_constraints()
     options.time and print("\tWCK for generating groups:", stopwatch.elapsed_time(reset=True), "seconds")
     handle_slides()
@@ -185,11 +187,11 @@ def _compile():
         pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False, encoding='UTF-8').decode("UTF-8")
         with open(filename, "w") as f:
             f.write(pretty_text)
-            print("  Generation of the file " + filename + " completed.")
+            print("  Generation of the file " + filename + " completed.\n")
         if options.compress:
             with lzma.open(filename + ".lzma", "w") as f:
                 f.write(bytes(pretty_text, 'utf-8'))
-                print("\tGeneration of the file " + filename + ".lzma completed.")
+                print("\tGeneration of the file " + filename + ".lzma completed.\n")
         if options.display:
             print("\n", pretty_text)
         options.time and print("\tWCK for generating files:", stopwatch.elapsed_time(reset=True), "seconds")
@@ -204,7 +206,7 @@ def _compile():
             json.dump(prepare_for_json(Compilation.data), f)
         print("  Generation for data saving of the file " + json_prefix + '.json' + " completed.")
 
-    print("\tTotal wall clock time:", Compilation.stopwatch.elapsed_time(), "seconds")
+    print("  Total wall clock time:", Compilation.stopwatch.elapsed_time(), "seconds")
 
     Compilation.done = True
 
@@ -305,7 +307,6 @@ def _compile():
 
         print()
         print(solution)
-
 
     return filename
 

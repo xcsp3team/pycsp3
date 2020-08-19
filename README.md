@@ -1,6 +1,6 @@
-<h1 align="center"> PyCSP3 v1.1.x </h1>
+<h1 align="center"> PyCSP3 v1.2.0 </h1>
 
-This is the version 1.1.0 of PyCSP3, a library in Python 3 (version 3.5 or later) for modeling constrained combinatorial problems.
+This is the version 1.2.0 of PyCSP3, a library in Python 3 (version 3.5 or later) for modeling combinatorial constrained problems.
 PyCSP3 is inspired from both [JvCSP3](http://www.xcsp.org/modeling) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack); it is also related to [CPpy](https://github.com/tias/cppy).
 
 With PyCSP3, it is possible to generate instances of:
@@ -14,54 +14,68 @@ Note that:
 * a [well-documented guide](https://github.com/xcsp3team/pycsp3/blob/master/guidePyCSP3.pdf) is available
 * PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
 
-**Important**: another version, 1.2.0, is planned to be published within a few weeks/months.
-Currently, our main goal is :
-* to fix a few problems encountered with python 3.8 (with python 3.5, 3.6 and 3.7, things look good)
-* to give more helpful messages when the user (modeler) writes something incorrect
-
-At this stage, one can run:
+At this stage, one can run two embedded solvers:
 * the constraint solver 'AbsCon', with the option -solve or the option -solver=abscon
 * the constraint solver 'Choco, with the option -solver=choco
+Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf)
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
 In the medium/long term, we also plan to develop an interface that will allow users to pilot solvers with Python.
 
-# Installation
 
+# Installation from PyPi
 
-Installation instructions are currently given for Linux and Windows (instructions for Mac will be inserted soon)
+This is the easiest way of installing PySCP3.
+
+Note that you need first Python 3 (version 3.5, or later) to be installed.
+You can do it, for example, from [python<org](https://www.python.org/downloads/)
+
 
 ## Installing PyCSP3 (Linux)
 
-
-For installing PyCSP3, you need to execute:
+Check if 'pip3' is installed. If it is not the case, execute:
 
 ```console
 sudo apt install python3-pip
-sudo pip3 install pycsp3
+
 ```
 
-For using the -solve or -solver options, you need to install (at least) Java version 8:
+Then, install PyCSP3 with the command 'pip3':
+
+```console
+sudo pip3 install pycsp3
+
+```
+
+For using the -solve or -solver options, you need to have Java (at least, version 8) installed:
 
 ```console
 sudo apt-get install openjdk-8-jdk
 ```
 
+
+## Installing PyCSP3 (Mac OS)
+
+If Python 3 is installed on your system, the command 'pip3' should already be present.
+
+Install PyCSP3 with the command 'pip3':
+
+```console
+sudo pip3 install pycsp3
+```
+
+For using the -solve or -solver options, you need to have Java (at least, version 8) installed.
+
+
 ## Installing PyCSP3 (Windows)
 
-For installing Python, you need to install the version 3.7:
-
-https://www.python.org/downloads/release/python-377/
-
-Do not forget to tick the box 'Add Python 3.7 to PATH' during the installation.
-
-Next, you have to open the console and upgrade pip:
+You may need to upgrade 'pip'. Open the console and type:
 
 ```console
 python -m pip install --upgrade pip
 ```
 
-And for installing pycsp3:
+Then, for installing pycsp3, type:
 
 ```console
 python -m pip install pycsp3
@@ -83,11 +97,29 @@ You can check the java command by typing in your console:
 java --version
 ```
 
+# Installation by cloning from GitHub
+
+Here is an illustration for MAC OS.
+We assume that Python 3 is installed (otherwise, type `port install python38` for example), and consequently 'pip3' is also installed.
+In a console, type:
+```console
+git clone https://github.com/xcsp3team/pycsp3.git
+pip3 install numpy
+pip3 install lxml
+pip3 install py4j
+```
+
+You may need to update the environment variable 'PYTHONPATH', by typing for example:
+```console
+export PYTHONPATH=$PYTHONPATH:.
+```
+
+
 ## Updating PyCSP3
 
 For updating your version of PyCSP3, simply execute:
 
-For linux:
+For linux/Mac:
 
 ```console
 sudo pip3 install --upgrade pycsp3
@@ -99,20 +131,21 @@ For Windows:
 python -m pip install --upgrade pycsp3
 ```
 
+
 ## Copying a pool of models
 
 PyCSP3 is accompanied by more than 100 models.
 To get them in a subdirectory `problems` of your current directory, execute:
 
 ```console
-python3 -m pycsp3 (For linux)
+python3 -m pycsp3 (For linux/Mac)
 python -m pycsp3 (For Windows)
 ```
 
 And you can test the compilation of one of the models, for example:
 
 ```console
-python3 problems/g0_school/Pic.py (For Linux)
+python3 problems/g0_school/Pic.py (For Linux/Mac)
 python problems\g0_school\Pic.py (For Windows)
 ```
 
@@ -150,7 +183,9 @@ Among the options, we find:
 
 * ```-solve```: attempts to solve the instance with the embedded solver 'AbsCon'. It requires that Java version 8 (at least) is installed.
 
-* ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'abscon' or 'choco'. Important: it requires that Java version 8 (at least) is installed.
+* ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'abscon' or 'choco'.
+Important: it requires that Java version 8 (at least) is installed.
+Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf)
 
 
 # Some Examples
