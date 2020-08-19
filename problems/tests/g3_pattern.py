@@ -129,10 +129,10 @@ xcsp = (Tester(NAME)
         .add("Nonogram", data="Nonogram_example.txt", prs_py="Nonogram_Parser", prs_jv="Nonogram_Parser", variant="table")  # 1 solution
         .add("OpenStacks", data="OpenStacks_example.dzn", prs_py="OpenStacks_ParserZ", prs_jv="OpenStacks_ParserZ", variant="m1")  # optimum 45
         .add("OpenStacks", data="OpenStacks_example.dzn", prs_py="OpenStacks_ParserZ", prs_jv="OpenStacks_ParserZ", variant="m2")  # optimum 45
-        .add("PrizeCollecting", data="PrizeCollecting_example.dzn", prs_py="PrizeCollecting_ParserZ", prs_jv="PrizeCollecting_ParserZ", special=True)
-        .add("ProgressiveParty", data="ProgressiveParty_example.txt", prs_py="ProgressiveParty_Parser", prs_jv="ProgressiveParty_Parser", special=True) # optimum 5
+        .add("PrizeCollecting", data="PrizeCollecting_example.dzn", prs_py="PrizeCollecting_ParserZ")  # optimum 20
+        .add("ProgressiveParty", data="ProgressiveParty_example.txt", prs_py="ProgressiveParty_Parser") # optimum 5
         .add("PseudoBoolean", data="PseudoBoolean_example.opb", prs_py="PseudoBoolean_Parser", prs_jv="PseudoBoolean_Parser")  # optimum 20
-        .add("RectPacking", data="RectPacking_perfect-001.json", special=True)
+        .add("RectPacking", data="RectPacking_perfect-001.json")
         .add("RoomMate", data="RoomMate_sr0006.json")  # 2 solutions
         .add("Sat", data="Sat_flat30-16.json", variant="clause")  # 1482 solutions
         .add("Sat", data="Sat_flat30-16.json", variant="sum")  # 1482 solutions
