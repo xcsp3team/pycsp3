@@ -1,83 +1,59 @@
+"""
+Variant of the prize collecting travelling salesman problem.
+Here, a subtour is authorized (because there are negative costs)
+See also the model in Minizinc
+
+Example of Execution:
+  python3 PrizeCollecting.py -data=PrizeCollecting_example.dzn -dataparser=PrizeCollecting_ParserZ.py
+"""
+
 from pycsp3 import *
 
-
-# TODO : in progress
-
 n, prizes = data.n, data.prizes
-prizes = cp_array(row + [0] for row in prizes)  # we add 0 for unused nodes; note that cp_array is required so as to be able to use the constraint 'element'
 
-# s[i] is the node that succeeds to the ith node in the tour ('n' if unused)
-s = VarArray(size=n, dom=range(n + 1))
+# s[i] is the node that succeeds to the ith node in the tour (value i if unused)
+s = VarArray(size=n, dom=range(n))
 
-# p[i] is the position of the ith node in the tour ('n' if unused)
-p = VarArray(size=n + 1 if not variant() else n, dom=range(n + 1))
+# p[i] is the position (starting at 0) of the ith node in the tour (-1 if unused)
+p = VarArray(size=n, dom=range(-1, n))
 
 # g[i] is the gain collected when going from the ith node to its successor in the tour
 g = VarArray(size=n, dom=lambda i: set(prizes[i]))
+
+
+def table(i):
+    tbl = {(i,) + (ANY,) * n,  # i means "unused node", so this is not constraining (we use ANY)
+           (0,) + (ANY,) * n}  # 0 means "last node", so this is not constraining (we use ANY)
+    for j in range(1, n):
+        if j != i:
+            tbl |= {(j,) + tuple(v if k == j else v - 1 if k == i else ANY for k in range(n)) for v in range(1, n)}
+    return tbl
+
 
 satisfy(
     # node 0 is the first node of the tour
     p[0] == 0,
 
     # managing unused nodes
-    [iff(p[i] != n, s[i] != n) for i in range(n)],
+    [iff(p[i] != -1, s[i] != i) for i in range(n)],
 
     # each node appears at most once during the tour
     [Count(s, value=i) <= 1 for i in range(n)],
 
     # computing gains
-    [prizes[i][s[i]] == g[i] for i in range(n)]
+    [prizes[i][s[i]] == g[i] for i in range(n)],
+
+    # linking variables from s and p
+    [(s[i], *p) in table(i) for i in range(n)]
 )
-
-if not variant():
-    # z[i] is the position of the successor of the ith node in the tour
-    z = VarArray(size=n, dom=range(n + 1))
-
-
-    def tab():
-        return {(0, ANY, 0), (n, n, n)} | {(i, j, j + 1) for i in range(1, n) for j in range(0, n - 1)}
-
-
-    print(sorted(list(tab())))
-
-    satisfy(
-        p[n] == n,
-
-        #        [(s[i], p[i], z[i]) in tab() for i in range(n)],
-
-        [imply(p[i] == n - 1, z[i] != n) for i in range(n)],
-
-        [z[i] == ift(s[i] == 0, 0, ift(s[i] == n, n, p[i] + 1)) for i in range(n)],
-
-        [p[s[i]] == z[i] for i in range(n)]
-    )
-
-
-elif variant("table"):
-    def table(pos):
-        tbl = {(0,) + (ANY,) * n, (n,) + (ANY,) * n}  # tuple([-1] + [ANY] * n), tuple([0] + [ANY] * n)
-        for vi in range(n):
-            if vi != pos and (vi != 0 or pos == 0):
-                for vv in range(1, n):
-                    tbl.add((vi,) + tuple(vv if i == vi else vv - 1 if i == pos else ANY for i in range(n)))
-        return tbl
-
-
-    satisfy(
-        s[0] == 1,
-        s[1] == 2,
-        s[2] == 3,
-        s[3] == 4,
-
-        # linking variables from s and p
-        [(s[i], *p) in table(i) for i in range(n)]
-    )
 
 maximize(
     # maximizing the sum of collected gains
     Sum(g)
 )
 
+# Note that
 
-
-# [imply(s[i] > 0, p[s[i]] == p[i]+1) for i in range(n)],  # TODO alternative to the short table above. How to do that ? meta-constraint ifThen ? reification ?
+# a) we use a short table because the following statement is currently not handled in PyCSP3:
+#      [imply((s[i] != i) & (s[i] != 0), p[s[i]] == p[i]+1) for i in range(n)],
+#    we currently think about some extensions (meta-constraint?)

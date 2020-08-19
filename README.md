@@ -17,7 +17,7 @@ Note that:
 At this stage, one can run two embedded solvers:
 * the constraint solver 'AbsCon', with the option -solve or the option -solver=abscon
 * the constraint solver 'Choco, with the option -solver=choco
-Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf)
+Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf).
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
 In the medium/long term, we also plan to develop an interface that will allow users to pilot solvers with Python.
@@ -28,7 +28,7 @@ In the medium/long term, we also plan to develop an interface that will allow us
 This is the easiest way of installing PySCP3.
 
 Note that you need first Python 3 (version 3.5, or later) to be installed.
-You can do it, for example, from [python<org](https://www.python.org/downloads/)
+You can do it, for example, from [python.org](https://www.python.org/downloads/)
 
 
 ## Installing PyCSP3 (Linux)
@@ -185,7 +185,7 @@ Among the options, we find:
 
 * ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'abscon' or 'choco'.
 Important: it requires that Java version 8 (at least) is installed.
-Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf)
+Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf).
 
 
 # Some Examples
