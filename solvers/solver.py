@@ -99,6 +99,8 @@ class SolverProcess:
                 args_solver += " -r_n=" + dict_simplified_options["limit_runs"]
             if "limit_sols" in dict_simplified_options:
                 args_solver += " -s=" + dict_simplified_options["limit_sols"]
+            if "nolimit" in dict_simplified_options:
+                args_solver += " -s=all"
             if "varheuristic" in dict_simplified_options:
                 dict_simplified_options["varh"] = dict_simplified_options["varHeuristic"]
             if "varh" in dict_simplified_options:
@@ -246,13 +248,14 @@ class SolverProcess:
                 print("Saving trace into a file not implemented in Choco")
 
         verbose = options.solve or "verbose" in dict_simplified_options
+        command = self.command + " " + model + " " + args_solver + (" " + options.solverargs if options.solverargs else "")
         if not verbose:
             print("\n  * Solving by " + self.name + " in progress ... ")
         if verbose:
-            print("\n  command: ", self.command + " " + model + " " + args_solver + "\n")
+            print("\n  command: ", command + "\n")
         else:
-            print("    command: ", self.command + " " + model + " " + args_solver)
-        result = self.execute(self.command + " " + model + " " + args_solver, verbose)
+            print("    command: ", command)
+        result = self.execute(command, verbose)
         if not verbose:
             print("  * Solved by " + self.name + " in " + stopwatch.elapsed_time()
                   + " seconds (use the solver option v to see directly the output of the solver).\n")
