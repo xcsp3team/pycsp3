@@ -10,23 +10,6 @@ from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.classes.entities import VarEntities, EVarArray, EVar
 from pycsp3.tools.utilities import Stopwatch, flatten
 from pycsp3.dashboard import options
-from pycsp3.compiler import ABSCON, CHOCO
-
-
-def directory_of_solver(name):
-    # assert name in {"abscon", "choco"}  #  for the moment, two embedded solvers"
-    return os.sep.join(__file__.split(os.sep)[:-1]) + os.sep + name + os.sep
-
-
-def class_path_abscon():
-    d = directory_of_solver("abscon")
-    return d + "AbsCon-20-08.jar" + os.pathsep + d + "xcsp3-tools-1.2.2-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
-
-
-def class_path_chocosolver():
-    d = directory_of_solver("choco")
-    return d + "choco-parsers-4.10.3-jar-with-dependencies.jar"
-
 
 class Instantiation:
     def __init__(self, pretty_solution, variables, values):
@@ -39,7 +22,6 @@ class Instantiation:
 
     def __str__(self):
         return str(self.pretty_solution)
-
 
 class SolverPy4J:
     gateways = []
@@ -88,165 +70,19 @@ class SolverProcess:
         self.stdout = None
         self.stderr = None
 
-    def solve(self, model, string_options, dict_options, dict_simplified_options):
-        stopwatch = Stopwatch()
-        args_solver = ""
-        if self.name == ABSCON:
-            # print(string_options, dict_options, dict_simplified_options)
-            if "limit_time" in dict_simplified_options:
-                args_solver += " -t=" + dict_simplified_options["limit_time"] + "s"
-            if "limit_runs" in dict_simplified_options:
-                args_solver += " -r_n=" + dict_simplified_options["limit_runs"]
-            if "limit_sols" in dict_simplified_options:
-                args_solver += " -s=" + dict_simplified_options["limit_sols"]
-            if "nolimit" in dict_simplified_options:
-                args_solver += " -s=all"
-            if "varheuristic" in dict_simplified_options:
-                dict_simplified_options["varh"] = dict_simplified_options["varHeuristic"]
-            if "varh" in dict_simplified_options:
-                v = dict_simplified_options["varh"]
-                if v == "input":
-                    va = "Lexico"
-                elif v == "dom":
-                    va = "Dom"
-                elif v == "rand":
-                    va = "Rand"
-                elif v == "impact":
-                    va = "Impact"
-                elif v == "activity":
-                    va = "Activity"
-                elif v == "dom/ddeg":
-                    va = "DDegOnDom"
-                elif v == "dom/wdeg":
-                    va = "WDegOnDom"
-                else:
-                    va = None
-                    print("heuristic " + v + " not implemented in AbsCon")
-                if va:
-                    args_solver += " -varh=" + va
-            if "valheuristic" in dict_simplified_options:
-                dict_simplified_options["valh"] = dict_simplified_options["valHeuristic"]
-            if "valh" in dict_simplified_options:
-                v = dict_simplified_options["valh"]
-                if v == "min":
-                    va = "First"
-                elif v == "max":
-                    va = "Last"
-                elif v == "rand":
-                    va = "Rand"
-                else:
-                    va = None
-                    print("heuristic " + v + " not implemented in AbsCon")
-                if va:
-                    args_solver += " -valh=" + va
-            if "lastConflict" in dict_simplified_options:
-                dict_simplified_options["lc"] = dict_simplified_options["lastConflict"]
-            if "lc" in dict_simplified_options:
-                args_solver += " -lc" + ("=" + dict_simplified_options["lc"] if dict_simplified_options["lc"] else "")
-            if "cos" in dict_simplified_options:
-                args_solver += " -varh=Memory"
-            if "last" in dict_simplified_options:
-                print("Technique 'last' not implemented in AbsCon")
-            if "restarts_type" in dict_simplified_options:
-                v = dict_simplified_options["restarts_type"]
-                if v != "geometric":
-                    print("Restarts Type " + v + " not implemented in AbsCon")
-            if "restarts_cutoff" in dict_simplified_options:
-                args_solver += " -r_c=" + dict_simplified_options["restarts_cutoff"]
-            if "restarts_factor" in dict_simplified_options:
-                args_solver += " -r_f=" + dict_simplified_options["restarts_factor"]
-            if "lb" in dict_simplified_options:
-                args_solver += " -lb=" + dict_simplified_options["lb"]
-            if "ub" in dict_simplified_options:
-                args_solver += " -ub=" + dict_simplified_options["ub"]
-            if "seed" in dict_simplified_options:
-                args_solver += " -seed=" + dict_simplified_options["seed"]
-            if "verbose" in dict_simplified_options:
-                args_solver += " -v=" + dict_simplified_options["verbose"]
-            if "trace" in dict_simplified_options:
-                if dict_simplified_options["trace"]:
-                    print("Saving trace into a file not implemented in AbsCon")
-                else:
-                    args_solver += " -trace"
-        elif self.name == CHOCO:
-            print(string_options, dict_options, dict_simplified_options)
-            tl = -1
-            if "limit_time" in dict_simplified_options:
-                tl = dict_simplified_options["limit_time"]
-            args_solver += " -limit=[" + tl + "s"
-            free = False
-            if "limit_runs" in dict_simplified_options:
-                args_solver += "," + dict_simplified_options["limit_runs"] + "runs"
-                free = True
-            if "limit_sols" in dict_simplified_options:
-                args_solver += "," + dict_simplified_options["limit_sols"] + "sols"
-                free = True
-            args_solver += "]"
-            if "varheuristic" in dict_simplified_options:
-                dict_simplified_options["varh"] = dict_simplified_options["varHeuristic"]
-            if "varh" in dict_simplified_options:
-                v = dict_simplified_options["varh"]
-                if v == "dom/wdeg":
-                    v = "domwdeg"
-                if v not in ["input", "dom", "rand", "ibs", "impact", "abs", "activity", "chs", "domwdeg"]:
-                    print("heuristic " + v + " not implemented in Choco")
-                else:
-                    args_solver += " -varh=" + v
-                    free = True
-            if "valheuristic" in dict_simplified_options:
-                dict_simplified_options["valh"] = dict_simplified_options["valHeuristic"]
-            if "valh" in dict_simplified_options:
-                v = dict_simplified_options["valh"]
-                if v not in ["min", "med", "max", "rand", "best", ]:
-                    print("heuristic " + v + " not implemented in AbsCon")
-                else:
-                    args_solver += " -valh=" + v
-                    free = True
-            if "lastConflict" in dict_simplified_options:
-                dict_simplified_options["lc"] = dict_simplified_options["lastConflict"]
-            if "lc" in dict_simplified_options:
-                args_solver += " -lc=" + (dict_simplified_options["lc"] if dict_simplified_options["lc"] else "1")
-                free = True
-            if "cos" in dict_simplified_options:
-                args_solver += " -cos"
-                free = True
-            if "last" in dict_simplified_options:
-                args_solver += " -last"
-                free = True
-            if "restarts_type" in dict_simplified_options:
-                rt = dict_simplified_options["restarts_type"]
-                args_solver += " -restarts=[" + rt + ","
-                if "restarts_cutoff" in dict_simplified_options:
-                    args_solver += dict_simplified_options["restarts_cutoff"] + ","
-                else:
-                    print("Choco needs 'restarts_cutoff' to be set when 'restarts_type' is set.")
-                if rt == "geometric":
-                    if "restarts_factor" in dict_simplified_options:
-                        args_solver += dict_simplified_options["restarts_gfactor"] + ","
-                    else:
-                        print("Choco needs 'restarts_gfactor' to be set when 'geometric' is declared.")
-                if "restarts_factor" in dict_simplified_options:
-                    args_solver += dict_simplified_options["restarts_factor"] + ","
-                else:
-                    print("Choco needs 'restarts_factor' to be set when 'restarts_type' is set.")
-                free = True
-            else:
-                if "restarts_cutoff" in dict_simplified_options \
-                        or "restarts_factor" in dict_simplified_options \
-                        or "restarts_gfactor" in dict_simplified_options:
-                    print("Choco needs 'restarts_type' to be set when 'restarts_cutoff' "
-                          "or 'restarts_factor' or 'restarts_gfactor' is set.")
-            if "lb" in dict_simplified_options or "ub" in dict_simplified_options:
-                print("Bounding objective not implemented in Choco")
-            if free:  # required when some solving options are defined
-                args_solver += " -f"
-            if "seed" in dict_simplified_options:
-                args_solver += " -seed=" + dict_simplified_options["seed"]
-            if "verbose" in dict_simplified_options:
-                print("Verbose log not implemented in Choco")
-            if "trace" in dict_simplified_options:
-                print("Saving trace into a file not implemented in Choco")
+    def directory_of_solver(self, name):
+        # assert name in {"abscon", "choco"}  #  for the moment, two embedded solvers"
+        return os.sep.join(__file__.split(os.sep)[:-1]) + os.sep + name + os.sep
 
+    def class_path(self):
+        raise NotImplementedError("Must be overridden")
+    
+    def parse_options(self, string_options, dict_options, dict_simplified_options):
+        raise NotImplementedError("Must be overridden")
+    
+    def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict()):
+        stopwatch = Stopwatch()
+        args_solver = self.parse_options(string_options, dict_options, dict_simplified_options)    
         verbose = options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + args_solver + (" " + options.solverargs if options.solverargs else "")
         if not verbose:
