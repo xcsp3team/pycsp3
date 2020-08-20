@@ -297,16 +297,15 @@ def _compile():
         simplify_args_recursive()
 
         solver = next(ss for ss in SOLVERS if ss.lower() == solver.lower())
-        print("solver", solver, "args", args)
+        # print("solver", solver, "args", args)
         if solver == CHOCO:
-            from pycsp3.solvers.chocosolver import ChocoProcess
+            from pycsp3.solvers.choco import ChocoProcess
             solution = ChocoProcess().solve(filename, solving, args, args_recursive)
         else:  # Fallback case => options.solver == "abscon":
             from pycsp3.solvers.abscon import AbsConProcess
             solution = AbsConProcess().solve(filename, solving, args, args_recursive)
-
-        print()
-        print(solution)
+        if solution:
+            print(solution)
 
     return filename
 

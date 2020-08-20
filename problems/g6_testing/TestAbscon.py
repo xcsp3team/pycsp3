@@ -1,6 +1,6 @@
 from pycsp3 import *
 from pycsp3.solvers.abscon import AbsConProcess, AbsconPy4J
-from pycsp3.solvers.chocosolver import ChocoProcess
+from pycsp3.solvers.choco import ChocoProcess
 
 x = VarArray(size=10, dom=range(20))
 y = Var(range(20))
