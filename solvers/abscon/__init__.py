@@ -93,9 +93,14 @@ class AbsConProcess(SolverProcess):
         return args_solver        
 
 class AbsconPy4J(SolverPy4J):
+
+    def class_path(self):
+        d = self.directory_of_solver("abscon")
+        return d + "AbsCon-20-08.jar" + os.pathsep + d + "xcsp3-tools-1.2.2-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
+
     def __init__(self):
-        d = directory_of_solver("abscon")
-        c = class_path_abscon()
+        d = self.directory_of_solver("abscon")
+        c = self.class_path()
         super().__init__(name="AbsCon", command="java -cp " + c + os.pathsep + d + "py4j0.10.8.1.jar" + os.pathsep + d + " AbsConPy4J")
 
 # command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAbsCon/ StackEntryPoint"

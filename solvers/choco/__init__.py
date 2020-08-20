@@ -4,6 +4,8 @@ from pycsp3.solvers.solver import SolverProcess, SolverPy4J
 
 class ChocoProcess(SolverProcess):
 
+
+    
     def __init__(self):
         super().__init__(
             name="Choco-solver", 
@@ -94,9 +96,13 @@ class ChocoProcess(SolverProcess):
         return args_solver
 
 class ChocoPy4J(SolverPy4J):
+    
+    def class_path(self):
+        return self.directory_of_solver("choco") + "choco-parsers-4.10.3-jar-with-dependencies.jar"
+    
     def __init__(self):
-        d = directory_of_solver("choco")
-        c = class_path_chocosolver()
+        d = self.directory_of_solver("choco")
+        c = self.class_path()
         super().__init__(
             name="Choco-solver", 
             command="java -cp " + c + os.pathsep + d + "py4j0.10.8.1.jar" + os.pathsep + d + " ChocoSolverPy4J"
