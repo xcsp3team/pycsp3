@@ -23,46 +23,6 @@ class Instantiation:
     def __str__(self):
         return str(self.pretty_solution)
 
-class SolverPy4J:
-    gateways = []
-    processes = []
-
-    def __init__(self, *, name, command):
-        self.gateway, self.process = SolverPy4J.connexion(command)
-        SolverPy4J.gateways.append(self.gateway)
-        SolverPy4J.processes.append(self.process)
-        self.solver = self.gateway.entry_point.getSolver()
-        self.name = name
-
-    @staticmethod
-    def connexion(command):
-        process = subprocess.Popen(command.split())
-        cnt = 0
-        while True:
-            time.sleep(0.1)
-            cnt += 1
-            print("Py4J Connection " + str(cnt) + " ...")
-            try:
-                gateway = JavaGateway(eager_load=True)
-            except Py4JNetworkError:
-                print("Py4J Connection failed: No JVM listening ...")
-            else:
-                print("Py4J Successfully connected to the JVM")
-                return gateway, process
-        return gateway, process
-
-    @staticmethod
-    def close():
-        for element in SolverPy4J.gateways:
-            element.close()
-
-    def loadXCSP3(self, arg):
-        if isinstance(arg, str):
-            self.solver.loadXCSP3(arg)
-        elif isinstance(arg, IOBase):
-            self.solver.loadXCSP3(arg.name)
-
-
 class SolverProcess:
     def __init__(self, *, name, command):
         self.name = name
@@ -135,3 +95,43 @@ class SolverProcess:
 
         pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
         return Instantiation(pretty_solution, variables, values)
+
+class SolverPy4J(SolverProcess):
+    gateways = []
+    processes = []
+
+    def __init__(self, *, name, command):
+        self.gateway, self.process = SolverPy4J.connexion(command)
+        SolverPy4J.gateways.append(self.gateway)
+        SolverPy4J.processes.append(self.process)
+        self.solver = self.gateway.entry_point.getSolver()
+        super().__init__(name=name, command=command)
+        
+    @staticmethod
+    def connexion(command):
+        process = subprocess.Popen(command.split())
+        cnt = 0
+        while True:
+            time.sleep(0.1)
+            cnt += 1
+            print("Py4J Connection " + str(cnt) + " ...")
+            try:
+                gateway = JavaGateway(eager_load=True)
+            except Py4JNetworkError:
+                print("Py4J Connection failed: No JVM listening ...")
+            else:
+                print("Py4J Successfully connected to the JVM")
+                return gateway, process
+        return gateway, process
+
+    @staticmethod
+    def close():
+        for element in SolverPy4J.gateways:
+            element.close()
+
+    def loadXCSP3(self, arg):
+        if isinstance(arg, str):
+            self.solver.loadXCSP3(arg)
+        elif isinstance(arg, IOBase):
+            self.solver.loadXCSP3(arg.name)
+
