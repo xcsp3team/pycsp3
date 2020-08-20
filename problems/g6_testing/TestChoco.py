@@ -1,5 +1,5 @@
 from pycsp3 import *
-from pycsp3.solvers.chocosolver import ChocoProcess, ChocoPy4J
+from pycsp3.solvers.choco import ChocoProcess, ChocoPy4J
 
 n = 8
 

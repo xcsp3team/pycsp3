@@ -20,11 +20,11 @@ def directory_of_solver(name):
 
 def class_path_abscon():
     d = directory_of_solver("abscon")
-    return d + "AbsCon-20-07.jar" + os.pathsep + d + "xcsp3-tools-1.2.1-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
+    return d + "AbsCon-20-08.jar" + os.pathsep + d + "xcsp3-tools-1.2.2-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
 
 
 def class_path_chocosolver():
-    d = directory_of_solver("chocosolver")
+    d = directory_of_solver("choco")
     return d + "choco-parsers-4.10.3-jar-with-dependencies.jar"
 
 
@@ -92,7 +92,7 @@ class SolverProcess:
         stopwatch = Stopwatch()
         args_solver = ""
         if self.name == ABSCON:
-            print(string_options, dict_options, dict_simplified_options)
+            # print(string_options, dict_options, dict_simplified_options)
             if "limit_time" in dict_simplified_options:
                 args_solver += " -t=" + dict_simplified_options["limit_time"] + "s"
             if "limit_runs" in dict_simplified_options:
@@ -175,7 +175,7 @@ class SolverProcess:
             free = False
             if "limit_runs" in dict_simplified_options:
                 args_solver += "," + dict_simplified_options["limit_runs"] + "runs"
-                free=True
+                free = True
             if "limit_sols" in dict_simplified_options:
                 args_solver += "," + dict_simplified_options["limit_sols"] + "sols"
                 free = True
@@ -215,16 +215,16 @@ class SolverProcess:
                 rt = dict_simplified_options["restarts_type"]
                 args_solver += " -restarts=[" + rt + ","
                 if "restarts_cutoff" in dict_simplified_options:
-                    args_solver += dict_simplified_options["restarts_cutoff"]+","
+                    args_solver += dict_simplified_options["restarts_cutoff"] + ","
                 else:
                     print("Choco needs 'restarts_cutoff' to be set when 'restarts_type' is set.")
                 if rt == "geometric":
                     if "restarts_factor" in dict_simplified_options:
-                        args_solver += dict_simplified_options["restarts_gfactor"]+","
+                        args_solver += dict_simplified_options["restarts_gfactor"] + ","
                     else:
                         print("Choco needs 'restarts_gfactor' to be set when 'geometric' is declared.")
                 if "restarts_factor" in dict_simplified_options:
-                    args_solver += dict_simplified_options["restarts_factor"]+","
+                    args_solver += dict_simplified_options["restarts_factor"] + ","
                 else:
                     print("Choco needs 'restarts_factor' to be set when 'restarts_type' is set.")
                 free = True
@@ -236,7 +236,7 @@ class SolverProcess:
                           "or 'restarts_factor' or 'restarts_gfactor' is set.")
             if "lb" in dict_simplified_options or "ub" in dict_simplified_options:
                 print("Bounding objective not implemented in Choco")
-            if free: # required when some solving options are defined
+            if free:  # required when some solving options are defined
                 args_solver += " -f"
             if "seed" in dict_simplified_options:
                 args_solver += " -seed=" + dict_simplified_options["seed"]
@@ -244,40 +244,46 @@ class SolverProcess:
                 print("Verbose log not implemented in Choco")
             if "trace" in dict_simplified_options:
                 print("Saving trace into a file not implemented in Choco")
-        print("\nSolving by " + self.name + " in progress ... ")
-        print("  command: ", self.command + " " + model + " " + args_solver)
-        result = self.execute(self.command + " " + model + " " + args_solver)
-        print(
-            "Solved by " + self.name + " in " + stopwatch.elapsed_time() + " seconds (add the option -ev to see totally the output of the solver).")
+
+        verbose = options.solve or "verbose" in dict_simplified_options
+        if not verbose:
+            print("\n  * Solving by " + self.name + " in progress ... ")
+        if verbose:
+            print("\n  command: ", self.command + " " + model + " " + args_solver + "\n")
+        else:
+            print("    command: ", self.command + " " + model + " " + args_solver)
+        result = self.execute(self.command + " " + model + " " + args_solver, verbose)
+        if not verbose:
+            print("  * Solved by " + self.name + " in " + stopwatch.elapsed_time()
+                  + " seconds (use the solver option v to see directly the output of the solver).\n")
         return self.solution() if result else None
 
-    def execute(self, command):
+    def execute(self, command, verbose):
         try:
-            p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, error = p.communicate()
-            self.stdout, self.stderr = out.decode('utf-8'), error.decode('utf-8')
-            return True
+            if verbose:
+                subprocess.Popen(command.split()).communicate()
+                return False  # in verbose mode, the solution is ignored
+            else:
+                p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                out, error = p.communicate()
+                self.stdout, self.stderr = out.decode('utf-8'), error.decode('utf-8')
+                return True
         except KeyboardInterrupt:
-            out, error = p.communicate()
-            self.stdout, self.stderr = out.decode('utf-8'), error.decode('utf-8')
-            print(self.stdout)
             return False
 
     def solution(self):
         if self.stdout.find("<unsatisfiable") != -1 or self.stdout.find("s UNSATISFIABLE") != -1:
             return Instantiation("unsatisfiable", None, None)
-        if options.ev:
-            print("\n", self.stdout)
         if self.stdout.find("<instantiation") == -1 or self.stdout.find("</instantiation>") == -1:
             print("  actually, the instance was not solved (add the option -ev to have more details")
             return None
         left, right = self.stdout.rfind("<instantiation"), self.stdout.rfind("</instantiation>")
-        root = etree.fromstring(self.stdout[left:right + len("</instantiation>")],
-                                etree.XMLParser(remove_blank_text=True))
+        s = self.stdout[left:right + len("</instantiation>")].replace("\nv", "")
+        root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
         variables = []
         for token in root[0].text.split():
             r = VarEntities.get_item_with_name(token)
-            if isinstance(r, (EVar, Variable)):  # TODO why do we need these two cases?
+            if isinstance(r, (EVar, Variable)):  # TODO why do we need these two classes of variables?
                 variables.append(r)
             else:
                 for x in flatten(r.variables, keep_none=True):
