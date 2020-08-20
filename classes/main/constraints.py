@@ -173,7 +173,7 @@ class ConstraintExtension(Constraint):
                             tpl = list(t[:j])
                         tpl.append(ConditionSet(TypeConditionOperator.IN, set(v)))
                     else:
-                        assert isinstance(v, Condition)
+                        assert isinstance(v, Condition), "The element of this table do not will be of the type: " + str(type(v))
                         if tpl:
                             tpl.append(v)
             if tpl:
