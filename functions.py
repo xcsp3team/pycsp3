@@ -491,14 +491,19 @@ def Sum(term, *others, condition=None):
             checkType(coeffs, ([Variable, int], type(None)))
             OpOverrider.enable()
         return terms, coeffs
-
+    
+    
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    
+    
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
     auxiliary().replace_partial_constraints(terms)
 
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
-    # TODO control here some assumptions
+    # TODO control here some assumptions (empty list done, others to do ?)
+    assert terms, "Wrong parameter for " + str(terms) + " (empty list)" 
+    
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))
 
 
