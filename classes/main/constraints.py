@@ -572,10 +572,10 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             return other
         if isinstance(other, Node):
             return auxiliary().replace_node(other)
-        assert isinstance(other, (ScalarProduct, PartialConstraint))
+        assert isinstance(other, (ScalarProduct, PartialConstraint)), "Wrong type for " + str(other) 
         if isinstance(self.constraint, ConstraintSum) and (isinstance(other, ScalarProduct) or isinstance(other.constraint, ConstraintSum)):
             return other
-        assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition)
+        assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition), "Wrong type for " + str(other.constraint) + " or/and " + str(self.constraint)
         return auxiliary().replace_partial_constraint(other)
 
     def _simplify_operation(self, other):
