@@ -5,6 +5,7 @@ NAME = "g6_testing"
 xcsp = (Tester(NAME)
          # .add("UnitTestingIntension")
          .add("TestAbscon")
+         .add("TestChoco")
          .add("TestElement")
          .add("TestSlices")
          .add("TestSumConditions")

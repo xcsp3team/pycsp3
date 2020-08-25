@@ -1,0 +1,17 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" size="[10]"> 0..19 </array>
+    <var id="y"> 0..19 </var>
+  </variables>
+  <constraints>
+    <intension> eq(x[0],5) </intension>
+    <minimum>
+      <list> x[] </list>
+      <condition> (eq,y) </condition>
+    </minimum>
+    <sum>
+      <list> x[] </list>
+      <condition> (gt,100) </condition>
+    </sum>
+  </constraints>
+</instance>
