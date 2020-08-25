@@ -17,8 +17,7 @@ print("\nStatic solving:\n")
 solution = AbsConProcess().solve(instance)
 print("solution:", solution)
 
-#print("\nPy4j solving:\n")
-#solver = AbsconPy4J()
-#solver.loadXCSP3(instance)
-
-#print("in progress")
+# print("\nPy4j solving:\n")
+# solver = AbsconPy4J()
+# solver.loadXCSP3(instance)
+# print("in progress")

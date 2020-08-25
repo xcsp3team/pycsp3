@@ -1,4 +1,3 @@
-import os
 import subprocess
 import time
 from io import IOBase
@@ -6,12 +5,82 @@ from io import IOBase
 from lxml import etree
 from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
-from pycsp3.classes.main.variables import Variable, VariableInteger
-from pycsp3.classes.entities import VarEntities, EVarArray, EVar
-from pycsp3.tools.utilities import Stopwatch, flatten
+from pycsp3.classes.entities import VarEntities, EVar
+from pycsp3.classes.main.variables import Variable
 from pycsp3.dashboard import options
+from pycsp3.tools.utilities import Stopwatch, flatten
+
 
 def process_options(solving):
+    def option_parsing(s, recursive=False):
+        if s is None:
+            return None
+        if s[0] != '[':
+            assert "," not in s and "]" not in s
+            return s
+        assert s[-1] == ']'
+        t = s[1:-1].split(",")
+        curr = -1
+        for i in range(len(t)):
+            if curr != -1:
+                t[curr] += "," + t[i]
+                if ']' in t[i]:
+                    curr = -1
+                t[i] = ""
+            elif '[' in t[i] and ']' not in t[i]:
+                curr = i
+        t = [v for v in t if v]  # we discard empty cells
+        t = [(k, None) if j == -1 else (k[:j], k[j + 1:]) for (j, k) in [(s.find("="), s) for s in t]]
+        return {k: v for (k, v) in [(k, option_parsing(v, recursive)) if recursive else (k, v) for (k, v) in t]}
+
+    def simplify_args_recursive():
+        if "limit" in args_recursive:
+            def handle_limit(s):
+                if s.endswith("sols"):  # keep it at this position (because ends with s)
+                    args_recursive["limit_sols"] = s[:-4]
+                elif s.endswith("runs"):
+                    args_recursive["limit_runs"] = s[:-4]
+                elif s.endswith("h"):
+                    args_recursive["limit_time"] = str(int(s[:-1]) * 3600)
+                elif s.endswith("m"):
+                    args_recursive["limit_time"] = str(int(s[:-1]) * 60)
+                elif s.endswith("s"):
+                    args_recursive["limit_time"] = s[:-1]
+                elif s.endswith("no"):
+                    args_recursive["nolimit"] = True
+
+            v = args_recursive["limit"]
+            if isinstance(v, dict):
+                for key in v:
+                    handle_limit(key)
+            else:
+                handle_limit(v)
+            del args_recursive["limit"]
+        if "restarts" in args_recursive:
+            v = args_recursive["restarts"]
+            if isinstance(v, dict):
+                for key in v:
+                    if key in ["monotonic", "geometric", "luby"]:
+                        args_recursive["restarts_type"] = key
+                    elif key == "cutoff":
+                        args_recursive["restarts_cutoff"] = v[key]
+                    elif key == "factor":
+                        args_recursive["restarts_factor"] = v[key]
+                    elif key == "gfactor":
+                        args_recursive["restarts_gfactor"] = v[key]
+            else:
+                args_recursive["restarts_type"] = v
+            del args_recursive["restarts"]
+        if "v" in args_recursive:
+            args_recursive["verbose"] = "1"
+            del args_recursive["v"]
+        if "vv" in args_recursive:
+            args_recursive["verbose"] = "2"
+            del args_recursive["vv"]
+        if "vvv" in args_recursive:
+            args_recursive["verbose"] = "3"
+            del args_recursive["vvv"]
+
     args = args_recursive = dict()
     if solving[0] != '[':
         assert "," not in solving and "]" not in solving
@@ -24,78 +93,9 @@ def process_options(solving):
             i = solving.find(",")
             solver = solving[1:i]
             args = option_parsing("[" + solving[i + 1:])
-            args_recursive = option_parsing("[" + solving[i + 1:], True) 
+            args_recursive = option_parsing("[" + solving[i + 1:], True)
+            simplify_args_recursive()
     return solver, args, args_recursive
-
-def option_parsing(s, recursive=False):
-    if s is None:
-        return None
-    if s[0] != '[':
-        assert "," not in s and "]" not in s
-        return s
-    assert s[-1] == ']'
-    t = s[1:-1].split(",")
-    curr = -1
-    for i in range(len(t)):
-        if curr != -1:
-            t[curr] += "," + t[i]
-            if ']' in t[i]:
-                curr = -1
-            t[i] = ""
-        elif '[' in t[i] and ']' not in t[i]:
-            curr = i;
-    t = [v for v in t if v]  # we discard empty cells
-    t = [(k, None) if j == -1 else (k[:j], k[j + 1:]) for (j, k) in [(s.find("="), s) for s in t]]
-    return {k: v for (k, v) in [(k, option_parsing(v, recursive)) if recursive else (k, v) for (k, v) in t]}
-
-def simplify_args_recursive(args_recursive):
-    if "limit" in args_recursive:
-        def handle_limit(args_recursive, s):
-            if s.endswith("sols"):  # keep it at this position (because ends with s)
-                args_recursive["limit_sols"] = s[:-4]
-            elif s.endswith("runs"):
-                args_recursive["limit_runs"] = s[:-4]
-            elif s.endswith("h"):
-                args_recursive["limit_time"] = str(int(s[:-1]) * 3600)
-            elif s.endswith("m"):
-                args_recursive["limit_time"] = str(int(s[:-1]) * 60)
-            elif s.endswith("s"):
-                args_recursive["limit_time"] = s[:-1]
-            return args_recursive
-
-        v = args_recursive["limit"]
-        if isinstance(v, dict):
-            for key in v:
-                args_recursive = handle_limit(args_recursive, key)
-        else:
-            args_recursive = handle_limit(args_recursive, v)
-        del args_recursive["limit"]
-    if "restarts" in args_recursive:
-        v = args_recursive["restarts"]
-        if isinstance(v, dict):
-            for key in v:
-                if key in ["monotonic", "geometric", "luby"]:
-                    args_recursive["restarts_type"] = key
-                elif key == "cutoff":
-                    args_recursive["restarts_cutoff"] = v[key]
-                elif key == "factor":
-                    args_recursive["restarts_factor"] = v[key]
-                elif key == "gfactor":
-                    args_recursive["restarts_gfactor"] = v[key]
-        else:
-            args_recursive["restarts_type"] = v
-        del args_recursive["restarts"]
-    if "v" in args_recursive:
-        args_recursive["verbose"] = "1"
-        del args_recursive["v"]
-    if "vv" in args_recursive:
-        args_recursive["verbose"] = "2"
-        del args_recursive["vv"]
-    if "vvv" in args_recursive:
-        args_recursive["verbose"] = "3"
-        del args_recursive["vvv"]
-    return args_recursive
-
 
 
 class Instantiation:
@@ -110,28 +110,24 @@ class Instantiation:
     def __str__(self):
         return str(self.pretty_solution)
 
+
 class SolverProcess:
-    def __init__(self, *, name, command):
+    def __init__(self, *, name, command, cp):
         self.name = name
         self.command = command
+        self.cp = cp
         self.stdout = None
         self.stderr = None
 
-    def directory_of_solver(self, name):
-        # assert name in {"abscon", "choco"}  #  for the moment, two embedded solvers"
-        return os.sep.join(__file__.split(os.sep)[:-1]) + os.sep + name + os.sep
+    def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
+        raise NotImplementedError("Must be overridden")
 
-    def class_path(self):
-        raise NotImplementedError("Must be overridden")
-    
-    def parse_options(self, string_options, dict_options, dict_simplified_options):
-        raise NotImplementedError("Must be overridden")
-    
     def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict()):
         stopwatch = Stopwatch()
-        args_solver = self.parse_options(string_options, dict_options, dict_simplified_options)    
+        solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
+        solver_args += " " + dict_options["args"] if "args" in dict_options else ""
         verbose = options.solve or "verbose" in dict_simplified_options
-        command = self.command + " " + model + " " + args_solver + (" " + options.solverargs if options.solverargs else "")
+        command = self.command + " " + model + " " + solver_args
         if not verbose:
             print("\n  * Solving by " + self.name + " in progress ... ")
         if verbose:
@@ -183,17 +179,18 @@ class SolverProcess:
         pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
         return Instantiation(pretty_solution, variables, values)
 
-class SolverPy4J(SolverProcess):
+
+class SolverPy4J(SolverProcess):  # TODO in progress
     gateways = []
     processes = []
 
-    def __init__(self, *, name, command):
+    def __init__(self, *, name, command, cp):
         self.gateway, self.process = SolverPy4J.connexion(command)
         SolverPy4J.gateways.append(self.gateway)
         SolverPy4J.processes.append(self.process)
         self.solver = self.gateway.entry_point.getSolver()
-        super().__init__(name=name, command=command)
-        
+        super().__init__(name=name, command=command, cp=cp)
+
     @staticmethod
     def connexion(command):
         process = subprocess.Popen(command.split())
@@ -221,4 +218,3 @@ class SolverPy4J(SolverProcess):
             self.solver.loadXCSP3(arg)
         elif isinstance(arg, IOBase):
             self.solver.loadXCSP3(arg.name)
-
