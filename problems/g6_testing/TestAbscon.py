@@ -1,6 +1,5 @@
 from pycsp3 import *
-from pycsp3.solvers.abscon import AbsConProcess, AbsconPy4J
-from pycsp3.solvers.choco import ChocoProcess
+from pycsp3.solvers.abscon import *
 
 x = VarArray(size=10, dom=range(20))
 y = Var(range(20))
@@ -18,8 +17,8 @@ print("\nStatic solving:\n")
 solution = AbsConProcess().solve(instance)
 print("solution:", solution)
 
-print("\nPy4j solving:\n")
-solver = AbsconPy4J()
-solver.loadXCSP3(instance)
+#print("\nPy4j solving:\n")
+#solver = AbsconPy4J()
+#solver.loadXCSP3(instance)
 
-print("in progress")
+#print("in progress")
