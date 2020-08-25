@@ -19,7 +19,7 @@ except AssertionError as e:
 g1 = VarArray(size=[e for e in range(1, 5)], dom=range(100))
 g2 = VarArray(size=[e for e in range(1, 5)], dom=[1, 2, 3])
 g3 = VarArray(size=[e for e in range(1, 5)], dom={1, 2, 3})
-g4= VarArray(size=[e for e in range(1, 5)], dom=(1, 2, 3))
+g4 = VarArray(size=[e for e in range(1, 5)], dom=(1, 2, 3))
 
 z1 = VarArray(size=[2] * 10, dom=range(100))
 

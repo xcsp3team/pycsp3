@@ -10,7 +10,6 @@ x = VarArray(size=[2, 2], dom=range(150))
 y = Var(dom=range(5))
 z = Var(dom=range(5))
 
-
 satisfy(
     t[a][b] == r,
     a + b + 1 == r

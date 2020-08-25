@@ -2,19 +2,19 @@ import os
 
 from pycsp3.solvers.solver import SolverProcess, SolverPy4J
 
+CHOCO_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
+CHOCO_CP = CHOCO_DIR + "choco-parsers-4.10.3-jar-with-dependencies.jar"
+
+
 class ChocoProcess(SolverProcess):
-    
     def __init__(self):
         super().__init__(
-            name="Choco-solver", 
-            command="java -cp " + self.class_path() + " org.chocosolver.parser.xcsp.ChocoXCSP"
+            name="Choco-solver",
+            command="java -cp " + CHOCO_CP + " org.chocosolver.parser.xcsp.ChocoXCSP", cp=CHOCO_CP
         )
 
-    def class_path(self):
-        return self.directory_of_solver("choco") + "choco-parsers-4.10.3-jar-with-dependencies.jar"
-
-    def parse_options(self, string_options, dict_options, dict_simplified_options):
-        args_solver = ""            
+    def parse_general_options(self, string_options, dict_options, dict_simplified_options):
+        args_solver = ""
         tl = -1
         if "limit_time" in dict_simplified_options:
             tl = dict_simplified_options["limit_time"]
@@ -80,7 +80,7 @@ class ChocoProcess(SolverProcess):
                     or "restarts_factor" in dict_simplified_options \
                     or "restarts_gfactor" in dict_simplified_options:
                 print("Choco needs 'restarts_type' to be set when 'restarts_cutoff' "
-                        "or 'restarts_factor' or 'restarts_gfactor' is set.")
+                      "or 'restarts_factor' or 'restarts_gfactor' is set.")
         if "lb" in dict_simplified_options or "ub" in dict_simplified_options:
             print("Bounding objective not implemented in Choco")
         if free:  # required when some solving options are defined
@@ -93,17 +93,10 @@ class ChocoProcess(SolverProcess):
             print("Saving trace into a file not implemented in Choco")
         return args_solver
 
-class ChocoPy4J(SolverPy4J):
-    
-    def class_path(self):
-        return self.directory_of_solver("choco") + "choco-parsers-4.10.3-jar-with-dependencies.jar"
-    
+
+class ChocoPy4J(SolverPy4J):  # TODO in progress
     def __init__(self):
-        d = self.directory_of_solver("choco")
-        c = self.class_path()
-        super().__init__(
-            name="Choco-solver", 
-            command="java -cp " + c + os.pathsep + d + "../py4j0.10.8.1.jar" + os.pathsep + d + " ChocoSolverPy4J"
-        )
+        cp = CHOCO_CP + os.pathsep + CHOCO_DIR + "../py4j0.10.8.1.jar" + os.pathsep + CHOCO_DIR + " ChocoSolverPy4J"
+        super().__init__(name="Choco-solver", command="java -cp " + cp, cp=CHOCO_CP)
 
 # command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAbsCon/ StackEntryPoint"
