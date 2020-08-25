@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import sys
 
-from pycsp3.solvers.solver import class_path_abscon
+from pycsp3.solvers.abscon import AbsConProcess
 from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
@@ -13,7 +13,7 @@ XCSP_PATH = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "xcsp" 
 
 PYTHON_VERSIONS = ["python3"]
 waiting = False
-
+solver = AbsConProcess()
 
 def run(xcsp, diff=None, same=None):
     global waiting
@@ -174,7 +174,8 @@ class Tester:
 
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
         print()
-        cmd = "java -cp " + class_path_abscon() + (" AbsCon " if special else " org.xcsp.modeler.Compiler ")
+
+        cmd = "java -cp " + solver.class_path() + (" AbsCon " if special else " org.xcsp.modeler.Compiler ")
         cmd += "problems.generators." + prs_jv if prs_jv else self.dir_pbs_jv + model
         if self.data_jv(data):
             if dataSpecial:

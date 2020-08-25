@@ -325,6 +325,10 @@ def checkType(obj, allowed_types, message=""):
                     break  # raise TypeMCSPError(inspector.getCalling(), p, allowedTypes, message, position)
             else:
                 return True
+    if message == "":
+        message = "Wrong type for " + str(obj) + " (allowable types: " + str(allowed_types) + ")\n"    
+    raise TypeError(message)
+
     # stack = inspect.stack(context=1)
     # name_function_stack = [s.function for s in stack]
     # position_functions_file = [i for i, s in enumerate(stack) if s.filename.endswith("functions.py")][0]
@@ -370,4 +374,4 @@ def checkType(obj, allowed_types, message=""):
     #     # doc = docstringOf(stack[1].function)
     #     # s += doc if doc is not None else "\n\tNo python docstring for this function"
 
-    raise TypeError(message)  # s)
+      # s)
