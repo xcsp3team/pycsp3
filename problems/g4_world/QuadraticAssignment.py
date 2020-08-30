@@ -30,5 +30,12 @@ satisfy(
 
 minimize(
     #  minimizing summed up distances multiplied by flows
-    Sum(d[i][j] * weights[i][j] for i, j in combinations(range(n), 2) if weights[i][j] != 0)
+    d * weights
 )
+
+
+#  Note that:
+#  a) d * weights is possible because d is of type 'ListVar' and because None values (and associated coeffs) will be discarded
+#  b) weights * d is also possible because weights is of type 'ListInt' and because None values (and associated coeffs) will be discarded
+#  c) one can also write of course:
+#     Sum(d[i][j] * weights[i][j] for i, j in combinations(range(n), 2) if weights[i][j] != 0)
