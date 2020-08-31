@@ -81,4 +81,4 @@ minimize(
 # Note that:
 
 # a) for computing (and checking) the load of each slab
-#    the reverse side ? eq(z[s]{c] = 1 => or(...) isnot really necessary but could it be helpful?
+#    the reverse side ? eq(z[s]{c] = 1 => or(...) is not really necessary but could it be helpful?
