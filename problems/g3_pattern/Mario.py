@@ -9,7 +9,7 @@ Examples of Execution:
 from pycsp3 import *
 
 marioHouse, luigiHouse, fuelLimit, houses = data
-fuels = [house.fuelConsumption for house in houses]  # using cp_array is not necessary since intern arrays have the right type (for the constraint Element)
+fuels, golds = zip(*houses)  # using cp_array is not necessary since intern arrays have the right type (for the constraint Element)
 nHouses = len(houses)
 
 # s[i] is the house succeeding to the ith house (itself if not part of the route)
@@ -27,7 +27,7 @@ if not variant():
 elif variant("table"):
     satisfy(
         # fuel consumption at each step
-        (s[i], f[i]) in {(j, fuel) for (j, fuel) in enumerate(house.fuelConsumption)} for i, house in enumerate(houses)
+        (s[i], f[i]) in {(j, fuel) for (j, fuel) in enumerate(fuels[i])} for i, house in enumerate(houses)
     )
 
 satisfy(
@@ -43,17 +43,18 @@ satisfy(
 
 maximize(
     # maximizing collected gold
-    Sum((s[i] != i) * houses[i].gold for i in range(nHouses) if i not in {marioHouse, luigiHouse})
+    Sum((s[i] != i) * golds[i] for i in range(nHouses) if i not in {marioHouse, luigiHouse})
 )
 
 
-# [(s[i], f[i]) in [(j, houses[i].fuelConsumption[j]) for j in range(len(houses[i].fuelConsumption))] for i in range(nHouses)],
+# Note that the code below, when building the table  is more compact than:
+# a) [(s[i], f[i]) in [(j, houses[i].fuelConsumption[j]) for j in range(len(houses[i].fuelConsumption))] for i in range(nHouses)],
+# or b) [(s[i], f[i]) in [(j, fuel) for j, fuel in enumerate(houses[i].fuelConsumption)] for i in range(nHouses)],
 
-# [(s[i], f[i]) in [(j, fuel) for j, fuel in enumerate(houses[i].fuelConsumption)] for i in range(nHouses)],
-
+# Note that introducing auxiliary variables for handling gold earned at each house as follows:
 # g[i] is the gold earned at house i
 # g = VarArray(size=nHouses, dom=lambda i: {0, houses[i].gold})
-# gold earned at each house
+# We need to introduce additional constraints, while the objective becomes:
 # maximize(
 #    maximizing collected gold
 #    Sum(g)

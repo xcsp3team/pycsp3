@@ -16,6 +16,9 @@ if nVisitors - nVisitees > 0:
     ve_sizes.append(nVisitors - nVisitees)  # an artificial group with dummy visitees is added
 n, nWeeks = nVisitors, len(vr_sizes)
 
+vr_table = {(i, sum(vr_sizes[:i]) + j) for i, size in enumerate(vr_sizes) for j in range(size)}
+ve_table = {(i, sum(ve_sizes[:i]) + j) for i, size in enumerate(ve_sizes) for j in range(size)}
+
 # r[i][w] is the visitor for the ith visitee at week w
 r = VarArray(size=[n, nWeeks], dom=range(n))
 
@@ -27,9 +30,6 @@ rg = VarArray(size=[n, nWeeks], dom=range(len(vr_sizes)))
 
 # eg[i][w] is the visitee group for the ith visitor at week w
 eg = VarArray(size=[n, nWeeks], dom=range(len(ve_sizes)))
-
-vr_table = {(i, sum(vr_sizes[:i]) + j) for i, size in enumerate(vr_sizes) for j in range(size)}
-ve_table = {(i, sum(ve_sizes[:i]) + j) for i, size in enumerate(ve_sizes) for j in range(size)}
 
 satisfy(
     # each week, all visitors must be different
