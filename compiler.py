@@ -18,7 +18,7 @@ from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtup
 from pycsp3.tools.slider import handle_slides
 from pycsp3.tools.utilities import Stopwatch
 from pycsp3.tools.xcsp import build_document
-from pycsp3.solvers.solver import simplify_args_recursive, option_parsing, process_options
+from pycsp3.solvers.solver import process_options
 
 None_Values = ['None', '', 'null']  # adding 'none'?
 
@@ -45,7 +45,7 @@ class Compilation:
 
 
 def _load_options():
-    options.set_values("data", "dataparser", "dataexport", "variant", "checker", "solver", "solverArgs")
+    options.set_values("data", "dataparser", "dataexport", "variant", "checker", "solver")
     options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "restrictTablesWrtDomains",
                       "solve"
                       )
@@ -215,7 +215,6 @@ def _compile():
     solving = ABSCON if options.solve else options.solver
     if solving:
         solver, args, args_recursive = process_options(solving)
-        args_recursive = simplify_args_recursive(args_recursive)
         solver = next(ss for ss in SOLVERS if ss.lower() == solver.lower())
         # print("solver", solver, "args", args)
         if solver == CHOCO:

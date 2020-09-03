@@ -29,3 +29,7 @@ minimize(
     # minimizing the sum of the squares of the auto-correlation
     Sum(c[k] * c[k] for k in range(n - 1))
 )
+
+
+# Note that:
+#  a) for the objective, c *c is possible, but needs an extension of XCSP3 specifications (allowing coefficients to be variables) TODO

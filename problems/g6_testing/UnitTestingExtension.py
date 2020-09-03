@@ -10,7 +10,7 @@ try:
 except AssertionError as e:
     print("Wrong test 1: Scope and tuples not compatible:", e)
     curser.queue_in.clear()
-    
+
 satisfy(
     # supports
     x[0] in table,
@@ -24,20 +24,20 @@ try:
 except AssertionError as e:
     print("Wrong test 2: Parameter 1:", e)
     curser.queue_in.clear()
-    
+
 try:
     satisfy(x[0] in None)
 except TypeError as e:
     print("Wrong test 3: Parameter 2:", e)
     curser.queue_in.clear()
-    
+
 table[1] = (1, 2)
 try:
     satisfy(x[0] in table)
 except AssertionError as e:
     print("Wrong test 4: Scope and tuples not compatible:", e)
     curser.queue_in.clear()
-    
+
 table = list(permutations(range(1, n + 1)))
 table[1] = ("a", "b", "c", "d", "e")
 
@@ -46,11 +46,10 @@ try:
 except TypeError as e:
     print("Wrong test 5: Table with different types:", e)
     curser.queue_in.clear()
-    
 
 table = [(1, 2, 3, 4, 5), (0.1, 0.2, 0.3, 0.4, 0.5)]
 
-try:    
+try:
     satisfy(
         # supports
         x[0] in table,
@@ -61,7 +60,7 @@ try:
 except AssertionError as e:
     print("Wrong test 6: Table with different types:", e)
     curser.queue_in.clear()
-    
+
 try:
     satisfy(x[0][0] in table)
 except AssertionError as e:

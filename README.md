@@ -20,7 +20,16 @@ At this stage, one can run two embedded solvers:
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf).
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-In the medium/long term, we also plan to develop an interface that will allow users to pilot solvers with Python.
+It is, for example, immediate to run 'AbsCon' or 'Choco' on XCSP3 instances (files) as the respective executables (jar files) are 
+present in directories `pycsp3/solvers/abscon` and  `pycsp3/solvers/choco`.
+For example, for running 'AbsCon' on the XCSP3 instance 'zebra.xml', just execute:
+```console
+java -jar AbsConYY-MM.jar zebra.xml 
+
+```
+while replacing YY and MM with the current values that are present in the name of the jar file.
+
+Note that, in the medium/long term, we also plan to develop an interface that will allow users to pilot solvers with Python.
 
 
 # Installation from PyPi

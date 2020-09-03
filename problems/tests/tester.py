@@ -175,7 +175,7 @@ class Tester:
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
         print()
 
-        cmd = "java -cp " + solver.class_path() + (" AbsCon " if special else " org.xcsp.modeler.Compiler ")
+        cmd = "java -cp " + solver.cp + (" AbsCon " if special else " org.xcsp.modeler.Compiler ")
         cmd += "problems.generators." + prs_jv if prs_jv else self.dir_pbs_jv + model
         if self.data_jv(data):
             if dataSpecial:
