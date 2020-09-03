@@ -30,7 +30,6 @@ def cursing():
         return tuple.__mul__(self, other)
 
     def _list_mul(self, other):  # for being able to use scalar products
-        #print("mmmmm", self, other)
         if is_containing(self, (Variable, Node), check_first_only=True):
             return ScalarProduct(self, other)
         # if is_containing(self, int) and is_containing(other, (Variable, Node)):
@@ -127,7 +126,7 @@ def cursing():
     curse(dict, "__add__", _dict_add)
     curse(tuple, "__mul__", _tuple_mul)
     curse(list, "__mul__", _list_mul)
-    #curse(list, "__rmul__", _list_rmul)
+    # curse(list, "__rmul__", _list_rmul)
     curse(tuple, "__contains__", _tuple_contains)
     curse(list, "__contains__", _list_contains)
     curse(set, "__contains__", _set_contains)
@@ -415,7 +414,13 @@ class ListInt(list):
         return ListInt(super().__add__(other))
 
     def __mul__(self, other):
-        if is_containing(other, (Variable, Node)):
+        if is_matrix(self):
+            assert is_matrix(other) and len(self) == len(other) and len(self[0]) == len(other[0])
+            t1, t2 = zip(
+                *[(self[i][j], other[i][j]) for i in range(len(self)) for j in range(len(self[0])) if self[i][j] is not None and other[i][j] is not None])
+            assert is_containing(t2, (Variable, Node))
+            return ScalarProduct(list(t2), list(t1))
+        if is_containing(flatten(other), (Variable, Node)):
             return ScalarProduct(other, self)
         assert is_containing(self, (Variable, Node))
         return ScalarProduct(self, other)
@@ -443,7 +448,13 @@ class ListVar(list):
         return ListVar(super().__add__(other))
 
     def __mul__(self, other):
-        assert is_containing(self, (Variable, Node))
+        if is_matrix(self):
+            assert is_matrix(other) and len(self) == len(other) and len(self[0]) == len(other[0])
+            t1, t2 = zip(
+                *[(self[i][j], other[i][j]) for i in range(len(self)) for j in range(len(self[0])) if self[i][j] is not None and other[i][j] is not None])
+            assert is_containing(t1, (Variable, Node))
+            return ScalarProduct(list(t1), list(t2))
+        assert is_containing(self, (Variable, Node))  # Node possible ?
         return ScalarProduct(self, list(other) if isinstance(other, (tuple, range)) else other)
 
     def __contains__(self, other):
@@ -487,3 +498,11 @@ def is_namedtuple(obj):  # imperfect way of checking, but must be enough for our
         return False
     fields = getattr(t, '_fields', None)
     return isinstance(fields, tuple) and all(type(field) == str for field in fields)
+
+# def to_special_list(t):
+#     assert is_1d_list(t)
+#     if is_containing(t, (Variable, type(None))):
+#         return ListVar(t)
+#     if is_containing(t, (int, type(None))):
+#         return ListInt(t)
+#     return t

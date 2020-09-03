@@ -2,18 +2,15 @@ import os
 
 from pycsp3.solvers.solver import SolverProcess, SolverPy4J
 
+ABSCON_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
+ABSCON_CP = ABSCON_DIR + (os.pathsep + ABSCON_DIR).join(["AbsCon-20-09.jar"])
+
+
 class AbsConProcess(SolverProcess):
     def __init__(self):
-        super().__init__(
-            name="AbsCon", 
-            command="java -cp " + self.class_path() + " AbsCon"
-        )
-    
-    def class_path(self):
-        d = self.directory_of_solver("abscon")
-        return d + "AbsCon-20-08.jar" + os.pathsep + d + "xcsp3-tools-1.2.2-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
+        super().__init__(name="AbsCon", command="java -cp " + ABSCON_CP + " AbsCon", cp=ABSCON_CP)
 
-    def parse_options(self, string_options, dict_options, dict_simplified_options):
+    def parse_general_options(self, string_options, dict_options, dict_simplified_options):
         args_solver = ""
         if "limit_time" in dict_simplified_options:
             args_solver += " -t=" + dict_simplified_options["limit_time"] + "s"
@@ -64,7 +61,7 @@ class AbsConProcess(SolverProcess):
         if "lastConflict" in dict_simplified_options:
             dict_simplified_options["lc"] = dict_simplified_options["lastConflict"]
         if "lc" in dict_simplified_options:
-            args_solver += " -lc" + ("=" + dict_simplified_options["lc"] if dict_simplified_options["lc"] else "")
+            args_solver += " -lc=" + (dict_simplified_options["lc"] if dict_simplified_options["lc"] else "1")
         if "cos" in dict_simplified_options:
             args_solver += " -varh=Memory"
         if "last" in dict_simplified_options:
@@ -90,17 +87,12 @@ class AbsConProcess(SolverProcess):
                 print("Saving trace into a file not implemented in AbsCon")
             else:
                 args_solver += " -trace"
-        return args_solver        
+        return args_solver
 
-class AbsconPy4J(SolverPy4J):
 
-    def class_path(self):
-        d = self.directory_of_solver("abscon")
-        return d + "AbsCon-20-08.jar" + os.pathsep + d + "xcsp3-tools-1.2.2-SNAPSHOT.jar" + os.pathsep + d + "javax.json-1.0.4.jar"
-
+class AbsconPy4J(SolverPy4J):  # TODO in progress
     def __init__(self):
-        d = self.directory_of_solver("abscon")
-        c = self.class_path()
-        super().__init__(name="AbsCon", command="java -cp " + c + os.pathsep + d + "../py4j0.10.8.1.jar" + os.pathsep + d + " AbsConPy4J")
+        cp = ABSCON_CP + os.pathsep + ABSCON_DIR + "../py4j0.10.8.1.jar" + os.pathsep + ABSCON_DIR + " AbsConPy4J"
+        super().__init__(name="AbsCon", command="java -cp " + cp, cp=ABSCON_CP)
 
 # command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAbsCon/ StackEntryPoint"
