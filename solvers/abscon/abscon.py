@@ -3,7 +3,7 @@ import os
 from pycsp3.solvers.solver import SolverProcess, SolverPy4J
 
 ABSCON_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
-ABSCON_CP = ABSCON_DIR + (os.pathsep + ABSCON_DIR).join(["AbsCon-20-08.jar", "xcsp3-tools-1.2.2-SNAPSHOT.jar", "javax.json-1.0.4.jar"])
+ABSCON_CP = ABSCON_DIR + (os.pathsep + ABSCON_DIR).join(["AbsCon-20-09.jar"])
 
 
 class AbsConProcess(SolverProcess):
