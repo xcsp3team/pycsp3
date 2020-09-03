@@ -129,7 +129,7 @@ class SolverProcess:
     
     def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict()):
         stopwatch = Stopwatch()
-        args_solver = self.parse_options(string_options, dict_options, dict_simplified_options)    
+        args_solver = self.parse_options(string_options, dict_options, dict_simplified_options)
         verbose = options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + args_solver + (" " + options.solverargs if options.solverargs else "")
         if not verbose:
