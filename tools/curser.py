@@ -107,6 +107,7 @@ def cursing():
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))  # functions.Sum(other)
         if isinstance(other, Variable):  # unary table constraint (based on a range)
+            
             queue_in.append((list(self), other))
             return True
         if isinstance(other, PartialConstraint):

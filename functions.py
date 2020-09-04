@@ -146,8 +146,11 @@ def _complete_partial_forms_of_constraints(entities):
         if isinstance(c, bool):
             assert len(curser.queue_in) > 0, "A boolean that does not represent a constraint is in the list of constraints in satisfy(): " + str(entities)
             right_operand, left_operand = curser.queue_in.popleft()
+            
+            
             entities[i] = _bool_interpretation_for_in(left_operand, right_operand, c)
         elif isinstance(c, ESlide):
+            
             for ent in c.entities:
                 _complete_partial_forms_of_constraints(ent.entities)
     return entities

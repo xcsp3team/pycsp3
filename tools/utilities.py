@@ -91,11 +91,11 @@ def unique_type_in(l, tpe=None):
 
 
 def is_1d_list(l, types=None):
-    return isinstance(l, list) and all(isinstance(v, types) if types else not isinstance(v, list) for v in l)
+    return len(l) and isinstance(l, list) and all(isinstance(v, types) if types else not isinstance(v, list) for v in l)
 
 
 def is_1d_tuple(l, types):
-    return isinstance(l, tuple) and all(isinstance(v, types) for v in l)
+    return len(l) and isinstance(l, tuple) and all(isinstance(v, types) for v in l)
 
 
 def is_2d_list(m, types=None):
