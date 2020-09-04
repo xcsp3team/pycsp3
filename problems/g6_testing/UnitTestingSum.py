@@ -6,13 +6,11 @@ try:
     satisfy(Sum([1, 2, 3]) < 5)
 except TypeError as e:
     print("Wrong test 1: ", e)
-    
 
 try:
     satisfy(Sum(None) < 5)
 except AssertionError as e:
     print("Wrong test 2: ", e)
-    
 
 satisfy(Sum(x) < 5)
 
@@ -20,14 +18,13 @@ try:
     satisfy(Sum(x, [1]) < 10)
 except TypeError as e:
     print("Wrong test 3: ", e)
-    
+
 satisfy(Sum(x, y) < 10)
 
 try:
     satisfy(Sum(x))
 except AssertionError as e:
     print("Wrong test 4:", e)
-
 
 try:
     satisfy(Sum(x) > None)
