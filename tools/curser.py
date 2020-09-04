@@ -465,6 +465,8 @@ def convert_to_namedtuples(obj):
     if isinstance(obj, tuple):
         obj = list(obj)  # because if data come from a text file (and not from a JSON file), we have different structures, which leads to problems
     if isinstance(obj, list):
+        if len(obj) == 0:
+            return obj
         if is_1d_list(obj, int):
             return ListInt(obj)
         if is_1d_list(obj, Variable):
@@ -473,6 +475,7 @@ def convert_to_namedtuples(obj):
             nt = namedtuple("nt" + str(convert_to_namedtuples.cnt), obj[0].keys())
             convert_to_namedtuples.cnt += 1
             return [nt(*(convert_to_namedtuples(v) for (k, v) in d.items())) for d in obj]
+
         t = [convert_to_namedtuples(v) for v in obj]
         return ListInt(t) if isinstance(t[0], ListInt) else ListVar(t) if isinstance(t[0], ListVar) else t
     if isinstance(obj, dict):

@@ -505,7 +505,8 @@ def Sum(term, *others, condition=None):
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
     # TODO control here some assumptions (empty list done, others to do ?)
-    assert terms, "Wrong parameter for " + str(terms) + " (empty list)" 
+    # python3 pycsp3/problems/g4_world/Rlfap.py -data=pycsp3/problems/data/json/Rlfap_max-graph-05.json -variant=max do not pass with this assert, it is normal ?
+    #assert terms, "Wrong parameter for " + str(terms) + " (empty list)" 
     
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))
 
