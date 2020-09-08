@@ -1,0 +1,22 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i][j] is the value in cell at row i and col j." size="[9][9]"> 1..9 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="imposing distinct values on each row and each column">
+      <matrix> x[][] </matrix>
+    </allDifferent>
+    <group class="blocks" note="imposing distinct values on each block">
+      <allDifferent> %... </allDifferent>
+      <args> x[0..2][0..2] </args>
+      <args> x[0..2][3..5] </args>
+      <args> x[0..2][6..8] </args>
+      <args> x[3..5][0..2] </args>
+      <args> x[3..5][3..5] </args>
+      <args> x[3..5][6..8] </args>
+      <args> x[6..8][0..2] </args>
+      <args> x[6..8][3..5] </args>
+      <args> x[6..8][6..8] </args>
+    </group>
+  </constraints>
+</instance>

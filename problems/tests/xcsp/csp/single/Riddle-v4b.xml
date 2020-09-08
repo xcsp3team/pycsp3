@@ -1,0 +1,11 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" size="[4]"> 0..14 </array>
+  </variables>
+  <constraints>
+    <intension> eq(add(x[0],1),x[1]) </intension>
+    <intension> eq(add(x[1],1),x[2]) </intension>
+    <intension> eq(add(x[2],1),x[3]) </intension>
+    <intension> eq(add(x[0],x[1],x[2],x[3]),14) </intension>
+  </constraints>
+</instance>

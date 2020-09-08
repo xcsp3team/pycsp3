@@ -1,0 +1,9 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the value of the ith domino" size="[200]"> 0..199 </array>
+  </variables>
+  <constraints>
+    <allEqual> x[] </allEqual>
+    <intension> or(eq(add(x[0],1),x[199]),and(eq(x[0],x[199]),eq(x[0],199))) </intension>
+  </constraints>
+</instance>

@@ -1,0 +1,18 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i] is 1 iff the ith item is selected" size="[20]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <sum note="not exceeding the capacity of the knapsack">
+      <list> x[] </list>
+      <coeffs> 1 5 2 12 12 6 12 10 4 3 6 6 6 11 12 9 5 4 6 9 </coeffs>
+      <condition> (le,50) </condition>
+    </sum>
+  </constraints>
+  <objectives>
+    <maximize note="maximizing summed up value (benefit)" type="sum">
+      <list> x[] </list>
+      <coeffs> 44 89 25 48 53 61 4 83 93 24 46 46 38 88 3 63 26 54 39 36 </coeffs>
+    </maximize>
+  </objectives>
+</instance>

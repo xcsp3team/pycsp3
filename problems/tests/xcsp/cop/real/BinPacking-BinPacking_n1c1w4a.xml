@@ -1,0 +1,150 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i][j] is the weight of the jth object put in the ith bin. It is 0 if less than j objects are present in the bin." size="[40][3]"> 0 30 31 32 34 35 40 41 44 47 49 50 51 52 53 56 60 63 64 65 69 72 76 77 79 80 84 85 88 89 91 92 93 95 99 </array>
+  </variables>
+  <constraints>
+    <group note="not exceeding the capacity of each bin">
+      <sum>
+        <list> %0 %1 %2 </list>
+        <condition> (le,100) </condition>
+      </sum>
+      <args> x[0][] </args>
+      <args> x[1][] </args>
+      <args> x[2][] </args>
+      <args> x[3][] </args>
+      <args> x[4][] </args>
+      <args> x[5][] </args>
+      <args> x[6][] </args>
+      <args> x[7][] </args>
+      <args> x[8][] </args>
+      <args> x[9][] </args>
+      <args> x[10][] </args>
+      <args> x[11][] </args>
+      <args> x[12][] </args>
+      <args> x[13][] </args>
+      <args> x[14][] </args>
+      <args> x[15][] </args>
+      <args> x[16][] </args>
+      <args> x[17][] </args>
+      <args> x[18][] </args>
+      <args> x[19][] </args>
+      <args> x[20][] </args>
+      <args> x[21][] </args>
+      <args> x[22][] </args>
+      <args> x[23][] </args>
+      <args> x[24][] </args>
+      <args> x[25][] </args>
+      <args> x[26][] </args>
+      <args> x[27][] </args>
+      <args> x[28][] </args>
+      <args> x[29][] </args>
+      <args> x[30][] </args>
+      <args> x[31][] </args>
+      <args> x[32][] </args>
+      <args> x[33][] </args>
+      <args> x[34][] </args>
+      <args> x[35][] </args>
+      <args> x[36][] </args>
+      <args> x[37][] </args>
+      <args> x[38][] </args>
+      <args> x[39][] </args>
+    </group>
+    <group note="items are stored decreasingly in each bin according to their weights">
+      <ordered>
+        <list> %0 %1 %2 </list>
+        <operator> ge </operator>
+      </ordered>
+      <args> x[0][] </args>
+      <args> x[1][] </args>
+      <args> x[2][] </args>
+      <args> x[3][] </args>
+      <args> x[4][] </args>
+      <args> x[5][] </args>
+      <args> x[6][] </args>
+      <args> x[7][] </args>
+      <args> x[8][] </args>
+      <args> x[9][] </args>
+      <args> x[10][] </args>
+      <args> x[11][] </args>
+      <args> x[12][] </args>
+      <args> x[13][] </args>
+      <args> x[14][] </args>
+      <args> x[15][] </args>
+      <args> x[16][] </args>
+      <args> x[17][] </args>
+      <args> x[18][] </args>
+      <args> x[19][] </args>
+      <args> x[20][] </args>
+      <args> x[21][] </args>
+      <args> x[22][] </args>
+      <args> x[23][] </args>
+      <args> x[24][] </args>
+      <args> x[25][] </args>
+      <args> x[26][] </args>
+      <args> x[27][] </args>
+      <args> x[28][] </args>
+      <args> x[29][] </args>
+      <args> x[30][] </args>
+      <args> x[31][] </args>
+      <args> x[32][] </args>
+      <args> x[33][] </args>
+      <args> x[34][] </args>
+      <args> x[35][] </args>
+      <args> x[36][] </args>
+      <args> x[37][] </args>
+      <args> x[38][] </args>
+      <args> x[39][] </args>
+    </group>
+    <cardinality note="ensuring that each item is stored in a bin">
+      <list> x[][] </list>
+      <values> 0 30 31 32 34 35 40 41 44 47 49 50 51 52 53 56 60 63 64 65 69 72 76 77 79 80 84 85 88 89 91 92 93 95 99 </values>
+      <occurs> 70 1 2 1 1 2 3 2 1 1 2 2 1 1 2 2 1 2 2 1 1 1 1 1 1 2 3 1 2 2 1 1 1 1 1 </occurs>
+    </cardinality>
+    <lex class="symmetry-breaking">
+      <list> x[0][] </list>
+      <list> x[1][] </list>
+      <list> x[2][] </list>
+      <list> x[3][] </list>
+      <list> x[4][] </list>
+      <list> x[5][] </list>
+      <list> x[6][] </list>
+      <list> x[7][] </list>
+      <list> x[8][] </list>
+      <list> x[9][] </list>
+      <list> x[10][] </list>
+      <list> x[11][] </list>
+      <list> x[12][] </list>
+      <list> x[13][] </list>
+      <list> x[14][] </list>
+      <list> x[15][] </list>
+      <list> x[16][] </list>
+      <list> x[17][] </list>
+      <list> x[18][] </list>
+      <list> x[19][] </list>
+      <list> x[20][] </list>
+      <list> x[21][] </list>
+      <list> x[22][] </list>
+      <list> x[23][] </list>
+      <list> x[24][] </list>
+      <list> x[25][] </list>
+      <list> x[26][] </list>
+      <list> x[27][] </list>
+      <list> x[28][] </list>
+      <list> x[29][] </list>
+      <list> x[30][] </list>
+      <list> x[31][] </list>
+      <list> x[32][] </list>
+      <list> x[33][] </list>
+      <list> x[34][] </list>
+      <list> x[35][] </list>
+      <list> x[36][] </list>
+      <list> x[37][] </list>
+      <list> x[38][] </list>
+      <list> x[39][] </list>
+      <operator> ge </operator>
+    </lex>
+  </constraints>
+  <objectives>
+    <maximize note="maximizing the number of unused bins" type="sum"> eq(x[0][0],0) eq(x[1][0],0) eq(x[2][0],0) eq(x[3][0],0) eq(x[4][0],0) eq(x[5][0],0) eq(x[6][0],0) eq(x[7][0],0) eq(x[8][0],0) eq(x[9][0],0) eq(x[10][0],0) eq(x[11][0],0) eq(x[12][0],0) eq(x[13][0],0) eq(x[14][0],0) eq(x[15][0],0) eq(x[16][0],0) eq(x[17][0],0) eq(x[18][0],0) eq(x[19][0],0) eq(x[20][0],0) eq(x[21][0],0) eq(x[22][0],0) eq(x[23][0],0) eq(x[24][0],0) eq(x[25][0],0) eq(x[26][0],0) eq(x[27][0],0) eq(x[28][0],0) eq(x[29][0],0) eq(x[30][0],0) eq(x[31][0],0) eq(x[32][0],0) eq(x[33][0],0) eq(x[34][0],0) eq(x[35][0],0) eq(x[36][0],0) eq(x[37][0],0) eq(x[38][0],0) eq(x[39][0],0) </maximize>
+  </objectives>
+</instance>

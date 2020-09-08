@@ -1,0 +1,56 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="q" note="q[i] is the column where is put the ith queen (at row i)" size="[10]"> 0..9 </array>
+  </variables>
+  <constraints>
+    <allDifferent> q[] </allDifferent>
+    <group>
+      <intension> ne(dist(%0,%1),%2) </intension>
+      <args> q[0] q[1] 1 </args>
+      <args> q[0] q[2] 2 </args>
+      <args> q[0] q[3] 3 </args>
+      <args> q[0] q[4] 4 </args>
+      <args> q[0] q[5] 5 </args>
+      <args> q[0] q[6] 6 </args>
+      <args> q[0] q[7] 7 </args>
+      <args> q[0] q[8] 8 </args>
+      <args> q[0] q[9] 9 </args>
+      <args> q[1] q[2] 1 </args>
+      <args> q[1] q[3] 2 </args>
+      <args> q[1] q[4] 3 </args>
+      <args> q[1] q[5] 4 </args>
+      <args> q[1] q[6] 5 </args>
+      <args> q[1] q[7] 6 </args>
+      <args> q[1] q[8] 7 </args>
+      <args> q[1] q[9] 8 </args>
+      <args> q[2] q[3] 1 </args>
+      <args> q[2] q[4] 2 </args>
+      <args> q[2] q[5] 3 </args>
+      <args> q[2] q[6] 4 </args>
+      <args> q[2] q[7] 5 </args>
+      <args> q[2] q[8] 6 </args>
+      <args> q[2] q[9] 7 </args>
+      <args> q[3] q[4] 1 </args>
+      <args> q[3] q[5] 2 </args>
+      <args> q[3] q[6] 3 </args>
+      <args> q[3] q[7] 4 </args>
+      <args> q[3] q[8] 5 </args>
+      <args> q[3] q[9] 6 </args>
+      <args> q[4] q[5] 1 </args>
+      <args> q[4] q[6] 2 </args>
+      <args> q[4] q[7] 3 </args>
+      <args> q[4] q[8] 4 </args>
+      <args> q[4] q[9] 5 </args>
+      <args> q[5] q[6] 1 </args>
+      <args> q[5] q[7] 2 </args>
+      <args> q[5] q[8] 3 </args>
+      <args> q[5] q[9] 4 </args>
+      <args> q[6] q[7] 1 </args>
+      <args> q[6] q[8] 2 </args>
+      <args> q[6] q[9] 3 </args>
+      <args> q[7] q[8] 1 </args>
+      <args> q[7] q[9] 2 </args>
+      <args> q[8] q[9] 1 </args>
+    </group>
+  </constraints>
+</instance>

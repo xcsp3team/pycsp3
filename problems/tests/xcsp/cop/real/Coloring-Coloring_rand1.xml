@@ -1,0 +1,33 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i] is the color assigned to the ith node of the graph" size="[20]"> 0..19 </array>
+  </variables>
+  <constraints>
+    <group note="two adjacent nodes must be colored differently">
+      <intension> ne(%0,%1) </intension>
+      <args> x[7] x[11] </args>
+      <args> x[7] x[3] </args>
+      <args> x[17] x[1] </args>
+      <args> x[13] x[11] </args>
+      <args> x[10] x[19] </args>
+      <args> x[1] x[9] </args>
+      <args> x[13] x[6] </args>
+      <args> x[2] x[1] </args>
+      <args> x[11] x[10] </args>
+      <args> x[13] x[4] </args>
+      <args> x[11] x[14] </args>
+      <args> x[1] x[12] </args>
+      <args> x[0] x[19] </args>
+      <args> x[11] x[8] </args>
+      <args> x[5] x[10] </args>
+      <args> x[2] x[1] </args>
+      <args> x[1] x[13] </args>
+      <args> x[13] x[10] </args>
+      <args> x[11] x[4] </args>
+      <args> x[16] x[8] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the greatest used color index (and, consequently, the number of colors)" type="maximum"> x[] </minimize>
+  </objectives>
+</instance>

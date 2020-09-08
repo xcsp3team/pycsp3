@@ -15,6 +15,7 @@ PYTHON_VERSIONS = ["python3"]
 waiting = False
 solver = AbsConProcess()
 
+
 def run(xcsp, diff=None, same=None):
     global waiting
     global PYTHON_VERSIONS
@@ -24,7 +25,7 @@ def run(xcsp, diff=None, same=None):
     mode = "-xcsp"
     for arg in sys.argv:
         if arg.startswith("-version"):
-            PYTHON_VERSIONS=[python_exec.replace("[", "").replace("]", "") for python_exec in arg.split("=")[1].split(",")]
+            PYTHON_VERSIONS = [python_exec.replace("[", "").replace("]", "") for python_exec in arg.split("=")[1].split(",")]
         if arg == "-xcsp" or arg == "-same" or arg == "-diff":
             mode = arg
         if arg == "-waiting":
@@ -169,7 +170,7 @@ class Tester:
             cmd += " -variant=" + variant
         if options_py:
             cmd += " " + options_py
-        #cmd += " -restrictTablesWrtDomains"
+        # cmd += " -restrictTablesWrtDomains"
         return cmd
 
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
@@ -229,18 +230,18 @@ class Tester:
                     with open(self.xml_path_py(), "r") as f:
                         for line in f.readlines():
                             print(COLOR_PY + line[0:-1])
-                # TODO replace rm -rf by os.remove() and check all system command
+                #  TODO replace rm -rf by os.remove() and check all system commands
                 if os.name != 'nt':
                     os.system("rm -rf *.*~")  # for removing the temporary files
 
     def check(self, xcsp=False):
         xml_to_compare = self.xml_path_xcsp() if xcsp else self.xml_path_jv()
         self.counters["total"] += 1
-        
+
         # LZMA decompress
         xml_lzma = None
-        if os.path.isfile(xml_to_compare+".lzma"):
-            xml_lzma = xml_to_compare+".lzma"
+        if os.path.isfile(xml_to_compare + ".lzma"):
+            xml_lzma = xml_to_compare + ".lzma"
             import lzma
             with lzma.open(xml_lzma) as f:
                 data = f.read()
@@ -265,7 +266,7 @@ class Tester:
                 self.print_differences(lines, limit=20 if len(lines) > 200 else None, xcsp=xcsp)
                 if waiting:
                     input("Press Enter to continue...")
-       
+
         # LZMA delete the decompress file
         if xml_lzma is not None:
             os.remove(xml_to_compare)

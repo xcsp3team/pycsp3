@@ -1,0 +1,54 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="d" note="d[i][j] is the number of occurrences of the jth variation on the ith template" size="[7][7]"> 0..9 </array>
+    <array id="p" note="p[i] is the number of printings of the ith template" size="[7]"> 0..1100 </array>
+  </variables>
+  <constraints>
+    <group note="all slots of all templates are used">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,9) </condition>
+      </sum>
+      <args> d[0][] </args>
+      <args> d[1][] </args>
+      <args> d[2][] </args>
+      <args> d[3][] </args>
+      <args> d[4][] </args>
+      <args> d[5][] </args>
+      <args> d[6][] </args>
+    </group>
+    <group note="respecting printing bounds for each variation">
+      <sum>
+        <list> p[] </list>
+        <coeffs> %... </coeffs>
+        <condition> (in,%0) </condition>
+      </sum>
+      <args> 238..275 d[][0] </args>
+      <args> 243..280 d[][1] </args>
+      <args> 247..286 d[][2] </args>
+      <args> 475..550 d[][3] </args>
+      <args> 475..550 d[][4] </args>
+      <args> 760..880 d[][5] </args>
+      <args> 1045..1210 d[][6] </args>
+    </group>
+    <block class="symmetry-breaking">
+      <group>
+        <intension> iff(eq(%0,0),eq(%1,9)) </intension>
+        <args> p[0] d[0][0] </args>
+        <args> p[1] d[1][0] </args>
+        <args> p[2] d[2][0] </args>
+        <args> p[3] d[3][0] </args>
+        <args> p[4] d[4][0] </args>
+        <args> p[5] d[5][0] </args>
+        <args> p[6] d[6][0] </args>
+      </group>
+      <ordered>
+        <list> p[] </list>
+        <operator> ge </operator>
+      </ordered>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the number of used templates" type="sum"> gt(p[0],0) gt(p[1],0) gt(p[2],0) gt(p[3],0) gt(p[4],0) gt(p[5],0) gt(p[6],0) </minimize>
+  </objectives>
+</instance>

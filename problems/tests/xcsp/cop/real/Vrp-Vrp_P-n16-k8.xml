@@ -1,0 +1,299 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i][j] is 1 iff the arc (i,j) is part of a route" size="[16][16]">
+      <domain for="x[0][0] x[1][1] x[2][2] x[3][3] x[4][4] x[5][5] x[6][6] x[7][7] x[8][8] x[9][9] x[10][10] x[11][11] x[12][12] x[13][13] x[14][14] x[15][15]"> 0 </domain>
+      <domain for="x[0][1..15] x[1][0] x[1][2..15] x[2][0..1] x[2][3..15] x[3][0..2] x[3][4..15] x[4][0..3] x[4][5..15] x[5][0..4] x[5][6..15] x[6][0..5] x[6][7..15] x[7][0..6] x[7][8..15] x[8][0..7] x[8][9..15] x[9][0..8] x[9][10..15] x[10][0..9] x[10][11..15] x[11][0..10] x[11][12..15] x[12][0..11] x[12][13..15] x[13][0..12] x[13][14..15] x[14][0..13] x[14][15] x[15][0..14]"> 0 1 </domain>
+    </array>
+    <array id="u" note="u[i] is the vehicle load after visiting the ith node (used for subtour elimination)" size="[16]">
+      <domain for="u[0]"> 0 </domain>
+      <domain for="u[1..15]"> 0..35 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <group note="exactly one incoming arc for each node j other than the depot (node 0)">
+      <count>
+        <list> %... </list>
+        <values> 1 </values>
+        <condition> (eq,1) </condition>
+      </count>
+      <args> x[][1] </args>
+      <args> x[][2] </args>
+      <args> x[][3] </args>
+      <args> x[][4] </args>
+      <args> x[][5] </args>
+      <args> x[][6] </args>
+      <args> x[][7] </args>
+      <args> x[][8] </args>
+      <args> x[][9] </args>
+      <args> x[][10] </args>
+      <args> x[][11] </args>
+      <args> x[][12] </args>
+      <args> x[][13] </args>
+      <args> x[][14] </args>
+      <args> x[][15] </args>
+    </group>
+    <group note="exactly one outgoing arc for each node i other than the depot (node 0)">
+      <count>
+        <list> %... </list>
+        <values> 1 </values>
+        <condition> (eq,1) </condition>
+      </count>
+      <args> x[1][] </args>
+      <args> x[2][] </args>
+      <args> x[3][] </args>
+      <args> x[4][] </args>
+      <args> x[5][] </args>
+      <args> x[6][] </args>
+      <args> x[7][] </args>
+      <args> x[8][] </args>
+      <args> x[9][] </args>
+      <args> x[10][] </args>
+      <args> x[11][] </args>
+      <args> x[12][] </args>
+      <args> x[13][] </args>
+      <args> x[14][] </args>
+      <args> x[15][] </args>
+    </group>
+    <group note="Miller-Tucker-Zemlin subtour elimination">
+      <sum>
+        <list> %0 %1 %2 </list>
+        <coeffs> 1 -1 35 </coeffs>
+        <condition> (le,%3) </condition>
+      </sum>
+      <args> u[1] u[2] x[1][2] 5 </args>
+      <args> u[1] u[3] x[1][3] 19 </args>
+      <args> u[1] u[4] x[1][4] 12 </args>
+      <args> u[1] u[5] x[1][5] 24 </args>
+      <args> u[1] u[6] x[1][6] 4 </args>
+      <args> u[1] u[7] x[1][7] 20 </args>
+      <args> u[1] u[8] x[1][8] 7 </args>
+      <args> u[1] u[9] x[1][9] 27 </args>
+      <args> u[1] u[10] x[1][10] 27 </args>
+      <args> u[1] u[11] x[1][11] 28 </args>
+      <args> u[1] u[12] x[1][12] 21 </args>
+      <args> u[1] u[13] x[1][13] 29 </args>
+      <args> u[1] u[14] x[1][14] 16 </args>
+      <args> u[1] u[15] x[1][15] 24 </args>
+      <args> u[2] u[1] x[2][1] 16 </args>
+      <args> u[2] u[3] x[2][3] 19 </args>
+      <args> u[2] u[4] x[2][4] 12 </args>
+      <args> u[2] u[5] x[2][5] 24 </args>
+      <args> u[2] u[6] x[2][6] 4 </args>
+      <args> u[2] u[7] x[2][7] 20 </args>
+      <args> u[2] u[8] x[2][8] 7 </args>
+      <args> u[2] u[9] x[2][9] 27 </args>
+      <args> u[2] u[10] x[2][10] 27 </args>
+      <args> u[2] u[11] x[2][11] 28 </args>
+      <args> u[2] u[12] x[2][12] 21 </args>
+      <args> u[2] u[13] x[2][13] 29 </args>
+      <args> u[2] u[14] x[2][14] 16 </args>
+      <args> u[2] u[15] x[2][15] 24 </args>
+      <args> u[3] u[1] x[3][1] 16 </args>
+      <args> u[3] u[2] x[3][2] 5 </args>
+      <args> u[3] u[4] x[3][4] 12 </args>
+      <args> u[3] u[5] x[3][5] 24 </args>
+      <args> u[3] u[6] x[3][6] 4 </args>
+      <args> u[3] u[7] x[3][7] 20 </args>
+      <args> u[3] u[8] x[3][8] 7 </args>
+      <args> u[3] u[9] x[3][9] 27 </args>
+      <args> u[3] u[10] x[3][10] 27 </args>
+      <args> u[3] u[11] x[3][11] 28 </args>
+      <args> u[3] u[12] x[3][12] 21 </args>
+      <args> u[3] u[13] x[3][13] 29 </args>
+      <args> u[3] u[14] x[3][14] 16 </args>
+      <args> u[3] u[15] x[3][15] 24 </args>
+      <args> u[4] u[1] x[4][1] 16 </args>
+      <args> u[4] u[2] x[4][2] 5 </args>
+      <args> u[4] u[3] x[4][3] 19 </args>
+      <args> u[4] u[5] x[4][5] 24 </args>
+      <args> u[4] u[6] x[4][6] 4 </args>
+      <args> u[4] u[7] x[4][7] 20 </args>
+      <args> u[4] u[8] x[4][8] 7 </args>
+      <args> u[4] u[9] x[4][9] 27 </args>
+      <args> u[4] u[10] x[4][10] 27 </args>
+      <args> u[4] u[11] x[4][11] 28 </args>
+      <args> u[4] u[12] x[4][12] 21 </args>
+      <args> u[4] u[13] x[4][13] 29 </args>
+      <args> u[4] u[14] x[4][14] 16 </args>
+      <args> u[4] u[15] x[4][15] 24 </args>
+      <args> u[5] u[1] x[5][1] 16 </args>
+      <args> u[5] u[2] x[5][2] 5 </args>
+      <args> u[5] u[3] x[5][3] 19 </args>
+      <args> u[5] u[4] x[5][4] 12 </args>
+      <args> u[5] u[6] x[5][6] 4 </args>
+      <args> u[5] u[7] x[5][7] 20 </args>
+      <args> u[5] u[8] x[5][8] 7 </args>
+      <args> u[5] u[9] x[5][9] 27 </args>
+      <args> u[5] u[10] x[5][10] 27 </args>
+      <args> u[5] u[11] x[5][11] 28 </args>
+      <args> u[5] u[12] x[5][12] 21 </args>
+      <args> u[5] u[13] x[5][13] 29 </args>
+      <args> u[5] u[14] x[5][14] 16 </args>
+      <args> u[5] u[15] x[5][15] 24 </args>
+      <args> u[6] u[1] x[6][1] 16 </args>
+      <args> u[6] u[2] x[6][2] 5 </args>
+      <args> u[6] u[3] x[6][3] 19 </args>
+      <args> u[6] u[4] x[6][4] 12 </args>
+      <args> u[6] u[5] x[6][5] 24 </args>
+      <args> u[6] u[7] x[6][7] 20 </args>
+      <args> u[6] u[8] x[6][8] 7 </args>
+      <args> u[6] u[9] x[6][9] 27 </args>
+      <args> u[6] u[10] x[6][10] 27 </args>
+      <args> u[6] u[11] x[6][11] 28 </args>
+      <args> u[6] u[12] x[6][12] 21 </args>
+      <args> u[6] u[13] x[6][13] 29 </args>
+      <args> u[6] u[14] x[6][14] 16 </args>
+      <args> u[6] u[15] x[6][15] 24 </args>
+      <args> u[7] u[1] x[7][1] 16 </args>
+      <args> u[7] u[2] x[7][2] 5 </args>
+      <args> u[7] u[3] x[7][3] 19 </args>
+      <args> u[7] u[4] x[7][4] 12 </args>
+      <args> u[7] u[5] x[7][5] 24 </args>
+      <args> u[7] u[6] x[7][6] 4 </args>
+      <args> u[7] u[8] x[7][8] 7 </args>
+      <args> u[7] u[9] x[7][9] 27 </args>
+      <args> u[7] u[10] x[7][10] 27 </args>
+      <args> u[7] u[11] x[7][11] 28 </args>
+      <args> u[7] u[12] x[7][12] 21 </args>
+      <args> u[7] u[13] x[7][13] 29 </args>
+      <args> u[7] u[14] x[7][14] 16 </args>
+      <args> u[7] u[15] x[7][15] 24 </args>
+      <args> u[8] u[1] x[8][1] 16 </args>
+      <args> u[8] u[2] x[8][2] 5 </args>
+      <args> u[8] u[3] x[8][3] 19 </args>
+      <args> u[8] u[4] x[8][4] 12 </args>
+      <args> u[8] u[5] x[8][5] 24 </args>
+      <args> u[8] u[6] x[8][6] 4 </args>
+      <args> u[8] u[7] x[8][7] 20 </args>
+      <args> u[8] u[9] x[8][9] 27 </args>
+      <args> u[8] u[10] x[8][10] 27 </args>
+      <args> u[8] u[11] x[8][11] 28 </args>
+      <args> u[8] u[12] x[8][12] 21 </args>
+      <args> u[8] u[13] x[8][13] 29 </args>
+      <args> u[8] u[14] x[8][14] 16 </args>
+      <args> u[8] u[15] x[8][15] 24 </args>
+      <args> u[9] u[1] x[9][1] 16 </args>
+      <args> u[9] u[2] x[9][2] 5 </args>
+      <args> u[9] u[3] x[9][3] 19 </args>
+      <args> u[9] u[4] x[9][4] 12 </args>
+      <args> u[9] u[5] x[9][5] 24 </args>
+      <args> u[9] u[6] x[9][6] 4 </args>
+      <args> u[9] u[7] x[9][7] 20 </args>
+      <args> u[9] u[8] x[9][8] 7 </args>
+      <args> u[9] u[10] x[9][10] 27 </args>
+      <args> u[9] u[11] x[9][11] 28 </args>
+      <args> u[9] u[12] x[9][12] 21 </args>
+      <args> u[9] u[13] x[9][13] 29 </args>
+      <args> u[9] u[14] x[9][14] 16 </args>
+      <args> u[9] u[15] x[9][15] 24 </args>
+      <args> u[10] u[1] x[10][1] 16 </args>
+      <args> u[10] u[2] x[10][2] 5 </args>
+      <args> u[10] u[3] x[10][3] 19 </args>
+      <args> u[10] u[4] x[10][4] 12 </args>
+      <args> u[10] u[5] x[10][5] 24 </args>
+      <args> u[10] u[6] x[10][6] 4 </args>
+      <args> u[10] u[7] x[10][7] 20 </args>
+      <args> u[10] u[8] x[10][8] 7 </args>
+      <args> u[10] u[9] x[10][9] 27 </args>
+      <args> u[10] u[11] x[10][11] 28 </args>
+      <args> u[10] u[12] x[10][12] 21 </args>
+      <args> u[10] u[13] x[10][13] 29 </args>
+      <args> u[10] u[14] x[10][14] 16 </args>
+      <args> u[10] u[15] x[10][15] 24 </args>
+      <args> u[11] u[1] x[11][1] 16 </args>
+      <args> u[11] u[2] x[11][2] 5 </args>
+      <args> u[11] u[3] x[11][3] 19 </args>
+      <args> u[11] u[4] x[11][4] 12 </args>
+      <args> u[11] u[5] x[11][5] 24 </args>
+      <args> u[11] u[6] x[11][6] 4 </args>
+      <args> u[11] u[7] x[11][7] 20 </args>
+      <args> u[11] u[8] x[11][8] 7 </args>
+      <args> u[11] u[9] x[11][9] 27 </args>
+      <args> u[11] u[10] x[11][10] 27 </args>
+      <args> u[11] u[12] x[11][12] 21 </args>
+      <args> u[11] u[13] x[11][13] 29 </args>
+      <args> u[11] u[14] x[11][14] 16 </args>
+      <args> u[11] u[15] x[11][15] 24 </args>
+      <args> u[12] u[1] x[12][1] 16 </args>
+      <args> u[12] u[2] x[12][2] 5 </args>
+      <args> u[12] u[3] x[12][3] 19 </args>
+      <args> u[12] u[4] x[12][4] 12 </args>
+      <args> u[12] u[5] x[12][5] 24 </args>
+      <args> u[12] u[6] x[12][6] 4 </args>
+      <args> u[12] u[7] x[12][7] 20 </args>
+      <args> u[12] u[8] x[12][8] 7 </args>
+      <args> u[12] u[9] x[12][9] 27 </args>
+      <args> u[12] u[10] x[12][10] 27 </args>
+      <args> u[12] u[11] x[12][11] 28 </args>
+      <args> u[12] u[13] x[12][13] 29 </args>
+      <args> u[12] u[14] x[12][14] 16 </args>
+      <args> u[12] u[15] x[12][15] 24 </args>
+      <args> u[13] u[1] x[13][1] 16 </args>
+      <args> u[13] u[2] x[13][2] 5 </args>
+      <args> u[13] u[3] x[13][3] 19 </args>
+      <args> u[13] u[4] x[13][4] 12 </args>
+      <args> u[13] u[5] x[13][5] 24 </args>
+      <args> u[13] u[6] x[13][6] 4 </args>
+      <args> u[13] u[7] x[13][7] 20 </args>
+      <args> u[13] u[8] x[13][8] 7 </args>
+      <args> u[13] u[9] x[13][9] 27 </args>
+      <args> u[13] u[10] x[13][10] 27 </args>
+      <args> u[13] u[11] x[13][11] 28 </args>
+      <args> u[13] u[12] x[13][12] 21 </args>
+      <args> u[13] u[14] x[13][14] 16 </args>
+      <args> u[13] u[15] x[13][15] 24 </args>
+      <args> u[14] u[1] x[14][1] 16 </args>
+      <args> u[14] u[2] x[14][2] 5 </args>
+      <args> u[14] u[3] x[14][3] 19 </args>
+      <args> u[14] u[4] x[14][4] 12 </args>
+      <args> u[14] u[5] x[14][5] 24 </args>
+      <args> u[14] u[6] x[14][6] 4 </args>
+      <args> u[14] u[7] x[14][7] 20 </args>
+      <args> u[14] u[8] x[14][8] 7 </args>
+      <args> u[14] u[9] x[14][9] 27 </args>
+      <args> u[14] u[10] x[14][10] 27 </args>
+      <args> u[14] u[11] x[14][11] 28 </args>
+      <args> u[14] u[12] x[14][12] 21 </args>
+      <args> u[14] u[13] x[14][13] 29 </args>
+      <args> u[14] u[15] x[14][15] 24 </args>
+      <args> u[15] u[1] x[15][1] 16 </args>
+      <args> u[15] u[2] x[15][2] 5 </args>
+      <args> u[15] u[3] x[15][3] 19 </args>
+      <args> u[15] u[4] x[15][4] 12 </args>
+      <args> u[15] u[5] x[15][5] 24 </args>
+      <args> u[15] u[6] x[15][6] 4 </args>
+      <args> u[15] u[7] x[15][7] 20 </args>
+      <args> u[15] u[8] x[15][8] 7 </args>
+      <args> u[15] u[9] x[15][9] 27 </args>
+      <args> u[15] u[10] x[15][10] 27 </args>
+      <args> u[15] u[11] x[15][11] 28 </args>
+      <args> u[15] u[12] x[15][12] 21 </args>
+      <args> u[15] u[13] x[15][13] 29 </args>
+      <args> u[15] u[14] x[15][14] 16 </args>
+    </group>
+    <group note="satisfying demand at each node">
+      <intension> ge(%0,%1) </intension>
+      <args> u[1] 19 </args>
+      <args> u[2] 30 </args>
+      <args> u[3] 16 </args>
+      <args> u[4] 23 </args>
+      <args> u[5] 11 </args>
+      <args> u[6] 31 </args>
+      <args> u[7] 15 </args>
+      <args> u[8] 28 </args>
+      <args> u[9] 8 </args>
+      <args> u[10] 8 </args>
+      <args> u[11] 7 </args>
+      <args> u[12] 14 </args>
+      <args> u[13] 6 </args>
+      <args> u[14] 19 </args>
+      <args> u[15] 11 </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize type="sum">
+      <list> x[][] </list>
+      <coeffs> 0 14 21 33 22 23 12 22 32 32 21 28 30 29 31 30 14 0 12 19 12 24 12 19 21 27 7 19 16 21 33 17 21 12 0 15 22 16 11 9 12 15 11 29 19 9 24 23 33 19 15 0 21 31 25 23 8 24 12 25 9 17 37 16 22 12 22 21 0 36 24 30 26 37 12 7 13 30 44 9 23 24 16 31 36 0 13 8 25 13 26 43 35 16 8 39 12 12 11 25 24 13 0 10 23 20 16 31 26 17 21 28 22 19 9 23 30 8 10 0 18 10 19 37 28 9 15 32 32 21 12 8 26 25 23 18 0 17 15 32 17 10 31 23 32 27 15 24 37 13 20 10 17 0 25 44 31 7 16 37 21 7 11 12 12 26 16 19 15 25 0 19 10 18 34 13 28 19 29 25 7 43 31 37 32 44 19 0 16 37 51 10 30 16 19 9 13 35 26 28 17 31 10 16 0 24 43 6 29 21 9 17 30 16 17 9 10 7 18 37 24 0 21 30 31 33 24 37 44 8 21 15 31 16 34 51 43 21 0 47 30 17 23 16 9 39 28 32 23 37 13 10 6 30 47 0 </coeffs>
+    </minimize>
+  </objectives>
+</instance>

@@ -1,0 +1,52 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" size="[10][10]"> 0..149 </array>
+    <array id="z" size="[10][10][10]"> 0..149 </array>
+    <array id="q" size="[10][10][10]"> 0..149 </array>
+    <var id="idx"> 0..9 </var>
+    <var id="res"> 2..151 </var>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[2]"> 0..149 </array>
+  </variables>
+  <constraints>
+    <element>
+      <list> x[][0] </list>
+      <index> x[0][0] </index>
+      <value> 5 </value>
+    </element>
+    <element>
+      <matrix> z[0][][] </matrix>
+      <index> z[0][0][0] q[0][1][2] </index>
+      <value> 5 </value>
+    </element>
+    <element>
+      <matrix> z[1][][] </matrix>
+      <index> z[0][0][0] q[0][1][2] </index>
+      <value> 6 </value>
+    </element>
+    <element>
+      <list> x[0][] </list>
+      <index> idx </index>
+      <value> aux_gb[0] </value>
+    </element>
+    <element>
+      <list> x[1][] </list>
+      <index> idx </index>
+      <value> aux_gb[1] </value>
+    </element>
+    <sum>
+      <list> x[0..1][] </list>
+      <coeffs> 1 1 1 1 1 1 1 1 1 1 0 -1 -2 -3 -4 -5 -6 -7 -8 -9 </coeffs>
+      <condition> (gt,0) </condition>
+    </sum>
+    <sum>
+      <list> x[0..1][] </list>
+      <coeffs> 1 1 1 1 1 1 1 1 1 1 0 -1 -2 -3 -4 -5 -6 -7 -8 -9 </coeffs>
+      <condition> (gt,0) </condition>
+    </sum>
+    <group>
+      <intension> eq(sub(res,2),%0) </intension>
+      <args> aux_gb[0] </args>
+      <args> aux_gb[1] </args>
+    </group>
+  </constraints>
+</instance>

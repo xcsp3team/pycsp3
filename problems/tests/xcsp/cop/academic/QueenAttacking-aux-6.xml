@@ -1,0 +1,31 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <var id="q" note="q is the cell for the queen"> 0..35 </var>
+    <array id="x" note="x[i] is the cell for the i+1th value" size="[36]"> 0..35 </array>
+    <array id="p" note="p[j] is 1 iff the j+1th prime number is not attacked by a queen" size="[11]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all values are put in different cells"> x[] </allDifferent>
+    <slide note="ensuring a knight move between two successive values">
+      <list> x[] </list>
+      <intension> or(and(eq(dist(div(%0,6),div(%1,6)),1),eq(dist(mod(%0,6),mod(%1,6)),2)),and(eq(dist(div(%0,6),div(%1,6)),2),eq(dist(mod(%0,6),mod(%1,6)),1))) </intension>
+    </slide>
+    <group note="determining if prime numbers are attacked by the queen">
+      <intension> iff(%0,or(eq(q,%1),and(ne(div(q,6),div(%1,6)),ne(mod(q,6),mod(%1,6)),ne(dist(div(q,6),div(%1,6)),dist(mod(q,6),mod(%1,6)))))) </intension>
+      <args> p[0] x[1] </args>
+      <args> p[1] x[2] </args>
+      <args> p[2] x[4] </args>
+      <args> p[3] x[6] </args>
+      <args> p[4] x[10] </args>
+      <args> p[5] x[12] </args>
+      <args> p[6] x[16] </args>
+      <args> p[7] x[18] </args>
+      <args> p[8] x[22] </args>
+      <args> p[9] x[28] </args>
+      <args> p[10] x[30] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the number of free primes" type="sum"> p[] </minimize>
+  </objectives>
+</instance>

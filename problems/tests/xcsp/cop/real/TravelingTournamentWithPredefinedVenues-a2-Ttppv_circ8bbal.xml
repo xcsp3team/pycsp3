@@ -1,0 +1,503 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="o" note="o[i][k] is the opponent (team) of the ith team  at the kth round" size="[8][7]"> 0..7 </array>
+    <array id="h" note="h[i][k] is 1 iff the ith team plays at home at the kth round" size="[8][7]"> 0 1 </array>
+    <array id="t" note="t[i][k] is the travelled distance by the ith team at the kth round. An additional round is considered for returning at home." size="[8][8]"> 0..4 </array>
+  </variables>
+  <constraints>
+    <group note="a team cannot play against itself">
+      <intension> ne(%0,%1) </intension>
+      <args> o[0][0] 0 </args>
+      <args> o[0][1] 0 </args>
+      <args> o[0][2] 0 </args>
+      <args> o[0][3] 0 </args>
+      <args> o[0][4] 0 </args>
+      <args> o[0][5] 0 </args>
+      <args> o[0][6] 0 </args>
+      <args> o[1][0] 1 </args>
+      <args> o[1][1] 1 </args>
+      <args> o[1][2] 1 </args>
+      <args> o[1][3] 1 </args>
+      <args> o[1][4] 1 </args>
+      <args> o[1][5] 1 </args>
+      <args> o[1][6] 1 </args>
+      <args> o[2][0] 2 </args>
+      <args> o[2][1] 2 </args>
+      <args> o[2][2] 2 </args>
+      <args> o[2][3] 2 </args>
+      <args> o[2][4] 2 </args>
+      <args> o[2][5] 2 </args>
+      <args> o[2][6] 2 </args>
+      <args> o[3][0] 3 </args>
+      <args> o[3][1] 3 </args>
+      <args> o[3][2] 3 </args>
+      <args> o[3][3] 3 </args>
+      <args> o[3][4] 3 </args>
+      <args> o[3][5] 3 </args>
+      <args> o[3][6] 3 </args>
+      <args> o[4][0] 4 </args>
+      <args> o[4][1] 4 </args>
+      <args> o[4][2] 4 </args>
+      <args> o[4][3] 4 </args>
+      <args> o[4][4] 4 </args>
+      <args> o[4][5] 4 </args>
+      <args> o[4][6] 4 </args>
+      <args> o[5][0] 5 </args>
+      <args> o[5][1] 5 </args>
+      <args> o[5][2] 5 </args>
+      <args> o[5][3] 5 </args>
+      <args> o[5][4] 5 </args>
+      <args> o[5][5] 5 </args>
+      <args> o[5][6] 5 </args>
+      <args> o[6][0] 6 </args>
+      <args> o[6][1] 6 </args>
+      <args> o[6][2] 6 </args>
+      <args> o[6][3] 6 </args>
+      <args> o[6][4] 6 </args>
+      <args> o[6][5] 6 </args>
+      <args> o[6][6] 6 </args>
+      <args> o[7][0] 7 </args>
+      <args> o[7][1] 7 </args>
+      <args> o[7][2] 7 </args>
+      <args> o[7][3] 7 </args>
+      <args> o[7][4] 7 </args>
+      <args> o[7][5] 7 </args>
+      <args> o[7][6] 7 </args>
+    </group>
+    <block note="ensuring predefined venues">
+      <group>
+        <element>
+          <list> 0 1 1 0 0 0 0 1 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[0][0] h[0][0] </args>
+        <args> o[0][1] h[0][1] </args>
+        <args> o[0][2] h[0][2] </args>
+        <args> o[0][3] h[0][3] </args>
+        <args> o[0][4] h[0][4] </args>
+        <args> o[0][5] h[0][5] </args>
+        <args> o[0][6] h[0][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> 0 0 0 1 0 1 0 1 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[1][0] h[1][0] </args>
+        <args> o[1][1] h[1][1] </args>
+        <args> o[1][2] h[1][2] </args>
+        <args> o[1][3] h[1][3] </args>
+        <args> o[1][4] h[1][4] </args>
+        <args> o[1][5] h[1][5] </args>
+        <args> o[1][6] h[1][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> 0 1 0 0 1 0 1 1 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[2][0] h[2][0] </args>
+        <args> o[2][1] h[2][1] </args>
+        <args> o[2][2] h[2][2] </args>
+        <args> o[2][3] h[2][3] </args>
+        <args> o[2][4] h[2][4] </args>
+        <args> o[2][5] h[2][5] </args>
+        <args> o[2][6] h[2][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> 1 0 1 0 0 1 1 0 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[3][0] h[3][0] </args>
+        <args> o[3][1] h[3][1] </args>
+        <args> o[3][2] h[3][2] </args>
+        <args> o[3][3] h[3][3] </args>
+        <args> o[3][4] h[3][4] </args>
+        <args> o[3][5] h[3][5] </args>
+        <args> o[3][6] h[3][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> 1 1 0 1 0 0 1 0 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[4][0] h[4][0] </args>
+        <args> o[4][1] h[4][1] </args>
+        <args> o[4][2] h[4][2] </args>
+        <args> o[4][3] h[4][3] </args>
+        <args> o[4][4] h[4][4] </args>
+        <args> o[4][5] h[4][5] </args>
+        <args> o[4][6] h[4][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> 1 0 1 0 1 0 0 0 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[5][0] h[5][0] </args>
+        <args> o[5][1] h[5][1] </args>
+        <args> o[5][2] h[5][2] </args>
+        <args> o[5][3] h[5][3] </args>
+        <args> o[5][4] h[5][4] </args>
+        <args> o[5][5] h[5][5] </args>
+        <args> o[5][6] h[5][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> 1 1 0 0 0 1 0 0 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[6][0] h[6][0] </args>
+        <args> o[6][1] h[6][1] </args>
+        <args> o[6][2] h[6][2] </args>
+        <args> o[6][3] h[6][3] </args>
+        <args> o[6][4] h[6][4] </args>
+        <args> o[6][5] h[6][5] </args>
+        <args> o[6][6] h[6][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> 0 0 0 1 1 1 1 0 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[7][0] h[7][0] </args>
+        <args> o[7][1] h[7][1] </args>
+        <args> o[7][2] h[7][2] </args>
+        <args> o[7][3] h[7][3] </args>
+        <args> o[7][4] h[7][4] </args>
+        <args> o[7][5] h[7][5] </args>
+        <args> o[7][6] h[7][6] </args>
+      </group>
+    </block>
+    <block note="ensuring symmetry of games: if team i plays against j, then team j plays against i">
+      <group>
+        <element>
+          <list> %0 %1 %2 %3 %4 %5 %6 %7 </list>
+          <index> %8 </index>
+          <value> 0 </value>
+        </element>
+        <args> o[][0] o[0][0] </args>
+        <args> o[][1] o[0][1] </args>
+        <args> o[][2] o[0][2] </args>
+        <args> o[][3] o[0][3] </args>
+        <args> o[][4] o[0][4] </args>
+        <args> o[][5] o[0][5] </args>
+        <args> o[][6] o[0][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> %0 %1 %2 %3 %4 %5 %6 %7 </list>
+          <index> %8 </index>
+          <value> 1 </value>
+        </element>
+        <args> o[][0] o[1][0] </args>
+        <args> o[][1] o[1][1] </args>
+        <args> o[][2] o[1][2] </args>
+        <args> o[][3] o[1][3] </args>
+        <args> o[][4] o[1][4] </args>
+        <args> o[][5] o[1][5] </args>
+        <args> o[][6] o[1][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> %0 %1 %2 %3 %4 %5 %6 %7 </list>
+          <index> %8 </index>
+          <value> 2 </value>
+        </element>
+        <args> o[][0] o[2][0] </args>
+        <args> o[][1] o[2][1] </args>
+        <args> o[][2] o[2][2] </args>
+        <args> o[][3] o[2][3] </args>
+        <args> o[][4] o[2][4] </args>
+        <args> o[][5] o[2][5] </args>
+        <args> o[][6] o[2][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> %0 %1 %2 %3 %4 %5 %6 %7 </list>
+          <index> %8 </index>
+          <value> 3 </value>
+        </element>
+        <args> o[][0] o[3][0] </args>
+        <args> o[][1] o[3][1] </args>
+        <args> o[][2] o[3][2] </args>
+        <args> o[][3] o[3][3] </args>
+        <args> o[][4] o[3][4] </args>
+        <args> o[][5] o[3][5] </args>
+        <args> o[][6] o[3][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> %0 %1 %2 %3 %4 %5 %6 %7 </list>
+          <index> %8 </index>
+          <value> 4 </value>
+        </element>
+        <args> o[][0] o[4][0] </args>
+        <args> o[][1] o[4][1] </args>
+        <args> o[][2] o[4][2] </args>
+        <args> o[][3] o[4][3] </args>
+        <args> o[][4] o[4][4] </args>
+        <args> o[][5] o[4][5] </args>
+        <args> o[][6] o[4][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> %0 %1 %2 %3 %4 %5 %6 %7 </list>
+          <index> %8 </index>
+          <value> 5 </value>
+        </element>
+        <args> o[][0] o[5][0] </args>
+        <args> o[][1] o[5][1] </args>
+        <args> o[][2] o[5][2] </args>
+        <args> o[][3] o[5][3] </args>
+        <args> o[][4] o[5][4] </args>
+        <args> o[][5] o[5][5] </args>
+        <args> o[][6] o[5][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> %0 %1 %2 %3 %4 %5 %6 %7 </list>
+          <index> %8 </index>
+          <value> 6 </value>
+        </element>
+        <args> o[][0] o[6][0] </args>
+        <args> o[][1] o[6][1] </args>
+        <args> o[][2] o[6][2] </args>
+        <args> o[][3] o[6][3] </args>
+        <args> o[][4] o[6][4] </args>
+        <args> o[][5] o[6][5] </args>
+        <args> o[][6] o[6][6] </args>
+      </group>
+      <group>
+        <element>
+          <list> %0 %1 %2 %3 %4 %5 %6 %7 </list>
+          <index> %8 </index>
+          <value> 7 </value>
+        </element>
+        <args> o[][0] o[7][0] </args>
+        <args> o[][1] o[7][1] </args>
+        <args> o[][2] o[7][2] </args>
+        <args> o[][3] o[7][3] </args>
+        <args> o[][4] o[7][4] </args>
+        <args> o[][5] o[7][5] </args>
+        <args> o[][6] o[7][6] </args>
+      </group>
+    </block>
+    <group note="each team plays once against all other teams">
+      <allDifferent> %... </allDifferent>
+      <args> o[0][] </args>
+      <args> o[1][] </args>
+      <args> o[2][] </args>
+      <args> o[3][] </args>
+      <args> o[4][] </args>
+      <args> o[5][] </args>
+      <args> o[6][] </args>
+      <args> o[7][] </args>
+    </group>
+    <group note="at most 2 consecutive games at home, or consecutive games away">
+      <regular>
+        <list> %... </list>
+        <transitions> (q,0,q01)(q,1,q11)(q01,0,q02)(q01,1,q11)(q11,0,q01)(q11,1,q12)(q02,1,q11)(q12,0,q01) </transitions>
+        <start> q </start>
+        <final> q01 q02 q11 q12 </final>
+      </regular>
+      <args> h[0][] </args>
+      <args> h[1][] </args>
+      <args> h[2][] </args>
+      <args> h[3][] </args>
+      <args> h[4][] </args>
+      <args> h[5][] </args>
+      <args> h[6][] </args>
+      <args> h[7][] </args>
+    </group>
+    <block note="handling travelling for the first game">
+      <extension>
+        <list> h[0][0] o[0][0] t[0][0] </list>
+        <supports> (0,1,1)(0,2,2)(0,3,3)(0,4,4)(0,5,3)(0,6,2)(0,7,1)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[1][0] o[1][0] t[1][0] </list>
+        <supports> (0,0,1)(0,2,1)(0,3,2)(0,4,3)(0,5,4)(0,6,3)(0,7,2)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[2][0] o[2][0] t[2][0] </list>
+        <supports> (0,0,2)(0,1,1)(0,3,1)(0,4,2)(0,5,3)(0,6,4)(0,7,3)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[3][0] o[3][0] t[3][0] </list>
+        <supports> (0,0,3)(0,1,2)(0,2,1)(0,4,1)(0,5,2)(0,6,3)(0,7,4)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[4][0] o[4][0] t[4][0] </list>
+        <supports> (0,0,4)(0,1,3)(0,2,2)(0,3,1)(0,5,1)(0,6,2)(0,7,3)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[5][0] o[5][0] t[5][0] </list>
+        <supports> (0,0,3)(0,1,4)(0,2,3)(0,3,2)(0,4,1)(0,6,1)(0,7,2)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[6][0] o[6][0] t[6][0] </list>
+        <supports> (0,0,2)(0,1,3)(0,2,4)(0,3,3)(0,4,2)(0,5,1)(0,7,1)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[7][0] o[7][0] t[7][0] </list>
+        <supports> (0,0,1)(0,1,2)(0,2,3)(0,3,4)(0,4,3)(0,5,2)(0,6,1)(1,*,0) </supports>
+      </extension>
+    </block>
+    <block note="handling travelling for the last game">
+      <extension>
+        <list> h[0][6] o[0][6] t[0][7] </list>
+        <supports> (0,1,1)(0,2,2)(0,3,3)(0,4,4)(0,5,3)(0,6,2)(0,7,1)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[1][6] o[1][6] t[1][7] </list>
+        <supports> (0,0,1)(0,2,1)(0,3,2)(0,4,3)(0,5,4)(0,6,3)(0,7,2)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[2][6] o[2][6] t[2][7] </list>
+        <supports> (0,0,2)(0,1,1)(0,3,1)(0,4,2)(0,5,3)(0,6,4)(0,7,3)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[3][6] o[3][6] t[3][7] </list>
+        <supports> (0,0,3)(0,1,2)(0,2,1)(0,4,1)(0,5,2)(0,6,3)(0,7,4)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[4][6] o[4][6] t[4][7] </list>
+        <supports> (0,0,4)(0,1,3)(0,2,2)(0,3,1)(0,5,1)(0,6,2)(0,7,3)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[5][6] o[5][6] t[5][7] </list>
+        <supports> (0,0,3)(0,1,4)(0,2,3)(0,3,2)(0,4,1)(0,6,1)(0,7,2)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[6][6] o[6][6] t[6][7] </list>
+        <supports> (0,0,2)(0,1,3)(0,2,4)(0,3,3)(0,4,2)(0,5,1)(0,7,1)(1,*,0) </supports>
+      </extension>
+      <extension>
+        <list> h[7][6] o[7][6] t[7][7] </list>
+        <supports> (0,0,1)(0,1,2)(0,2,3)(0,3,4)(0,4,3)(0,5,2)(0,6,1)(1,*,0) </supports>
+      </extension>
+    </block>
+    <block note="handling travelling for two successive games">
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,1,2,1)(0,0,1,3,2)(0,0,1,4,3)(0,0,1,5,4)(0,0,1,6,3)(0,0,1,7,2)(0,0,2,1,1)(0,0,2,3,1)(0,0,2,4,2)(0,0,2,5,3)(0,0,2,6,4)(0,0,2,7,3)(0,0,3,1,2)(0,0,3,2,1)(0,0,3,4,1)(0,0,3,5,2)(0,0,3,6,3)(0,0,3,7,4)(0,0,4,1,3)(0,0,4,2,2)(0,0,4,3,1)(0,0,4,5,1)(0,0,4,6,2)(0,0,4,7,3)(0,0,5,1,4)(0,0,5,2,3)(0,0,5,3,2)(0,0,5,4,1)(0,0,5,6,1)(0,0,5,7,2)(0,0,6,1,3)(0,0,6,2,4)(0,0,6,3,3)(0,0,6,4,2)(0,0,6,5,1)(0,0,6,7,1)(0,0,7,1,2)(0,0,7,2,3)(0,0,7,3,4)(0,0,7,4,3)(0,0,7,5,2)(0,0,7,6,1)(0,1,1,*,1)(0,1,2,*,2)(0,1,3,*,3)(0,1,4,*,4)(0,1,5,*,3)(0,1,6,*,2)(0,1,7,*,1)(1,0,*,1,1)(1,0,*,2,2)(1,0,*,3,3)(1,0,*,4,4)(1,0,*,5,3)(1,0,*,6,2)(1,0,*,7,1)(1,1,*,*,0) </supports>
+        </extension>
+        <args> h[0][0] h[0][1] o[0][0] o[0][1] t[0][1] </args>
+        <args> h[0][1] h[0][2] o[0][1] o[0][2] t[0][2] </args>
+        <args> h[0][2] h[0][3] o[0][2] o[0][3] t[0][3] </args>
+        <args> h[0][3] h[0][4] o[0][3] o[0][4] t[0][4] </args>
+        <args> h[0][4] h[0][5] o[0][4] o[0][5] t[0][5] </args>
+        <args> h[0][5] h[0][6] o[0][5] o[0][6] t[0][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,2,2)(0,0,0,3,3)(0,0,0,4,4)(0,0,0,5,3)(0,0,0,6,2)(0,0,0,7,1)(0,0,2,0,2)(0,0,2,3,1)(0,0,2,4,2)(0,0,2,5,3)(0,0,2,6,4)(0,0,2,7,3)(0,0,3,0,3)(0,0,3,2,1)(0,0,3,4,1)(0,0,3,5,2)(0,0,3,6,3)(0,0,3,7,4)(0,0,4,0,4)(0,0,4,2,2)(0,0,4,3,1)(0,0,4,5,1)(0,0,4,6,2)(0,0,4,7,3)(0,0,5,0,3)(0,0,5,2,3)(0,0,5,3,2)(0,0,5,4,1)(0,0,5,6,1)(0,0,5,7,2)(0,0,6,0,2)(0,0,6,2,4)(0,0,6,3,3)(0,0,6,4,2)(0,0,6,5,1)(0,0,6,7,1)(0,0,7,0,1)(0,0,7,2,3)(0,0,7,3,4)(0,0,7,4,3)(0,0,7,5,2)(0,0,7,6,1)(0,1,0,*,1)(0,1,2,*,1)(0,1,3,*,2)(0,1,4,*,3)(0,1,5,*,4)(0,1,6,*,3)(0,1,7,*,2)(1,0,*,0,1)(1,0,*,2,1)(1,0,*,3,2)(1,0,*,4,3)(1,0,*,5,4)(1,0,*,6,3)(1,0,*,7,2)(1,1,*,*,0) </supports>
+        </extension>
+        <args> h[1][0] h[1][1] o[1][0] o[1][1] t[1][1] </args>
+        <args> h[1][1] h[1][2] o[1][1] o[1][2] t[1][2] </args>
+        <args> h[1][2] h[1][3] o[1][2] o[1][3] t[1][3] </args>
+        <args> h[1][3] h[1][4] o[1][3] o[1][4] t[1][4] </args>
+        <args> h[1][4] h[1][5] o[1][4] o[1][5] t[1][5] </args>
+        <args> h[1][5] h[1][6] o[1][5] o[1][6] t[1][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,1,1)(0,0,0,3,3)(0,0,0,4,4)(0,0,0,5,3)(0,0,0,6,2)(0,0,0,7,1)(0,0,1,0,1)(0,0,1,3,2)(0,0,1,4,3)(0,0,1,5,4)(0,0,1,6,3)(0,0,1,7,2)(0,0,3,0,3)(0,0,3,1,2)(0,0,3,4,1)(0,0,3,5,2)(0,0,3,6,3)(0,0,3,7,4)(0,0,4,0,4)(0,0,4,1,3)(0,0,4,3,1)(0,0,4,5,1)(0,0,4,6,2)(0,0,4,7,3)(0,0,5,0,3)(0,0,5,1,4)(0,0,5,3,2)(0,0,5,4,1)(0,0,5,6,1)(0,0,5,7,2)(0,0,6,0,2)(0,0,6,1,3)(0,0,6,3,3)(0,0,6,4,2)(0,0,6,5,1)(0,0,6,7,1)(0,0,7,0,1)(0,0,7,1,2)(0,0,7,3,4)(0,0,7,4,3)(0,0,7,5,2)(0,0,7,6,1)(0,1,0,*,2)(0,1,1,*,1)(0,1,3,*,1)(0,1,4,*,2)(0,1,5,*,3)(0,1,6,*,4)(0,1,7,*,3)(1,0,*,0,2)(1,0,*,1,1)(1,0,*,3,1)(1,0,*,4,2)(1,0,*,5,3)(1,0,*,6,4)(1,0,*,7,3)(1,1,*,*,0) </supports>
+        </extension>
+        <args> h[2][0] h[2][1] o[2][0] o[2][1] t[2][1] </args>
+        <args> h[2][1] h[2][2] o[2][1] o[2][2] t[2][2] </args>
+        <args> h[2][2] h[2][3] o[2][2] o[2][3] t[2][3] </args>
+        <args> h[2][3] h[2][4] o[2][3] o[2][4] t[2][4] </args>
+        <args> h[2][4] h[2][5] o[2][4] o[2][5] t[2][5] </args>
+        <args> h[2][5] h[2][6] o[2][5] o[2][6] t[2][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,1,1)(0,0,0,2,2)(0,0,0,4,4)(0,0,0,5,3)(0,0,0,6,2)(0,0,0,7,1)(0,0,1,0,1)(0,0,1,2,1)(0,0,1,4,3)(0,0,1,5,4)(0,0,1,6,3)(0,0,1,7,2)(0,0,2,0,2)(0,0,2,1,1)(0,0,2,4,2)(0,0,2,5,3)(0,0,2,6,4)(0,0,2,7,3)(0,0,4,0,4)(0,0,4,1,3)(0,0,4,2,2)(0,0,4,5,1)(0,0,4,6,2)(0,0,4,7,3)(0,0,5,0,3)(0,0,5,1,4)(0,0,5,2,3)(0,0,5,4,1)(0,0,5,6,1)(0,0,5,7,2)(0,0,6,0,2)(0,0,6,1,3)(0,0,6,2,4)(0,0,6,4,2)(0,0,6,5,1)(0,0,6,7,1)(0,0,7,0,1)(0,0,7,1,2)(0,0,7,2,3)(0,0,7,4,3)(0,0,7,5,2)(0,0,7,6,1)(0,1,0,*,3)(0,1,1,*,2)(0,1,2,*,1)(0,1,4,*,1)(0,1,5,*,2)(0,1,6,*,3)(0,1,7,*,4)(1,0,*,0,3)(1,0,*,1,2)(1,0,*,2,1)(1,0,*,4,1)(1,0,*,5,2)(1,0,*,6,3)(1,0,*,7,4)(1,1,*,*,0) </supports>
+        </extension>
+        <args> h[3][0] h[3][1] o[3][0] o[3][1] t[3][1] </args>
+        <args> h[3][1] h[3][2] o[3][1] o[3][2] t[3][2] </args>
+        <args> h[3][2] h[3][3] o[3][2] o[3][3] t[3][3] </args>
+        <args> h[3][3] h[3][4] o[3][3] o[3][4] t[3][4] </args>
+        <args> h[3][4] h[3][5] o[3][4] o[3][5] t[3][5] </args>
+        <args> h[3][5] h[3][6] o[3][5] o[3][6] t[3][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,1,1)(0,0,0,2,2)(0,0,0,3,3)(0,0,0,5,3)(0,0,0,6,2)(0,0,0,7,1)(0,0,1,0,1)(0,0,1,2,1)(0,0,1,3,2)(0,0,1,5,4)(0,0,1,6,3)(0,0,1,7,2)(0,0,2,0,2)(0,0,2,1,1)(0,0,2,3,1)(0,0,2,5,3)(0,0,2,6,4)(0,0,2,7,3)(0,0,3,0,3)(0,0,3,1,2)(0,0,3,2,1)(0,0,3,5,2)(0,0,3,6,3)(0,0,3,7,4)(0,0,5,0,3)(0,0,5,1,4)(0,0,5,2,3)(0,0,5,3,2)(0,0,5,6,1)(0,0,5,7,2)(0,0,6,0,2)(0,0,6,1,3)(0,0,6,2,4)(0,0,6,3,3)(0,0,6,5,1)(0,0,6,7,1)(0,0,7,0,1)(0,0,7,1,2)(0,0,7,2,3)(0,0,7,3,4)(0,0,7,5,2)(0,0,7,6,1)(0,1,0,*,4)(0,1,1,*,3)(0,1,2,*,2)(0,1,3,*,1)(0,1,5,*,1)(0,1,6,*,2)(0,1,7,*,3)(1,0,*,0,4)(1,0,*,1,3)(1,0,*,2,2)(1,0,*,3,1)(1,0,*,5,1)(1,0,*,6,2)(1,0,*,7,3)(1,1,*,*,0) </supports>
+        </extension>
+        <args> h[4][0] h[4][1] o[4][0] o[4][1] t[4][1] </args>
+        <args> h[4][1] h[4][2] o[4][1] o[4][2] t[4][2] </args>
+        <args> h[4][2] h[4][3] o[4][2] o[4][3] t[4][3] </args>
+        <args> h[4][3] h[4][4] o[4][3] o[4][4] t[4][4] </args>
+        <args> h[4][4] h[4][5] o[4][4] o[4][5] t[4][5] </args>
+        <args> h[4][5] h[4][6] o[4][5] o[4][6] t[4][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,1,1)(0,0,0,2,2)(0,0,0,3,3)(0,0,0,4,4)(0,0,0,6,2)(0,0,0,7,1)(0,0,1,0,1)(0,0,1,2,1)(0,0,1,3,2)(0,0,1,4,3)(0,0,1,6,3)(0,0,1,7,2)(0,0,2,0,2)(0,0,2,1,1)(0,0,2,3,1)(0,0,2,4,2)(0,0,2,6,4)(0,0,2,7,3)(0,0,3,0,3)(0,0,3,1,2)(0,0,3,2,1)(0,0,3,4,1)(0,0,3,6,3)(0,0,3,7,4)(0,0,4,0,4)(0,0,4,1,3)(0,0,4,2,2)(0,0,4,3,1)(0,0,4,6,2)(0,0,4,7,3)(0,0,6,0,2)(0,0,6,1,3)(0,0,6,2,4)(0,0,6,3,3)(0,0,6,4,2)(0,0,6,7,1)(0,0,7,0,1)(0,0,7,1,2)(0,0,7,2,3)(0,0,7,3,4)(0,0,7,4,3)(0,0,7,6,1)(0,1,0,*,3)(0,1,1,*,4)(0,1,2,*,3)(0,1,3,*,2)(0,1,4,*,1)(0,1,6,*,1)(0,1,7,*,2)(1,0,*,0,3)(1,0,*,1,4)(1,0,*,2,3)(1,0,*,3,2)(1,0,*,4,1)(1,0,*,6,1)(1,0,*,7,2)(1,1,*,*,0) </supports>
+        </extension>
+        <args> h[5][0] h[5][1] o[5][0] o[5][1] t[5][1] </args>
+        <args> h[5][1] h[5][2] o[5][1] o[5][2] t[5][2] </args>
+        <args> h[5][2] h[5][3] o[5][2] o[5][3] t[5][3] </args>
+        <args> h[5][3] h[5][4] o[5][3] o[5][4] t[5][4] </args>
+        <args> h[5][4] h[5][5] o[5][4] o[5][5] t[5][5] </args>
+        <args> h[5][5] h[5][6] o[5][5] o[5][6] t[5][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,1,1)(0,0,0,2,2)(0,0,0,3,3)(0,0,0,4,4)(0,0,0,5,3)(0,0,0,7,1)(0,0,1,0,1)(0,0,1,2,1)(0,0,1,3,2)(0,0,1,4,3)(0,0,1,5,4)(0,0,1,7,2)(0,0,2,0,2)(0,0,2,1,1)(0,0,2,3,1)(0,0,2,4,2)(0,0,2,5,3)(0,0,2,7,3)(0,0,3,0,3)(0,0,3,1,2)(0,0,3,2,1)(0,0,3,4,1)(0,0,3,5,2)(0,0,3,7,4)(0,0,4,0,4)(0,0,4,1,3)(0,0,4,2,2)(0,0,4,3,1)(0,0,4,5,1)(0,0,4,7,3)(0,0,5,0,3)(0,0,5,1,4)(0,0,5,2,3)(0,0,5,3,2)(0,0,5,4,1)(0,0,5,7,2)(0,0,7,0,1)(0,0,7,1,2)(0,0,7,2,3)(0,0,7,3,4)(0,0,7,4,3)(0,0,7,5,2)(0,1,0,*,2)(0,1,1,*,3)(0,1,2,*,4)(0,1,3,*,3)(0,1,4,*,2)(0,1,5,*,1)(0,1,7,*,1)(1,0,*,0,2)(1,0,*,1,3)(1,0,*,2,4)(1,0,*,3,3)(1,0,*,4,2)(1,0,*,5,1)(1,0,*,7,1)(1,1,*,*,0) </supports>
+        </extension>
+        <args> h[6][0] h[6][1] o[6][0] o[6][1] t[6][1] </args>
+        <args> h[6][1] h[6][2] o[6][1] o[6][2] t[6][2] </args>
+        <args> h[6][2] h[6][3] o[6][2] o[6][3] t[6][3] </args>
+        <args> h[6][3] h[6][4] o[6][3] o[6][4] t[6][4] </args>
+        <args> h[6][4] h[6][5] o[6][4] o[6][5] t[6][5] </args>
+        <args> h[6][5] h[6][6] o[6][5] o[6][6] t[6][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %... </list>
+          <supports> (0,0,0,1,1)(0,0,0,2,2)(0,0,0,3,3)(0,0,0,4,4)(0,0,0,5,3)(0,0,0,6,2)(0,0,1,0,1)(0,0,1,2,1)(0,0,1,3,2)(0,0,1,4,3)(0,0,1,5,4)(0,0,1,6,3)(0,0,2,0,2)(0,0,2,1,1)(0,0,2,3,1)(0,0,2,4,2)(0,0,2,5,3)(0,0,2,6,4)(0,0,3,0,3)(0,0,3,1,2)(0,0,3,2,1)(0,0,3,4,1)(0,0,3,5,2)(0,0,3,6,3)(0,0,4,0,4)(0,0,4,1,3)(0,0,4,2,2)(0,0,4,3,1)(0,0,4,5,1)(0,0,4,6,2)(0,0,5,0,3)(0,0,5,1,4)(0,0,5,2,3)(0,0,5,3,2)(0,0,5,4,1)(0,0,5,6,1)(0,0,6,0,2)(0,0,6,1,3)(0,0,6,2,4)(0,0,6,3,3)(0,0,6,4,2)(0,0,6,5,1)(0,1,0,*,1)(0,1,1,*,2)(0,1,2,*,3)(0,1,3,*,4)(0,1,4,*,3)(0,1,5,*,2)(0,1,6,*,1)(1,0,*,0,1)(1,0,*,1,2)(1,0,*,2,3)(1,0,*,3,4)(1,0,*,4,3)(1,0,*,5,2)(1,0,*,6,1)(1,1,*,*,0) </supports>
+        </extension>
+        <args> h[7][0] h[7][1] o[7][0] o[7][1] t[7][1] </args>
+        <args> h[7][1] h[7][2] o[7][1] o[7][2] t[7][2] </args>
+        <args> h[7][2] h[7][3] o[7][2] o[7][3] t[7][3] </args>
+        <args> h[7][3] h[7][4] o[7][3] o[7][4] t[7][4] </args>
+        <args> h[7][4] h[7][5] o[7][4] o[7][5] t[7][5] </args>
+        <args> h[7][5] h[7][6] o[7][5] o[7][6] t[7][6] </args>
+      </group>
+    </block>
+    <group class="redundant-constraints" note="at each round, opponents are all different">
+      <allDifferent> %... </allDifferent>
+      <args> o[][0] </args>
+      <args> o[][1] </args>
+      <args> o[][2] </args>
+      <args> o[][3] </args>
+      <args> o[][4] </args>
+      <args> o[][5] </args>
+      <args> o[][6] </args>
+    </group>
+    <intension class="symmetry-breaking"> lt(o[0][0],o[0][6]) </intension>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing summed up travelled distance" type="sum"> t[][] </minimize>
+  </objectives>
+</instance>

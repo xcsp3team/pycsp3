@@ -1,0 +1,36 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the ith value of the first set" size="[5]"> 1..10 </array>
+    <array id="y" note="y[i] is the ith value of the second set" size="[5]"> 1..10 </array>
+  </variables>
+  <constraints>
+    <allDifferent> x[] y[] </allDifferent>
+    <group class="power1">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,27) </condition>
+      </sum>
+      <args> x[] </args>
+      <args> y[] </args>
+    </group>
+    <group class="power2">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,192) </condition>
+      </sum>
+      <args> mul(x[0],x[0]) mul(x[1],x[1]) mul(x[2],x[2]) mul(x[3],x[3]) mul(x[4],x[4]) </args>
+      <args> mul(y[0],y[0]) mul(y[1],y[1]) mul(y[2],y[2]) mul(y[3],y[3]) mul(y[4],y[4]) </args>
+    </group>
+    <block class="symmetry-breaking">
+      <intension> eq(x[0],1) </intension>
+      <group>
+        <ordered>
+          <list> %... </list>
+          <operator> lt </operator>
+        </ordered>
+        <args> x[] </args>
+        <args> y[] </args>
+      </group>
+    </block>
+  </constraints>
+</instance>

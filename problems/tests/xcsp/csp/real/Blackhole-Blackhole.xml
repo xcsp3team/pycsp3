@@ -1,0 +1,31 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the value j of the card at the ith position of the built stack" size="[16]"> 0..15 </array>
+    <array id="y" note="y[j] is the position i of the card whose value is j" size="[16]"> 0..15 </array>
+  </variables>
+  <constraints>
+    <channel note="linking variables of x and y">
+      <list> x[] </list>
+      <list> y[] </list>
+    </channel>
+    <intension note="the Ace of Spades is initially put on the stack"> eq(y[0],0) </intension>
+    <group note="cards must be played in the order of the piles">
+      <ordered>
+        <list> %0 %1 %2 </list>
+        <operator> lt </operator>
+      </ordered>
+      <args> y[1] y[4] y[13] </args>
+      <args> y[15] y[9] y[6] </args>
+      <args> y[14] y[2] y[12] </args>
+      <args> y[7..8] y[5] </args>
+      <args> y[11] y[10] y[3] </args>
+    </group>
+    <slide note="each new card put on the stack must be at a rank higher or lower than the previous one">
+      <list> x[] </list>
+      <extension>
+        <list> %0 %1 </list>
+        <supports> (0,1)(0,3)(0,5)(0,7)(0,9)(0,11)(0,13)(0,15)(1,0)(1,2)(1,4)(1,6)(1,8)(1,10)(1,12)(1,14)(2,1)(2,3)(2,5)(2,7)(2,9)(2,11)(2,13)(2,15)(3,0)(3,2)(3,4)(3,6)(3,8)(3,10)(3,12)(3,14)(4,1)(4,3)(4,5)(4,7)(4,9)(4,11)(4,13)(4,15)(5,0)(5,2)(5,4)(5,6)(5,8)(5,10)(5,12)(5,14)(6,1)(6,3)(6,5)(6,7)(6,9)(6,11)(6,13)(6,15)(7,0)(7,2)(7,4)(7,6)(7,8)(7,10)(7,12)(7,14)(8,1)(8,3)(8,5)(8,7)(8,9)(8,11)(8,13)(8,15)(9,0)(9,2)(9,4)(9,6)(9,8)(9,10)(9,12)(9,14)(10,1)(10,3)(10,5)(10,7)(10,9)(10,11)(10,13)(10,15)(11,0)(11,2)(11,4)(11,6)(11,8)(11,10)(11,12)(11,14)(12,1)(12,3)(12,5)(12,7)(12,9)(12,11)(12,13)(12,15)(13,0)(13,2)(13,4)(13,6)(13,8)(13,10)(13,12)(13,14)(14,1)(14,3)(14,5)(14,7)(14,9)(14,11)(14,13)(14,15)(15,0)(15,2)(15,4)(15,6)(15,8)(15,10)(15,12)(15,14) </supports>
+      </extension>
+    </slide>
+  </constraints>
+</instance>

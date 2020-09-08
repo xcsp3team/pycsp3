@@ -1,0 +1,50 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="jetski" type="symbolic"> Anton Chet Mindy Sabrina Tanya </var>
+    <var id="kayak" as="jetski" type="symbolic"/>
+    <var id="canoe" as="jetski" type="symbolic"/>
+    <var id="sailboard" as="jetski" type="symbolic"/>
+    <var id="sailboat" as="jetski" type="symbolic"/>
+    <var id="beer" as="jetski" type="symbolic"/>
+    <var id="juice" as="jetski" type="symbolic"/>
+    <var id="soda" as="jetski" type="symbolic"/>
+    <var id="water" as="jetski" type="symbolic"/>
+    <var id="wine" as="jetski" type="symbolic"/>
+    <var id="bread" as="jetski" type="symbolic"/>
+    <var id="cheese" as="jetski" type="symbolic"/>
+    <var id="cookies" as="jetski" type="symbolic"/>
+    <var id="fish" as="jetski" type="symbolic"/>
+    <var id="salad" as="jetski" type="symbolic"/>
+  </variables>
+  <constraints>
+    <allDifferent> jetski kayak canoe sailboard sailboat </allDifferent>
+    <allDifferent> beer juice soda water wine </allDifferent>
+    <allDifferent> bread cheese cookies fish salad </allDifferent>
+    <intension> or(eq(beer,Mindy),eq(soda,Mindy)) </intension>
+    <intension> or(eq(beer,jetski),eq(soda,jetski)) </intension>
+    <intension> ne(jetski,Mindy) </intension>
+    <intension> ne(kayak,Chet) </intension>
+    <intension> ne(fish,Chet) </intension>
+    <intension> ne(water,Chet) </intension>
+    <intension> ne(wine,Chet) </intension>
+    <allDifferent> kayak fish water wine </allDifferent>
+    <intension> ne(salad,wine) </intension>
+    <intension> or(eq(canoe,Sabrina),eq(beer,Sabrina)) </intension>
+    <intension> or(eq(canoe,cheese),eq(beer,cheese)) </intension>
+    <intension> ne(canoe,beer) </intension>
+    <intension> ne(cheese,Sabrina) </intension>
+    <intension> in(jetski,set(beer,soda)) </intension>
+    <intension> in(Mindy,set(beer,soda)) </intension>
+    <extension>
+      <list> bread </list>
+      <supports> Mindy Sabrina Tanya </supports>
+    </extension>
+    <extension>
+      <list> juice </list>
+      <supports> Mindy Sabrina Tanya </supports>
+    </extension>
+    <intension> eq(bread,juice) </intension>
+    <intension> notin(sailboat,set(cookies,soda)) </intension>
+    <intension> ne(soda,cookies) </intension>
+  </constraints>
+</instance>

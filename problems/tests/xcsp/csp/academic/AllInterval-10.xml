@@ -1,0 +1,10 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the ith note of the series" size="[10]"> 0..9 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="notes must occur once, and so form a permutation"> x[] </allDifferent>
+    <allDifferent note="intervals between neighbouring notes must form a permutation"> dist(x[1],x[0]) dist(x[2],x[1]) dist(x[3],x[2]) dist(x[4],x[3]) dist(x[5],x[4]) dist(x[6],x[5]) dist(x[7],x[6]) dist(x[8],x[7]) dist(x[9],x[8]) </allDifferent>
+    <intension class="symmetry-breaking"> lt(x[0],x[9]) </intension>
+  </constraints>
+</instance>

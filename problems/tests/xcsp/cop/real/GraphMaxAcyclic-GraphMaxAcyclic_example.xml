@@ -1,0 +1,30 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i] is the number associated with the ith node; arcs are only possible from greater to lower numbers (nodes)" size="[5]"> 0..4 </array>
+    <array id="a" note="a[i][j] is 1 iff the arc from i to j is selected" size="[5][5]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="different numbers must be associated to nodes"> x[] </allDifferent>
+    <group note="ensuring acyclicity">
+      <intension> iff(gt(%0,%1),eq(%2,1)) </intension>
+      <args> x[0] x[1] a[0][1] </args>
+      <args> x[0] x[4] a[0][4] </args>
+      <args> x[1] x[0] a[1][0] </args>
+      <args> x[1] x[2] a[1][2] </args>
+      <args> x[1] x[3] a[1][3] </args>
+      <args> x[2] x[1] a[2][1] </args>
+      <args> x[2] x[3] a[2][3] </args>
+      <args> x[2] x[4] a[2][4] </args>
+      <args> x[3] x[1] a[3][1] </args>
+      <args> x[3] x[2] a[3][2] </args>
+      <args> x[4] x[0] a[4][0] </args>
+      <args> x[4] x[2] a[4][2] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <maximize note="maximising the summed weight of selected arcs" type="sum">
+      <list> a[0][1] a[0][4] a[1][0] a[1][2..3] a[2][1] a[2][3..4] a[3][1..2] a[4][0] a[4][2] </list>
+      <coeffs> 7 6 3 10 8 5 9 1 7 3 2 4 </coeffs>
+    </maximize>
+  </objectives>
+</instance>

@@ -1,0 +1,16 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <var id="q" note="q is the cell for the queen"> 0..35 </var>
+    <array id="x" note="x[i] is the cell for the i+1th value" size="[36]"> 0..35 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all values are put in different cells"> x[] </allDifferent>
+    <slide note="ensuring a knight move between two successive values">
+      <list> x[] </list>
+      <intension> or(and(eq(dist(div(%0,6),div(%1,6)),1),eq(dist(mod(%0,6),mod(%1,6)),2)),and(eq(dist(div(%0,6),div(%1,6)),2),eq(dist(mod(%0,6),mod(%1,6)),1))) </intension>
+    </slide>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the number of free primes" type="sum"> or(eq(q,x[1]),and(ne(div(q,6),div(x[1],6)),ne(mod(q,6),mod(x[1],6)),ne(dist(div(q,6),div(x[1],6)),dist(mod(q,6),mod(x[1],6))))) or(eq(q,x[2]),and(ne(div(q,6),div(x[2],6)),ne(mod(q,6),mod(x[2],6)),ne(dist(div(q,6),div(x[2],6)),dist(mod(q,6),mod(x[2],6))))) or(eq(q,x[4]),and(ne(div(q,6),div(x[4],6)),ne(mod(q,6),mod(x[4],6)),ne(dist(div(q,6),div(x[4],6)),dist(mod(q,6),mod(x[4],6))))) or(eq(q,x[6]),and(ne(div(q,6),div(x[6],6)),ne(mod(q,6),mod(x[6],6)),ne(dist(div(q,6),div(x[6],6)),dist(mod(q,6),mod(x[6],6))))) or(eq(q,x[10]),and(ne(div(q,6),div(x[10],6)),ne(mod(q,6),mod(x[10],6)),ne(dist(div(q,6),div(x[10],6)),dist(mod(q,6),mod(x[10],6))))) or(eq(q,x[12]),and(ne(div(q,6),div(x[12],6)),ne(mod(q,6),mod(x[12],6)),ne(dist(div(q,6),div(x[12],6)),dist(mod(q,6),mod(x[12],6))))) or(eq(q,x[16]),and(ne(div(q,6),div(x[16],6)),ne(mod(q,6),mod(x[16],6)),ne(dist(div(q,6),div(x[16],6)),dist(mod(q,6),mod(x[16],6))))) or(eq(q,x[18]),and(ne(div(q,6),div(x[18],6)),ne(mod(q,6),mod(x[18],6)),ne(dist(div(q,6),div(x[18],6)),dist(mod(q,6),mod(x[18],6))))) or(eq(q,x[22]),and(ne(div(q,6),div(x[22],6)),ne(mod(q,6),mod(x[22],6)),ne(dist(div(q,6),div(x[22],6)),dist(mod(q,6),mod(x[22],6))))) or(eq(q,x[28]),and(ne(div(q,6),div(x[28],6)),ne(mod(q,6),mod(x[28],6)),ne(dist(div(q,6),div(x[28],6)),dist(mod(q,6),mod(x[28],6))))) or(eq(q,x[30]),and(ne(div(q,6),div(x[30],6)),ne(mod(q,6),mod(x[30],6)),ne(dist(div(q,6),div(x[30],6)),dist(mod(q,6),mod(x[30],6))))) </minimize>
+  </objectives>
+</instance>

@@ -1,0 +1,16 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <var id="b" note="b is the number of banana cakes"> 0..99 </var>
+    <var id="c" note="c is the number of chocolate cakes"> 0..99 </var>
+  </variables>
+  <constraints>
+    <intension note="using at most 4000 grams of flour"> le(add(mul(250,b),mul(200,c)),4000) </intension>
+    <intension note="using at most 6 bananas"> le(mul(2,b),6) </intension>
+    <intension note="using at most 2000 grams of sugar"> le(add(mul(75,b),mul(150,c)),2000) </intension>
+    <intension note="using at most 500 grams of butter"> le(add(mul(100,b),mul(150,c)),500) </intension>
+    <intension note="using at most 500 grams of cocoa"> le(mul(75,c),500) </intension>
+  </constraints>
+  <objectives>
+    <maximize note="maximizing the profit (400 and 450 cents for each banana and chocolate cake, respectively)"> add(mul(b,400),mul(c,450)) </maximize>
+  </objectives>
+</instance>

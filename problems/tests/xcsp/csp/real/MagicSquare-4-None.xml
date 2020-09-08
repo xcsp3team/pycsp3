@@ -1,0 +1,36 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i][j] is the value at row i and column j of the magic square" size="[4][4]"> 1..16 </array>
+  </variables>
+  <constraints>
+    <allDifferent> x[][] </allDifferent>
+    <group>
+      <sum>
+        <list> %... </list>
+        <condition> (eq,34) </condition>
+      </sum>
+      <args> x[0][] </args>
+      <args> x[1][] </args>
+      <args> x[2][] </args>
+      <args> x[3][] </args>
+    </group>
+    <group>
+      <sum>
+        <list> %... </list>
+        <condition> (eq,34) </condition>
+      </sum>
+      <args> x[][0] </args>
+      <args> x[][1] </args>
+      <args> x[][2] </args>
+      <args> x[][3] </args>
+    </group>
+    <group class="diagonals">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,34) </condition>
+      </sum>
+      <args> x[0][0] x[1][1] x[2][2] x[3][3] </args>
+      <args> x[3][0] x[2][1] x[1][2] x[0][3] </args>
+    </group>
+  </constraints>
+</instance>

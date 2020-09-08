@@ -1,0 +1,65 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the x-coordinate where is put the ith rectangle" size="[21]"> 0..111 </array>
+    <array id="y" note="y[i] is the y-coordinate where is put the ith rectangle" size="[21]"> 0..111 </array>
+  </variables>
+  <constraints>
+    <group note="unary constraints on x">
+      <intension> le(add(%0,%1),112) </intension>
+      <args> x[0] 2 </args>
+      <args> x[1] 4 </args>
+      <args> x[2] 6 </args>
+      <args> x[3] 7 </args>
+      <args> x[4] 8 </args>
+      <args> x[5] 9 </args>
+      <args> x[6] 11 </args>
+      <args> x[7] 15 </args>
+      <args> x[8] 16 </args>
+      <args> x[9] 17 </args>
+      <args> x[10] 18 </args>
+      <args> x[11] 19 </args>
+      <args> x[12] 24 </args>
+      <args> x[13] 25 </args>
+      <args> x[14] 27 </args>
+      <args> x[15] 29 </args>
+      <args> x[16] 33 </args>
+      <args> x[17] 35 </args>
+      <args> x[18] 37 </args>
+      <args> x[19] 42 </args>
+      <args> x[20] 50 </args>
+    </group>
+    <group note="unary constraints on y">
+      <intension> le(add(%0,%1),112) </intension>
+      <args> y[0] 2 </args>
+      <args> y[1] 4 </args>
+      <args> y[2] 6 </args>
+      <args> y[3] 7 </args>
+      <args> y[4] 8 </args>
+      <args> y[5] 9 </args>
+      <args> y[6] 11 </args>
+      <args> y[7] 15 </args>
+      <args> y[8] 16 </args>
+      <args> y[9] 17 </args>
+      <args> y[10] 18 </args>
+      <args> y[11] 19 </args>
+      <args> y[12] 24 </args>
+      <args> y[13] 25 </args>
+      <args> y[14] 27 </args>
+      <args> y[15] 29 </args>
+      <args> y[16] 33 </args>
+      <args> y[17] 35 </args>
+      <args> y[18] 37 </args>
+      <args> y[19] 42 </args>
+      <args> y[20] 50 </args>
+    </group>
+    <noOverlap note="no overlap on boxes">
+      <origins> (x[0],y[0])(x[1],y[1])(x[2],y[2])(x[3],y[3])(x[4],y[4])(x[5],y[5])(x[6],y[6])(x[7],y[7])(x[8],y[8])(x[9],y[9])(x[10],y[10])(x[11],y[11])(x[12],y[12])(x[13],y[13])(x[14],y[14])(x[15],y[15])(x[16],y[16])(x[17],y[17])(x[18],y[18])(x[19],y[19])(x[20],y[20]) </origins>
+      <lengths> (2,2)(4,4)(6,6)(7,7)(8,8)(9,9)(11,11)(15,15)(16,16)(17,17)(18,18)(19,19)(24,24)(25,25)(27,27)(29,29)(33,33)(35,35)(37,37)(42,42)(50,50) </lengths>
+    </noOverlap>
+    <group class="symmetry-breaking">
+      <intension> le(%0,%1) </intension>
+      <args> x[20] 31 </args>
+      <args> y[20] x[20] </args>
+    </group>
+  </constraints>
+</instance>

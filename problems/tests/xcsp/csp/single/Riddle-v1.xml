@@ -1,0 +1,14 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="x1"> 0..14 </var>
+    <var id="x2"> 0..14 </var>
+    <var id="x3"> 0..14 </var>
+    <var id="x4"> 0..14 </var>
+  </variables>
+  <constraints>
+    <intension> eq(add(x1,1),x2) </intension>
+    <intension> eq(add(x2,1),x3) </intension>
+    <intension> eq(add(x3,1),x4) </intension>
+    <intension> eq(add(x1,x2,x3,x4),14) </intension>
+  </constraints>
+</instance>

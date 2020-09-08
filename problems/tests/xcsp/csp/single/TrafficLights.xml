@@ -1,0 +1,18 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="v" note="v[i] is the color for the ith vehicle traffic light" size="[4]" type="symbolic"> green red red-yellow yellow </array>
+    <array id="p" note="p[i] is the color for the ith pedestrian traffic light" size="[4]" type="symbolic"> green red </array>
+  </variables>
+  <constraints>
+    <group>
+      <extension>
+        <list> %... </list>
+        <supports> (green,green,red,red)(red,red,green,green)(red-yellow,red,yellow,red)(yellow,red,red-yellow,red) </supports>
+      </extension>
+      <args> v[0] p[0] v[1] p[1] </args>
+      <args> v[1] p[1] v[2] p[2] </args>
+      <args> v[2] p[2] v[3] p[3] </args>
+      <args> v[3] p[3] v[0] p[0] </args>
+    </group>
+  </constraints>
+</instance>

@@ -1,0 +1,140 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i][j] concerns the domino (having values) i-j; this is the position of the value i in the grid for this domino" size="[7][7]"> 0..55 </array>
+    <array id="y" note="y[i][j] concerns the domino (having values) i-j; this is the position of the value j in the grid for this domino" size="[7][7]"> 0..55 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="each part of each domino in a different cell"> x[0][] x[1][1..6] x[2][2..6] x[3][3..6] x[4][4..6] x[5][5..6] x[6][6] y[0][] y[1][1..6] y[2][2..6] y[3][3..6] y[4][4..6] y[5][5..6] y[6][6] </allDifferent>
+    <block note="unary constraints">
+      <group>
+        <extension>
+          <list> %0 </list>
+          <supports> 0 24 28 35 42 45 50 51 </supports>
+        </extension>
+        <args> x[0][0] </args>
+        <args> y[0][0] </args>
+        <args> x[0][1] </args>
+        <args> x[0][2] </args>
+        <args> x[0][3] </args>
+        <args> x[0][4] </args>
+        <args> x[0][5] </args>
+        <args> x[0][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 </list>
+          <supports> 15 18 23 25 31 37 47 48 </supports>
+        </extension>
+        <args> y[0][1] </args>
+        <args> x[1][1] </args>
+        <args> y[1][1] </args>
+        <args> x[1][2] </args>
+        <args> x[1][3] </args>
+        <args> x[1][4] </args>
+        <args> x[1][5] </args>
+        <args> x[1][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 </list>
+          <supports> 2 3 10 11 19 29 30 52 </supports>
+        </extension>
+        <args> y[0][2] </args>
+        <args> y[1][2] </args>
+        <args> x[2][2] </args>
+        <args> y[2][2] </args>
+        <args> x[2][3] </args>
+        <args> x[2][4] </args>
+        <args> x[2][5] </args>
+        <args> x[2][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 </list>
+          <supports> 8 16 20 27 32 34 36 43 </supports>
+        </extension>
+        <args> y[0][3] </args>
+        <args> y[1][3] </args>
+        <args> y[2][3] </args>
+        <args> x[3][3] </args>
+        <args> y[3][3] </args>
+        <args> x[3][4] </args>
+        <args> x[3][5] </args>
+        <args> x[3][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 </list>
+          <supports> 5 12..14 21 26 41 46 </supports>
+        </extension>
+        <args> y[0][4] </args>
+        <args> y[1][4] </args>
+        <args> y[2][4] </args>
+        <args> y[3][4] </args>
+        <args> x[4][4] </args>
+        <args> y[4][4] </args>
+        <args> x[4][5] </args>
+        <args> x[4][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 </list>
+          <supports> 1 4 7 33 38 53..55 </supports>
+        </extension>
+        <args> y[0][5] </args>
+        <args> y[1][5] </args>
+        <args> y[2][5] </args>
+        <args> y[3][5] </args>
+        <args> y[4][5] </args>
+        <args> x[5][5] </args>
+        <args> y[5][5] </args>
+        <args> x[5][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 </list>
+          <supports> 6 9 17 22 39 40 44 49 </supports>
+        </extension>
+        <args> y[0][6] </args>
+        <args> y[1][6] </args>
+        <args> y[2][6] </args>
+        <args> y[3][6] </args>
+        <args> y[4][6] </args>
+        <args> y[5][6] </args>
+        <args> x[6][6] </args>
+        <args> y[6][6] </args>
+      </group>
+    </block>
+    <group note="adjacency constraints">
+      <intension> or(eq(dist(%0,%1),8),and(eq(dist(%0,%1),1),eq(div(%0,8),div(%1,8)))) </intension>
+      <args> x[0][0] y[0][0] </args>
+      <args> x[0][1] y[0][1] </args>
+      <args> x[0][2] y[0][2] </args>
+      <args> x[0][3] y[0][3] </args>
+      <args> x[0][4] y[0][4] </args>
+      <args> x[0][5] y[0][5] </args>
+      <args> x[0][6] y[0][6] </args>
+      <args> x[1][1] y[1][1] </args>
+      <args> x[1][2] y[1][2] </args>
+      <args> x[1][3] y[1][3] </args>
+      <args> x[1][4] y[1][4] </args>
+      <args> x[1][5] y[1][5] </args>
+      <args> x[1][6] y[1][6] </args>
+      <args> x[2][2] y[2][2] </args>
+      <args> x[2][3] y[2][3] </args>
+      <args> x[2][4] y[2][4] </args>
+      <args> x[2][5] y[2][5] </args>
+      <args> x[2][6] y[2][6] </args>
+      <args> x[3][3] y[3][3] </args>
+      <args> x[3][4] y[3][4] </args>
+      <args> x[3][5] y[3][5] </args>
+      <args> x[3][6] y[3][6] </args>
+      <args> x[4][4] y[4][4] </args>
+      <args> x[4][5] y[4][5] </args>
+      <args> x[4][6] y[4][6] </args>
+      <args> x[5][5] y[5][5] </args>
+      <args> x[5][6] y[5][6] </args>
+      <args> x[6][6] y[6][6] </args>
+    </group>
+  </constraints>
+</instance>

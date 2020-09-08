@@ -1,0 +1,51 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="killer" note="killer is the person who kills Agatha"> 0 1 2 </var>
+    <array id="hating" note="hating[i][j] is 1 iff person i hates person j" size="[3][3]"> 0 1 </array>
+    <array id="richer" note="richer[i][j] is 1 iff person i is richer than person j" size="[3][3]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <element note="a killer always hates his victim">
+      <list> hating[][0] </list>
+      <index> killer </index>
+      <value> 1 </value>
+    </element>
+    <element note="a killer is never richer than his victim">
+      <list> richer[][0] </list>
+      <index> killer </index>
+      <value> 0 </value>
+    </element>
+    <group note="Charles hates no one that Agatha hates">
+      <intension> imp(%0,not(%1)) </intension>
+      <args> hating[0][0] hating[2][0] </args>
+      <args> hating[0][1] hating[2][1] </args>
+      <args> hating[0][2] hating[2][2] </args>
+    </group>
+    <instantiation note="Agatha hates everybody except the butler">
+      <list> hating[0][0] hating[0][2] </list>
+      <values> 1 1 </values>
+    </instantiation>
+    <group note="the butler hates everyone not richer than Aunt Agatha">
+      <intension> imp(not(%0),%1) </intension>
+      <args> richer[0][0] hating[1][0] </args>
+      <args> richer[1][0] hating[1][1] </args>
+      <args> richer[2][0] hating[1][2] </args>
+    </group>
+    <group note="the butler hates everyone Agatha hates">
+      <intension> imp(%0,%1) </intension>
+      <args> hating[0][0] hating[1][0] </args>
+      <args> hating[0][1] hating[1][1] </args>
+      <args> hating[0][2] hating[1][2] </args>
+    </group>
+    <group note="no one hates everyone">
+      <count>
+        <list> %0 %1 %2 </list>
+        <values> 0 </values>
+        <condition> (gt,0) </condition>
+      </count>
+      <args> hating[0][] </args>
+      <args> hating[1][] </args>
+      <args> hating[2][] </args>
+    </group>
+  </constraints>
+</instance>

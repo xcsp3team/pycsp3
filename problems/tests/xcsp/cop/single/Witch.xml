@@ -1,0 +1,26 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <var id="x" note="x is the number of magic potions for love"> 0..399 </var>
+    <var id="y" note="y is the number of magic potions for youth"> 0..399 </var>
+  </variables>
+  <constraints>
+    <sum>
+      <list> x y </list>
+      <coeffs> 3 2 </coeffs>
+      <condition> (le,800) </condition>
+    </sum>
+    <sum>
+      <list> x y </list>
+      <coeffs> 1 3 </coeffs>
+      <condition> (le,700) </condition>
+    </sum>
+    <sum>
+      <list> x y </list>
+      <coeffs> 1 2 </coeffs>
+      <condition> (le,400) </condition>
+    </sum>
+  </constraints>
+  <objectives>
+    <maximize> add(mul(4,x),mul(5,y)) </maximize>
+  </objectives>
+</instance>

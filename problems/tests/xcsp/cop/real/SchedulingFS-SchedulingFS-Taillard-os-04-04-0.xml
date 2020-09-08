@@ -1,0 +1,39 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[i][j] is the start time of the jth operation for the ith job" size="[4][4]"> 0..671 </array>
+  </variables>
+  <constraints>
+    <group note="operations must be ordered on each job">
+      <ordered>
+        <list> %0 %1 %2 %3 </list>
+        <lengths> %4 %5 %6 </lengths>
+        <operator> le </operator>
+      </ordered>
+      <args> s[0][] 34 2 54 </args>
+      <args> s[1][] 15 89 70 </args>
+      <args> s[2][] 38 19 28 </args>
+      <args> s[3][] 95 7 34 </args>
+    </group>
+    <block note="no overlap on resources">
+      <noOverlap>
+        <origins> s[][0] </origins>
+        <lengths> 34 15 38 95 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[][1] </origins>
+        <lengths> 2 89 19 7 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[][2] </origins>
+        <lengths> 54 70 28 34 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[][3] </origins>
+        <lengths> 61 9 87 29 </lengths>
+      </noOverlap>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the makespan" type="maximum"> add(s[0][3],61) add(s[1][3],9) add(s[2][3],87) add(s[3][3],29) </minimize>
+  </objectives>
+</instance>

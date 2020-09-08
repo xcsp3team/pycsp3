@@ -1,0 +1,120 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="v" note="v[i] is the voucher used for the ith pizza. 0 means that no voucher is used. A negative (resp., positive) value i means that the ith pizza contributes to the the pay (resp., free) part of voucher |i|." size="[10]"> -9..9 </array>
+    <array id="p" note="p[i] is the number of paid pizzas wrt the ith voucher" size="[9]">
+      <domain for="p[0] p[2] p[7]"> 0 1 </domain>
+      <domain for="p[1] p[4..5]"> 0 2 </domain>
+      <domain for="p[3]"> 0 </domain>
+      <domain for="p[6] p[8]"> 0 3 </domain>
+    </array>
+    <array id="f" note="f[i] is the number of free pizzas wrt the ith voucher" size="[9]">
+      <domain for="f[0] f[5] f[8]"> 0..2 </domain>
+      <domain for="f[1] f[6]"> 0..3 </domain>
+      <domain for="f[2..4]"> 0 1 </domain>
+      <domain for="f[7]"> 0 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <group note="counting paid pizzas">
+      <count>
+        <list> v[] </list>
+        <values> %0 </values>
+        <condition> (eq,%1) </condition>
+      </count>
+      <args> -1 p[0] </args>
+      <args> -2 p[1] </args>
+      <args> -3 p[2] </args>
+      <args> -4 p[3] </args>
+      <args> -5 p[4] </args>
+      <args> -6 p[5] </args>
+      <args> -7 p[6] </args>
+      <args> -8 p[7] </args>
+      <args> -9 p[8] </args>
+    </group>
+    <group note="counting free pizzas">
+      <count>
+        <list> v[] </list>
+        <values> %0 </values>
+        <condition> (eq,%1) </condition>
+      </count>
+      <args> 1 f[0] </args>
+      <args> 2 f[1] </args>
+      <args> 3 f[2] </args>
+      <args> 4 f[3] </args>
+      <args> 5 f[4] </args>
+      <args> 6 f[5] </args>
+      <args> 7 f[6] </args>
+      <args> 8 f[7] </args>
+      <args> 9 f[8] </args>
+    </group>
+    <group note="a voucher, if used, must contribute to have at least one free pizza.">
+      <intension> iff(eq(%0,0),ne(%1,%2)) </intension>
+      <args> f[0] p[0] 1 </args>
+      <args> f[1] p[1] 2 </args>
+      <args> f[2] p[2] 1 </args>
+      <args> f[3] p[3] 0 </args>
+      <args> f[4] p[4] 2 </args>
+      <args> f[5] p[5] 2 </args>
+      <args> f[6] p[6] 3 </args>
+      <args> f[7] p[7] 1 </args>
+      <args> f[8] p[8] 3 </args>
+    </group>
+    <group note="a free pizza obtained with a voucher must be cheaper than any pizza paid wrt this voucher">
+      <intension> imp(lt(%0,0),ne(%0,neg(%1))) </intension>
+      <args> v[0] v[1] </args>
+      <args> v[0] v[2] </args>
+      <args> v[0] v[3] </args>
+      <args> v[0] v[4] </args>
+      <args> v[0] v[5] </args>
+      <args> v[1] v[2] </args>
+      <args> v[1] v[3] </args>
+      <args> v[1] v[4] </args>
+      <args> v[1] v[5] </args>
+      <args> v[2] v[5] </args>
+      <args> v[3] v[2] </args>
+      <args> v[3] v[4] </args>
+      <args> v[3] v[5] </args>
+      <args> v[4] v[2] </args>
+      <args> v[4] v[5] </args>
+      <args> v[6] v[0] </args>
+      <args> v[6] v[1] </args>
+      <args> v[6] v[2] </args>
+      <args> v[6] v[3] </args>
+      <args> v[6] v[4] </args>
+      <args> v[6] v[5] </args>
+      <args> v[6] v[7] </args>
+      <args> v[6] v[8] </args>
+      <args> v[7] v[0] </args>
+      <args> v[7] v[1] </args>
+      <args> v[7] v[2] </args>
+      <args> v[7] v[3] </args>
+      <args> v[7] v[4] </args>
+      <args> v[7] v[5] </args>
+      <args> v[7] v[8] </args>
+      <args> v[8] v[0] </args>
+      <args> v[8] v[1] </args>
+      <args> v[8] v[2] </args>
+      <args> v[8] v[3] </args>
+      <args> v[8] v[4] </args>
+      <args> v[8] v[5] </args>
+      <args> v[9] v[0] </args>
+      <args> v[9] v[1] </args>
+      <args> v[9] v[2] </args>
+      <args> v[9] v[3] </args>
+      <args> v[9] v[4] </args>
+      <args> v[9] v[5] </args>
+      <args> v[9] v[6] </args>
+      <args> v[9] v[7] </args>
+      <args> v[9] v[8] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing summed up costs of pizzas" type="sum">
+      <list> le(v[0],0) le(v[1],0) le(v[2],0) le(v[3],0) le(v[4],0) le(v[5],0) le(v[6],0) le(v[7],0) le(v[8],0) le(v[9],0) </list>
+      <coeffs> 50 60 90 70 80 100 20 30 40 10 </coeffs>
+    </minimize>
+  </objectives>
+  <annotations>
+    <decision> v[] </decision>
+  </annotations>
+</instance>
