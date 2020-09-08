@@ -1,0 +1,59 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="a"> 1..26 </var>
+    <var id="b"> 1..26 </var>
+    <var id="c"> 1..26 </var>
+    <var id="d"> 1..26 </var>
+    <var id="e"> 1..26 </var>
+    <var id="f"> 1..26 </var>
+    <var id="g"> 1..26 </var>
+    <var id="h"> 1..26 </var>
+    <var id="i"> 1..26 </var>
+    <var id="j"> 1..26 </var>
+    <var id="k"> 1..26 </var>
+    <var id="l"> 1..26 </var>
+    <var id="m"> 1..26 </var>
+    <var id="n"> 1..26 </var>
+    <var id="o"> 1..26 </var>
+    <var id="p"> 1..26 </var>
+    <var id="q"> 1..26 </var>
+    <var id="r"> 1..26 </var>
+    <var id="s"> 1..26 </var>
+    <var id="t"> 1..26 </var>
+    <var id="u"> 1..26 </var>
+    <var id="v"> 1..26 </var>
+    <var id="w"> 1..26 </var>
+    <var id="x"> 1..26 </var>
+    <var id="y"> 1..26 </var>
+    <var id="z"> 1..26 </var>
+  </variables>
+  <constraints>
+    <allDifferent note="all letters must be different"> a b c d e f g h i j k l m n o p q r s t u v w x y z </allDifferent>
+    <group note="respecting clues">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> 45 b a l l e t </args>
+      <args> 43 c e l l o </args>
+      <args> 74 c o n c e r t </args>
+      <args> 30 f l u t e </args>
+      <args> 50 f u g u e </args>
+      <args> 66 g l e e </args>
+      <args> 58 j a z z </args>
+      <args> 47 l y r e </args>
+      <args> 53 o b o e </args>
+      <args> 65 o p e r a </args>
+      <args> 59 p o l k a </args>
+      <args> 50 q u a r t e t </args>
+      <args> 134 s a x o p h o n e </args>
+      <args> 51 s c a l e </args>
+      <args> 37 s o l o </args>
+      <args> 61 s o n g </args>
+      <args> 82 s o p r a n o </args>
+      <args> 72 t h e m e </args>
+      <args> 100 v i o l i n </args>
+      <args> 34 w a l t z </args>
+    </group>
+  </constraints>
+</instance>

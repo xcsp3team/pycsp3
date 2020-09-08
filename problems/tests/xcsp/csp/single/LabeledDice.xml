@@ -1,0 +1,27 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the cube where the ith letter of the alphabet is put" size="[26]"> 1..4 </array>
+  </variables>
+  <constraints>
+    <group note="the four letters of each word appears on different cubes">
+      <allDifferent> %... </allDifferent>
+      <args> x[1] x[14] x[20] x[24] </args>
+      <args> x[0] x[2] x[4] x[21] </args>
+      <args> x[2] x[4] x[11] x[19] </args>
+      <args> x[1] x[5] x[11] x[20] </args>
+      <args> x[5] x[10] x[14] x[17] </args>
+      <args> x[4] x[7] x[12] x[15] </args>
+      <args> x[3] x[9] x[20] x[24] </args>
+      <args> x[9..10] x[13] x[20] </args>
+      <args> x[8] x[11..13] </args>
+      <args> x[8] x[15..16] x[20] </args>
+      <args> x[0] x[6] x[18] x[22] </args>
+      <args> x[0] x[8] x[18] x[21] </args>
+    </group>
+    <cardinality note="each cube is assigned 6 letters">
+      <list> x[0..22] x[24] </list>
+      <values> 1 2 3 4 </values>
+      <occurs> 6 6 6 6 </occurs>
+    </cardinality>
+  </constraints>
+</instance>

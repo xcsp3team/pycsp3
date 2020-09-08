@@ -1,0 +1,18 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i] is the position of the ith tick" size="[8]"> 0..64 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all distances are different"> dist(x[0],x[1]) dist(x[0],x[2]) dist(x[0],x[3]) dist(x[0],x[4]) dist(x[0],x[5]) dist(x[0],x[6]) dist(x[0],x[7]) dist(x[1],x[2]) dist(x[1],x[3]) dist(x[1],x[4]) dist(x[1],x[5]) dist(x[1],x[6]) dist(x[1],x[7]) dist(x[2],x[3]) dist(x[2],x[4]) dist(x[2],x[5]) dist(x[2],x[6]) dist(x[2],x[7]) dist(x[3],x[4]) dist(x[3],x[5]) dist(x[3],x[6]) dist(x[3],x[7]) dist(x[4],x[5]) dist(x[4],x[6]) dist(x[4],x[7]) dist(x[5],x[6]) dist(x[5],x[7]) dist(x[6],x[7]) </allDifferent>
+    <block class="symmetry-breaking">
+      <intension> eq(x[0],0) </intension>
+      <ordered>
+        <list> x[] </list>
+        <operator> lt </operator>
+      </ordered>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the position of the rightmost tick" type="maximum"> x[] </minimize>
+  </objectives>
+</instance>

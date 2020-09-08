@@ -1,0 +1,41 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i] is 1 iff the ith shift is selected" size="[77]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <group note="each task is covered by exactly one shift">
+      <count>
+        <list> %... </list>
+        <values> 1 </values>
+        <condition> (eq,1) </condition>
+      </count>
+      <args> x[63] x[67] x[70] x[74] x[76] </args>
+      <args> x[6..12] </args>
+      <args> x[9] x[11..12] x[27..31] </args>
+      <args> x[1] x[7] x[12] x[14] x[21] x[27..31] x[42..44] </args>
+      <args> x[1] x[7] x[14] x[21] x[31] x[42..44] x[58] </args>
+      <args> x[20..21] x[24] x[29] x[33] x[47] x[58] x[68] </args>
+      <args> x[20..21] x[24] x[29] x[33] x[47] x[58] x[68] </args>
+      <args> x[13..21] </args>
+      <args> x[18] x[20] x[32..35] </args>
+      <args> x[18] x[20] x[32..35] </args>
+      <args> x[12] x[18] x[22] x[27] x[32] x[36] x[45] x[71..72] </args>
+      <args> x[0..5] </args>
+      <args> x[3] x[5] x[22..26] </args>
+      <args> x[22..26] x[36..41] </args>
+      <args> x[3] x[9] x[16] x[19] x[22] x[26] x[36..41] x[56..57] </args>
+      <args> x[3] x[9] x[16] x[19] x[23] x[28] x[39..40] x[46] x[50] x[56..57] x[64..67] </args>
+      <args> x[19] x[23] x[28] x[35] x[38] x[40] x[43] x[46] x[50..51] x[57] x[64..67] x[73..74] </args>
+      <args> x[35] x[38..39] x[43] x[50..52] x[56] x[59] x[65] x[67] x[73..74] </args>
+      <args> x[0] x[2] x[4] x[6] x[8] x[10] x[13] x[15] x[17] x[45..55] </args>
+      <args> x[2] x[4..5] x[8] x[10..11] x[15] x[17] x[49] x[51..52] x[54..55] x[59..63] </args>
+      <args> x[4..5] x[10..11] x[17] x[25] x[30] x[34] x[48] x[52..53] x[55] x[59..63] x[69..70] </args>
+      <args> x[25..26] x[30..31] x[34] x[37] x[41..42] x[44] x[48..49] x[53..54] x[61] x[63] x[69..70] x[75..76] </args>
+      <args> x[40..41] x[44] x[53..55] x[57] x[60] x[62] x[64] x[66] x[71..72] </args>
+      <args> x[58] x[61..62] x[65..66] x[68..69] x[72..73] x[75] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the number of shifts" type="sum"> x[] </minimize>
+  </objectives>
+</instance>

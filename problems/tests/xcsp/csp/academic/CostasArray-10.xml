@@ -1,0 +1,19 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the row where is put the ith mark (on the ith column)" size="[10]"> 0..9 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all marks are on different rows (and columns)"> x[] </allDifferent>
+    <group note="all displacement vectors between the marks must be different">
+      <allDifferent> %... </allDifferent>
+      <args> sub(x[0],x[1]) sub(x[1],x[2]) sub(x[2],x[3]) sub(x[3],x[4]) sub(x[4],x[5]) sub(x[5],x[6]) sub(x[6],x[7]) sub(x[7],x[8]) sub(x[8],x[9]) </args>
+      <args> sub(x[0],x[2]) sub(x[1],x[3]) sub(x[2],x[4]) sub(x[3],x[5]) sub(x[4],x[6]) sub(x[5],x[7]) sub(x[6],x[8]) sub(x[7],x[9]) </args>
+      <args> sub(x[0],x[3]) sub(x[1],x[4]) sub(x[2],x[5]) sub(x[3],x[6]) sub(x[4],x[7]) sub(x[5],x[8]) sub(x[6],x[9]) </args>
+      <args> sub(x[0],x[4]) sub(x[1],x[5]) sub(x[2],x[6]) sub(x[3],x[7]) sub(x[4],x[8]) sub(x[5],x[9]) </args>
+      <args> sub(x[0],x[5]) sub(x[1],x[6]) sub(x[2],x[7]) sub(x[3],x[8]) sub(x[4],x[9]) </args>
+      <args> sub(x[0],x[6]) sub(x[1],x[7]) sub(x[2],x[8]) sub(x[3],x[9]) </args>
+      <args> sub(x[0],x[7]) sub(x[1],x[8]) sub(x[2],x[9]) </args>
+      <args> sub(x[0],x[8]) sub(x[1],x[9]) </args>
+    </group>
+  </constraints>
+</instance>

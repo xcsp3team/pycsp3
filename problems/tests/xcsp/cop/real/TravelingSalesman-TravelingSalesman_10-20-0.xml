@@ -1,0 +1,29 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="c" note="c[i] is the ith city of the tour" size="[10]"> 0..9 </array>
+    <array id="d" note="d[i] is the distance between the cities i and i+1 chosen in the tour" size="[10]"> 0 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="Visiting each city only once"> c[] </allDifferent>
+    <group note="computing the distance between any two successive cities in the tour">
+      <element>
+        <matrix> (0,3,15,13,4,5,9,5,16,8)(3,0,18,16,2,2,12,6,19,8)(15,18,0,2,17,19,7,13,3,16)(13,16,2,0,15,17,5,11,4,14)(4,2,17,15,0,2,10,4,17,5)(5,2,19,17,2,0,12,6,19,6)(9,12,7,5,10,12,0,6,7,9)(5,6,13,11,4,6,6,0,13,4)(16,19,3,4,17,19,7,13,0,15)(8,8,16,14,5,6,9,4,15,0) </matrix>
+        <index> %0 %1 </index>
+        <value> %2 </value>
+      </element>
+      <args> c[0] c[1] d[0] </args>
+      <args> c[1] c[2] d[1] </args>
+      <args> c[2] c[3] d[2] </args>
+      <args> c[3] c[4] d[3] </args>
+      <args> c[4] c[5] d[4] </args>
+      <args> c[5] c[6] d[5] </args>
+      <args> c[6] c[7] d[6] </args>
+      <args> c[7] c[8] d[7] </args>
+      <args> c[8] c[9] d[8] </args>
+      <args> c[9] c[0] d[9] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the travelled distance" type="sum"> d[] </minimize>
+  </objectives>
+</instance>

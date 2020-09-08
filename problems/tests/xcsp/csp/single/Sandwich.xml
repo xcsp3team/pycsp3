@@ -1,0 +1,58 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="culprit" note="culprit is among alice (0), bob (1) and sascha (2)"> 0 1 2 </var>
+    <array id="liking" note="liking[i][j] is 1 iff the ith guy likes the jth guy" size="[3][3]"> 0 1 </array>
+    <array id="taller" note="taller[i][j] is 1 iff the ith guy is taller than the jth guy" size="[3][3]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <element note="the culprit likes Alice">
+      <list> liking[][0] </list>
+      <index> culprit </index>
+      <value> 1 </value>
+    </element>
+    <element note="the culprit is taller than Alice">
+      <list> taller[][0] </list>
+      <index> culprit </index>
+      <value> 1 </value>
+    </element>
+    <instantiation note="nobody is taller than himself">
+      <list> taller[0][0] taller[1][1] taller[2][2] </list>
+      <values> 0 0 0 </values>
+    </instantiation>
+    <group note="the ith guy is taller than the jth guy iff the reverse is not true">
+      <intension> ne(%0,%1) </intension>
+      <args> taller[0][1] taller[1][0] </args>
+      <args> taller[0][2] taller[2][0] </args>
+      <args> taller[1][0] taller[0][1] </args>
+      <args> taller[1][2] taller[2][1] </args>
+      <args> taller[2][0] taller[0][2] </args>
+      <args> taller[2][1] taller[1][2] </args>
+    </group>
+    <group note="Bob likes no one that Alice likes">
+      <intension> imp(%0,not(%1)) </intension>
+      <args> liking[0][0] liking[1][0] </args>
+      <args> liking[0][1] liking[1][1] </args>
+      <args> liking[0][2] liking[1][2] </args>
+    </group>
+    <instantiation note="Alice likes everybody except Bob">
+      <list> liking[0][0] liking[0][2] </list>
+      <values> 1 1 </values>
+    </instantiation>
+    <group note="Sascha likes everyone that Alice likes">
+      <intension> imp(%0,%1) </intension>
+      <args> liking[0][0] liking[2][0] </args>
+      <args> liking[0][1] liking[2][1] </args>
+      <args> liking[0][2] liking[2][2] </args>
+    </group>
+    <group note="nobody likes everyone">
+      <count>
+        <list> %0 %1 %2 </list>
+        <values> 0 </values>
+        <condition> (ge,1) </condition>
+      </count>
+      <args> liking[0][] </args>
+      <args> liking[1][] </args>
+      <args> liking[2][] </args>
+    </group>
+  </constraints>
+</instance>

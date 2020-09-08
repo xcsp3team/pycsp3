@@ -1,0 +1,17 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <var id="betty"> 0..6 </var>
+    <var id="chris"> 0..6 </var>
+    <var id="donald"> 0..6 </var>
+    <var id="fred"> 0..6 </var>
+    <var id="gary"> 0..6 </var>
+    <var id="mary"> 0..6 </var>
+    <var id="paul"> 0..6 </var>
+  </variables>
+  <constraints>
+    <allDifferent note="all friends are at a different position"> betty chris donald fred gary mary paul </allDifferent>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the overall dissatisfaction" type="sum"> ne(dist(betty,gary),1) ne(dist(betty,mary),1) ne(dist(chris,betty),1) ne(dist(chris,gary),1) ne(dist(fred,mary),1) ne(dist(fred,donald),1) ne(dist(paul,fred),1) ne(dist(paul,donald),1) </minimize>
+  </objectives>
+</instance>

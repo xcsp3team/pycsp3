@@ -1,0 +1,85 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="m" note="m[i] is the model used for the ith rack" size="[10]"> 0..2 </array>
+    <array id="p" note="p[i] is the power of the model used for the ith rack" size="[10]"> 0 150 200 </array>
+    <array id="s" note="s[i] is the size (number of connectors) of the model used for the ith rack" size="[10]"> 0 8 16 </array>
+    <array id="c" note="c[i] is the cost (price) of the model used for the ith rack" size="[10]"> 0 150 200 </array>
+    <array id="nc" note="nc[i][j] is the number of cards of type j put in the ith rack" size="[10][4]">
+      <domain for="nc[][0]"> 0..16 </domain>
+      <domain for="nc[][1]"> 0..8 </domain>
+      <domain for="nc[][2]"> 0..4 </domain>
+      <domain for="nc[][3]"> 0..2 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <group note="linking rack models with powers, sizes and costs">
+      <extension>
+        <list> %... </list>
+        <supports> (0,150,8,150)(1,200,16,200)(2,0,0,0) </supports>
+      </extension>
+      <args> m[0] p[0] s[0] c[0] </args>
+      <args> m[1] p[1] s[1] c[1] </args>
+      <args> m[2] p[2] s[2] c[2] </args>
+      <args> m[3] p[3] s[3] c[3] </args>
+      <args> m[4] p[4] s[4] c[4] </args>
+      <args> m[5] p[5] s[5] c[5] </args>
+      <args> m[6] p[6] s[6] c[6] </args>
+      <args> m[7] p[7] s[7] c[7] </args>
+      <args> m[8] p[8] s[8] c[8] </args>
+      <args> m[9] p[9] s[9] c[9] </args>
+    </group>
+    <group note="connector-capacity constraints">
+      <sum>
+        <list> %... </list>
+        <condition> (le,%0) </condition>
+      </sum>
+      <args> s[0] nc[0][] </args>
+      <args> s[1] nc[1][] </args>
+      <args> s[2] nc[2][] </args>
+      <args> s[3] nc[3][] </args>
+      <args> s[4] nc[4][] </args>
+      <args> s[5] nc[5][] </args>
+      <args> s[6] nc[6][] </args>
+      <args> s[7] nc[7][] </args>
+      <args> s[8] nc[8][] </args>
+      <args> s[9] nc[9][] </args>
+    </group>
+    <group note="power-capacity constraints">
+      <sum>
+        <list> %... </list>
+        <coeffs> 20 40 50 75 </coeffs>
+        <condition> (le,%0) </condition>
+      </sum>
+      <args> p[0] nc[0][] </args>
+      <args> p[1] nc[1][] </args>
+      <args> p[2] nc[2][] </args>
+      <args> p[3] nc[3][] </args>
+      <args> p[4] nc[4][] </args>
+      <args> p[5] nc[5][] </args>
+      <args> p[6] nc[6][] </args>
+      <args> p[7] nc[7][] </args>
+      <args> p[8] nc[8][] </args>
+      <args> p[9] nc[9][] </args>
+    </group>
+    <group note="demand constraints">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> 20 nc[][0] </args>
+      <args> 8 nc[][1] </args>
+      <args> 4 nc[][2] </args>
+      <args> 2 nc[][3] </args>
+    </group>
+    <block class="symmetry-breaking">
+      <ordered>
+        <list> m[] </list>
+        <operator> ge </operator>
+      </ordered>
+      <intension> imp(eq(m[0],m[1]),ge(nc[0][0],nc[1][0])) </intension>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the total cost being paid for all racks" type="sum"> c[] </minimize>
+  </objectives>
+</instance>

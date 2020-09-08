@@ -1,0 +1,49 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the x-coordinate of the ith container" size="[3]"> 0..4 </array>
+    <array id="y" note="y[i] is the y-coordinate of the ith container" size="[3]"> 0..4 </array>
+    <array id="w" note="w[i] is the width of the ith container" size="[3]">
+      <domain for="w[0]"> 1 5 </domain>
+      <domain for="w[1]"> 2 4 </domain>
+      <domain for="w[2]"> 3 4 </domain>
+    </array>
+    <array id="h" note="h[i] is the height of the ith container" size="[3]">
+      <domain for="h[0]"> 1 5 </domain>
+      <domain for="h[1]"> 2 4 </domain>
+      <domain for="h[2]"> 3 4 </domain>
+    </array>
+    <array id="r" note="r[i] is 1 iff the ith container is rotated by 90 degrees" size="[3]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <group note="horizontal control">
+      <intension> le(add(%0,%1),5) </intension>
+      <args> x[0] w[0] </args>
+      <args> x[1] w[1] </args>
+      <args> x[2] w[2] </args>
+    </group>
+    <group note="vertical control">
+      <intension> le(add(%0,%1),5) </intension>
+      <args> y[0] h[0] </args>
+      <args> y[1] h[1] </args>
+      <args> y[2] h[2] </args>
+    </group>
+    <block note="managing rotation">
+      <extension>
+        <list> r[0] w[0] h[0] </list>
+        <supports> (0,5,1)(1,1,5) </supports>
+      </extension>
+      <extension>
+        <list> r[1] w[1] h[1] </list>
+        <supports> (0,2,4)(1,4,2) </supports>
+      </extension>
+      <extension>
+        <list> r[2] w[2] h[2] </list>
+        <supports> (0,3,4)(1,4,3) </supports>
+      </extension>
+    </block>
+    <noOverlap note="no overlapping between containers">
+      <origins> (x[0],y[0])(x[1],y[1])(x[2],y[2]) </origins>
+      <lengths> (w[0],h[0])(w[1],h[1])(w[2],h[2]) </lengths>
+    </noOverlap>
+  </constraints>
+</instance>

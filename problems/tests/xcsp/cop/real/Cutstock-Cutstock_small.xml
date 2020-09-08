@@ -1,0 +1,58 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="p" note="p[i] is 1 iff the ith piece of the stock is used" size="[7]"> 0 1 </array>
+    <array id="r" note="r[i][j] is the number of items of type j built using stock piece i" size="[7][3]">
+      <domain for="r[][0..1]"> 0..2 </domain>
+      <domain for="r[][2]"> 0..4 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <block note="each item demand must be exactly satisfied">
+      <group>
+        <sum>
+          <list> %... </list>
+          <condition> (eq,2) </condition>
+        </sum>
+        <args> r[][0] </args>
+        <args> r[][1] </args>
+      </group>
+      <sum>
+        <list> r[][2] </list>
+        <condition> (eq,4) </condition>
+      </sum>
+    </block>
+    <group note="each piece of the stock cannot provide more than its length">
+      <sum>
+        <list> %... </list>
+        <coeffs> 7 5 3 -10 </coeffs>
+        <condition> (le,0) </condition>
+      </sum>
+      <args> r[0][] p[0] </args>
+      <args> r[1][] p[1] </args>
+      <args> r[2][] p[2] </args>
+      <args> r[3][] p[3] </args>
+      <args> r[4][] p[4] </args>
+      <args> r[5][] p[5] </args>
+      <args> r[6][] p[6] </args>
+    </group>
+    <block class="symmetry-breaking">
+      <ordered>
+        <list> p[] </list>
+        <operator> ge </operator>
+      </ordered>
+      <lex>
+        <list> r[0][] </list>
+        <list> r[1][] </list>
+        <list> r[2][] </list>
+        <list> r[3][] </list>
+        <list> r[4][] </list>
+        <list> r[5][] </list>
+        <list> r[6][] </list>
+        <operator> ge </operator>
+      </lex>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the number of used pieces" type="sum"> p[] </minimize>
+  </objectives>
+</instance>

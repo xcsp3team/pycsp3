@@ -1,0 +1,41 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="cn" note="cn[i][j] is the color of the jth node of the ith clique" size="[5][3]"> 0..27 </array>
+    <array id="ce" note="ce[i][j1][j2] is the color of the edge (j1,j2) of the ith clique, for j1 strictly less than j2" size="[5][3][3]"> 1..27 </array>
+    <array id="cp" note="cp[i][j] is the color of the jth edge of the ith path" size="[4][3]"> 1..27 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all nodes are colored differently"> cn[][] </allDifferent>
+    <allDifferent note="all edges are colored differently"> ce[0][0][1..2] ce[0][1][2] ce[1][0][1..2] ce[1][1][2] ce[2][0][1..2] ce[2][1][2] ce[3][0][1..2] ce[3][1][2] ce[4][0][1..2] ce[4][1][2] cp[][] </allDifferent>
+    <group note="computing colors of edges from colors of nodes">
+      <intension> eq(%0,dist(%1,%2)) </intension>
+      <args> ce[0][0][1] cn[0][0] cn[0][1] </args>
+      <args> ce[0][0][2] cn[0][0] cn[0][2] </args>
+      <args> ce[0][1][2] cn[0][1] cn[0][2] </args>
+      <args> ce[1][0][1] cn[1][0] cn[1][1] </args>
+      <args> ce[1][0][2] cn[1][0] cn[1][2] </args>
+      <args> ce[1][1][2] cn[1][1] cn[1][2] </args>
+      <args> ce[2][0][1] cn[2][0] cn[2][1] </args>
+      <args> ce[2][0][2] cn[2][0] cn[2][2] </args>
+      <args> ce[2][1][2] cn[2][1] cn[2][2] </args>
+      <args> ce[3][0][1] cn[3][0] cn[3][1] </args>
+      <args> ce[3][0][2] cn[3][0] cn[3][2] </args>
+      <args> ce[3][1][2] cn[3][1] cn[3][2] </args>
+      <args> ce[4][0][1] cn[4][0] cn[4][1] </args>
+      <args> ce[4][0][2] cn[4][0] cn[4][2] </args>
+      <args> ce[4][1][2] cn[4][1] cn[4][2] </args>
+      <args> cp[0][0] cn[0][0] cn[1][0] </args>
+      <args> cp[0][1] cn[0][1] cn[1][1] </args>
+      <args> cp[0][2] cn[0][2] cn[1][2] </args>
+      <args> cp[1][0] cn[1][0] cn[2][0] </args>
+      <args> cp[1][1] cn[1][1] cn[2][1] </args>
+      <args> cp[1][2] cn[1][2] cn[2][2] </args>
+      <args> cp[2][0] cn[2][0] cn[3][0] </args>
+      <args> cp[2][1] cn[2][1] cn[3][1] </args>
+      <args> cp[2][2] cn[2][2] cn[3][2] </args>
+      <args> cp[3][0] cn[3][0] cn[4][0] </args>
+      <args> cp[3][1] cn[3][1] cn[4][1] </args>
+      <args> cp[3][2] cn[3][2] cn[4][2] </args>
+    </group>
+  </constraints>
+</instance>

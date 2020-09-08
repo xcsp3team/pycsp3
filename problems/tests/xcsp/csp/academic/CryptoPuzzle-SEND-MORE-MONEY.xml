@@ -1,0 +1,19 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the value assigned to the ith letter (if present) of the alphabet" size="[26]"> 0..9 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all letters must be assigned different values"> x[3..4] x[12..14] x[17..18] x[24] </allDifferent>
+    <group note="the most significant letter of each word cannot be equal to 0">
+      <intension> ne(%0,0) </intension>
+      <args> x[18] </args>
+      <args> x[12] </args>
+      <args> x[12] </args>
+    </group>
+    <sum note="ensuring the crypto-arithmetic sum">
+      <list> add(x[3],x[4]) add(x[13],x[17]) add(x[4],x[14]) add(x[18],x[12]) x[24] x[4] x[13..14] x[12] </list>
+      <coeffs> 1 10 100 1000 -1 -10 -100 -1000 -10000 </coeffs>
+      <condition> (eq,0) </condition>
+    </sum>
+  </constraints>
+</instance>

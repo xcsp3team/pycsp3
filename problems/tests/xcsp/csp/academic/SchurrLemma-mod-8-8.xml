@@ -1,0 +1,22 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the box where the ith ball is put" size="[8]"> 0..7 </array>
+  </variables>
+  <constraints>
+    <group>
+      <allDifferent> %0 %1 %2 </allDifferent>
+      <args> x[0..2] </args>
+      <args> x[0] x[2..3] </args>
+      <args> x[0] x[3..4] </args>
+      <args> x[0] x[4..5] </args>
+      <args> x[0] x[5..6] </args>
+      <args> x[0] x[6..7] </args>
+      <args> x[1..2] x[4] </args>
+      <args> x[1] x[3] x[5] </args>
+      <args> x[1] x[4] x[6] </args>
+      <args> x[1] x[5] x[7] </args>
+      <args> x[2..3] x[6] </args>
+      <args> x[2] x[4] x[7] </args>
+    </group>
+  </constraints>
+</instance>

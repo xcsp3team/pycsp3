@@ -1,0 +1,25 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="s"> 0..9 </var>
+    <var id="e"> 0..9 </var>
+    <var id="n"> 0..9 </var>
+    <var id="d"> 0..9 </var>
+    <var id="m"> 0..9 </var>
+    <var id="o"> 0..9 </var>
+    <var id="r"> 0..9 </var>
+    <var id="y"> 0..9 </var>
+  </variables>
+  <constraints>
+    <allDifferent note="letters are given different values"> s e n d m o r y </allDifferent>
+    <group note="words cannot start with 0">
+      <intension> gt(%0,0) </intension>
+      <args> s </args>
+      <args> m </args>
+    </group>
+    <sum note="respecting the mathematical equation">
+      <list> s e n d m o r e m o n e y </list>
+      <coeffs> 1000 100 10 1 1000 100 10 1 -10000 -1000 -100 -10 -1 </coeffs>
+      <condition> (eq,0) </condition>
+    </sum>
+  </constraints>
+</instance>

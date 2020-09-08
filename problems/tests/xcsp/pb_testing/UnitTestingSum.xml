@@ -1,0 +1,29 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="x"> 0 1 </var>
+    <var id="y"> 0 1 </var>
+    <var id="z"> 0 1 </var>
+  </variables>
+  <constraints>
+    <sum>
+      <list> x </list>
+      <condition> (lt,5) </condition>
+    </sum>
+    <sum>
+      <list> x y </list>
+      <condition> (lt,10) </condition>
+    </sum>
+    <sum>
+      <list> x </list>
+      <condition> (in,{1,2,3}) </condition>
+    </sum>
+    <sum>
+      <list> x </list>
+      <condition> (eq,0) </condition>
+    </sum>
+    <sum>
+      <list> x </list>
+      <condition> (ge,0) </condition>
+    </sum>
+  </constraints>
+</instance>
