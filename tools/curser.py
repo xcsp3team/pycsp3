@@ -469,12 +469,17 @@ class ListVar(list):
         return columns(self)
 
 
+
+
+
 def convert_to_namedtuples(obj):
     if not hasattr(convert_to_namedtuples, "cnt"):
         convert_to_namedtuples.cnt = 0
     if isinstance(obj, tuple):
         obj = list(obj)  # because if data come from a text file (and not from a JSON file), we have different structures, which leads to problems
     if isinstance(obj, list):
+        if len(obj) == 0:
+            return obj
         if is_1d_list(obj, int):
             return ListInt(obj)
         if is_1d_list(obj, Variable):
