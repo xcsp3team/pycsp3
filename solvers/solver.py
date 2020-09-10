@@ -126,8 +126,7 @@ class SolverProcess:
         if string_options != "" and not dict_options and not dict_simplified_options:
             string_options = "[" + self.name.lower() + "," + string_options + "]"
             solver, dict_options, dict_simplified_options = process_options(string_options)
-            #dict_simplified_options = simplify_args_recursive(dict_simplified_options)
-            
+
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""
