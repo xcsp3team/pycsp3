@@ -469,32 +469,48 @@ class ListVar(list):
         return columns(self)
 
 
-
-
-
 def convert_to_namedtuples(obj):
-    if not hasattr(convert_to_namedtuples, "cnt"):
-        convert_to_namedtuples.cnt = 0
-    if isinstance(obj, tuple):
-        obj = list(obj)  # because if data come from a text file (and not from a JSON file), we have different structures, which leads to problems
-    if isinstance(obj, list):
-        if len(obj) == 0:
-            return obj
-        if is_1d_list(obj, int):
-            return ListInt(obj)
-        if is_1d_list(obj, Variable):
-            return ListVar(obj)
-        if is_1d_list(obj, dict):
-            nt = namedtuple("nt" + str(convert_to_namedtuples.cnt), obj[0].keys())
-            convert_to_namedtuples.cnt += 1
-            return [nt(*(convert_to_namedtuples(v) for (k, v) in d.items())) for d in obj]
-        t = [convert_to_namedtuples(v) for v in obj]
-        return ListInt(t) if isinstance(t[0], ListInt) else ListVar(t) if isinstance(t[0], ListVar) else t
-    if isinstance(obj, dict):
-        nt = namedtuple("nt" + str(convert_to_namedtuples.cnt), obj.keys())
-        convert_to_namedtuples.cnt += 1
-        return nt(*(convert_to_namedtuples(v) for (k, v) in obj.items()))
-    return obj
+    def with_only_alphanumeric_keys(obj):
+        if isinstance(obj, dict):
+            if any(not k.isalnum() for k in obj.keys()):
+                return False
+            return all(with_only_alphanumeric_keys(v) for v in obj.values())
+        if isinstance(obj,(int,str)):
+            return True
+        try:
+            iter(obj)
+        except TypeError:  # not iterable
+            return True
+        else:  # iterable
+            return all(with_only_alphanumeric_keys(v) for v in obj)
+
+    def recursive_convert_to_namedtuples(obj):
+        if not hasattr(recursive_convert_to_namedtuples, "cnt"):
+            recursive_convert_to_namedtuples.cnt = 0
+        if isinstance(obj, tuple):
+            obj = list(obj)  # because if data come from a text file (and not from a JSON file), we have different structures, which leads to problems
+        if isinstance(obj, list):
+            if len(obj) == 0:
+                return obj
+            if is_1d_list(obj, int):
+                return ListInt(obj)
+            if is_1d_list(obj, Variable):
+                return ListVar(obj)
+            if is_1d_list(obj, dict):
+                nt = namedtuple("nt" + str(recursive_convert_to_namedtuples.cnt), obj[0].keys())
+                recursive_convert_to_namedtuples.cnt += 1
+                return [nt(*(recursive_convert_to_namedtuples(v) for (k, v) in d.items())) for d in obj]
+            t = [recursive_convert_to_namedtuples(v) for v in obj]
+            return ListInt(t) if isinstance(t[0], ListInt) else ListVar(t) if isinstance(t[0], ListVar) else t
+        if isinstance(obj, dict):
+            nt = namedtuple("nt" + str(recursive_convert_to_namedtuples.cnt), obj.keys())
+            recursive_convert_to_namedtuples.cnt += 1
+            return nt(*(recursive_convert_to_namedtuples(v) for (k, v) in obj.items()))
+        return obj
+
+    if not with_only_alphanumeric_keys(obj):
+        return obj  # not possible to make the conversion in that case
+    return recursive_convert_to_namedtuples(obj)
 
 
 def is_namedtuple(obj):  # imperfect way of checking, but must be enough for our use (when JSON dumping Compilation.data)
