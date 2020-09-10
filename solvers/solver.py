@@ -123,6 +123,11 @@ class SolverProcess:
         raise NotImplementedError("Must be overridden")
 
     def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict()):
+        if len(VarEntities.items) ==0:
+            print("\n The instance has no variable, so the solver is not run.")
+            print("Did you forget to indicate the variant of the model?")
+            return None
+
         if string_options != "" and not dict_options and not dict_simplified_options:
             string_options = "[" + self.name.lower() + "," + string_options + "]"
             solver, dict_options, dict_simplified_options = process_options(string_options)
@@ -139,32 +144,37 @@ class SolverProcess:
         else:
             print("    command: ", command)
         result = self.execute(command, verbose)
+        missing = result is not None and result[0].find("Missing Implementation") != -1
         if not verbose:
-            print("  * Solved by " + self.name + " in " + stopwatch.elapsed_time()
-                  + " seconds (use the solver option v to see directly the output of the solver).\n")
-        return self.solution() if result else None
+            if result and not missing:
+                print("  * Solved by " + self.name + " in " + stopwatch.elapsed_time() + " seconds")
+            else:
+                print("  * Solving process stopped by " + self.name + " after " + stopwatch.elapsed_time() + " seconds")
+                if missing:
+                    print("\n   This is due to a missing implementation")
+            print("\nNB: use the solver option v, as in -solver=[choco,v] or -solver=[abscon,v] to see directly the output of the solver.\n")
+        return self.solution(result[0]) if result else None
 
     def execute(self, command, verbose):
         try:
             if verbose:
                 subprocess.Popen(command.split()).communicate()
-                return False  # in verbose mode, the solution is ignored
+                return None  # in verbose mode, the solution is ignored
             else:
                 p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 out, error = p.communicate()
-                self.stdout, self.stderr = out.decode('utf-8'), error.decode('utf-8')
-                return True
+                return out.decode('utf-8'), error.decode('utf-8')
         except KeyboardInterrupt:
-            return False
-
-    def solution(self):
-        if self.stdout.find("<unsatisfiable") != -1 or self.stdout.find("s UNSATISFIABLE") != -1:
-            return Instantiation("unsatisfiable", None, None)
-        if self.stdout.find("<instantiation") == -1 or self.stdout.find("</instantiation>") == -1:
-            print("  actually, the instance was not solved (add the option -ev to have more details")
             return None
-        left, right = self.stdout.rfind("<instantiation"), self.stdout.rfind("</instantiation>")
-        s = self.stdout[left:right + len("</instantiation>")].replace("\nv", "")
+
+    def solution(self, stdout):
+        if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
+            return Instantiation("unsatisfiable", None, None)
+        if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
+            print("  Actually, the instance was not solved")
+            return None
+        left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
+        s = stdout[left:right + len("</instantiation>")].replace("\nv", "")
         root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
         variables = []
         for token in root[0].text.split():
