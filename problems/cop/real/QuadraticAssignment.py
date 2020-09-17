@@ -39,3 +39,4 @@ minimize(
 #  b) weights * d is also possible because weights is of type 'ListInt' and because None values (and associated coeffs) will be discarded
 #  c) one can also write of course:
 #     Sum(d[i][j] * weights[i][j] for i, j in combinations(range(n), 2) if weights[i][j] != 0)
+# d) the model is only valid for symmetric instances (and then, the bound must be multiplied by two)   TODO

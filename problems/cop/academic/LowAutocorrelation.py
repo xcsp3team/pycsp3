@@ -32,4 +32,4 @@ minimize(
 
 
 # Note that:
-#  a) for the objective, c *c is possible, but needs an extension of XCSP3 specifications (allowing coefficients to be variables) TODO
+#  a) for the objective, c * c is possible, but needs an extension of XCSP3 specifications (allowing objective coefficients to be variables) TODO
