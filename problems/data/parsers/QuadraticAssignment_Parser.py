@@ -1,5 +1,5 @@
 from pycsp3.problems.data.parsing import *
 
-n = number_in(line())
-data["weights"] = [numbers_in(next_line()) for _ in range(n)]  # empty lines are discarced by the dataparser
-data["distances"] = [numbers_in(next_line()) for _ in range(n)]
+n = next_int()
+data["weights"] = [[next_int() for _ in range(n)] for _ in range(n)]
+data["distances"] = [[next_int() for _ in range(n)] for _ in range(n)]

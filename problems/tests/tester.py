@@ -8,9 +8,6 @@ from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
-DATA_PATH = "pycsp3" + os.sep + "problems" + os.sep + "data" + os.sep
-XCSP_PATH = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "xcsp" + os.sep
-
 PYTHON_VERSIONS = ["python3"]
 waiting = False
 solver = AbsConProcess()
@@ -89,16 +86,21 @@ class Tester:
         os.remove(tmp)
         return lines
 
-    def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_tmp=None, dir_prs_py=None, dir_prs_jv=None):
+    def data_path(self):
+        return self.main_dir + "data" + os.sep
+
+    def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_tmp=None, dir_prs_py=None, dir_prs_jv=None, private=False):
+        self.main_dir = "pycsp3" + os.sep + "problems" + os.sep if not private else "ppycsp3" + os.sep + "pproblems" + os.sep
+
         if name is None:
             assert dir_pbs_py and dir_pbs_jv and dir_tmp
         else:
-            dir_pbs_py = "pycsp3" + os.sep + "problems" + os.sep + name + os.sep
+            dir_pbs_py = self.main_dir + name + os.sep
             dir_pbs_jv = "problems." + name + "."
-            dir_tmp = "pycsp3" + os.sep + "problems" + os.sep + "tests" + os.sep + "tmp" + os.sep + name
-            dir_prs_py = "pycsp3" + os.sep + "problems" + os.sep + "data" + os.sep + "parsers" + os.sep
+            dir_tmp = self.main_dir + "tests" + os.sep + "tmp" + os.sep + name
+            dir_prs_py = self.main_dir + "data" + os.sep + "parsers" + os.sep
             dir_prs_jv = "problems.generators."
-            self.dir_xcsp = XCSP_PATH + name + os.sep
+            self.dir_xcsp = self.main_dir + "tests" + os.sep + "xcsp" + os.sep + name + os.sep
 
         self.tmpDiff = dir_tmp + os.sep + "tmpDiff.txt"
         if not os.path.exists(dir_tmp):
@@ -155,15 +157,15 @@ class Tester:
         return self.dir_xcsp + self.name_xml
 
     def data_py(self, data):
-        return None if data is None else DATA_PATH + "json" + os.sep + data if data.endswith(".json") else data
+        return None if data is None else self.data_path() + "json" + os.sep + data if data.endswith(".json") else data
 
     def data_jv(self, data):
-        return None if data is None else DATA_PATH + "json" + os.sep + data if data.endswith(".json") else data
+        return None if data is None else self.data_path() + "json" + os.sep + data if data.endswith(".json") else data
 
     def _command_py(self, model, data, variant, prs_py, options_py, python_exec="python3"):
         cmd = python_exec + " " + self.dir_pbs_py + model + ".py"
         if self.data_py(data):
-            cmd += " -data=" + ("" if prs_py is None else DATA_PATH + "raw" + os.sep) + self.data_py(data)
+            cmd += " -data=" + ("" if prs_py is None else self.data_path() + "raw" + os.sep) + self.data_py(data)
         if prs_py:
             cmd += " -dataparser=" + self.dir_prs_py + prs_py
         if variant:
@@ -181,7 +183,7 @@ class Tester:
         if self.data_jv(data):
             if dataSpecial:
                 cmd += " " + str(dataSpecial)
-            cmd += " " + (DATA_PATH + "raw" + os.sep if prs_jv else " -data=") + self.data_jv(data)
+            cmd += " " + (self.data_path() + "raw" + os.sep if prs_jv else " -data=") + self.data_jv(data)
         if special:
             cmd += " -ic=false -export=file"
         if variant:

@@ -509,6 +509,7 @@ def convert_to_namedtuples(obj):
         return obj
 
     if not with_only_alphanumeric_keys(obj):
+        print("\nWarning: some key of some dictionary involved in the data is not alphanumeric, so no conversion to named tuples is performed\n")
         return obj  # not possible to make the conversion in that case
     return recursive_convert_to_namedtuples(obj)
 
