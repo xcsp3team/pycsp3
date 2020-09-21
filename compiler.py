@@ -172,6 +172,12 @@ def _compile():
         if sys.argv[1].endswith(".json"):
             with open(sys.argv[1], 'r') as f:
                 print(f.read())
+
+    filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
+    filename = filename_prefix + ".xml"
+    if Compilation.done:
+        return filename
+
     stopwatch = Stopwatch()
     print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
     build_similar_constraints()
@@ -181,9 +187,6 @@ def _compile():
     build_compact_forms()
     options.time and print("\tWCK for compacting forms:", stopwatch.elapsed_time(reset=True), "seconds")
 
-    filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
-
-    filename = filename_prefix + ".xml"
     root = build_document()
     if root is not None:
         pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False, encoding='UTF-8').decode("UTF-8")
