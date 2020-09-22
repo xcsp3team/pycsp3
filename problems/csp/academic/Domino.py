@@ -31,4 +31,4 @@ elif variant("table"):
     )
 
 
-# Note that is is not possible to write: x[0] == x[- 1] == v - 1
+# Note that it is not possible to write: x[0] == x[- 1] == v - 1
