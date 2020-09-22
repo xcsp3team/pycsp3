@@ -169,9 +169,9 @@ def transitions_to_string(ts):
 
 def table_to_string(table, restricting_domains=None, *, parallel=False):
     def _tuple_to_string(t):
-        print(t)
         return "(" + ",".join(
-            str(v) if isinstance(v, (int, tuple)) else 
+            str(v) if isinstance(v, (int)) else 
+            str(set(v)) if isinstance(v, tuple) else
             conditions.inside(v).str_tuple() if isinstance(v, range) else
             v if isinstance(v, (str)) else 
             "*" if v == ANY else v.str_tuple() 
