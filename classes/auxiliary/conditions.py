@@ -15,7 +15,6 @@ UTF_LTGT = "\u2276"
 UTF_NOT_ELEMENT_OF = "\u00AC"  # ""\u2209"
 UTF_COMPLEMENT = "\u2201"
 
-
 @total_ordering
 class Condition:
     def __init__(self, operator):
@@ -204,8 +203,8 @@ def _inside_outside(v, op):
     return ConditionSet(op, set(v))
 
 
-# def inside(*v):
-#     return _inside_outside(v, TypeConditionOperator.IN)
+def inside(*v):
+    return _inside_outside(v, TypeConditionOperator.IN)
 
 
 def complement(*v):

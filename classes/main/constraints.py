@@ -214,9 +214,6 @@ class ConstraintExtension(Constraint):
             ConstraintExtension.cache_smart[h] = smart
         if not smart:
             if not self.restrictTablesWrtDomains:
-                # we can use caching here
-                # h = hash(tuple(table))
-                # print("h", h, h in ConstraintExtension.cache)
                 if h not in ConstraintExtension.cache:
                     table.sort()
                     table = ConstraintExtension.remove_redundant_tuples(table)
@@ -229,9 +226,7 @@ class ConstraintExtension(Constraint):
         else:  # it is smart
             if self.keepsmartconditions:  # currently, no restriction of tables (wrt domains) in that case
                 self.attributes.append((TypeXML.TYPE, "smart"))
-                # h = hash(tuple(table))
                 if h not in ConstraintExtension.cache:
-                    table.sort()
                     table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
                 return ConstraintExtension.cache[h]
