@@ -196,17 +196,30 @@ class ConstraintExtension(Constraint):
             table = tbl
         return table
 
+
+    def calculate_hash(self, table):
+        try:
+            h = hash(tuple(table))
+        except:
+            for i, t in enumerate(table):
+                if any(isinstance(e, set) for e in t):
+                    new_t = tuple(tuple(e) if isinstance(e, set) else e for e in t)
+                    table[i] = new_t
+            h = hash(tuple(table))
+        return h
+
     def process_table(self, scope, table):
+        
         if len(table) == 0:
             return None
 
+        h = self.calculate_hash(table)
+
         if len(scope) == 1:  # if arity 1
-            h = hash(tuple(table))
             if h not in ConstraintExtension.cache:
                 ConstraintExtension.cache[h] = integers_to_string(table) if isinstance(table[0], int) else " ".join(v for v in sorted(table))
             return ConstraintExtension.cache[h]
-
-        h = hash(tuple(table))
+        
         if h in ConstraintExtension.cache_smart:
             smart = ConstraintExtension.cache_smart[h]
         else:
@@ -214,9 +227,6 @@ class ConstraintExtension(Constraint):
             ConstraintExtension.cache_smart[h] = smart
         if not smart:
             if not self.restrictTablesWrtDomains:
-                # we can use caching here
-                # h = hash(tuple(table))
-                # print("h", h, h in ConstraintExtension.cache)
                 if h not in ConstraintExtension.cache:
                     table.sort()
                     table = ConstraintExtension.remove_redundant_tuples(table)
@@ -229,9 +239,7 @@ class ConstraintExtension(Constraint):
         else:  # it is smart
             if self.keepsmartconditions:  # currently, no restriction of tables (wrt domains) in that case
                 self.attributes.append((TypeXML.TYPE, "smart"))
-                # h = hash(tuple(table))
                 if h not in ConstraintExtension.cache:
-                    table.sort()
                     table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
                 return ConstraintExtension.cache[h]

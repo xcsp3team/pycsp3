@@ -15,7 +15,6 @@ UTF_LTGT = "\u2276"
 UTF_NOT_ELEMENT_OF = "\u00AC"  # ""\u2209"
 UTF_COMPLEMENT = "\u2201"
 
-
 @total_ordering
 class Condition:
     def __init__(self, operator):
@@ -200,12 +199,14 @@ def _inside_outside(v, op):
     v = v if len(v) > 1 else v[0]
     if isinstance(v, range):
         return ConditionInterval(op, v.start, v.stop - 1)
+    if isinstance(v, set):
+        return ConditionSet(op, v)
     assert is_1d_list(v, int) or is_1d_tuple(v, int)
     return ConditionSet(op, set(v))
 
 
-# def inside(*v):
-#     return _inside_outside(v, TypeConditionOperator.IN)
+def inside(*v):
+    return _inside_outside(v, TypeConditionOperator.IN)
 
 
 def complement(*v):
