@@ -231,7 +231,7 @@ class ConstraintExtension(Constraint):
                 self.attributes.append((TypeXML.TYPE, "smart"))
                 # h = hash(tuple(table))
                 if h not in ConstraintExtension.cache:
-                    table.sort()
+                    #table.sort()
                     table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=os.name != 'nt')
                 return ConstraintExtension.cache[h]
