@@ -190,15 +190,16 @@ def _compile():
     root = build_document()
     if root is not None:
         pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False, encoding='UTF-8').decode("UTF-8")
-        with open(filename, "w") as f:
-            f.write(pretty_text)
-            print("  Generation of the file " + filename + " completed.\n")
+        if options.display:
+            print("\n", pretty_text)
+        else:
+            with open(filename, "w") as f:
+                f.write(pretty_text)
+                print("  Generation of the file " + filename + " completed.\n")
         if options.compress:
             with lzma.open(filename + ".lzma", "w") as f:
                 f.write(bytes(pretty_text, 'utf-8'))
                 print("\tGeneration of the file " + filename + ".lzma completed.\n")
-        if options.display:
-            print("\n", pretty_text)
         options.time and print("\tWCK for generating files:", stopwatch.elapsed_time(reset=True), "seconds")
 
     if options.dataexport:
@@ -217,6 +218,9 @@ def _compile():
 
     solving = ABSCON if options.solve else options.solver
     if solving:
+        if options.display:
+            print("Warning: options display and solve are not compatibles.")
+            return filename
         solver, args, args_recursive = process_options(solving)
         solver = next(ss for ss in SOLVERS if ss.lower() == solver.lower())
         # print("solver", solver, "args", args)
