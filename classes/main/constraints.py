@@ -196,30 +196,24 @@ class ConstraintExtension(Constraint):
             table = tbl
         return table
 
-
-    def calculate_hash(self, table):
-        try:
-            h = hash(tuple(table))
-        except:
-            for i, t in enumerate(table):
-                if any(isinstance(e, set) for e in t):
-                    new_t = tuple(tuple(e) if isinstance(e, set) else e for e in t)
-                    table[i] = new_t
-            h = hash(tuple(table))
-        return h
-
     def process_table(self, scope, table):
-        
         if len(table) == 0:
             return None
 
-        h = self.calculate_hash(table)
+        # we compute the hash code of the table
+        try:
+            h = hash(tuple(table))
+        except TypeError:
+            for i, t in enumerate(table):
+                if any(isinstance(v, set) for v in t):
+                    table[i] = tuple(tuple(v) if isinstance(v, set) else v for v in t)
+            h = hash(tuple(table))
 
         if len(scope) == 1:  # if arity 1
             if h not in ConstraintExtension.cache:
                 ConstraintExtension.cache[h] = integers_to_string(table) if isinstance(table[0], int) else " ".join(v for v in sorted(table))
             return ConstraintExtension.cache[h]
-        
+
         if h in ConstraintExtension.cache_smart:
             smart = ConstraintExtension.cache_smart[h]
         else:
@@ -227,6 +221,7 @@ class ConstraintExtension(Constraint):
             ConstraintExtension.cache_smart[h] = smart
         if not smart:
             if not self.restrictTablesWrtDomains:
+                # we can use caching here
                 if h not in ConstraintExtension.cache:
                     table.sort()
                     table = ConstraintExtension.remove_redundant_tuples(table)
@@ -580,10 +575,11 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             return other
         if isinstance(other, Node):
             return auxiliary().replace_node(other)
-        assert isinstance(other, (ScalarProduct, PartialConstraint)), "Wrong type for " + str(other) 
+        assert isinstance(other, (ScalarProduct, PartialConstraint)), "Wrong type for " + str(other)
         if isinstance(self.constraint, ConstraintSum) and (isinstance(other, ScalarProduct) or isinstance(other.constraint, ConstraintSum)):
             return other
-        assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition), "Wrong type for " + str(other.constraint) + " or/and " + str(self.constraint)
+        assert isinstance(self.constraint, ConstraintWithCondition) and isinstance(other.constraint, ConstraintWithCondition), "Wrong type for " + str(
+            other.constraint) + " or/and " + str(self.constraint)
         return auxiliary().replace_partial_constraint(other)
 
     def _simplify_operation(self, other):

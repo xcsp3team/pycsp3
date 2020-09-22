@@ -219,7 +219,7 @@ def _compile():
     solving = ABSCON if options.solve else options.solver
     if solving:
         if options.display:
-            print("Warning: options display and solve are not compatibles.")
+            print("Warning: options -display and -solve should not be used together.")
             return filename
         solver, args, args_recursive = process_options(solving)
         solver = next(ss for ss in SOLVERS if ss.lower() == solver.lower())
