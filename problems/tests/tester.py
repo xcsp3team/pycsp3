@@ -91,7 +91,8 @@ class Tester:
         return self.main_dir + "data" + os.sep
 
     def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_tmp=None, dir_prs_py=None, dir_prs_jv=None):
-        base_dir = Path(sys.argv[0]).parent.parent  # we assume that testing files (e.g., cop_acad.py) are in a subdirectory of problems
+        # we assume that testing files (e.g., cop_acad.py) are in a subdirectory of problems
+        base_dir = ".." if str(Path(sys.argv[0]).parent) == '.' else Path(sys.argv[0]).parent.parent
         self.main_dir = str(base_dir) + os.sep
 
         if name is None:
