@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from pycsp3.solvers.abscon import AbsConProcess
 from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
@@ -90,7 +91,8 @@ class Tester:
         return self.main_dir + "data" + os.sep
 
     def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_tmp=None, dir_prs_py=None, dir_prs_jv=None, private=False):
-        self.main_dir = "pycsp3" + os.sep + "problems" + os.sep if not private else "ppycsp3" + os.sep + "pproblems" + os.sep
+        base_dir = Path(sys.argv[0]).parent.parent  # we assume that testing files are in subdirectory tests of problems
+        self.main_dir = str(base_dir) + os.sep  # if not private else "ppycsp3" + os.sep + "pproblems" + os.sep
 
         if name is None:
             assert dir_pbs_py and dir_pbs_jv and dir_tmp
