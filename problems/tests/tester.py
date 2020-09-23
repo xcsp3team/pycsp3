@@ -69,6 +69,11 @@ class Tester:
 
     @staticmethod
     def execute_compiler(title, command):
+        if len(sys.argv) == 2:
+            if sys.argv[1] == "-choco":
+                command += " -solver=[choco,limit=2s]"
+            elif sys.argv[1] == "-abscon":
+                command += " -solver=[abscon,limit=2s]"
         print(BLUE + "Command:" + WHITE, command)
         out, error = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         # print(title + " stdout:")
