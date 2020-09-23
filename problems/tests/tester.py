@@ -90,9 +90,9 @@ class Tester:
     def data_path(self):
         return self.main_dir + "data" + os.sep
 
-    def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_tmp=None, dir_prs_py=None, dir_prs_jv=None, private=False):
-        base_dir = Path(sys.argv[0]).parent.parent  # we assume that testing files are in subdirectory tests of problems
-        self.main_dir = str(base_dir) + os.sep  # if not private else "ppycsp3" + os.sep + "pproblems" + os.sep
+    def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_tmp=None, dir_prs_py=None, dir_prs_jv=None):
+        base_dir = Path(sys.argv[0]).parent.parent  # we assume that testing files (e.g., cop_acad.py) are in a subdirectory of problems
+        self.main_dir = str(base_dir) + os.sep
 
         if name is None:
             assert dir_pbs_py and dir_pbs_jv and dir_tmp
