@@ -17,6 +17,7 @@ Note that:
 At this stage, one can run two embedded solvers:
 * the constraint solver 'AbsCon', with the option -solve or the option -solver=abscon
 * the constraint solver 'Choco, with the option -solver=choco
+
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf).
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
@@ -160,7 +161,7 @@ python problems\g0_school\Pic.py (For Windows)
 
 ## Compiling PyCSP3 Models
 
-For generating an XCSP3 file from a PyCSP3 model, you have to execute:
+For generating an XCSP3 instance from a PyCSP3 model, you have to execute:
 
 ```console
 python3 <file> [options]
@@ -196,6 +197,9 @@ Among the options, we find:
 Important: it requires that Java version 8 (at least) is installed.
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf).
 
+By default, a file containing the XCSP3 instance is generated, unless you use the option:
+
+* ```-display```: displays the XCSP3 instance in the system standard output, instead of generating an XCSP3 file 
 
 # Some Examples
 
