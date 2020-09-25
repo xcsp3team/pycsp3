@@ -660,7 +660,7 @@ def _optimize(term, minimization):
     if isinstance(term, PartialConstraint) and isinstance(term.constraint, ConstraintSum) and TypeCtrArg.COEFFS not in term.constraint.arguments:
         l = term.constraint.arguments[TypeCtrArg.LIST]
         if len(l.content) == 1:
-            term = l.content[0]
+            term = l.content[0]  # this was a sum with only one term, so we just consider this term as an expression to be optimized
     if isinstance(term, ScalarProduct):
         term = Sum(term)  # to have a PartialConstraint
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"
