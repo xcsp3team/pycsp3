@@ -45,7 +45,7 @@ class Compilation:
 
 
 def _load_options():
-    options.set_values("data", "dataparser", "dataexport", "variant", "checker", "solver")
+    options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver")
     options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "restrictTablesWrtDomains",
                       "solve"
                       )
@@ -101,7 +101,17 @@ def _load_data():
                 compilation_data, ordered_data = _load_data_sequence(args)
         else:
             compilation_data, ordered_data = _load_data_sequence([data])
-        string_data = "-" + "-".join(str(v) for v in ordered_data)
+        df = options.dataformat
+        if df:
+            if df[0] == '[':
+                assert df[-1] == ']'
+                df = df[1:-1]
+            df = df.split(',')
+            assert len(df) == len(ordered_data)
+            ss = "-".join(df).format(*ordered_data)
+        else:
+            ss = "-".join(str(v) for v in ordered_data)
+        string_data = "-" + ss
     return compilation_data, string_data
 
 
@@ -167,11 +177,10 @@ def _compile():
         return str(obj) if isinstance(obj, datetime.time) else obj
 
     OpOverrider.disable()
-    if options.display:
-        # print("\n", sys.argv, "\n")
-        if sys.argv[1].endswith(".json"):
-            with open(sys.argv[1], 'r') as f:
-                print(f.read())
+    # if options.display:
+    #     if sys.argv[1].endswith(".json"):
+    #         with open(sys.argv[1], 'r') as f:
+    #             print(f.read())
 
     filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
     filename = filename_prefix + ".xml"
