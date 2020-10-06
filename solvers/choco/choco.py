@@ -82,15 +82,15 @@ class ChocoProcess(SolverProcess):
                 print("Choco needs 'restarts_type' to be set when 'restarts_cutoff' "
                       "or 'restarts_factor' or 'restarts_gfactor' is set.")
         if "lb" in dict_simplified_options or "ub" in dict_simplified_options:
-            print("Bounding objective not implemented in Choco")
+            print("  Bounding objective not implemented in Choco")
         if free:  # required when some solving options are defined
             args_solver += " -f"
         if "seed" in dict_simplified_options:
             args_solver += " -seed=" + dict_simplified_options["seed"]
         if "verbose" in dict_simplified_options:
-            print("Verbose log not implemented in Choco")
+            print("  Verbose log not implemented in Choco")
         if "trace" in dict_simplified_options:
-            print("Saving trace into a file not implemented in Choco")
+            print("  Saving trace into a file not implemented in Choco")
         return args_solver
 
 
