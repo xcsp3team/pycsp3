@@ -18,7 +18,7 @@ class ChocoProcess(SolverProcess):
         tl = -1
         if "limit_time" in dict_simplified_options:
             tl = dict_simplified_options["limit_time"]
-        args_solver += " -limit=[" + str(tl) + "s"
+        args_solver += " -limit=[" + str(tl) + ("s" if tl != -1 else "")
         free = False
         if "limit_runs" in dict_simplified_options:
             args_solver += "," + dict_simplified_options["limit_runs"] + "runs"

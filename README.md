@@ -8,7 +8,7 @@ With PyCSP3, it is possible to generate instances of:
 1. COPs (Constraint Optimization Problems)
 
 in format XCSP3; see [www.xcsp.org](www.xcsp.org).
-Currently, PyCSP3 focuses on [XCSP3-core](https://arxiv.org/abs/2009.00514), meaning that only discrete variables with finite domains can be defined.
+Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514),  which allows us to use integer variables (with finite domains) and popular constraints.
 
 Note that:
 * the code is available on [Github](https://github.com/xcsp3team/pycsp3)
