@@ -235,10 +235,12 @@ def _compile():
         # print("solver", solver, "args", args)
         if solver == CHOCO:
             from pycsp3.solvers.choco import ChocoProcess
-            solution = ChocoProcess().solve(filename, solving, args, args_recursive)
+            result, solution = ChocoProcess().solve(filename, solving, args, args_recursive)
         else:  # Fallback case => options.solver == "abscon":
             from pycsp3.solvers.abscon import AbsConProcess
-            solution = AbsConProcess().solve(filename, solving, args, args_recursive)
+            result, solution = AbsConProcess().solve(filename, solving, args, args_recursive)
+        if result:
+            print(result)
         if solution:
             print(solution)
 

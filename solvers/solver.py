@@ -123,7 +123,45 @@ class SolverProcess:
         raise NotImplementedError("Must be overridden")
 
     def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict()):
-        if len(VarEntities.items) ==0:
+        def extract_result_and_solution(stdout):
+            if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
+                return "UNSAT", None
+            if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
+                print("  Actually, the instance was not solved")
+                return "UNKNOWN", None
+            left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
+            s = stdout[left:right + len("</instantiation>")].replace("\nv", "")
+            root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
+            variables = []
+            for token in root[0].text.split():
+                r = VarEntities.get_item_with_name(token)
+                if isinstance(r, (EVar, Variable)):  # TODO why do we need these two classes of variables?
+                    variables.append(r)
+                else:
+                    for x in flatten(r.variables, keep_none=True):
+                        variables.append(x)
+            values = root[1].text.split()  # a list with all values given as strings (possibly '*')
+            assert len(variables) == len(values)
+            for i, v in enumerate(values):
+                if variables[i]:
+                    variables[i].value = v  # we add new field (may be useful)
+
+            pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
+            return "OPTIMUM" if stdout.find("s OPTIMUM ") != -1 else "SAT", Instantiation(pretty_solution, variables, values)
+
+        def execute(command, verbose):
+            try:
+                if verbose:
+                    subprocess.Popen(command.split()).communicate()
+                    return None  # in verbose mode, the solution is ignored
+                else:
+                    p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    out, error = p.communicate()
+                    return out.decode('utf-8'), error.decode('utf-8')
+            except KeyboardInterrupt:
+                return None
+
+        if len(VarEntities.items) == 0:
             print("\n The instance has no variable, so the solver is not run.")
             print("Did you forget to indicate the variant of the model?")
             return None
@@ -143,55 +181,17 @@ class SolverProcess:
             print("\n  command: ", command + "\n")
         else:
             print("    command: ", command)
-        result = self.execute(command, verbose)
-        missing = result is not None and result[0].find("Missing Implementation") != -1
+        out_err = execute(command, verbose)
+        missing = out_err is not None and out_err[0].find("Missing Implementation") != -1
         if not verbose:
-            if result and not missing:
+            if out_err and not missing:
                 print("  * Solved by " + self.name + " in " + stopwatch.elapsed_time() + " seconds")
             else:
                 print("  * Solving process stopped by " + self.name + " after " + stopwatch.elapsed_time() + " seconds")
                 if missing:
                     print("\n   This is due to a missing implementation")
             print("\nNB: use the solver option v, as in -solver=[choco,v] or -solver=[abscon,v] to see directly the output of the solver.\n")
-        return self.solution(result[0]) if result else None
-
-    def execute(self, command, verbose):
-        try:
-            if verbose:
-                subprocess.Popen(command.split()).communicate()
-                return None  # in verbose mode, the solution is ignored
-            else:
-                p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                out, error = p.communicate()
-                return out.decode('utf-8'), error.decode('utf-8')
-        except KeyboardInterrupt:
-            return None
-
-    def solution(self, stdout):
-        if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
-            return Instantiation("unsatisfiable", None, None)
-        if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
-            print("  Actually, the instance was not solved")
-            return None
-        left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
-        s = stdout[left:right + len("</instantiation>")].replace("\nv", "")
-        root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
-        variables = []
-        for token in root[0].text.split():
-            r = VarEntities.get_item_with_name(token)
-            if isinstance(r, (EVar, Variable)):  # TODO why do we need these two classes of variables?
-                variables.append(r)
-            else:
-                for x in flatten(r.variables, keep_none=True):
-                    variables.append(x)
-        values = root[1].text.split()  # a list with all values given as strings (possibly '*')
-        assert len(variables) == len(values)
-        for i, v in enumerate(values):
-            if variables[i]:
-                variables[i].value = v  # we add new field (may be useful)
-
-        pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
-        return Instantiation(pretty_solution, variables, values)
+        return extract_result_and_solution(out_err[0]) if out_err else (None, None)
 
 
 class SolverPy4J(SolverProcess):  # TODO in progress
