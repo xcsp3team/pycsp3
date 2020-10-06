@@ -135,7 +135,7 @@ class SolverProcess:
             left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
             s = stdout[left:right + len("</instantiation>")].replace("\nv", "")
             root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
-            optimal = stdout.find("s OPTIMUM ") != - -1
+            optimal = stdout.find("s OPTIMUM ") != -1
             if cop:
                 if "type" not in root.attrib:
                     root.attrib['type'] = "solution" + (" optimal" if optimal else "")
