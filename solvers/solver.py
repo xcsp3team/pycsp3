@@ -10,6 +10,8 @@ from pycsp3.classes.main.variables import Variable
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import Stopwatch, flatten
 
+UNKNOWN, SAT, UNSAT, OPTIMUM = "UNKNOWN", "SAT", "UNSAT", "OPTIMUM"
+
 
 def process_options(solving):
     def option_parsing(s, recursive=False):
@@ -118,20 +120,35 @@ class SolverProcess:
         self.cp = cp
         self.stdout = None
         self.stderr = None
+        self.last_command_wck = None
 
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
-    def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict()):
+    def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict(), cop=True):
         def extract_result_and_solution(stdout):
             if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
-                return "UNSAT", None
+                return UNSAT, None
             if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
                 print("  Actually, the instance was not solved")
-                return "UNKNOWN", None
+                return UNKNOWN, None
             left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
             s = stdout[left:right + len("</instantiation>")].replace("\nv", "")
             root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
+            optimal = stdout.find("s OPTIMUM ") != - -1
+            if cop:
+                if "type" not in root.attrib:
+                    root.attrib['type'] = "solution" + (" optimal" if optimal else "")
+                elif root.attrib['type'] == "solution" and optimal:
+                    root.attrib['type'] = "solution optimal"
+                if "cost" not in root.attrib:
+                    left = stdout.rfind("o ") + 2;
+                    right = left + 1;
+                    while stdout[right].isdigit():
+                        right += 1
+                    root.attrib['cost'] = stdout[left:right]
+                if "id" in root.attrib:
+                    del root.attrib['id']
             variables = []
             for token in root[0].text.split():
                 r = VarEntities.get_item_with_name(token)
@@ -147,7 +164,7 @@ class SolverProcess:
                     variables[i].value = v  # we add new field (may be useful)
 
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
-            return "OPTIMUM" if stdout.find("s OPTIMUM ") != -1 else "SAT", Instantiation(pretty_solution, variables, values)
+            return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
 
         def execute(command, verbose):
             try:
@@ -180,17 +197,18 @@ class SolverProcess:
         if verbose:
             print("\n  command: ", command + "\n")
         else:
-            print("    command: ", command)
+            print("    with command: ", command)
         out_err = execute(command, verbose)
         missing = out_err is not None and out_err[0].find("Missing Implementation") != -1
         if not verbose:
+            self.last_command_wck = stopwatch.elapsed_time()
             if out_err and not missing:
-                print("  * Solved by " + self.name + " in " + stopwatch.elapsed_time() + " seconds")
+                print("  * Solved by " + self.name + " in " + self.last_command_wck + " seconds")
             else:
-                print("  * Solving process stopped by " + self.name + " after " + stopwatch.elapsed_time() + " seconds")
+                print("  * Solving process stopped by " + self.name + " after " + self.last_command_wck + " seconds")
                 if missing:
                     print("\n   This is due to a missing implementation")
-            print("\nNB: use the solver option v, as in -solver=[choco,v] or -solver=[abscon,v] to see directly the output of the solver.\n")
+            print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[abscon,v] to see directly the output of the solver.\n")
         return extract_result_and_solution(out_err[0]) if out_err else (None, None)
 
 
