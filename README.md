@@ -156,8 +156,8 @@ python -m pycsp3 (For Windows)
 And you can test the compilation of one of the models, for example:
 
 ```console
-python3 problems/g0_school/Pic.py (For Linux/Mac)
-python problems\g0_school\Pic.py (For Windows)
+python3 problems/csp/single/Zebra.py (For Linux/Mac)
+python problems\csp\single\Zebra.py (For Windows)
 ```
 
 ## Compiling PyCSP3 Models
