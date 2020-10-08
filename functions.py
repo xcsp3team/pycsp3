@@ -94,6 +94,8 @@ def VarArray(*, size, dom, comment=None):
     name = extract_declaration_for("VarArray")
     if comment is None and not isinstance(name, list):
         comment, tags = comment_and_tags_of(function_name="VarArray")
+    else:
+        tags = []
 
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
     assert not isinstance(dom, type(lambda: 0)) or len(size) == len(inspect.signature(dom).parameters), \
