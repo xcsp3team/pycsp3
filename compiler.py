@@ -12,13 +12,13 @@ from lxml import etree
 
 from pycsp3.dashboard import options
 from pycsp3.problems.data import parsing
+from pycsp3.solvers.solver import process_options
 from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
 from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtuple
 from pycsp3.tools.slider import handle_slides
-from pycsp3.tools.utilities import Stopwatch
+from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE
 from pycsp3.tools.xcsp import build_document
-from pycsp3.solvers.solver import process_options
 
 None_Values = ['None', '', 'null']  # adding 'none'?
 
@@ -47,8 +47,7 @@ class Compilation:
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver")
     options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "restrictTablesWrtDomains",
-                      "solve"
-                      )
+                      "solve")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -204,7 +203,7 @@ def _compile():
         else:
             with open(filename, "w") as f:
                 f.write(pretty_text)
-                print("  Generation of the file " + filename + " completed.\n")
+                print("  * Generating the file " + filename + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.\n")
         if options.compress:
             with lzma.open(filename + ".lzma", "w") as f:
                 f.write(bytes(pretty_text, 'utf-8'))
@@ -221,7 +220,7 @@ def _compile():
             json.dump(prepare_for_json(Compilation.data), f)
         print("  Generation for data saving of the file " + json_prefix + '.json' + " completed.")
 
-    print("  Total wall clock time:", Compilation.stopwatch.elapsed_time(), "seconds")
+    # print("  Total wall clock time:", Compilation.stopwatch.elapsed_time(), "seconds")
 
     Compilation.done = True
 

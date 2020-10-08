@@ -8,7 +8,7 @@ from py4j.java_gateway import JavaGateway, Py4JNetworkError
 from pycsp3.classes.entities import VarEntities, EVar
 from pycsp3.classes.main.variables import Variable
 from pycsp3.dashboard import options
-from pycsp3.tools.utilities import Stopwatch, flatten
+from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE
 
 UNKNOWN, SAT, UNSAT, OPTIMUM = "UNKNOWN", "SAT", "UNSAT", "OPTIMUM"
 
@@ -203,7 +203,7 @@ class SolverProcess:
         if not verbose:
             self.last_command_wck = stopwatch.elapsed_time()
             if out_err and not missing:
-                print("  * Solved by " + self.name + " in " + self.last_command_wck + " seconds")
+                print("  * Solved by " + self.name + " in " + GREEN + self.last_command_wck + WHITE + " seconds")
             else:
                 print("  * Solving process stopped by " + self.name + " after " + self.last_command_wck + " seconds")
                 if missing:
