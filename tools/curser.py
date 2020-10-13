@@ -111,6 +111,11 @@ def cursing():
         if isinstance(other, PartialConstraint):
             queue_in.append((self, other))
             return True
+        if isinstance(other, Node):
+            other = auxiliary().replace_node(other)
+            queue_in.append((self, other))
+            return True
+
         return range.__contains__(self, other)
 
     def _enumerate_contains(self, other):
