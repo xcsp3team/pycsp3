@@ -121,9 +121,16 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
 
     if isinstance(left_operand, Variable) and isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
         return None
-    if isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
+    if isinstance(left_operand, Variable) and isinstance(right_operand, range):
+        ctr = Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
+    elif isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
         ctr = Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))
+    # elif isinstance(left_operand, Node) and isinstance(right_operand, range):
+    #     if bool_value:
+    #         ctr = Intension(conjunction(left_operand >= right_operand.start, left_operand <= right_operand.stop - 1))
+    #     else:
+    #         ctr = Intension(disjunction(left_operand < right_operand.start, left_operand > right_operand.stop - 1))
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
         ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
     elif isinstance(right_operand, Automaton):  #  it is a regular constraint
@@ -132,8 +139,9 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         ctr = Mdd(scope=left_operand, mdd=right_operand)
     elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
         ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1))  # atLeast1 TODO to be replaced by a member/element constraint ?
+    # elif isinstance(left_operand, Node):
+    #     p
     else:  #  It is a table constraint
-
         if not hasattr(left_operand, '__iter__'):
             left_operand = [left_operand]
         if not bool_value and len(right_operand) == 0:
