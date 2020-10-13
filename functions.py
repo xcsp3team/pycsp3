@@ -620,6 +620,8 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
 
 def NoOverlap(*, origins, lengths, zero_ignored=False):
     checkType(origins, [Variable])
+    if isinstance(lengths, int):
+        lengths = [lengths for _ in range(len(origins))]
     checkType(lengths, ([Variable], [int]))
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
