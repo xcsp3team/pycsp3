@@ -3,6 +3,7 @@ from pycsp3.classes.auxiliary.values import IntegerValue, IntegerInterval, Symbo
 
 import math
 
+
 class Domain:
     def __init__(self, *args):
         if len(args) == 1 and args[0] == math.inf:  # special integer variable with an infinite domain
@@ -44,12 +45,14 @@ class Domain:
             self.set_type(TypeVar.SYMBOLIC)
 
     def __iter__(self):
-        return self.original_values[0].__iter__() if len(self.original_values) == 1 and isinstance(self.original_values[0],
-                                                                                                   IntegerInterval) else self.original_values.__iter__()
+        if len(self.original_values) == 1 and isinstance(self.original_values[0], IntegerInterval):
+            return self.original_values[0].__iter__()
+        return self.all_values().__iter__()  #original_values.__iter__()
 
     def __getitem__(self, item):
-        return self.original_values[0].__getitem__(item) if len(self.original_values) == 1 and isinstance(self.original_values[0], IntegerInterval) \
-            else self.original_values.__getitem__(item)
+        if len(self.original_values) == 1 and isinstance(self.original_values[0], IntegerInterval):
+            return self.original_values[0].__getitem__(item)
+        return self.original_values.__getitem__(item)
 
     def __hash__(self):
         return super().__hash__()
@@ -70,7 +73,7 @@ class Domain:
             if len(self.original_values) == 1 and isinstance(self.original_values[0], IntegerInterval):
                 self.values = range(self.original_values[0].inf, self.original_values[0].sup + 1)
             else:
-                self.values = sorted(v.value if isinstance(v, IntegerValue) else v for v in self)
+                self.values = sorted(v.value if isinstance(v, IntegerValue) else v for v in self.original_values)
         return self.values
 
     def is_binary(self):
