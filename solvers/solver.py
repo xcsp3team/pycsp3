@@ -1,5 +1,8 @@
 import subprocess
 import time
+import sys
+import os
+import signal
 from io import IOBase
 
 from lxml import etree
@@ -99,6 +102,24 @@ def process_options(solving):
             simplify_args_recursive()
     return solver, args, args_recursive
 
+class Logger(object):
+    def __init__(self, log_file):
+        self.log_file = os.path.dirname(os.path.realpath(__file__)) + "/" + log_file
+        if os.path.exists(self.log_file):
+            os.remove(self.log_file)
+        self.log = open(self.log_file, "a")
+
+    def write(self, message):
+        self.log.write(message)  
+
+    def read(self):
+        o = open(self.log_file, "r")
+        r = o.read()
+        o.close()
+        return r
+
+    def close(self):
+        self.log.close()
 
 class Instantiation:
     def __init__(self, pretty_solution, variables, values):
@@ -125,7 +146,7 @@ class SolverProcess:
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
-    def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict(), cop=True):
+    def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict(), cop=True, compiler=False):
         def extract_result_and_solution(stdout):
             if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
                 return UNSAT, None
@@ -167,23 +188,44 @@ class SolverProcess:
             return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
 
         def execute(command, verbose):
-            try:
-                if verbose:
-                    subprocess.Popen(command.split()).communicate()
-                    return None  # in verbose mode, the solution is ignored
-                else:
-                    p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    out, error = p.communicate()
-                    return out.decode('utf-8'), error.decode('utf-8')
-            except KeyboardInterrupt:
-                return None
+            global stopped
+            stopped = False
+            p = subprocess.Popen(
+                    command.split(), 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.PIPE, 
+                    universal_newlines=True,
+                    preexec_fn=os.setsid)
 
+            # Change SIGINT
+            handler = signal.getsignal(signal.SIGINT)
+            def new_handler(frame, signum):
+                global stopped
+                stopped = True
+                os.killpg(os.getpgid(p.pid), signal.SIGINT)
+            signal.signal(signal.SIGINT, new_handler)
+
+            # To save the output of the solver
+            log = Logger("solver.log")
+            
+            for line in p.stdout:
+                if verbose:
+                    sys.stdout.write(line)
+                log.write(line)
+            p.wait()
+            p.terminate()
+            log.close()
+            
+            # Reset the right SIGINT
+            signal.signal(signal.SIGINT, new_handler)
+            return log.read(), stopped
+            
         if len(VarEntities.items) == 0:
             print("\n The instance has no variable, so the solver is not run.")
             print("Did you forget to indicate the variant of the model?")
             return None
 
-        if string_options != "":
+        if compiler is False: # To get options from the model
             string_options = "[" + self.name.lower() + "," + string_options + "]"
             solver, dict_options, dict_simplified_options = process_options(string_options)
 
@@ -192,24 +234,20 @@ class SolverProcess:
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""
         verbose = options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + solver_args
-        if not verbose:
-            print("\n  * Solving by " + self.name + " in progress ... ")
-        if verbose:
-            print("\n  command: ", command + "\n")
+        print("\n  * Solving by " + self.name + " in progress ... ")
+        print("    with command: ", command)
+        out_err, stopped = execute(command, verbose)
+        print()
+        missing = out_err is not None and out_err.find("Missing Implementation") != -1
+        self.last_command_wck = stopwatch.elapsed_time()
+        if stopped:
+            print("  * Solving process stopped (SIGINT) by " + self.name + " after " + GREEN + self.last_command_wck + WHITE + " seconds")
         else:
-            print("    with command: ", command)
-        out_err = execute(command, verbose)
-        missing = out_err is not None and out_err[0].find("Missing Implementation") != -1
-        if not verbose:
-            self.last_command_wck = stopwatch.elapsed_time()
-            if out_err and not missing:
-                print("  * Solved by " + self.name + " in " + GREEN + self.last_command_wck + WHITE + " seconds")
-            else:
-                print("  * Solving process stopped by " + self.name + " after " + self.last_command_wck + " seconds")
-                if missing:
-                    print("\n   This is due to a missing implementation")
-            print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[abscon,v] to see directly the output of the solver.\n")
-        return extract_result_and_solution(out_err[0]) if out_err else (None, None)
+            print("  * Solved by " + self.name + " in " + GREEN + self.last_command_wck + WHITE + " seconds")
+        if missing:
+            print("\n   This is due to a missing implementation")
+        print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[abscon,v] to see directly the output of the solver.\n")
+        return extract_result_and_solution(out_err) if out_err else (None, None)
 
 
 class SolverPy4J(SolverProcess):  # TODO in progress
