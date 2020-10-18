@@ -183,7 +183,7 @@ class SolverProcess:
             print("Did you forget to indicate the variant of the model?")
             return None
 
-        if string_options != "" and not dict_options and not dict_simplified_options:
+        if string_options != "":
             string_options = "[" + self.name.lower() + "," + string_options + "]"
             solver, dict_options, dict_simplified_options = process_options(string_options)
 
