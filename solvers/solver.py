@@ -102,15 +102,16 @@ def process_options(solving):
             simplify_args_recursive()
     return solver, args, args_recursive
 
-class Logger(object):
+
+class Logger:
     def __init__(self, log_file):
-        self.log_file = os.path.dirname(os.path.realpath(__file__)) + "/" + log_file
+        self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.pathsep + log_file
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
 
     def write(self, message):
-        self.log.write(message)  
+        self.log.write(message)
 
     def read(self):
         o = open(self.log_file, "r")
@@ -120,6 +121,7 @@ class Logger(object):
 
     def close(self):
         self.log.close()
+
 
 class Instantiation:
     def __init__(self, pretty_solution, variables, values):
@@ -188,26 +190,20 @@ class SolverProcess:
             return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
 
         def execute(command, verbose):
+            p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
             global stopped
             stopped = False
-            p = subprocess.Popen(
-                    command.split(), 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE, 
-                    universal_newlines=True,
-                    preexec_fn=os.setsid)
 
-            # Change SIGINT
-            handler = signal.getsignal(signal.SIGINT)
+            # handler = signal.getsignal(signal.SIGINT)
+
             def new_handler(frame, signum):
                 global stopped
                 stopped = True
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
+
             signal.signal(signal.SIGINT, new_handler)
 
-            # To save the output of the solver
-            log = Logger("solver.log")
-            
+            log = Logger("solver.log")  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
@@ -215,17 +211,17 @@ class SolverProcess:
             p.wait()
             p.terminate()
             log.close()
-            
+
             # Reset the right SIGINT
             signal.signal(signal.SIGINT, new_handler)
             return log.read(), stopped
-            
+
         if len(VarEntities.items) == 0:
             print("\n The instance has no variable, so the solver is not run.")
             print("Did you forget to indicate the variant of the model?")
             return None
 
-        if compiler is False: # To get options from the model
+        if compiler is False:  # To get options from the model
             string_options = "[" + self.name.lower() + "," + string_options + "]"
             solver, dict_options, dict_simplified_options = process_options(string_options)
 
