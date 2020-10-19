@@ -105,7 +105,7 @@ def process_options(solving):
 
 class Logger:
     def __init__(self, log_file):
-        self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.pathsep + log_file
+        self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + log_file
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
