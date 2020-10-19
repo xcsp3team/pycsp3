@@ -191,18 +191,14 @@ class SolverProcess:
 
         def execute(command, verbose):
             p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
-            global stopped
             stopped = False
-
-            # handler = signal.getsignal(signal.SIGINT)
-
+            handler = signal.getsignal(signal.SIGINT)
             def new_handler(frame, signum):
                 global stopped
                 stopped = True
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
 
             signal.signal(signal.SIGINT, new_handler)
-
             log = Logger("solver.log")  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
@@ -211,9 +207,7 @@ class SolverProcess:
             p.wait()
             p.terminate()
             log.close()
-
-            # Reset the right SIGINT
-            signal.signal(signal.SIGINT, new_handler)
+            signal.signal(signal.SIGINT, handler)  # Reset the right SIGINT
             return log.read(), stopped
 
         if len(VarEntities.items) == 0:
