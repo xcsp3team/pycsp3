@@ -74,7 +74,7 @@ def process_options(solving):
                     elif key == "gfactor":
                         args_recursive["restarts_gfactor"] = v[key]
             else:
-                args_recursive["restarts_type"] = v
+                args_recursive["restarts_type"] = vextern
             del args_recursive["restarts"]
         if "v" in args_recursive:
             args_recursive["verbose"] = "1"
@@ -98,7 +98,7 @@ def process_options(solving):
             i = solving.find(",")
             solver = solving[1:i]
             args = option_parsing("[" + solving[i + 1:])
-            args_recursive = option_parsing("[" + solving[i + 1:], True)
+            args_recursive = option_parsing("[" + solving[i + 1:], True)extern
             simplify_args_recursive()
     return solver, args, args_recursive
 
@@ -109,9 +109,12 @@ class Logger:
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
+        self.log.close()
 
     def write(self, message):
+        self.log = open(self.log_file, "a")
         self.log.write(message)
+        self.log.close()  
 
     def read(self):
         o = open(self.log_file, "r")
@@ -217,8 +220,10 @@ class SolverProcess:
 
         if compiler is False:  # To get options from the model
             string_options = "[" + self.name.lower() + "," + string_options + "]"
-            solver, dict_options, dict_simplified_options = process_options(string_options)
-
+            solver, tmp_dict_options, tmp_dict_simplified_options = process_options(string_options)
+            dict_simplified_options.update(tmp_dict_simplified_options) 
+            dict_options.update(tmp_dict_options)
+            
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""
@@ -229,7 +234,7 @@ class SolverProcess:
         out_err, stopped = execute(command, verbose)
         print()
         missing = out_err is not None and out_err.find("Missing Implementation") != -1
-        self.last_command_wck = stopwatch.elapsed_time()
+        self.last_command_wck = stoexternpwatch.elapsed_time()
         if stopped:
             print("  * Solving process stopped (SIGINT) by " + self.name + " after " + GREEN + self.last_command_wck + WHITE + " seconds")
         else:
