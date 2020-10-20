@@ -74,7 +74,7 @@ def process_options(solving):
                     elif key == "gfactor":
                         args_recursive["restarts_gfactor"] = v[key]
             else:
-                args_recursive["restarts_type"] = vextern
+                args_recursive["restarts_type"] = v
             del args_recursive["restarts"]
         if "v" in args_recursive:
             args_recursive["verbose"] = "1"
@@ -98,7 +98,7 @@ def process_options(solving):
             i = solving.find(",")
             solver = solving[1:i]
             args = option_parsing("[" + solving[i + 1:])
-            args_recursive = option_parsing("[" + solving[i + 1:], True)extern
+            args_recursive = option_parsing("[" + solving[i + 1:], True)
             simplify_args_recursive()
     return solver, args, args_recursive
 
@@ -234,7 +234,7 @@ class SolverProcess:
         out_err, stopped = execute(command, verbose)
         print()
         missing = out_err is not None and out_err.find("Missing Implementation") != -1
-        self.last_command_wck = stoexternpwatch.elapsed_time()
+        self.last_command_wck = stopwatch.elapsed_time()
         if stopped:
             print("  * Solving process stopped (SIGINT) by " + self.name + " after " + GREEN + self.last_command_wck + WHITE + " seconds")
         else:
