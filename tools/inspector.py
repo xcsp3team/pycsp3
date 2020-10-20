@@ -312,8 +312,8 @@ def extract_declaration_for(function_name):
 def checkType(obj, allowed_types, message=""):
     if options.checker == "none":
         return True
-    if options.checker == "fast" and isinstance(obj, (list, tuple, set)) and len(obj) > 100:
-        obj = obj[:1]
+    if options.checker == "fast" and isinstance(obj, (list, tuple, set, frozenset)) and len(obj) > 100:
+        obj = obj[:1]  # TODO problem here: sets cannot be indexed
     allowed_types = (allowed_types,) if not isinstance(allowed_types, tuple) else allowed_types
     for allowedType in allowed_types:
         if not isinstance(allowedType, list):
@@ -326,7 +326,7 @@ def checkType(obj, allowed_types, message=""):
             else:
                 return True
     if message == "":
-        message = "Wrong type for " + str(obj) + " (allowable types: " + str(allowed_types) + ")\n"    
+        message = "Wrong type for " + str(obj) + " (allowable types: " + str(allowed_types) + ")\n"
     raise TypeError(message)
 
     # stack = inspect.stack(context=1)
@@ -374,4 +374,4 @@ def checkType(obj, allowed_types, message=""):
     #     # doc = docstringOf(stack[1].function)
     #     # s += doc if doc is not None else "\n\tNo python docstring for this function"
 
-      # s)
+    # s)

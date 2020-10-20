@@ -74,7 +74,7 @@ def process_options(solving):
                     elif key == "gfactor":
                         args_recursive["restarts_gfactor"] = v[key]
             else:
-                args_recursive["restarts_type"] = v
+                args_recursive["restarts_type"] = vextern
             del args_recursive["restarts"]
         if "v" in args_recursive:
             args_recursive["verbose"] = "1"
@@ -98,13 +98,14 @@ def process_options(solving):
             i = solving.find(",")
             solver = solving[1:i]
             args = option_parsing("[" + solving[i + 1:])
-            args_recursive = option_parsing("[" + solving[i + 1:], True)
+            args_recursive = option_parsing("[" + solving[i + 1:], True)extern
             simplify_args_recursive()
     return solver, args, args_recursive
 
-class Logger(object):
+
+class Logger:
     def __init__(self, log_file):
-        self.log_file = os.path.dirname(os.path.realpath(__file__)) + "/" + log_file
+        self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + log_file
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
@@ -123,6 +124,7 @@ class Logger(object):
 
     def close(self):
         self.log.close()
+
 
 class Instantiation:
     def __init__(self, pretty_solution, variables, values):
@@ -191,26 +193,16 @@ class SolverProcess:
             return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
 
         def execute(command, verbose):
-            global stopped
+            p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
             stopped = False
-            p = subprocess.Popen(
-                    command.split(), 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE, 
-                    universal_newlines=True,
-                    preexec_fn=os.setsid)
-
-            # Change SIGINT
             handler = signal.getsignal(signal.SIGINT)
             def new_handler(frame, signum):
                 global stopped
                 stopped = True
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
-            signal.signal(signal.SIGINT, new_handler)
 
-            # To save the output of the solver
-            log = Logger("solver.log")
-            
+            signal.signal(signal.SIGINT, new_handler)
+            log = Logger("solver.log")  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
@@ -218,17 +210,15 @@ class SolverProcess:
             p.wait()
             p.terminate()
             log.close()
-            
-            # Reset the right SIGINT
-            signal.signal(signal.SIGINT, new_handler)
+            signal.signal(signal.SIGINT, handler)  # Reset the right SIGINT
             return log.read(), stopped
-            
+
         if len(VarEntities.items) == 0:
             print("\n The instance has no variable, so the solver is not run.")
             print("Did you forget to indicate the variant of the model?")
             return None
 
-        if compiler is False: # To get options from the model
+        if compiler is False:  # To get options from the model
             string_options = "[" + self.name.lower() + "," + string_options + "]"
             solver, tmp_dict_options, tmp_dict_simplified_options = process_options(string_options)
             dict_simplified_options.update(tmp_dict_simplified_options) 
@@ -244,7 +234,7 @@ class SolverProcess:
         out_err, stopped = execute(command, verbose)
         print()
         missing = out_err is not None and out_err.find("Missing Implementation") != -1
-        self.last_command_wck = stopwatch.elapsed_time()
+        self.last_command_wck = stoexternpwatch.elapsed_time()
         if stopped:
             print("  * Solving process stopped (SIGINT) by " + self.name + " after " + GREEN + self.last_command_wck + WHITE + " seconds")
         else:

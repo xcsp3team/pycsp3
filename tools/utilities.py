@@ -177,7 +177,6 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
             "*" if v == ANY else v.str_tuple()
             for v in t) + ")"
 
-    print("Creation of a table of size: " + str(len(table)) + (" in parallel" if parallel and len(table) >= 100000 else ""))
     if not parallel or len(table) < 100000:
         s = []
         previous = ""
@@ -189,6 +188,7 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
                 previous = t
         return "".join(s)
     else:
+        print("Creation of a table of size: " + str(len(table)) + (" in parallel" if parallel and len(table) >= 100000 else ""))
         n_threads = cpu_count()
         size = len(table) // n_threads
         pool = Pool(n_threads)
