@@ -15,7 +15,6 @@ from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE
 
 UNKNOWN, SAT, UNSAT, OPTIMUM = "UNKNOWN", "SAT", "UNSAT", "OPTIMUM"
 
-
 def process_options(solving):
     def option_parsing(s, recursive=False):
         if s is None:
@@ -109,13 +108,12 @@ class Logger:
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
-        self.log.close()
+        
 
     def write(self, message):
-        self.log = open(self.log_file, "a")
         self.log.write(message)
-        self.log.close()  
-
+        self.log.flush()
+        
     def read(self):
         o = open(self.log_file, "r")
         r = o.read()
