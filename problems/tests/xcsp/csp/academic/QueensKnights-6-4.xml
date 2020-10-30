@@ -1,0 +1,37 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="q" note="q[i] is the column number of the board where is put the ith queen (in the ith row)" size="[6]"> 0..5 </array>
+    <array id="k" note="k[i] is the cell number of the board where is put the ith knight" size="[4]"> 0..35 </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[8]"> 0..5 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all queens are put in different columns"> q[] </allDifferent>
+    <allDifferent note="controlling no two queens on the same upward diagonal"> add(q[0],0) add(q[1],1) add(q[2],2) add(q[3],3) add(q[4],4) add(q[5],5) </allDifferent>
+    <allDifferent note="controlling no two queens on the same downward diagonal"> sub(q[0],0) sub(q[1],1) sub(q[2],2) sub(q[3],3) sub(q[4],4) sub(q[5],5) </allDifferent>
+    <allDifferent note="all knights are put in different cells"> k[] </allDifferent>
+    <group note="all knights form a cycle">
+      <extension>
+        <list> %0 %1 </list>
+        <supports> (1,2)(2,1) </supports>
+      </extension>
+      <args> aux_gb[0] aux_gb[1] </args>
+      <args> aux_gb[2] aux_gb[3] </args>
+      <args> aux_gb[4] aux_gb[5] </args>
+      <args> aux_gb[6] aux_gb[7] </args>
+    </group>
+    <group>
+      <intension> eq(dist(div(%0,6),div(%1,6)),%2) </intension>
+      <args> k[0] k[1] aux_gb[0] </args>
+      <args> k[1] k[2] aux_gb[2] </args>
+      <args> k[2] k[3] aux_gb[4] </args>
+      <args> k[3] k[0] aux_gb[6] </args>
+    </group>
+    <group>
+      <intension> eq(dist(mod(%0,6),mod(%1,6)),%2) </intension>
+      <args> k[0] k[1] aux_gb[1] </args>
+      <args> k[1] k[2] aux_gb[3] </args>
+      <args> k[2] k[3] aux_gb[5] </args>
+      <args> k[3] k[0] aux_gb[7] </args>
+    </group>
+  </constraints>
+</instance>

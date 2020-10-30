@@ -346,11 +346,6 @@ def disjunction(*args):
     return Node.disjunction(*args)
 
 
-def knight_attack(x, y, order):
-    d1, d2 = dist(x // order, y // order), dist(x % order, y % order)  # distances between rows and columns
-    return (d1 == 1) & (d2 == 2) | (d1 == 2) & (d2 == 1)
-
-
 ''' Language-based Constraints '''
 
 

@@ -45,6 +45,7 @@ run(Tester("csp" + os.sep + "academic")
     .add("Queens", data="10")  # 724 solutions
     .add("Queens", data="10", variant="v1")  # 724 solutions
     .add("Queens", data="10", variant="v2")  # 724 solutions
+    .add("QueensKnights", data="[6,4]")  # 1664 solutions
     .add("QueensKnights", data="[10,5]")  # unsat
     .add("SchurrLemma", data="[6,6]")  # 39870 solutions
     .add("SchurrLemma", data="[8,8]", variant="mod")  # 141120 solutions
