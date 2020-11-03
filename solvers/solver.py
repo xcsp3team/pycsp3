@@ -200,7 +200,7 @@ class SolverProcess:
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
 
             signal.signal(signal.SIGINT, new_handler)
-            log = Logger("solver.log")  # To record the output of the solver
+            log = Logger("solver"+time.strftime("%Y%m%d_%H%M%S")+".log")  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
