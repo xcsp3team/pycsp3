@@ -100,6 +100,9 @@ class ConditionValue(Condition):
             return UTF_GE + str(self.value + 1) if isinstance(self.value, int) else UTF_GT + str(self.value)
         assert False
 
+    def __repr__(self):
+        return self.str_tuple()
+        
     def right_operand(self):
         return self.value
 
