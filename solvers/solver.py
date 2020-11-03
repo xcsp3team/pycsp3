@@ -4,6 +4,7 @@ import sys
 import os
 import signal
 from io import IOBase
+import uuid
 
 from lxml import etree
 from py4j.java_gateway import JavaGateway, Py4JNetworkError
@@ -200,7 +201,11 @@ class SolverProcess:
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
 
             signal.signal(signal.SIGINT, new_handler)
-            log = Logger("solver"+time.strftime("%Y%m%d_%H%M%S")+".log")  # To record the output of the solver
+            nano_time = "%.20f" % time.time()
+            nano_time = nano_time.replace(".", "_")
+            uuid_mac = str(hex(uuid.getnode()))
+            pid = str(os.getpid())
+            log = Logger("solver_"+nano_time+"_"+uuid_mac+"_"+pid+".log")  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
