@@ -1,18 +1,16 @@
-import types
-# import itertools
-import numpy
 import re
-
+import types
 from enum import Enum, unique
 from functools import reduce
 from itertools import product
 
-from pycsp3.classes.auxiliary.ptypes import auto
-from pycsp3.classes.main.variables import Variable, NotVariable, NegVariable
+import numpy
+
 from pycsp3.classes import main
-from pycsp3.dashboard import options
-from pycsp3.tools.utilities import flatten, is_containing
+from pycsp3.classes.auxiliary.ptypes import auto
+from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
+from pycsp3.tools.utilities import flatten, is_containing
 
 
 class Entity:
@@ -343,7 +341,7 @@ class Node(Entity):
                     return av
                 return range(av[0], av[0] + 1) if len(av) == 1 else range(av[0], av[1] + 1) if len(av) == 2 and av[0] + 1 == av[1] else av
             if self.type == TypeNode.INT:
-                return range(self.sons, self.sons+1)  # we use a range instead of a singleton list because it simplifies computation (see code below)
+                return range(self.sons, self.sons + 1)  # we use a range instead of a singleton list because it simplifies computation (see code below)
             assert False, "no such 0-ary type " + str(self.type) + " is expected"
         if self.type.min_arity == self.type.max_arity == 1:
             pv = self.sons[0].possible_values()
@@ -488,12 +486,13 @@ class Node(Entity):
                 t.append(arg)
             elif isinstance(arg, EVar):
                 t.append(Node(TypeNode.VAR, arg.variable))
-            elif isinstance(arg, NotVariable):
-                t.append(Node(TypeNode.NOT, [Node(TypeNode.VAR, arg.variable)]))
-            elif isinstance(arg, NegVariable):
-                t.append(Node(TypeNode.NEG, [Node(TypeNode.VAR, arg.variable)]))
             elif isinstance(arg, Variable):
-                t.append(Node(TypeNode.VAR, arg))
+                if arg.inverse:
+                    t.append(Node(TypeNode.NEG, [Node(TypeNode.VAR, arg)]))
+                elif arg.negation:
+                    t.append(Node(TypeNode.NOT, [Node(TypeNode.VAR, arg)]))
+                else:
+                    t.append(Node(TypeNode.VAR, arg))
             elif isinstance(arg, int):
                 t.append(Node(TypeNode.INT, arg))
             elif isinstance(arg, str):

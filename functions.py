@@ -19,7 +19,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintCumulative, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
-from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic, NotVariable, NegVariable
+from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
 from pycsp3.compiler import default_data
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
@@ -464,10 +464,10 @@ def Sum(term, *others, condition=None):
         for tree in terms:
             if isinstance(tree, Variable):
                 t1.append(tree)
-                t2.append(1)
+                t2.append(-1 if tree.inverse else 1)
             else:
-                assert isinstance(tree, (Node, NegVariable))
-                pair = (tree.variable, -1) if isinstance(tree, NegVariable) else tree.tree_val_if_binary_type(TypeNode.MUL)
+                assert isinstance(tree, Node)
+                pair = tree.tree_val_if_binary_type(TypeNode.MUL)
                 if pair is None:
                     break
                 t1.append(pair[0])
@@ -651,11 +651,10 @@ def Clause(term, *others, phases=None):
     literals = flatten(term, others)
     phases = [False] * len(literals) if phases is None else flatten(phases)
     assert len(literals) == len(phases)
-    checkType(literals, ([Variable, NotVariable]))
+    checkType(literals, [Variable])
     checkType(phases, [bool])
     for i, literal in enumerate(literals):
-        if isinstance(literal, NotVariable):
-            literals[i] = literal.variable
+        if literal.negation:
             phases[i] = True
     return ECtr(ConstraintClause(literals, phases))
 

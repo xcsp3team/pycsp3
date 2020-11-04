@@ -98,7 +98,7 @@ def build_partition(variables, preserve_order):
         def update(z):
             nonlocal part, no_arrays
             harvest.append(z)
-            if isinstance(z, Variable) and z.indexes:
+            if isinstance(z, Variable) and z.indexes and not z.inverse and not z.negation:
                 no_arrays = False
                 if len(part) == 0 or VarEntities.varToEVarArray[z].id == VarEntities.varToEVarArray[part[-1]].id:
                     part.append(z)
