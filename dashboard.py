@@ -1,3 +1,10 @@
+ORANGE, WHITE = '\033[93m', '\033[0m'
+
+
+def warning(message):
+    print("\n  " + ORANGE + "Warning: " + WHITE + message + "\n")
+
+
 class _Options:
     def __init__(self):
         self.values = tuple()  # options with non-Boolean values (strings or numbers)
@@ -36,7 +43,7 @@ class _Options:
                         vars(self)[flag] = True
                         assert flag not in self.values or flag == 'dataexport', "You have to specify a value for the option -" + flag
                     else:
-                        print("Warning: Unknown option", arg)
+                        warning("Unknown option: " + arg)
                 else:
                     assert len(t) == 2
                     value = t[0].lower()
@@ -44,7 +51,7 @@ class _Options:
                         assert len(t[1]) > 0, "The value specified for the option -" + value + " is the empty string"
                         vars(self)[value] = t[1]
                     else:
-                        print("Warning: Unknown option", arg)
+                        warning("Unknown option: ", arg)
             else:
                 self.parameters.append(arg)
 

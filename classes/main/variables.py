@@ -4,16 +4,6 @@ from pycsp3.classes.auxiliary.ptypes import TypeVar
 from pycsp3.classes.main.domains import Domain
 
 
-class NotVariable:
-    def __init__(self, variable):
-        self.variable = variable
-
-
-class NegVariable:
-    def __init__(self, variable):
-        self.variable = variable
-
-
 class Variable:
     name2obj = dict()  # Dictionary (keys: names of variables - values: variable objects)
 
@@ -77,7 +67,7 @@ class Variable:
         var_name = name + "[" + "][".join(str(i) for i in indexes) + "]"
         return Variable.build_variable(var_name, domain, indexes)
 
-    def __init__(self, name, dom):
+    def __init__(self, name, dom, *, inverse=False, negation=False):
         self.id = name
         self.dom = dom
         pos = self.id.find("[")
@@ -86,12 +76,14 @@ class Variable:
         else:
             self.prefix, self.suffix = self.id[:pos], self.id[pos:]
             self.indexes = [int(v) for v in re.split("\]\[", self.suffix[1:-1])]
+        self.inverse = inverse  # arithmetic inverse
+        self.negation = negation  # logical negation
 
     def __invert__(self):
-        return NotVariable(self)
+        return Variable(self.id, self.dom, negation=not self.negation)
 
     def __neg__(self):
-        return NegVariable(self)
+        return Variable(self.id, self.dom, inverse=not self.inverse)
 
     def __hash__(self, *args, **kwargs):
         return object.__hash__(self, *args, **kwargs)

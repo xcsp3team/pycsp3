@@ -260,7 +260,7 @@ PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, UNDERLINE = '\033[95m', '\0
 
 
 def warning(message):
-    print("  " + ORANGE + "Warning: " + WHITE + message)
+    print("\n  " + ORANGE + "Warning: " + WHITE + message)
 
 
 def error(s):

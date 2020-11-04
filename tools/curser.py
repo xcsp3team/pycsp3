@@ -4,7 +4,7 @@ from collections import deque, namedtuple
 from pycsp3.classes.entities import Node, TypeNode
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation, ECtr, auxiliary)
-from pycsp3.classes.main.variables import Variable, VariableInteger, NotVariable
+from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY, error_if
@@ -175,7 +175,7 @@ class OpOverrider:
 
         Variable.__and__ = Node.__and__ = OpOverrider.__and__
         Variable.__or__ = Node.__or__ = OpOverrider.__or__
-        Variable.__invert__ = Node.__invert__ = OpOverrider.__invert__
+        Node.__invert__ = OpOverrider.__invert__  # we keep __invert__ for Variable
         Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
 
     @staticmethod
@@ -208,7 +208,7 @@ class OpOverrider:
 
         Variable.__and__ = Node.__and__ = None
         Variable.__or__ = Node.__or__ = None
-        Variable.__invert__ = Node.__invert__ = None
+        Node.__invert__ = None  # we keep __invert__ for Variable
         Variable.__xor__ = Node.__xor__ = None
 
         return OpOverrider
@@ -317,7 +317,7 @@ class OpOverrider:
         return object.__and__(self, other) if None in {self, other} else Node.conjunction(self, other)
 
     def __invert__(self):
-        return NotVariable(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
+        return Variable.__invert__(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
         return object.__xor__(self, other) if None in {self, other} else Node.build(TypeNode.XOR, self, other)
@@ -480,7 +480,7 @@ def convert_to_namedtuples(obj):
             if any(not k.isalnum() for k in obj.keys()):
                 return False
             return all(with_only_alphanumeric_keys(v) for v in obj.values())
-        if isinstance(obj,(int,str)):
+        if isinstance(obj, (int, str)):
             return True
         try:
             iter(obj)
