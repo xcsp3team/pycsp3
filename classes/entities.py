@@ -532,7 +532,7 @@ class Node(Entity):
         if type == TypeNode.EQ and all(son.type.is_predicate_operator() for son in node.sons):
             node = Node(TypeNode.IFF, node.sons)
         # Reducing the node
-        for t in {TypeNode.ADD, TypeNode.MUL, TypeNode.OR, TypeNode.AND, TypeNode.EQ, TypeNode.IFF}:
+        for t in {TypeNode.ADD, TypeNode.MUL, TypeNode.OR, TypeNode.AND}:
             node.flatten_by_associativity(t)
         node.reduce_integers()
         return node
