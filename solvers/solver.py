@@ -146,6 +146,7 @@ class SolverProcess:
         self.stdout = None
         self.stderr = None
         self.last_command_wck = None
+        self.id_file = None
 
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
@@ -201,11 +202,14 @@ class SolverProcess:
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
 
             signal.signal(signal.SIGINT, new_handler)
-            nano_time = "%.20f" % time.time()
-            nano_time = nano_time.replace(".", "_")
             uuid_mac = str(hex(uuid.getnode()))
             pid = str(os.getpid())
-            log = Logger("solver_"+nano_time+"_"+uuid_mac+"_"+pid+".log")  # To record the output of the solver
+            name_file = "solver_"+uuid_mac+"_"+pid
+            if self.id_file is not None:
+                name_file += "_"+str(self.id_file)
+            name_file += ".log"  
+            print("  * Log file of the solver:", name_file)  
+            log = Logger(name_file)  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
