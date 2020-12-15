@@ -177,13 +177,24 @@ class SolverProcess:
                     del root.attrib['id']
             variables = []
             for token in root[0].text.split():
+                
                 r = VarEntities.get_item_with_name(token)
                 if isinstance(r, (EVar, Variable)):  # TODO why do we need these two classes of variables?
                     variables.append(r)
                 else:
                     for x in flatten(r.variables, keep_none=True):
                         variables.append(x)
-            values = root[1].text.split()  # a list with all values given as strings (possibly '*')
+            values = []
+            tmp_values = root[1].text.split()  # a list with all values given as strings (possibly '*')
+            
+            # new code for * in the values of the solution 
+            for value in tmp_values:
+                if "*" not in value:
+                    values.append(value)
+                else:
+                    val, n_val = value.split("*")
+                    values.extend([val]*int(n_val))
+
             assert len(variables) == len(values)
             for i, v in enumerate(values):
                 if variables[i]:
