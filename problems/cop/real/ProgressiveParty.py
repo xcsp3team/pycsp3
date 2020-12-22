@@ -25,7 +25,7 @@ satisfy(
     [iff(s[b][p] == b, h[b]) for b in range(nBoats) for p in range(nPeriods)],
 
     # identifying host boats (when visiting)
-    [imply(s[b1][p] == b2, h[b2]) for b1 in range(nBoats) for b2 in range(nBoats) if b1 != b2 for p in range(nPeriods)],
+    [h[s[b][p]] == 1 for b in range(nBoats) for p in range(nPeriods)],
 
     # channeling variables from arrays s and g
     [Channel(g[b][p], s[b][p]) for b in range(nBoats) for p in range(nPeriods)],
@@ -45,5 +45,8 @@ minimize(
     Sum(h)
 )
 
-
-# less compact way of posting : [[g[i][p][b] for i in range(nBoats)] * crews <= boats[b].capacity for b in range(nBoats) for p in range(nPeriods)],
+# Noe that:
+# a) here is a less compact way of posting a group:
+#    [[g[i][p][b] for i in range(nBoats)] * crews <= boats[b].capacity for b in range(nBoats) for p in range(nPeriods)],
+# b) an alternative way of posting a group:
+#    [imply(s[b1][p] == b2, h[b2]) for b1 in range(nBoats) for b2 in range(nBoats) if b1 != b2 for p in range(nPeriods)],
