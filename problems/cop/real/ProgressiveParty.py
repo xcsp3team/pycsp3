@@ -11,6 +11,19 @@ nPeriods, boats = data
 nBoats = len(boats)
 capacities, crews = zip(*boats)
 
+
+def minimal_number_of_hosts():
+    nPersons = sum(crews)
+    cnt, acc = 0, 0
+    for capacity in sorted(capacities, reverse=True):
+        if acc >= nPersons:
+            return cnt
+        acc += capacity
+        cnt += 1
+
+
+nMinHosts = minimal_number_of_hosts()
+
 # h[b] indicates if the boat b is a host boat
 h = VarArray(size=nBoats, dom={0, 1})
 
@@ -21,10 +34,10 @@ s = VarArray(size=[nBoats, nPeriods], dom=range(nBoats))
 g = VarArray(size=[nBoats, nPeriods, nBoats], dom={0, 1})
 
 satisfy(
-    # identifying host boats (when receiving)
+    # identifying host boats
     [iff(s[b][p] == b, h[b]) for b in range(nBoats) for p in range(nPeriods)],
 
-    # identifying host boats (when visiting)
+    # identifying host boats (from visitors)
     [h[s[b][p]] == 1 for b in range(nBoats) for p in range(nPeriods)],
 
     # channeling variables from arrays s and g
@@ -37,7 +50,10 @@ satisfy(
     [AllDifferent(s[b], excepting=b) for b in range(nBoats)],
 
     # guest crews cannot meet more than once
-    [Sum(s[b1][p] == s[b2][p] for p in range(nPeriods)) <= 2 for b1, b2 in combinations(range(nBoats), 2)]
+    [Sum(s[b1][p] == s[b2][p] for p in range(nPeriods)) <= 1 for b1, b2 in combinations(range(nBoats), 2)],
+
+    # ensuring a minimum number of hosts  tag(redundant-constraint)
+    Sum(h) >= nMinHosts
 )
 
 minimize(
@@ -46,7 +62,9 @@ minimize(
 )
 
 # Noe that:
-# a) here is a less compact way of posting a group:
-#    [[g[i][p][b] for i in range(nBoats)] * crews <= boats[b].capacity for b in range(nBoats) for p in range(nPeriods)],
-# b) an alternative way of posting a group:
+# a) here is an alternative way of posting the 2nd group:
 #    [imply(s[b1][p] == b2, h[b2]) for b1 in range(nBoats) for b2 in range(nBoats) if b1 != b2 for p in range(nPeriods)],
+# b) here is a less compact way of posting the 4th group:
+#    [[g[i][p][b] for i in range(nBoats)] * crews <= capacities[b] for b in range(nBoats) for p in range(nPeriods)],
+# c) in the paper "The Progressive Party Problem: Integer Linear Programming and Constraint Programming Compared" by B. Smith et al.
+#    Constraints Journal 1996, additional constraints (not taken into account here) on host boats allow to prove easily optimality for the instance red42.
