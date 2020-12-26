@@ -73,44 +73,59 @@ def _load_data():
         return OrderedDict([("f" + str(i), od[i]) for i, v in enumerate(raw_data)]), od
         # return DataVisitor(raw_data).visit(ast.parse(inspect.getsource(Compilation.model)))
 
+    def _load_multiple_data_pieces():  # formatting instructions not possible in that case
+        s = ""
+        for arg in args:
+            if "=" in arg:
+                t = arg.split('=')
+                value = None if t[1] in None_Values else int(t[1]) if t[1].isdigit() else t[1]
+                compilation_data[t[0]] = value
+                s += "-" + str(value)
+            else:
+                assert arg.endswith("json")
+                with open(arg) as f:
+                    compilation_data.update(json.loads(f.read(), object_pairs_hook=OrderedDict))
+                    s += "-" + arg.split(os.sep)[-1:][0].split(".")[:1][0]
+        return compilation_data, s
+
     data = options.data
-    compilation_data = OrderedDict()  # the object used for recording the data, available in the model
     if data is None:
-        return compilation_data, ""
-    if data.endswith(".json"):
+        return OrderedDict(), ""
+    if data.endswith(".json"):  # a single json file
         assert os.path.exists(data), "The file " + data + " does not exist (in the specified directory)."
         with open(data) as f:
-            compilation_data = json.loads(f.read(), object_pairs_hook=OrderedDict)
-            string_data = "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
+            return json.loads(f.read(), object_pairs_hook=OrderedDict), "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
+    compilation_data = OrderedDict()  # the object used for recording the data, available in the model
+    # if '{' in data and '}' in data:
+    #    compilation_data = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()), object_pairs_hook=OrderedDict)
+    #    for k, v in compilation_data.items(): setattr(compilation_data, k, v)  ordered_data = list(compilation_data.values())
+    if (data[0], data[-1]) in [('[', ']'), ('(', ')')]:  # NB: these characters may be needed to be escaped as in \[2,3\]
+        args = data[1:-1].split(",")
+        if "json" in data:
+            return _load_multiple_data_pieces()
+        if '=' in data:
+            assert data.count('=') == data.count(',') + 1, "badly formed string of data " + data
+            ordered_data = []
+            for arg in args:
+                t = arg.split('=')
+                value = None if t[1] in None_Values else int(t[1]) if t[1].isdigit() else t[1]
+                compilation_data[t[0]] = value
+                ordered_data.append(value)
+        else:
+            compilation_data, ordered_data = _load_data_sequence(args)
     else:
-        #  if '{' in data and '}' in data:
-        #    compilation_data = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()), object_pairs_hook=OrderedDict)
-        #    for k, v in compilation_data.items(): setattr(compilation_data, k, v)  ordered_data = list(compilation_data.values())
-        if data[0] == '[' and data[-1] == ']' or data[0] == '(' and data[-1] == ')':  # NB: these characters may be needed to be escaped as in \[2,3\]
-            args = data[1:-1].split(",")
-            if '=' in data:
-                assert data.count('=') == data.count(',') + 1, "badly formed string of data " + data
-                ordered_data = []
-                for arg in args:
-                    t = arg.split('=')
-                    value = None if t[1] in None_Values else int(t[1]) if t[1].isdigit() else t[1]
-                    compilation_data[t[0]] = value
-                    ordered_data.append(value)
-            else:
-                compilation_data, ordered_data = _load_data_sequence(args)
-        else:
-            compilation_data, ordered_data = _load_data_sequence([data])
-        df = options.dataformat
-        if df:
-            if df[0] == '[':
-                assert df[-1] == ']'
-                df = df[1:-1]
-            df = df.split(',')
-            assert len(df) == len(ordered_data)
-            ss = "-".join(df).format(*ordered_data)
-        else:
-            ss = "-".join(str(v) for v in ordered_data)
-        string_data = "-" + ss
+        compilation_data, ordered_data = _load_data_sequence([data])
+    df = options.dataformat
+    if df:
+        if df[0] == '[':
+            assert df[-1] == ']'
+            df = df[1:-1]
+        df = df.split(',')
+        assert len(df) == len(ordered_data)
+        ss = "-".join(df).format(*ordered_data)
+    else:
+        ss = "-".join(str(v) for v in ordered_data)
+    string_data = "-" + ss
     return compilation_data, string_data
 
 
