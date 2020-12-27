@@ -96,7 +96,8 @@ def _argument(elt, arg, key, value):
                 subelt.set(str(att[2]), str(att[3]))
             elt.append(subelt)
     else:
-        elt.append(_element(key, attributes=arg.attributes, text=None if isinstance(value, list) and len(value) == 1 and value[0] is None else value))
+        v = None if isinstance(value, list) and len(value) == 1 and value[0] is None else value
+        elt.append(_element(key, attributes=arg.attributes, text=v))
 
 
 def _constraint(entity, *, possible_simplified_form=False):
