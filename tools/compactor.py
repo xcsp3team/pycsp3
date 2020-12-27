@@ -5,6 +5,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeCtrArg
 from pycsp3.classes.entities import CtrEntities, ObjEntities, AnnEntities, ESlide, EGroup, VarEntities
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import flatten, is_containing
+from pycsp3.dashboard import options
 
 
 class SequenceOfSuccessiveVariables:
@@ -236,11 +237,37 @@ def compact(variables, *, preserve_order=False, group_args=False):
     return " ".join(str(s) for s in t)
 
 
+def _compact_values(values, limit):
+    if not options.compactvalues:
+        return values
+    assert isinstance(values, list) and len(values) > 0, type(values)
+    l = []
+    i = 0
+    last = values[0]
+    while True:
+        before = i
+        while i < len(values) and values[i] == last:
+            i += 1
+        nb = i - before
+        if nb >= limit:
+            l.append(str(last) + "x" + str(nb))
+        else:
+            for _ in range(nb):
+                l.append(last)
+        if i == len(values):
+            break
+        last = values[i]
+    return l
+
+
 def _compact_constraint_arguments(arguments):
     for arg in list(arguments.values()):
         if isinstance(arg.content, list) and len(arg.content) > 0 and arg.content_compressible:
             if not isinstance(arg.content[0], list):  # It is only one list
-                arg.content = compact(arg.content, preserve_order=arg.content_ordered)
+                if isinstance(arg.content[0], int) and str(arg.name) in ["coeffs", "values"]:  # TODO other arguments?
+                    arg.content = _compact_values(arg.content, 3)
+                else:
+                    arg.content = compact(arg.content, preserve_order=arg.content_ordered)
             elif arg.lifted is True:
                 arg.content = [compact(l, preserve_order=arg.content_ordered) for l in arg.content]
         elif arg.name == TypeCtrArg.MATRIX:  # Special case for matrix

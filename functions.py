@@ -484,7 +484,7 @@ def Sum(term, *others, condition=None):
             OpOverrider.disable()
             if len(coeffs) == 1 and isinstance(coeffs[0], (tuple, set, range)):
                 coeffs = list(coeffs[0])
-            elif isinstance(coeffs, (tuple, set, range)):
+            elif isinstance(coeffs, (tuple, set, range)):  # TODO is ste appropriate?
                 coeffs = list(coeffs)
             elif isinstance(coeffs, (int, Variable)):
                 coeffs = [coeffs]
@@ -507,7 +507,6 @@ def Sum(term, *others, condition=None):
     # if len(terms) == 1 and coeffs is None: return terms
 
     # TODO control here some assumptions (empty list seems to be possible. See RLFAP)
-
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))
 
 

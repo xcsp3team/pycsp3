@@ -97,7 +97,7 @@ class Constraint:
         if len(records) == 0:
             return diffs
         if Diffs.fusion and not all(
-                        name in Diffs.fusion.argument_names for name in diffs.argument_names):  # diffs.argument_names != Diffs.fusion.argument_names:
+                name in Diffs.fusion.argument_names for name in diffs.argument_names):  # diffs.argument_names != Diffs.fusion.argument_names:
             return False  # because arguments are not the same (so it is not possible to make a unique abstraction)
         if len([flag for flag in diffs.argument_flags if flag]) > 1:
             return False  # two arguments of different size cannot be currently abstracted
