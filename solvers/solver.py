@@ -114,7 +114,7 @@ class Logger:
     def write(self, message):
         self.log = open(self.log_file, "a")
         self.log.write(message)
-        self.log.close()  
+        self.log.close()
 
     def read(self):
         o = open(self.log_file, "r")
@@ -183,11 +183,20 @@ class SolverProcess:
                 else:
                     for x in flatten(r.variables, keep_none=True):
                         variables.append(x)
-            values = root[1].text.split()  # a list with all values given as strings (possibly '*')
+            values = []
+            for tok in root[1].text.split():
+                if 'x' in tok:  # in order to handle compact forms in solutions
+                    vk = tok.split('x')
+                    assert len(vk) == 2
+                    for _ in range(int(vk[1])):
+                        values.append(vk[0])
+                else:
+                    values.append(tok)
+            # values is a list with all values given as strings (possibly '*')
             assert len(variables) == len(values)
             for i, v in enumerate(values):
                 if variables[i]:
-                    variables[i].value = v  # we add new field (may be useful)
+                    variables[i].value = v  # we add a new field (may be useful)
 
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
             return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
@@ -196,6 +205,7 @@ class SolverProcess:
             p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
             stopped = False
             handler = signal.getsignal(signal.SIGINT)
+
             def new_handler(frame, signum):
                 global stopped
                 stopped = True
@@ -221,9 +231,9 @@ class SolverProcess:
         if compiler is False:  # To get options from the model
             string_options = "[" + self.name.lower() + "," + string_options + "]"
             solver, tmp_dict_options, tmp_dict_simplified_options = process_options(string_options)
-            dict_simplified_options.update(tmp_dict_simplified_options) 
+            dict_simplified_options.update(tmp_dict_simplified_options)
             dict_options.update(tmp_dict_options)
-            
+
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""

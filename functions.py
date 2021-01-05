@@ -484,7 +484,7 @@ def Sum(term, *others, condition=None):
             OpOverrider.disable()
             if len(coeffs) == 1 and isinstance(coeffs[0], (tuple, set, range)):
                 coeffs = list(coeffs[0])
-            elif isinstance(coeffs, (tuple, set, range)):  # TODO is ste appropriate?
+            elif isinstance(coeffs, (tuple, set, range)):  # TODO is set appropriate?
                 coeffs = list(coeffs)
             elif isinstance(coeffs, (int, Variable)):
                 coeffs = [coeffs]
