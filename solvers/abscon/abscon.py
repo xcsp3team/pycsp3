@@ -3,12 +3,12 @@ import os
 from pycsp3.solvers.solver import SolverProcess, SolverPy4J
 
 ABSCON_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
-ABSCON_CP = ABSCON_DIR + (os.pathsep + ABSCON_DIR).join(["AbsCon-20-09.jar"])
+ABSCON_CP = ABSCON_DIR + (os.pathsep + ABSCON_DIR).join(["ACE-21-01.jar"])
 
 
 class AbsConProcess(SolverProcess):
     def __init__(self):
-        super().__init__(name="AbsCon", command="java -cp " + ABSCON_CP + " AbsCon", cp=ABSCON_CP)
+        super().__init__(name="AbsCon", command="java -jar " + ABSCON_CP, cp=ABSCON_CP)
 
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):
         args_solver = ""

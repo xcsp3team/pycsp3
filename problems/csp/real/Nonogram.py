@@ -12,7 +12,7 @@ from pycsp3 import *
 rows, cols = data  # patterns for row and columns
 nRows, nCols = len(rows), len(cols)
 
-#  x[i][j] is 1 iff the cell at row i and col j is colored in black
+# x[i][j] is 1 iff the cell at row i and col j is colored in black
 x = VarArray(size=[nRows, nCols], dom={0, 1})
 
 if not variant():
