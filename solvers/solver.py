@@ -189,13 +189,14 @@ class SolverProcess:
             
             # new code for * in the values of the solution 
             for value in tmp_values:
-                if "*" not in value:
+                if "x" not in value:
                     values.append(value)
                 else:
-                    val, n_val = value.split("*")
+                    val, n_val = value.split("x")
                     values.extend([val]*int(n_val))
-
+            
             assert len(variables) == len(values)
+            
             for i, v in enumerate(values):
                 if variables[i]:
                     variables[i].value = v  # we add new field (may be useful)
