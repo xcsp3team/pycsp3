@@ -29,5 +29,9 @@ satisfy(
     [Increasing([y[j] for j in pile], strict=True) for pile in piles],
 
     # each new card put on the stack must be at a rank higher or lower than the previous one
-    [(x[i], x[i + 1]) in table for i in range(nCards - 1)]
+    Slide((x[i], x[i + 1]) in table for i in range(nCards - 1))
 )
+
+# Note that:
+# a) Slide is only used to have more compact XCSP3 instances
+#    we could have written: [(x[i], x[i + 1]) in table for i in range(nCards - 1)]
