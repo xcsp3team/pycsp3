@@ -30,7 +30,7 @@ if sys.argv:
         data = None
     else:
         # TODO: analysing if we have to compile (e..g, when running the tester, we should not try to do that); Trying this with the inspector?
-        if "pycsp3/problems/tests/" not in sys.argv[0]:  # TODO is it correct?
+        if "pycsp3/problems/tests/" not in sys.argv[0]:  # TODO is it correct?
             Compilation.load()
             data = Compilation.data
         else:

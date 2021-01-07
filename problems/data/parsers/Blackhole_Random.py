@@ -12,19 +12,17 @@ nPiles = (nCards - 1) // nCardsPerPile
 assert (nCards - 1) % nCardsPerPile == 0
 
 random.seed(seed)
-cards = list(range(nCards))
-piles = []
-for i in range(nPiles):
-    pile = []
-    for j in range(nCardsPerPile):
-        v = random.randrange(len(cards))
-        pile.append(cards[v])
-        del cards[v]
-    piles.append(pile)
+active_piles = list(range(nPiles))
+piles = [[] for _ in range(nPiles)]
+
+for i in range(1, nCards):
+    r = random.randrange(len(active_piles))
+    k = active_piles[r]
+    piles[k].insert(0, i)
+    if len(piles[k]) == nCardsPerPile:
+        del active_piles[r]
 
 data["nCardsPerSuit"] = nCardsPerSuit
 data["piles"] = piles
 
-Compilation.string_data = "-" + "-".join(str(v) for v in (nCardsPerSuit, seed))
-
-# TODO not a good way of building instances because they are most of the time  trivially unsatisfiable
+Compilation.string_data = "-" + "-".join(str(v) for v in (nCardsPerSuit, nCardsPerPile, seed))
