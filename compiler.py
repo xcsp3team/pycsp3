@@ -46,7 +46,6 @@ class Compilation:
 
     @staticmethod
     def set_filename(f):
-
         Compilation.user_filename = f
 
 
@@ -187,9 +186,8 @@ def _compile():
     #         with open(sys.argv[1], 'r') as f:
     #             print(f.read())
 
-    print("COUCOU:", Compilation.user_filename)
     if Compilation.user_filename is not None:
-        
+        print("User-defined XML file name:", Compilation.user_filename)
         filename = Compilation.user_filename
     else:
         filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
