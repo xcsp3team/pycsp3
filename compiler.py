@@ -34,6 +34,7 @@ class Compilation:
     stopwatch = None
     stopwatch2 = None
     done = False
+    user_filename = None
 
     @staticmethod
     def load(console=False):
@@ -42,6 +43,11 @@ class Compilation:
     @staticmethod
     def compile():
         return _compile()
+
+    @staticmethod
+    def set_filename(f):
+
+        Compilation.user_filename = f
 
 
 def _load_options():
@@ -181,8 +187,14 @@ def _compile():
     #         with open(sys.argv[1], 'r') as f:
     #             print(f.read())
 
-    filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
-    filename = filename_prefix + ".xml"
+    print("COUCOU:", Compilation.user_filename)
+    if Compilation.user_filename is not None:
+        
+        filename = Compilation.user_filename
+    else:
+        filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
+        filename = filename_prefix + ".xml"
+    
     if Compilation.done:
         return filename
 
