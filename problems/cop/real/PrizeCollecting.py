@@ -55,5 +55,5 @@ maximize(
 # Note that
 
 # a) we use a short table because the following statement is currently not handled in PyCSP3:
-#      [imply((s[i] != i) & (s[i] != 0), p[s[i]] == p[i]+1) for i in range(n)],
+#      [imply((s[i] != i) & (s[i] != 0), p[s[i]] == p[i]+1) for i in range(n)], TODO. checking that.
 #    we currently think about some extensions (meta-constraint?)

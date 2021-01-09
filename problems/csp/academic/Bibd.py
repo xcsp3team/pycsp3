@@ -9,7 +9,6 @@ Examples of Execution:
 
 from pycsp3 import *
 
-print("data", data)
 v, b, r, k, l = data or (6, 0, 0, 3, 8)
 b = (l * v * (v - 1)) // (k * (k - 1)) if b == 0 else b  # when specified at 0, b is automatically computed
 r = (l * (v - 1)) // (k - 1) if r == 0 else r  # when specified at 0, r is automatically computed

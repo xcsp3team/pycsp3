@@ -46,15 +46,20 @@ x = VarArray(size=[nRows, nCols, nPatterns], dom=lambda i, j, k: {0, 1} if slice
 # s[i][j][k] is the size of the slice with left top cell at (i,j) and pattern k (0 if the slice is not selected)
 s = VarArray(size=[nRows, nCols, nPatterns], dom=lambda i, j, k: {0, pattern_size(i, j, k)} if slices[i][j][k] else None)
 
+# z is the number of selected pizza cells
+z = Var(range(nRows*nCols+1))
+
 satisfy(
     # computing sizes of selected slices
     [(x[i][j][k], s[i][j][k]) in {(0, 0), (1, pattern_size(i, j, k))} for i, j, k in product(range(nRows), range(nCols), range(nPatterns)) if slices[i][j][k]],
 
     # ensuring that no two slices overlap
-    [Sum([x[t[0]][t[1]][t[2]] for t in overlaps[i][j]]) <= 1 for i in range(nRows) for j in range(nCols) if len(overlaps[i][j]) > 1]
+    [Sum([x[t[0]][t[1]][t[2]] for t in overlaps[i][j]]) <= 1 for i in range(nRows) for j in range(nCols) if len(overlaps[i][j]) > 1],
+
+    Sum(s) == z
 )
 
 maximize(
     # maximizing the number of selected pizza cells
-    Sum(s)
+    z
 )

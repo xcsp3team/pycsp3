@@ -1,3 +1,7 @@
+"""
+Example: python3 pycsp3/problems/csp/real/Blackhole.py  -dataparser=pycsp3/problems/data/parsers/Blackhole_Random.py 13 3 0
+"""
+
 import random
 
 from pycsp3.compiler import Compilation
@@ -24,5 +28,6 @@ for i in range(1, nCards):
 
 data["nCardsPerSuit"] = nCardsPerSuit
 data["piles"] = piles
+print(str(seed).format("{:03d}"))
 
-Compilation.string_data = "-" + "-".join(str(v) for v in (nCardsPerSuit, nCardsPerPile, seed))
+Compilation.string_data = "-" + "-".join(str(v) for v in (nCardsPerSuit, nCardsPerPile, "{:02d}".format(seed)))

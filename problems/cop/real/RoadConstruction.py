@@ -9,7 +9,6 @@ from pycsp3 import *
 
 budget, distances, costs = data
 n = len(distances)
-print(data, n)
 
 M = 10000
 
