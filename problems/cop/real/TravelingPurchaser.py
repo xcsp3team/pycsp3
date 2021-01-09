@@ -27,10 +27,10 @@ satisfy(
     # linking distances to successors
     [distances[i][s[i]] == d[i] for i in range(nCities)],
 
-    # linking purchase locations to purchase costs 
+    # linking purchase locations to purchase costs
     [prices[i][l[i]] == c[i] for i in range(nProducts)],
 
-    # purchasing a product at a city is only possible if you visit that city 
+    # purchasing a product at a city is only possible if you visit that city
     [imply(s[i] == i, l[j] != i) for i in range(nCities) for j in range(nProducts)],
 
     Circuit(s),

@@ -13,7 +13,7 @@ from pycsp3 import *
 
 n, c = data or (8, 4)
 
-#  x[i][j] is 1 if a coin is placed at row i and column j
+# x[i][j] is 1 if a coin is placed at row i and column j
 x = VarArray(size=[n, n], dom={0, 1})
 
 satisfy(

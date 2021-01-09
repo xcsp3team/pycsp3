@@ -29,10 +29,10 @@ if not variant():
         # computing (and checking) the load of each slab
         [[sb[i] == j for i in range(nOrders)] * sizes == ld[j] for j in range(nSlabs)],
 
-        # computing the loss of each slab 
+        # computing the loss of each slab
         [(ld[j], ls[j]) in {(i, loss) for i, loss in enumerate(possibleLosses)} for j in range(nSlabs)],
 
-        # no more than two colors for each slab 
+        # no more than two colors for each slab
         [Sum(disjunction(sb[i] == j for i in g) for g in colorGroups) <= 2 for j in range(nSlabs)]
     )
 

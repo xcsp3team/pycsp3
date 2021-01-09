@@ -64,10 +64,10 @@ elif variant("wastage"):
 
     table = {(*t, i) for t in product(range(2), repeat=9) for i in range(3) if condition_for_tuple(*t, i)}
 
-    #  x[i][j] is 1 iff the cell at row i and col j is alive (note that there is a border)
+    # x[i][j] is 1 iff the cell at row i and col j is alive (note that there is a border)
     x = VarArray(size=[n + 2, n + 2], dom=lambda i, j: {0} if i in {0, n + 1} or j in {0, n + 1} else {0, 1})
 
-    #  w[i][j] is the wastage for the cell at row i and col j
+    # w[i][j] is the wastage for the cell at row i and col j
     w = VarArray(size=[n + 2, n + 2], dom={0, 1, 2})
 
     # ws[i] is the wastage sum for cells at row i
