@@ -7,7 +7,7 @@ from pycsp3.classes.main.constraints import (
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY, error_if
+from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY, warning, error_if
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -38,7 +38,6 @@ def cursing():
 
     # def _list_rmul(self, other):
     #     return _list_mul(other, self)
-
 
     def _tuple_contains(self, other):
         if not OpOverrider.activated:
@@ -475,9 +474,9 @@ class ListVar(list):
 
 
 def convert_to_namedtuples(obj):
-    def with_only_alphanumeric_keys(obj):
+    def with_only_alphanumeric_keys(obj):  # alphanum or '_'
         if isinstance(obj, dict):
-            if any(not k.isalnum() for k in obj.keys()):
+            if any(not k.isidentifier() for k in obj.keys()):
                 return False
             return all(with_only_alphanumeric_keys(v) for v in obj.values())
         if isinstance(obj, (int, str)):
@@ -514,7 +513,7 @@ def convert_to_namedtuples(obj):
         return obj
 
     if not with_only_alphanumeric_keys(obj):
-        print("\nWarning: some key of some dictionary involved in the data is not alphanumeric, so no conversion to named tuples is performed\n")
+        warning("some key of some dictionary involved in the data is not alphanumeric, so no conversion to named tuples is performed\n")
         return obj  # not possible to make the conversion in that case
     return recursive_convert_to_namedtuples(obj)
 
