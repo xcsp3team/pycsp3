@@ -8,7 +8,6 @@ Example of Execution:
 from pycsp3 import *
 
 nPeriods, boats = data
-nPeriods+=3
 nBoats = len(boats)
 capacities, crews = zip(*boats)
 
