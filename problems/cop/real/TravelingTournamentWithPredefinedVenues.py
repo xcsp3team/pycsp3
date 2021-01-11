@@ -8,6 +8,7 @@ python3 pycsp3/problems/g4_world/TravelingTournamentWithPredefinedVenues.py -dat
 """
 
 from pycsp3 import *
+print("data",data)
 
 nTeams, venues = data
 nRounds = nTeams - 1
