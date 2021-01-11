@@ -2,13 +2,13 @@ import os
 
 from pycsp3.solvers.solver import SolverProcess, SolverPy4J
 
-ABSCON_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
-ABSCON_CP = ABSCON_DIR + (os.pathsep + ABSCON_DIR).join(["ACE-21-01.jar"])
+ACE_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
+ACE_CP = ACE_DIR + (os.pathsep + ACE_DIR).join(["ACE-21-01.jar"])
 
 
-class AbsConProcess(SolverProcess):
+class AceProcess(SolverProcess):
     def __init__(self):
-        super().__init__(name="AbsCon", command="java -jar " + ABSCON_CP, cp=ABSCON_CP)
+        super().__init__(name="Ace", command="java -jar " + ACE_CP, cp=ACE_CP)
 
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):
         args_solver = ""
@@ -40,7 +40,7 @@ class AbsConProcess(SolverProcess):
                 va = "WDegOnDom"
             else:
                 va = None
-                print("heuristic " + v + " not implemented in AbsCon")
+                print("heuristic " + v + " not implemented in Ace")
             if va:
                 args_solver += " -varh=" + va
         if "valheuristic" in dict_simplified_options:
@@ -55,7 +55,7 @@ class AbsConProcess(SolverProcess):
                 va = "Rand"
             else:
                 va = None
-                print("heuristic " + v + " not implemented in AbsCon")
+                print("heuristic " + v + " not implemented in Ace")
             if va:
                 args_solver += " -valh=" + va
         if "lastConflict" in dict_simplified_options:
@@ -65,11 +65,11 @@ class AbsConProcess(SolverProcess):
         if "cos" in dict_simplified_options:
             args_solver += " -varh=Memory"
         if "last" in dict_simplified_options:
-            print("Technique 'last' not implemented in AbsCon")
+            print("Technique 'last' not implemented in Ace")
         if "restarts_type" in dict_simplified_options:
             v = dict_simplified_options["restarts_type"]
             if v != "geometric":
-                print("Restarts Type " + v + " not implemented in AbsCon")
+                print("Restarts Type " + v + " not implemented in Ace")
         if "restarts_cutoff" in dict_simplified_options:
             args_solver += " -r_c=" + dict_simplified_options["restarts_cutoff"]
         if "restarts_factor" in dict_simplified_options:
@@ -84,15 +84,15 @@ class AbsConProcess(SolverProcess):
             args_solver += " -v=" + dict_simplified_options["verbose"]
         if "trace" in dict_simplified_options:
             if dict_simplified_options["trace"]:
-                print("Saving trace into a file not implemented in AbsCon")
+                print("Saving trace into a file not implemented in Ace")
             else:
                 args_solver += " -trace"
         return args_solver
 
 
-class AbsconPy4J(SolverPy4J):  # TODO in progress
+class AcePy4J(SolverPy4J):  # TODO in progress
     def __init__(self):
-        cp = ABSCON_CP + os.pathsep + ABSCON_DIR + "../py4j0.10.8.1.jar" + os.pathsep + ABSCON_DIR + " AbsConPy4J"
-        super().__init__(name="AbsCon", command="java -cp " + cp, cp=ABSCON_CP)
+        cp = ACE_CP + os.pathsep + ACE_DIR + "../py4j0.10.8.1.jar" + os.pathsep + ACE_DIR + " AcePy4J"
+        super().__init__(name="Ace", command="java -cp " + cp, cp=ACE_CP)
 
-# command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAbsCon/ StackEntryPoint"
+# command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAce/ StackEntryPoint"

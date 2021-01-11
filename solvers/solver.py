@@ -168,8 +168,8 @@ class SolverProcess:
                 elif root.attrib['type'] == "solution" and optimal:
                     root.attrib['type'] = "solution optimal"
                 if "cost" not in root.attrib:
-                    left = stdout.rfind("o ") + 2;
-                    right = left + 1;
+                    left = stdout.rfind("o ") + 2
+                    right = left + 1
                     while stdout[right].isdigit():
                         right += 1
                     root.attrib['cost'] = stdout[left:right]
@@ -251,7 +251,7 @@ class SolverProcess:
             print("  * Solved by " + self.name + " in " + GREEN + self.last_command_wck + WHITE + " seconds")
         if missing:
             print("\n   This is due to a missing implementation")
-        print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[abscon,v] to see directly the output of the solver.\n")
+        print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[ace,v] to see directly the output of the solver.\n")
         return extract_result_and_solution(out_err) if out_err else (None, None)
 
 

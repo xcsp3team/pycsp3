@@ -22,7 +22,7 @@ from pycsp3.tools.xcsp import build_document
 
 None_Values = ['None', '', 'null']  # adding 'none'?
 
-ABSCON, CHOCO = SOLVERS = ["AbsCon", "Choco"]
+ACE, CHOCO = SOLVERS = ["Ace", "Choco"]
 
 
 class Compilation:
@@ -239,7 +239,7 @@ def _compile():
 
     Compilation.done = True
 
-    solving = ABSCON if options.solve else options.solver
+    solving = ACE if options.solve else options.solver
     if solving:
         if options.display:
             print("Warning: options -display and -solve should not be used together.")
@@ -251,9 +251,9 @@ def _compile():
         if solver == CHOCO:
             from pycsp3.solvers.choco import ChocoProcess
             result, solution = ChocoProcess().solve(filename, solving, args, args_recursive, cop, compiler=True)
-        else:  # Fallback case => options.solver == "abscon":
-            from pycsp3.solvers.abscon import AbsConProcess
-            result, solution = AbsConProcess().solve(filename, solving, args, args_recursive, cop, compiler=True)
+        else:  # Fallback case => options.solver == "ace":
+            from pycsp3.solvers.abscon import AceProcess
+            result, solution = AceProcess().solve(filename, solving, args, args_recursive, cop, compiler=True)
         # if result:
         #     print(result)
         if solution:

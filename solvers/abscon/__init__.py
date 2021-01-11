@@ -1,1 +1,1 @@
-from pycsp3.solvers.abscon.abscon import *
+from pycsp3.solvers.abscon.ace import *
