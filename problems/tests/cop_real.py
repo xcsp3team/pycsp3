@@ -66,7 +66,7 @@ run(Tester("cop" + os.sep + "real")
     .add("Rcpsp", data="Rcpsp_j30-01-01.json")  # optimum 43
     .add("Rlfap", data="Rlfap_card-scen-04.json", variant="card")  # optimum 46
     .add("Rlfap", data="Rlfap_span-scen-05.json", variant="span")  # optimum 792
-    .add("Rlfap", data="Rlfap_max-graph-05.json", variant="max")  # optimum 221  (use -ub=222 with AbsCon to prove it, or -os=increasing)
+    .add("Rlfap", data="Rlfap_max-graph-05.json", variant="max")  # optimum 221  (use -ub=222 with Ace to prove it, or -os=increasing)
     .add("SchedulingFS", data="SchedulingFS-Taillard-os-04-04-0.json")  # optimum 302
     .add("SchedulingFS", data="Taillard-fs-020-05-1.json")
     .add("SchedulingJS", data="Sadeh-js-e0ddr1-0.json")
@@ -76,7 +76,7 @@ run(Tester("cop" + os.sep + "real")
     .add("SteelMillSlab", data="SteelMillSlab_bench_2_0.json")
     .add("SteelMillSlab", data="SteelMillSlab_bench_2_0.json", variant="01")
     .add("Tal", data="Tal-frobserved-7-15-11-13-9-1-11-7-4_1.json")  # optimum 142
-    .add("TemplateDesign", data="TemplateDesign_catfood_2.json")  # optimum 2 ; java AbsCon TemplateDesign-catfood_2.xml -valh=Rand -p=SAC3 -sop
+    .add("TemplateDesign", data="TemplateDesign_catfood_2.json")  # optimum 2 ; java ace TemplateDesign-catfood_2.xml -valh=Rand -p=SAC3 -sop
     .add("TemplateDesign", data="TemplateDesign_catfood_2.json", variant="aux")
     .add("TravelingPurchaser", data="TravelingPurchaser-7-5-30-1.json")  # optimum 124
     .add("TravelingTournament", data="TravelingTournament_galaxy04.json", variant="a2")  # optimum 517

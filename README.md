@@ -16,17 +16,17 @@ Note that:
 * PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
 
 At this stage, one can run two embedded solvers:
-* the constraint solver 'AbsCon', with the option -solve or the option -solver=abscon
+* the constraint solver 'Ace' (AbsCon Essence), with the option -solve or the option -solver=ace
 * the constraint solver 'Choco, with the option -solver=choco
 
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf).
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-It is, for example, immediate to run 'AbsCon' or 'Choco' on XCSP3 instances (files) as the respective executables (jar files) are 
+It is, for example, immediate to run 'Ace' or 'Choco' on XCSP3 instances (files) as the respective executables (jar files) are 
 present in directories `pycsp3/solvers/abscon` and  `pycsp3/solvers/choco`.
-For example, for running 'AbsCon' on the XCSP3 instance 'zebra.xml', just execute:
+For example, for running 'Ace' on the XCSP3 instance 'zebra.xml', just execute:
 ```console
-java -jar AbsConYY-MM.jar zebra.xml 
+java -jar ACE-YY-MM.jar zebra.xml 
 
 ```
 while replacing YY and MM with the current values that are present in the name of the jar file.
@@ -192,9 +192,9 @@ Among the options, we find:
 * ```-variant=<variant_name>```: the name of a variant, to be used with function `variant()`.
       See Example AllInterval below, for an illustration.
 
-* ```-solve```: attempts to solve the instance with the embedded solver 'AbsCon'. It requires that Java version 8 (at least) is installed.
+* ```-solve```: attempts to solve the instance with the embedded solver 'Ace'. It requires that Java version 8 (at least) is installed.
 
-* ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'abscon' or 'choco'.
+* ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace' or 'choco'.
 Important: it requires that Java version 8 (at least) is installed.
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf).
 
@@ -260,7 +260,7 @@ To generate the XCSP3 instance (file), the command is:
 python3 SendMore.py
 ```
 
-To generate and solve (with AbsCon) the XCSP3 instance, the command is:
+To generate and solve (with Ace) the XCSP3 instance, the command is:
 
 ```console
 python3 SendMore.py -solve
@@ -398,7 +398,7 @@ For compiling the second model variant, using the option `-variant`, the command
 python3 AllInterval.py -data=5 -variant=aux
 ```
 
-To generate and solve (with AbsCon) the instance of order 10 and variant 'aux', the command is:
+To generate and solve (with Ace) the instance of order 10 and variant 'aux', the command is:
 
 ```console
 python3 AllInterval.py -data=10 -variant=aux -solve

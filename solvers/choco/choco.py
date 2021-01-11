@@ -43,7 +43,7 @@ class ChocoProcess(SolverProcess):
         if "valh" in dict_simplified_options:
             v = dict_simplified_options["valh"]
             if v not in ["min", "med", "max", "rand", "best", ]:
-                print("heuristic " + v + " not implemented in AbsCon")
+                print("heuristic " + v + " not implemented in Choco")
             else:
                 args_solver += " -valh=" + v
                 free = True
@@ -99,4 +99,3 @@ class ChocoPy4J(SolverPy4J):  # TODO in progress
         cp = CHOCO_CP + os.pathsep + CHOCO_DIR + "../py4j0.10.8.1.jar" + os.pathsep + CHOCO_DIR + " ChocoSolverPy4J"
         super().__init__(name="Choco-solver", command="java -cp " + cp, cp=CHOCO_CP)
 
-# command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAbsCon/ StackEntryPoint"

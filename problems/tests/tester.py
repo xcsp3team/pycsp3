@@ -4,14 +4,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-from pycsp3.solvers.abscon import AbsConProcess
+from pycsp3.solvers.abscon import AceProcess
 from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
 PYTHON_VERSIONS = ["python3"]
 waiting = False
-solver = AbsConProcess()
+solver = AceProcess()
 
 
 def run(xcsp, diff=None, same=None):
@@ -72,8 +72,8 @@ class Tester:
         if len(sys.argv) == 2:
             if sys.argv[1] == "-choco":
                 command += " -solver=[choco,limit=2s]"
-            elif sys.argv[1] == "-abscon":
-                command += " -solver=[abscon,limit=2s]"
+            elif sys.argv[1] == "-ace":
+                command += " -solver=[ace,limit=2s]"
         print(BLUE + "Command:" + WHITE, command)
         out, error = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
         # print(title + " stdout:")
@@ -186,7 +186,7 @@ class Tester:
     def _command_jv(self, model, data, variant, prs_jv, special, dataSpecial):
         print()
 
-        cmd = "java -cp " + solver.cp + (" AbsCon " if special else " org.xcsp.modeler.Compiler ")
+        cmd = "java -cp " + solver.cp + (" ace " if special else " org.xcsp.modeler.Compiler ")
         cmd += "problems.generators." + prs_jv if prs_jv else self.dir_pbs_jv + model
         if self.data_jv(data):
             if dataSpecial:

@@ -51,7 +51,7 @@ satisfy(
     # a team cannot play against itself
     [o[i][k] != i for i in range(nTeams) for k in range(nRounds)],
 
-    # ensuring predefined venues  
+    # ensuring predefined venues
     [venues[i][o[i][k]] == h[i][k] for i in range(nTeams) for k in range(nRounds)],
 
     # ensuring symmetry of games: if team i plays against j, then team j plays against i
