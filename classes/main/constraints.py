@@ -361,7 +361,7 @@ class ConstraintSum(ConstraintWithCondition):
         vs = self.arguments[TypeCtrArg.LIST].content
         cs = self.arguments[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in self.arguments else None
         if cs is None:
-            return sum(x.dom.smallest_value() for x in vs)
+            return sum(x.dom.smallest_value() if isinstance(x, Variable) else x.possible_values()[0] for x in vs)
         assert len(vs) == len(cs)
         t = []
         for i, x in enumerate(vs):
@@ -377,7 +377,7 @@ class ConstraintSum(ConstraintWithCondition):
         vs = self.arguments[TypeCtrArg.LIST].content
         cs = self.arguments[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in self.arguments else None
         if cs is None:
-            return sum(x.dom.greatest_value() for x in vs)
+            return sum(x.dom.greatest_value() if isinstance(x, Variable) else x.possible_values()[-1] for x in vs)
         assert len(vs) == len(cs)
         t = []
         for i, x in enumerate(vs):
@@ -443,10 +443,10 @@ class ConstraintMaximum(ConstraintWithCondition):
         self.arg(TypeCtrArg.CONDITION, condition)
 
     def min_possible_value(self):
-        return max(x.dom.smallest_value() for x in self.arguments[TypeCtrArg.LIST].content)
+        return max(x.dom.smallest_value() if isinstance(x, Variable) else x.possible_values()[0] for x in self.arguments[TypeCtrArg.LIST].content)
 
     def max_possible_value(self):
-        return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
+        return max(x.dom.greatest_value() if isinstance(x, Variable) else x.possible_values()[-1] for x in self.arguments[TypeCtrArg.LIST].content)
 
 
 class ConstraintMinimum(ConstraintMaximum):
@@ -455,10 +455,10 @@ class ConstraintMinimum(ConstraintMaximum):
         self.name = TypeCtr.MINIMUM
 
     def min_possible_value(self):
-        return min(x.dom.smallest_value() for x in self.arguments[TypeCtrArg.LIST].content)
+        return min(x.dom.smallest_value() if isinstance(x, Variable) else x.possible_values()[0] for x in self.arguments[TypeCtrArg.LIST].content)
 
     def max_possible_value(self):
-        return min(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
+        return min(x.dom.greatest_value() if isinstance(x, Variable) else x.possible_values()[-1] for x in self.arguments[TypeCtrArg.LIST].content)
 
 
 class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with a general condition
@@ -629,7 +629,9 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
     def __mul__(self, other):
-        assert isinstance(self.constraint, ConstraintSum) and isinstance(other, int)
+        assert isinstance(other, int)
+        if not isinstance(self.constraint, ConstraintSum):
+            return Node.build(TypeNode.MUL, self._simplify_operation(other))
         args = self.constraint.arguments
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
         value = args[TypeCtrArg.CONDITION]
