@@ -83,6 +83,29 @@ def numbers_in(line):
     return [int(v) for v in re.findall(r'[-]?\d+', line)]  # [int(v) for v in line().split() if v.isdigit()]
 
 
+def numbers_in_lines_until(stop):
+    s = ""
+    while not next_line().endswith(stop):
+        s += line()
+    return numbers_in(s + line())
+
+
+def decrement(t):
+    assert isinstance(t, list)
+    for i in range(len(t)):
+        if isinstance(t[i], list):
+            decrement(t[i])
+        else:
+            assert isinstance(t[i], int)
+            t[i] -= 1
+    return t
+
+
+def split_with_colums_of_size(t, k):
+    assert isinstance(t, list) and len(t) % k == 0
+    return [[t[i * k + j] for j in range(k)] for i in range(len(t) // k)]
+
+
 def ask_number(message):
     parameter = options.consume_parameter()
     return int(parameter) if parameter else int(input(message + " "))
