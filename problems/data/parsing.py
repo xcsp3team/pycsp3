@@ -102,7 +102,7 @@ def decrement(t):
 
 
 def split_with_colums_of_size(t, k):
-    assert isinstance(t, list) and len(t) % k == 0
+    assert isinstance(t, list) and len(t) % k == 0, str(type(list)) + " " + str(len(t)) + " " + str(k)
     return [[t[i * k + j] for j in range(k)] for i in range(len(t) // k)]
 
 
