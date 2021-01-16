@@ -3,7 +3,7 @@ from collections import OrderedDict
 from lxml import etree
 
 from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeXML, TypeVar, TypeCtr, TypeCtrArg
-from pycsp3.classes.entities import Entity, EVar, EVarArray, ECtr, EObjective, EAnnotation, EGroup, \
+from pycsp3.classes.entities import Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, \
     EBlock, ESlide, EIfThenElse, EToGather, EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities
 from pycsp3.classes.main.constraints import ConstraintIntension
 from pycsp3.dashboard import options
@@ -172,8 +172,8 @@ def _constraints_recursive(elt, entity):
     elif isinstance(entity, EBlock):
         if len(entity.entities) != 0:
             son = _constraints_iterative(_element(TypeXML.BLOCK, entity), entity.entities)
-    elif isinstance(entity, EIfThenElse):
-        son = _constraints_iterative(_element(TypeXML.ifThenElse, entity), entity.entities)
+    elif isinstance(entity, EMetaCtr):
+        son = _constraints_iterative(_element(str(entity.id), entity), entity.entities)
     elif isinstance(entity, EToSatisfy):
         _constraints_iterative(elt, entity.entities)
     else:

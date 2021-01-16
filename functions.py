@@ -8,7 +8,8 @@ from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, Co
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
-    EVar, EVarArray, ECtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EIfThenElse, EObjective, EAnnotation, AnnEntities, TypeNode, Node)
+    EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EIfThen, EIfThenElse, EObjective, EAnnotation, AnnEntities,
+    TypeNode, Node)
 from pycsp3.classes.main.annotations import (
     AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
     AnnotationRestarts)
@@ -141,7 +142,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1))  # atLeast1 TODO to be replaced by a member/element constraint ?
     # elif isinstance(left_operand, Node):
     #     p
-    else:  #  It is a table constraint
+    else:  # It is a table constraint
         if not hasattr(left_operand, '__iter__'):
             left_operand = [left_operand]
         if not bool_value and len(right_operand) == 0:
@@ -168,6 +169,22 @@ def _wrap_intension_constraints(entities):
         if isinstance(c, Node):
             entities[i] = Intension(c)  # the node is wrapped by a Constraint object (Intension)
     return entities
+
+
+def And(*args):
+    return EAnd(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+
+
+def Or(*args):
+    return EOr(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+
+
+def Not(*args):
+    return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+
+
+def IfThen(*args):
+    return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def IfThenElse(*args):
@@ -236,13 +253,14 @@ def satisfy(*args):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
         no_parameter_satisfy = i
-        assert isinstance(arg, (ECtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), "non authorized type " + str(arg) + " " + str(
+        assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), "non authorized type " + str(
+            arg) + " " + str(
             type(arg))
         if arg is None:
             continue
         arg = list(arg) if isinstance(arg, types.GeneratorType) else arg
         comment_at_2 = any(comment != '' for comment in comments2[i])
-        if isinstance(arg, (ECtr, ESlide)):  # case: simple constraint or slide
+        if isinstance(arg, (ECtr, EMetaCtr, ESlide)):  # case: simple constraint or slide
             to_post = _complete_partial_forms_of_constraints([arg])[0]
         elif isinstance(arg, Node):  # a predicate to be wrapped by a constraint (intension)
             to_post = Intension(arg)
@@ -252,7 +270,7 @@ def satisfy(*args):
             #                 + str(args) + " " + str(i) + ".\nA constraint is certainly badly formed"
             other, partial = curser.queue_in.popleft()
             to_post = _bool_interpretation_for_in(partial, other, arg)
-        elif any(isinstance(ele, ESlide) for ele in arg):  #  Case: Slide
+        elif any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide
             to_post = _block(arg)
         elif comment_at_2:  # Case: block
             for j, ele in enumerate(arg):
@@ -261,7 +279,7 @@ def satisfy(*args):
                 elif comments2[i][j] or tags2[i][j]:
                     arg[j] = _group(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
             to_post = _block(arg)
-        else:  #  Group
+        else:  # Group
             to_post = _group(arg)
         if to_post:
             t.append(to_post.note(comments1[i]).tag(tags1[i]))

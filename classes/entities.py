@@ -11,6 +11,7 @@ from pycsp3.classes.auxiliary.ptypes import auto
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing
+from pycsp3.classes.auxiliary.ptypes import TypeCtr
 
 
 class Entity:
@@ -134,7 +135,7 @@ class ECtrs(Entity):
 
     def __init__(self, constraints=None):
         super().__init__(None)  # no need to have an id here
-        assert constraints is not None and isinstance(constraints, list)
+        assert isinstance(constraints, list)
         self.entities = [c for c in constraints if c is not None]
 
 
@@ -180,11 +181,39 @@ class ESlide(ECtrs):
         self.circular = False
 
 
-class EIfThenElse(ECtrs):
+class EMetaCtr(Entity):
+    def __init__(self, name, constraints, min_arity, max_arity=None):
+        super().__init__(name)  # no need to have an id here
+        assert isinstance(constraints, list)
+        self.entities = [c for c in constraints if c is not None]
+        checkType(self.entities, [ECtr, EMetaCtr])
+        assert len(self.entities) >= min_arity, "At least " + str(min_arity) + " components must be specified in the meta-constraint"
+        assert max_arity is None or len(self.entities) <= max_arity, "At most " + str(max_arity) + " components must be specified in the meta-constraint"
+
+
+class EAnd(EMetaCtr):
     def __init__(self, constraints):
-        checkType(constraints, [ECtr])
-        assert len(constraints) == 3, "Error: three components must be specified in ifThenElse"
-        super().__init__(constraints)
+        super().__init__(TypeCtr.AND, constraints, 2)
+
+
+class EOr(EMetaCtr):
+    def __init__(self, constraints):
+        super().__init__(TypeCtr.OR, constraints, 2)
+
+
+class ENot(EMetaCtr):
+    def __init__(self, constraints):
+        super().__init__(TypeCtr.NOT, constraints, 1, 1)
+
+
+class EIfThen(EMetaCtr):
+    def __init__(self, constraints):
+        super().__init__(TypeCtr.IF_THEN, constraints, 2, 2)
+
+
+class EIfThenElse(EMetaCtr):
+    def __init__(self, constraints):
+        super().__init__(TypeCtr.IF_THEN_ELSE, constraints, 3, 3)
 
 
 class EObjective(Entity):

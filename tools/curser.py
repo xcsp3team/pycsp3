@@ -1,7 +1,7 @@
 import types
 from collections import deque, namedtuple
 
-from pycsp3.classes.entities import Node, TypeNode
+from pycsp3.classes.entities import Node, TypeNode, EIfThenElse
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation, ECtr, auxiliary)
 from pycsp3.classes.main.variables import Variable, VariableInteger
@@ -310,9 +310,16 @@ class OpOverrider:
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
+        #print(self, type(self))
+        #print(other)
+        #if isinstance(other, ECtr):
+        #    return IfThenElse([other,other,other])
+        #    other = auxiliary().replace_partial_constraint(other)
         return object.__or__(self, other) if None in {self, other} else Node.disjunction(self, other)
 
     def __and__(self, other):
+        # if isinstance(other, PartialConstraint):
+        #    other = auxiliary().replace_partial_constraint(other)
         return object.__and__(self, other) if None in {self, other} else Node.conjunction(self, other)
 
     def __invert__(self):
