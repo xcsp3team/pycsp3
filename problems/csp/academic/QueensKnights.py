@@ -30,7 +30,7 @@ satisfy(
     AllDifferent(k),
 
     # all knights form a cycle
-    [(dist(k[i] // n, k[(i + 1) % nKnights] // n), dist(k[i] % n, k[(i + 1) % nKnights] % n)) in {(1, 2), (2, 1)} for i in range(nKnights)]
+    [(abs(k[i] // n - k[(i + 1) % nKnights] // n), abs(k[i] % n - k[(i + 1) % nKnights] % n)) in {(1, 2), (2, 1)} for i in range(nKnights)]
 )
 
 # Note that:

@@ -1,5 +1,6 @@
 from enum import Enum, unique
 
+# This file is called ptypes because types is a reserved word in Python
 
 def auto(n_occurrences=1):
     def _auto():  # To be replaced by auto() in python 3.6 ?

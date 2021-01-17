@@ -79,6 +79,9 @@ class Variable:
         self.inverse = inverse  # arithmetic inverse
         self.negation = negation  # logical negation
 
+    def __eq__(self, other):
+        return isinstance(other, Variable) and self.id == other.id
+
     def __invert__(self):
         return Variable(self.id, self.dom, negation=not self.negation)
 
