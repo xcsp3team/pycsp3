@@ -11,7 +11,7 @@ from pycsp3.classes.auxiliary.ptypes import auto
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing
-from pycsp3.classes.auxiliary.ptypes import TypeCtr
+from pycsp3.classes.auxiliary.ptypes import TypeCtr, TypeConditionOperator
 
 
 class Entity:
@@ -322,6 +322,27 @@ class TypeNode(Enum):
     def is_predicate_operator(self):
         return self.is_logical_operator() or self.is_relational_operator() or self in {TypeNode.IN, TypeNode.NOTIN}
 
+    @staticmethod
+    def value_of(v):
+        if isinstance(v, TypeNode):
+            return v
+        if isinstance(v, str):
+            if v == "<":
+                return TypeNode.LT
+            if v == "<=":
+                return TypeNode.LE
+            if v == ">=":
+                return TypeNode.GE
+            if v == ">":
+                return TypeNode.GT
+            if v in ("=", "=="):
+                return TypeNode.EQ
+            if v in ("!=", "<>"):
+                return TypeNode.NE
+            return TypeNode[v.upper()]
+        if isinstance(v, TypeConditionOperator):
+            return TypeNode[str(v).upper()]
+
 
 def neg_range(r):
     assert isinstance(r, range) and r.step == 1
@@ -534,21 +555,7 @@ class Node(Entity):
 
     @staticmethod
     def build(type, *args):
-        if isinstance(type, str):
-            if type == "<":
-                type = TypeNode.LT
-            elif type == "<=":
-                type = TypeNode.LE
-            elif type == ">=":
-                type = TypeNode.GE
-            elif type == ">":
-                type = TypeNode.GT
-            elif type in {"=", "=="}:
-                type = TypeNode.EQ
-            elif type == "!=":
-                type = TypeNode.NE
-            else:
-                type = TypeNode[type.upper()]
+        type = TypeNode.value_of(type)  # for handling the cases where type is of type str or TypeConditionOperator
         if type is TypeNode.SET:
             assert len(args) == 1
             elements = list(args[0])

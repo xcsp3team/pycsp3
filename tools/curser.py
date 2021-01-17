@@ -1,13 +1,15 @@
 import types
 from collections import deque, namedtuple
 
-from pycsp3.classes.entities import Node, TypeNode, EIfThenElse
+from pycsp3.classes.entities import Node, TypeNode
 from pycsp3.classes.main.constraints import (
-    ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation, ECtr, auxiliary)
+    ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix,
+    ConstraintInstantiation, ECtr,
+    auxiliary, global_indirection)
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, ANY, warning, error_if
+from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, ANY, warning, error_if
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -172,10 +174,10 @@ class OpOverrider:
         Variable.__floordiv__ = Node.__floordiv__ = OpOverrider.__floordiv__
         Variable.__rfloordiv__ = Node.__rfloordiv__ = OpOverrider.__rfloordiv__
 
-        Variable.__and__ = Node.__and__ = OpOverrider.__and__
-        Variable.__or__ = Node.__or__ = OpOverrider.__or__
-        Node.__invert__ = OpOverrider.__invert__  # we keep __invert__ for Variable
-        Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
+        ECtr.__and__ = Variable.__and__ = Node.__and__ = OpOverrider.__and__
+        ECtr.__or__ = Variable.__or__ = Node.__or__ = OpOverrider.__or__
+        ECtr.__invert__ = Node.__invert__ = OpOverrider.__invert__  # we keep __invert__ for Variable
+        ECtr.__xor__ = Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
 
     @staticmethod
     def disable():
@@ -205,10 +207,10 @@ class OpOverrider:
         Variable.__floordiv__ = Node.__floordiv__ = None
         Variable.__rfloordiv__ = Node.__rfloordiv__ = None
 
-        Variable.__and__ = Node.__and__ = None
-        Variable.__or__ = Node.__or__ = None
-        Node.__invert__ = None  # we keep __invert__ for Variable
-        Variable.__xor__ = Node.__xor__ = None
+        ECtr.__and__ = Variable.__and__ = Node.__and__ = None
+        ECtr.__or__ = Variable.__or__ = Node.__or__ = None
+        ECtr.__invert__ = Node.__invert__ = None  # we keep __invert__ for Variable
+        ECtr.__xor__ = Variable.__xor__ = Node.__xor__ = None
 
         return OpOverrider
 
@@ -296,6 +298,10 @@ class OpOverrider:
         return other.__lt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GT, self, other)
 
     def __eq__(self, other):
+        if isinstance(self, ECtr):
+            self = global_indirection(self.constraint)
+        if isinstance(other, ECtr):
+            other = global_indirection(other.constraint)
         if self is None or other is None:
             return object.__eq__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
@@ -303,6 +309,10 @@ class OpOverrider:
         return other.__eq__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.EQ, self, other)
 
     def __ne__(self, other):
+        if isinstance(self, ECtr):
+            self = global_indirection(self.constraint)
+        if isinstance(other, ECtr):
+            other = global_indirection(other.constraint)
         if self is None or other is None:
             return object.__ne__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
@@ -310,22 +320,29 @@ class OpOverrider:
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
-        #print(self, type(self))
-        #print(other)
-        #if isinstance(other, ECtr):
-        #    return IfThenElse([other,other,other])
-        #    other = auxiliary().replace_partial_constraint(other)
+        if isinstance(self, ECtr):
+            self = global_indirection(self.constraint)
+        if isinstance(other, ECtr):
+            other = global_indirection(other.constraint)
         return object.__or__(self, other) if None in {self, other} else Node.disjunction(self, other)
 
     def __and__(self, other):
-        # if isinstance(other, PartialConstraint):
-        #    other = auxiliary().replace_partial_constraint(other)
+        if isinstance(self, ECtr):
+            self = global_indirection(self.constraint)
+        if isinstance(other, ECtr):
+            other = global_indirection(other.constraint)
         return object.__and__(self, other) if None in {self, other} else Node.conjunction(self, other)
 
     def __invert__(self):
+        if isinstance(self, ECtr):
+            self = global_indirection(self.constraint)
         return Variable.__invert__(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
+        if isinstance(self, ECtr):
+            self = global_indirection(self.constraint)
+        if isinstance(other, ECtr):
+            other = global_indirection(other.constraint)
         return object.__xor__(self, other) if None in {self, other} else Node.build(TypeNode.XOR, self, other)
 
     def __eq__lv(self, other):  # lv for ListVar

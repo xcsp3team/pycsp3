@@ -11,6 +11,7 @@ from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, \
     to_ordinary_table
+from pycsp3 import functions
 
 
 class Diffs:
@@ -49,6 +50,13 @@ class ConstraintArgument:
         self.content_ordered = content_ordered  # indicates if the content must be kept as it is (order is important)
         self.lifted = lifted  # indicates if the constraint is lifted to several lists (or sets); see specifications
 
+    def __eq__(self, other):  # must be called in protection mode (see in functions.py the function)
+        if not isinstance(other, ConstraintArgument) or self.name != other.name or len(self.attributes) > 0 or len(other.attributes) > 0:
+            return False  # attributes not currently completely taken into account
+        if self.content_compressible != other.content_compressible or self.content_ordered != other.content_ordered or self.lifted != other.lifted:
+            return False
+        return self.content == other.content
+
     def __str__(self):
         return str(self.name) + str(self.content)
 
@@ -59,6 +67,13 @@ class Constraint:
         self.attributes = []
         self.arguments = OrderedDict()  # arguments of the constraint (such as list, supports, condition, ...)
         self.n_parameters = 0  # used when building abstract forms of constraints (e.g., in groups for %0 %1 %2 ...)
+
+    def __eq__(self, other):  # must be called in protection mode (see in functions.py the function)
+        if not isinstance(other, Constraint) or self.name != other.name or len(self.attributes) > 0 or len(other.attributes) > 0:
+            return False  # attributes not currently completely taken into account
+        if self.n_parameters > 0 or other.n_parameters > 0:
+            return False
+        return self.arguments == other.arguments
 
     def arg(self, name, content, *, attributes=[], content_compressible=True, content_ordered=False, lifted=False):
         self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted)
@@ -723,6 +738,9 @@ class ScalarProduct:
         return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
 
+cache_aux = []
+
+
 class _Auxiliary:
     def __init__(self):
         self._introduced_variables = []
@@ -744,7 +762,12 @@ class _Auxiliary:
 
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
-        return self.__replace(pc, Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
+        for c, x in cache_aux:
+            if functions.protect().execute(pc.constraint == c):
+                return x
+        aux = self.__replace(pc, Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
+        cache_aux.append((pc.constraint, aux))
+        return aux
 
     def replace_partial_constraints(self, terms):
         assert isinstance(terms, list)
@@ -769,3 +792,18 @@ def auxiliary():
     if not hasattr(auxiliary, "obj"):
         auxiliary.obj = _Auxiliary()
     return auxiliary.obj
+
+
+def global_indirection(c):
+    if isinstance(c, ConstraintWithCondition):
+        condition = c.arguments[TypeCtrArg.CONDITION].content
+        c.arguments[TypeCtrArg.CONDITION] = None
+        pc = PartialConstraint(c)
+    if isinstance(c, ConstraintAllDifferent):
+        l = c.arguments[TypeCtrArg.LIST].content
+        pc = PartialConstraint(ConstraintNValues(l, c.arguments[TypeCtrArg.EXCEPT].content, None))
+        condition = Condition.build_condition((TypeConditionOperator.EQ, len(l)))
+    if isinstance(c, ConstraintAllEqual):
+        pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
+        condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
+    return Node.build(condition.operator, auxiliary().replace_partial_constraint(pc), condition.right_operand())

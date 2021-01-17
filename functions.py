@@ -17,7 +17,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintSum,
     ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
-    ConstraintCumulative, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary)
+    ConstraintCumulative, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -332,23 +332,23 @@ def max(*args):
     return Node.build(TypeNode.MAX, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else maxPython(*args)
 
 
-def dist(*args):
-    return Node.build(TypeNode.DIST, *args)
-
-
 def xor(*args):
-    return Node.build(TypeNode.XOR, *args) if len(args) > 1 else args[0]
+    return args[0] ^ args[1] if len(args) == 2 else Node.build(TypeNode.XOR, *args) if len(args) > 1 else args[0]
 
 
 def iff(*args):
-    return Node.build(TypeNode.IFF, *args)
+    return args[0] == args[1] if len(args) == 2 else Node.build(TypeNode.IFF, *args)
 
 
 def imply(*args):
+    assert len(args) == 2
+    args = [global_indirection(arg.constraint) if isinstance(arg, ECtr) else arg for arg in args]
     return Node.build(TypeNode.IMP, *args)
 
 
 def ift(*args):
+    assert len(args) == 3
+    args = [global_indirection(arg.constraint) if isinstance(arg, ECtr) else arg for arg in args]
     return Node.build(TypeNode.IF, *args)
 
 
