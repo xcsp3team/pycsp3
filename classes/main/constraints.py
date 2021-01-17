@@ -50,7 +50,7 @@ class ConstraintArgument:
         self.content_ordered = content_ordered  # indicates if the content must be kept as it is (order is important)
         self.lifted = lifted  # indicates if the constraint is lifted to several lists (or sets); see specifications
 
-    def __eq__(self, other):  # must be called in protection mode (see in functions.py the function)
+    def __eq__(self, other):  # must be called in protection mode (see in functions.py the function protect())
         if not isinstance(other, ConstraintArgument) or self.name != other.name or len(self.attributes) > 0 or len(other.attributes) > 0:
             return False  # attributes not currently completely taken into account
         if self.content_compressible != other.content_compressible or self.content_ordered != other.content_ordered or self.lifted != other.lifted:
@@ -68,7 +68,7 @@ class Constraint:
         self.arguments = OrderedDict()  # arguments of the constraint (such as list, supports, condition, ...)
         self.n_parameters = 0  # used when building abstract forms of constraints (e.g., in groups for %0 %1 %2 ...)
 
-    def __eq__(self, other):  # must be called in protection mode (see in functions.py the function)
+    def __eq__(self, other):  # must be called in protection mode (see in functions.py the function protect())
         if not isinstance(other, Constraint) or self.name != other.name or len(self.attributes) > 0 or len(other.attributes) > 0:
             return False  # attributes not currently completely taken into account
         if self.n_parameters > 0 or other.n_parameters > 0:
@@ -738,14 +738,13 @@ class ScalarProduct:
         return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
 
-cache_aux = []
-
 
 class _Auxiliary:
     def __init__(self):
         self._introduced_variables = []
         self._collected_constraints = []
         self.prefix = "aux_gb"
+        self.cache = []
 
     def __replace(self, obj, dom):
         assert dom.get_type() == TypeVar.INTEGER
@@ -762,11 +761,11 @@ class _Auxiliary:
 
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
-        for c, x in cache_aux:
+        for c, x in self.cache:
             if functions.protect().execute(pc.constraint == c):
                 return x
         aux = self.__replace(pc, Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
-        cache_aux.append((pc.constraint, aux))
+        self.cache.append((pc.constraint, aux))
         return aux
 
     def replace_partial_constraints(self, terms):
