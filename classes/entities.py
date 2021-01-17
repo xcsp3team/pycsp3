@@ -342,6 +342,7 @@ class TypeNode(Enum):
             return TypeNode[v.upper()]
         if isinstance(v, TypeConditionOperator):
             return TypeNode[str(v).upper()]
+        return None  # other cases to handle?
 
 
 def neg_range(r):
