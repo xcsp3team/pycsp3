@@ -20,10 +20,10 @@ satisfy(
     # exactly one incoming arc for each node j other than the depot (node 0)
     [Count(x[:, j], value=1) == 1 for j in range(1, n)],
 
-    # exactly one outgoing arc for each node i other than the depot (node 0)  
+    # exactly one outgoing arc for each node i other than the depot (node 0)
     [Count(x[i], value=1) == 1 for i in range(1, n)],
 
-    # Miller-Tucker-Zemlin subtour elimination 
+    # Miller-Tucker-Zemlin subtour elimination
     [[u[i], u[j], x[i][j]] * [1, -1, capacity] <= capacity - demand[j] for i in range(1, n) for j in range(1, n) if i != j],
 
     # satisfying demand at each node

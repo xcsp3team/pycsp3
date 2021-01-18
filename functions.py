@@ -8,7 +8,8 @@ from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, Co
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
-    EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EIfThen, EIfThenElse, EObjective, EAnnotation, AnnEntities,
+    EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
+    AnnEntities,
     TypeNode, Node)
 from pycsp3.classes.main.annotations import (
     AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
@@ -189,6 +190,10 @@ def IfThen(*args):
 
 def IfThenElse(*args):
     return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+
+
+def Iff(*args):
+    return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def Slide(*args):

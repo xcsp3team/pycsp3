@@ -29,7 +29,7 @@ satisfy(
 )
 
 minimize(
-    #  minimizing summed up distances multiplied by flows
+    # minimizing summed up distances multiplied by flows
     d * weights
 )
 

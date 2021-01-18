@@ -216,6 +216,11 @@ class EIfThenElse(EMetaCtr):
         super().__init__(TypeCtr.IF_THEN_ELSE, constraints, 3, 3)
 
 
+class EIff(EMetaCtr):
+    def __init__(self, constraints):
+        super().__init__(TypeCtr.IFF, constraints, 2, 2)
+
+
 class EObjective(Entity):
     def __init__(self, c):
         if c is None:

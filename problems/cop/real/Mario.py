@@ -59,7 +59,7 @@ maximize(
     Sum((s[i] != i) * golds[i] for i in range(nHouses) if i not in {marioHouse, luigiHouse})
 )
 
-# Note that the code below, when building the table  is more compact than:
+# Note that the code below, when building the table is more compact than:
 # a) [(s[i], f[i]) in [(j, houses[i].fuelConsumption[j]) for j in range(len(houses[i].fuelConsumption))] for i in range(nHouses)],
 # or b) [(s[i], f[i]) in [(j, fuel) for j, fuel in enumerate(houses[i].fuelConsumption)] for i in range(nHouses)],
 

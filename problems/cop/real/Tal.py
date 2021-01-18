@@ -79,14 +79,14 @@ satisfy(
             imply(l[i][j] > 0, x[i][j] > x[i][j - 1]),
             imply(l[i][j - 1] == 0, l[i][j] == 0)
         ] for i in range(2, nLevels, 2) for j in range(1, lengths[i])
-        ],
+    ],
 
     # grammar a
     [
         (iff(l[i][j] == 0, a[i][j] == 0),
          [a[i][j], l[i][j]] + [l[i - 1][k] for k in range(j, j + n_possible_sons(i, j))] + [c[i][j]] in table_for_grammar(n_possible_sons(i, j)))
         for i in range(1, nLevels, 2) for j in range(lengths[i])
-        ],
+    ],
 
     [predicate(l, a, i, j, lengths) for i in range(0, nLevels, 2) for j in range(nWords) if j < lengths[i]],
 

@@ -244,7 +244,7 @@ def comments_and_tags_of_parameters_of(*, function_name, args):
                         tags2[i1].append("")
                         new_line += '$'
                     else:
-                        assert level != 0
+                        assert level != 0, line + " " + str(level)
                         new_line += '_'
                 else:
                     new_line += c

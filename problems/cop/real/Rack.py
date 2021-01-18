@@ -54,7 +54,7 @@ minimize(
 
 # Note that:
 
-# a)  using zip is compacter than writing:
+# a) using zip is compacter than writing:
 #   powers, sizes, costs = [row[0] for row in models], [row[1] for row in models], [row[2] for row in models]
 #   cardPowers, cardDemands =[row[0] for row in cardTypes], [row[1] for row in cardTypes]
 
