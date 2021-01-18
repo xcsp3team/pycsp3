@@ -100,10 +100,10 @@ satisfy(
     # cost of not satisfying on requests
     [iff(x[d][p] == sp[on_r[p][d].shift], cn[p][d] == 0) for p in range(nStaffs) for d in range(nDays) if on_r[p][d]],
 
-    # cost of not satisfying off requests 
+    # cost of not satisfying off requests
     [iff(x[d][p] == sp[off_r[p][d].shift], cf[p][d] != 0) for p in range(nStaffs) for d in range(nDays) if off_r[p][d]],
 
-    # cost of under or over covering 
+    # cost of under or over covering
     [(np[d][s], cc[d][s]) in enumerate(costs(d, s)) for d in range(nDays) for s in range(nShifts)]
 )
 

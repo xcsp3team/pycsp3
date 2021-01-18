@@ -446,7 +446,7 @@ class ConstraintCardinality(Constraint):
 
 
 def _index_att(v):
-    return []  #[(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
+    return []  # [(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
 
 
 class ConstraintMaximum(ConstraintWithCondition):
@@ -506,7 +506,7 @@ class ConstraintElementMatrix(Constraint):
         self.arg(TypeCtrArg.INDEX, [index1, index2], content_ordered=True)
         if value:
             self.arg(TypeCtrArg.CONDITION, Condition.build_condition((TypeConditionOperator.EQ, value)))
-        #self.arg(TypeCtrArg.VALUE, value)
+        # self.arg(TypeCtrArg.VALUE, value)
 
 
 class ConstraintChannel(ConstraintUnmergeable):
@@ -619,8 +619,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             if isinstance(self.constraint, ConstraintElement):
                 arg = self.constraint.arguments[TypeCtrArg.LIST]
                 arg.content = flatten(arg.content)  # we need to flatten now because it has not been done before
-            #return ECtr(self.constraint.set_value(other))  # only value must be replaced for these constraints
-            return ECtr(self.constraint.set_condition(TypeConditionOperator.EQ,other))  # the condition must be replaced
+            # return ECtr(self.constraint.set_value(other))  # only value must be replaced for these constraints
+            return ECtr(self.constraint.set_condition(TypeConditionOperator.EQ, other))  # the condition must be replaced
         return self.add_condition(TypeConditionOperator.EQ, other)
         # pair = self._simplify_with_auxiliary_variables(other)
         # return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
@@ -689,7 +689,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         pair = obj2.var_val_if_binary_type(TypeNode.MUL) if isinstance(obj2, Node) else None
         if pair:
             obj2 = PartialConstraint(ConstraintSum([pair[0]], [pair[1]], None))
-        elif isinstance(obj2, Variable):
+        elif isinstance(obj2, (Variable,Node)):
             obj2 = PartialConstraint(ConstraintSum([obj2], [1], None))
         elif isinstance(obj2, ScalarProduct):
             obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))
@@ -798,6 +798,7 @@ def auxiliary():
 
 
 def global_indirection(c):
+    pc = None
     if isinstance(c, ConstraintWithCondition):
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
@@ -809,5 +810,7 @@ def global_indirection(c):
     if isinstance(c, ConstraintAllEqual):
         pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
         condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
-    assert pc
+    assert pc, "You use a global constraint in a complex expression.\n" + \
+               "However, this constraint cannot be externalized by introducing an auxiliary variable.\n" + \
+               "Maybe, you can use meta-constraint functions (Or, And, Not, IfThen, IfThenElse, Iff or modify your model."
     return Node.build(condition.operator, auxiliary().replace_partial_constraint(pc), condition.right_operand())
