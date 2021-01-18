@@ -8,7 +8,7 @@
   </variables>
   <constraints>
     <group class="channeling">
-      <intension> iff(%0,eq(%1,%2)) </intension>
+      <intension> eq(%0,eq(%1,%2)) </intension>
       <args> pc[0][0] s[0] 0 </args>
       <args> pc[0][1] s[1] 0 </args>
       <args> pc[0][2] s[2] 0 </args>

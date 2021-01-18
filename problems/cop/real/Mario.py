@@ -15,43 +15,55 @@ nHouses = len(houses)
 # s[i] is the house succeeding to the ith house (itself if not part of the route)
 s = VarArray(size=nHouses, dom=range(nHouses))
 
-# f[i] is the fuel consumed at each step (from house i to its successor)
-f = VarArray(size=nHouses, dom=lambda i: fuels[i])
-
 if not variant():
     satisfy(
-        # fuel consumption at each step
-        fuels[i][s[i]] == f[i] for i in range(nHouses)
+        # we cannot consume more than the available fuel
+        Sum(fuels[i][s[i]] for i in range(nHouses)) <= fuelLimit,
+
+        # Mario must make a tour (not necessarily complete)
+        Circuit(s),
+
+        # Mario's house succeeds to Luigi's house
+        s[luigiHouse] == marioHouse
     )
 
-elif variant("table"):
+else:
+    # f[i] is the fuel consumed at each step (from house i to its successor)
+    f = VarArray(size=nHouses, dom=lambda i: fuels[i])
+
+    if variant("aux"):
+        satisfy(
+            # fuel consumption at each step
+            fuels[i][s[i]] == f[i] for i in range(nHouses)
+        )
+
+    elif variant("table"):
+        satisfy(
+            # fuel consumption at each step
+            (s[i], f[i]) in {(j, fuel) for (j, fuel) in enumerate(fuels[i])} for i, house in enumerate(houses)
+        )
+
     satisfy(
-        # fuel consumption at each step
-        (s[i], f[i]) in {(j, fuel) for (j, fuel) in enumerate(fuels[i])} for i, house in enumerate(houses)
+        # we cannot consume more than the available fuel
+        Sum(f) <= fuelLimit,
+
+        # Mario must make a tour (not necessarily complete)
+        Circuit(s),
+
+        # Mario's house succeeds to Luigi's house
+        s[luigiHouse] == marioHouse
     )
-
-satisfy(
-    # we cannot consume more than the available fuel
-    Sum(f) <= fuelLimit,
-
-    # Mario must make a tour (not necessarily complete)
-    Circuit(s),
-
-    # Mario's house succeeds to Luigi's house
-    s[luigiHouse] == marioHouse
-)
 
 maximize(
     # maximizing collected gold
     Sum((s[i] != i) * golds[i] for i in range(nHouses) if i not in {marioHouse, luigiHouse})
 )
 
-
 # Note that the code below, when building the table  is more compact than:
 # a) [(s[i], f[i]) in [(j, houses[i].fuelConsumption[j]) for j in range(len(houses[i].fuelConsumption))] for i in range(nHouses)],
 # or b) [(s[i], f[i]) in [(j, fuel) for j, fuel in enumerate(houses[i].fuelConsumption)] for i in range(nHouses)],
 
-# Note that introducing auxiliary variables for handling gold earned at each house as follows:
+# Note that introducing auxiliary variables for handling gold earned at each house could be as follows:
 # g[i] is the gold earned at house i
 # g = VarArray(size=nHouses, dom=lambda i: {0, houses[i].gold})
 # We need to introduce additional constraints, while the objective becomes:

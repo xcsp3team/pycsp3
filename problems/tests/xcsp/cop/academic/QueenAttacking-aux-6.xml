@@ -11,7 +11,7 @@
       <intension> or(and(eq(dist(div(%0,6),div(%1,6)),1),eq(dist(mod(%0,6),mod(%1,6)),2)),and(eq(dist(div(%0,6),div(%1,6)),2),eq(dist(mod(%0,6),mod(%1,6)),1))) </intension>
     </slide>
     <group note="determining if prime numbers are attacked by the queen">
-      <intension> iff(%0,or(eq(q,%1),and(ne(div(q,6),div(%1,6)),ne(mod(q,6),mod(%1,6)),ne(dist(div(q,6),div(%1,6)),dist(mod(q,6),mod(%1,6)))))) </intension>
+      <intension> eq(%0,or(eq(q,%1),and(ne(div(q,6),div(%1,6)),ne(mod(q,6),mod(%1,6)),ne(dist(div(q,6),div(%1,6)),dist(mod(q,6),mod(%1,6)))))) </intension>
       <args> p[0] x[1] </args>
       <args> p[1] x[2] </args>
       <args> p[2] x[4] </args>

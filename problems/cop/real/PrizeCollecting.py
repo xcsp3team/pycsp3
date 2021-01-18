@@ -20,16 +20,6 @@ p = VarArray(size=n, dom=range(-1, n))
 # g[i] is the gain collected when going from the ith node to its successor in the tour
 g = VarArray(size=n, dom=lambda i: set(prizes[i]))
 
-
-def table(i):
-    tbl = {(i,) + (ANY,) * n,  # i means "unused node", so this is not constraining (we use ANY)
-           (0,) + (ANY,) * n}  # 0 means "last node", so this is not constraining (we use ANY)
-    for j in range(1, n):
-        if j != i:
-            tbl |= {(j,) + tuple(v if k == j else v - 1 if k == i else ANY for k in range(n)) for v in range(1, n)}
-    return tbl
-
-
 satisfy(
     # node 0 is the first node of the tour
     p[0] == 0,
@@ -41,11 +31,29 @@ satisfy(
     [Count(s, value=i) <= 1 for i in range(n)],
 
     # computing gains
-    [prizes[i][s[i]] == g[i] for i in range(n)],
-
-    # linking variables from s and p
-    [(s[i], *p) in table(i) for i in range(n)]
+    [prizes[i][s[i]] == g[i] for i in range(n)]
 )
+
+if not variant():
+    satisfy(
+        # linking variables from s and p
+        (s[i] == i) | (s[i] == 0) | (p[s[i]] == p[i] + 1) for i in range(n)
+    )
+
+elif variant("table"):
+    def table(i):
+        tbl = {(i,) + (ANY,) * n,  # i means "unused node", so this is not constraining (we use ANY)
+               (0,) + (ANY,) * n}  # 0 means "last node", so this is not constraining (we use ANY)
+        for j in range(1, n):
+            if j != i:
+                tbl |= {(j,) + tuple(v if k == j else v - 1 if k == i else ANY for k in range(n)) for v in range(1, n)}
+        return tbl
+
+
+    satisfy(
+        # linking variables from s and p
+        (s[i], *p) in table(i) for i in range(n)
+    )
 
 maximize(
     # maximizing the sum of collected gains
@@ -53,7 +61,6 @@ maximize(
 )
 
 # Note that
-
-# a) we use a short table because the following statement is currently not handled in PyCSP3:
-#      [imply((s[i] != i) & (s[i] != 0), p[s[i]] == p[i]+1) for i in range(n)], TODO. checking that.
-#    we currently think about some extensions (meta-constraint?)
+# a) the short table is used to code the element constraints under condition
+# b) one can also write the equivalent form
+#    [imply((s[i] != i) & (s[i] != 0), p[s[i]] == p[i]+1) for i in range(n)],

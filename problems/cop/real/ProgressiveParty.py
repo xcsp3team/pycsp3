@@ -22,8 +22,6 @@ def minimal_number_of_hosts():
         cnt += 1
 
 
-nMinHosts = minimal_number_of_hosts()
-
 # h[b] indicates if the boat b is a host boat
 h = VarArray(size=nBoats, dom={0, 1})
 
@@ -53,7 +51,7 @@ satisfy(
     [Sum(s[b1][p] == s[b2][p] for p in range(nPeriods)) <= 1 for b1, b2 in combinations(range(nBoats), 2)],
 
     # ensuring a minimum number of hosts  tag(redundant-constraint)
-    Sum(h) >= nMinHosts
+    Sum(h) >= minimal_number_of_hosts()
 )
 
 minimize(

@@ -8,7 +8,7 @@
   </variables>
   <constraints>
     <group note="linking variables sb and y">
-      <intension> iff(eq(%0,%1),%2) </intension>
+      <intension> eq(eq(%0,%1),%2) </intension>
       <args> sb[0] 0 y[0][0] </args>
       <args> sb[1] 0 y[0][1] </args>
       <args> sb[2] 0 y[0][2] </args>

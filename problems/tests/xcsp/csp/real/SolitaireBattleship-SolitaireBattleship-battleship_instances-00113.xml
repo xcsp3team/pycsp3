@@ -300,8 +300,8 @@
     </group>
     <cardinality note="counting the number of occurrences of ship segments of each type">
       <list> t[1..10][1..10] </list>
-      <values> 1 2 3 4 -2 -4 -3 -1 </values>
-      <occurs> cp[3] cp[2] cp[1] cp[0] cn[2] cn[0..1] cn[3] </occurs>
+      <values> 4 3 2 1 -4 -3 -2 -1 </values>
+      <occurs> cp[] cn[] </occurs>
     </cardinality>
     <group note="ensuring the right number of occurrences of ship segments of each type">
       <intension> eq(add(%0,%1),%2) </intension>

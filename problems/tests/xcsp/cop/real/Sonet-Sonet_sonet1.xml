@@ -15,7 +15,7 @@
       <args> x[0][2] x[0][5] x[1][2] x[1][5] x[2][2] x[2][5] x[3][2] x[3][5] x[4][2] x[4][5] x[5][2] x[5][5] x[6][2] x[6][5] x[7][2] x[7][5] x[8][2] x[8][5] x[9][2] x[9][5] </args>
       <args> x[][4..5] </args>
     </group>
-    <group>
+    <group note="respecting the capacity of rings">
       <count>
         <list> %... </list>
         <values> 1 </values>
@@ -32,7 +32,7 @@
       <args> x[8][] </args>
       <args> x[9][] </args>
     </group>
-    <lex>
+    <lex class="symmetry-breaking">
       <list> x[0][] </list>
       <list> x[1][] </list>
       <list> x[2][] </list>
@@ -47,6 +47,6 @@
     </lex>
   </constraints>
   <objectives>
-    <minimize type="sum"> x[][] </minimize>
+    <minimize note="minimizing the number of nodes installed on rings" type="sum"> x[][] </minimize>
   </objectives>
 </instance>
