@@ -33,11 +33,13 @@ run(Tester("cop" + os.sep + "real")
     .add("Knapsack", data="Knapsack_20-50-00.json")  # optimum 583
     .add("LinearArrangement", data="MinLA01.json")
     .add("Mario", data="Mario_easy-2.json")  # optimum 628
+    .add("Mario", data="Mario_easy-2.json", variant="aux")  # optimum 628
     .add("Mario", data="Mario_easy-2.json", variant="table")  # optimum 628
     .add("MultiKnapsack", data="MultiKnapsack_example.txt", prs_py="MultiKnapsack_Parser", prs_jv="MultiKnapsack_Parser")
     .add("OpenStacks", data="OpenStacks_example.dzn", prs_py="OpenStacks_ParserZ", prs_jv="OpenStacks_ParserZ", variant="m1")  # optimum 45
     .add("OpenStacks", data="OpenStacks_example.dzn", prs_py="OpenStacks_ParserZ", prs_jv="OpenStacks_ParserZ", variant="m2")  # optimum 45
     .add("PrizeCollecting", data="PrizeCollecting_example.dzn", prs_py="PrizeCollecting_ParserZ")  # optimum 20
+    .add("PrizeCollecting", data="PrizeCollecting_example.dzn", prs_py="PrizeCollecting_ParserZ", variant="table")  # optimum 20
     .add("ProgressiveParty", data="ProgressiveParty_example.txt", prs_py="ProgressiveParty_Parser")  # optimum 5
     .add("PseudoBoolean", data="PseudoBoolean_example.opb", prs_py="PseudoBoolean_Parser", prs_jv="PseudoBoolean_Parser")  # optimum 20
     .add("Sonet", data="Sonet_sonet1.json")  # optimum 8

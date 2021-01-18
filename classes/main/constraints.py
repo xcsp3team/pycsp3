@@ -1,6 +1,7 @@
 import os
 from collections import OrderedDict
 
+from pycsp3 import functions
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
@@ -11,7 +12,6 @@ from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, \
     to_ordinary_table
-from pycsp3 import functions
 
 
 class Diffs:
@@ -58,7 +58,7 @@ class ConstraintArgument:
         return self.content == other.content
 
     def __str__(self):
-        return str(self.name) + str(self.content)
+        return str(self.name) + ":" + str(self.content)
 
 
 class Constraint:
@@ -446,7 +446,7 @@ class ConstraintCardinality(Constraint):
 
 
 def _index_att(v):
-    return [(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
+    return []  #[(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
 
 
 class ConstraintMaximum(ConstraintWithCondition):
@@ -482,7 +482,9 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         smallest = index.dom[0].smallest() if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
         self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
-        self.arg(TypeCtrArg.VALUE, value)
+        if value:
+            self.arg(TypeCtrArg.CONDITION, Condition.build_condition((TypeConditionOperator.EQ, value)))
+        # self.arg(TypeCtrArg.VALUE, value)
 
     def min_possible_value(self):
         if isinstance(self.arguments[TypeCtrArg.LIST].content[0], int):
@@ -502,7 +504,9 @@ class ConstraintElementMatrix(Constraint):
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
                      [(TypeCtrArg.START_COL_INDEX, start_col_index)] if start_col_index else []))
         self.arg(TypeCtrArg.INDEX, [index1, index2], content_ordered=True)
-        self.arg(TypeCtrArg.VALUE, value)
+        if value:
+            self.arg(TypeCtrArg.CONDITION, Condition.build_condition((TypeConditionOperator.EQ, value)))
+        #self.arg(TypeCtrArg.VALUE, value)
 
 
 class ConstraintChannel(ConstraintUnmergeable):
@@ -615,7 +619,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             if isinstance(self.constraint, ConstraintElement):
                 arg = self.constraint.arguments[TypeCtrArg.LIST]
                 arg.content = flatten(arg.content)  # we need to flatten now because it has not been done before
-            return ECtr(self.constraint.set_value(other))  # only value must be replaced for these constraints
+            #return ECtr(self.constraint.set_value(other))  # only value must be replaced for these constraints
+            return ECtr(self.constraint.set_condition(TypeConditionOperator.EQ,other))  # the condition must be replaced
         return self.add_condition(TypeConditionOperator.EQ, other)
         # pair = self._simplify_with_auxiliary_variables(other)
         # return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
@@ -738,7 +743,6 @@ class ScalarProduct:
         return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
 
-
 class _Auxiliary:
     def __init__(self):
         self._introduced_variables = []
@@ -799,10 +803,11 @@ def global_indirection(c):
         c.arguments[TypeCtrArg.CONDITION] = None
         pc = PartialConstraint(c)
     if isinstance(c, ConstraintAllDifferent):
-        l = c.arguments[TypeCtrArg.LIST].content
-        pc = PartialConstraint(ConstraintNValues(l, c.arguments[TypeCtrArg.EXCEPT].content, None))
-        condition = Condition.build_condition((TypeConditionOperator.EQ, len(l)))
+        lst = c.arguments[TypeCtrArg.LIST].content
+        pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))
+        condition = Condition.build_condition((TypeConditionOperator.EQ, len(lst)))
     if isinstance(c, ConstraintAllEqual):
         pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
         condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
+    assert pc
     return Node.build(condition.operator, auxiliary().replace_partial_constraint(pc), condition.right_operand())

@@ -87,7 +87,7 @@ def _variables():
     return elt
 
 
-def _argument(elt, arg, key, value):
+def _argument(elt, arg, key, value, change_element_value=False):
     assert value is not None
     if arg.lifted is True:  # TODO do we have an example? (3-tuples for attributes in this case?)
         for i, l in enumerate(value):
@@ -97,7 +97,11 @@ def _argument(elt, arg, key, value):
             elt.append(subelt)
     else:
         v = None if isinstance(value, list) and len(value) == 1 and value[0] is None else value
-        elt.append(_element(key, attributes=arg.attributes, text=v))
+        if change_element_value and str(key) == "condition":
+            v = str(v)
+            elt.append(_element("value", attributes=arg.attributes, text=v[v.index(',') + 1:-1]))
+        else:
+            elt.append(_element(key, attributes=arg.attributes, text=v))
 
 
 def _constraint(entity, *, possible_simplified_form=False):
@@ -112,8 +116,9 @@ def _constraint(entity, *, possible_simplified_form=False):
     if len(arguments) == 1 and not arguments[0].lifted and (possible_simplified_form or arguments[0].name == TypeCtrArg.LIST):
         _text(elt, arguments[0].content)
     else:
+        b = str(c.name) == "element"
         for arg in arguments:
-            _argument(elt, arg, arg.name, arg.content)
+            _argument(elt, arg, arg.name, arg.content, change_element_value=b)
     return elt
 
 
@@ -127,8 +132,9 @@ def _constraint_template(group):
         if len(arguments) == 1 and TypeCtrArg.LIST in group.abstraction:
             _text(elt, group.abstraction[TypeCtrArg.LIST])
         else:
+            b = str(first.constraint.name) == "element"
             for k, v in arguments:
-                _argument(elt, first.constraint.arguments[k], k, v)
+                _argument(elt, first.constraint.arguments[k], k, v, change_element_value=b)
         return elt
 
 

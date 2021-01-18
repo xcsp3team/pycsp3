@@ -1,0 +1,113 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[i] is the house succeeding to the ith house (itself if not part of the route)" size="[15]"> 0..14 </array>
+    <array id="f" note="f[i] is the fuel consumed at each step (from house i to its successor)" size="[15]">
+      <domain for="f[0]"> 0 13 18 86 217 221 274 322 670 677 808 921 943 969 </domain>
+      <domain for="f[1]"> 0 83 242 246 335 451 528 529 679 702 712 719 813 906 </domain>
+      <domain for="f[2]"> 0 5 72 73 110 127 161 274 430 523 664 686 702 799 835 </domain>
+      <domain for="f[3]"> 0 31 71 80 83 127 248 467 668 683 717 753 808 826 916 </domain>
+      <domain for="f[4]"> 0 13 101 110 280 294 414 551 579 593 706 717 813 951 </domain>
+      <domain for="f[5]"> 0 12 72 80 138 146 222 225 262 571 677 679 907 938 951 </domain>
+      <domain for="f[6]"> 0 27 31 189 226 262 287 454 501 558 593 670 835 906 977 </domain>
+      <domain for="f[7]"> 0 5 12 38 71 118 189 221 226 246 314 483 504 579 921 </domain>
+      <domain for="f[8]"> 0 138 161 167 267 335 393 420 504 558 683 706 721 943 949 </domain>
+      <domain for="f[9]"> 0 27 221 222 430 528 529 579 589 668 747 757 949 969 980 </domain>
+      <domain for="f[10]"> 0 13 101 146 248 287 334 393 483 492 633 686 719 757 859 </domain>
+      <domain for="f[11]"> 0 18 33 226 375 528 551 571 633 664 721 747 826 977 981 </domain>
+      <domain for="f[12]"> 0 33 38 217 226 267 280 334 451 491 799 824 907 916 980 </domain>
+      <domain for="f[13]"> 0 86 143 167 225 242 314 414 454 467 492 523 589 824 981 </domain>
+      <domain for="f[14]"> 0 73 118 143 294 322 375 420 491 501 528 712 753 859 938 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <block note="fuel consumption at each step">
+      <element>
+        <list> 0 221 274 808 13 677 670 921 943 969 13 18 217 86 322 </list>
+        <index> s[0] </index>
+        <value> f[0] </value>
+      </element>
+      <element>
+        <list> 0 0 702 83 813 679 906 246 335 529 719 528 451 242 712 </list>
+        <index> s[1] </index>
+        <value> f[1] </value>
+      </element>
+      <element>
+        <list> 274 702 0 127 110 72 835 5 161 430 686 664 799 523 73 </list>
+        <index> s[2] </index>
+        <value> f[2] </value>
+      </element>
+      <element>
+        <list> 808 83 127 0 717 80 31 71 683 668 248 826 916 467 753 </list>
+        <index> s[3] </index>
+        <value> f[3] </value>
+      </element>
+      <element>
+        <list> 13 813 110 717 0 951 593 579 706 579 101 551 280 414 294 </list>
+        <index> s[4] </index>
+        <value> f[4] </value>
+      </element>
+      <element>
+        <list> 677 679 72 80 951 0 262 12 138 222 146 571 907 225 938 </list>
+        <index> s[5] </index>
+        <value> f[5] </value>
+      </element>
+      <element>
+        <list> 670 906 835 31 593 262 0 189 558 27 287 977 226 454 501 </list>
+        <index> s[6] </index>
+        <value> f[6] </value>
+      </element>
+      <element>
+        <list> 921 246 5 71 579 12 189 0 504 221 483 226 38 314 118 </list>
+        <index> s[7] </index>
+        <value> f[7] </value>
+      </element>
+      <element>
+        <list> 943 335 161 683 706 138 558 504 0 949 393 721 267 167 420 </list>
+        <index> s[8] </index>
+        <value> f[8] </value>
+      </element>
+      <element>
+        <list> 969 529 430 668 579 222 27 221 949 0 757 747 980 589 528 </list>
+        <index> s[9] </index>
+        <value> f[9] </value>
+      </element>
+      <element>
+        <list> 13 719 686 248 101 146 287 483 393 757 0 633 334 492 859 </list>
+        <index> s[10] </index>
+        <value> f[10] </value>
+      </element>
+      <element>
+        <list> 18 528 664 826 551 571 977 226 721 747 633 0 33 981 375 </list>
+        <index> s[11] </index>
+        <value> f[11] </value>
+      </element>
+      <element>
+        <list> 217 451 799 916 280 907 226 38 267 980 334 33 0 824 491 </list>
+        <index> s[12] </index>
+        <value> f[12] </value>
+      </element>
+      <element>
+        <list> 86 242 523 467 414 225 454 314 167 589 492 981 824 0 143 </list>
+        <index> s[13] </index>
+        <value> f[13] </value>
+      </element>
+      <element>
+        <list> 322 712 73 753 294 938 501 118 420 528 859 375 491 143 0 </list>
+        <index> s[14] </index>
+        <value> f[14] </value>
+      </element>
+    </block>
+    <sum note="we cannot consume more than the available fuel">
+      <list> f[] </list>
+      <condition> (le,2000) </condition>
+    </sum>
+    <circuit note="Mario must make a tour (not necessarily complete)"> s[] </circuit>
+    <intension note="Mario's house succeeds to Luigi's house"> eq(s[1],0) </intension>
+  </constraints>
+  <objectives>
+    <maximize note="maximizing collected gold" type="sum">
+      <list> ne(s[2],2) ne(s[3],3) ne(s[4],4) ne(s[5],5) ne(s[6],6) ne(s[7],7) ne(s[8],8) ne(s[9],9) ne(s[10],10) ne(s[11],11) ne(s[12],12) ne(s[13],13) ne(s[14],14) </list>
+      <coeffs> 40 67 89 50 6 19 47 68 94 86 34 14 14 </coeffs>
+    </maximize>
+  </objectives>
+</instance>
