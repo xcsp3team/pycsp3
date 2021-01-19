@@ -11,7 +11,7 @@
   <constraints>
     <instantiation note="no ship on borders">
       <list> s[0][] s[13][] s[][0] s[][13] </list>
-      <values> 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 </values>
+      <values> 0x56 </values>
     </instantiation>
     <group note="respecting the specified row tallies">
       <sum>

@@ -11,7 +11,7 @@ from pycsp3 import *
 nRows, nCols, clues = data
 
 # x[i][j] is the value put at row i and column j
-x = VarArray(size=[nRows, nCols], dom=lambda i, j: range(1, 10) if clues[i][j].x == clues[i][j].y == 0 else None)
+x = VarArray(size=[nRows, nCols], dom=lambda i, j: range(1, 10) if clues[i][j].x == clues[i][j].x == 0 else None)
 
 
 def structures():
@@ -25,16 +25,16 @@ def structures():
         return t
 
     def v_scope(i, j):
-        assert clues[i][j].y > 0
+        assert clues[i][j].x > 0
         t = []
         for k in range(i + 1, nRows):
-            if clues[k][j].y != 0:
+            if clues[k][j].x != 0:
                 break
             t.append(x[k][j])
         return t
 
     h = [(h_scope(i, j), clues[i][j].x) for i in range(nRows) for j in range(nCols) if clues[i][j].x > 0]
-    v = [(v_scope(i, j), clues[i][j].y) for i in range(nRows) for j in range(nCols) if clues[i][j].y > 0]
+    v = [(v_scope(i, j), clues[i][j].x) for i in range(nRows) for j in range(nCols) if clues[i][j].x > 0]
     return h, v
 
 

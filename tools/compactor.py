@@ -238,7 +238,7 @@ def compact(variables, *, preserve_order=False, group_args=False):
 
 
 def _compact_values(values, limit):
-    if not options.compactvalues:
+    if options.dontcompactvalues:
         return values
     assert isinstance(values, list) and len(values) > 0, type(values)
     l = []

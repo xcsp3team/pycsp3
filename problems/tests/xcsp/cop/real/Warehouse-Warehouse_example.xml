@@ -101,7 +101,7 @@
   <objectives>
     <minimize note="minimizing the overall cost" type="sum">
       <list> c[] o[] </list>
-      <coeffs> 1 1 1 1 1 1 1 1 1 1 30 30 30 30 30 </coeffs>
+      <coeffs> 1x10 30x5 </coeffs>
     </minimize>
   </objectives>
 </instance>

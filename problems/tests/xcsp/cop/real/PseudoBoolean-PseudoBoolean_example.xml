@@ -802,7 +802,7 @@
   <objectives>
     <minimize note="minimizing the linear objective" type="sum">
       <list> x[96..143] </list>
-      <coeffs> 1 2 1 1 1 2 2 1 1 1 2 1 1 2 1 1 1 2 2 1 1 1 2 1 1 2 1 1 1 2 2 1 1 1 2 1 1 2 1 1 1 2 2 1 1 1 2 1 </coeffs>
+      <coeffs> 1 2 1x3 2 2 1x3 2 1 1 2 1x3 2 2 1x3 2 1 1 2 1x3 2 2 1x3 2 1 1 2 1x3 2 2 1x3 2 1 </coeffs>
     </minimize>
   </objectives>
 </instance>

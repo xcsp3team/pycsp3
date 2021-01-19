@@ -625,7 +625,7 @@
     </group>
     <sum note="ensuring the same numbers of black and white queens">
       <list> b[][] w[][] </list>
-      <coeffs> 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </coeffs>
+      <coeffs> 1x36 -1x36 </coeffs>
       <condition> (eq,0) </condition>
     </sum>
   </constraints>

@@ -49,7 +49,7 @@
     </group>
     <instantiation note="putting special value 0 on borders">
       <list> t[0][] l[][5] t[7][] l[][0] </list>
-      <values> 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 </values>
+      <values> 0x24 </values>
     </instantiation>
   </constraints>
 </instance>

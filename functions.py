@@ -523,7 +523,7 @@ def Sum(term, *others, condition=None):
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
 
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
-    auxiliary().replace_partial_constraints(terms)
+    auxiliary().replace_nodes_and_partial_constraints(terms)
 
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
@@ -594,7 +594,7 @@ def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
     terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have PartialConstraints
     checkType(terms, ([Variable, Node], [PartialConstraint]))
-    auxiliary().replace_partial_constraints(terms)
+    auxiliary().replace_nodes_and_partial_constraints(terms)
     checkType(index, (Variable, type(None)))
     checkType(start_index, int)
     checkType(type_rank, TypeRank)

@@ -11,7 +11,7 @@
   <constraints>
     <instantiation note="no ship on borders">
       <list> s[0][] s[11][] s[][0] s[][11] </list>
-      <values> 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 </values>
+      <values> 0x48 </values>
     </instantiation>
     <group note="respecting the specified row tallies">
       <sum>
@@ -348,7 +348,7 @@
     </group>
     <instantiation class="clues">
       <list> s[7][10] s[6][10] s[8][10] s[7][9] s[7][11] s[1][6] </list>
-      <values> 1 0 0 0 0 0 </values>
+      <values> 1 0x5 </values>
     </instantiation>
   </constraints>
 </instance>
