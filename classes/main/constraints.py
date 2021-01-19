@@ -772,12 +772,12 @@ class _Auxiliary:
         self.cache.append((pc.constraint, aux))
         return aux
 
-    def replace_nodes_and_partial_constraints(self, terms):
+    def replace_nodes_and_partial_constraints(self, terms, nodes_too=False):
         assert isinstance(terms, list)
         for i, t in enumerate(terms):
             if isinstance(t, PartialConstraint):
                 terms[i] = self.replace_partial_constraint(t)
-            elif isinstance(t,Node):
+            elif nodes_too and isinstance(t, Node):
                 terms[i] = self.replace_node(t)
         return terms
 
