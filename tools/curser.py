@@ -379,7 +379,7 @@ class OpOverrider:
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
-            indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes))
+            indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
