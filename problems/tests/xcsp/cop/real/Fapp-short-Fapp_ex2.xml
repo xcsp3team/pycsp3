@@ -115,7 +115,7 @@
   <objectives>
     <minimize type="sum">
       <list> k v1[] v2[] </list>
-      <coeffs> 1960 140 140 140 140 140 140 140 140 140 140 140 140 140 140 1 1 1 1 1 1 1 1 1 1 1 1 1 1 </coeffs>
+      <coeffs> 1960 140x14 1x14 </coeffs>
     </minimize>
   </objectives>
 </instance>

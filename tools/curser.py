@@ -163,6 +163,7 @@ class OpOverrider:
         Variable.__ge__ = Node.__ge__ = OpOverrider.__ge__
         Variable.__gt__ = Node.__gt__ = OpOverrider.__gt__
 
+        Variable.__neg__ = Node.__neg__ = OpOverrider.__neg__
         Variable.__add__ = Node.__add__ = OpOverrider.__add__
         Variable.__radd__ = Node.__radd__ = OpOverrider.__radd__
         Variable.__sub__ = Node.__sub__ = OpOverrider.__sub__
@@ -196,6 +197,7 @@ class OpOverrider:
         Variable.__ge__ = Node.__ge__ = object.__ge__
         Variable.__gt__ = Node.__gt__ = object.__gt__
 
+        Variable.__neg__ = Node.__neg__ = None
         Variable.__add__ = Node.__add__ = None
         Variable.__radd__ = Node.__radd__ = None
         Variable.__sub__ = Node.__sub__ = None
@@ -224,7 +226,7 @@ class OpOverrider:
         index = slice(None, None, None) if indexes[dimension] == ANY else indexes[dimension]
         if isinstance(index, int):
             if isinstance(t, list):
-                t = t[index]  #  to keep the shape (dimensions), we need to do that
+                t = t[index]  # to keep the shape (dimensions), we need to do that
             else:
                 return t
         elif isinstance(index, slice):
@@ -239,9 +241,12 @@ class OpOverrider:
                 t = OpOverrider.project_recursive(t, indexes, dimension + 1)
         return t
 
+    def __neg__(self):
+        return Node.build(TypeNode.NEG, self)
+
     def __add__(self, other):
         if isinstance(other, PartialConstraint):
-            return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
+            return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other) if isinstance(other.constraint, ConstraintSum) else other + self
         return Node.build(TypeNode.ADD, self, other)
 
     def __radd__(self, other):
@@ -249,7 +254,7 @@ class OpOverrider:
 
     def __sub__(self, other):
         if isinstance(other, PartialConstraint):
-            return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
+            return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other) if isinstance(other.constraint, ConstraintSum) else -(other - self)
         return Node.build(TypeNode.SUB, self, other)
 
     def __rsub__(self, other):
@@ -369,10 +374,12 @@ class OpOverrider:
     def __getitem__lv(self, indexes):
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
+        elif isinstance(indexes, Node):
+            indexes = auxiliary().replace_node(indexes)
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
-            indexes = auxiliary().replace_partial_constraints(list(indexes))
+            indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes))
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
@@ -401,7 +408,7 @@ class OpOverrider:
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
-            indexes = auxiliary().replace_partial_constraints(list(indexes))
+            indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes))
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
                 assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):

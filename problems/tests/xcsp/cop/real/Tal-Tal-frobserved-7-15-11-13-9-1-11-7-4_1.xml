@@ -66,7 +66,7 @@
     </group>
     <instantiation note="on row 0, costs are 0">
       <list> c[0][] </list>
-      <values> 0 0 0 0 0 0 0 0 </values>
+      <values> 0x8 </values>
     </instantiation>
     <instantiation note="on row 0, the jth label is the jth word of the sentence">
       <list> l[0][] </list>

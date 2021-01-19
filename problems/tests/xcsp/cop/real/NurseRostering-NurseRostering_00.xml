@@ -21,7 +21,7 @@
   <constraints>
     <instantiation note="days off for staff">
       <list> x[0][0] x[2][3] x[5][1] x[8][2] x[9][4] </list>
-      <values> 1 1 1 1 1 </values>
+      <values> 1x5 </values>
     </instantiation>
     <block note="computing number of days">
       <group>

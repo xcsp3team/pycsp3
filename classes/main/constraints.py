@@ -689,7 +689,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         pair = obj2.var_val_if_binary_type(TypeNode.MUL) if isinstance(obj2, Node) else None
         if pair:
             obj2 = PartialConstraint(ConstraintSum([pair[0]], [pair[1]], None))
-        elif isinstance(obj2, (Variable,Node)):
+        elif isinstance(obj2, (Variable, Node)):
             obj2 = PartialConstraint(ConstraintSum([obj2], [1], None))
         elif isinstance(obj2, ScalarProduct):
             obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))
@@ -772,11 +772,13 @@ class _Auxiliary:
         self.cache.append((pc.constraint, aux))
         return aux
 
-    def replace_partial_constraints(self, terms):
+    def replace_nodes_and_partial_constraints(self, terms):
         assert isinstance(terms, list)
         for i, t in enumerate(terms):
             if isinstance(t, PartialConstraint):
                 terms[i] = self.replace_partial_constraint(t)
+            elif isinstance(t,Node):
+                terms[i] = self.replace_node(t)
         return terms
 
     def replace_node(self, node):

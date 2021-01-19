@@ -60,7 +60,7 @@
   <objectives>
     <minimize note="minimizing overall differences between highest and lowest rankings of players in leagues while paying attention to numbers of countries" type="sum">
       <list> sub(aux_gb[0],aux_gb[1]) sub(aux_gb[2],aux_gb[3]) sub(aux_gb[4],aux_gb[5]) sub(aux_gb[6],aux_gb[7]) aux_gb[8..11] </list>
-      <coeffs> 100 100 100 100 -1 -1 -1 -1 </coeffs>
+      <coeffs> 100x4 -1x4 </coeffs>
     </minimize>
   </objectives>
 </instance>

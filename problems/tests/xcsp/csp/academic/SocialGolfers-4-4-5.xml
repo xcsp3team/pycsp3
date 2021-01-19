@@ -1225,7 +1225,7 @@
       </lex>
       <instantiation>
         <list> g[0][] g[1..4][0] g[1..4][1] g[1..4][2] g[1..4][3] </list>
-        <values> 0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3 0 0 0 0 1 1 1 1 2 2 2 2 3 3 3 3 </values>
+        <values> 0x4 1x4 2x4 3x4 0x4 1x4 2x4 3x4 </values>
       </instantiation>
     </block>
   </constraints>
