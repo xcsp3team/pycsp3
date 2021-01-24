@@ -6,7 +6,6 @@ Example of Execution:
 """
 from pycsp3 import *
 
-
 jobs = data
 horizon = max(job.dueDate for job in jobs) if all(job.dueDate != -1 for job in jobs) else sum(sum(job.durations) for job in jobs)
 durations = [job.durations for job in jobs]
@@ -27,10 +26,14 @@ satisfy(
     [s[i][- 1] <= jobs[i].dueDate - durations[i][- 1] for i in range(n) if 0 <= jobs[i].dueDate < horizon - 1],
 
     # no overlap on resources
-    [NoOverlap(origins=[s[i][indexes[i][j]] for i in range(n)], lengths=[durations[i][indexes[i][j]] for i in range(n)]) for j in range(m)]
+    [NoOverlap(tasks=[(s[i][indexes[i][j]], durations[i][indexes[i][j]]) for i in range(n)]) for j in range(m)]
 )
 
 minimize(
     # minimizing the makespan
     Maximum(s[i][- 1] + durations[i][- 1] for i in range(n))
 )
+
+# Note that :
+# a) the group of overlap constraints could be equivalently written:
+#   [NoOverlap(origins=[s[i][indexes[i][j]] for i in range(n)], lengths=[durations[i][indexes[i][j]] for i in range(n)]) for j in range(m)]
