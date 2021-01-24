@@ -635,22 +635,37 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
 ''' Packing and Scheduling Constraints '''
 
 
-def NoOverlap(*, origins, lengths, zero_ignored=False):
+def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
+    if tasks:
+        assert origins is None and lengths is None
+        tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
+        assert isinstance(tasks, list) and len(tasks) > 0
+        assert any(isinstance(task, (tuple, list)) and len(task) == 2 for task in tasks)
+        origins, lengths = zip(*tasks)
     checkType(origins, [Variable])
-    if isinstance(lengths, int):
-        lengths = [lengths for _ in range(len(origins))]
+    lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else lengths
     checkType(lengths, ([Variable], [int]))
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
 
-def Cumulative(*, origins, lengths, ends=None, heights, condition=None):
+def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=None, condition=None):
+    if tasks:
+        assert origins is None and lengths is None and ends is None and heights is None
+        tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
+        assert isinstance(tasks, list) and len(tasks) > 0
+        v = len(tasks[0])
+        assert v in (3, 4) and any(isinstance(task, (tuple, list)) and len(task) == v for task in tasks)
+        if v == 3:
+            origins, lengths, heights = zip(*tasks)
+        else:
+            origins, lengths, ends, heights = zip(*tasks)
     origins = flatten(origins)
     checkType(origins, [Variable])
     lengths = flatten(lengths)
     checkType(lengths, ([Variable], [int]))
     heights = flatten(heights)
     checkType(heights, ([Variable], [int]))
-    if ends is not None: ends = flatten(ends)
+    ends = flatten(ends) if ends is not None else ends  # ends is optional
     checkType(ends, ([Variable], type(None)))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
 
