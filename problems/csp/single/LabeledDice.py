@@ -18,7 +18,7 @@ words = ["buoy", "cave", "celt", "flub", "fork", "hemp", "judy", "junk", "limn",
 x = VarArray(size=26, dom=lambda i: range(1, 5) if i in alphabet_positions("".join(words)) else None)
 
 satisfy(
-    # the four letters of each word appears on different cubes
+    # the four letters of each word appear on different cubes
     [AllDifferent(x[i] for i in alphabet_positions(w)) for w in words],
 
     # each cube is assigned 6 letters
