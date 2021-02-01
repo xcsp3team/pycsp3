@@ -500,6 +500,7 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
 class ConstraintElementMatrix(Constraint):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
+        self.matrix = lst
         self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst,
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
                      [(TypeCtrArg.START_COL_INDEX, start_col_index)] if start_col_index else []))
@@ -507,6 +508,16 @@ class ConstraintElementMatrix(Constraint):
         if value:
             self.arg(TypeCtrArg.CONDITION, Condition.build_condition((TypeConditionOperator.EQ, value)))
         # self.arg(TypeCtrArg.VALUE, value)
+
+    def min_possible_value(self):
+        if isinstance(self.matrix[0][0], int):
+            return min(v for row in self.matrix for v in row)
+        return min(x.dom.smallest_value() for row in self.matrix for x in row)
+
+    def max_possible_value(self):
+        if isinstance(self.matrix[0][0], int):
+            return max(v for row in self.matrix for v in row)
+        return max(x.dom.greatest_value() for row in self.matrix for x in row)
 
 
 class ConstraintChannel(ConstraintUnmergeable):
