@@ -203,7 +203,7 @@ def _compile():
 
 
     if Compilation.user_filename is not None:
-        print("User-defined XML file name:", Compilation.user_filename)
+        print("  * User-defined XML file name:", Compilation.user_filename)
         filename = Compilation.user_filename
     else:
         filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
