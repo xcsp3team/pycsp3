@@ -3,6 +3,7 @@ import time
 import sys
 import os
 import signal
+import uuid
 from io import IOBase
 
 from lxml import etree
@@ -104,8 +105,13 @@ def process_options(solving):
 
 
 class Logger:
-    def __init__(self, log_file):
-        self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + log_file
+    def __init__(self, extend_filename=None):
+        uuid_mac = str(hex(uuid.getnode()))
+        pid = str(os.getpid())
+        extend_filename = "_" + str(extend_filename) if extend_filename is not None else ""
+        self.log_file = "solver_"+uuid_mac+"_"+pid+extend_filename+".log"
+        self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + self.log_file
+        print("  * Log file of the solver:", self.log_file)
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
@@ -146,7 +152,14 @@ class SolverProcess:
         self.stdout = None
         self.stderr = None
         self.last_command_wck = None
+        self.extend_filename_logger = None
 
+    def set_command(self, _command):
+        self.command = _command
+    
+    def extend_logger(self, _extend_filename_logger):
+        self.extend_filename_logger = _extend_filename_logger
+    
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
@@ -211,7 +224,7 @@ class SolverProcess:
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
 
             signal.signal(signal.SIGINT, new_handler)
-            log = Logger("solver.log")  # To record the output of the solver
+            log = Logger(self.extend_filename_logger)  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
