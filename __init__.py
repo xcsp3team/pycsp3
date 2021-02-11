@@ -36,10 +36,9 @@ if sys.argv:
         else:
             Compilation.done = True
 
-
-def compile():
+def compile(user_filename=None):
+    Compilation.set_filename(user_filename)
     return Compilation.compile()
-
 
 @atexit.register
 def end():
