@@ -109,12 +109,11 @@ class Logger:
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
-        self.log.close()
-
+        
     def write(self, message):
         self.log = open(self.log_file, "a")
         self.log.write(message)
-        self.log.close()
+        self.log.flush()
 
     def read(self):
         o = open(self.log_file, "r")
