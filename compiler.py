@@ -34,10 +34,15 @@ class Compilation:
     stopwatch = None
     stopwatch2 = None
     done = False
-
+    user_filename = None
+    
     @staticmethod
     def load(console=False):
         _load(console=console)
+
+    @staticmethod
+    def set_filename(_user_filename):
+        Compilation.user_filename = _user_filename
 
     @staticmethod
     def compile():
@@ -196,8 +201,14 @@ def _compile():
     #         with open(sys.argv[1], 'r') as f:
     #             print(f.read())
 
-    filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
-    filename = filename_prefix + ".xml"
+
+    if Compilation.user_filename is not None:
+        print("  * User-defined XML file name:", Compilation.user_filename)
+        filename = Compilation.user_filename
+    else:
+        filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
+        filename = filename_prefix + ".xml"
+
     if Compilation.done:
         return filename
 
