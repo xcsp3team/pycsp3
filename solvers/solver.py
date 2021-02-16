@@ -153,6 +153,11 @@ class SolverProcess:
         self.stderr = None
         self.last_command_wck = None
         self.extend_filename_logger = None
+        self.string_options_from_model = ""
+
+    def add_string_options(self, opt):
+        opt = str(opt).strip()
+        self.string_options_from_model += " " + opt if self.string_options_from_model != "" else opt
 
     def set_command(self, _command):
         self.command = _command
@@ -245,10 +250,16 @@ class SolverProcess:
             solver, tmp_dict_options, tmp_dict_simplified_options = process_options(string_options)
             dict_simplified_options.update(tmp_dict_simplified_options)
             dict_options.update(tmp_dict_options)
+        
+        if self.string_options_from_model is not None:
+            if "args" in dict_options:
+                dict_options["args"]+=self.string_options_from_model
+            else:
+                dict_options["args"]=self.string_options_from_model
 
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
-        solver_args += " " + dict_options["args"] if "args" in dict_options else ""
+        solver_args += dict_options["args"] if "args" in dict_options else ""        
         verbose = options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + solver_args
         print("\n  * Solving by " + self.name + " in progress ... ")
