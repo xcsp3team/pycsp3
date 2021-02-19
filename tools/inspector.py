@@ -113,12 +113,11 @@ def _extract_code(function_name):
     #  In 3.8 the index is the line where the function name appears
     #  In 3.7 and lower versions, it is the line at the end of the function
     #  So the algorithms are completely different
-    frame = list(reversed(inspect.stack(context=100)))[frame[0]]
+    frame = list(reversed(inspect.stack(context=2000)))[frame[0]]
     if sys.version_info[1] == 8:
         codes = _extract_code_index_first_line(frame, function_name)
     else:
         codes = _extract_code_index_last_line(frame, function_name)
-
     return codes
 
 
@@ -210,7 +209,6 @@ def comments_and_tags_of_parameters_of(*, function_name, args):
     tags1 = [""] * len(args)  # tags at first level
     tags2 = [[""] for _ in args]  # tags at second level
     code = list(reversed(_extract_code(function_name)))
-
     are_empty_lines = [is_empty_line(line) for line in code]
 
     code = _delete_bracket_part(code, len(args))
@@ -218,7 +216,7 @@ def comments_and_tags_of_parameters_of(*, function_name, args):
     i1 = 0  # index indicating the position of the current parameter
     i2 = 0  # index indicating the position of the element of the current list (inside the current parameter)
     found = False
-    for i, line in enumerate(code):
+    for i, line in enumerate(code):    
         if not is_comment_line(line):
             new_line = ""  # possibly a new line to replace line
             for j, c in enumerate(line):
