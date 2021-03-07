@@ -44,3 +44,5 @@ def compile(user_filename=None):
 def end():
     if not Compilation.done:
         Compilation.compile()
+
+#atexit.register(end)

@@ -17,7 +17,7 @@ from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
 from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtuple
 from pycsp3.tools.slider import handle_slides
-from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE
+from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE, Error
 from pycsp3.tools.xcsp import build_document
 
 None_Values = ['None', '', 'null']  # adding 'none'?
@@ -182,6 +182,8 @@ def default_data(filename):
 
 
 def _compile():
+    if Error.errorOccurrence:
+        return None
     # used to save data in jSON
     def prepare_for_json(obj):
         if is_namedtuple(obj):
