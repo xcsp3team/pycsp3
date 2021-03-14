@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 from pycsp3.classes.auxiliary.ptypes import TypeCtrArg
 from pycsp3.classes.auxiliary.conditions import Condition
-from pycsp3.classes.entities import CtrEntities, ECtr, ECtrs, EGroup, EBlock, EToGather, ESlide, EToSatisfy, TypeNode
+from pycsp3.classes.entities import CtrEntities, ECtr, ECtrs, EMetaCtr, EGroup, EBlock, EToGather, ESlide, EToSatisfy, TypeNode
 from pycsp3.classes.main.constraints import ConstraintIntension, Diffs, ConstraintInstantiation
 
 LIMIT_FOR_VAR_ARGS = 3
@@ -47,7 +47,7 @@ def detecting_groups_recursively(ctr_entities):
     for e in ctr_entities:
         if isinstance(e, (EBlock, ESlide, EToSatisfy)):
             detecting_groups_recursively(e.entities)
-        if isinstance(e, EToGather):
+        if isinstance(e, EToGather) and len(e.entities) > 0 and not isinstance(e.entities[0], EMetaCtr):
             e.entities = _detecting_groups(e.entities)
 
 

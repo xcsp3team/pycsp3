@@ -18,7 +18,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintSum,
     ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
-    ConstraintCumulative, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, global_indirection)
+    ConstraintCumulative, ConstraintBinPacking, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -208,7 +208,7 @@ def satisfy(*args):
 
     def _group(*_args):
         entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
-        checkType(entities, [ECtr, ECtrs])
+        checkType(entities, [ECtr, ECtrs, EMetaCtr])
         return EToGather(entities)
 
     def _block(*_args):
@@ -258,9 +258,8 @@ def satisfy(*args):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
         no_parameter_satisfy = i
-        assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), "non authorized type " + str(
-            arg) + " " + str(
-            type(arg))
+        assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), \
+            "non authorized type " + str(arg) + " " + str(type(arg))
         if arg is None:
             continue
         arg = list(arg) if isinstance(arg, types.GeneratorType) else arg
@@ -668,6 +667,16 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     ends = flatten(ends) if ends is not None else ends  # ends is optional
     checkType(ends, ([Variable], type(None)))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
+
+
+def BinPacking(term, *others, sizes, condition=None):
+    terms = flatten(term, others)
+    assert len(terms) > 0, "A binPacking with an empty scope"
+    checkType(terms, [Variable])
+    sizes = flatten(sizes)
+    checkType(sizes, [int])
+    assert len(terms) == len(sizes)
+    return _wrapping_by_complete_or_partial_constraint(ConstraintBinPacking(terms, sizes, Condition.build_condition(condition)))
 
 
 ''' Constraints on Graphs'''
