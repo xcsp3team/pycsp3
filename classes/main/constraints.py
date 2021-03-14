@@ -75,6 +75,13 @@ class Constraint:
             return False
         return self.arguments == other.arguments
 
+    def equal_except_condition(self, other):
+        if not isinstance(other, Constraint) or self.name != other.name or len(self.attributes) > 0 or len(other.attributes) > 0:
+            return False  # attributes not currently completely taken into account
+        if self.n_parameters > 0 or other.n_parameters > 0:
+            return False
+        return [v for v in self.arguments.items() if str(v[0]) != "condition"] == [v for v in other.arguments.items() if str(v[0]) != "condition"]
+
     def arg(self, name, content, *, attributes=[], content_compressible=True, content_ordered=False, lifted=False):
         self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted)
         return self
@@ -668,7 +675,9 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
     def __mul__(self, other):
-        assert isinstance(other, int)
+        if not isinstance(other, int):
+            pair = self._simplify_operation(other)
+            return Node.build(TypeNode.MUL, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.MUL, other)
         if not isinstance(self.constraint, ConstraintSum):
             return Node.build(TypeNode.MUL, self._simplify_operation(other))
         args = self.constraint.arguments
@@ -696,7 +705,11 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __str__(self):
         c = self.constraint
         # assert len(c.arguments) == 2
-        return str(c.name) + "(" + str(compact(c.arguments[TypeCtrArg.LIST].content)) + ")"  # TODO experimental stuff
+        s = str(c.name) + "("
+        for k, v in c.arguments.items():
+            s = s + str(v) + ","
+        return s[:-1] + ")"
+        # return s + str(compact(c.arguments[TypeCtrArg.LIST].content)) + ")"
 
     @staticmethod
     def combine_partial_objects(obj1, operator, obj2):  # currently, only partial sums can be combined
@@ -785,7 +798,8 @@ class _Auxiliary:
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
         for c, x in self.cache:
-            if functions.protect().execute(pc.constraint == c):
+            if functions.protect().execute(pc.constraint.equal_except_condition(c)):
+                # if functions.protect().execute(pc.constraint == c):
                 return x
         aux = self.__replace(pc, Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
         self.cache.append((pc.constraint, aux))
@@ -821,7 +835,7 @@ def auxiliary():
 def global_indirection(c):
     pc = None
     if options.usemeta:
-        return None # to force using meta-constraints
+        return None  # to force using meta-constraints
     if isinstance(c, ConstraintWithCondition):
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None

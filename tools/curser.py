@@ -177,7 +177,7 @@ class OpOverrider:
         Variable.__floordiv__ = Node.__floordiv__ = OpOverrider.__floordiv__
         Variable.__rfloordiv__ = Node.__rfloordiv__ = OpOverrider.__rfloordiv__
 
-        ECtr.__and__ = Variable.__and__ = Node.__and__ = OpOverrider.__and__
+        ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = OpOverrider.__and__
         ECtr.__or__ = Variable.__or__ = Node.__or__ = OpOverrider.__or__
         ECtr.__invert__ = Node.__invert__ = OpOverrider.__invert__  # we keep __invert__ for Variable
         ECtr.__xor__ = Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
@@ -211,7 +211,7 @@ class OpOverrider:
         Variable.__floordiv__ = Node.__floordiv__ = None
         Variable.__rfloordiv__ = Node.__rfloordiv__ = None
 
-        ECtr.__and__ = Variable.__and__ = Node.__and__ = None
+        ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = None
         ECtr.__or__ = Variable.__or__ = Node.__or__ = None
         ECtr.__invert__ = Node.__invert__ = None  # we keep __invert__ for Variable
         ECtr.__xor__ = Variable.__xor__ = Node.__xor__ = None
