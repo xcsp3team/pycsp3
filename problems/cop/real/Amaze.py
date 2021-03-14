@@ -43,7 +43,7 @@ minimize(
 #          | {(v, v, v, v1, v2) for v in range(1, nValues) for v1 in range(nValues) for v2 in range(nValues) if v1 != v and v2 != v}
 #          | {(v, v, v1, v, v2) for v in range(1, nValues) for v1 in range(nValues) for v2 in range(nValues) if v1 != v and v2 != v}
 #          ...
-# currently, the smart conditions are automatically converted to form starred tuples (in the future, we weill deal with them)
+# currently, the smart conditions are automatically converted to form starred tuples (in the future, we will deal with them)
 
 # b) even if  data come from a text file via a parser that builds tuples (and not lists)
 #    we have to write [i, j] not in points1 + points2 because tuples (in data) are automatically converted to lists

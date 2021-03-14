@@ -1,15 +1,17 @@
 import types
 from collections import deque, namedtuple
 
-from pycsp3.classes.entities import Node, TypeNode
+from pycsp3.classes.entities import Node, TypeNode, ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix,
-    ConstraintInstantiation, ECtr,
+    ConstraintInstantiation,
     auxiliary, global_indirection)
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, ANY, warning, error_if
+
+from pycsp3 import functions
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -313,42 +315,66 @@ class OpOverrider:
             return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
         return other.__eq__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.EQ, self, other)
 
+    @staticmethod
+    def manage_global_indirection(arg1, arg2):
+        if isinstance(arg1, EMetaCtr) or isinstance(arg2, EMetaCtr):
+            return None
+        if isinstance(arg1, ECtr):
+            gi1 = global_indirection(arg1.constraint)
+            if gi1 is None:
+                return None
+            arg1 = gi1
+        if isinstance(arg2, ECtr):
+            gi2 = global_indirection(arg2.constraint)
+            if gi2 is None:
+                return None
+            arg2 = gi2
+        return arg1, arg2
+
     def __ne__(self, other):
-        if isinstance(self, ECtr):
-            self = global_indirection(self.constraint)
-        if isinstance(other, ECtr):
-            other = global_indirection(other.constraint)
-        if self is None or other is None:
+        res = OpOverrider.manage_global_indirection(self, other)
+        assert res  # or should we return an Xor meta-constraint if res is None?
+        self, other = res
+        if None in {self, other}:
             return object.__ne__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
-        if isinstance(self, ECtr):
-            self = global_indirection(self.constraint)
-        if isinstance(other, ECtr):
-            other = global_indirection(other.constraint)
-        return object.__or__(self, other) if None in {self, other} else Node.disjunction(self, other)
+        res = OpOverrider.manage_global_indirection(self, other)
+        if res is None:
+            return functions.Or(self, other)
+        self, other = res
+        if None in {self, other}:
+            return object.__or__(self, other)
+        return Node.disjunction(self, other)
 
     def __and__(self, other):
-        if isinstance(self, ECtr):
-            self = global_indirection(self.constraint)
-        if isinstance(other, ECtr):
-            other = global_indirection(other.constraint)
-        return object.__and__(self, other) if None in {self, other} else Node.conjunction(self, other)
+        res = OpOverrider.manage_global_indirection(self, other)
+        if res is None:
+            return functions.And(self, other)
+        self, other = res
+        if None in {self, other}:
+            return object.__and__(self, other)
+        return Node.conjunction(self, other)
 
     def __invert__(self):
         if isinstance(self, ECtr):
-            self = global_indirection(self.constraint)
+            gi = global_indirection(self.constraint)
+            if gi is None:
+                return functions.Not(self)
+            self = gi
         return Variable.__invert__(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
-        if isinstance(self, ECtr):
-            self = global_indirection(self.constraint)
-        if isinstance(other, ECtr):
-            other = global_indirection(other.constraint)
-        return object.__xor__(self, other) if None in {self, other} else Node.build(TypeNode.XOR, self, other)
+        res = OpOverrider.manage_global_indirection(self, other)
+        if res is None:
+            return functions.Xor(self, other)
+        self, other = res
+        if None in {self, other}:
+            return object.__xor__(self, other)
+        return Node.build(TypeNode.XOR, self, other)
 
     def __eq__lv(self, other):  # lv for ListVar
         def Instantiation(*, variables, values):

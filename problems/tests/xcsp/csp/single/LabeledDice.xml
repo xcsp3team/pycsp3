@@ -3,7 +3,7 @@
     <array id="x" note="x[i] is the cube where the ith letter of the alphabet is put" size="[26]"> 1..4 </array>
   </variables>
   <constraints>
-    <group note="the four letters of each word appears on different cubes">
+    <group note="the four letters of each word appear on different cubes">
       <allDifferent> %... </allDifferent>
       <args> x[1] x[14] x[20] x[24] </args>
       <args> x[0] x[2] x[4] x[21] </args>

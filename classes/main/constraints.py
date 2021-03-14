@@ -11,7 +11,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, \
-    to_ordinary_table
+    to_ordinary_table, warning
 
 
 class Diffs:
@@ -550,13 +550,21 @@ class ConstraintNoOverlap(ConstraintUnmergeable):
             self.attributes.append((TypeCtrArg.ZERO_IGNORED, zero_ignored))
 
 
-class ConstraintCumulative(Constraint):
+class ConstraintCumulative(Constraint):  # TODO inheriting from ConstraintWithCondition instead? is this a pb?
     def __init__(self, origins, lengths, ends, heights, condition):
         super().__init__(TypeCtr.CUMULATIVE)
         self.arg(TypeCtrArg.ORIGINS, origins, content_ordered=True)
         self.arg(TypeCtrArg.LENGTHS, lengths, content_ordered=True)
         self.arg(TypeCtrArg.ENDS, ends, content_ordered=True)
         self.arg(TypeCtrArg.HEIGHTS, heights, content_ordered=True)
+        self.arg(TypeCtrArg.CONDITION, condition)
+
+
+class ConstraintBinPacking(Constraint):
+    def __init__(self, lst, sizes, condition):
+        super().__init__(TypeCtr.BIN_PACKING)
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
+        self.arg(TypeCtrArg.SIZES, sizes, content_ordered=True)
         self.arg(TypeCtrArg.CONDITION, condition)
 
 
@@ -812,6 +820,8 @@ def auxiliary():
 
 def global_indirection(c):
     pc = None
+    if options.usemeta:
+        return None # to force using meta-constraints
     if isinstance(c, ConstraintWithCondition):
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
@@ -823,7 +833,10 @@ def global_indirection(c):
     if isinstance(c, ConstraintAllEqual):
         pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
         condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
-    assert pc, "You use a global constraint in a complex expression.\n" + \
-               "However, this constraint cannot be externalized by introducing an auxiliary variable.\n" + \
-               "Maybe, you can use meta-constraint functions (Or, And, Not, IfThen, IfThenElse, Iff or modify your model."
+    if pc is None:
+        warning("You use a global constraint in a complex expression.\n" +
+                "\tHowever, this constraint cannot be externalized by introducing an auxiliary variable.\n" +
+                "\tHence a meta-constraint function (Or, And, Not, IfThen, IfThenElse, Iff) is automatically called.\n" +
+                "\tCheck that it is relevant, or modify your model.\n")
+        return None
     return Node.build(condition.operator, auxiliary().replace_partial_constraint(pc), condition.right_operand())
