@@ -5,7 +5,7 @@ from pycsp3.classes.entities import Node, TypeNode, ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix,
     ConstraintInstantiation,
-    auxiliary, global_indirection)
+    auxiliary, global_indirection, manage_global_indirection)
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
@@ -158,8 +158,8 @@ class OpOverrider:
         ListInt.__getitem__ = OpOverrider.__getitem__li
         ListInt.__contains__ = OpOverrider.__contains__li
 
-        Variable.__eq__ = Node.__eq__ = OpOverrider.__eq__
-        Variable.__ne__ = Node.__ne__ = OpOverrider.__ne__
+        EMetaCtr.__eq__ = Variable.__eq__ = Node.__eq__ = OpOverrider.__eq__
+        EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = OpOverrider.__ne__
         Variable.__lt__ = Node.__lt__ = OpOverrider.__lt__
         Variable.__le__ = Node.__le__ = OpOverrider.__le__
         Variable.__ge__ = Node.__ge__ = OpOverrider.__ge__
@@ -178,9 +178,9 @@ class OpOverrider:
         Variable.__rfloordiv__ = Node.__rfloordiv__ = OpOverrider.__rfloordiv__
 
         ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = OpOverrider.__and__
-        ECtr.__or__ = Variable.__or__ = Node.__or__ = OpOverrider.__or__
+        ECtr.__or__ = EMetaCtr.__or__ = Variable.__or__ = Node.__or__ = OpOverrider.__or__
         ECtr.__invert__ = Node.__invert__ = OpOverrider.__invert__  # we keep __invert__ for Variable
-        ECtr.__xor__ = Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
+        ECtr.__xor__ = EMetaCtr.__xor__ = Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
 
     @staticmethod
     def disable():
@@ -192,8 +192,8 @@ class OpOverrider:
         ListInt.__getitem__ = list.__getitem__
         ListInt.__contains__ = list.__contains__
 
-        Variable.__eq__ = Node.__eq__ = object.__eq__
-        Variable.__ne__ = Node.__ne__ = object.__ne__
+        EMetaCtr.__eq__ = Variable.__eq__ = Node.__eq__ = object.__eq__
+        EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = object.__ne__
         Variable.__lt__ = Node.__lt__ = object.__lt__
         Variable.__le__ = Node.__le__ = object.__le__
         Variable.__ge__ = Node.__ge__ = object.__ge__
@@ -212,9 +212,9 @@ class OpOverrider:
         Variable.__rfloordiv__ = Node.__rfloordiv__ = None
 
         ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = None
-        ECtr.__or__ = Variable.__or__ = Node.__or__ = None
+        ECtr.__or__ = EMetaCtr.__or__ = Variable.__or__ = Node.__or__ = None
         ECtr.__invert__ = Node.__invert__ = None  # we keep __invert__ for Variable
-        ECtr.__xor__ = Variable.__xor__ = Node.__xor__ = None
+        ECtr.__xor__ = EMetaCtr.__xor__ = Variable.__xor__ = Node.__xor__ = None
 
         return OpOverrider
 
@@ -281,81 +281,66 @@ class OpOverrider:
         return Node.build(TypeNode.DIV, other, self)
 
     def __lt__(self, other):
-        if self is None or other is None:
+        if None in (self, other):
             return object.__lt__(self, other)
         return other.__gt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LT, self, other)
 
     def __le__(self, other):
-        if self is None or other is None:
+        if None in (self, other):
             return object.__le__(self, other)
         return other.__ge__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LE, self, other)
 
     def __ge__(self, other):
-        if self is None or other is None:
+        if None in (self, other):
             return object.__ge__(self, other)
         if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
         return other.__le__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GE, self, other)
 
     def __gt__(self, other):
-        if self is None or other is None:
+        if None in (self, other):
             return object.__gt__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
         return other.__lt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GT, self, other)
 
     def __eq__(self, other):
-        if isinstance(self, ECtr):
-            self = global_indirection(self.constraint)
-        if isinstance(other, ECtr):
-            other = global_indirection(other.constraint)
-        if self is None or other is None:
+        res = manage_global_indirection(self, other)
+        if res is None:
+            return functions.Iff(self, other)
+        self, other = res
+        if None in {self, other}:  # we must not write None in (self,other) because recursive behaviour
             return object.__eq__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
         return other.__eq__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.EQ, self, other)
 
-    @staticmethod
-    def manage_global_indirection(arg1, arg2):
-        if isinstance(arg1, EMetaCtr) or isinstance(arg2, EMetaCtr):
-            return None
-        if isinstance(arg1, ECtr):
-            gi1 = global_indirection(arg1.constraint)
-            if gi1 is None:
-                return None
-            arg1 = gi1
-        if isinstance(arg2, ECtr):
-            gi2 = global_indirection(arg2.constraint)
-            if gi2 is None:
-                return None
-            arg2 = gi2
-        return arg1, arg2
-
     def __ne__(self, other):
-        res = OpOverrider.manage_global_indirection(self, other)
-        assert res  # or should we return an Xor meta-constraint if res is None?
+        res = manage_global_indirection(self, other)
+        if res is None:
+            return functions.Xor(self, other)  # TODO: is it always appropriate?
         self, other = res
-        if None in {self, other}:
+        if None in (self, other):
             return object.__ne__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
-        res = OpOverrider.manage_global_indirection(self, other)
+        res = manage_global_indirection(self, other)
         if res is None:
             return functions.Or(self, other)
         self, other = res
-        if None in {self, other}:
+        if None in (self, other):
             return object.__or__(self, other)
         return Node.disjunction(self, other)
 
     def __and__(self, other):
-        res = OpOverrider.manage_global_indirection(self, other)
+        res = manage_global_indirection(self, other)
         if res is None:
             return functions.And(self, other)
         self, other = res
-        if None in {self, other}:
+        if None in (self, other):
             return object.__and__(self, other)
         return Node.conjunction(self, other)
 
@@ -368,11 +353,11 @@ class OpOverrider:
         return Variable.__invert__(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
-        res = OpOverrider.manage_global_indirection(self, other)
+        res = manage_global_indirection(self, other)
         if res is None:
             return functions.Xor(self, other)
         self, other = res
-        if None in {self, other}:
+        if None in (self, other):
             return object.__xor__(self, other)
         return Node.build(TypeNode.XOR, self, other)
 
