@@ -206,6 +206,11 @@ class ENot(EMetaCtr):
         super().__init__(TypeCtr.NOT, constraints, 1, 1)
 
 
+class EXor(EMetaCtr):
+    def __init__(self, constraints):
+        super().__init__(TypeCtr.XOR, constraints, 2)
+
+
 class EIfThen(EMetaCtr):
     def __init__(self, constraints):
         super().__init__(TypeCtr.IF_THEN, constraints, 2, 2)
@@ -569,7 +574,7 @@ class Node(Entity):
             return Node(type, Node._create_sons(*sorted_sons))  # *sorted(args[0])))
         args = flatten(Node.build(TypeNode.SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args)
         assert type.is_valid_arity(len(args)), "Problem: Bad arity for node " + type.name + ". It is " + str(
-            len(args)) + " but it should be between " + str(type.arityMin) + " and " + str(type.arityMax)
+            len(args)) + " but it should be between " + str(type.min_arity) + " and " + str(type.max_arity)
         node = Node(type, Node._create_sons(*args))
         if type == TypeNode.EQ and all(son.type.is_predicate_operator() for son in node.sons):
             node = Node(TypeNode.IFF, node.sons)

@@ -8,7 +8,7 @@ from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, Co
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
-    EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
+    EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
     AnnEntities,
     TypeNode, Node)
 from pycsp3.classes.main.annotations import (
@@ -18,7 +18,8 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintSum,
     ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
-    ConstraintCumulative, ConstraintBinPacking, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, global_indirection)
+    ConstraintCumulative, ConstraintBinPacking, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, global_indirection,
+    manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -184,6 +185,10 @@ def Not(*args):
     return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
+def Xor(*args):
+    return EXor(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+
+
 def IfThen(*args):
     return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
@@ -341,19 +346,28 @@ def xor(*args):
 
 
 def iff(*args):
+    assert len(args) >= 2
+    res = manage_global_indirection(*args)
+    if res is None:
+        return Iff(args)
+    args = res
     return args[0] == args[1] if len(args) == 2 else Node.build(TypeNode.IFF, *args)
 
 
 def imply(*args):
     assert len(args) == 2
-    args = [global_indirection(arg.constraint) if isinstance(arg, ECtr) else arg for arg in args]
-    return Node.build(TypeNode.IMP, *args)
+    res = manage_global_indirection(*args)
+    if res is None:
+        return IfThen(args)
+    return Node.build(TypeNode.IMP, *res)
 
 
 def ift(*args):
     assert len(args) == 3
-    args = [global_indirection(arg.constraint) if isinstance(arg, ECtr) else arg for arg in args]
-    return Node.build(TypeNode.IF, *args)
+    res = manage_global_indirection(*args)
+    if res is None:
+        return IfThenElse(args)
+    return Node.build(TypeNode.IF, *res)
 
 
 def expr(operator, *args):

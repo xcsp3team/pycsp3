@@ -5,7 +5,7 @@ from pycsp3 import functions
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
-from pycsp3.classes.entities import EVarArray, ECtr, TypeNode, Node
+from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr, TypeNode, Node
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
@@ -854,3 +854,18 @@ def global_indirection(c):
                 "\tCheck that it is relevant, or modify your model.\n")
         return None
     return Node.build(condition.operator, auxiliary().replace_partial_constraint(pc), condition.right_operand())
+
+
+def manage_global_indirection(*args):
+    assert len(args) > 1
+    if any(isinstance(arg, EMetaCtr) for arg in args):
+        return None
+    t = []
+    for arg in args:
+        if isinstance(arg, ECtr):
+            gi = global_indirection(arg.constraint)
+            if gi is None:
+                return None
+            arg = gi
+        t.append(arg)
+    return tuple(t)

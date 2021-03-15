@@ -63,7 +63,7 @@ class TypeCtr(AbstractType):
     STRETCH, NO_OVERLAP, CUMULATIVE, BIN_PACKING, KNAPSACK, NETWORK_FLOW = auto(6)
     CIRCUIT, N_CIRCUITS, PATH, N_PATHS, TREE, N_TREES, ARBO, N_ARBOS, N_CLIQUES = auto(9)
     CLAUSE, INSTANTIATION = auto(2)
-    AND, OR, NOT, IFF, IF_THEN, IF_THEN_ELSE = auto(6)
+    AND, OR, NOT, XOR, IFF, IF_THEN, IF_THEN_ELSE = auto(7)
     SLIDE, SEQBIN = auto(2)
     MINIMIZE, MAXIMIZE = auto(2)  # used for posting objectives (not exactly constraints)
 
