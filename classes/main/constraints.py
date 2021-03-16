@@ -831,8 +831,6 @@ def auxiliary():
         auxiliary.obj = _Auxiliary()
     return auxiliary.obj
 
-import inspect
-
 def global_indirection(c):
     pc = None
     if options.usemeta:
