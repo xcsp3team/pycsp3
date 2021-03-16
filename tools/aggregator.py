@@ -5,6 +5,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeCtrArg
 from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.entities import CtrEntities, ECtr, ECtrs, EMetaCtr, EGroup, EBlock, EToGather, ESlide, EToSatisfy, TypeNode
 from pycsp3.classes.main.constraints import ConstraintIntension, Diffs, ConstraintInstantiation
+from pycsp3.tools.utilities import error
 
 LIMIT_FOR_VAR_ARGS = 3
 
@@ -120,6 +121,8 @@ def _compute_group_abstraction_intension(group):
                 old = "%" + str(min(t))
                 # while old in abstract_tree:
                 abstract_tree = _replace_parameter(abstract_tree, old, par)
+    if any(len(args) == 0 for args in all_args):
+        error("A group with at least an empty argument list")
     return abstract_tree, all_args
 
 

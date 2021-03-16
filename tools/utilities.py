@@ -259,17 +259,22 @@ def display_constraints(ctr_entities, separator=""):
 PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, UNDERLINE = '\033[95m', '\033[94m', '\033[92m', '\033[93m', '\033[91m', '\033[0m', '\033[1m', '\033[4m'
 
 
+class Error():
+    errorOccurrence = False
+
+
 def warning(message):
     print("\n  " + ORANGE + "Warning: " + WHITE + message)
 
 
 def error(s):
+    Error.errorOccurrence = True
     print("\n\t" + RED + "ERROR: " + WHITE, s, "\n")
     print("\t\t(add option -ev to your command if you want to see the trace of the error)\n")
     if options.ev:
         raise TypeError(s)
     else:
-        sys.exit(0)
+        sys.exit(1)
 
 
 def error_if(test, s):

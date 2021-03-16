@@ -110,10 +110,10 @@ def _extract_code(function_name):
         return browse_code_bottom_to_top(lines, function_name)
 
     # The index of the line in the stack of the inspector changes between python 3.7 and 3.8:
-    #  In 3.8 the index is the line where the function name appears
-    #  In 3.7 and lower versions, it is the line at the end of the function
-    #  So the algorithms are completely different
-    frame = list(reversed(inspect.stack(context=100)))[frame[0]]
+    # In 3.8 the index is the line where the function name appears
+    # In 3.7 and lower versions, it is the line at the end of the function
+    # So the algorithms are completely different
+    frame = list(reversed(inspect.stack(context=2000)))[frame[0]]  # TODO how to avoid this constant?
     if sys.version_info[1] == 8:
         codes = _extract_code_index_first_line(frame, function_name)
     else:
