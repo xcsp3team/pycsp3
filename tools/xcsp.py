@@ -9,6 +9,7 @@ from pycsp3.classes.main.constraints import ConstraintIntension
 from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.slider import _identify_slide
+from pycsp3.classes.auxiliary.conditions import Condition
 
 SIZE_LIMIT_FOR_USING_AS = 12  # when building domains of variables of arrays of variables (and using the attribute 'as')
 
@@ -96,11 +97,13 @@ def _argument(elt, arg, key, value, change_element_value=False):
                 subelt.set(str(att[2]), str(att[3]))
             elt.append(subelt)
     else:
-        v = None if isinstance(value, list) and len(value) == 1 and value[0] is None else value
-        if change_element_value and key == TypeCtrArg.CONDITION and value.operator == TypeConditionOperator.EQ:
-            v = str(v)
-            elt.append(_element("value", attributes=arg.attributes, text=v[v.index(',') + 1:-1]))
+        # the first part (if) will be removed in the medium term (we will systematically use the XML <condition>)
+        if change_element_value and key == TypeCtrArg.CONDITION and ((isinstance(value, Condition) and value.operator == TypeConditionOperator.EQ)
+                                                                     or (isinstance(value, str) and value.startswith("(eq,"))):
+            v = str(value)
+            elt.append(_element(TypeCtrArg.VALUE, attributes=arg.attributes, text=v[v.index(',') + 1:-1]))
         else:
+            v = None if isinstance(value, list) and len(value) == 1 and value[0] is None else value
             elt.append(_element(key, attributes=arg.attributes, text=v))
 
 
@@ -116,7 +119,7 @@ def _constraint(entity, *, possible_simplified_form=False):
     if len(arguments) == 1 and not arguments[0].lifted and (possible_simplified_form or arguments[0].name == TypeCtrArg.LIST):
         _text(elt, arguments[0].content)
     else:
-        b = str(c.name) == "element"
+        b = c.name == TypeCtr.ELEMENT
         for arg in arguments:
             _argument(elt, arg, arg.name, arg.content, change_element_value=b)
     return elt
