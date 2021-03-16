@@ -155,6 +155,10 @@ class SolverProcess:
         self.extend_filename_logger = None
         self.string_options_from_model = ""
 
+    def add_string_options(self, opt):
+        opt = str(opt).strip()
+        self.string_options_from_model += " " + opt if self.string_options_from_model != "" else opt
+
     def set_command(self, _command):
         self.command = _command
 
