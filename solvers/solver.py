@@ -109,13 +109,13 @@ class Logger:
         uuid_mac = str(hex(uuid.getnode()))
         pid = str(os.getpid())
         extend_filename = "_" + str(extend_filename) if extend_filename is not None else ""
-        self.log_file = "solver_"+uuid_mac+"_"+pid+extend_filename+".log"
+        self.log_file = "solver_" + uuid_mac + "_" + pid + extend_filename + ".log"
         self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + self.log_file
         print("  * Log file of the solver:", self.log_file)
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
-        
+
     def write(self, message):
         self.log = open(self.log_file, "a")
         self.log.write(message)
@@ -153,13 +153,14 @@ class SolverProcess:
         self.stderr = None
         self.last_command_wck = None
         self.extend_filename_logger = None
+        self.string_options_from_model = ""
 
     def set_command(self, _command):
         self.command = _command
-    
+
     def extend_logger(self, _extend_filename_logger):
         self.extend_filename_logger = _extend_filename_logger
-    
+
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
@@ -246,9 +247,15 @@ class SolverProcess:
             dict_simplified_options.update(tmp_dict_simplified_options)
             dict_options.update(tmp_dict_options)
 
+        if self.string_options_from_model is not None:
+            if "args" in dict_options:
+                dict_options["args"] += self.string_options_from_model
+            else:
+                dict_options["args"] = self.string_options_from_model
+
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
-        solver_args += " " + dict_options["args"] if "args" in dict_options else ""
+        solver_args += dict_options["args"] if "args" in dict_options else ""
         verbose = options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + solver_args
         print("\n  * Solving by " + self.name + " in progress ... ")
