@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from lxml import etree
 
-from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeXML, TypeVar, TypeCtr, TypeCtrArg
+from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeConditionOperator, TypeXML, TypeVar, TypeCtr, TypeCtrArg
 from pycsp3.classes.entities import Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, \
     EBlock, ESlide, EIfThenElse, EToGather, EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities
 from pycsp3.classes.main.constraints import ConstraintIntension
@@ -97,7 +97,7 @@ def _argument(elt, arg, key, value, change_element_value=False):
             elt.append(subelt)
     else:
         v = None if isinstance(value, list) and len(value) == 1 and value[0] is None else value
-        if change_element_value and str(key) == "condition":
+        if change_element_value and str(key) == "condition" and value.operator == TypeConditionOperator.EQ:
             v = str(v)
             elt.append(_element("value", attributes=arg.attributes, text=v[v.index(',') + 1:-1]))
         else:

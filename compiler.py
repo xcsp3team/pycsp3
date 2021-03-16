@@ -35,7 +35,7 @@ class Compilation:
     stopwatch2 = None
     done = False
     user_filename = None
-    
+
     @staticmethod
     def load(console=False):
         _load(console=console)
@@ -52,7 +52,7 @@ class Compilation:
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver")
     options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "restrictTablesWrtDomains",
-                      "safe", "solve", "dontcompactValues","usemeta")
+                      "safe", "solve", "dontcompactValues", "usemeta")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -184,6 +184,7 @@ def default_data(filename):
 def _compile():
     if Error.errorOccurrence:
         return None
+
     # used to save data in jSON
     def prepare_for_json(obj):
         if is_namedtuple(obj):
@@ -202,7 +203,6 @@ def _compile():
     #     if sys.argv[1].endswith(".json"):
     #         with open(sys.argv[1], 'r') as f:
     #             print(f.read())
-
 
     if Compilation.user_filename is not None:
         print("  * User-defined XML file name:", Compilation.user_filename)
