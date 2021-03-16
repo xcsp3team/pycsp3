@@ -78,7 +78,6 @@ def browse_code_top_to_bottom(lines, function_name):
             break
     return list(reversed(codes))
 
-
 def _extract_correct_frame(function_name):
     stack = list(reversed(inspect.stack(context=1)))
     frame = [(i - 1, stack[i - 1]) for i, frame in enumerate(stack) if is_correct_frame(frame, function_name) and i > 0][0]  # Get the correct frame
