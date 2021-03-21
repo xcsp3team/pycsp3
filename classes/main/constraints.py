@@ -9,7 +9,7 @@ from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr, TypeNode, Node
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
-from pycsp3.tools.compactor import compact
+from pycsp3.tools import curser
 from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, \
     to_ordinary_table, warning
 
@@ -55,7 +55,15 @@ class ConstraintArgument:
             return False  # attributes not currently completely taken into account
         if self.content_compressible != other.content_compressible or self.content_ordered != other.content_ordered or self.lifted != other.lifted:
             return False
-        return self.content == other.content
+        return curser.OpOverrider.eq_protected(self.content, other.content)
+
+        # #print(type(self.content),type(other.content))
+        # if isinstance(self.content, list):  #
+        #     return list.__eq__(self.content, other.content)
+        # #if isinstance(self.content, (EMetaCtr, Variable, Node)):
+        # #    return object.__eq__(self.content, other.content)
+        # return object.__eq__(self.content, other.content)
+        # return self.content == other.content
 
     def __str__(self):
         return str(self.name) + ":" + str(self.content)
@@ -410,6 +418,13 @@ class ConstraintSum(ConstraintWithCondition):
                 cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
                 t.append(max(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
         return sum(t)
+
+    def revert_coeffs(self):
+        if TypeCtrArg.COEFFS in self.arguments:
+            self.arguments[TypeCtrArg.COEFFS].content = [-v for v in self.arguments[TypeCtrArg.COEFFS].content]
+        else:
+            self.arg(TypeCtrArg.COEFFS, [-1 for _ in range(len(self.arguments[TypeCtrArg.LIST]))])
+        return self
 
 
 class ConstraintCount(ConstraintWithCondition):
@@ -798,7 +813,8 @@ class _Auxiliary:
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
         for c, x in self.cache:
-            if functions.protect().execute(pc.constraint.equal_except_condition(c)):
+            if pc.constraint.equal_except_condition(c):
+                # if functions.protect().execute(pc.constraint.equal_except_condition(c)):
                 # if functions.protect().execute(pc.constraint == c):
                 return x
         aux = self.__replace(pc, Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
