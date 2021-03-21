@@ -182,9 +182,6 @@ def default_data(filename):
 
 
 def _compile():
-    if Error.errorOccurrence:
-        return None
-
     # used to save data in jSON
     def prepare_for_json(obj):
         if is_namedtuple(obj):
@@ -198,11 +195,9 @@ def _compile():
             return obj
         return str(obj) if isinstance(obj, datetime.time) else obj
 
+    if Error.errorOccurrence:
+        return None
     OpOverrider.disable()
-    # if options.display:
-    #     if sys.argv[1].endswith(".json"):
-    #         with open(sys.argv[1], 'r') as f:
-    #             print(f.read())
 
     if Compilation.user_filename is not None:
         print("  * User-defined XML file name:", Compilation.user_filename)
