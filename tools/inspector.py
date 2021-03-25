@@ -35,39 +35,34 @@ def is_continued_line(line):
     return isinstance(line, str) and line.strip().endswith('\\')
 
 
-def is_correct_frame(frame, f):
-    return frame.function == f or frame.function == "__init__" and f in frame.code_context[0]
-
-
 # Starts at the end of the function and runs it up until the function name is found
 def browse_code_bottom_to_top(lines, function_name):
-    codes = []
+    code = []
     function_name_found = False
     for line in lines:
         if function_name_found is False:
-            codes.append(line)
+            code.append(line)
             if function_name in line and not is_comment_line(line):
                 function_name_found = True
         else:
             if is_continued_line(line) or is_empty_line(line) or is_comment_line(line):
-                codes.append(line)
+                code.append(line)
             else:
                 break
-    return codes
+    return code
 
 
 def browse_code_top_to_bottom(lines, function_name):
-    codes = []
+    code = []
     function_name_found = False
     level = 0
     for line in lines:
         if function_name in line and not is_comment_line(line):
             function_name_found = True
-            codes.append(line)
+            code.append(line)
             line = line.split(function_name)[1]
         else:
-            codes.append(line)
-
+            code.append(line)
         if function_name_found:
             for letter in line:
                 if letter in {'(', '['}:
@@ -76,50 +71,37 @@ def browse_code_top_to_bottom(lines, function_name):
                     level = level - 1
         if level == 0:
             break
-    return list(reversed(codes))
+    return list(reversed(code))
 
 
 def _extract_correct_frame(function_name):
-    stack = list(reversed(inspect.stack(context=1)))
-    frame = [(i - 1, stack[i - 1]) for i, frame in enumerate(stack) if is_correct_frame(frame, function_name) and i > 0][0]  # Get the correct frame
-    return frame
-
-
-def _extract_code_index_last_line(frame, function_name):
-    lines = list(reversed(frame.code_context[:frame.index + 1]))
-    return browse_code_bottom_to_top(lines, function_name)
-
-
-def _extract_code_index_first_line(frame, function_name):
-    if function_name == "Var" or function_name == "VarArray":
-        lines = list(reversed(frame.code_context[:frame.index + 1]))
-        return browse_code_bottom_to_top(lines, function_name)
-    else:
-        lines = list(frame.code_context[frame.index:])
-        return browse_code_top_to_bottom(lines, function_name)
+    for i, frame_info in enumerate(reversed(inspect.stack(context=1))):
+        if i > 0 and (frame_info.function == function_name or frame_info.function == "__init__" and function_name in frame_info.code_context[0]):
+            return i - 1, previous  # Get the correct frame
+        previous = frame_info
+    return None
 
 
 def _extract_code(function_name):
-    frame = _extract_correct_frame(function_name)  # getting the good frame
+    index, frame_info = _extract_correct_frame(function_name)  # getting the good frame
 
-    # Console case
-    if frame[1].filename == "<stdin>":
+    if frame_info.filename == "<stdin>":  # Console case
         if os.name == 'nt':
             assert os.name != 'nt', "Console mode is not available on Windows"
-        lines = reversed([readline.get_history_item(i + 1) for i in range(readline.get_current_history_length())])
+        lines = reversed(readline.get_history_item(i + 1) for i in range(readline.get_current_history_length()))
         return browse_code_bottom_to_top(lines, function_name)
 
     # The index of the line in the stack of the inspector changes between python 3.7 and 3.8:
     # In 3.8 the index is the line where the function name appears
     # In 3.7 and lower versions, it is the line at the end of the function
     # So the algorithms are completely different
-    frame = list(reversed(inspect.stack(context=2000)))[frame[0]]  # TODO how to avoid this constant?
-    if sys.version_info[1] == 8:
-        codes = _extract_code_index_first_line(frame, function_name)
+    frame_info = list(reversed(inspect.stack(context=2000)))[index]  # TODO how to avoid this constant?
+    if sys.version_info[1] >= 8 and function_name != "Var" and function_name != "VarArray":  # why special cases for Var and VarArray?
+        lines = list(frame_info.code_context[frame_info.index:])
+        return browse_code_top_to_bottom(lines, function_name)
     else:
-        codes = _extract_code_index_last_line(frame, function_name)
-
-    return codes
+        lines = reversed(frame_info.code_context[:frame_info.index + 1])
+        return browse_code_bottom_to_top(lines, function_name)
 
 
 # returns a pair (left,right) of positions of the first occurrence of the specified separators in the line, or None

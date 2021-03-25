@@ -1,6 +1,6 @@
 import os
 
-from pycsp3.solvers.solver import SolverProcess, SolverPy4J
+from pycsp3.solvers.solver import SolverProcess #, SolverPy4J
 
 ACE_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
 ACE_CP = ACE_DIR + (os.pathsep + ACE_DIR).join(["ACE-21-03.jar"])
@@ -90,9 +90,9 @@ class AceProcess(SolverProcess):
         return args_solver
 
 
-class AcePy4J(SolverPy4J):  # TODO in progress
-    def __init__(self):
-        cp = ACE_CP + os.pathsep + ACE_DIR + "../py4j0.10.8.1.jar" + os.pathsep + ACE_DIR + " AcePy4J"
-        super().__init__(name="Ace", command="java -cp " + cp, cp=ACE_CP)
+# class AcePy4J(SolverPy4J):  # TODO in progress
+#     def __init__(self):
+#         cp = ACE_CP + os.pathsep + ACE_DIR + "../py4j0.10.8.1.jar" + os.pathsep + ACE_DIR + " AcePy4J"
+#         super().__init__(name="Ace", command="java -cp " + cp, cp=ACE_CP)
 
 # command="java -cp /usr/local/share/py4j/py4j0.10.8.1.jar:.:./pyAce/ StackEntryPoint"

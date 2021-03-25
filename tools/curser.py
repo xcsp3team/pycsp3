@@ -497,6 +497,7 @@ class ListInt(list):
             return ScalarProduct(list(t2), list(t1))
         if is_containing(flatten(other), (Variable, Node)):
             return ScalarProduct(other, self)
+        print("hhhh ", self, other)
         assert is_containing(self, (Variable, Node))
         return ScalarProduct(self, other)
 

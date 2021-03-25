@@ -1,6 +1,6 @@
 import os
 
-from pycsp3.solvers.solver import SolverProcess, SolverPy4J
+from pycsp3.solvers.solver import SolverProcess  #, SolverPy4J
 
 CHOCO_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
 CHOCO_CP = CHOCO_DIR + "choco-parsers-4.10.5-jar-with-dependencies.jar"
@@ -94,8 +94,8 @@ class ChocoProcess(SolverProcess):
         return args_solver
 
 
-class ChocoPy4J(SolverPy4J):  # TODO in progress
-    def __init__(self):
-        cp = CHOCO_CP + os.pathsep + CHOCO_DIR + "../py4j0.10.8.1.jar" + os.pathsep + CHOCO_DIR + " ChocoSolverPy4J"
-        super().__init__(name="Choco-solver", command="java -cp " + cp, cp=CHOCO_CP)
+# class ChocoPy4J(SolverPy4J):  # TODO in progress
+#     def __init__(self):
+#         cp = CHOCO_CP + os.pathsep + CHOCO_DIR + "../py4j0.10.8.1.jar" + os.pathsep + CHOCO_DIR + " ChocoSolverPy4J"
+#         super().__init__(name="Choco-solver", command="java -cp " + cp, cp=CHOCO_CP)
 

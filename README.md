@@ -115,9 +115,7 @@ We assume that Python 3 is installed (otherwise, type `port install python38` fo
 In a console, type:
 ```console
 git clone https://github.com/xcsp3team/pycsp3.git
-pip3 install numpy
 pip3 install lxml
-pip3 install py4j
 ```
 
 You may need to update the environment variable 'PYTHONPATH', by typing for example:
