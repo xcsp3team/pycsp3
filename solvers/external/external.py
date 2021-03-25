@@ -1,6 +1,6 @@
 import os
 
-from pycsp3.solvers.solver import SolverProcess, SolverPy4J
+from pycsp3.solvers.solver import SolverProcess  #, SolverPy4J
 
 
 class ExternalProcess(SolverProcess):

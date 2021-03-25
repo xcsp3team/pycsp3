@@ -4,8 +4,6 @@ from enum import Enum, unique
 from functools import reduce
 from itertools import product
 
-import numpy
-
 from pycsp3.classes import main
 from pycsp3.classes.auxiliary.ptypes import auto
 from pycsp3.classes.main.variables import Variable
@@ -392,6 +390,12 @@ class Node(Entity):
     def __str__(self):
         return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
 
+    def _product(t):
+        p = 1
+        for i in t:
+            p *= i
+        return p
+
     def possible_values(self):
         if self.type.is_predicate_operator():
             return range(0, 2)  # we use a range instead of [0,1] because it simplifies computation (see code below)
@@ -438,7 +442,7 @@ class Node(Entity):
             if self.type == TypeNode.ADD:
                 return reduce(add_range, pvs) if all_ranges else possible_range({sum(p) for p in product(*(pv for pv in pvs))})
             if self.type == TypeNode.MUL:
-                return possible_range({numpy.prod(p) for p in product(*(pv for pv in pvs))})
+                return possible_range({self._product(p) for p in product(*(pv for pv in pvs))})  # or numpy.prod ?
             # TODO: in case of all_ranges being False, possibility of improving the efficiency of the code below for MIN and MAX
             if self.type == TypeNode.MIN:
                 return range(min(pv.start for pv in pvs), min(pv.stop for pv in pvs)) if all_ranges \
