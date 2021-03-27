@@ -51,7 +51,7 @@ class _Options:
                         assert len(t[1]) > 0, "The value specified for the option -" + value + " is the empty string"
                         vars(self)[value] = t[1]
                     else:
-                        warning("Unknown option: ", arg)
+                        warning("Unknown option: " + arg)
             else:
                 self.parameters.append(arg)
 
