@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from pycsp3.solvers.abscon import AceProcess
-from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, string_color
+from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
@@ -240,7 +240,7 @@ class Tester:
                     with open(self.xml_path_py(), "r") as f:
                         for line in f.readlines():
                             print(COLOR_PY + line[0:-1])
-                #  TODO replace rm -rf by os.remove() and check all system commands
+                # TODO replace rm -rf by os.remove() and check all system commands
                 if os.name != 'nt':
                     os.system("rm -rf *.*~")  # for removing the temporary files
 
@@ -252,7 +252,7 @@ class Tester:
         xml_lzma = None
         if os.path.isfile(xml_to_compare + ".lzma"):
             if os.name == 'nt':
-                print("  Not comparing due to a problem with LZMA on windows")
+                print("  Not comparing because of LZMA on windows")
                 return None
             xml_lzma = xml_to_compare + ".lzma"
             import lzma
@@ -317,7 +317,7 @@ class Tester:
         print(WHITE)
 
     def print_information(self, model, data, variant, prs_py, prs_jv, python_exec):
-        print("\n" + string_color("|================================================================|", RED))
+        print("\n" + RED + "|================================================================|" + WHITE)
         print("  Python: " + python_exec[0] + " (" + python_exec[1] + ")")
 
         print("  Name: " + model + ("    Variant: " + variant if variant else ""))
@@ -328,6 +328,6 @@ class Tester:
             print("  parser py: " + prs_py)
         if prs_jv:
             print("  parser jv: " + prs_jv)
-        print(string_color("|================================================================|", RED))
+        print(RED + "|================================================================|" + WHITE)
 
         
