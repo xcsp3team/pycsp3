@@ -219,7 +219,10 @@ class SolverProcess:
             return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
 
         def execute(command, verbose):
-            p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
+            if os.name != 'nt':
+                p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
+            else:
+                p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             stopped = False
             handler = signal.getsignal(signal.SIGINT)
 

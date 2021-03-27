@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from pycsp3.solvers.abscon import AceProcess
-from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
+from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, string_color
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
@@ -32,7 +32,7 @@ def run(xcsp, diff=None, same=None):
     # Get versions
     for i, python_exec in enumerate(PYTHON_VERSIONS):
         cmd = [python_exec, "--version"]
-        out, _ = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        out, _ = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=(os.name == 'nt')).communicate()
         version = out.decode('utf-8').strip()
         PYTHON_VERSIONS[i] = (python_exec, version)
 
@@ -57,13 +57,13 @@ class Tester:
         if not os.path.isfile(origin):
             print("error: do not found the file " + origin)
             exit(0)
-        subprocess.call([command, origin, target], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.call([command, origin, target], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=(os.name == 'nt'))
 
     @staticmethod
     def xml_indent(file):
         cmd = ["pycsp3" + os.sep + "libs" + os.sep + "xmlindent" + os.sep + "xmlindent", '-i', '2', '-w', file]
         print(cmd)
-        out, error = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        out, error = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=(os.name == 'nt')).communicate()
         if error.decode('utf-8') != "":
             print("XmlIndent stderr : ")
 
@@ -75,7 +75,7 @@ class Tester:
             elif sys.argv[1] == "-ace":
                 command += " -solver=[ace,limit=2s]"
         print(BLUE + "Command:" + WHITE, command)
-        out, error = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+        out, error = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=(os.name == 'nt')).communicate()
         # print(title + " stdout:")
         print(out.decode('utf-8'))
         if error.decode('utf-8') != "":
@@ -86,7 +86,7 @@ class Tester:
     def diff_files(file1, file2, tmp):
         command = "diff " + file1 + " " + file2
         with open(tmp, "wb") as out:
-            subprocess.Popen(command.split(), stdout=out, stderr=None).communicate()
+            subprocess.Popen(command.split(), stdout=out, stderr=None, shell=(os.name == 'nt')).communicate()
         with open(tmp, "r") as out:
             lines = out.readlines()
         os.remove(tmp)
@@ -232,10 +232,10 @@ class Tester:
                     if os.name != 'nt':
                         self.check()
                 elif mode == 2:  # comparison with recorded XCSP files
-                    if os.name != 'nt':
+                    #if os.name != 'nt':
                         # shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simulate a comparison with JvCSP
-                        print("  Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
-                        self.check(True)
+                    print("  Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
+                    self.check(True)
                 else:
                     with open(self.xml_path_py(), "r") as f:
                         for line in f.readlines():
@@ -251,6 +251,9 @@ class Tester:
         # LZMA decompress
         xml_lzma = None
         if os.path.isfile(xml_to_compare + ".lzma"):
+            if os.name == 'nt':
+                print("  Not comparing due to a problem with LZMA on windows")
+                return None
             xml_lzma = xml_to_compare + ".lzma"
             import lzma
             with lzma.open(xml_lzma) as f:
@@ -258,6 +261,7 @@ class Tester:
                 fp = open(xml_to_compare, "wb")
                 fp.write(data)
                 fp.close()
+                
             print("Decompress " + xml_lzma + " done.")
 
         # Show differences    
@@ -313,7 +317,7 @@ class Tester:
         print(WHITE)
 
     def print_information(self, model, data, variant, prs_py, prs_jv, python_exec):
-        print("\n" + RED + "|================================================================|" + WHITE)
+        print("\n" + string_color("|================================================================|", RED))
         print("  Python: " + python_exec[0] + " (" + python_exec[1] + ")")
 
         print("  Name: " + model + ("    Variant: " + variant if variant else ""))
@@ -324,4 +328,6 @@ class Tester:
             print("  parser py: " + prs_py)
         if prs_jv:
             print("  parser jv: " + prs_jv)
-        print(RED + "|================================================================|" + WHITE)
+        print(string_color("|================================================================|", RED))
+
+        

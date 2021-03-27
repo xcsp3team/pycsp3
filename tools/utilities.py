@@ -1,3 +1,4 @@
+import os
 import sys
 import types
 from collections.abc import Iterable
@@ -256,8 +257,13 @@ def display_constraints(ctr_entities, separator=""):
                 print(separator + str(ce.constraint))
 
 
-PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, UNDERLINE = '\033[95m', '\033[94m', '\033[92m', '\033[93m', '\033[91m', '\033[0m', '\033[1m', '\033[4m'
+def is_color(s):
+    return s if os.name != 'nt' else ""
 
+PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, UNDERLINE = is_color('\033[95m'), is_color('\033[94m'), is_color('\033[92m'), is_color('\033[93m'), is_color('\033[91m'), is_color('\033[0m'), is_color('\033[1m'), is_color('\033[4m')
+
+def string_color(s, start, final=WHITE):
+    return start + s + final
 
 class Error():
     errorOccurrence = False
@@ -275,7 +281,6 @@ def error(s):
         raise TypeError(s)
     else:
         sys.exit(1)
-
 
 def error_if(test, s):
     if test:
