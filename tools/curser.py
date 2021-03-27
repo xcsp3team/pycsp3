@@ -192,7 +192,9 @@ class OpOverrider:
         ListInt.__getitem__ = list.__getitem__
         ListInt.__contains__ = list.__contains__
 
-        EMetaCtr.__eq__ = Variable.__eq__ = Node.__eq__ = object.__eq__
+        EMetaCtr.__eq__ = Node.__eq__ = object.__eq__
+        Variable.__eq__ = Variable.eq__save  # TODO are there other methods in the same situation?
+
         EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = object.__ne__
         Variable.__lt__ = Node.__lt__ = object.__lt__
         Variable.__le__ = Node.__le__ = object.__le__
@@ -217,6 +219,16 @@ class OpOverrider:
         ECtr.__xor__ = EMetaCtr.__xor__ = Variable.__xor__ = Node.__xor__ = None
 
         return OpOverrider
+
+    @staticmethod
+    def eq_protected(v1, v2):
+        if isinstance(v1, list) and isinstance(v2, list):
+            if len(v1) != len(v2):
+                return False
+            return all(OpOverrider.eq_protected(v1[i], v2[i]) for i in range(len(v1)))
+        if isinstance(v1, Variable):
+            return Variable.eq__save(v1, v2)
+        return v1 == v2
 
     @staticmethod
     def execute(arg):
@@ -248,6 +260,13 @@ class OpOverrider:
 
     def __add__(self, other):
         if isinstance(other, PartialConstraint):
+            if isinstance(other.constraint, ConstraintSum) and isinstance(self, Node) and all(s.type == TypeNode.VAR for s in self.sons):
+                if self.type == TypeNode.ADD:
+                    for s in self.sons:
+                        other = other + s.sons
+                    return other
+                if self.type == TypeNode.SUB:
+                    return other + self.sons[0].sons - self.sons[1].sons
             return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other) if isinstance(other.constraint, ConstraintSum) else other + self
         return Node.build(TypeNode.ADD, self, other)
 
@@ -256,6 +275,16 @@ class OpOverrider:
 
     def __sub__(self, other):
         if isinstance(other, PartialConstraint):
+            if isinstance(other.constraint, ConstraintSum) and isinstance(self, Node) and all(s.type == TypeNode.VAR for s in self.sons):
+                if self.type == TypeNode.ADD:
+                    for s in self.sons:
+                        other = other - s.sons
+                    other.constraint.revert_coeffs()
+                    return other
+                if self.type == TypeNode.SUB:
+                    other = other - self.sons[0].sons + self.sons[1].sons
+                    other.constraint.revert_coeffs()
+                    return other
             return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other) if isinstance(other.constraint, ConstraintSum) else -(other - self)
         return Node.build(TypeNode.SUB, self, other)
 
@@ -281,24 +310,24 @@ class OpOverrider:
         return Node.build(TypeNode.DIV, other, self)
 
     def __lt__(self, other):
-        if None in (self, other):
+        if self is None or other is None:
             return object.__lt__(self, other)
         return other.__gt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LT, self, other)
 
     def __le__(self, other):
-        if None in (self, other):
+        if self is None or other is None:
             return object.__le__(self, other)
         return other.__ge__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LE, self, other)
 
     def __ge__(self, other):
-        if None in (self, other):
+        if self is None or other is None:
             return object.__ge__(self, other)
         if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
         return other.__le__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GE, self, other)
 
     def __gt__(self, other):
-        if None in (self, other):
+        if self is None or other is None:
             return object.__gt__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
@@ -309,7 +338,7 @@ class OpOverrider:
         if res is None:
             return functions.Iff(self, other)
         self, other = res
-        if None in {self, other}:  # we must not write None in (self,other) because recursive behaviour
+        if self is None or other is None:  # we must not write None in (self,other) because recursive behaviour
             return object.__eq__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
@@ -320,7 +349,7 @@ class OpOverrider:
         if res is None:
             return functions.Xor(self, other)  # TODO: is it always appropriate?
         self, other = res
-        if None in (self, other):
+        if self is None or other is None:
             return object.__ne__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
@@ -331,7 +360,7 @@ class OpOverrider:
         if res is None:
             return functions.Or(self, other)
         self, other = res
-        if None in (self, other):
+        if self is None or other is None:
             return object.__or__(self, other)
         return Node.disjunction(self, other)
 
@@ -340,7 +369,7 @@ class OpOverrider:
         if res is None:
             return functions.And(self, other)
         self, other = res
-        if None in (self, other):
+        if self is None or other is None:
             return object.__and__(self, other)
         return Node.conjunction(self, other)
 
@@ -357,7 +386,7 @@ class OpOverrider:
         if res is None:
             return functions.Xor(self, other)
         self, other = res
-        if None in (self, other):
+        if self is None or other is None:
             return object.__xor__(self, other)
         return Node.build(TypeNode.XOR, self, other)
 
@@ -468,6 +497,7 @@ class ListInt(list):
             return ScalarProduct(list(t2), list(t1))
         if is_containing(flatten(other), (Variable, Node)):
             return ScalarProduct(other, self)
+        print("hhhh ", self, other)
         assert is_containing(self, (Variable, Node))
         return ScalarProduct(self, other)
 
