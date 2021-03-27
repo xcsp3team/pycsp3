@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from pycsp3.solvers.abscon import AceProcess
-from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
+from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, string_color
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
@@ -317,7 +317,7 @@ class Tester:
         print(WHITE)
 
     def print_information(self, model, data, variant, prs_py, prs_jv, python_exec):
-        print("\n" + RED + "|================================================================|" + WHITE)
+        print("\n" + string_color("|================================================================|", RED))
         print("  Python: " + python_exec[0] + " (" + python_exec[1] + ")")
 
         print("  Name: " + model + ("    Variant: " + variant if variant else ""))
@@ -328,4 +328,6 @@ class Tester:
             print("  parser py: " + prs_py)
         if prs_jv:
             print("  parser jv: " + prs_jv)
-        print(RED + "|================================================================|" + WHITE)
+        print(string_color("|================================================================|", RED))
+
+        
