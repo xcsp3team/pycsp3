@@ -34,7 +34,7 @@ while replacing YY and MM with the current values that are present in the name o
 Note that, in the medium/long term, we also plan to develop an interface that will allow users to pilot solvers with Python.
 
 
-# Installation from PyPi
+# 1) Installation from PyPi
 
 This is the easiest way of installing PySCP3.
 
@@ -108,23 +108,7 @@ You can check the java command by typing in your console:
 java --version
 ```
 
-# Installation by cloning from GitHub
-
-Here is an illustration for MAC OS.
-We assume that Python 3 is installed (otherwise, type `port install python38` for example), and consequently 'pip3' is also installed.
-In a console, type:
-```console
-git clone https://github.com/xcsp3team/pycsp3.git
-pip3 install lxml
-```
-
-You may need to update the environment variable 'PYTHONPATH', by typing for example:
-```console
-export PYTHONPATH=$PYTHONPATH:.
-```
-
-
-## Updating PyCSP3
+## Updating the Version of PyCSP3 (for PyPi)
 
 For updating your version of PyCSP3, simply execute:
 
@@ -140,8 +124,7 @@ For Windows:
 python -m pip install --upgrade pycsp3
 ```
 
-
-## Copying a pool of models
+## Copying a Pool of Models
 
 PyCSP3 is accompanied by more than 100 models.
 To get them in a subdirectory `problems` of your current directory, execute:
@@ -157,6 +140,27 @@ And you can test the compilation of one of the models, for example:
 python3 problems/csp/single/Zebra.py (For Linux/Mac)
 python problems\csp\single\Zebra.py (For Windows)
 ```
+
+# 2) Installation (alternative) by Cloning from GitHub
+
+An alternative to Pypi is to clone the code from GitHub.
+Here is an illustration for MAC OS.
+We assume that Python 3 is installed (otherwise, type `port install python38` for example), and consequently 'pip3' is also installed.
+In a console, type:
+```console
+git clone https://github.com/xcsp3team/pycsp3.git
+pip3 install lxml
+```
+
+You may need to update the environment variable 'PYTHONPATH', by typing for example:
+```console
+export PYTHONPATH=$PYTHONPATH:.
+```
+
+# 3) Compilation and Examples
+
+We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
+But first, we give some general information about compilation.
 
 ## Compiling PyCSP3 Models
 
@@ -199,11 +203,6 @@ Information about how piloting these embedded solvers can be found in [this docu
 By default, a file containing the XCSP3 instance is generated, unless you use the option:
 
 * ```-display```: displays the XCSP3 instance in the system standard output, instead of generating an XCSP3 file 
-
-# Some Examples
-
-We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
-
 
 ## Example 1: in console mode
 
