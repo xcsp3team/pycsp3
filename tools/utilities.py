@@ -178,7 +178,8 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
             "*" if v == ANY else v.str_tuple()
             for v in t) + ")"
 
-    if not parallel or len(table) < 100000:
+    LIMIT = 100000  # hard coding
+    if not parallel or len(table) < LIMIT:
         s = []
         previous = ""
         for t in table:  # table is assumed to be sorted (adding an assert?) ; only distinct tuples are kept
@@ -189,7 +190,7 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
                 previous = t
         return "".join(s)
     else:
-        print("Creation of a table of size: " + str(len(table)) + (" in parallel" if parallel and len(table) >= 100000 else ""))
+        print("Creation of a table of size: " + str(len(table)) + (" in parallel" if parallel and len(table) >= LIMIT else ""))
         n_threads = cpu_count()
         size = len(table) // n_threads
         pool = Pool(n_threads)
@@ -257,15 +258,19 @@ def display_constraints(ctr_entities, separator=""):
                 print(separator + str(ce.constraint))
 
 
-def is_color(s):
+def _proxy_color(s):
     return s if os.name != 'nt' else ""
 
-PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, UNDERLINE = is_color('\033[95m'), is_color('\033[94m'), is_color('\033[92m'), is_color('\033[93m'), is_color('\033[91m'), is_color('\033[0m'), is_color('\033[1m'), is_color('\033[4m')
+
+PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, UNDERLINE = _proxy_color('\033[95m'), _proxy_color('\033[94m'), _proxy_color('\033[92m'), _proxy_color(
+    '\033[93m'), _proxy_color('\033[91m'), _proxy_color('\033[0m'), _proxy_color('\033[1m'), _proxy_color('\033[4m')
+
 
 def string_color(s, start, final=WHITE):
     return start + s + final
 
-class Error():
+
+class Error:
     errorOccurrence = False
 
 
@@ -281,6 +286,7 @@ def error(s):
         raise TypeError(s)
     else:
         sys.exit(1)
+
 
 def error_if(test, s):
     if test:

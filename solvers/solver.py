@@ -262,7 +262,7 @@ class SolverProcess:
 
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
-        solver_args += dict_options["args"] if "args" in dict_options else ""
+        solver_args += " " + dict_options["args"] if "args" in dict_options else ""
         verbose = options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + solver_args
         print("\n  * Solving by " + self.name + " in progress ... ")
@@ -279,7 +279,6 @@ class SolverProcess:
             print("\n   This is due to a missing implementation")
         print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[ace,v] to see directly the output of the solver.\n")
         return extract_result_and_solution(out_err) if out_err else (None, None)
-
 
 # class SolverPy4J(SolverProcess):  # TODO in progress
 #     gateways = []
