@@ -52,7 +52,7 @@ class Compilation:
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver")
     options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "restrictTablesWrtDomains",
-                      "safe", "solve", "dontcompactValues", "usemeta")
+                      "safe", "solve", "dontcompactValues", "usemeta", "debug")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -67,7 +67,7 @@ def _load_model():
         specification = util.spec_from_file_location("", name)
         model = util.module_from_spec(specification)
         return model, model_string
-    except:
+    except Exception:
         usage("It was not possible to read the file: " + sys.argv[0])
         raise
 
@@ -143,7 +143,7 @@ def _load_dataparser(parser_file, data_file):
         if string_data is None:
             string_data = Compilation.string_data if Compilation.string_data else ""  # in case data are recorded through the dataparser (after asking the user)
         return compilation_data, string_data
-    except:
+    except Exception:
         usage("It was not possible to correctly read the file: " + parser_file)
         raise
 

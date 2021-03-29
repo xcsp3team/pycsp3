@@ -88,7 +88,7 @@ def _extract_code(function_name):
     if frame_info.filename == "<stdin>":  # Console case
         if os.name == 'nt':
             assert os.name != 'nt', "Console mode is not available on Windows"
-        lines = reversed(readline.get_history_item(i + 1) for i in range(readline.get_current_history_length()))
+        lines = reversed(list(readline.get_history_item(i + 1) for i in range(readline.get_current_history_length())))
         return browse_code_bottom_to_top(lines, function_name)
 
     # The index of the line in the stack of the inspector changes between python 3.7 and 3.8:
