@@ -312,7 +312,7 @@ def Extension(*, scope, table, positive=True):
         assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
     else:  # if all(isinstance(x, VariableInteger) for x in scope):
         for i, t in enumerate(table):
-            assert isinstance(t, tuple)
+            assert isinstance(t, tuple), str(t)
             assert len(t) == len(scope), ("The length of each tuple must be the same as the arity."
                                           + "Maybe a problem with slicing: you must for example write x#[i:i+3,0] instead of x[i:i+3][0]")
     return ECtr(ConstraintExtension(scope, table, positive, options.keepsmartconditions, options.restricttableswrtdomains))
