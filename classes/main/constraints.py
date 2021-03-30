@@ -706,6 +706,16 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __rmul__(self, other):
         return PartialConstraint.__mul__(self, other)
 
+    def __floordiv__(self, other):
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+        return Node.build(TypeNode.DIV, auxiliary().replace_partial_constraint(self), other)
+
+    def __mod__(self, other):
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+        return Node.build(TypeNode.MOD, auxiliary().replace_partial_constraint(self), other)
+
     def __getitem__(self, i):
         assert isinstance(self.constraint, ConstraintElement)
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
@@ -789,6 +799,18 @@ class ScalarProduct:
     def __sub__(self, other):
         return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
+    def __floordiv__(self, other):
+        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+        return Node.build(TypeNode.DIV, auxiliary().replace_partial_constraint(pc), other)
+
+    def __mod__(self, other):
+        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+        return Node.build(TypeNode.MOD, auxiliary().replace_partial_constraint(pc), other)
+
 
 class _Auxiliary:
     def __init__(self):
@@ -818,7 +840,6 @@ class _Auxiliary:
                 # if functions.protect().execute(pc.constraint == c):
                 return x
         aux = self.__replace(pc, Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
-        # print("uuuu ", pc.constraint, aux)
         self.cache.append((pc.constraint, aux))
         return aux
 
