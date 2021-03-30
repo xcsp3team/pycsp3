@@ -19,7 +19,7 @@ unsafe_cache = False  # see for example Pic since the table is released as it oc
 
 
 def cursing():
-    def _dict_add(self, other):  # for being able to merge dictionaries
+    def _dict_add(self, other):  # for being able to merge dictionaries (to be removed when python 3.9 will be adopted)
         if isinstance(other, dict):
             d = self.copy()
             d.update(other)
@@ -415,7 +415,16 @@ class OpOverrider:
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         elif isinstance(indexes, Node):
-            indexes = auxiliary().replace_node(indexes)
+            res = indexes.var_val_if_binary_type(TypeNode.ADD)
+            if res is not None and res[1] == 0:  # in case we had x+0 or 0+x, we replace by x
+                indexes = res[0]
+            else:
+                res = indexes.var_val_if_binary_type(TypeNode.MUL)
+                if res is not None and res[1] == 1:  # in case we had x*1 or 1*x, we replace by x
+                    indexes = res[0]
+                else:
+                    # we force the domain of the aux variable with the parameter indexing
+                    indexes = auxiliary().replace_node(indexes, indexing=range(len(self)))
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:

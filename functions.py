@@ -558,16 +558,6 @@ def Count(term, *others, value=None, values=None, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
 
-# def AtLeastOne(term, *others, value=None, values=None):
-#     return Count(term, others, value=value, values=values) >= 1
-#
-# def AtMostOne(term, *others, value=None, values=None):
-#     return Count(term, others, value=value, values=values) <= 1
-#
-# def ExactlyOne(term, *others, value=None, values=None):
-#     return Count(term, others, value=value, values=values) == 1
-
-
 def NValues(term, *others, excepting=None, condition=None):
     terms = flatten(term, others)
     checkType(terms, [Variable])
@@ -591,10 +581,12 @@ def Cardinality(term, *others, occurrences, closed=False):
     checkType(closed, (bool, type(None)))
     for i, occ in enumerate(occurs):
         if isinstance(occ, range):
-            occurs[i] = str(min(occ)) + ".." + str(max(occ))
+            occurs[i] = min(occ) if len(occ) == 1 else str(min(occ)) + ".." + str(max(occ))
         if isinstance(occ, list):
             flat = flatten(occ)
-            if all([isinstance(e, int) for e in flat]) and flat == list(range(min(flat), max(flat) + 1)):
+            if len(flat) == 1:
+                flat = flat[0]
+            elif all(isinstance(e, int) for e in flat) and flat == list(range(min(flat), max(flat) + 1)):
                 flat = str(min(flat)) + ".." + str(max(flat))
             occurs[i] = flat
     return ECtr(ConstraintCardinality(terms, values, occurs, closed))

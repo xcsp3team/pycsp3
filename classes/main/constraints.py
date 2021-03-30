@@ -818,6 +818,7 @@ class _Auxiliary:
                 # if functions.protect().execute(pc.constraint == c):
                 return x
         aux = self.__replace(pc, Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
+        # print("uuuu ", pc.constraint, aux)
         self.cache.append((pc.constraint, aux))
         return aux
 
@@ -830,10 +831,13 @@ class _Auxiliary:
                 terms[i] = self.replace_node(t)
         return terms
 
-    def replace_node(self, node):
+    def replace_node(self, node, indexing=None):
         assert isinstance(node, Node)
-        values = node.possible_values()
-        values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
+        if indexing:
+            values = indexing  # for the moment, because this is a range for an Element constraint
+        else:
+            values = node.possible_values()
+            values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
         return self.__replace(node, Domain(values))
 
     def collected(self):
