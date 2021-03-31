@@ -105,12 +105,11 @@ def process_options(solving):
 
 
 class Logger:
-    def __init__(self, extend_filename=None):
-        uuid_mac = str(hex(uuid.getnode()))
-        pid = str(os.getpid())
-        extend_filename = "_" + str(extend_filename) if extend_filename is not None else ""
-        self.log_file = "solver_" + uuid_mac + "_" + pid + extend_filename + ".log"
-        self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + self.log_file
+    def __init__(self, extend_filename=""):
+        mac, pid = hex(uuid.getnode()), str(os.getpid())
+        filename = "solver_" + mac + "_" + pid + "_" + (str(extend_filename) if extend_filename else "") + ".log"
+        self.log_file = os.getcwd() + os.sep + filename
+        # self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + filename  # old code
         print("  * Log file of the solver:", self.log_file)
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
