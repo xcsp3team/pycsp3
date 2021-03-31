@@ -46,6 +46,11 @@ def cursing():
     def _tuple_contains(self, other):
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, Node):
+            other = auxiliary().replace_node(other)
+        if isinstance(other, PartialConstraint):
+            queue_in.append((list(self), other))
+            return True
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
             queue_in.append((list(self), other))
             return True
@@ -57,6 +62,8 @@ def cursing():
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, Node):
+            other = auxiliary().replace_node(other)
         if isinstance(other, types.GeneratorType):
             other = list(other)
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
@@ -74,9 +81,13 @@ def cursing():
     def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, Node):
+            other = auxiliary().replace_node(other)
         if isinstance(other, types.GeneratorType):
             other = list(other)
         tself = unique_type_in(self)
+        if isinstance(other, PartialConstraint):
+            print("hhhhset", self, other, tself)
         # if isinstance(other, Variable) and len(self) > 0 and is_containing(self, int):  # unary table constraint
         if isinstance(other, Variable) and tself in {int, str}:  # unary table constraint
             queue_in.append((list(self), other))
