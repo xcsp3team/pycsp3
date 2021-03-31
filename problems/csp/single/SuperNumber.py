@@ -11,8 +11,9 @@ We are looking for the 10-digit number which satisfies the following conditions:
 Using divisibility rules (https://en.wikipedia.org/wiki/Divisibility_rule) allows us
 to use less expensive operations (constraints), but a less compact model
 
-Execution:
+Examples of Execution:
   python3 SuperNumber.py
+  python3 SuperNumber.py -variant=rules
 """
 
 from pycsp3 import *
