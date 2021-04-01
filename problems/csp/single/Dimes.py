@@ -18,7 +18,7 @@ x = Var(range(26))  # 26 is a safe upper bound
 s = VarArray(size=5, dom={3, 4})
 
 satisfy(
-    [1, 2, 3, 5, 10] * s == x * 10
+    s * [1, 2, 3, 5, 10] == x * 10
 )
 
 # Note that
