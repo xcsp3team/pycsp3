@@ -86,8 +86,6 @@ def cursing():
         if isinstance(other, types.GeneratorType):
             other = list(other)
         tself = unique_type_in(self)
-        if isinstance(other, PartialConstraint):
-            print("hhhhset", self, other, tself)
         # if isinstance(other, Variable) and len(self) > 0 and is_containing(self, int):  # unary table constraint
         if isinstance(other, Variable) and tself in {int, str}:  # unary table constraint
             queue_in.append((list(self), other))
