@@ -11,7 +11,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
 from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, transitions_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, \
-    to_ordinary_table, warning
+    to_ordinary_table, warning, is_windows
 
 
 class Diffs:
@@ -245,7 +245,7 @@ class ConstraintExtension(Constraint):
                 ConstraintExtension.cache[h] = integers_to_string(table) if isinstance(table[0], int) else " ".join(v for v in sorted(table))
             return ConstraintExtension.cache[h]
 
-        possible_parallelism = not options.safe and os.name != 'nt'
+        possible_parallelism = not options.safe and not is_windows()
         if h in ConstraintExtension.cache_smart:
             smart = ConstraintExtension.cache_smart[h]
         else:

@@ -258,8 +258,12 @@ def display_constraints(ctr_entities, separator=""):
                 print(separator + str(ce.constraint))
 
 
+def is_windows():
+    return os.name == 'nt'
+
+
 def _proxy_color(s):
-    return s if os.name != 'nt' else ""
+    return "" if is_windows() else s
 
 
 PURPLE, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, UNDERLINE = _proxy_color('\033[95m'), _proxy_color('\033[94m'), _proxy_color('\033[92m'), _proxy_color(

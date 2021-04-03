@@ -86,3 +86,6 @@ minimize(
     # minimizing summed up travelled distance
     Sum(t)
 )
+
+# Note that:
+# we could avoid building systematically similar automata -and tables)

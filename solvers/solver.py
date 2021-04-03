@@ -12,7 +12,7 @@ from lxml import etree
 from pycsp3.classes.entities import VarEntities, EVar
 from pycsp3.classes.main.variables import Variable
 from pycsp3.dashboard import options
-from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE
+from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows
 
 UNKNOWN, SAT, UNSAT, OPTIMUM = "UNKNOWN", "SAT", "UNSAT", "OPTIMUM"
 
@@ -218,7 +218,7 @@ class SolverProcess:
             return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
 
         def execute(command, verbose):
-            if os.name != 'nt':
+            if not is_windows():
                 p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
             else:
                 p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)

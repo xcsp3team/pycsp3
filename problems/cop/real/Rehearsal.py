@@ -60,4 +60,4 @@ elif variant("bis"):
 # a) the first model variant is very compact. The second model variant explicitly introduces some auxiliary variables
 #    which, to som respect, allows a better control of the generated instances. Here, however, the outputs  are not
 #    so different for this problem.
-# b) we cannot currently write: (a[p] <= i <= l[p]) (this is technically not obvious to accept that)
+# b) we cannot currently write: (a[p] <= i <= l[p]) (this is technically not obvious to handle that)
