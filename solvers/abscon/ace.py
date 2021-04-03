@@ -1,6 +1,6 @@
 import os
 
-from pycsp3.solvers.solver import SolverProcess #, SolverPy4J
+from pycsp3.solvers.solver import SolverProcess  # , SolverPy4J
 
 ACE_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
 ACE_CP = ACE_DIR + (os.pathsep + ACE_DIR).join(["ACE-21-03.jar"])
@@ -87,8 +87,9 @@ class AceProcess(SolverProcess):
                 print("Saving trace into a file not implemented in Ace")
             else:
                 args_solver += " -trace"
+        if os.name == 'nt':
+            args_solver += " -npc"  # no rpint colors
         return args_solver
-
 
 # class AcePy4J(SolverPy4J):  # TODO in progress
 #     def __init__(self):

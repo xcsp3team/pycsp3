@@ -3,9 +3,9 @@ import os
 import sys
 
 from pycsp3.dashboard import options
-from pycsp3.tools.utilities import flatten
+from pycsp3.tools.utilities import flatten, is_windows
 
-if not os.name == 'nt':
+if not is_windows():
     import readline
 
 fileToTrace = [arg for arg in sys.argv if arg.endswith(".py") and "compiler.py" not in arg] + ["<stdin>"]
@@ -13,7 +13,8 @@ fileToTrace = [arg for arg in sys.argv if arg.endswith(".py") and "compiler.py" 
 
 def _global_value_of(variable):
     stack = list(reversed(inspect.stack(context=1)))
-    frames = [frame for frame in stack if frame.filename in fileToTrace]
+    frames = [frame for frame in stack for trace in fileToTrace if trace in frame.filename]
+    # frames = [frame for frame in stack if frame.filename in fileToTrace]
     if len(frames) == 0:
         return None
     globs = frames[0].frame.f_globals
@@ -86,8 +87,8 @@ def _extract_code(function_name):
     index, frame_info = _extract_correct_frame(function_name)  # getting the good frame
 
     if frame_info.filename == "<stdin>":  # Console case
-        if os.name == 'nt':
-            assert os.name != 'nt', "Console mode is not available on Windows"
+        if is_windows():
+            assert False, "Console mode is not available on Windows"
         lines = reversed(list(readline.get_history_item(i + 1) for i in range(readline.get_current_history_length())))
         return browse_code_bottom_to_top(lines, function_name)
 

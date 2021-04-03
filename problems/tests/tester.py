@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from pycsp3.solvers.abscon import AceProcess
-from pycsp3.tools.utilities import BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
+from pycsp3.tools.utilities import is_windows, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
@@ -32,7 +32,7 @@ def run(xcsp, diff=None, same=None):
     # Get versions
     for i, python_exec in enumerate(PYTHON_VERSIONS):
         cmd = [python_exec, "--version"]
-        out, _ = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=(os.name == 'nt')).communicate()
+        out, _ = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=is_windows()).communicate()
         version = out.decode('utf-8').strip()
         PYTHON_VERSIONS[i] = (python_exec, version)
 
@@ -50,20 +50,20 @@ class Tester:
     def system_command(command, origin, target):
         assert command in {"mv", "cp"}
         print(os.getcwd())
-        if os.name == 'nt':
+        if is_windows():
             command = "move" if command == 'mv' else command
             command = "copy" if command == 'cp' else command
         print(command, origin, target)
         if not os.path.isfile(origin):
             print("error: do not found the file " + origin)
             exit(0)
-        subprocess.call([command, origin, target], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=(os.name == 'nt'))
+        subprocess.call([command, origin, target], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=is_windows())
 
     @staticmethod
     def xml_indent(file):
         cmd = ["pycsp3" + os.sep + "libs" + os.sep + "xmlindent" + os.sep + "xmlindent", '-i', '2', '-w', file]
         print(cmd)
-        out, error = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=(os.name == 'nt')).communicate()
+        out, error = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=is_windows()).communicate()
         if error.decode('utf-8') != "":
             print("XmlIndent stderr : ")
 
@@ -75,7 +75,7 @@ class Tester:
             elif sys.argv[1] == "-ace":
                 command += " -solver=[ace,limit=2s]"
         print(BLUE + "Command:" + WHITE, command)
-        out, error = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=(os.name == 'nt')).communicate()
+        out, error = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=is_windows()).communicate()
         # print(title + " stdout:")
         print(out.decode('utf-8'))
         if error.decode('utf-8') != "":
@@ -86,7 +86,7 @@ class Tester:
     def diff_files(file1, file2, tmp):
         command = "diff " + file1 + " " + file2
         with open(tmp, "wb") as out:
-            subprocess.Popen(command.split(), stdout=out, stderr=None, shell=(os.name == 'nt')).communicate()
+            subprocess.Popen(command.split(), stdout=out, stderr=None, shell=is_windows()).communicate()
         with open(tmp, "r") as out:
             lines = out.readlines()
         os.remove(tmp)
@@ -226,14 +226,14 @@ class Tester:
                 shutil.move(self.name_xml, self.xml_path_py())
                 if mode == 1:  # comparison with jv
                     self.execute_compiler("JvCSP", self._command_jv(model, data, variant, prs_jv, special, dataSpecial))
-                    if os.name != 'nt':
+                    if not is_windows():
                         self.xml_indent(self.name_xml)
                     shutil.move(self.name_xml, self.xml_path_jv())
-                    if os.name != 'nt':
+                    if not is_windows():
                         self.check()
                 elif mode == 2:  # comparison with recorded XCSP files
-                    #if os.name != 'nt':
-                        # shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simulate a comparison with JvCSP
+                    # if not is_windows():
+                    # shutil.copy(self.dir_xcsp + self.name_xml, self.xml_path_jv())  # we copy the xcsp file in the java dir to simulate a comparison with JvCSP
                     print("  Comparing PyCSP outcome with the XCSP3 file stored in " + self.dir_xcsp)
                     self.check(True)
                 else:
@@ -241,7 +241,7 @@ class Tester:
                         for line in f.readlines():
                             print(COLOR_PY + line[0:-1])
                 # TODO replace rm -rf by os.remove() and check all system commands
-                if os.name != 'nt':
+                if not is_windows():
                     os.system("rm -rf *.*~")  # for removing the temporary files
 
     def check(self, xcsp=False):
@@ -251,7 +251,7 @@ class Tester:
         # LZMA decompress
         xml_lzma = None
         if os.path.isfile(xml_to_compare + ".lzma"):
-            if os.name == 'nt':
+            if is_windows():
                 print("  Not comparing because of LZMA on windows")
                 return None
             xml_lzma = xml_to_compare + ".lzma"
@@ -261,7 +261,7 @@ class Tester:
                 fp = open(xml_to_compare, "wb")
                 fp.write(data)
                 fp.close()
-                
+
             print("Decompress " + xml_lzma + " done.")
 
         # Show differences    
@@ -329,5 +329,3 @@ class Tester:
         if prs_jv:
             print("  parser jv: " + prs_jv)
         print(RED + "|================================================================|" + WHITE)
-
-        
