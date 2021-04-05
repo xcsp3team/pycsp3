@@ -1,14 +1,24 @@
+import types
+
 from pycsp3.tools.curser import queue_in
 
 
 class Diagram:
+    _cnt = 0
+    _cache = {}
+
     def __init__(self, transitions):
         self.transitions = Diagram._add_transitions(transitions)
         self.states = sorted({q for (q, _, _) in self.transitions} | {q for (_, _, q) in self.transitions})
+        self.num = Diagram._cnt
+        Diagram._cnt += 1
 
     def __contains__(self, other):
         queue_in.append((self, other))
         return True
+
+    def __str__(self):
+        return "transitions=" + str(self.transitions)
 
     MSG_STATE = "states must given under the form of strings"
 
@@ -30,6 +40,11 @@ class Diagram:
                 t.append((state1, value, state2))
         return t
 
+    def transitions_to_string(self):
+        if self.num not in Diagram._cache:
+            Diagram._cache[self.num] = "".join(["(" + q1 + "," + str(v) + "," + q2 + ")" for (q1, v, q2) in self.transitions])
+        return Diagram._cache[self.num]
+
 
 class Automaton(Diagram):
     @staticmethod
@@ -45,5 +60,7 @@ class Automaton(Diagram):
 
 class MDD(Diagram):
     def __init__(self, transitions):
+        if isinstance(transitions, types.GeneratorType):
+            transitions = [t for t in transitions]
         assert isinstance(transitions, list)  # currently, a list is wanted for a MDD (and not a set); to be changed?
         super().__init__(transitions)

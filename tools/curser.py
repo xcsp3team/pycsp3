@@ -9,7 +9,7 @@ from pycsp3.classes.main.constraints import (
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, ANY, warning, error_if
+from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, ANY, warning, error_if, error
 
 from pycsp3 import functions
 
@@ -165,7 +165,7 @@ class OpOverrider:
         ListVar.__ne__ = OpOverrider.__ne__lv
         ListVar.__getitem__ = OpOverrider.__getitem__lv
         ListInt.__getitem__ = OpOverrider.__getitem__li
-        ListInt.__contains__ = OpOverrider.__contains__li
+        # ListInt.__contains__ = OpOverrider.__contains__li
 
         EMetaCtr.__eq__ = Variable.__eq__ = Node.__eq__ = OpOverrider.__eq__
         EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = OpOverrider.__ne__
@@ -199,7 +199,7 @@ class OpOverrider:
         ListVar.__ne__ = list.__ne__
         ListVar.__getitem__ = list.__getitem__
         ListInt.__getitem__ = list.__getitem__
-        ListInt.__contains__ = list.__contains__
+        # ListInt.__contains__ = list.__contains__
 
         EMetaCtr.__eq__ = Node.__eq__ = object.__eq__
         Variable.__eq__ = Variable.eq__save  # TODO are there other methods in the same situation?
@@ -493,11 +493,11 @@ class OpOverrider:
         except TypeError:
             return result
 
-    def __contains__li(self, other):
-        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
-            queue_in.append((self, other))
-            return True
-        return list.__contains__(self, other)
+    # def __contains__li(self, other):
+    #     if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
+    #         queue_in.append((self, other))
+    #         return True
+    #     return list.__contains__(self, other)
 
 
 class ListInt(list):
@@ -524,6 +524,17 @@ class ListInt(list):
 
     def __rmul__(self, other):
         return ListInt.__mul__(other, self)
+
+    def __contains__(self, other):
+        if is_containing(other, Variable) and len(self) > 0:
+            if isinstance(self[0], (tuple, int)):
+                queue_in.append((self, other))
+                return True
+            if isinstance(other, list) and isinstance(self[0], list):  # TODO more precise test? and/or make a warning (this should be tuples instead of lists)
+                queue_in.append(([tuple(t) for t in self], other))
+                return True
+                # error("It seems that you build tables whose elements are lists instead of tuples: " + str(other) + " in " + str(self))
+        return list.__contains__(self, other)
 
 
 def columns(m):

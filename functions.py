@@ -396,7 +396,7 @@ def Mdd(*, scope, mdd):
     scope = flatten(scope)
     checkType(scope, [Variable])
     checkType(mdd, MDD)
-    return ECtr(ConstraintMdd(scope, mdd.transitions))
+    return ECtr(ConstraintMdd(scope, mdd))
 
 
 ''' Comparison-based Constraints '''
