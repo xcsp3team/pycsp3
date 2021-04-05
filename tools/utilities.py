@@ -164,10 +164,6 @@ def matrix_to_string(m):
     # return "\n" + "\n".join(["\t(" + ",".join([str(v) for v in t]) + ")" for t in m]) + "\n"
 
 
-def transitions_to_string(ts):
-    return "".join(["(" + q1 + "," + str(v) + "," + q2 + ")" for (q1, v, q2) in ts])
-
-
 def table_to_string(table, restricting_domains=None, *, parallel=False):
     def _tuple_to_string(t):
         return "(" + ",".join(

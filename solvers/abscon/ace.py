@@ -88,7 +88,7 @@ class AceProcess(SolverProcess):
             else:
                 args_solver += " -trace"
         if os.name == 'nt':
-            args_solver += " -npc"  # no rpint colors
+            args_solver += " -npc"  # no print colors
         return args_solver
 
 # class AcePy4J(SolverPy4J):  # TODO in progress

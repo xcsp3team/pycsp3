@@ -99,6 +99,8 @@ def _load_data():
     if data.endswith(".json"):  # a single json file
         assert os.path.exists(data), "The file " + data + " does not exist (in the specified directory)."
         with open(data) as f:
+            #ss = f.read()  #.decode("utf-8")
+            #print("gggg ",ss)
             return json.loads(f.read(), object_pairs_hook=OrderedDict), "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
     compilation_data = OrderedDict()  # the object used for recording the data, available in the model
     # if '{' in data and '}' in data:
