@@ -117,6 +117,8 @@ class Constraint:
         records = []
         for i in range(len(args1)):
             if str(args1[i].content) != str(args2[i].content):
+                if args1[i].name == TypeCtrArg.MATRIX:  # TODO making a more specific test?
+                    return False
                 if args1[i].name == TypeCtrArg.CONDITION and args1[i].content.operator != args2[i].content.operator:
                     return False  # the operators are different in the two conditions
                 b = hasattr(args1[i].content, '__len__') and hasattr(args2[i].content, '__len__') and len(args1[i].content) != len(args2[i].content)
@@ -519,7 +521,7 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
 
-class ConstraintElementMatrix(Constraint):
+class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
         self.matrix = lst

@@ -8,7 +8,6 @@ python3 pycsp3/problems/g4_world/TravelingTournamentWithPredefinedVenues.py -dat
 """
 
 from pycsp3 import *
-print("data",data)
 
 nTeams, venues = data
 nRounds = nTeams - 1
@@ -16,20 +15,17 @@ assert nTeams % 2 == 0, "an even number of teams is expected"
 nConsecutiveGames = 2 if variant("a2") else 3  # used in one comment
 
 
-def circ_distance(i, j):
-    return min(abs(i - j), nTeams - abs(i - j))
+def table(i, at_end=False):  # when at_end is True, this is for the first or last game of the ith team
+    def cd(v1, v2):  # circular distance
+        return min(abs(v1 - v2), nTeams - abs(v1 - v2))
 
-
-def table_end(i):
-    # when playing at home (whatever the opponent, travel distance is 0)
-    return {(1, ANY, 0)} | {(0, j, circ_distance(i, j)) for j in range(nTeams) if j != i}
-
-
-def table_intern(i):
-    return ({(1, 1, ANY, ANY, 0)} |
-            {(0, 1, j, ANY, circ_distance(j, i)) for j in range(nTeams) if j != i} |
-            {(1, 0, ANY, j, circ_distance(i, j)) for j in range(nTeams) if j != i} |
-            {(0, 0, j1, j2, circ_distance(j1, j2)) for j1 in range(nTeams) for j2 in range(nTeams) if different_values(i, j1, j2)})
+    if at_end:  # note that when playing at home (whatever the opponent), the travel distance is 0
+        return {(1, ANY, 0)} | {(0, j, cd(i, j)) for j in range(nTeams) if j != i}
+    else:
+        return ({(1, 1, ANY, ANY, 0)} |
+                {(0, 1, j, ANY, cd(j, i)) for j in range(nTeams) if j != i} |
+                {(1, 0, ANY, j, cd(i, j)) for j in range(nTeams) if j != i} |
+                {(0, 0, j1, j2, cd(j1, j2)) for j1 in range(nTeams) for j2 in range(nTeams) if different_values(i, j1, j2)})
 
 
 def automaton():
@@ -65,13 +61,13 @@ satisfy(
     [h[i] in automaton() for i in range(nTeams)],
 
     # handling travelling for the first game
-    [(h[i][0], o[i][0], t[i][0]) in table_end(i) for i in range(nTeams)],
+    [(h[i][0], o[i][0], t[i][0]) in table(i, at_end=True) for i in range(nTeams)],
 
     # handling travelling for the last game
-    [(h[i][- 1], o[i][- 1], t[i][-1]) in table_end(i) for i in range(nTeams)],
+    [(h[i][- 1], o[i][- 1], t[i][-1]) in table(i, at_end=True) for i in range(nTeams)],
 
     # handling travelling for two successive games
-    [(h[i][k], h[i][k + 1], o[i][k], o[i][k + 1], t[i][k + 1]) in table_intern(i) for i in range(nTeams) for k in range(nRounds - 1)],
+    [(h[i][k], h[i][k + 1], o[i][k], o[i][k + 1], t[i][k + 1]) in table(i) for i in range(nTeams) for k in range(nRounds - 1)],
 
     # at each round, opponents are all different  tag(redundant-constraints)
     [AllDifferent(col) for col in columns(o)],
