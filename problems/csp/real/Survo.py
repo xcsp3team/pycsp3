@@ -8,7 +8,7 @@ Often some of the integers are given readily in the table in order to guarantee
 uniqueness of the solution and/or for making the task easier.
 
 Example of Execution:
-  python3 Survo.py -data=Survo1.json
+  python3 Survo.py -data=Survo-01.json
 """
 
 from pycsp3 import *
