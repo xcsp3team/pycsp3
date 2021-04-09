@@ -150,7 +150,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         if not bool_value and len(right_operand) == 0:
             return None
         # TODO what to do if the table is empty and bool_value is true? an error message ?
-        ctr = Extension(scope=list(left_operand), table=right_operand, positive=bool_value)
+        ctr = Extension(scope=flatten(left_operand), table=right_operand, positive=bool_value)  # TODO ok for using flatten? (before it was list())
     return ctr
 
 
