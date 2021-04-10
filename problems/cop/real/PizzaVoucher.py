@@ -41,5 +41,6 @@ minimize(
 
 annotate(decision=v)
 
-
-#  [(f[i] == 0) == (p[i] != vouchers[i].payPart) for i in range(nVouchers)],  is this clearer?
+""" Comments
+1) do you think that [(f[i] == 0) == (p[i] != vouchers[i].payPart) for i in range(nVouchers)] is clearer?
+"""

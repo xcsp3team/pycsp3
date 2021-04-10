@@ -28,12 +28,12 @@ satisfy(
     Increasing(x)
 )
 
-# Note that:
-
-# a) in some models of the literature, sometimes, the product is decomposed as for example:
-#     y = VarArray(size=2, dom=range(71100))
-#     satisfy(
-#       x[0] * x[1] == y[0],
-#       x[2] * x[3] == y[1],
-#       y[0] * y[1] == 711 * 100 * 100 * 100
-#     )
+""" Comments
+1) in some models of the literature, sometimes, the product is decomposed as for example:
+  y = VarArray(size=2, dom=range(71100))
+  satisfy(
+     x[0] * x[1] == y[0],
+     x[2] * x[3] == y[1],
+     y[0] * y[1] == 711 * 100 * 100 * 100
+  )
+"""

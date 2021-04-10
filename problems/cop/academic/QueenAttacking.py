@@ -111,8 +111,6 @@ elif variant("table"):
         # (q == x[j]) | (row(q) != row(x[j])) & (col(q) != col(x[j])) & (abs(row(q) - row(x[j])) != abs(col(q) - col(x[j]))) for j in [p - 1 for p in primes])
     )
 
-
-
-# Note that:
-
-# a) the variant hybrid involves the automatic introduction of auxiliary variables
+""" Comments
+1) the variant hybrid involves the automatic introduction of auxiliary variables
+"""

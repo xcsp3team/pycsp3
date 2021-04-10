@@ -136,14 +136,14 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     #         ctr = Intension(disjunction(left_operand < right_operand.start, left_operand > right_operand.stop - 1))
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
         ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
-    elif isinstance(right_operand, Automaton):  #  it is a regular constraint
+    elif isinstance(right_operand, Automaton):  # it is a regular constraint
         ctr = Regular(scope=left_operand, automaton=right_operand)
     elif isinstance(right_operand, MDD):  # it is a MDD constraint
         ctr = Mdd(scope=left_operand, mdd=right_operand)
     elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
         ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1))  # atLeast1 TODO to be replaced by a member/element constraint ?
     # elif isinstance(left_operand, Node):
-    #     p
+    #
     else:  # It is a table constraint
         if not hasattr(left_operand, '__iter__'):
             left_operand = [left_operand]

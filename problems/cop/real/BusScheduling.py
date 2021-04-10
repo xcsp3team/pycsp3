@@ -25,6 +25,7 @@ minimize(
     Sum(x)
 )
 
-
-# Note that the default value for Count is 1. We can equivalently write:
-# Count([x[i] for i, shift in enumerate(shifts) if t in shift], value=1) == 1 for t in range(nTasks)
+""" Comments
+1) Note that the default value for Count is 1. We can equivalently write:
+ Count([x[i] for i, shift in enumerate(shifts) if t in shift], value=1) == 1 for t in range(nTasks)
+"""

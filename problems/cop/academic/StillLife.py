@@ -103,24 +103,24 @@ elif variant("wastage"):
         (2 * n * n + 4 * n - ws[-1]) // 4
     )
 
-# Note that:
+""" Comments
+1) we could have posted unary constraints instead of identifying specific cells
+   at the border assumed to be dead, when creating arrays of variables, like:
+ [
+   [(x[0][j] == 0, x[- 1][j] == 0) for j in range(n + 2)],
+   [(x[i][0] == 0, x[i][- 1] == 0) for i in range(n + 2)],
+ ],
 
-# a) we could have posted unary constraints instead of identifying specific when creating arrays of variables:
-# # cells at the border are assumed to be dead
-# [
-#     [(x[0][j] == 0, x[- 1][j] == 0) for j in range(n + 2)],
-#     [(x[i][0] == 0, x[i][- 1] == 0) for i in range(n + 2)],
-# ],
+2) in order to generate automatically slide constraints when handling rules for the boarder, we could
+   post groups of constraints separately, i.e., write:
 
-# b) in order to generate automatically slide constraints when handling rules for the boarder, we could
-# post groups of constraints separately, i.e., write:
-#
-# # imposing rules for ensuring valid dead cells around the board
-# [x[0][i:i + 3] != (1, 1, 1) for i in range(m - 2)],
-#  ... (while using the option -recognizeSlides)
+ # imposing rules for ensuring valid dead cells around the board
+ [x[0][i:i + 3] != (1, 1, 1) for i in range(m - 2)],
+ ... (while using the option -recognizeSlides)
 
-# c) we could use extension constraints instead of intension constraints, which would give:
-# [x[0][i:i + 3] not in {(1, 1, 1)} for i in range(m - 2)],
-# By the way, note that expressing such intension constraints are possible here because x[0][i:i + 3] has type 'ListVar'
-# If it was not the case, as for example in: (x[0][0], x[0][1], x[0][2]) != (1,1,1), we would have to call cp_array
-# which would give : cp_array(x[0][0], x[0][1], x[0][2]) != (1,1,1)
+3) we could use extension constraints instead of intension constraints, which would give:
+  [x[0][i:i + 3] not in {(1, 1, 1)} for i in range(m - 2)],
+  By the way, note that expressing such intension constraints are possible here because x[0][i:i + 3] has type 'ListVar'
+  If it was not the case, as for example in: (x[0][0], x[0][1], x[0][2]) != (1,1,1), we would have to call cp_array
+  which would give : cp_array(x[0][0], x[0][1], x[0][2]) != (1,1,1)
+"""

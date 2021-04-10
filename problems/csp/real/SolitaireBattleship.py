@@ -90,7 +90,7 @@ satisfy(
     [hint_ctr(c, i, j) for (c, i, j) in hints] if hints else None
 )
 
-# Note that:
-
-# a) another way of setting border values to 0 is with constraints 'Sum', as in:
-#   [Sum(s[0]) == 0, Sum(s[n + 1]) == 0, Sum(s[:, 0]) == 0, Sum(s[:, n + 1]) == 0],
+""" Comments
+1) another way of setting border values to 0 is with constraints 'Sum', as in:
+ [Sum(s[0]) == 0, Sum(s[n + 1]) == 0, Sum(s[:, 0]) == 0, Sum(s[:, n + 1]) == 0],
+"""

@@ -33,10 +33,14 @@ minimize(
     d * weights
 )
 
+""" Comments
+1) d * weights is possible because d is of type 'ListVar' and because None values (and associated coeffs) will be discarded
 
-#  Note that:
-#  a) d * weights is possible because d is of type 'ListVar' and because None values (and associated coeffs) will be discarded
-#  b) weights * d is also possible because weights is of type 'ListInt' and because None values (and associated coeffs) will be discarded
-#  c) one can also write of course:
-#     Sum(d[i][j] * weights[i][j] for i, j in combinations(range(n), 2) if weights[i][j] != 0)
-# d) the model is only valid for symmetric instances (and then, the bound must be multiplied by two)   TODO
+2) weights * d is also possible because weights is of type 'ListInt' and because None values (and associated coeffs) will be discarded
+
+3) one can also write of course:
+ Sum(d[i][j] * weights[i][j] for i, j in combinations(range(n), 2) if weights[i][j] != 0)
+
+4) the model is only valid for symmetric instances (the obtained bound must then be multiplied by two)   
+   TODO a more general model (for non systematically symmetric instances)
+"""

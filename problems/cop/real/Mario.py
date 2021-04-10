@@ -59,15 +59,18 @@ maximize(
     Sum((s[i] != i) * golds[i] for i in range(nHouses) if i not in {marioHouse, luigiHouse})
 )
 
-# Note that the code below, when building the table is more compact than:
-# a) [(s[i], f[i]) in [(j, houses[i].fuelConsumption[j]) for j in range(len(houses[i].fuelConsumption))] for i in range(nHouses)],
-# or b) [(s[i], f[i]) in [(j, fuel) for j, fuel in enumerate(houses[i].fuelConsumption)] for i in range(nHouses)],
+""" Comments
+1) Note that the code below, when building the table is more compact than:
+ [(s[i], f[i]) in [(j, houses[i].fuelConsumption[j]) for j in range(len(houses[i].fuelConsumption))] for i in range(nHouses)],
+ or [(s[i], f[i]) in [(j, fuel) for j, fuel in enumerate(houses[i].fuelConsumption)] for i in range(nHouses)],
 
-# Note that introducing auxiliary variables for handling gold earned at each house could be as follows:
-# g[i] is the gold earned at house i
-# g = VarArray(size=nHouses, dom=lambda i: {0, houses[i].gold})
-# We need to introduce additional constraints, while the objective becomes:
-# maximize(
-#    maximizing collected gold
-#    Sum(g)
-# )
+2) Note that introducing auxiliary variables for handling gold earned at each house could be as follows:
+ # g[i] is the gold earned at house i
+ g = VarArray(size=nHouses, dom=lambda i: {0, houses[i].gold})
+ 
+  We need to introduce additional constraints, while the objective becomes:
+ maximize(
+   # maximizing collected gold
+   Sum(g)
+ )
+"""

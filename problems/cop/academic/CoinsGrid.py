@@ -26,5 +26,7 @@ minimize(
     Sum(x[i][j] * abs(i - j) ** 2 for i in range(n) for j in range(n))
 )
 
+""" Comments
+1) there are other variants in Hurlimann's paper (TODO)
+"""
 
-#  TODO: other variants in Hurlimann's paper

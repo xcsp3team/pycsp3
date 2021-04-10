@@ -34,6 +34,7 @@ minimize(
     Maximum(s[i][- 1] + durations[i][- 1] for i in range(n))
 )
 
-# Note that :
-# a) the group of overlap constraints could be equivalently written:
-#   [NoOverlap(origins=[s[i][indexes[i][j]] for i in range(n)], lengths=[durations[i][indexes[i][j]] for i in range(n)]) for j in range(m)]
+""" Comments
+1) the group of overlap constraints could be equivalently written:
+ [NoOverlap(origins=[s[i][indexes[i][j]] for i in range(n)], lengths=[durations[i][indexes[i][j]] for i in range(n)]) for j in range(m)]
+"""

@@ -92,7 +92,8 @@ minimize(
     k * (10 * nSofts ** 2) + Sum(v1) * (10 * nSofts) + Sum(v2)
 )
 
+""" Comments
+1) we transform lists in tuples of relaxation arrays for speeding up calculations
 
-# Note that
-# a) we transform lists in tuples of relaxation arrays for speeding up calculations
-# b) when gap is 0, abs(x - y) == gap (resp., abs(x - y) != gap) is automatically simplified into x == y (resp., x != y)
+2) when gap is 0, abs(x - y) == gap (resp., abs(x - y) != gap) is automatically simplified into x == y (resp., x != y)
+"""

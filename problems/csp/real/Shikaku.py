@@ -47,11 +47,10 @@ satisfy(
 )
 
 
-
-# [l[i] <= rooms[i].col for i in range(nRooms)],
-#
-# [r[i] > rooms[i].col for i in range(nRooms)],
-#
-# [t[i] <= rooms[i].row for i in range(nRooms)],
-#
-# [b[i] > rooms[i].row for i in range(nRooms)],
+""" Comments
+1) it is also possible to write (but this is less compact):
+ [l[i] <= rooms[i].col for i in range(nRooms)],
+ [r[i] > rooms[i].col for i in range(nRooms)],
+ [t[i] <= rooms[i].row for i in range(nRooms)],
+ [b[i] > rooms[i].row for i in range(nRooms)],
+"""

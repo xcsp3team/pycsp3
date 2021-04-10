@@ -34,6 +34,7 @@ minimize(
     Sum(d)
 )
 
-
-# Note that for large instances, one may think about using an adjacency matrix, as with:
-# a = [[1 if (i, j) in e or (j, i) in e else 0 for j in range(n)] for i in range(n)]
+""" Comments
+1) Note that for large instances, one may think about using an adjacency matrix, as with:
+ a = [[1 if (i, j) in e or (j, i) in e else 0 for j in range(n)] for i in range(n)]
+"""

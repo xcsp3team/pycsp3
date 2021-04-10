@@ -77,8 +77,7 @@ minimize(
     Sum(ls)
 )
 
-
-# Note that:
-
-# a) for computing (and checking) the load of each slab
-#    the reverse side ? eq(z[s]{c] = 1 => or(...) is not really necessary but could it be helpful?
+""" Comments
+1) for computing (and checking) the load of each slab
+   the reverse side ? eq(z[s]{c] = 1 => or(...) is not really necessary but could it be helpful?
+"""

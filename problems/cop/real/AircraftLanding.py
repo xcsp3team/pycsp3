@@ -58,5 +58,9 @@ minimize(
     e * early_penalties + t * late_penalties
 )
 
-# TODO: Testing the model with several runways. a new array r r[i] is the runway ; a new array s s[i] is x[i]*k+r[i] where k is the number of runways
-# and AllDifferent(s)
+""" Comments
+1) we could extend the model for handling several runways. 
+   For example, by introducing a new array r where r[i] is the runway ; 
+   a new array s where s[i] is x[i]*k+r[i] where k is the number of runways
+   and posting new constraints (AllDifferent(s), ...) TODO
+"""

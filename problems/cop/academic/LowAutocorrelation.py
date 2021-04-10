@@ -30,6 +30,7 @@ minimize(
     Sum(c[k] * c[k] for k in range(n - 1))
 )
 
-
-# Note that:
-#  a) for the objective, c * c is possible, but needs an extension of XCSP3 specifications (allowing objective coefficients to be variables) TODO
+""" Comments 
+1) for the objective, c * c is possible, but this needs an extension of XCSP3 specifications 
+   (allowing objective coefficients to be variables) TODO
+"""

@@ -44,7 +44,6 @@ satisfy(
     x[i][j] == clues[i][j] for i in range(n) for j in range(n) if clues and clues[i][j] > 0
 )
 
-
-# Note that :
-
-# a) using set(permutations(range(1, n + 1))) instead of list(permutations(range(1, n + 1))) is far less time efficient
+""" Comments
+1) using set(permutations(range(1, n + 1))) instead of list(permutations(range(1, n + 1))) is far less time efficient
+"""

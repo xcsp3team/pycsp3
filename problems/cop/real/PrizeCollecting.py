@@ -60,7 +60,9 @@ maximize(
     Sum(g)
 )
 
-# Note that
-# a) the short table is used to code the element constraints under condition
-# b) one can also write the equivalent form
-#    [imply((s[i] != i) & (s[i] != 0), p[s[i]] == p[i]+1) for i in range(n)],
+""" Comments
+1) the short table is used to code the element constraints under condition
+
+1) when linking variables from s and p, one could also write the equivalent form
+ [imply((s[i] != i) & (s[i] != 0), p[s[i]] == p[i]+1) for i in range(n)],
+"""
