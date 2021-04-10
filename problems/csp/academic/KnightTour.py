@@ -82,6 +82,6 @@ satisfy(
     [x[0] == 0, x[1] == n + 2]
 )
 
-
-# Note that:
-# a) it is possible to use extension constraints instead of intension constraints (see, e.g., the problem QueensKnights)
+""" Comments
+1) it is possible to use extension constraints instead of intension constraints (see, e.g., the problem QueensKnights)
+"""

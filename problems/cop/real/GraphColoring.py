@@ -35,6 +35,6 @@ elif variant("sum"):
         Sum(c)
     )
 
-
-# Note that
-# a) when d is 1, abs(x - y) >= d is automatically simplified into x != y
+""" Comments
+1) when d is 1, abs(x - y) >= d is automatically simplified into x != y
+"""

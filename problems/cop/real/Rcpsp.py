@@ -26,20 +26,20 @@ minimize(
     s[- 1]
 )
 
-# Note that:
+""" Comments
+1) using tuple unpacking allows us to get directly fields of the tuples. Instead, we could write:
+ origins, lengths, heights = zip(*[(s[i], job.duration, job.requiredQuantities[k]) for i, job in enumerate(jobs) if job.requiredQuantities[k] > 0])
 
-# a) using tuple unpacking allows us to get directly fields of the tuples. Instead, we could write:
-#   origins, lengths, heights = zip(*[(s[i], job.duration, job.requiredQuantities[k]) for i, job in enumerate(jobs) if job.requiredQuantities[k] > 0])
+2) for posting Cumulative constraints in an alternative way, it would be less compact to write:
+ def cumulative_for(k):
+    origins, lengths, heights = zip(*[(s[i], duration, quantities[k]) for i, (duration, _, quantities) in enumerate(jobs) if quantities[k] > 0])
+    return Cumulative(origins=origins, lengths=lengths, heights=heights)
+ ...
+ [cumulative_for(k) <= capacity for k, capacity in enumerate(capacities)]
 
-# b) for posting Cumulative constraints in an alternative way, it would be less compact to write:
-#    def cumulative_for(k):
-#       origins, lengths, heights = zip(*[(s[i], duration, quantities[k]) for i, (duration, _, quantities) in enumerate(jobs) if quantities[k] > 0])
-#       return Cumulative(origins=origins, lengths=lengths, heights=heights)
-#    ...
-#    [cumulative_for(k) <= capacity for k, capacity in enumerate(capacities)]
-
-# c) in case of b), using zip is compacter than writing something like:
-#   indexes = [i for i in range(nJobs) if jobs[i].requiredQuantities[k] > 0]
-#   origins = [s[i] for i in indexes]
-#   lengths = [jobs[i].duration for i in indexes]
-#   heights = [jobs[i].requiredQuantities[k] for i in indexes]
+3) in case of b), using zip is compacter than writing something like:
+ indexes = [i for i in range(nJobs) if jobs[i].requiredQuantities[k] > 0]
+ origins = [s[i] for i in indexes]
+ lengths = [jobs[i].duration for i in indexes]
+ heights = [jobs[i].requiredQuantities[k] for i in indexes]
+"""

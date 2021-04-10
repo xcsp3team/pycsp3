@@ -39,17 +39,17 @@ satisfy(
     [(w_rankings[w][o] >= w_rankings[w, hb[w]]) | (m_rankings[o][wf[o]] < m_rankings[o][w]) for w in Women for o in Men]
 )
 
-# Note that:
+""" Comments
+1) one could add two redundant constraints AllDifferent on wf and hb
 
-# a) one could add two redundant constraints AllDifferent on wf and hb
+2) one could replace Channel(wf, hb) with:
+ # each man is the husband of his wife
+ [hb[wf[m]] == m for m in Men],
 
-# b) one could replace Channel(wf, hb) with:
-#    # each man is the husband of his wife
-#    [hb[wf[m]] == m for m in Men],
-#
-#    # each woman is the wife of her husband
-#    [wf[hb[w]] == w for w in Women],
+ # each woman is the wife of her husband
+ [wf[hb[w]] == w for w in Women],
 
-# c) global constraints involved in general expressions are externalized by introducing
-#    auxiliary variables. By using the compiler option, -useMeta, this is no more the case
-#    but the generated instance is no more in the perimeter of XCSP3-core
+3) global constraints involved in general expressions are externalized by introducing
+   auxiliary variables. By using the compiler option, -useMeta, this is no more the case
+   but the generated instance is no more in the perimeter of XCSP3-core
+"""

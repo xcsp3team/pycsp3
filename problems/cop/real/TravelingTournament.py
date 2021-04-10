@@ -85,5 +85,6 @@ minimize(
     Sum(t)
 )
 
-# Note that:
-# we could avoid building systematically similar automata (and tables)
+""" Comments
+1) we could avoid building systematically similar automata (and tables)
+"""

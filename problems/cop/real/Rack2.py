@@ -52,11 +52,13 @@ minimize(
     Sum(c)
 )
 
+""" Comments
+1) the introduced dummy model is not saved when using the option -dataexport because here we don't modify data.rackModels
 
-# Note that:
+2) one could write (to be ckecked)
+ models = [{'power': 0, 'nConnectors': 0, 'price': 0}] + models
 
-# a) the introduced dummy model is not saved when using the option -dataexport because here we don't modify data.rackModels
-
-# models = [{'power': 0, 'nConnectors': 0, 'price': 0}] + models
-# [model.power for model in models], [model.nConnectors for model in models], [model.price for model in models]
-# [cardType.power for cardType in cardTypes], [cardType.demand for cardType in cardTypes]
+3) using zip allows a more compact statement, compared to:
+ powers, sizes, costs = [model.power for model in models], [model.nConnectors for model in models], [model.price for model in models]
+ cardPowers, cardDemands = [cardType.power for cardType in cardTypes], [cardType.demand for cardType in cardTypes]
+"""

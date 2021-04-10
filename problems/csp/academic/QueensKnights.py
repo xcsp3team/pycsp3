@@ -33,6 +33,8 @@ satisfy(
     [(abs(k[i] // n - k[(i + 1) % nKnights] // n), abs(k[i] % n - k[(i + 1) % nKnights] % n)) in {(1, 2), (2, 1)} for i in range(nKnights)]
 )
 
-# Note that:
-# a) adding  (q[i] != k[j] % n) | (i != k[j] // n) for i in range(n) for j in range(nKnights) does not seem to filter more values.
-# b) expressing a table constraint where the scope does not list simple variables entails automatically introducing auxiliary variables at compilation time
+""" Comments
+1) adding  (q[i] != k[j] % n) | (i != k[j] // n) for i in range(n) for j in range(nKnights) does not seem to filter more values.
+
+2) expressing a table constraint where the scope does not list simple variables entails automatically introducing auxiliary variables at compilation time
+"""

@@ -32,6 +32,7 @@ satisfy(
     Slide((x[i], x[i + 1]) in table for i in range(nCards - 1))
 )
 
-# Note that:
-# a) Slide is only used to have more compact XCSP3 instances
-#    we could have written: [(x[i], x[i + 1]) in table for i in range(nCards - 1)]
+""" Comments
+1) Slide is only used to have more compact XCSP3 instances
+   we could have written: [(x[i], x[i + 1]) in table for i in range(nCards - 1)]
+"""

@@ -40,8 +40,7 @@ elif variant("max"):
         + Sum(ift(expr(op, abs(f[i] - f[j]), k), 0, interferenceCosts[wgt]) for (i, j, op, k, wgt) in constraints if wgt)
     )
 
-
-# Note that:
-
-# a) expr allows us to build an expression (constraint) with an operator given as first parameter (possibly, a string)
-#    otherwise, it could have been written: abs(f[i] - f[j]) == k if op == "=" else abs(f[i] - f[j]) > k
+""" Comments
+1) expr allows us to build an expression (constraint) with an operator given as first parameter (possibly, a string)
+   otherwise, it could have been written: abs(f[i] - f[j]) == k if op == "=" else abs(f[i] - f[j]) > k
+"""

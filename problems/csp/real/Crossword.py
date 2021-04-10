@@ -80,9 +80,8 @@ elif variant("alt"):
         [w[i] != w[j] for i, j in combinations(range(nHoles), 2) if holes[i].r == holes[j].r]
     )
 
+""" Comments
+1) we use lists instead of sets for tables ([(i1, i2)  ... instead of  {(i1, i2) ..) because it is quite faster to process
 
-# Note that:
-
-# a) we use lists instead of sets for tables ([(i1, i2)  ... instead of  {(i1, i2) ..) because it is quite faster to process
-
-# b) it is not possible to write x[i][j] when i is a slice; this must be x[i, j]
+2) it is not possible to write x[i][j] when i is a slice; this must be x[i, j]
+"""

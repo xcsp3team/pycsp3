@@ -77,6 +77,8 @@ minimize(
     Sum(c[i] != Unusable for i in range(nBins))
 )
 
-# Note that
-# a) capacities = [0] + capacities is not working because we need a cp_array
-# b) posting a LexMatrix does not seem to be correct
+""" Comments
+1) capacities = [0] + capacities is not working because we need a cp_array
+
+2) posting a LexMatrix does not seem to be correct
+"""

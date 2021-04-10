@@ -49,8 +49,7 @@ satisfy(
     [c[i][start:stop] in table_spanning(i, start, stop) for (i, start, stop) in spans]
 )
 
-
-# Note that:
-
-# a) when managing scheduled discharge flows, we have a list with four cells for variables and integers.
-# However, when there is the special value None (at the fourth position in both lists), the two lists will be automatically reduced to three cells.
+""" Comments
+1) when managing scheduled discharge flows, we have a list with four cells for variables and integers.
+ However, when there is the special value None (at the fourth position in both lists), the two lists will be automatically reduced to three cells.
+"""

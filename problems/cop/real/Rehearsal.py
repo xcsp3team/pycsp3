@@ -56,8 +56,10 @@ elif variant("bis"):
         Sum(durations[o[i]] * ((ep[p][i] == 0) & (a[p] <= i) & (i <= l[p])) for p in range(nPlayers) for i in range(nPieces))
     )
 
-# Note that
-# a) the first model variant is very compact. The second model variant explicitly introduces some auxiliary variables
-#    which, to som respect, allows a better control of the generated instances. Here, however, the outputs  are not
-#    so different for this problem.
-# b) we cannot currently write: (a[p] <= i <= l[p]) (this is technically not obvious to handle that)
+""" Comments
+1) the first model variant is very compact. The second model variant explicitly introduces some auxiliary variables
+   which, to som respect, allows a better control of the generated instances. Here, however, the outputs  are not
+   so different for this problem.
+
+2) we cannot currently write: (a[p] <= i <= l[p]) (this is technically not obvious to handle that, and even seems almost impossible)
+"""

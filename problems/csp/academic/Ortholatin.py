@@ -47,7 +47,8 @@ satisfy(
     [(x[0][j] == j, y[0][j] == j) for j in range(n)]
 )
 
-
-# Note that a less compact way of posting symmetry_breaking constraints is:
-# # tag(symmetry-breaking)
-# [[x[0][j] == j for j in range(n)], [y[0][j] == j for j in range(n)]],
+""" Comments
+1) Note that a less compact way of posting symmetry_breaking constraints is:
+ # tag(symmetry-breaking)
+ [[x[0][j] == j for j in range(n)], [y[0][j] == j for j in range(n)]],
+"""

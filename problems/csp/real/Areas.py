@@ -72,8 +72,8 @@ satisfy(
     [(cross(x, i, j), cross(d, i, j)) in table_other() for i in range(1, n + 1) for j in range(1, m + 1) if puzzle[i - 1][j - 1] == 0]
 )
 
-#  Note that:
-
-# a) (cross(x, i, j), cross(d, i, j)) is a tuple containing two sub-tuples of variables.
-#    This is automatically flattened. It is also possible to write:
-#    (*cross(x, i, j), *cross(d, i, j))
+""" Comments 
+1) (cross(x, i, j), cross(d, i, j)) is a tuple containing two sub-tuples of variables.
+   This is automatically flattened. It is also possible to write:
+   (*cross(x, i, j), *cross(d, i, j))
+"""

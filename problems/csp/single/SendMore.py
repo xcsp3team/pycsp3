@@ -23,7 +23,8 @@ satisfy(
     [s, e, n, d] * [1000, 100, 10, 1] + [m, o, r, e] * [1000, 100, 10, 1] == [m, o, n, e, y] * [10000, 1000, 100, 10, 1]
 )
 
-
-# some other possible ways of posting the sum:
-# [m, o - s - m, n - e - o, e - n - r, y - d - e] * [10000, 1000, 100, 10, 1] == 0
-# [s + m, e + o, n + r, d + e] * [1000, 100, 10, 1] == [m, o, n, e, y] * [10000, 1000, 100, 10, 1]
+""" Comments
+1) some other possible ways of posting the sum:
+ [m, o - s - m, n - e - o, e - n - r, y - d - e] * [10000, 1000, 100, 10, 1] == 0
+ [s + m, e + o, n + r, d + e] * [1000, 100, 10, 1] == [m, o, n, e, y] * [10000, 1000, 100, 10, 1]
+"""

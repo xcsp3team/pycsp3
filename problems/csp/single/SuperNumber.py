@@ -59,8 +59,8 @@ elif variant("rules"):
         Sum(x[:9]) % 9 == 0
     )
 
-# Note that:
-
-# a) we directly set 0 for the last digit (because it must be divisible by 10)
-#    as a valid alternative, we could have written [x[:i] * [10 ** (i - j - 1) for j in range(i)] % i == 0 for i in range(2, 11)]
-#    but this generates still bigger integers (for example, not managed by Choco 4.10.5)
+""" Comments
+1) we directly set 0 for the last digit (because it must be divisible by 10)
+   as a valid alternative, we could have written [x[:i] * [10 ** (i - j - 1) for j in range(i)] % i == 0 for i in range(2, 11)]
+   but this generates still bigger integers (for example, not managed by Choco 4.10.5)
+"""
