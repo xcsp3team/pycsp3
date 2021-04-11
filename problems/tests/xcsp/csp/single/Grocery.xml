@@ -1,0 +1,16 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the price (multiplied by 100) of the ith item" size="[4]"> 0..710 </array>
+  </variables>
+  <constraints>
+    <sum note="adding the prices of items corresponds to 711 cents">
+      <list> x[] </list>
+      <condition> (eq,711) </condition>
+    </sum>
+    <intension note="multiplying the prices of items corresponds to 711 cents (times 1000000)"> eq(mul(x[0],x[1],x[2],x[3]),711000000) </intension>
+    <ordered class="symmetry-breaking">
+      <list> x[] </list>
+      <operator> le </operator>
+    </ordered>
+  </constraints>
+</instance>

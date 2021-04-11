@@ -1,0 +1,11 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="g" note="g is the number of grandparents"> 1..6 </var>
+    <var id="p" note="p is the number of parents"> 1..10 </var>
+    <var id="c" note="c is the number of children"> 1..40 </var>
+  </variables>
+  <constraints>
+    <intension> eq(add(mul(g,6),mul(p,2),mul(c,1)),40) </intension>
+    <intension> eq(add(g,p,c),20) </intension>
+  </constraints>
+</instance>

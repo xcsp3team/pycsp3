@@ -5,7 +5,12 @@ from pycsp3.problems.tests.tester import Tester, run
 run(Tester("csp" + os.sep + "real")
     .add("Areas", data="Areas-3-3-3.json")  # 7 solutions
     .add("Blackhole", data="Blackhole.json", options_py="-recognizeSlides")  # 47232 solutions
+    .add("CarSequencing", data="CarSequencing_dingbas.json")  # 6 solutions
+    .add("CarSequencing", data="CarSequencing_dingbas.json", variant="table")  # 6 solutions
     .add("Coloring", data="Coloring_rand1.json", variant="csp")  # sat
+    .add("Crossword", data="Crossword_vg6-7-ogd.json")  # sat
+    .add("Crossword", data="Crossword_h1501-lex.json")  # sat
+    .add("Crossword", data="Crossword_h0504-lex.json", variant="alt")  # sat
     .add("Dominoes", data="Dominoes_grid1.json")  # 128 solutions
     .add("Eternity", data="Eternity_07x05.json")  # 32 solutions
     .add("Eternity", data="Eternity_example.txt", prs_py="Eternity_Parser", prs_jv="Eternity_Parser")  # 32 solutions
@@ -37,12 +42,7 @@ run(Tester("csp" + os.sep + "real")
     .add("VesselLoading", data="VesselLoading-inst1.json")  # 8 solutions
     .add("VesselLoading", data="VesselLoading-inst2.json")
 
-    .add("CarSequencing", data="CarSequencing_dingbas.json")  # 6 solutions
-    .add("CarSequencing", data="CarSequencing_dingbas.json", variant="table")  # 6 solutions
-    .add("Crossword", data="Crossword_vg6-7-ogd.json")  # sat
-    .add("Crossword", data="Crossword_h1501-lex.json")  # sat
-    .add("Crossword", data="Crossword_h0504-lex.json", variant="alt")  # sat
-    .add("MisteryShopper", data="MisteryShopper_04.json")  # 501552 solutions
+      .add("MisteryShopper", data="MisteryShopper_04.json")  # 501552 solutions
     .add("RadarSurveillance", data="RadarSurveillance_8-24-3-2-00.json")  # sat
     .add("SolitaireBattleship", data="SolitaireBattleship_sb-12-12-5-0.json")  # 51 solutions
     .add("SolitaireBattleship", data="SolitaireBattleship-battleship_instances-00113.json")  # 1 solution

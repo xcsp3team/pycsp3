@@ -1,0 +1,12 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="m" note="m is the number of men"> 0..99 </var>
+    <var id="w" note="w is the number of women"> 0..99 </var>
+    <var id="c" note="m is the number of children"> 0..99 </var>
+  </variables>
+  <constraints>
+    <intension> eq(add(m,w,c),100) </intension>
+    <intension> eq(add(mul(m,6),mul(w,4),c),200) </intension>
+    <intension> eq(mul(m,5),w) </intension>
+  </constraints>
+</instance>

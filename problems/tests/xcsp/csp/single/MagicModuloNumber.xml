@@ -1,0 +1,18 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="x"> 0..9999 </var>
+  </variables>
+  <constraints>
+    <group>
+      <intension> eq(mod(x,%0),%1) </intension>
+      <args> 2 1 </args>
+      <args> 3 2 </args>
+      <args> 4 3 </args>
+      <args> 5 4 </args>
+      <args> 6 5 </args>
+      <args> 7 6 </args>
+      <args> 8 7 </args>
+      <args> 9 8 </args>
+    </group>
+  </constraints>
+</instance>

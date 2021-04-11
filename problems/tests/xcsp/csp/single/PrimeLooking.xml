@@ -1,0 +1,14 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="x" note="the number we look for"> 0..999 </var>
+    <var id="d1" note="a first divider"> 2..999 </var>
+    <var id="d2" note="a second divider"> 2..999 </var>
+  </variables>
+  <constraints>
+    <intension> eq(x,mul(d1,d2)) </intension>
+    <intension> ne(mod(x,2),0) </intension>
+    <intension> ne(mod(x,3),0) </intension>
+    <intension> ne(mod(x,5),0) </intension>
+    <intension> le(d1,d2) </intension>
+  </constraints>
+</instance>

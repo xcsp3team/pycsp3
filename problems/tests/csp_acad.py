@@ -54,9 +54,9 @@ run(Tester("csp" + os.sep + "academic")
     .add("SportsScheduling", data="6")  # 10 solutions
     .add("SportsScheduling", data="6", variant="dummy")  # 10 solutions
     .add("Steiner3", data="7")  # 151200 solutions
+    .add("Superpermutation", data="3")  # 1 solution
+    .add("Superpermutation", data="3", variant="table")  # 1 solution
     .add("Talisman", data="[4,2]")  # 34714 solutions
+     # .add("WordDesign", data="[WordDesign.json,n=5]")  # sat  (pb in testing mode due to special way of setting parameters)
     )
 
-# .add("Pions", data="[6,4]")
-# .add("QueensPions", data="[6,4,3]")
-# .add("QueensPions", data="[6,4,3]", variant="mul")

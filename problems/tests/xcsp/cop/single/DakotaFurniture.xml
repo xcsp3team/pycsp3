@@ -1,0 +1,16 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <var id="d" note="d is the number of manufactured desks"> 0..99 </var>
+    <var id="t" note="t is the number of manufactured  tables"> 0..99 </var>
+    <var id="c" note="c is the number of manufactured chairs"> 0..99 </var>
+  </variables>
+  <constraints>
+    <intension> le(add(mul(8,d),mul(6,t),c),48) </intension>
+    <intension> le(add(mul(8,d),mul(4,t),mul(3,c)),40) </intension>
+    <intension> le(add(mul(4,d),mul(3,t),c),16) </intension>
+    <intension> le(t,5) </intension>
+  </constraints>
+  <objectives>
+    <maximize> add(mul(60,d),mul(30,t),mul(20,c)) </maximize>
+  </objectives>
+</instance>
