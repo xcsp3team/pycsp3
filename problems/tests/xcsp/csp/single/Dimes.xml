@@ -1,0 +1,13 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="x" note="x is the number of dimes"> 0..25 </var>
+    <array id="s" note="s[i] is the number of stamps of value 1, 2, 3, 5 and 10 according to i" size="[5]"> 3 4 </array>
+  </variables>
+  <constraints>
+    <sum>
+      <list> s[] x </list>
+      <coeffs> 1 2 3 5 10 -10 </coeffs>
+      <condition> (eq,0) </condition>
+    </sum>
+  </constraints>
+</instance>

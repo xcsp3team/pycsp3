@@ -1,0 +1,14 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="x" note="x is the number we look for"> 1000..9999 </var>
+    <array id="d" note="d[i] is the ith digit of x" size="[4]"> 0..9 </array>
+  </variables>
+  <constraints>
+    <sum>
+      <list> d[] </list>
+      <coeffs> 1000 100 10 1 </coeffs>
+      <condition> (eq,x) </condition>
+    </sum>
+    <intension> eq(mod(mul(x,x),10000),x) </intension>
+  </constraints>
+</instance>

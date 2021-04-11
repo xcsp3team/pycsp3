@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from pycsp3.solvers.abscon import AceProcess
-from pycsp3.tools.utilities import is_windows, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD
+from pycsp3.tools.utilities import is_windows, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, warning
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
@@ -55,7 +55,7 @@ class Tester:
             command = "copy" if command == 'cp' else command
         print(command, origin, target)
         if not os.path.isfile(origin):
-            print("error: do not found the file " + origin)
+            warning("file not found: " + origin)
             exit(0)
         subprocess.call([command, origin, target], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=is_windows())
 
@@ -266,7 +266,7 @@ class Tester:
 
         # Show differences    
         if not os.path.isfile(self.xml_path_py()) or not os.path.isfile(xml_to_compare):
-            print("error: files not found " + self.xml_path_py() + " or " + xml_to_compare)
+            warning("at least 1 file not found among " + self.xml_path_py() + " and " + xml_to_compare)
             self.counters["err"] += 1
             if waiting:
                 input("Press Enter to continue...")

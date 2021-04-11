@@ -1,0 +1,19 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <var id="n" note="n is a (non-trivial) Dudeney number"> 2..99999 </var>
+    <var id="s" note="s is the perfect cubic root of n"> 0..47 </var>
+    <array id="d" note="d[i] is the ith digit of the Dudeney number" size="[5]"> 0..9 </array>
+  </variables>
+  <constraints>
+    <intension> eq(n,mul(s,s,s)) </intension>
+    <sum>
+      <list> d[] </list>
+      <condition> (eq,s) </condition>
+    </sum>
+    <sum>
+      <list> d[] </list>
+      <coeffs> 10000 1000 100 10 1 </coeffs>
+      <condition> (eq,n) </condition>
+    </sum>
+  </constraints>
+</instance>

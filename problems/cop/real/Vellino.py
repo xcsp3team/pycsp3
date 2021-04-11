@@ -78,7 +78,10 @@ minimize(
 )
 
 """ Comments
-1) capacities = [0] + capacities is not working because we need a cp_array
+1) writing capacities = [0] + capacities is not possible because the new built list 
+   is there not from the specific type of list we need. One would need to call
+   the function cp_array
 
-2) posting a LexMatrix does not seem to be correct
+2) posting a LexMatrix does not seem to be correct from the perspective of the model
+   (to be checked)
 """

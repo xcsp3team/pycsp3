@@ -88,6 +88,7 @@ def _load_data():
                 s += "-" + str(value)
             else:
                 assert arg.endswith("json")
+                assert os.path.exists(arg), "The file " + arg + " does not exist (in the specified directory)." + str(os.path)
                 with open(arg) as f:
                     compilation_data.update(json.loads(f.read(), object_pairs_hook=OrderedDict))
                     s += "-" + arg.split(os.sep)[-1:][0].split(".")[:1][0]

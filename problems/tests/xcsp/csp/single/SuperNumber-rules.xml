@@ -1,0 +1,57 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x is the ith digit of the number" size="[10]">
+      <domain for="x[0..8]"> 0..9 </domain>
+      <domain for="x[9]"> 0 </domain>
+    </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[5]">
+      <domain for="aux_gb[0]"> 0..27 </domain>
+      <domain for="aux_gb[1]"> 0..54 </domain>
+      <domain for="aux_gb[2]"> -999..1008 </domain>
+      <domain for="aux_gb[3]"> 0..999 </domain>
+      <domain for="aux_gb[4]"> 0..81 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all digits must be different"> x[] </allDifferent>
+    <extension note="divisibility by 2">
+      <list> x[1] </list>
+      <supports> 0 2 4 6 8 </supports>
+    </extension>
+    <intension note="divisibility by 3"> eq(mod(aux_gb[0],3),0) </intension>
+    <intension note="divisibility by 4"> eq(mod(add(mul(x[2],10),x[3]),4),0) </intension>
+    <extension note="divisibility by 5">
+      <list> x[4] </list>
+      <supports> 0 5 </supports>
+    </extension>
+    <block note="divisibility by 6">
+      <extension>
+        <list> x[5] </list>
+        <supports> 0 2 4 6 8 </supports>
+      </extension>
+      <intension> eq(mod(aux_gb[1],3),0) </intension>
+    </block>
+    <intension note="divisibility by 7"> eq(mod(aux_gb[2],7),0) </intension>
+    <intension note="divisibility by 8"> eq(mod(aux_gb[3],8),0) </intension>
+    <intension note="divisibility by 9"> eq(mod(aux_gb[4],9),0) </intension>
+    <group>
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> aux_gb[0] x[0..2] </args>
+      <args> aux_gb[1] x[0..5] </args>
+      <args> aux_gb[4] x[0..8] </args>
+    </group>
+    <sum>
+      <list> x[0..6] </list>
+      <coeffs> 1 -100 -10 -1 100 10 1 </coeffs>
+      <condition> (eq,aux_gb[2]) </condition>
+    </sum>
+    <sum>
+      <list> x[5..7] </list>
+      <coeffs> 100 10 1 </coeffs>
+      <condition> (eq,aux_gb[3]) </condition>
+    </sum>
+  </constraints>
+</instance>
