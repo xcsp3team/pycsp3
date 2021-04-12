@@ -57,6 +57,6 @@ run(Tester("csp" + os.sep + "academic")
     .add("Superpermutation", data="3")  # 1 solution
     .add("Superpermutation", data="3", variant="table")  # 1 solution
     .add("Talisman", data="[4,2]")  # 34714 solutions
-     # .add("WordDesign", data="[WordDesign.json,n=5]")  # sat  (pb in testing mode due to special way of setting parameters)
+     # .add("WordDesign", data="[WordDesign.json,n=5]")  # sat  (pb in testing mode due to special way of setting parameters (pb with path)
     )
 

@@ -2,7 +2,7 @@
 See https://en.wikipedia.org/wiki/Fillomino
 
 Example of Execution:
-  python3 Fillomino.py -data=Fillomino_example.json
+  python3 Fillomino.py -data=Fillomino-08.json
 """
 
 from pycsp3 import *
@@ -13,7 +13,7 @@ n, m = len(puzzle), len(puzzle[0])
 preassigned = dict()  # we collect pre-assigned starting squares for the first occurrences of specified values
 for i in range(n):
     for j in range(m):
-        if puzzle[i][j] != 0 and puzzle[i][j] not in preassigned:
+        if puzzle[i][j] != 0 and puzzle[i][j] not in preassigned:  # the second part is important
             preassigned[puzzle[i][j]] = (i + 1, j + 1)  # +1 because of the border
 
 nRegions = len(preassigned) + (n * m - sum(preassigned.keys()))
@@ -36,11 +36,6 @@ def tables():
 
 
 table_connection, table_region = tables()
-
-
-def cross(t, i, j):
-    return t[i][j], t[i][j - 1], t[i][j + 1], t[i - 1][j], t[i + 1][j]
-
 
 # x[i][j] is the region (number) where the square at row i and column j belongs (borders are inserted for simplicity)
 x = VarArray(size=[n + 2, m + 2], dom=lambda i, j: {-1} if i in {0, n + 1} or j in {0, m + 1} else range(nRegions))
@@ -66,7 +61,7 @@ satisfy(
     [s[k] == Sum(x[i][j] == k for i in range(1, n + 1) for j in range(1, m + 1)) for k in range(nRegions)],
 
     # ensuring connection
-    [(y[i][j], cross(x, i, j), cross(d, i, j)) in table_connection for i in range(1, n + 1) for j in range(1, m + 1)],
+    [(y[i][j], x.cross(i, j), d.cross(i, j)) in table_connection for i in range(1, n + 1) for j in range(1, m + 1)],
 
     # two regions of the same size cannot have neighbouring squares
     [
@@ -74,3 +69,11 @@ satisfy(
         [(y[i][j], y[i + 1][j], x[i][j], x[i + 1][j]) in table_region for j in range(1, m + 1) for i in range(1, n)]
     ]
 )
+
+""" Comments
+1) cross() is a predefined method on matrices of variables (of type ListVar).
+   Hence, x.cross(i, j) is equivalent to :
+   [t[i][j], t[i][j - 1], t[i][j + 1], t[i - 1][j], t[i + 1][j]] 
+2) gt(1) when building a tuple allows to handle all tuples with a value > 1
+   Later, it will be possible to generate smart tables instead of starred tables 
+"""

@@ -1,0 +1,31 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i][j] is the value in the cell at row i and column j" size="[3][4]"> 1..12 </array>
+  </variables>
+  <constraints>
+    <instantiation note="taking hints into consideration">
+      <list> x[0][1] x[1][0] x[2][2] </list>
+      <values> 6 8 3 </values>
+    </instantiation>
+    <allDifferent note="all numbers must appear once"> x[][] </allDifferent>
+    <group note="respecting sums on rows">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> 30 x[0][] </args>
+      <args> 18 x[1][] </args>
+      <args> 30 x[2][] </args>
+    </group>
+    <group note="respecting sums on columns">
+      <sum>
+        <list> %0 %1 %2 </list>
+        <condition> (eq,%3) </condition>
+      </sum>
+      <args> x[][0] 27 </args>
+      <args> x[][1] 16 </args>
+      <args> x[][2] 10 </args>
+      <args> x[][3] 25 </args>
+    </group>
+  </constraints>
+</instance>

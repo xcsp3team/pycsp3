@@ -1,0 +1,254 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i] is the landing time of the ith plane" size="[10]">
+      <domain for="x[0]"> 129..559 </domain>
+      <domain for="x[1]"> 195..744 </domain>
+      <domain for="x[2]"> 89..510 </domain>
+      <domain for="x[3]"> 96..521 </domain>
+      <domain for="x[4]"> 110..555 </domain>
+      <domain for="x[5]"> 120..576 </domain>
+      <domain for="x[6]"> 124..577 </domain>
+      <domain for="x[7]"> 126..573 </domain>
+      <domain for="x[8]"> 135..591 </domain>
+      <domain for="x[9]"> 160..657 </domain>
+    </array>
+    <array id="e" note="e[i] is the earliness of the ith plane" size="[10]">
+      <domain for="e[0]"> 0..26 </domain>
+      <domain for="e[1]"> 0..63 </domain>
+      <domain for="e[2]"> 0..9 </domain>
+      <domain for="e[3]"> 0..10 </domain>
+      <domain for="e[4]"> 0..13 </domain>
+      <domain for="e[5] e[8]"> 0..15 </domain>
+      <domain for="e[6] e[7]"> 0..14 </domain>
+      <domain for="e[9]"> 0..20 </domain>
+    </array>
+    <array id="t" note="t[i] is the tardiness of the ith plane" size="[10]">
+      <domain for="t[0]"> 0..404 </domain>
+      <domain for="t[1]"> 0..486 </domain>
+      <domain for="t[2]"> 0..412 </domain>
+      <domain for="t[3]"> 0..415 </domain>
+      <domain for="t[4]"> 0..432 </domain>
+      <domain for="t[5] t[8]"> 0..441 </domain>
+      <domain for="t[6]"> 0..439 </domain>
+      <domain for="t[7]"> 0..433 </domain>
+      <domain for="t[9]"> 0..477 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <allDifferent note="planes must land at different times"> x[] </allDifferent>
+    <block note="the separation time required between any two planes must be satisfied:">
+      <noOverlap>
+        <origins> x[0] x[1] </origins>
+        <lengths> 3 3 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[0] x[2] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[0] x[3] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[0] x[4] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[0] x[5] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[0] x[6] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[0] x[7] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[0] x[8] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[0] x[9] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[1] x[2] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[1] x[3] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[1] x[4] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[1] x[5] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[1] x[6] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[1] x[7] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[1] x[8] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[1] x[9] </origins>
+        <lengths> 15 15 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[2] x[3] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[2] x[4] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[2] x[5] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[2] x[6] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[2] x[7] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[2] x[8] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[2] x[9] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[3] x[4] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[3] x[5] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[3] x[6] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[3] x[7] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[3] x[8] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[3] x[9] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[4] x[5] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[4] x[6] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[4] x[7] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[4] x[8] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[4] x[9] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[5] x[6] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[5] x[7] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[5] x[8] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[5] x[9] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[6] x[7] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[6] x[8] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[6] x[9] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[7] x[8] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[7] x[9] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> x[8] x[9] </origins>
+        <lengths> 8 8 </lengths>
+      </noOverlap>
+    </block>
+    <group note="computing earlinesses of planes">
+      <intension> eq(%0,max(0,sub(%1,%2))) </intension>
+      <args> e[0] 155 x[0] </args>
+      <args> e[1] 258 x[1] </args>
+      <args> e[2] 98 x[2] </args>
+      <args> e[3] 106 x[3] </args>
+      <args> e[4] 123 x[4] </args>
+      <args> e[5] 135 x[5] </args>
+      <args> e[6] 138 x[6] </args>
+      <args> e[7] 140 x[7] </args>
+      <args> e[8] 150 x[8] </args>
+      <args> e[9] 180 x[9] </args>
+    </group>
+    <group note="computing tardinesses of planes">
+      <intension> eq(%0,max(0,sub(%1,%2))) </intension>
+      <args> t[0] x[0] 155 </args>
+      <args> t[1] x[1] 258 </args>
+      <args> t[2] x[2] 98 </args>
+      <args> t[3] x[3] 106 </args>
+      <args> t[4] x[4] 123 </args>
+      <args> t[5] x[5] 135 </args>
+      <args> t[6] x[6] 138 </args>
+      <args> t[7] x[7] 140 </args>
+      <args> t[8] x[8] 150 </args>
+      <args> t[9] x[9] 180 </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the deviation cost" type="sum">
+      <list> e[] t[] </list>
+      <coeffs> 1000 1000 3000x8 1000 1000 3000x8 </coeffs>
+    </minimize>
+  </objectives>
+</instance>
