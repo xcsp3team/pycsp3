@@ -1,0 +1,29 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i] is 1 iff the ith subset is selected" size="[7]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <group note="avoiding intersection of subsets">
+      <count>
+        <list> %... </list>
+        <values> 1 </values>
+        <condition> (le,1) </condition>
+      </count>
+      <args> x[0] x[5] </args>
+      <args> x[0..1] x[5] </args>
+      <args> x[5] x[6] </args>
+      <args> x[6] </args>
+      <args> x[2] x[5] </args>
+      <args> x[2] x[3] </args>
+      <args> x[3] x[6] </args>
+      <args> x[1] x[6] </args>
+      <args> x[4] x[5] </args>
+      <args> x[3..5] </args>
+      <args> x[3] x[5..6] </args>
+      <args> x[6] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <maximize note="maximizing the number of selected subsets" type="sum"> x[] </maximize>
+  </objectives>
+</instance>

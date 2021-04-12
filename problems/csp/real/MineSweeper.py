@@ -23,11 +23,13 @@ n, m = len(puzzle), len(puzzle[0])
 # x[i][j] is 1 iff there is a mine in the square at row i and column j
 x = VarArray(size=[n, m], dom=lambda i, j: {0} if puzzle[i][j] >= 0 else {0, 1})
 
-
-def around(i, j):
-    return [x[i + k][j + l] for k in [-1, 0, 1] for l in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + l < m and (k, l) != (0, 0)]
-
-
 satisfy(
-    Sum(around(i, j)) == puzzle[i][j] for i in range(n) for j in range(m) if puzzle[i][j] >= 0
+    # respecting clues of the puzzle
+    Sum(x.around(i, j)) == puzzle[i][j] for i in range(n) for j in range(m) if puzzle[i][j] >= 0
 )
+
+""" Comments
+1) around() is a predefined method on matrices of variables (of type ListVar).
+   Hence, x.around(i, j) is equivalent to :
+   [x[i + k][j + l] for k in [-1, 0, 1] for l in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + l < m and (k, l) != (0, 0)]
+"""
