@@ -33,7 +33,7 @@ class Compilation:
     solve = None
     stopwatch = None
     stopwatch2 = None
-    done = False
+    done = False  # for recording the result of compilation ( under the form of a tuple, with the filename and a Boolean set to tru if COP)
     user_filename = None
 
     @staticmethod
@@ -248,6 +248,7 @@ def _compile():
 
     Compilation.done = True
 
+    cop = root is not None and root.attrib and root.attrib["type"] == "COP"
     solving = ACE if options.solve else options.solver
     if solving:
         if options.display:
@@ -256,19 +257,18 @@ def _compile():
         solver, args, args_recursive = process_options(solving)
         solver = next(ss for ss in SOLVERS if ss.lower() == solver.lower())
         # print("solver", solver, "args", args)
-        cop = root.attrib["type"] == "COP"
         if solver == CHOCO:
             from pycsp3.solvers.choco import ChocoProcess
-            result, solution = ChocoProcess().solve(filename, solving, args, args_recursive, cop, compiler=True)
+            result, solution = ChocoProcess().solve((filename, cop),solving, args, args_recursive, compiler=True)
         else:  # Fallback case => options.solver == "ace":
             from pycsp3.solvers.abscon import AceProcess
-            result, solution = AceProcess().solve(filename, solving, args, args_recursive, cop, compiler=True)
+            result, solution = AceProcess().solve((filename,cop), solving, args, args_recursive, compiler=True)
         # if result:
         #     print(result)
         if solution:
             print(solution)
 
-    return filename
+    return filename, cop
 
 
 def usage(message):

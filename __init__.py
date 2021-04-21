@@ -45,7 +45,9 @@ if sys.argv:
         Compilation.load(console=True)
         data = None
     elif "pycsp3/problems/tests/" in sys.argv[0]:  # test mode
-        # TODO is it correct? analysing if we have to compile (e..g, when running the tester, we should not try to do that); Trying this with the inspector?
+        # TODO is it correct (for avoiding compilingtwo times)?
+        #  analysing if we have to compile (e..g, when running the tester, we should not try to do that);
+        #  Trying to replace this with the inspector?
         Compilation.done = True
     else:
         Compilation.load()

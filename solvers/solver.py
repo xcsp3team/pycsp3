@@ -148,18 +148,18 @@ class SolverProcess:
         self.name = name
         self.command = command
         self.cp = cp
+        self.options = ""
         self.stdout = None
         self.stderr = None
         self.last_command_wck = None
         self.extend_filename_logger = None
-        self.string_options_from_model = ""
 
-    def add_string_options(self, opt):
-        opt = str(opt).strip()
-        self.string_options_from_model += " " + opt if self.string_options_from_model != "" else opt
-
-    def set_command(self, _command):
+    def command(self, _command):
         self.command = _command
+
+    def setting(self, option):
+        option = str(option).strip()
+        self.options += " " + option if self.options != "" else option
 
     def extend_logger(self, _extend_filename_logger):
         self.extend_filename_logger = _extend_filename_logger
@@ -167,7 +167,9 @@ class SolverProcess:
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
-    def solve(self, model, string_options="", dict_options=dict(), dict_simplified_options=dict(), cop=True, compiler=False):
+    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False):
+        model, cop = instance
+
         def extract_result_and_solution(stdout):
             if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
                 return UNSAT, None
@@ -253,11 +255,11 @@ class SolverProcess:
             dict_simplified_options.update(tmp_dict_simplified_options)
             dict_options.update(tmp_dict_options)
 
-        if self.string_options_from_model is not None:
+        if self.options is not None:
             if "args" in dict_options:
-                dict_options["args"] += self.string_options_from_model
+                dict_options["args"] += self.options
             else:
-                dict_options["args"] = self.string_options_from_model
+                dict_options["args"] = self.options
 
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)

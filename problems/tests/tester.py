@@ -271,7 +271,6 @@ class Tester:
             if waiting:
                 input("Press Enter to continue...")
         else:
-
             lines = self.diff_files(self.xml_path_py(), xml_to_compare, self.tmpDiff)
             if len(lines) == 0:
                 print("  => No difference for " + self.name_xml)
