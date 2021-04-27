@@ -137,6 +137,7 @@ class ECtrs(Entity):
         self.entities = [c for c in constraints if c is not None]
 
 
+
 class EToGather(ECtrs):
     ''' Constraints possibly stored in a group (the user asked to gather these constraints)'''
 
@@ -154,6 +155,8 @@ class EToSatisfy(ECtrs):
             CtrEntities.items.append(self)
             super().__init__(constraints)
 
+    def delete(self, i):
+        self.entities.remove(self.entities[i])
 
 class EGroup(ECtrs):
     ''' Constraints in a group '''

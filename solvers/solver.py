@@ -153,13 +153,14 @@ class SolverProcess:
         self.stderr = None
         self.last_command_wck = None
         self.extend_filename_logger = None
+        self.n_executions = 0
 
     def command(self, _command):
         self.command = _command
 
     def setting(self, option):
         option = str(option).strip()
-        self.options += " " + option if self.options != "" else option
+        self.options = " " + option if self.options != "" else option
 
     def extend_logger(self, _extend_filename_logger):
         self.extend_filename_logger = _extend_filename_logger
@@ -196,7 +197,9 @@ class SolverProcess:
             variables = []
             for token in root[0].text.split():
                 r = VarEntities.get_item_with_name(token)
-                if isinstance(r, (EVar, Variable)):  # TODO why do we need these two classes of variables?
+                if isinstance(r, EVar):
+                    variables.append(r.variable)
+                elif isinstance(r, Variable):
                     variables.append(r)
                 else:
                     for x in flatten(r.variables, keep_none=True):
@@ -215,7 +218,6 @@ class SolverProcess:
             for i, v in enumerate(values):
                 if variables[i]:
                     variables[i].value = v  # we add a new field (may be useful)
-
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
             return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
 
@@ -233,7 +235,7 @@ class SolverProcess:
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
 
             signal.signal(signal.SIGINT, new_handler)
-            log = Logger(self.extend_filename_logger)  # To record the output of the solver
+            log = Logger(self.extend_filename_logger if self.extend_filename_logger is not None else str(self.n_executions))  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
@@ -279,6 +281,7 @@ class SolverProcess:
         if missing:
             print("\n   This is due to a missing implementation")
         print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[ace,v] to see directly the output of the solver.\n")
+        self.n_executions+=1
         return extract_result_and_solution(out_err) if out_err else (None, None)
 
 # class SolverPy4J(SolverProcess):  # TODO in progress
