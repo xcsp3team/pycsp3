@@ -45,8 +45,8 @@ class Compilation:
         Compilation.user_filename = _user_filename
 
     @staticmethod
-    def compile():
-        return _compile()
+    def compile(disabling = True):
+        return _compile(disabling)
 
 
 def _load_options():
@@ -182,7 +182,7 @@ def default_data(filename):
     return Compilation.data
 
 
-def _compile():
+def _compile(disabling=False):
     # used to save data in jSON
     def prepare_for_json(obj):
         if is_namedtuple(obj):
@@ -198,7 +198,9 @@ def _compile():
 
     if Error.errorOccurrence:
         return None
-    OpOverrider.disable()
+    
+    if disabling:
+        OpOverrider.disable()
 
     if Compilation.user_filename is not None:
         print("  * User-defined XML file name:", Compilation.user_filename)
@@ -207,8 +209,8 @@ def _compile():
         filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
         filename = filename_prefix + ".xml"
 
-    if Compilation.done:
-        return filename
+    #if Compilation.done:
+    #    return filename
 
     stopwatch = Stopwatch()
     print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
@@ -246,6 +248,7 @@ def _compile():
 
     # print("  Total wall clock time:", Compilation.stopwatch.elapsed_time(), "seconds")
 
+    #if disabling:
     Compilation.done = True
 
     cop = root is not None and root.attrib and root.attrib["type"] == "COP"
