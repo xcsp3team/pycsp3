@@ -144,6 +144,8 @@ class Instantiation:
 
 
 class SolverProcess:
+    automatic_call = False
+
     def __init__(self, *, name, command, cp):
         self.name = name
         self.command = command
@@ -168,7 +170,7 @@ class SolverProcess:
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
-    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False):
+    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=False, automatic=False):
         model, cop = instance
 
         def extract_result_and_solution(stdout):
@@ -250,7 +252,16 @@ class SolverProcess:
             print("\n The instance has no variable, so the solver is not run.")
             print("Did you forget to indicate the variant of the model?")
             return None
-
+        
+        print("self.n_executions:", self.n_executions)
+        print("automatic:", automatic)
+        print("automatic_call:", SolverProcess.automatic_call)
+         
+        if automatic is False and SolverProcess.automatic_call:
+            print("\n You attempt to solve the instance with both -solve and the function solve().")
+            return None
+        
+        SolverProcess.automatic_call = automatic
         if compiler is False:  # To get options from the model
             string_options = "[" + self.name.lower() + "," + string_options + "]"
             solver, tmp_dict_options, tmp_dict_simplified_options = process_options(string_options)
@@ -266,7 +277,7 @@ class SolverProcess:
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""
-        verbose = options.solve or "verbose" in dict_simplified_options
+        verbose = verbose or options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + solver_args
         print("\n  * Solving by " + self.name + " in progress ... ")
         print("    with command: ", command)
