@@ -262,10 +262,10 @@ def _compile(disabling=False):
         # print("solver", solver, "args", args)
         if solver == CHOCO:
             from pycsp3.solvers.choco import ChocoProcess
-            result, solution = ChocoProcess().solve((filename, cop),solving, args, args_recursive, compiler=True)
+            result, solution = ChocoProcess().solve((filename, cop),solving, args, args_recursive, compiler=True, automatic=True)
         else:  # Fallback case => options.solver == "ace":
             from pycsp3.solvers.abscon import AceProcess
-            result, solution = AceProcess().solve((filename,cop), solving, args, args_recursive, compiler=True)
+            result, solution = AceProcess().solve((filename,cop), solving, args, args_recursive, compiler=True, automatic=True)
         # if result:
         #     print(result)
         if solution:
