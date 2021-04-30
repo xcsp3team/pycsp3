@@ -1,26 +1,34 @@
+import os.path
 import re
 from collections import OrderedDict
 
 from pycsp3.dashboard import options
 
 data = None
-_data_file = None
 _dataParser = None
 
 
-def register_fields(data_file):
-    global data, _data_file, _dataParser
+def register_fields(data_value):
+    global data, _dataParser
     data = OrderedDict()
-    _data_file = data_file
-    _dataParser = DataParser(data_file)
+    _dataParser = DataParser(data_value)
     return data
 
 
 class DataParser:
-    def __init__(self, data_file):
-        if data_file:
-            with open(data_file) as f:
-                self.lines = [line[:-1].strip() if line[-1] == '\n' else line.strip() for line in f.readlines() if len(line.strip()) > 0]
+    def __init__(self, data_value):
+        if data_value[0] == '[':
+            assert data_value[-1] == ']'
+            values = data_value[1:-1].split(',')
+        else:
+            values = [data_value]
+        self.lines = []
+        for value in values:
+            if os.path.isfile(value):
+                with open(value) as f:
+                    self.lines += [line[:-1].strip() if line[-1] == '\n' else line.strip() for line in f.readlines() if len(line.strip()) > 0]
+            else:
+                self.lines += [str(value)]
         self.curr_line_index = 0
         self.curr_line_tokens = None
 
