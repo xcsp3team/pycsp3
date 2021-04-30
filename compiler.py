@@ -135,9 +135,9 @@ def _load_data():
     return compilation_data, string_data
 
 
-def _load_dataparser(parser_file, data_file):
+def _load_dataparser(parser_file, data_value):
     try:
-        compilation_data = parsing.register_fields(data_file)  # the object used for recording data is returned, available in the model
+        compilation_data = parsing.register_fields(data_value)  # the object used for recording data is returned, available in the model
         specification = util.spec_from_file_location("", parser_file)
         specification.loader.exec_module(util.module_from_spec(specification))
         string_data = "-" + options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.data else None
