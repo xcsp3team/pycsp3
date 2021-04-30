@@ -33,7 +33,7 @@ class Compilation:
     solve = None
     stopwatch = None
     stopwatch2 = None
-    done = False  # for recording the result of compilation ( under the form of a tuple, with the filename and a Boolean set to tru if COP)
+    done = False
     user_filename = None
 
     @staticmethod
