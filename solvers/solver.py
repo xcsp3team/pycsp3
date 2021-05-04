@@ -253,9 +253,9 @@ class SolverProcess:
             print("Did you forget to indicate the variant of the model?")
             return None
         
-        print("self.n_executions:", self.n_executions)
-        print("automatic:", automatic)
-        print("automatic_call:", SolverProcess.automatic_call)
+        #print("self.n_executions:", self.n_executions)
+        #print("automatic:", automatic)
+        #print("automatic_call:", SolverProcess.automatic_call)
          
         if automatic is False and SolverProcess.automatic_call:
             print("\n You attempt to solve the instance with both -solve and the function solve().")
