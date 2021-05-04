@@ -54,9 +54,9 @@ if sys.argv:
         data = Compilation.data
 
 
-def compile(user_filename=None, *, disabling=False):
+def compile(user_filename=None, *, disabling_opoverrider=False):
     Compilation.set_filename(user_filename)
-    return Compilation.compile(disabling)
+    return Compilation.compile(disabling_opoverrider)
 
 
 @atexit.register

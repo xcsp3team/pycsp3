@@ -45,8 +45,8 @@ class Compilation:
         Compilation.user_filename = _user_filename
 
     @staticmethod
-    def compile(disabling = True):
-        return _compile(disabling)
+    def compile(disabling_opoverrider=True):
+        return _compile(disabling_opoverrider)
 
 
 def _load_options():
@@ -182,7 +182,7 @@ def default_data(filename):
     return Compilation.data
 
 
-def _compile(disabling=False):
+def _compile(disabling_opoverrider=False):
     # used to save data in jSON
     def prepare_for_json(obj):
         if is_namedtuple(obj):
@@ -198,8 +198,8 @@ def _compile(disabling=False):
 
     if Error.errorOccurrence:
         return None
-    
-    if disabling:
+
+    if disabling_opoverrider:
         OpOverrider.disable()
 
     if Compilation.user_filename is not None:
@@ -208,9 +208,6 @@ def _compile(disabling=False):
     else:
         filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
         filename = filename_prefix + ".xml"
-
-    #if Compilation.done:
-    #    return filename
 
     stopwatch = Stopwatch()
     print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
@@ -248,7 +245,6 @@ def _compile(disabling=False):
 
     # print("  Total wall clock time:", Compilation.stopwatch.elapsed_time(), "seconds")
 
-    #if disabling:
     Compilation.done = True
 
     cop = root is not None and root.attrib and root.attrib["type"] == "COP"
@@ -262,10 +258,10 @@ def _compile(disabling=False):
         # print("solver", solver, "args", args)
         if solver == CHOCO:
             from pycsp3.solvers.choco import ChocoProcess
-            result, solution = ChocoProcess().solve((filename, cop),solving, args, args_recursive, compiler=True, automatic=True)
+            result, solution = ChocoProcess().solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
         else:  # Fallback case => options.solver == "ace":
             from pycsp3.solvers.abscon import AceProcess
-            result, solution = AceProcess().solve((filename,cop), solving, args, args_recursive, compiler=True, automatic=True)
+            result, solution = AceProcess().solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
         # if result:
         #     print(result)
         if solution:

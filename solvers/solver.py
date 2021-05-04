@@ -237,7 +237,8 @@ class SolverProcess:
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
 
             signal.signal(signal.SIGINT, new_handler)
-            log = Logger(self.extend_filename_logger if self.extend_filename_logger is not None else str(self.n_executions))  # To record the output of the solver
+            log = Logger(
+                self.extend_filename_logger if self.extend_filename_logger is not None else str(self.n_executions))  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
@@ -252,15 +253,11 @@ class SolverProcess:
             print("\n The instance has no variable, so the solver is not run.")
             print("Did you forget to indicate the variant of the model?")
             return None
-        
-        #print("self.n_executions:", self.n_executions)
-        #print("automatic:", automatic)
-        #print("automatic_call:", SolverProcess.automatic_call)
-         
+
         if automatic is False and SolverProcess.automatic_call:
             print("\n You attempt to solve the instance with both -solve and the function solve().")
             return None
-        
+
         SolverProcess.automatic_call = automatic
         if compiler is False:  # To get options from the model
             string_options = "[" + self.name.lower() + "," + string_options + "]"
@@ -272,7 +269,7 @@ class SolverProcess:
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""
         solver_args += self.options
-        
+
         verbose = verbose or options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + solver_args
         print("\n  * Solving by " + self.name + " in progress ... ")
@@ -288,7 +285,7 @@ class SolverProcess:
         if missing:
             print("\n   This is due to a missing implementation")
         print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[ace,v] to see directly the output of the solver.\n")
-        self.n_executions+=1
+        self.n_executions += 1
         return extract_result_and_solution(out_err) if out_err else (None, None)
 
 # class SolverPy4J(SolverProcess):  # TODO in progress

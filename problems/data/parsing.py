@@ -81,14 +81,14 @@ def remaining_lines(skip_curr=False):
     return _dataParser.lines[_dataParser.curr_line_index:]
 
 
-def number_in(line):
+def number_in(line, offset=0):
     assert line is not None
-    return int(re.search(r'[-]?\d+', line).group(0))
+    return int(re.search(r'[-]?\d+', line).group(0)) + offset
 
 
-def numbers_in(line):
+def numbers_in(line, offset=0):
     assert line is not None
-    return [int(v) for v in re.findall(r'[-]?\d+', line)]  # [int(v) for v in line().split() if v.isdigit()]
+    return [int(v) + offset for v in re.findall(r'[-]?\d+', line)]  # [int(v) for v in line().split() if v.isdigit()]
 
 
 def numbers_in_lines_until(stop):
