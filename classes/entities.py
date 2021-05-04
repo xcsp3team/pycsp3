@@ -156,7 +156,7 @@ class EToSatisfy(ECtrs):
             super().__init__(constraints)
 
     def delete(self, i):
-        self.entities.remove(self.entities[i])
+        del self.entities[i]
 
 class EGroup(ECtrs):
     ''' Constraints in a group '''
