@@ -54,9 +54,9 @@ if sys.argv:
         data = Compilation.data
 
 
-def compile(user_filename=None):
+def compile(user_filename=None, *, disabling=False):
     Compilation.set_filename(user_filename)
-    return Compilation.compile()
+    return Compilation.compile(disabling)
 
 
 @atexit.register
