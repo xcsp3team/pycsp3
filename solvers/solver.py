@@ -144,6 +144,8 @@ class Instantiation:
 
 
 class SolverProcess:
+    automatic_call = False
+
     def __init__(self, *, name, command, cp):
         self.name = name
         self.command = command
@@ -153,13 +155,14 @@ class SolverProcess:
         self.stderr = None
         self.last_command_wck = None
         self.extend_filename_logger = None
+        self.n_executions = 0
 
     def command(self, _command):
         self.command = _command
 
-    def setting(self, option):
+    def setting(self, option=""):
         option = str(option).strip()
-        self.options += " " + option if self.options != "" else option
+        self.options = " " + option if self.options != "" else option
 
     def extend_logger(self, _extend_filename_logger):
         self.extend_filename_logger = _extend_filename_logger
@@ -167,7 +170,7 @@ class SolverProcess:
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
-    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False):
+    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=False, automatic=False):
         model, cop = instance
 
         def extract_result_and_solution(stdout):
@@ -196,7 +199,9 @@ class SolverProcess:
             variables = []
             for token in root[0].text.split():
                 r = VarEntities.get_item_with_name(token)
-                if isinstance(r, (EVar, Variable)):  # TODO why do we need these two classes of variables?
+                if isinstance(r, EVar):
+                    variables.append(r.variable)
+                elif isinstance(r, Variable):
                     variables.append(r)
                 else:
                     for x in flatten(r.variables, keep_none=True):
@@ -215,7 +220,6 @@ class SolverProcess:
             for i, v in enumerate(values):
                 if variables[i]:
                     variables[i].value = v  # we add a new field (may be useful)
-
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
             return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
 
@@ -233,7 +237,7 @@ class SolverProcess:
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
 
             signal.signal(signal.SIGINT, new_handler)
-            log = Logger(self.extend_filename_logger)  # To record the output of the solver
+            log = Logger(self.extend_filename_logger if self.extend_filename_logger is not None else str(self.n_executions))  # To record the output of the solver
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
@@ -248,23 +252,28 @@ class SolverProcess:
             print("\n The instance has no variable, so the solver is not run.")
             print("Did you forget to indicate the variant of the model?")
             return None
-
+        
+        #print("self.n_executions:", self.n_executions)
+        #print("automatic:", automatic)
+        #print("automatic_call:", SolverProcess.automatic_call)
+         
+        if automatic is False and SolverProcess.automatic_call:
+            print("\n You attempt to solve the instance with both -solve and the function solve().")
+            return None
+        
+        SolverProcess.automatic_call = automatic
         if compiler is False:  # To get options from the model
             string_options = "[" + self.name.lower() + "," + string_options + "]"
             solver, tmp_dict_options, tmp_dict_simplified_options = process_options(string_options)
             dict_simplified_options.update(tmp_dict_simplified_options)
             dict_options.update(tmp_dict_options)
 
-        if self.options is not None:
-            if "args" in dict_options:
-                dict_options["args"] += self.options
-            else:
-                dict_options["args"] = self.options
-
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""
-        verbose = options.solve or "verbose" in dict_simplified_options
+        solver_args += self.options
+        
+        verbose = verbose or options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + solver_args
         print("\n  * Solving by " + self.name + " in progress ... ")
         print("    with command: ", command)
@@ -279,6 +288,7 @@ class SolverProcess:
         if missing:
             print("\n   This is due to a missing implementation")
         print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[ace,v] to see directly the output of the solver.\n")
+        self.n_executions+=1
         return extract_result_and_solution(out_err) if out_err else (None, None)
 
 # class SolverPy4J(SolverProcess):  # TODO in progress
