@@ -160,7 +160,7 @@ class SolverProcess:
     def command(self, _command):
         self.command = _command
 
-    def setting(self, option):
+    def setting(self, option=""):
         option = str(option).strip()
         self.options = " " + option if self.options != "" else option
 
@@ -268,15 +268,11 @@ class SolverProcess:
             dict_simplified_options.update(tmp_dict_simplified_options)
             dict_options.update(tmp_dict_options)
 
-        if self.options is not None:
-            if "args" in dict_options:
-                dict_options["args"] += self.options
-            else:
-                dict_options["args"] = self.options
-
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""
+        solver_args += self.options
+        
         verbose = verbose or options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + model + " " + solver_args
         print("\n  * Solving by " + self.name + " in progress ... ")
