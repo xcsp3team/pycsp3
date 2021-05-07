@@ -67,7 +67,13 @@ def next_line(repeat=0):
     return l
 
 
+def skip_empty_lines(or_prefixed_by=None):
+    while line() is not None and (len(line().strip()) == 0 or or_prefixed_by and line().startswith(or_prefixed_by)):
+        next_line()
+
+
 def next_int():
+    # skip_empty_lines()
     return _dataParser.next(to_int=True)
 
 

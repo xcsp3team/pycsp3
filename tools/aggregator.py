@@ -88,6 +88,11 @@ def _compute_group_abstraction_intension(group):
                 break
         return True
 
+    if group.abstraction:
+        # TODO not perfect because if we remove a constraint from the list in incremental mode
+        # the group is no more coherent
+        return group.abstraction, group.all_args
+
     all_args = [ce.constraint.abstract_values() for ce in group.entities]
     abstract_tree = group.entities[0].constraint.abstract_tree()
     n_parameters = len(group.entities[0].constraint.abstract_values())
@@ -133,6 +138,7 @@ def _compute_group_abstraction_other(group):
 
     # building the abstract constraint template
     abstract_condition = len(group.diff_argument_names) == 2 and group.diff_argument_names[-1] == TypeCtrArg.CONDITION
+    c.n_parameters = 0
     for arg in c.arguments.values():
         if arg.name in group.diff_argument_names:
             index = group.diff_argument_names.index(arg.name)
