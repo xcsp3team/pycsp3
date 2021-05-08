@@ -137,7 +137,6 @@ class ECtrs(Entity):
         self.entities = [c for c in constraints if c is not None]
 
 
-
 class EToGather(ECtrs):
     ''' Constraints possibly stored in a group (the user asked to gather these constraints)'''
 
@@ -157,6 +156,7 @@ class EToSatisfy(ECtrs):
 
     def delete(self, i):
         del self.entities[i]
+
 
 class EGroup(ECtrs):
     ''' Constraints in a group '''
@@ -389,6 +389,13 @@ class Node(Entity):
         self.sons = args  # TODO sons is used whatever this is a parent or a leaf node; not a good choice. change the name of this field ??? to content ??
         self.abstractTree = None
         self.abstractValues = None
+
+    def eq__safe(self, other):
+        if not isinstance(other, Node) or self.type != other.type or self.leaf != other.leaf:
+            return False
+        if not self.leaf:
+            return len(self.sons) == len(other.sons) and all(self.sons[i].eq__safe(other.sons[i]) for i in range(len(self.sons)))
+        return self.sons.eq__safe(other.sons) if isinstance(self.sons, Variable) else self.sons == other.sons
 
     def __str__(self):
         return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
