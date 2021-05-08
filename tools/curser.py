@@ -202,7 +202,7 @@ class OpOverrider:
         # ListInt.__contains__ = list.__contains__
 
         EMetaCtr.__eq__ = Node.__eq__ = object.__eq__
-        Variable.__eq__ = Variable.eq__save  # TODO are there other methods in the same situation?
+        Variable.__eq__ = Variable.eq__safe  # TODO are there other methods in the same situation?
 
         EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = object.__ne__
         Variable.__lt__ = Node.__lt__ = object.__lt__
@@ -232,11 +232,13 @@ class OpOverrider:
     @staticmethod
     def eq_protected(v1, v2):
         if isinstance(v1, list) and isinstance(v2, list):
-            if len(v1) != len(v2):
-                return False
-            return all(OpOverrider.eq_protected(v1[i], v2[i]) for i in range(len(v1)))
+            return len(v1) == len(v2) and all(OpOverrider.eq_protected(v1[i], v2[i]) for i in range(len(v1)))
+        if type(v1) != type(v2):
+            return False
         if isinstance(v1, Variable):
-            return Variable.eq__save(v1, v2)
+            return Variable.eq__safe(v1, v2)
+        if isinstance(v1, Node):
+            return Node.eq__safe(v1, v2)
         return v1 == v2
 
     @staticmethod

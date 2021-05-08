@@ -534,7 +534,6 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
-
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
     auxiliary().replace_nodes_and_partial_constraints(terms)
 

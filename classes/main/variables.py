@@ -79,11 +79,11 @@ class Variable:
         self.inverse = inverse  # arithmetic inverse
         self.negation = negation  # logical negation
 
-    def eq__save(self,other):
+    def eq__safe(self, other):
         return isinstance(other, Variable) and self.id == other.id
 
     def __eq__(self, other):
-        return self.eq__save(other)  #isinstance(other, Variable) and self.id == other.id
+        return self.eq__safe(other)  #isinstance(other, Variable) and self.id == other.id
 
     def __invert__(self):
         return Variable(self.id, self.dom, negation=not self.negation)
