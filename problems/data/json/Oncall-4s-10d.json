@@ -1,0 +1,1 @@
+{"workLoads": [100, 100, 100, 100], "nDays": 10, "unavailable": [[0, 9], [0, 2, 9], [2], [1]], "fixed": [[], [], [0], []], "offset": 2, "adjacency": 1, "wednesday": 1}
