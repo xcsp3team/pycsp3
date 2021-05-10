@@ -610,6 +610,8 @@ class Node(Entity):
                 args = tuple(args[0])
             if isinstance(args[0], types.GeneratorType):
                 args = tuple(list(args[0]))
+        if len(args) == 0:
+            return True if t == TypeNode.AND else False
         return Node.build(t, *args) if len(args) > 1 else args[0]
 
     @staticmethod
