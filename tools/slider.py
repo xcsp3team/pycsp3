@@ -49,11 +49,13 @@ def _identify_slide(group):
         return scope, 1, False
 
     ''' trying to recognize a circular Slide '''
-    if sliding_scope + [[scope[i] for i in range(len(scope) - arity + 1, len(scope))] + [scope[0]]] == all_args:
+    sliding_scope = [[x for x in [scope[(i + k) % len(scope)] for k in range(arity)]] for i in range(len(scope))]
+    if sliding_scope == all_args:
         return scope, 1, True
 
     ''' trying to recognize a slide with an offset not equal to 1'''
     offset = _possible_offset(all_args)
+    print("hhhh ", offset)
     if offset is None or offset <= 1:
         return None
     sliding_scope = [[x for x in scope[i:i + arity]] for i in range(0, len(scope) - arity + 1, offset)]
