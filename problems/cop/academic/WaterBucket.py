@@ -40,7 +40,7 @@ def tables():
 table_transitions, table_horizon = tables()
 
 # x[t][i] is the volume of water in bucket i at time (round) t
-x = VarArray(size=[h, 3], dom=[[range(c1 + 1), range(c2 + 1), range(c3 + 1)]] * h)
+x = VarArray(size=[h, 3], dom=lambda t, i: range(c1 + 1) if i == 0 else range(c2 + 1) if i == 1 else range(c3 + 1))
 
 # z is the number of transfers of water in order to reach the goal
 z = Var(dom=range(h))
@@ -60,3 +60,8 @@ minimize(
     # minimizing the number of transfers
     z
 )
+
+""" Comments
+1) it is no more possible to write x = VarArray(size=[h, 3], dom=[[range(c1 + 1), range(c2 + 1), range(c3 + 1)]] * h)
+that is to say, a list of lists of domains (one must use a (lambda) function) 
+"""
