@@ -106,6 +106,11 @@ def VarArray(*, size, dom, comment=None):
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
     assert str(name) not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
 
+    if isinstance(dom, (tuple, list, set)):
+        domain = flatten(dom)
+        assert all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)
+        dom = Domain(set(domain))
+
     var_objects = Variable.build_variables_array(name, size, dom)
     if isinstance(name, list):
         for variable in var_objects:
@@ -667,7 +672,7 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     checkType(origins, [Variable])
     lengths = flatten(lengths)
     checkType(lengths, ([Variable], [int]))
-    heights = flatten(heights)
+    heights = [heights for _ in range(len(origins))] if isinstance(heights, int) else flatten(heights)
     checkType(heights, ([Variable], [int]))
     ends = flatten(ends) if ends is not None else ends  # ends is optional
     checkType(ends, ([Variable], type(None)))
@@ -714,10 +719,10 @@ def Clause(term, *others, phases=None):
 
 
 def _optimize(term, minimization):
-    if isinstance(term, PartialConstraint) and isinstance(term.constraint, ConstraintSum) and TypeCtrArg.COEFFS not in term.constraint.arguments:
+    if isinstance(term, PartialConstraint) and isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):
         l = term.constraint.arguments[TypeCtrArg.LIST]
-        if len(l.content) == 1:
-            term = l.content[0]  # this was a sum with only one term, so we just consider this term as an expression to be optimized
+        if len(l.content) == 1 and TypeCtrArg.COEFFS not in term.constraint.arguments:
+            term = l.content[0]  # this was a sum/maximum/minimum with only one term, so we just consider this term as an expression to be optimized
     if isinstance(term, ScalarProduct):
         term = Sum(term)  # to have a PartialConstraint
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"

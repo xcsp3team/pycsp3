@@ -29,10 +29,10 @@ r, n = data or (3, 12)
 x = VarArray(size=n, dom=range(1, n + 1))
 
 # z is the minimal value such that any (circular) subsequence of x  of size r is less than or equal to z
-z = Var(range(sum(n-v for v in range(r)) +1))
+z = Var(range(sum(n - v for v in range(r)) + 1))
 
 satisfy(
-    # a permutation ies required
+    # a permutation is required
     AllDifferent(x),
 
     # any subsequence of size r must be less than or equal to z

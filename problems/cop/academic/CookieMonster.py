@@ -52,3 +52,13 @@ satisfy(
 minimize(
     f
 )
+
+
+""" Comments
+1) the two groups of constraints concerning the initial and final states could be equivalently written:
+  # initial state
+  x[0] == jars,
+
+  # final state
+  x[-1] == [0 for _ in range(nJars)],
+"""

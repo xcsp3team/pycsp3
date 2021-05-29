@@ -39,7 +39,7 @@ class Variable:
             return domain
         if isinstance(domain, list) and (all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)):
             return Domain(set(domain))
-        assert isinstance(domain, (range, set)), type(domain)
+        assert isinstance(domain, (range, set)), str(type(domain)) + " " + str(domain)
         return Domain(domain)
 
     @staticmethod
