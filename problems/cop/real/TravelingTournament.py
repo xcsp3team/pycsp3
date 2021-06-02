@@ -2,8 +2,8 @@
 See https://www.researchgate.net/publication/220270875_The_Traveling_Tournament_Problem_Description_and_Benchmarks
 
 Examples of Execution:
-  python3 TravelingTournament_Parser.py -data=TravelingTournament_galaxy04.json -variant=a2
-  python3 TravelingTournament_Parser.py -data=TravelingTournament_galaxy04.json -variant=a3
+  python3 TravelingTournament.py -data=TravelingTournament_galaxy04.json -variant=a2
+  python3 TravelingTournament.py -data=TravelingTournament_galaxy04.json -variant=a3
 """
 
 from pycsp3 import *
@@ -77,7 +77,6 @@ satisfy(
 
     # handling travelling for two successive games
     [(h[i][k], h[i][k + 1], o[i][k], o[i][k + 1], t[i][k + 1]) in table(i) for i in range(nTeams) for k in range(nRounds - 1)]
-
 )
 
 minimize(
@@ -86,5 +85,5 @@ minimize(
 )
 
 """ Comments
-1) we could avoid building systematically similar automata (and tables)
+1) with a cache, we could avoid building systematically similar automata (and tables)
 """
