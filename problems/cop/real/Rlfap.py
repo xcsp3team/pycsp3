@@ -36,7 +36,7 @@ elif variant("card"):
 elif variant("max"):
     minimize(
         # minimizing the sum of violation costs
-        Sum(ift(f[i] == v, 0, mobilityCosts[mob]) for (i, v, mob) in variables if v and mob)
+        Sum(ift(f[i] == v, 0, mobilityCosts[mob]) for i, (_, v, mob) in enumerate(variables) if v and mob)
         + Sum(ift(expr(op, abs(f[i] - f[j]), k), 0, interferenceCosts[wgt]) for (i, j, op, k, wgt) in constraints if wgt)
     )
 
