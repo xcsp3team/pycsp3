@@ -72,7 +72,9 @@ class EVarArray(Entity):
         self.name = name
         self.variables = X
         self.flatVars = flatten(X)
-        assert len(self.flatVars) != 0, "Array of variable empty !"
+        if len(self.flatVars) == 0:
+            return
+        # assert len(self.flatVars) != 0, "Array of variable empty !"
         self.containing_hole = None  # undefined until we ask  #flatVarsKeepingNone = flatten(X, keep_none=True)
         self.size = []
         curr = self.variables
