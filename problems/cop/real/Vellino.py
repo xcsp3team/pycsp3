@@ -1,9 +1,9 @@
 """
 From "Constraint Programming in OPL", P. Van Hentenryck, L. Michel, L. Perron, and J.-C. Régin, CP'99
 
-This configuration problem involves placing objects of different materials (glass, plastic, steel, wood, and copper)
-into bins of various types/colors (red, blue, green), subject to capacity (each bin type has a maximum) and compatibility constraints.
-Every object must be placed into a bin and the total number of used bins must be minimized.
+This configuration problem involves putting components of different materials (glass, plastic, steel, wood, and copper)
+into bins of various types/colors (red, blue, green), subject to capacity (each bin type has a maximum capacity) and compatibility constraints.
+Every component must be placed into a bin and the total number of used bins must be minimized.
 The compatibility constraints are:
  - red bins cannot contain plastic or steel
  - blue bins cannot contain wood or plastic
@@ -31,14 +31,14 @@ maxCapacity, nBins = max(capacities), sum(demands)
 # c[i] is the color of the ith bin
 c = VarArray(size=nBins, dom=range(nColors))
 
-# p[i][j] is the number of objects of the jth material put in the ith bin
+# p[i][j] is the number of components of the jth material put in the ith bin
 p = VarArray(size=[nBins, nMaterials], dom=lambda i, j: range(min(maxCapacity, demands[j]) + 1))
 
 satisfy(
     # every bin with a real colour must contain something, and vice versa
     [(c[i] == Unusable) == (Sum(p[i]) == 0) for i in range(nBins)],
 
-    # all objects of each material is spread across all bins
+    # all components of each material are spread across all bins
     [Sum(p[:, j]) == demands[j] for j in range(nMaterials)],
 
     # the capacity of each bin is not exceeded
@@ -53,7 +53,7 @@ satisfy(
     # green bins cannot contain steel or glass
     [(c[i] != Green) | ((p[i][Steel] == 0) & (p[i][Glass] == 0)) for i in range(nBins)],
 
-    # red bins contain at most one wooden object
+    # red bins contain at most one wooden component
     [(c[i] != Red) | (p[i][Wood] <= 1) for i in range(nBins)],
 
     # green bins contain at most two wooden components
