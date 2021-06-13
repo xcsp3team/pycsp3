@@ -24,7 +24,7 @@ satisfy(
     [(y[i] == x[i]) | (y[i] == functions[gate.f][y[gate.in1]][y[gate.in2]]) & (x[i] == -1) for i, gate in enumerate(gates) if i > 1]
 )
 
-maximize(
-    # maximizing the number of non faulty gates
-    Sum(x[i] == -1 for i in range(2, nGates))
+minimize(
+    # minimizing the number of faulty gates
+    Sum(x[i] != -1 for i in range(2, nGates))
 )
