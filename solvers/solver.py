@@ -156,9 +156,13 @@ class SolverProcess:
         self.last_command_wck = None
         self.extend_filename_logger = None
         self.n_executions = 0
+        self.last_log = None
 
     def command(self, _command):
         self.command = _command
+
+    def get_logger(self):
+        return self.last_log
 
     def setting(self, option=""):
         option = str(option).strip()
@@ -239,6 +243,7 @@ class SolverProcess:
             signal.signal(signal.SIGINT, new_handler)
             log = Logger(
                 self.extend_filename_logger if self.extend_filename_logger is not None else str(self.n_executions))  # To record the output of the solver
+            self.last_log = log.log_file
             for line in p.stdout:
                 if verbose:
                     sys.stdout.write(line)
@@ -249,7 +254,7 @@ class SolverProcess:
             signal.signal(signal.SIGINT, handler)  # Reset the right SIGINT
             return log.read(), stopped
 
-        if len(VarEntities.items) == 0:
+        if model is not None and len(VarEntities.items) == 0:
             print("\n The instance has no variable, so the solver is not run.")
             print("Did you forget to indicate the variant of the model?")
             return None
@@ -271,7 +276,8 @@ class SolverProcess:
         solver_args += self.options
 
         verbose = verbose or options.solve or "verbose" in dict_simplified_options
-        command = self.command + " " + model + " " + solver_args
+        command = self.command + " " + (model if model is not None else "") + " " + solver_args
+        
         print("\n  * Solving by " + self.name + " in progress ... ")
         print("    with command: ", command)
         out_err, stopped = execute(command, verbose)
