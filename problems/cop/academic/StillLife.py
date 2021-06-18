@@ -36,7 +36,7 @@ if not variant():
         # imposing rules for ensuring valid dead cells around the board
         [
             [x[0][i:i + 3] != (1, 1, 1) for i in range(m - 2)],
-            [x[- 1][i: i + 3] != (1, 1, 1) for i in range(m - 2)],
+            [x[-1][i: i + 3] != (1, 1, 1) for i in range(m - 2)],
             [x[i:i + 3, 0] != (1, 1, 1) for i in range(n - 2)],
             [x[i:i + 3, - 1] != (1, 1, 1) for i in range(n - 2)]
         ],
@@ -107,8 +107,8 @@ elif variant("wastage"):
 1) we could have posted unary constraints instead of identifying specific cells
    at the border assumed to be dead, when creating arrays of variables, like:
  [
-   [(x[0][j] == 0, x[- 1][j] == 0) for j in range(n + 2)],
-   [(x[i][0] == 0, x[i][- 1] == 0) for i in range(n + 2)],
+   [(x[0][j] == 0, x[-1][j] == 0) for j in range(n + 2)],
+   [(x[i][0] == 0, x[i][-1] == 0) for i in range(n + 2)],
  ],
 
 2) in order to generate automatically slide constraints when handling rules for the boarder, we could

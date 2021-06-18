@@ -28,7 +28,7 @@ satisfy(
     [Count(v, value=i + 1) == f[i] for i in range(nVouchers)],
 
     # a voucher, if used, must contribute to have at least one free pizza.
-    [iff(f[i] == 0, p[i] != vouchers[i].payPart) for i in range(nVouchers)],
+    [(f[i] == 0) == (p[i] != vouchers[i].payPart) for i in range(nVouchers)],
 
     # a free pizza obtained with a voucher must be cheaper than any pizza paid wrt this voucher
     [imply(v[i] < 0, v[i] != -v[j]) for i in range(nPizzas) for j in range(nPizzas) if i != j and prices[i] < prices[j]]

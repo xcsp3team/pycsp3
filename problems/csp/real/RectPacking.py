@@ -13,6 +13,7 @@ from pycsp3 import *
 width, height = data.container
 boxes = data.boxes
 nBoxes = len(boxes)
+print(data)
 
 # x[i] is the x-coordinate where is put the ith rectangle
 x = VarArray(size=nBoxes, dom=range(width))
@@ -28,8 +29,12 @@ satisfy(
     [y[i] + boxes[i].height <= height for i in range(nBoxes)],
 
     # no overlap on boxes
-    NoOverlap(origins=[(x[i], y[i]) for i in range(nBoxes)], lengths=[(w, h) for (w, h) in boxes]),
+    NoOverlap(origins=[(x[i], y[i]) for i in range(nBoxes)], lengths=boxes),
 
     # tag(symmetry-breaking)
-    [x[- 1] <= math.floor((width - boxes[- 1].width) // 2.0), y[- 1] <= x[- 1]] if width == height else None
+    [x[-1] <= math.floor((width - boxes[-1].width) // 2.0), y[-1] <= x[-1]] if width == height else None
 )
+
+""" Comments
+1) even if elements of boxes are named tuples, one can write length=boxes instead of lengths=[(w, h) for (w, h) in boxes]
+"""
