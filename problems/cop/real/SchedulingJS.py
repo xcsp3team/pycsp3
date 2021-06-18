@@ -23,7 +23,7 @@ satisfy(
     [s[i][0] > jobs[i].releaseDate for i in range(n) if jobs[i].releaseDate > 0],
 
     # respecting due dates
-    [s[i][- 1] <= jobs[i].dueDate - durations[i][- 1] for i in range(n) if 0 <= jobs[i].dueDate < horizon - 1],
+    [s[i][-1] <= jobs[i].dueDate - durations[i][-1] for i in range(n) if 0 <= jobs[i].dueDate < horizon - 1],
 
     # no overlap on resources
     [NoOverlap(tasks=[(s[i][indexes[i][j]], durations[i][indexes[i][j]]) for i in range(n)]) for j in range(m)]
@@ -31,7 +31,7 @@ satisfy(
 
 minimize(
     # minimizing the makespan
-    Maximum(s[i][- 1] + durations[i][- 1] for i in range(n))
+    Maximum(s[i][-1] + durations[i][-1] for i in range(n))
 )
 
 """ Comments

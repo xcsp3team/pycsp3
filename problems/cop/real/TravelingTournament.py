@@ -21,7 +21,7 @@ def table(i, at_end=False):  # # when at_end is True, this is for the first or l
         return ({(1, 1, ANY, ANY, 0)} |
                 {(0, 1, j, ANY, distances[i][j]) for j in range(nTeams) if j != i} |
                 {(1, 0, ANY, j, distances[i][j]) for j in range(nTeams) if j != i} |
-                {(0, 0, j1, j2, distances[j1][j2]) for j1 in range(nTeams) for j2 in range(nTeams) if different_values(i, j1, j2)})
+                {(0, 0, j, k, distances[j][k]) for j in range(nTeams) for k in range(nTeams) if different_values(i, j, k)})
 
 
 def automaton():
@@ -64,7 +64,7 @@ satisfy(
     [AllDifferent(o[:, k]) for k in range(nRounds)],
 
     # tag(symmetry-breaking)
-    o[0][0] < o[0][- 1],
+    o[0][0] < o[0][-1],
 
     # at most 'nConsecutiveGames' consecutive games at home, or consecutive games away
     [h[i] in automaton() for i in range(nTeams)],
@@ -73,7 +73,7 @@ satisfy(
     [(h[i][0], o[i][0], t[i][0]) in table(i, at_end=True) for i in range(nTeams)],
 
     # handling travelling for the last game
-    [(h[i][- 1], o[i][- 1], t[i][-1]) in table(i, at_end=True) for i in range(nTeams)],
+    [(h[i][-1], o[i][-1], t[i][-1]) in table(i, at_end=True) for i in range(nTeams)],
 
     # handling travelling for two successive games
     [(h[i][k], h[i][k + 1], o[i][k], o[i][k + 1], t[i][k + 1]) in table(i) for i in range(nTeams) for k in range(nRounds - 1)]

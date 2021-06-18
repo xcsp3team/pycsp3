@@ -150,7 +150,7 @@ def _compute_group_abstraction_other(group):
                     group.entities[0].constraint.arguments[arg.name].content) > LIMIT_FOR_VAR_ARGS:
                 abstraction[arg.name] = "%..."
                 var_args_argument = arg.name
-            elif var_args_argument is None and group.diff_argument_names[- 1] == arg.name and isinstance(arg.content, list) and len(
+            elif var_args_argument is None and group.diff_argument_names[-1] == arg.name and isinstance(arg.content, list) and len(
                     arg.content) > LIMIT_FOR_VAR_ARGS:
                 abstraction[arg.name] = "%..."
             else:
@@ -174,7 +174,7 @@ def _compute_group_abstraction_other(group):
     arguments_names = list(c.arguments.keys())
     for ce in group.entities:
         tmp = []
-        if var_args_argument is None or group.diff_argument_flags[- 1]:
+        if var_args_argument is None or group.diff_argument_flags[-1]:
             for name in arguments_names:
                 if name in group.diff_argument_names:
                     add_content(ce.constraint.arguments[name].content)

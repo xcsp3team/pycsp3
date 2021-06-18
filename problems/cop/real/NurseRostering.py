@@ -92,7 +92,7 @@ satisfy(
     [x[i: i + kmin[p] + 1, p] in automaton(kmin[p], True) for p in range(nStaffs) for i in range(nDays - kmin[p])],
 
     # managing off days on schedule ends
-    [(imply(x[0][p] != off, x[i][p] != off), imply(x[- 1][p] != off, x[- 1 - i][p] != off)) for p in range(nStaffs) if kmin[p] > 1 for i in range(1, kmin[p])],
+    [(imply(x[0][p] != off, x[i][p] != off), imply(x[-1][p] != off, x[-1 - i][p] != off)) for p in range(nStaffs) if kmin[p] > 1 for i in range(1, kmin[p])],
 
     # minimum consecutive days off
     [x[i: i + kday[p] + 1, p] in automaton(kday[p], False) for p in range(nStaffs) for i in range(nDays - kday[p])],
