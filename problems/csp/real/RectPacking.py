@@ -13,7 +13,6 @@ from pycsp3 import *
 width, height = data.container
 boxes = data.boxes
 nBoxes = len(boxes)
-print(data)
 
 # x[i] is the x-coordinate where is put the ith rectangle
 x = VarArray(size=nBoxes, dom=range(width))
