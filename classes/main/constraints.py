@@ -896,7 +896,7 @@ def global_indirection(c):
         aux = auxiliary().replace_element_index(length, index)
         if aux:
             c.arguments[TypeCtrArg.INDEX].content = aux
-            functions.satisfy((index,aux) in {(v, v if 0<=v < length else ANY) for v in index.dom})
+            functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
     if isinstance(c, ConstraintAllDifferent):
         lst = c.arguments[TypeCtrArg.LIST].content
         pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))
