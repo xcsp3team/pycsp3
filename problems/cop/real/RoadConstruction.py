@@ -26,5 +26,5 @@ satisfy(
 )
 
 minimize(
-    Sum(sp[i][j][- 1] for i, j in combinations(range(n), 2))
+    Sum(sp[i][j][-1] for i, j in combinations(range(n), 2))
 )

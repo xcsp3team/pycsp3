@@ -1,7 +1,7 @@
 <instance format="XCSP3" type="COP">
   <variables>
     <array id="c" note="c[i] is the color of the ith bin" size="[19]"> 0..3 </array>
-    <array id="p" note="p[i][j] is the number of objects of the jth material put in the ith bin" size="[19][5]">
+    <array id="p" note="p[i][j] is the number of components of the jth material put in the ith bin" size="[19][5]">
       <domain for="p[][0]"> 0..2 </domain>
       <domain for="p[0][1] p[0][3..4] p[1][1] p[1][3..4] p[2][1] p[2][3..4] p[3][1] p[3][3..4] p[4][1] p[4][3..4] p[5][1] p[5][3..4] p[6][1] p[6][3..4] p[7][1] p[7][3..4] p[8][1] p[8][3..4] p[9][1] p[9][3..4] p[10][1] p[10][3..4] p[11][1] p[11][3..4] p[12][1] p[12][3..4] p[13][1] p[13][3..4] p[14][1] p[14][3..4] p[15][1] p[15][3..4] p[16][1] p[16][3..4] p[17][1] p[17][3..4] p[18][1] p[18][3..4]"> 0..4 </domain>
       <domain for="p[][2]"> 0..3 </domain>
@@ -34,7 +34,7 @@
       <args> c[17] aux_gb[17] </args>
       <args> c[18] aux_gb[18] </args>
     </group>
-    <group note="all objects of each material is spread across all bins">
+    <group note="all components of each material are spread across all bins">
       <sum>
         <list> %... </list>
         <condition> (eq,%0) </condition>
@@ -136,7 +136,7 @@
       <args> c[17] p[17][2] p[17][0] </args>
       <args> c[18] p[18][2] p[18][0] </args>
     </group>
-    <group note="red bins contain at most one wooden object">
+    <group note="red bins contain at most one wooden component">
       <intension> or(ne(%0,1),le(%1,1)) </intension>
       <args> c[0] p[0][3] </args>
       <args> c[1] p[1][3] </args>

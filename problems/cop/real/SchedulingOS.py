@@ -39,10 +39,10 @@ satisfy(
     [NoOverlap(origins=sd[:, j], lengths=durations[:, j]) for j in range(m)],
 
     # tag(redundant-constraints)
-    [s[i][- 1] + d[i][- 1] >= sum(durations[i]) for i in range(n)]
+    [s[i][-1] + d[i][-1] >= sum(durations[i]) for i in range(n)]
 )
 
 minimize(
     # minimizing the makespan
-    Maximum(s[i][- 1] + d[i][- 1] for i in range(n))
+    Maximum(s[i][-1] + d[i][-1] for i in range(n))
 )

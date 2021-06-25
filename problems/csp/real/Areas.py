@@ -74,6 +74,6 @@ satisfy(
 
 """ Comments 
 1) (cross(x, i, j), cross(d, i, j)) is a tuple containing two sub-tuples of variables.
-   This is automatically flattened. It is also possible to write:
+   This is automatically flattened (i.e., transformed into a single tuple). It is also possible to write:
    (*cross(x, i, j), *cross(d, i, j))
 """

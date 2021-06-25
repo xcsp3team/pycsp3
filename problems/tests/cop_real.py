@@ -94,4 +94,5 @@ run(Tester("cop" + os.sep + "real")
     .add("Vellino", data="Vellino-5.json")  # optimum 8
     .add("Vrp", data="Vrp_P-n16-k8.json")
     .add("Warehouse", data="Warehouse_example.txt", prs_py="Warehouse_Parser", prs_jv="Warehouse_Parser")  # optimum 383
+    .add("Warehouse", data="Warehouse_example.txt", prs_py="Warehouse_Parser", prs_jv="Warehouse_Parser", variant="compact")  # optimum 383
     )

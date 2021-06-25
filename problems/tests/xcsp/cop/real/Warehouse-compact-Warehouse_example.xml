@@ -1,0 +1,92 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="w" note="w[i] is the warehouse supplying the ith store" size="[10]"> 0..4 </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[11]">
+      <domain for="aux_gb[0]"> 11..100 </domain>
+      <domain for="aux_gb[1]"> 27..83 </domain>
+      <domain for="aux_gb[2]"> 70..97 </domain>
+      <domain for="aux_gb[3]"> 2..73 </domain>
+      <domain for="aux_gb[4]"> 4..96 </domain>
+      <domain for="aux_gb[5]"> 22..67 </domain>
+      <domain for="aux_gb[6]"> 1..73 </domain>
+      <domain for="aux_gb[7]"> 10..96 </domain>
+      <domain for="aux_gb[8]"> 35..93 </domain>
+      <domain for="aux_gb[9]"> 47..95 </domain>
+      <domain for="aux_gb[10]"> 1..10 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <group note="capacities of warehouses must not be exceeded">
+      <count>
+        <list> w[] </list>
+        <values> %0 </values>
+        <condition> (le,%1) </condition>
+      </count>
+      <args> 0 1 </args>
+      <args> 1 4 </args>
+      <args> 2 2 </args>
+      <args> 3 1 </args>
+      <args> 4 3 </args>
+    </group>
+    <element>
+      <list> 100 24 11 25 30 </list>
+      <index> w[0] </index>
+      <value> aux_gb[0] </value>
+    </element>
+    <element>
+      <list> 28 27 82 83 74 </list>
+      <index> w[1] </index>
+      <value> aux_gb[1] </value>
+    </element>
+    <element>
+      <list> 74 97 71 96 70 </list>
+      <index> w[2] </index>
+      <value> aux_gb[2] </value>
+    </element>
+    <element>
+      <list> 2 55 73 69 61 </list>
+      <index> w[3] </index>
+      <value> aux_gb[3] </value>
+    </element>
+    <element>
+      <list> 46 96 59 83 4 </list>
+      <index> w[4] </index>
+      <value> aux_gb[4] </value>
+    </element>
+    <element>
+      <list> 42 22 29 67 59 </list>
+      <index> w[5] </index>
+      <value> aux_gb[5] </value>
+    </element>
+    <element>
+      <list> 1 5 73 59 56 </list>
+      <index> w[6] </index>
+      <value> aux_gb[6] </value>
+    </element>
+    <element>
+      <list> 10 73 13 43 96 </list>
+      <index> w[7] </index>
+      <value> aux_gb[7] </value>
+    </element>
+    <element>
+      <list> 93 35 63 85 46 </list>
+      <index> w[8] </index>
+      <value> aux_gb[8] </value>
+    </element>
+    <element>
+      <list> 47 65 55 71 95 </list>
+      <index> w[9] </index>
+      <value> aux_gb[9] </value>
+    </element>
+    <nValues>
+      <list> w[] </list>
+      <condition> (eq,aux_gb[10]) </condition>
+    </nValues>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the overall cost" type="sum">
+      <list> aux_gb[] </list>
+      <coeffs> 1x10 30 </coeffs>
+    </minimize>
+  </objectives>
+</instance>

@@ -1,6 +1,6 @@
-<h1 align="center"> PyCSP3 v1.2.2 </h1>
+<h1 align="center"> PyCSP3 v1.3 </h1>
 
-This is Version 1.2.2 of PyCSP3, a library in Python 3 (version 3.5 or later) for modeling combinatorial constrained problems.
+This is Version 1.3 of PyCSP3, a library in Python 3 (version 3.5 or later) for modeling combinatorial constrained problems.
 PyCSP3 is inspired from both [JvCSP3](http://www.xcsp.org/modeling) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack); it is also related to [CPpy](https://github.com/tias/cppy).
 
 With PyCSP3, it is possible to generate instances of:
@@ -19,7 +19,7 @@ At this stage, one can run two embedded solvers:
 * the constraint solver 'Ace' (AbsCon Essence), with the option -solve or the option -solver=ace
 * the constraint solver 'Choco, with the option -solver=choco
 
-Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf).
+Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
 It is, for example, immediate to run 'Ace' or 'Choco' on XCSP3 instances (files) as the respective executables (jar files) are 
@@ -198,7 +198,7 @@ Among the options, we find:
 
 * ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace' or 'choco'.
 Important: it requires that Java version 8 (at least) is installed.
-Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/optionsSolvers.pdf).
+Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
 
 By default, a file containing the XCSP3 instance is generated, unless you use the option:
 

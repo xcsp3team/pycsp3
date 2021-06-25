@@ -15,7 +15,7 @@ nCities = len(distances)
 c = VarArray(size=nCities, dom=range(nCities))
 
 # d[i] is the distance between the cities i and i+1 chosen in the tour
-d = VarArray(size=nCities, dom={v for row in distances for v in row})
+d = VarArray(size=nCities, dom=distances)
 
 satisfy(
     # Visiting each city only once
@@ -40,3 +40,8 @@ minimize(
     # minimizing the travelled distance
     Sum(d)
 )
+
+
+""" Comments
+1) writing dom=distances is equivalent (and more compact) than writing dom={v for row in distances for v in row}
+"""

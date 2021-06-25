@@ -23,7 +23,7 @@ satisfy(
 
 """ Comments
 1) [1, 2, 3, 5, 10] * s cannot work (because the list of integers if not built from cp_array)
-    we should write: cp_array(1, 2, 3, 5, 10) * s
+   one should write: cp_array(1, 2, 3, 5, 10) * s
 
 2) there are two solutions
 """

@@ -20,16 +20,16 @@ if not variant():
     satisfy(
         AllEqual(x),
 
-        (x[0] + 1 == x[- 1]) | ((x[0] == x[- 1]) & (x[0] == d - 1))
+        (x[0] + 1 == x[-1]) | ((x[0] == x[-1]) & (x[0] == d - 1))
     )
 
 elif variant("table"):
     satisfy(
         [(x[i], x[i + 1]) in {(v, v) for v in range(d)} for i in range(n - 1)],
 
-        (x[0], x[- 1]) in {(v + 1, v) for v in range(d - 1)} | {(d - 1, d - 1)}
+        (x[0], x[-1]) in {(v + 1, v) for v in range(d - 1)} | {(d - 1, d - 1)}
     )
 
 """ Comments
-1) Note that it is not possible to write: x[0] == x[- 1] == v - 1
+1) Note that it is not possible to write: x[0] == x[-1] == v - 1
 """

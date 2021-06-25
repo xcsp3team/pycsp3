@@ -78,12 +78,15 @@ def _load_data():
         return OrderedDict([("f" + str(i), od[i]) for i, v in enumerate(raw_data)]), od
         # return DataVisitor(raw_data).visit(ast.parse(inspect.getsource(Compilation.model)))
 
+    def _arg_value(s):
+        return None if s in None_Values else int(s) if s.isdigit() else s
+
     def _load_multiple_data_pieces():  # formatting instructions not possible in that case
         s = ""
         for arg in args:
             if "=" in arg:
                 t = arg.split('=')
-                value = None if t[1] in None_Values else int(t[1]) if t[1].isdigit() else t[1]
+                value = _arg_value(t[1])
                 compilation_data[t[0]] = value
                 s += "-" + str(value)
             else:
@@ -114,7 +117,7 @@ def _load_data():
             ordered_data = []
             for arg in args:
                 t = arg.split('=')
-                value = None if t[1] in None_Values else int(t[1]) if t[1].isdigit() else t[1]
+                value = _arg_value(t[1])
                 compilation_data[t[0]] = value
                 ordered_data.append(value)
         else:
@@ -159,6 +162,7 @@ def _load(*, console=False):
         else:
             Compilation.data, Compilation.string_data = _load_data()
         Compilation.data = convert_to_namedtuples(Compilation.data)
+        Compilation.string_data = Compilation.string_data.replace("/", "-")
         if len(Compilation.data) == 0:
             Compilation.data = None
         elif len(Compilation.data) == 1:
