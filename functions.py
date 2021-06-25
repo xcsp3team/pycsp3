@@ -268,6 +268,8 @@ def satisfy(*args):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
         no_parameter_satisfy = i
+        if isinstance(arg, (set,frozenset)):
+            arg= list(arg)
         assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), \
             "non authorized type " + str(arg) + " " + str(type(arg))
         if arg is None:

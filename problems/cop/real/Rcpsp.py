@@ -23,7 +23,7 @@ satisfy(
 )
 
 minimize(
-    s[- 1]
+    s[-1]
 )
 
 """ Comments

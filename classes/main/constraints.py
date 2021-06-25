@@ -5,7 +5,7 @@ from pycsp3 import functions
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
-from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr, TypeNode, Node
+from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr, TypeNode, Node, possible_range
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
@@ -831,7 +831,8 @@ class _Auxiliary:
             self._introduced_variables = EVarArray([var], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
         else:
             self._introduced_variables.extend_with(var)
-        self._collected_constraints.append((obj, var))
+        if obj:
+            self._collected_constraints.append((obj, var))
         return var
 
     def replace_partial_constraint(self, pc):
@@ -863,6 +864,12 @@ class _Auxiliary:
             values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
         return self.__replace(node, Domain(values))
 
+    def replace_element_index(self, length, index):
+        if all(0 <= v < length for v in index.dom):
+            return None
+        values = possible_range({v for v in index.dom if 0 <= v < length})
+        return self.__replace(None, Domain(values))
+
     def collected(self):
         t = self._collected_constraints
         self._collected_constraints = []
@@ -883,6 +890,13 @@ def global_indirection(c):
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
         pc = PartialConstraint(c)
+    if isinstance(c, ConstraintElement):
+        index = c.arguments[TypeCtrArg.INDEX].content
+        length = len(c.arguments[TypeCtrArg.LIST].content)
+        aux = auxiliary().replace_element_index(length, index)
+        if aux:
+            c.arguments[TypeCtrArg.INDEX].content = aux
+            functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
     if isinstance(c, ConstraintAllDifferent):
         lst = c.arguments[TypeCtrArg.LIST].content
         pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))

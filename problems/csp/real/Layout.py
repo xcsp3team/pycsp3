@@ -10,30 +10,30 @@ Execution:
 from pycsp3 import *
 
 grid, shapes = data
-nRows, nCols, nShapes = len(grid), len(grid[0]), len(shapes)
+n, m, nShapes = len(grid), len(grid[0]), len(shapes)
 
 
-def bases(shape):
-    height, width = len(shape), len(shape[0])
-    return [i * nCols + j for i in range(nRows - height + 1) for j in range(nCols - width + 1) if
+def domain_y(k):
+    shape, height, width = shapes[k], len(shapes[k]), len(shapes[k][0])
+    return [i * m + j for i in range(n - height + 1) for j in range(m - width + 1) if
             all(grid[i + gi][j + gj] == 1 or shape[gi][gj] == 0 for gi in range(height) for gj in range(width))]
 
 
 def table(k):
     shape, height, width = shapes[k], len(shapes[k]), len(shapes[k][0])
     tbl = []
-    for v in bases(shape):
-        i, j = v // nCols, v % nCols
-        t = [(i + gi) * nCols + (j + gj) for gi in range(height) for gj in range(width) if shape[gi][gj] == 1]
-        tbl.append((v,) + tuple(k if w in t else ANY for w in range(nRows * nCols)))
+    for v in domain_y(k):
+        i, j = v // m, v % m
+        t = [(i + gi) * m + (j + gj) for gi in range(height) for gj in range(width) if shape[gi][gj] == 1]
+        tbl.append((v,) + tuple(k if w in t else ANY for w in range(n * m)))
     return tbl
 
 
 # x[i][j] is the index of the shape occupying the cell at row i and column j (or -1 if the cell is free)
-x = VarArray(size=[nRows, nCols], dom=lambda i, j: {-1} if grid[i][j] == 0 else range(nShapes))
+x = VarArray(size=[n, m], dom=lambda i, j: {-1} if grid[i][j] == 0 else range(nShapes))
 
 # y[k] is the (index of the) base cell in the grid where we start putting the kth shape
-y = VarArray(size=nShapes, dom=lambda k: bases(shapes[k]))
+y = VarArray(size=nShapes, dom=domain_y)
 
 satisfy(
     # putting shapes in the grid
@@ -41,5 +41,5 @@ satisfy(
 )
 
 """ Comments
-1) (y[k], x) is a possible shortcut for (y[k], *flatten(x))
+1) (y[k], x) is a shortcut for (y[k], *flatten(x))
 """

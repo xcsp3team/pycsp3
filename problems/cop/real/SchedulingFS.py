@@ -24,5 +24,5 @@ satisfy(
 
 minimize(
     # minimizing the makespan
-    Maximum(s[i][- 1] + durations[i][- 1] for i in range(n))
+    Maximum(s[i][-1] + durations[i][-1] for i in range(n))
 )

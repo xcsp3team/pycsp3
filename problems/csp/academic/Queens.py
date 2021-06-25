@@ -29,10 +29,10 @@ elif variant("v1"):
     satisfy(
         AllDifferent(q),
 
-        [abs(q[i] - q[j]) != abs(i - j) for i, j in combinations(n, 2)]
+        [abs(q[i] - q[j]) != j - i for i, j in combinations(n, 2)]
     )
 
 elif variant("v2"):
     satisfy(
-        (q[i] != q[j]) & (abs(q[i] - q[j]) != abs(i - j)) for i, j in combinations(n, 2)
+        (q[i] != q[j]) & (abs(q[i] - q[j]) != j - i) for i, j in combinations(n, 2)
     )
