@@ -126,7 +126,6 @@ def VarArray(*, size, dom, comment=None):
 
 def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     assert type(bool_value) is bool
-
     if isinstance(left_operand, Variable) and isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
         return None
     if isinstance(left_operand, Variable) and isinstance(right_operand, range):

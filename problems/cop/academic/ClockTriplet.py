@@ -49,5 +49,5 @@ minimize(
 """ Comments
 1) the call to Slide can be avoided, but the interest is two-fold:
   - getting a more compact XCSP3 file
-  - letting the possibility of exploiting the meta-constraint Slide (stronger filtering) by solvers  
+  - letting solvers the possibility of exploiting the meta-constraint Slide (stronger filtering)
 """

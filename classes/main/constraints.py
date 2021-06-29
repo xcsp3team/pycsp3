@@ -896,6 +896,7 @@ def global_indirection(c):
         aux = auxiliary().replace_element_index(length, index)
         if aux:
             c.arguments[TypeCtrArg.INDEX].content = aux
+            # below, should we replace ANY by a specific value (for avoid interchageable values)?
             functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
     if isinstance(c, ConstraintAllDifferent):
         lst = c.arguments[TypeCtrArg.LIST].content
