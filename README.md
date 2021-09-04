@@ -184,7 +184,6 @@ Among the options, we find:
 
     Data can then be directly used in the PyCSP3 model by means of a predefined variable `data`.
 
-
 * ```-dataparser=<file>```: a Python file for reading/parsing data given under any arbitrary form (e.g., by a text file).
      See Example Nonogram below, for an illustration.
 
@@ -199,6 +198,8 @@ Among the options, we find:
 * ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace' or 'choco'.
 Important: it requires that Java version 8 (at least) is installed.
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
+
+* ```-output=<file_name>```: sets the filename of the generated XCSP3 instance (think about the extension .xml)
 
 By default, a file containing the XCSP3 instance is generated, unless you use the option:
 

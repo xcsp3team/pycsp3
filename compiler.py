@@ -50,7 +50,7 @@ class Compilation:
 
 
 def _load_options():
-    options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver")
+    options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver", "output")
     options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "restrictTablesWrtDomains",
                       "safe", "solve", "dontcompactValues", "usemeta", "debug")
     if options.checker is None:
@@ -206,9 +206,14 @@ def _compile(disabling_opoverrider=False):
     if disabling_opoverrider:
         OpOverrider.disable()
 
+    if Compilation.user_filename is None and options.output is not None:
+        Compilation.set_filename(options.output)
     if Compilation.user_filename is not None:
-        print("  * User-defined XML file name:", Compilation.user_filename)
+        if options.output is None:
+            print("  * User-defined XML file name:", Compilation.user_filename)
         filename = Compilation.user_filename
+        if filename.endswith(".xml"):
+            filename_prefix = filename[:-4]  # can be useful if data are exported
     else:
         filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
         filename = filename_prefix + ".xml"
