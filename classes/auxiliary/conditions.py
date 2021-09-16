@@ -6,6 +6,7 @@ from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
 
+UTF_EQ = "\u003D"
 UTF_NE = "\u2260"
 UTF_LT = "\uFE64"  # ""\u227A"
 UTF_LE = "\u2264"
@@ -75,6 +76,8 @@ class ConditionValue(Condition):
         return super()._key() + (self.value,)
 
     def filtering(self, values):
+        if self.operator == TypeConditionOperator.EQ:
+            return (v for v in values if v == self.value)
         if self.operator == TypeConditionOperator.NE:
             return (v for v in values if v != self.value)
         if self.operator == TypeConditionOperator.LT:
@@ -88,6 +91,8 @@ class ConditionValue(Condition):
         assert False
 
     def str_tuple(self):
+        if self.operator == TypeConditionOperator.EQ:
+            return UTF_EQ + str(self.value)        
         if self.operator == TypeConditionOperator.NE:
             return UTF_NE + str(self.value)
         if self.operator == TypeConditionOperator.LT:
@@ -181,6 +186,8 @@ class ConditionSet(Condition):
 def ne(v):
     return ConditionValue(TypeConditionOperator.NE, v)
 
+def eq(v):
+    return ConditionValue(TypeConditionOperator.EQ, v)
 
 def lt(v):
     return ConditionValue(TypeConditionOperator.LT, v)
