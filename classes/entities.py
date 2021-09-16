@@ -302,10 +302,10 @@ class TypeNode(Enum):
         return self.lowercase_name
 
     ''' 0-ary '''
-    VAR, PAR, INT, RATIONAL, DECIMAL, SYMBOL, PARTIAL = ((id, 0, 0) for id in auto(7))
+    VAR, INT, RATIONAL, DECIMAL, SYMBOL, PARTIAL = ((id, 0, 0) for id in auto(6))
 
     ''' Unary'''
-    NEG, ABS, SQR, NOT, CARD, HULL, CONVEX, SQRT, EXP, LN, SIN, COS, TAN, ASIN, ACOS, ATAN, SINH, COSH, TANH = ((id, 1, 1) for id in auto(19))
+    COL, NEG, ABS, SQR, NOT, CARD, HULL, CONVEX, SQRT, EXP, LN, SIN, COS, TAN, ASIN, ACOS, ATAN, SINH, COSH, TANH = ((id, 1, 1) for id in auto(20))
 
     ''' Binary '''
     SUB, DIV, MOD, POW, DIST, LT, LE, GE, GT, IN, NOTIN, IMP, DIFF, DJOINT, SUBSET, SUBSEQ, SUPSEQ, SUPSET, FDIV, FMOD, = ((id, 2, 2) for id in auto(20))
@@ -399,6 +399,20 @@ class Node(Entity):
             return len(self.sons) == len(other.sons) and all(self.sons[i].eq__safe(other.sons[i]) for i in range(len(self.sons)))
         return self.sons.eq__safe(other.sons) if isinstance(self.sons, Variable) else self.sons == other.sons
 
+    def __strsmart__(self):
+        if self.type.is_leaf():
+          return str(self.sons)
+
+        if self.type == TypeNode.COL:
+          assert self.sons[0].type != TypeNode.COL, "Smart tuple must be of the form col(x)[+or-][integer]" 
+          return "%" + str(self.sons[0])  
+        if self.type == TypeNode.ADD or self.type == TypeNode.SUB:
+          assert self.sons[0].type == TypeNode.COL and self.sons[1].type == TypeNode.INT, "Smart tuple must be of the form col(x)[+or-][integer]" 
+          good_str = "+" if self.type == TypeNode.ADD else "-" 
+          return self.sons[0].__strsmart__() + good_str + self.sons[1].__strsmart__()
+        else:
+          assert False, "Smart tuple must be of the form col(x)[+or-][integer]" 
+          
     def __str__(self):
         return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
 
@@ -469,7 +483,7 @@ class Node(Entity):
         if isinstance(self.sons, list):
             for son in self.sons:
                 Node.mark_as_used(son)
-
+    
     def _abstraction_recursive(self, cache, harvest_values):
         if self.type in {TypeNode.VAR, TypeNode.INT, TypeNode.SYMBOL}:
             key = id(self)

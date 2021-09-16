@@ -2,6 +2,8 @@ from types import GeneratorType
 from functools import total_ordering
 
 from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator
+from pycsp3.classes.entities import Node
+
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
@@ -77,7 +79,7 @@ class ConditionValue(Condition):
 
     def filtering(self, values):
         if self.operator == TypeConditionOperator.EQ:
-            return (v for v in values if v == self.value)
+            return (self.value, )
         if self.operator == TypeConditionOperator.NE:
             return (v for v in values if v != self.value)
         if self.operator == TypeConditionOperator.LT:
@@ -91,6 +93,7 @@ class ConditionValue(Condition):
         assert False
 
     def str_tuple(self):
+        #print("str_tuple:", self.value)
         if self.operator == TypeConditionOperator.EQ:
             return UTF_EQ + str(self.value)        
         if self.operator == TypeConditionOperator.NE:
@@ -111,6 +114,31 @@ class ConditionValue(Condition):
     def right_operand(self):
         return self.value
 
+class ConditionNode(Condition):
+    def __init__(self, operator, node):
+        super().__init__(operator)
+        self.node = node
+    
+    def __hash__(self):
+        return hash(self._key())
+    
+    def __eq__(self, other):
+        return self.node.eq__safe(other)
+
+    def _key(self):
+        return super()._key() + (self.node,)
+
+    def filtering(self, values): #To do not use it during the filtering
+        return {self} 
+        assert False, "Currently not implemented"
+
+    def str_tuple(self):
+        return self.node.__strsmart__()
+        return str(self.node)
+        assert False, "Currently not implemented"
+
+    def right_operand(self):
+        return self.variable
 
 class ConditionVariable(Condition):
     def __init__(self, operator, variable):
@@ -184,24 +212,37 @@ class ConditionSet(Condition):
 
 
 def ne(v):
+    if isinstance(v, Node):
+      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
     return ConditionValue(TypeConditionOperator.NE, v)
 
 def eq(v):
+  if isinstance(v, Node):
+    return ConditionNode(TypeConditionOperator.EQ, v)
+  if isinstance(v, int):
     return ConditionValue(TypeConditionOperator.EQ, v)
+  assert False, "A condition eq() must be a node or an integer"
 
 def lt(v):
+    if isinstance(v, Node):
+      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
     return ConditionValue(TypeConditionOperator.LT, v)
 
 
 def le(v):
+    if isinstance(v, Node):
+      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
     return ConditionValue(TypeConditionOperator.LE, v)
 
-
 def ge(v):
+    if isinstance(v, Node):
+      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
     return ConditionValue(TypeConditionOperator.GE, v)
 
 
 def gt(v):
+    if isinstance(v, Node):
+      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
     return ConditionValue(TypeConditionOperator.GT, v)
 
 

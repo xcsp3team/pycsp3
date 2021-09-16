@@ -333,13 +333,16 @@ def Intension(node):
     node.mark_as_used()
     return ctr
 
+def col(*args):
+    assert len(args) == 1 and isinstance(args[0], int)    
+    return Node.build(TypeNode.COL, *args)
 
 def abs(*args):
     if len(args) == 1 and isinstance(args[0], Node) and args[0].type == TypeNode.SUB:
         return Node.build(TypeNode.DIST, *args[0].sons)
     return Node.build(TypeNode.ABS, *args) if len(args) == 1 and isinstance(args[0], (Node, Variable)) else absPython(*args)
 
-
+    
 def min(*args):
     return Node.build(TypeNode.MIN, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 
