@@ -28,7 +28,7 @@ def automaton():
     qi, q01, q02, q03, q11, q12, q13 = states = "q", "q01", "q02", "q03", "q11", "q12", "q13"
     tr2 = [(qi, 0, q01), (qi, 1, q11), (q01, 0, q02), (q01, 1, q11), (q11, 0, q01), (q11, 1, q12), (q02, 1, q11), (q12, 0, q01)]
     tr3 = [(q02, 0, q03), (q12, 1, q13), (q03, 1, q11), (q13, 0, q01)]
-    return Automaton(start=qi, final={q for q in states if q != qi}, transitions=tr2 if variant("a2") else tr2 + tr3)
+    return Automaton(start=qi, final=states[1:], transitions=tr2 if variant("a2") else tr2 + tr3)
 
 
 # o[i][k] is the opponent (team) of the ith team  at the kth round
@@ -41,7 +41,7 @@ h = VarArray(size=[nTeams, nRounds], dom={0, 1})
 a = VarArray(size=[nTeams, nRounds], dom={0, 1})
 
 # t[i][k] is the travelled distance by the ith team at the kth round. An additional round is considered for returning at home.
-t = VarArray(size=[nTeams, nRounds + 1], dom={d for row in distances for d in row})
+t = VarArray(size=[nTeams, nRounds + 1], dom=distances)
 
 satisfy(
 
@@ -86,4 +86,6 @@ minimize(
 
 """ Comments
 1) with a cache, we could avoid building systematically similar automata (and tables)
+2) we write dom=distances, which is equivalent to (and more compact than) dom={d for row in distances for d in row}
+3) we write final=states[1:], which is equivalent to (and more compact than) final={q for q in states if q != qi}
 """

@@ -1,7 +1,7 @@
 <h1 align="center"> PyCSP3 v1.3 </h1>
 
 This is Version 1.3 of PyCSP3, a library in Python 3 (version 3.5 or later) for modeling combinatorial constrained problems.
-PyCSP3 is inspired from both [JvCSP3](http://www.xcsp.org/modeling) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack); it is also related to [CPpy](https://github.com/tias/cppy).
+PyCSP3 is inspired from both [JvCSP3](http://www.xcsp.org/modeling) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). 
 
 With PyCSP3, it is possible to generate instances of:
 1. CSPs (Constraint Satisfaction Problems)
@@ -662,18 +662,14 @@ def automaton(pattern):
     else:
         n_states = sum(pattern) + len(pattern)
         num = 0
-        for i in range(len(pattern)):
+        for i, size in enumerate(pattern):
             transitions.append((q(num), 0, q(num)))
-            for j in range(pattern[i]):
-                transitions.append((q(num), 1, q(num + 1)))
-                num += 1
-            if i < len(pattern) - 1:
-                transitions.append((q(num), 0, q(num + 1)))
-                num += 1
-        transitions.append((q(num), 0, q(num)))
+            transitions.extend((q(num + j), 1, q(num + j + 1)) for j in range(size))
+            transitions.append((q(num + size), 0, q(num + size + (1 if i < len(pattern) - 1 else 0))))
+            num += size + 1
     return Automaton(start=q(0), final=q(n_states - 1), transitions=transitions)
 
-#  x[i][j] is 1 iff the cell at row i and col j is colored in black
+# x[i][j] is 1 iff the cell at row i and col j is colored in black
 x = VarArray(size=[nRows, nCols], dom={0, 1})
 
 satisfy(
