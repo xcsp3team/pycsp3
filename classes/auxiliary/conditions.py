@@ -216,6 +216,9 @@ def ne(v):
       assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
     return ConditionValue(TypeConditionOperator.NE, v)
 
+
+# - mettre sou forme {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
+# avec au moins une variable
 def eq(v):
   if isinstance(v, Node):
     return ConditionNode(TypeConditionOperator.EQ, v)
