@@ -8,16 +8,6 @@ from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
 
-UTF_EQ = "\u003D"
-UTF_NE = "\u2260"
-UTF_LT = "\uFE64"  # ""\u227A"
-UTF_LE = "\u2264"
-UTF_GE = "\u2265"
-UTF_GT = "\uFE65"  # "\u227B"
-UTF_LTGT = "\u2276"
-UTF_NOT_ELEMENT_OF = "\u00AC"  # ""\u2209"
-UTF_COMPLEMENT = "\u2201"
-
 @total_ordering
 class Condition:
     def __init__(self, operator):
@@ -93,19 +83,12 @@ class ConditionValue(Condition):
         assert False
 
     def str_tuple(self):
-        #print("str_tuple:", self.value)
-        if self.operator == TypeConditionOperator.EQ:
-            return UTF_EQ + str(self.value)        
-        if self.operator == TypeConditionOperator.NE:
-            return UTF_NE + str(self.value)
+        if self.operator == TypeConditionOperator.EQ or self.operator == TypeConditionOperator.NE or self.operator == TypeConditionOperator.LE or self.operator == TypeConditionOperator.GE:
+          return TypeConditionOperator.toUTF8(self.operator) + str(self.value)
         if self.operator == TypeConditionOperator.LT:
-            return UTF_LE + str(self.value - 1) if isinstance(self.value, int) else UTF_LT + str(self.value)
-        if self.operator == TypeConditionOperator.LE:
-            return UTF_LE + str(self.value)
-        if self.operator == TypeConditionOperator.GE:
-            return UTF_GE + str(self.value)
+            return TypeConditionOperator.toUTF8(TypeConditionOperator.LE) + str(self.value - 1) if isinstance(self.value, int) else TypeConditionOperator.toUTF8(TypeConditionOperator.LT) + str(self.value)
         if self.operator == TypeConditionOperator.GT:
-            return UTF_GE + str(self.value + 1) if isinstance(self.value, int) else UTF_GT + str(self.value)
+            return TypeConditionOperator.toUTF8(TypeConditionOperator.GE) + str(self.value + 1) if isinstance(self.value, int) else TypeConditionOperator.toUTF8(TypeConditionOperator.GT) + str(self.value)
         assert False
     
     def __repr__(self):
@@ -130,13 +113,10 @@ class ConditionNode(Condition):
 
     def filtering(self, values): #To do not use it during the filtering
         return {self} 
-        assert False, "Currently not implemented"
-
+        
     def str_tuple(self):
-        return self.node.__strsmart__()
-        return str(self.node)
-        assert False, "Currently not implemented"
-
+        return (TypeConditionOperator.toUTF8(self.operator) if self.operator != TypeConditionOperator.EQ else "") + self.node.__strsmart__()
+        
     def right_operand(self):
         return self.variable
 
@@ -178,7 +158,7 @@ class ConditionInterval(Condition):
         if self.operator == TypeConditionOperator.IN:
             return self.right_operand()
         if self.operator == TypeConditionOperator.NOTIN:
-            return UTF_COMPLEMENT + self.right_operand()
+            return TypeConditionOperator.toUTF8(TypeConditionOperator.NOTIN) + self.right_operand()
         assert False
 
     def right_operand(self):
@@ -204,50 +184,38 @@ class ConditionSet(Condition):
         if self.operator == TypeConditionOperator.IN:
             return self.right_operand()
         if self.operator == TypeConditionOperator.NOTIN:
-            return UTF_COMPLEMENT + self.right_operand()
+            return TypeConditionOperator.toUTF8(TypeConditionOperator.NOTIN) + self.right_operand()
         assert False
 
     def right_operand(self):
         return "{" + ",".join(str(v) for v in self.t) + "}"
 
 
-def ne(v):
-    if isinstance(v, Node):
-      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
-    return ConditionValue(TypeConditionOperator.NE, v)
-
-
-# - mettre sou forme {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
-# avec au moins une variable
-def eq(v):
+def operatorCondition(typeConditionOperator, v):
   if isinstance(v, Node):
-    return ConditionNode(TypeConditionOperator.EQ, v)
+    # {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
+    return ConditionNode(typeConditionOperator, v)
   if isinstance(v, int):
-    return ConditionValue(TypeConditionOperator.EQ, v)
-  assert False, "A condition eq() must be a node or an integer"
+    return ConditionValue(typeConditionOperator, v)
+  assert False, "A condition " + typeConditionOperator + " must be a Node or an Integer."
 
+def ne(v):
+  return operatorCondition(TypeConditionOperator.NE, v)
+
+def eq(v):
+  return operatorCondition(TypeConditionOperator.EQ, v)
+  
 def lt(v):
-    if isinstance(v, Node):
-      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
-    return ConditionValue(TypeConditionOperator.LT, v)
-
-
+  return operatorCondition(TypeConditionOperator.LT, v)
+  
 def le(v):
-    if isinstance(v, Node):
-      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
-    return ConditionValue(TypeConditionOperator.LE, v)
-
+  return operatorCondition(TypeConditionOperator.LE, v)
+  
 def ge(v):
-    if isinstance(v, Node):
-      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
-    return ConditionValue(TypeConditionOperator.GE, v)
-
-
+  return operatorCondition(TypeConditionOperator.GE, v)
+ 
 def gt(v):
-    if isinstance(v, Node):
-      assert False, "Only eq() can take a smart tuple (i.e. can have a Node Object)"
-    return ConditionValue(TypeConditionOperator.GT, v)
-
+  return operatorCondition(TypeConditionOperator.GT, v)
 
 def _inside_outside(v, op):
     v = v if len(v) > 1 else v[0]
