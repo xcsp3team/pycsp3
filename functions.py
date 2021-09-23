@@ -335,6 +335,7 @@ def Intension(node):
 
 def col(*args):
     assert len(args) == 1 and isinstance(args[0], int)    
+    return Node(TypeNode.COL, args[0])
     return Node.build(TypeNode.COL, *args)
 
 def abs(*args):

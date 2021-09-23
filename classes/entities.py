@@ -302,10 +302,10 @@ class TypeNode(Enum):
         return self.lowercase_name
 
     ''' 0-ary '''
-    VAR, INT, RATIONAL, DECIMAL, SYMBOL, PARTIAL = ((id, 0, 0) for id in auto(6))
+    VAR, INT, RATIONAL, DECIMAL, SYMBOL, PARTIAL, COL = ((id, 0, 0) for id in auto(7))
 
     ''' Unary'''
-    COL, NEG, ABS, SQR, NOT, CARD, HULL, CONVEX, SQRT, EXP, LN, SIN, COS, TAN, ASIN, ACOS, ATAN, SINH, COSH, TANH = ((id, 1, 1) for id in auto(20))
+    NEG, ABS, SQR, NOT, CARD, HULL, CONVEX, SQRT, EXP, LN, SIN, COS, TAN, ASIN, ACOS, ATAN, SINH, COSH, TANH = ((id, 1, 1) for id in auto(19))
 
     ''' Binary '''
     SUB, DIV, MOD, POW, DIST, LT, LE, GE, GT, IN, NOTIN, IMP, DIFF, DJOINT, SUBSET, SUBSEQ, SUPSEQ, SUPSET, FDIV, FMOD, = ((id, 2, 2) for id in auto(20))
@@ -399,15 +399,16 @@ class Node(Entity):
             return len(self.sons) == len(other.sons) and all(self.sons[i].eq__safe(other.sons[i]) for i in range(len(self.sons)))
         return self.sons.eq__safe(other.sons) if isinstance(self.sons, Variable) else self.sons == other.sons
 
+    # {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
     def __strsmart__(self):
         if self.type.is_leaf():
+          if self.type == TypeNode.COL:
+            return "%" + str(self.sons)
           return str(self.sons)
-
-        if self.type == TypeNode.COL:
-          assert self.sons[0].type != TypeNode.COL, "Smart tuple must be of the form col(x)[+or-][integer]" 
-          return "%" + str(self.sons[0])  
         if self.type == TypeNode.ADD or self.type == TypeNode.SUB:
-          assert self.sons[0].type == TypeNode.COL and self.sons[1].type == TypeNode.INT, "Smart tuple must be of the form col(x)[+or-][integer]" 
+          assert len(self.sons) == 2, "Smart tuple must be of the form {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}" 
+          assert self.sons[0].type == TypeNode.COL or self.sons[0].type == TypeNode.INT, "Smart tuple must be of the form {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}" 
+          assert self.sons[1].type == TypeNode.COL or self.sons[1].type == TypeNode.INT, "Smart tuple must be of the form {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}" 
           good_str = "+" if self.type == TypeNode.ADD else "-" 
           return self.sons[0].__strsmart__() + good_str + self.sons[1].__strsmart__()
         else:
