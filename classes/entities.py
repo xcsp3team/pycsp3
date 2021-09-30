@@ -399,21 +399,19 @@ class Node(Entity):
             return len(self.sons) == len(other.sons) and all(self.sons[i].eq__safe(other.sons[i]) for i in range(len(self.sons)))
         return self.sons.eq__safe(other.sons) if isinstance(self.sons, Variable) else self.sons == other.sons
 
-    # {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
     def __strsmart__(self):
         if self.type.is_leaf():
-          if self.type == TypeNode.COL:
-            return "%" + str(self.sons)
-          return str(self.sons)
+            if self.type == TypeNode.COL:
+                return "%" + str(self.sons)
+            return str(self.sons)
         if self.type == TypeNode.ADD or self.type == TypeNode.SUB:
-          assert len(self.sons) == 2, "Smart tuple must be of the form {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}" 
-          assert self.sons[0].type == TypeNode.COL or self.sons[0].type == TypeNode.INT, "Smart tuple must be of the form {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}" 
-          assert self.sons[1].type == TypeNode.COL or self.sons[1].type == TypeNode.INT, "Smart tuple must be of the form {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}" 
-          good_str = "+" if self.type == TypeNode.ADD else "-" 
-          return self.sons[0].__strsmart__() + good_str + self.sons[1].__strsmart__()
+            msg = "Smart tuple must be of the form {eq|lt|le|ge|gt|ne}{var|integer}{+|-}{var|integer}"
+            assert len(self.sons) == 2, msg
+            assert self.sons[0].type in (TypeNode.INT, TypeNode.COL) and self.sons[1].type in (TypeNode.INT, TypeNode.COL), msg
+            return self.sons[0].__strsmart__() + ("+" if self.type == TypeNode.ADD else "-") + self.sons[1].__strsmart__()
         else:
-          assert False, "Smart tuple must be of the form col(x)[+or-][integer]" 
-          
+            assert False, "Smart tuple must be of the form col(x)[+or-][integer]"
+
     def __str__(self):
         return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
 
@@ -484,7 +482,7 @@ class Node(Entity):
         if isinstance(self.sons, list):
             for son in self.sons:
                 Node.mark_as_used(son)
-    
+
     def _abstraction_recursive(self, cache, harvest_values):
         if self.type in {TypeNode.VAR, TypeNode.INT, TypeNode.SYMBOL}:
             key = id(self)

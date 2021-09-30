@@ -1,18 +1,20 @@
-from types import GeneratorType
 from functools import total_ordering
+from types import GeneratorType
 
 from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator
 from pycsp3.classes.entities import Node
-
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
+
+LT, LE, GE, GT, EQ, NE, IN, NOTIN = [t for t in TypeConditionOperator]
+
 
 @total_ordering
 class Condition:
     def __init__(self, operator):
         self.operator = operator
-        assert isinstance(operator, TypeConditionOperator), "the operator " + str(operator) + " is not correct (should be of type TypeConditionOperator)"
+        assert isinstance(operator, TypeConditionOperator), "the operator " + str(operator) + " should be of type TypeConditionOperator"
 
     def _key(self):
         return str(type(self)), str(self.operator)
@@ -68,57 +70,61 @@ class ConditionValue(Condition):
         return super()._key() + (self.value,)
 
     def filtering(self, values):
-        if self.operator == TypeConditionOperator.EQ:
-            return (self.value, )
-        if self.operator == TypeConditionOperator.NE:
+        if self.operator == EQ:  # we should avoid calling this (by directly giving the value in the tuple: write 6 instead of (eq(6)))
+            return (self.value,) if self.value in values else ()
+        if self.operator == NE:
             return (v for v in values if v != self.value)
-        if self.operator == TypeConditionOperator.LT:
+        if self.operator == LT:
             return (v for v in values if v < self.value)
-        if self.operator == TypeConditionOperator.LE:
+        if self.operator == LE:
             return (v for v in values if v <= self.value)
-        if self.operator == TypeConditionOperator.GE:
+        if self.operator == GE:
             return (v for v in values if v >= self.value)
-        if self.operator == TypeConditionOperator.GT:
+        if self.operator == GT:
             return (v for v in values if v > self.value)
         assert False
 
     def str_tuple(self):
-        if self.operator == TypeConditionOperator.EQ or self.operator == TypeConditionOperator.NE or self.operator == TypeConditionOperator.LE or self.operator == TypeConditionOperator.GE:
-          return TypeConditionOperator.toUTF8(self.operator) + str(self.value)
-        if self.operator == TypeConditionOperator.LT:
-            return TypeConditionOperator.toUTF8(TypeConditionOperator.LE) + str(self.value - 1) if isinstance(self.value, int) else TypeConditionOperator.toUTF8(TypeConditionOperator.LT) + str(self.value)
-        if self.operator == TypeConditionOperator.GT:
-            return TypeConditionOperator.toUTF8(TypeConditionOperator.GE) + str(self.value + 1) if isinstance(self.value, int) else TypeConditionOperator.toUTF8(TypeConditionOperator.GT) + str(self.value)
+        op_utf = TypeConditionOperator.to_utf(self.operator)
+        if self.operator in (EQ, NE, LE, GE):
+            return op_utf + str(self.value)
+        # <= and >= more readable than < and > (this is why we translate when possible)
+        if self.operator == LT:
+            return TypeConditionOperator.to_utf(LE) + str(self.value - 1) if isinstance(self.value, int) else op_utf + str(self.value)
+        if self.operator == GT:
+            return TypeConditionOperator.to_utf(GE) + str(self.value + 1) if isinstance(self.value, int) else op_utf + str(self.value)
         assert False
-    
+
     def __repr__(self):
         return self.str_tuple()
 
     def right_operand(self):
         return self.value
 
+
 class ConditionNode(Condition):
     def __init__(self, operator, node):
         super().__init__(operator)
         self.node = node
-    
+
     def __hash__(self):
         return hash(self._key())
-    
+
     def __eq__(self, other):
         return self.node.eq__safe(other)
 
     def _key(self):
         return super()._key() + (self.node,)
 
-    def filtering(self, values): #To do not use it during the filtering
-        return {self} 
-        
+    def filtering(self, values):  # To do not use it during the filtering
+        return {self}
+
     def str_tuple(self):
-        return (TypeConditionOperator.toUTF8(self.operator) if self.operator != TypeConditionOperator.EQ else "") + self.node.__strsmart__()
-        
+        return (TypeConditionOperator.to_utf(self.operator) if self.operator != EQ else "") + self.node.__strsmart__()
+
     def right_operand(self):
         return self.variable
+
 
 class ConditionVariable(Condition):
     def __init__(self, operator, variable):
@@ -148,17 +154,17 @@ class ConditionInterval(Condition):
         return super()._key() + (self.min, self.max)
 
     def filtering(self, values):
-        if self.operator == TypeConditionOperator.IN:
+        if self.operator == IN:
             return (v for v in values if self.min <= v <= self.max)
-        if self.operator == TypeConditionOperator.NOTIN:
+        if self.operator == NOTIN:
             return (v for v in values if v < self.min or self.max < v)
         assert False
 
     def str_tuple(self):
-        if self.operator == TypeConditionOperator.IN:
+        if self.operator == IN:
             return self.right_operand()
-        if self.operator == TypeConditionOperator.NOTIN:
-            return TypeConditionOperator.toUTF8(TypeConditionOperator.NOTIN) + self.right_operand()
+        if self.operator == NOTIN:
+            return TypeConditionOperator.to_utf(NOTIN) + self.right_operand()
         assert False
 
     def right_operand(self):
@@ -174,48 +180,55 @@ class ConditionSet(Condition):
         return super()._key() + tuple(self.t)
 
     def filtering(self, values):
-        if self.operator == TypeConditionOperator.IN:
+        if self.operator == IN:
             return (v for v in values if v in self.t)
-        if self.operator == TypeConditionOperator.NOTIN:
+        if self.operator == NOTIN:
             return (v for v in values if v not in self.t)
         assert False
 
     def str_tuple(self):
-        if self.operator == TypeConditionOperator.IN:
+        if self.operator == IN:
             return self.right_operand()
-        if self.operator == TypeConditionOperator.NOTIN:
-            return TypeConditionOperator.toUTF8(TypeConditionOperator.NOTIN) + self.right_operand()
+        if self.operator == NOTIN:
+            return TypeConditionOperator.to_utf(NOTIN) + self.right_operand()
         assert False
 
     def right_operand(self):
         return "{" + ",".join(str(v) for v in self.t) + "}"
 
 
-def operatorCondition(typeConditionOperator, v):
-  if isinstance(v, Node):
-    # {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
-    return ConditionNode(typeConditionOperator, v)
-  if isinstance(v, int):
-    return ConditionValue(typeConditionOperator, v)
-  assert False, "A condition " + typeConditionOperator + " must be a Node or an Integer."
+def _build_condition(operator, v):
+    if isinstance(v, int):
+        return ConditionValue(operator, v)
+    if isinstance(v, Node):
+        # {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
+        return ConditionNode(operator, v)
+    assert False, "The right argument following " + operator + " must be an integer or a node."
 
-def ne(v):
-  return operatorCondition(TypeConditionOperator.NE, v)
+
+def lt(v):
+    return _build_condition(LT, v)
+
+
+def le(v):
+    return _build_condition(LE, v)
+
+
+def ge(v):
+    return _build_condition(GE, v)
+
+
+def gt(v):
+    return _build_condition(GT, v)
+
 
 def eq(v):
-  return operatorCondition(TypeConditionOperator.EQ, v)
-  
-def lt(v):
-  return operatorCondition(TypeConditionOperator.LT, v)
-  
-def le(v):
-  return operatorCondition(TypeConditionOperator.LE, v)
-  
-def ge(v):
-  return operatorCondition(TypeConditionOperator.GE, v)
- 
-def gt(v):
-  return operatorCondition(TypeConditionOperator.GT, v)
+    return _build_condition(EQ, v)
+
+
+def ne(v):
+    return _build_condition(NE, v)
+
 
 def _inside_outside(v, op):
     v = v if len(v) > 1 else v[0]
@@ -228,8 +241,8 @@ def _inside_outside(v, op):
 
 
 def inside(*v):
-    return _inside_outside(v, TypeConditionOperator.IN)
+    return _inside_outside(v, IN)
 
 
 def complement(*v):
-    return _inside_outside(v, TypeConditionOperator.NOTIN)
+    return _inside_outside(v, NOTIN)

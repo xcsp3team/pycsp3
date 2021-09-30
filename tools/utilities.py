@@ -166,11 +166,6 @@ def matrix_to_string(m):
 
 def table_to_string(table, restricting_domains=None, *, parallel=False):
     def _tuple_to_string(t):
-        #print("Here:", t)
-        #for ele in t:
-          #print(type(ele))
-          #print("jj:",ele) 
-        
         return "(" + ",".join(
             str(v) if isinstance(v, (int)) else
             str(set(v)) if isinstance(v, tuple) else

@@ -267,8 +267,8 @@ def satisfy(*args):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
         no_parameter_satisfy = i
-        if isinstance(arg, (set,frozenset)):
-            arg= list(arg)
+        if isinstance(arg, (set, frozenset)):
+            arg = list(arg)
         assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), \
             "non authorized type " + str(arg) + " " + str(type(arg))
         if arg is None:
@@ -332,17 +332,18 @@ def Intension(node):
     node.mark_as_used()
     return ctr
 
+
 def col(*args):
-    assert len(args) == 1 and isinstance(args[0], int)    
+    assert len(args) == 1 and isinstance(args[0], int)
     return Node(TypeNode.COL, args[0])
-    return Node.build(TypeNode.COL, *args)
+
 
 def abs(*args):
     if len(args) == 1 and isinstance(args[0], Node) and args[0].type == TypeNode.SUB:
         return Node.build(TypeNode.DIST, *args[0].sons)
     return Node.build(TypeNode.ABS, *args) if len(args) == 1 and isinstance(args[0], (Node, Variable)) else absPython(*args)
 
-    
+
 def min(*args):
     return Node.build(TypeNode.MIN, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 

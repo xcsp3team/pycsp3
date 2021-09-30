@@ -1,5 +1,6 @@
 from enum import Enum, unique
 
+
 # This file is called ptypes because types is a reserved word in Python
 
 def auto(n_occurrences=1):
@@ -101,6 +102,7 @@ class TypeXML(AbstractType):
     SOFT = auto()
     ANNOTATIONS, DECISION, OUTPUT, VAR_HEURISTIC, VAL_HEURISTIC, PREPRO, SEARCH, RESTARTS, FILTERING = auto(9)
 
+
 UTF_EQ = "\u003D"
 UTF_NE = "\u2260"
 UTF_LT = "\uFE64"  # ""\u227A"
@@ -110,6 +112,7 @@ UTF_GT = "\uFE65"  # "\u227B"
 UTF_LTGT = "\u2276"
 UTF_NOT_ELEMENT_OF = "\u00AC"  # ""\u2209"
 UTF_COMPLEMENT = "\u2201"
+
 
 @unique
 class TypeConditionOperator(AbstractType):
@@ -134,24 +137,24 @@ class TypeConditionOperator(AbstractType):
             if s == "!=":
                 return TypeConditionOperator.NE
         raise ValueError
-    
+
     @staticmethod
-    def toUTF8(typeConditionOperator):
-      if typeConditionOperator == TypeConditionOperator.EQ:
-          return UTF_EQ        
-      if typeConditionOperator == TypeConditionOperator.NE:
-          return UTF_NE
-      if typeConditionOperator == TypeConditionOperator.LT:
-          return UTF_LT
-      if typeConditionOperator == TypeConditionOperator.LE:
-          return UTF_LE
-      if typeConditionOperator == TypeConditionOperator.GE:
-          return UTF_GE
-      if typeConditionOperator == TypeConditionOperator.GT:
-          return UTF_GT
-      if typeConditionOperator == TypeConditionOperator.NOTIN:
-          return UTF_COMPLEMENT
-      assert False
+    def to_utf(condition_operator):
+        if condition_operator == TypeConditionOperator.LT:
+            return UTF_LT
+        if condition_operator == TypeConditionOperator.LE:
+            return UTF_LE
+        if condition_operator == TypeConditionOperator.GE:
+            return UTF_GE
+        if condition_operator == TypeConditionOperator.GT:
+            return UTF_GT
+        if condition_operator == TypeConditionOperator.EQ:
+            return UTF_EQ
+        if condition_operator == TypeConditionOperator.NE:
+            return UTF_NE
+        if condition_operator == TypeConditionOperator.NOTIN:
+            return UTF_COMPLEMENT
+        assert False
 
 
 @unique
