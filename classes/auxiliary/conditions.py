@@ -2,18 +2,11 @@ from types import GeneratorType
 from functools import total_ordering
 
 from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator
+from pycsp3.classes.entities import Node
+
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
-
-UTF_NE = "\u2260"
-UTF_LT = "\uFE64"  # ""\u227A"
-UTF_LE = "\u2264"
-UTF_GE = "\u2265"
-UTF_GT = "\uFE65"  # "\u227B"
-UTF_LTGT = "\u2276"
-UTF_NOT_ELEMENT_OF = "\u00AC"  # ""\u2209"
-UTF_COMPLEMENT = "\u2201"
 
 @total_ordering
 class Condition:
@@ -75,6 +68,8 @@ class ConditionValue(Condition):
         return super()._key() + (self.value,)
 
     def filtering(self, values):
+        if self.operator == TypeConditionOperator.EQ:
+            return (self.value, )
         if self.operator == TypeConditionOperator.NE:
             return (v for v in values if v != self.value)
         if self.operator == TypeConditionOperator.LT:
@@ -88,16 +83,12 @@ class ConditionValue(Condition):
         assert False
 
     def str_tuple(self):
-        if self.operator == TypeConditionOperator.NE:
-            return UTF_NE + str(self.value)
+        if self.operator == TypeConditionOperator.EQ or self.operator == TypeConditionOperator.NE or self.operator == TypeConditionOperator.LE or self.operator == TypeConditionOperator.GE:
+          return TypeConditionOperator.toUTF8(self.operator) + str(self.value)
         if self.operator == TypeConditionOperator.LT:
-            return UTF_LE + str(self.value - 1) if isinstance(self.value, int) else UTF_LT + str(self.value)
-        if self.operator == TypeConditionOperator.LE:
-            return UTF_LE + str(self.value)
-        if self.operator == TypeConditionOperator.GE:
-            return UTF_GE + str(self.value)
+            return TypeConditionOperator.toUTF8(TypeConditionOperator.LE) + str(self.value - 1) if isinstance(self.value, int) else TypeConditionOperator.toUTF8(TypeConditionOperator.LT) + str(self.value)
         if self.operator == TypeConditionOperator.GT:
-            return UTF_GE + str(self.value + 1) if isinstance(self.value, int) else UTF_GT + str(self.value)
+            return TypeConditionOperator.toUTF8(TypeConditionOperator.GE) + str(self.value + 1) if isinstance(self.value, int) else TypeConditionOperator.toUTF8(TypeConditionOperator.GT) + str(self.value)
         assert False
     
     def __repr__(self):
@@ -106,6 +97,28 @@ class ConditionValue(Condition):
     def right_operand(self):
         return self.value
 
+class ConditionNode(Condition):
+    def __init__(self, operator, node):
+        super().__init__(operator)
+        self.node = node
+    
+    def __hash__(self):
+        return hash(self._key())
+    
+    def __eq__(self, other):
+        return self.node.eq__safe(other)
+
+    def _key(self):
+        return super()._key() + (self.node,)
+
+    def filtering(self, values): #To do not use it during the filtering
+        return {self} 
+        
+    def str_tuple(self):
+        return (TypeConditionOperator.toUTF8(self.operator) if self.operator != TypeConditionOperator.EQ else "") + self.node.__strsmart__()
+        
+    def right_operand(self):
+        return self.variable
 
 class ConditionVariable(Condition):
     def __init__(self, operator, variable):
@@ -145,7 +158,7 @@ class ConditionInterval(Condition):
         if self.operator == TypeConditionOperator.IN:
             return self.right_operand()
         if self.operator == TypeConditionOperator.NOTIN:
-            return UTF_COMPLEMENT + self.right_operand()
+            return TypeConditionOperator.toUTF8(TypeConditionOperator.NOTIN) + self.right_operand()
         assert False
 
     def right_operand(self):
@@ -171,32 +184,38 @@ class ConditionSet(Condition):
         if self.operator == TypeConditionOperator.IN:
             return self.right_operand()
         if self.operator == TypeConditionOperator.NOTIN:
-            return UTF_COMPLEMENT + self.right_operand()
+            return TypeConditionOperator.toUTF8(TypeConditionOperator.NOTIN) + self.right_operand()
         assert False
 
     def right_operand(self):
         return "{" + ",".join(str(v) for v in self.t) + "}"
 
 
+def operatorCondition(typeConditionOperator, v):
+  if isinstance(v, Node):
+    # {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
+    return ConditionNode(typeConditionOperator, v)
+  if isinstance(v, int):
+    return ConditionValue(typeConditionOperator, v)
+  assert False, "A condition " + typeConditionOperator + " must be a Node or an Integer."
+
 def ne(v):
-    return ConditionValue(TypeConditionOperator.NE, v)
+  return operatorCondition(TypeConditionOperator.NE, v)
 
-
+def eq(v):
+  return operatorCondition(TypeConditionOperator.EQ, v)
+  
 def lt(v):
-    return ConditionValue(TypeConditionOperator.LT, v)
-
-
+  return operatorCondition(TypeConditionOperator.LT, v)
+  
 def le(v):
-    return ConditionValue(TypeConditionOperator.LE, v)
-
-
+  return operatorCondition(TypeConditionOperator.LE, v)
+  
 def ge(v):
-    return ConditionValue(TypeConditionOperator.GE, v)
-
-
+  return operatorCondition(TypeConditionOperator.GE, v)
+ 
 def gt(v):
-    return ConditionValue(TypeConditionOperator.GT, v)
-
+  return operatorCondition(TypeConditionOperator.GT, v)
 
 def _inside_outside(v, op):
     v = v if len(v) > 1 else v[0]

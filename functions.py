@@ -4,7 +4,7 @@ import types
 from collections import namedtuple
 from itertools import combinations, product, permutations
 
-from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, lt, le, ge, gt, ne, complement
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, lt, le, ge, gt, ne, eq, complement
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
@@ -332,13 +332,17 @@ def Intension(node):
     node.mark_as_used()
     return ctr
 
+def col(*args):
+    assert len(args) == 1 and isinstance(args[0], int)    
+    return Node(TypeNode.COL, args[0])
+    return Node.build(TypeNode.COL, *args)
 
 def abs(*args):
     if len(args) == 1 and isinstance(args[0], Node) and args[0].type == TypeNode.SUB:
         return Node.build(TypeNode.DIST, *args[0].sons)
     return Node.build(TypeNode.ABS, *args) if len(args) == 1 and isinstance(args[0], (Node, Variable)) else absPython(*args)
 
-
+    
 def min(*args):
     return Node.build(TypeNode.MIN, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 
@@ -833,4 +837,4 @@ def cp_array(*l):
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, complement)
+    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, eq, complement)

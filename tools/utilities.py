@@ -166,6 +166,11 @@ def matrix_to_string(m):
 
 def table_to_string(table, restricting_domains=None, *, parallel=False):
     def _tuple_to_string(t):
+        #print("Here:", t)
+        #for ele in t:
+          #print(type(ele))
+          #print("jj:",ele) 
+        
         return "(" + ",".join(
             str(v) if isinstance(v, (int)) else
             str(set(v)) if isinstance(v, tuple) else
@@ -184,6 +189,7 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
                         or all(t[i] == ANY or t[i] in restricting_domains[i].all_values() for i in range(len(t))):
                     s.append(_tuple_to_string(t))
                 previous = t
+            
         return "".join(s)
     else:
         print("Creation of a table of size: " + str(len(table)) + (" in parallel" if parallel and len(table) >= LIMIT else ""))
@@ -238,7 +244,7 @@ def to_ordinary_table(table, domains, *, keep_any=False):
     else:
         for t in table:
             if any(v == ANY or isinstance(v, conditions.Condition) for v in t):  # v may be a ConditionValue object (with method 'filtering')
-                tbl.update(product(*({v} if isinstance(v, int) else doms[i] if v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
+                tbl.update(product(*({v} if isinstance(v, int) else doms[i] if v == ANY else v.filtering(doms[i]) for i, v in enumerate(t)))) 
             else:
                 tbl.add(t)
     return tbl

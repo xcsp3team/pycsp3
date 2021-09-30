@@ -230,6 +230,7 @@ class ConstraintExtension(Constraint):
         return table
 
     def process_table(self, scope, table):
+
         if len(table) == 0:
             return None
 
@@ -276,11 +277,13 @@ class ConstraintExtension(Constraint):
                 # if ever we would want to use caching, we should include domains when computing hashes
                 table = ConstraintExtension.convert_smart_to_ordinary(scope, table)
                 table = ConstraintExtension.remove_redundant_tuples(table)
+                
                 return table_to_string(table, restricting_domains=[x.dom for x in scope] if self.restrictTablesWrtDomains else None,
                                        parallel=possible_parallelism)
-
+      
     def __init__(self, scope, table, positive=True, keepsmartconditions=False, restrictTablesWrtDomains=False):
         super().__init__(TypeCtr.EXTENSION)
+        
         self.keepsmartconditions = keepsmartconditions
         self.restrictTablesWrtDomains = restrictTablesWrtDomains
         assert is_1d_list(scope, Variable)
@@ -288,6 +291,9 @@ class ConstraintExtension(Constraint):
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)
         self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, self.process_table(scope, table), content_compressible=False)
 
+        
+
+        
     def close_to(self, other):
         if not self.similar_structure(other):
             return False
