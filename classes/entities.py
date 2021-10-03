@@ -299,6 +299,7 @@ def reset():
     ObjEntities.items = []
     AnnEntities.items = []
     AnnEntities.items_types = []
+    Variable.name2obj = dict()
 
 
 @unique
