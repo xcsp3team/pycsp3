@@ -883,7 +883,7 @@ class _Auxiliary:
 
 
 def auxiliary():
-    if not hasattr(auxiliary, "obj"):
+    if not hasattr(auxiliary, "obj") or auxiliary.obj is None:
         auxiliary.obj = _Auxiliary()
     return auxiliary.obj
 

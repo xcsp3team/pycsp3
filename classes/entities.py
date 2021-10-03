@@ -300,6 +300,8 @@ def reset():
     AnnEntities.items = []
     AnnEntities.items_types = []
     Variable.name2obj = dict()
+    main.constraints.auxiliary.obj = None
+    # Diffs.reset()
 
 
 @unique
