@@ -6,7 +6,7 @@ CHOCO_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
 CHOCO_CP = CHOCO_DIR + "choco-parsers-4.10.5-jar-with-dependencies.jar"
 
 
-class ChocoProcess(SolverProcess):
+class Choco(SolverProcess):
     def __init__(self):
         super().__init__(
             name="Choco-solver",

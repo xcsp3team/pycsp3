@@ -10,8 +10,8 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 5:
 
 from pycsp3.functions import *  # keep it at first position (before Compilation)
 from pycsp3.compiler import Compilation
-from pycsp3.solvers.abscon.ace import AceProcess
-from pycsp3.solvers.choco.choco import ChocoProcess
+from pycsp3.solvers.ace.ace import Ace
+from pycsp3.solvers.choco.choco import Choco
 
 __version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt'), encoding='utf-8').read()
 
@@ -56,8 +56,8 @@ if sys.argv:
         data = Compilation.data
 
 
-def compile(user_filename=None, *, disabling_opoverrider=False):
-    Compilation.set_filename(user_filename)
+def compile(filename=None, *, disabling_opoverrider=False):
+    Compilation.set_filename(filename)
     return Compilation.compile(disabling_opoverrider)
 
 

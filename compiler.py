@@ -52,7 +52,7 @@ class Compilation:
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver", "output")
     options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "restrictTablesWrtDomains",
-                      "safe", "solve", "dontcompactValues", "usemeta", "debug")
+                      "safe", "solve", "dontcompactValues", "usemeta", "debug", "verbose")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -175,7 +175,10 @@ def _load(*, console=False):
 
 
 def default_data(filename):
-    fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
+    if filename[0] == '.':
+        fn = os.path.abspath('.') + filename[1:]
+    else:
+        fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
     assert fn.endswith(".json")
     assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
     with open(fn) as f:
@@ -209,7 +212,7 @@ def _compile(disabling_opoverrider=False):
     if Compilation.user_filename is None and options.output is not None:
         Compilation.set_filename(options.output)
     if Compilation.user_filename is not None:
-        if options.output is None:
+        if options.output is None and options.verbose:
             print("  * User-defined XML file name:", Compilation.user_filename)
         filename = Compilation.user_filename
         if filename.endswith(".xml"):
@@ -219,7 +222,8 @@ def _compile(disabling_opoverrider=False):
         filename = filename_prefix + ".xml"
 
     stopwatch = Stopwatch()
-    print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
+    if options.verbose:
+        print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
     build_similar_constraints()
     options.time and print("\tWCK for generating groups:", stopwatch.elapsed_time(reset=True), "seconds")
     handle_slides()
@@ -266,11 +270,11 @@ def _compile(disabling_opoverrider=False):
         solver = next(ss for ss in SOLVERS if ss.lower() == solver.lower())
         # print("solver", solver, "args", args)
         if solver == CHOCO:
-            from pycsp3.solvers.choco import ChocoProcess
-            result, solution = ChocoProcess().solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
+            from pycsp3.solvers.choco import Choco
+            result, solution = Choco().solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
         else:  # Fallback case => options.solver == "ace":
-            from pycsp3.solvers.abscon import AceProcess
-            result, solution = AceProcess().solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
+            from pycsp3.solvers.ace import Ace
+            result, solution = Ace().solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
         # if result:
         #     print(result)
         if solution:

@@ -4,14 +4,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-from pycsp3.solvers.abscon import AceProcess
+from pycsp3.solvers.ace import Ace
 from pycsp3.tools.utilities import is_windows, BLUE, GREEN, ORANGE, RED, WHITE, WHITE_BOLD, warning
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
 PYTHON_VERSIONS = ["python3"]
 waiting = False
-solver = AceProcess()
+solver = Ace()
 
 
 def run(xcsp, diff=None, same=None):

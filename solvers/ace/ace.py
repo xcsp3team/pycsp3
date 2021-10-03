@@ -6,9 +6,9 @@ ACE_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
 ACE_CP = ACE_DIR + (os.pathsep + ACE_DIR).join(["ACE-21-05.jar"])
 
 
-class AceProcess(SolverProcess):
+class Ace(SolverProcess):
     def __init__(self):
-        super().__init__(name="Ace", command="java -jar " + ACE_CP, cp=ACE_CP)
+        super().__init__(name="ACE", command="java -jar " + ACE_CP, cp=ACE_CP)
 
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):
         args_solver = ""
