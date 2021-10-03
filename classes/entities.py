@@ -290,6 +290,17 @@ class AnnEntities:
     items_types = []
 
 
+def reset():
+    VarEntities.items = []
+    VarEntities.varToEVar = dict()
+    VarEntities.varToEVarArray = dict()
+    VarEntities.prefixToEVarArray = dict()
+    CtrEntities.items = []
+    ObjEntities.items = []
+    AnnEntities.items = []
+    AnnEntities.items_types = []
+
+
 @unique
 class TypeNode(Enum):
     def __init__(self, id, min_arity, max_arity):
