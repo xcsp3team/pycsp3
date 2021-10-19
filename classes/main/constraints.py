@@ -837,8 +837,8 @@ class _Auxiliary:
             self._introduced_variables = EVarArray([var], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
         else:
             self._introduced_variables.extend_with(var)
-        if obj:
-            self._collected_constraints.append((obj, var))
+        #if obj:
+        self._collected_constraints.append((obj, var))
         return var
 
     def replace_partial_constraint(self, pc):

@@ -10,6 +10,7 @@ from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.slider import _identify_slide
 from pycsp3.classes.auxiliary.conditions import Condition
+from pycsp3.tools.utilities import warning
 
 SIZE_LIMIT_FOR_USING_AS = 12  # when building domains of variables of arrays of variables (and using the attribute 'as')
 
@@ -21,6 +22,13 @@ class DefaultListOrderedDict(OrderedDict):
 
 
 def _text(elt, s):
+    test = str(s)
+    if "False" in test or "True" in test:
+        warning(
+            "False or True is present in " + test
+            + "\n\tIt is likely a problem with the use of logical operators"
+            + "\n\tFor example, you must write (x == 0) | (x ==1) instead of (x == 0) or (x == 1)"
+            + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide\n")
     elt.text = " " + (" ".join(str(v) for v in s) if isinstance(s, (list, tuple)) else str(s)) + " "
 
 

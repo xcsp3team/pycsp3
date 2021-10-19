@@ -298,7 +298,7 @@ def satisfy(*args):
             to_post = _block(arg)
         else:  # Group
             to_post = _group(arg)
-        if to_post:
+        if to_post is not None:
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
             #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
