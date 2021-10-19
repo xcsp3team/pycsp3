@@ -2,6 +2,8 @@ import atexit
 import os
 import sys
 
+from lxml import etree
+
 __python_version__ = str(sys.version).split(os.linesep)[0].split(' ')[0]
 
 if sys.version_info[0] < 3 or sys.version_info[1] < 5:
@@ -12,6 +14,7 @@ from pycsp3.functions import *  # keep it at first position (before Compilation)
 from pycsp3.compiler import Compilation
 from pycsp3.solvers.ace.ace import Ace
 from pycsp3.solvers.choco.choco import Choco
+from pycsp3.solvers.solver import ACE, CHOCO
 
 __version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt'), encoding='utf-8').read()
 
@@ -47,7 +50,7 @@ if sys.argv:
         Compilation.load(console=True)
         data = None
     elif "pycsp3/problems/tests/" in sys.argv[0]:  # test mode
-        # TODO is it correct (for avoiding compilingtwo times)?
+        # TODO is it correct (for avoiding compiling two times)?
         #  analysing if we have to compile (e..g, when running the tester, we should not try to do that);
         #  Trying to replace this with the inspector?
         Compilation.done = True
@@ -59,6 +62,26 @@ if sys.argv:
 def compile(filename=None, *, disabling_opoverrider=False):
     Compilation.set_filename(filename)
     return Compilation.compile(disabling_opoverrider)
+
+
+last_solver = None
+
+
+def solution():
+    global last_solver
+    return last_solver.last_solution
+
+
+def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=False):
+    global last_solver
+    instance = compile(filename, disabling_opoverrider=disabling_opoverrider)
+    if instance is None:
+        print("Problem when compiling")
+    else:
+        last_solver = Ace() if solver == ACE else Choco()
+        last_solver.setting(options)
+        result = last_solver.solve(instance, verbose=True)
+        return result
 
 
 @atexit.register

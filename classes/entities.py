@@ -165,8 +165,11 @@ class EToSatisfy(ECtrs):
             CtrEntities.items.append(self)
             super().__init__(constraints)
 
-    def delete(self, i):
-        del self.entities[i]
+    def delete(self, i=None):
+        if i is None:
+            self.entities = []
+        else:
+            del self.entities[i]
 
 
 class EGroup(ECtrs):

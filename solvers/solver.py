@@ -10,11 +10,12 @@ from lxml import etree
 # from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
 from pycsp3.classes.entities import VarEntities, EVar
-from pycsp3.classes.main.variables import Variable
+from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows
 
 UNKNOWN, SAT, UNSAT, OPTIMUM = "UNKNOWN", "SAT", "UNSAT", "OPTIMUM"
+ACE, CHOCO = "ACE", "Choco"
 
 
 def process_options(solving):
@@ -131,10 +132,11 @@ class Logger:
 
 
 class Instantiation:
-    def __init__(self, pretty_solution, variables, values):
-        self.pretty_solution = pretty_solution
+    def __init__(self, root, variables, values, pretty_solution):
+        self.root = root
         self.variables = variables
         self.values = values
+        self.pretty_solution = pretty_solution
 
     def __repr__(self):
         return self.variables, self.values
@@ -154,9 +156,10 @@ class SolverProcess:
         self.stdout = None
         self.stderr = None
         self.last_command_wck = None
-        self.extend_filename_logger = None
+        self.log_filename_suffix = None
         self.n_executions = 0
         self.last_log = None
+        self.last_solution = None
 
     def command(self, _command):
         self.command = _command
@@ -164,12 +167,13 @@ class SolverProcess:
     def get_logger(self):
         return self.last_log
 
-    def setting(self, option=""):
-        option = str(option).strip()
-        self.options = " " + option if self.options != "" else option
+    def setting(self, value):
+        if value is not None:
+            value = str(value).strip()
+            self.options = " " + value if self.options != "" else value
 
-    def extend_logger(self, _extend_filename_logger):
-        self.extend_filename_logger = _extend_filename_logger
+    def log_suffix(self, _extend_filename_logger):
+        self.log_filename_suffix = _extend_filename_logger
 
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
@@ -179,10 +183,10 @@ class SolverProcess:
 
         def extract_result_and_solution(stdout):
             if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
-                return UNSAT, None
+                return UNSAT
             if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
                 print("  Actually, the instance was not solved")
-                return UNKNOWN, None
+                return UNKNOWN
             left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
             s = stdout[left:right + len("</instantiation>")].replace("\nv", "")
             root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
@@ -221,11 +225,14 @@ class SolverProcess:
                     values.append(tok)
             # values is a list with all values given as strings (possibly '*')
             assert len(variables) == len(values)
-            for i, v in enumerate(values):
+            for i, _ in enumerate(values):
                 if variables[i]:
-                    variables[i].value = v  # we add a new field (may be useful)
+                    if isinstance(variables[i], VariableInteger):
+                        values[i] = int(values[i])
+                    variables[i].value = values[i]  # we add a new field (may be useful)
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
-            return OPTIMUM if optimal else SAT, Instantiation(pretty_solution, variables, values)
+            self.last_solution = Instantiation(root, variables, values, pretty_solution)
+            return OPTIMUM if optimal else SAT
 
         def execute(command, verbose):
             if not is_windows():
@@ -242,7 +249,7 @@ class SolverProcess:
 
             signal.signal(signal.SIGINT, new_handler)
             log = Logger(
-                self.extend_filename_logger if self.extend_filename_logger is not None else str(self.n_executions))  # To record the output of the solver
+                self.log_filename_suffix if self.log_filename_suffix is not None else str(self.n_executions))  # To record the output of the solver
             self.last_log = log.log_file
             for line in p.stdout:
                 if verbose:
@@ -277,7 +284,7 @@ class SolverProcess:
 
         verbose = verbose or options.solve or "verbose" in dict_simplified_options
         command = self.command + " " + (model if model is not None else "") + " " + solver_args
-        
+
         print("\n  * Solving by " + self.name + " in progress ... ")
         print("    with command: ", command)
         out_err, stopped = execute(command, verbose)
@@ -290,9 +297,12 @@ class SolverProcess:
             print("  * Solved by " + self.name + " in " + GREEN + self.last_command_wck + WHITE + " seconds")
         if missing:
             print("\n   This is due to a missing implementation")
-        print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[ace,v] to see directly the output of the solver.\n")
+        if automatic:
+            print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[ace,v] to see directly the output of the solver.\n")
+        else:
+            print()
         self.n_executions += 1
-        return extract_result_and_solution(out_err) if out_err else (None, None)
+        return extract_result_and_solution(out_err) if out_err else UNKNOWN
 
 # class SolverPy4J(SolverProcess):  # TODO in progress
 #     gateways = []

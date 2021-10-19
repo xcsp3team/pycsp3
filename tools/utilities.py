@@ -21,7 +21,7 @@ class Stopwatch:
         elapsed_time = time() - self.initial_time
         if reset:
             self.initial_time = time()
-        return "{:8.2f}".format(elapsed_time)
+        return "{:.2f}".format(elapsed_time)
 
 
 class _Star(float):
