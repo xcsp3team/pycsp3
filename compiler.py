@@ -12,7 +12,6 @@ from lxml import etree
 
 from pycsp3.dashboard import options
 from pycsp3.problems.data import parsing
-from pycsp3.solvers.solver import process_options
 from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
 from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtuple
@@ -21,8 +20,6 @@ from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE, Error
 from pycsp3.tools.xcsp import build_document
 
 None_Values = ['None', '', 'null']  # adding 'none'?
-
-ACE, CHOCO = SOLVERS = ["Ace", "Choco"]
 
 
 class Compilation:
@@ -259,27 +256,7 @@ def _compile(disabling_opoverrider=False):
     # print("  Total wall clock time:", Compilation.stopwatch.elapsed_time(), "seconds")
 
     Compilation.done = True
-
     cop = root is not None and root.attrib and root.attrib["type"] == "COP"
-    solving = ACE if options.solve else options.solver
-    if solving:
-        if options.display:
-            print("Warning: options -display and -solve should not be used together.")
-            return filename
-        solver, args, args_recursive = process_options(solving)
-        solver = next(ss for ss in SOLVERS if ss.lower() == solver.lower())
-        # print("solver", solver, "args", args)
-        if solver == CHOCO:
-            from pycsp3.solvers.choco import Choco
-            result, solution = Choco().solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
-        else:  # Fallback case => options.solver == "ace":
-            from pycsp3.solvers.ace import Ace
-            result, solution = Ace().solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
-        # if result:
-        #     print(result)
-        if solution:
-            print(solution)
-
     return filename, cop
 
 

@@ -175,3 +175,16 @@ class TypeOrderedOperator(Enum):
 @unique
 class TypeRank(Enum):
     FIRST, LAST, ANY = auto(3)
+
+
+@unique
+class TypeSolver(Enum):
+    ACE, CHOCO = auto(2)
+
+
+@unique
+class TypeStatus(Enum):
+    UNSAT, SAT, OPTIMUM, UNKNOWN = auto(4)
+
+    def __str__(self):
+        return self.name

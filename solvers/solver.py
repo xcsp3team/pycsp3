@@ -1,21 +1,19 @@
-import subprocess
-import time
-import sys
 import os
 import signal
+import subprocess
+import sys
 import uuid
-from io import IOBase
 
 from lxml import etree
-# from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
+from pycsp3.classes.auxiliary.ptypes import TypeStatus
 from pycsp3.classes.entities import VarEntities, EVar
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows
 
-UNKNOWN, SAT, UNSAT, OPTIMUM = "UNKNOWN", "SAT", "UNSAT", "OPTIMUM"
-ACE, CHOCO = "ACE", "Choco"
+
+# from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
 
 def process_options(solving):
@@ -183,10 +181,10 @@ class SolverProcess:
 
         def extract_result_and_solution(stdout):
             if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
-                return UNSAT
+                return TypeStatus.UNSAT
             if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
                 print("  Actually, the instance was not solved")
-                return UNKNOWN
+                return TypeStatus.UNKNOWN
             left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
             s = stdout[left:right + len("</instantiation>")].replace("\nv", "")
             root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
@@ -232,7 +230,7 @@ class SolverProcess:
                     variables[i].value = values[i]  # we add a new field (may be useful)
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
             self.last_solution = Instantiation(root, variables, values, pretty_solution)
-            return OPTIMUM if optimal else SAT
+            return TypeStatus.OPTIMUM if optimal else TypeStatus.SAT
 
         def execute(command, verbose):
             if not is_windows():
@@ -302,7 +300,7 @@ class SolverProcess:
         else:
             print()
         self.n_executions += 1
-        return extract_result_and_solution(out_err) if out_err else UNKNOWN
+        return extract_result_and_solution(out_err) if out_err else TypeStatus.UNKNOWN
 
 # class SolverPy4J(SolverProcess):  # TODO in progress
 #     gateways = []
