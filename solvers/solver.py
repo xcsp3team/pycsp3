@@ -10,7 +10,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeStatus
 from pycsp3.classes.entities import VarEntities, EVar
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
-from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows
+from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows, ANY
 
 
 # from py4j.java_gateway import JavaGateway, Py4JNetworkError
@@ -226,7 +226,7 @@ class SolverProcess:
             for i, _ in enumerate(values):
                 if variables[i]:
                     if isinstance(variables[i], VariableInteger):
-                        values[i] = int(values[i])
+                        values[i] = int(values[i]) if values[i] != "*" else ANY
                     variables[i].value = values[i]  # we add a new field (may be useful)
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
             self.last_solution = Instantiation(root, variables, values, pretty_solution)
