@@ -109,7 +109,7 @@ class Logger:
         filename = "solver_" + mac + "_" + pid + "_" + (str(extend_filename) if extend_filename else "") + ".log"
         self.log_file = os.getcwd() + os.sep + filename
         # self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + filename  # old code
-        print("  * Log file of the solver:", self.log_file)
+        print("    - log file:", self.log_file)
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
@@ -284,7 +284,7 @@ class SolverProcess:
         command = self.command + " " + (model if model is not None else "") + " " + solver_args
 
         print("\n  * Solving by " + self.name + " in progress ... ")
-        print("    with command: ", command)
+        print("    - command:", command)
         out_err, stopped = execute(command, verbose)
         print()
         missing = out_err is not None and out_err.find("Missing Implementation") != -1

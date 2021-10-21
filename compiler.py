@@ -151,6 +151,7 @@ def _load_dataparser(parser_file, data_value):
 
 def _load(*, console=False):
     Compilation.stopwatch = Stopwatch()
+
     _load_options()
     if console is False:
         Compilation.model, Compilation.string_model = _load_model()
@@ -236,7 +237,7 @@ def _compile(disabling_opoverrider=False):
         else:
             with open(filename, "w") as f:
                 f.write(pretty_text)
-                print("  * Generating the file " + filename + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.\n")
+                print("  * Generating the file " + filename + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.")
         if options.compress:
             with lzma.open(filename + ".lzma", "w") as f:
                 f.write(bytes(pretty_text, 'utf-8'))

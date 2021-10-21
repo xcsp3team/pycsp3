@@ -71,7 +71,7 @@ def build_partition(variables, preserve_order):
                 arrays_partition[va].append(z)
                 if va not in arrays:
                     arrays.append(va)
-                elif arrays[-1][0] != va:
+                elif arrays[-1][0] is not va:
                     return False
             else:  # if z is not DELETED:  # it can be a Variable, but also an integer, a Node, a state (for an automaton).
                 others.append(z)

@@ -15,7 +15,7 @@ Execution:
 
 from pycsp3 import *
 
-trains = data
+trains = data or default_data("Brussels.json")
 departures, gaps, costs = zip(*trains)
 nTrains, horizon = len(trains), max(departures) + max(gaps) * 4 + 1  # arbitrary horizon
 

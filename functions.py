@@ -5,7 +5,7 @@ from collections import namedtuple
 from itertools import combinations, product, permutations
 
 from pycsp3.classes.auxiliary.conditions import Condition, lt, le, ge, gt, ne, eq, complement
-from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank, TypeStatus
+from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank, TypeSolver, TypeStatus
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
@@ -835,8 +835,12 @@ def cp_array(*l):
     else:
         raise NotImplemented
 
+
+# The two next lines are added, so as to be able to use these constants directly in user code
 UNSAT, SAT, OPTIMUM, UNKNOWN = [s for s in TypeStatus]
+ACE, CHOCO = [s for s in TypeSolver]
+
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
     _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, eq, complement, reset, ANY,
-         to_ordinary_table(), product, UNSAT, SAT, OPTIMUM, UNKNOWN)
+         to_ordinary_table(), product, ACE, CHOCO, UNSAT, SAT, OPTIMUM, UNKNOWN)
