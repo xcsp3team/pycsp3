@@ -5,6 +5,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeCtrArg
 from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.entities import CtrEntities, ECtr, ECtrs, EMetaCtr, EGroup, EBlock, EToGather, ESlide, EToSatisfy, TypeNode
 from pycsp3.classes.main.constraints import ConstraintIntension, Diffs, ConstraintInstantiation
+from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import error
 
 LIMIT_FOR_VAR_ARGS = 3
@@ -60,15 +61,22 @@ def _compute_group_abstraction_intension(group):
         return (s.replace("(" + k + ")", "(" + v + ")").replace("," + k + ",", "," + v + ",").replace("(" + k + ",", "(" + v + ",")
                 .replace("," + k + ")", "," + v + ")").replace("(" + k + ")", "(" + v + ")"))
 
+    def _same(v1, v2):
+        if isinstance(v1, Variable):
+            return v1.eq__safe(v2)
+        if isinstance(v2, Variable):
+            return v2.eq__safe(v1)
+        return v1 == v2
+
     def _is_same_value_at_column(i, all_args):
         """ comparison from both ends so as to find opportunistically that the parameter is not the same everywhere"""
         left, right = 1, len(all_args) - 1
         value = all_args[0][i]
         while True:
-            if value != all_args[left][i]:
+            if not _same(value, all_args[left][i]):
                 return False
             left += 1
-            if value != all_args[right][i]:
+            if not _same(value, all_args[right][i]):
                 return False
             right -= 1
             if left > right:
@@ -78,10 +86,10 @@ def _compute_group_abstraction_intension(group):
     def _is_same_value_in_columns(i, j, all_args):
         left, right = 0, len(all_args) - 1
         while True:
-            if all_args[left][i] != all_args[left][j]:
+            if not _same(all_args[left][i], all_args[left][j]):
                 return False
             left += 1
-            if all_args[right][i] != all_args[right][j]:
+            if not _same(all_args[right][i], all_args[right][j]):
                 return False
             right -= 1
             if left > right:

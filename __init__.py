@@ -57,7 +57,7 @@ if sys.argv:
         Compilation.load()
         data = Compilation.data
 
-last_solver = None
+last_solver = None  # this is the last built solver
 
 
 def compile(filename=None, *, disabling_opoverrider=False):
