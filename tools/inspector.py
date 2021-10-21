@@ -1,5 +1,4 @@
 import inspect
-import os
 import sys
 
 from pycsp3.dashboard import options

@@ -8,7 +8,6 @@ from multiprocessing import cpu_count, Pool
 from time import time
 
 from pycsp3.classes.auxiliary import conditions
-from pycsp3.classes.main.variables import Variable
 from pycsp3.classes.main.domains import Domain
 from pycsp3.dashboard import options
 

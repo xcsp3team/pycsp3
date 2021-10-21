@@ -19,6 +19,7 @@ def build_similar_constraints():
 
 
 # Phase 1: Detecting groups of similar constraints
+
 def detecting_groups_recursively(ctr_entities):
     def _detecting_groups(entities):
         flags = [False] * len(entities)  # indicate (indexes of) constraints that are similar at a given moment (see intern loop)
@@ -54,7 +55,6 @@ def detecting_groups_recursively(ctr_entities):
 
 
 # Phase 2: Building groups (constraint templates and args)
-
 
 def _compute_group_abstraction_intension(group):
     def _replace_parameter(s, k, v):
@@ -212,6 +212,7 @@ def building_groups_recursively(entities, previous=None):
 
 
 # Phase 3: adding/removing some blocks
+
 def canonizing_groups_and_blocks(entities, previous=None):
     def _building_block(entity):
         if len(entity.entities) == 0:
@@ -249,6 +250,7 @@ def canonizing_groups_and_blocks(entities, previous=None):
 
 
 # Phase 4: detecting forms corresponding to instantiations
+
 def recognizing_instantiations(entities):
     def _elements_for_building_instantiation(trees):
         t1, t2 = [], []
