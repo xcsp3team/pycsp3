@@ -109,7 +109,7 @@ class Logger:
         filename = "solver_" + mac + "_" + pid + "_" + (str(extend_filename) if extend_filename else "") + ".log"
         self.log_file = os.getcwd() + os.sep + filename
         # self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + filename  # old code
-        print("    - log file:", self.log_file)
+        print("    - logfile:", self.log_file)
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
@@ -158,6 +158,8 @@ class SolverProcess:
         self.n_executions = 0
         self.last_log = None
         self.last_solution = None
+        self.n_solutions = None
+        self.bound = None
 
     def command(self, _command):
         self.command = _command
@@ -179,6 +181,13 @@ class SolverProcess:
     def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=False, automatic=False):
         model, cop = instance
 
+        def _int_from(s, left):
+            right = left + s[left:].find("\n")
+            left = right - 1
+            while s[left].isdigit():
+                left -= 1
+            return s[left + 1:right]
+
         def extract_result_and_solution(stdout):
             if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
                 return TypeStatus.UNSAT
@@ -188,18 +197,12 @@ class SolverProcess:
             left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
             s = stdout[left:right + len("</instantiation>")].replace("\nv", "")
             root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
-            optimal = stdout.find("s OPTIMUM ") != -1
+            optimal = stdout.find("s OPTIMUM") != -1
             if cop:
-                if "type" not in root.attrib:
-                    root.attrib['type'] = "solution" + (" optimal" if optimal else "")
-                elif root.attrib['type'] == "solution" and optimal:
-                    root.attrib['type'] = "solution optimal"
+                root.attrib['type'] = "optimum" if optimal else "solution"
                 if "cost" not in root.attrib:
-                    left = stdout.rfind("o ") + 2
-                    right = left + 1
-                    while stdout[right].isdigit():
-                        right += 1
-                    root.attrib['cost'] = stdout[left:right]
+                    root.attrib['cost'] = _int_from(stdout, stdout.rfind("o ") + 2)
+                self.bound = root.attrib['cost']
                 if "id" in root.attrib:
                     del root.attrib['id']
             variables = []
@@ -230,6 +233,9 @@ class SolverProcess:
                     variables[i].value = values[i]  # we add a new field (may be useful)
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
             self.last_solution = Instantiation(root, variables, values, pretty_solution)
+            j = stdout.find("d NUMBER OF SOLUTIONS")
+            if j != -1:
+                self.n_solutions = _int_from(stdout, j)
             return TypeStatus.OPTIMUM if optimal else TypeStatus.SAT
 
         def execute(command, verbose):
@@ -286,7 +292,7 @@ class SolverProcess:
         print("\n  * Solving by " + self.name + " in progress ... ")
         print("    - command:", command)
         out_err, stopped = execute(command, verbose)
-        print()
+        # print()
         missing = out_err is not None and out_err.find("Missing Implementation") != -1
         self.last_command_wck = stopwatch.elapsed_time()
         if stopped:

@@ -94,7 +94,17 @@ def solution():
     return None if last_solver is None else last_solver.last_solution
 
 
-def solve(*, solver=TypeSolver.ACE, options=None, filename=None, disabling_opoverrider=False):
+def n_solutions():
+    global last_solver
+    return None if last_solver is None else last_solver.n_solutions
+
+
+def bound():
+    global last_solver
+    return None if last_solver is None else last_solver.bound
+
+
+def solve(*, solver=TypeSolver.ACE, options=None, filename=None, disabling_opoverrider=False, verbose=False, all_solutions=False):
     global last_solver
     instance = compile(filename, disabling_opoverrider=disabling_opoverrider)
     if instance is None:
@@ -102,7 +112,7 @@ def solve(*, solver=TypeSolver.ACE, options=None, filename=None, disabling_opove
     else:
         last_solver = Ace() if solver == TypeSolver.ACE else Choco()
         last_solver.setting(options)
-        result = last_solver.solve(instance, verbose=True)
+        result = last_solver.solve(instance, dict_simplified_options={"nolimit": True} if all_solutions else {}, verbose=verbose)
         return result
 
 
