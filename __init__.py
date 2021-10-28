@@ -60,29 +60,25 @@ if sys.argv:
 last_solver = None  # this is the last built solver
 
 
-def compile(filename=None, *, disabling_opoverrider=False):
-    if filename is not None:
-        Compilation.set_filename(filename)
-    filename, cop = Compilation.compile(disabling_opoverrider)
-
+def compile(filename=None, *, disabling_opoverrider=False, verbose=1):
+    global last_solver
+    filename, cop = Compilation.compile(filename, disabling_opoverrider, verbose=verbose)
     solving = TypeSolver.ACE.name if options.solve else options.solver
     if solving:
-        global last_solver
         if options.display:
             print("Warning: options -display and -solve should not be used together.")
             return filename
         solver, args, args_recursive = process_options(solving)
         solver = next(ss for ss in TypeSolver if ss.name.lower() == solver.lower())
-        # print("solver", solver, "args", args)
         if solver == TypeSolver.CHOCO:
             from pycsp3.solvers.choco import Choco
             last_solver = Choco()
-            result = last_solver.solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
+            result = last_solver.solve((filename, cop), solving, args, args_recursive, compiler=True, verbose=verbose, automatic=True)
         else:  # Fallback case => options.solver == "ace":
             from pycsp3.solvers.ace import Ace
             last_solver = Ace()
-            result = last_solver.solve((filename, cop), solving, args, args_recursive, compiler=True, automatic=True)
-        print(result)
+            result = last_solver.solve((filename, cop), solving, args, args_recursive, compiler=True, verbose=verbose, automatic=True)
+        print("\nResult: ", result)
         if solution():
             print(solution())
 
@@ -104,9 +100,9 @@ def bound():
     return None if last_solver is None else last_solver.bound
 
 
-def solve(*, solver=TypeSolver.ACE, options=None, filename=None, disabling_opoverrider=False, verbose=False, all_solutions=False):
+def solve(*, solver=TypeSolver.ACE, options=None, filename=None, disabling_opoverrider=False, verbose=0, all_solutions=False):
     global last_solver
-    instance = compile(filename, disabling_opoverrider=disabling_opoverrider)
+    instance = compile(filename, disabling_opoverrider=disabling_opoverrider, verbose=verbose)
     if instance is None:
         print("Problem when compiling")
     else:

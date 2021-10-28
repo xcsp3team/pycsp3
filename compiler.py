@@ -42,8 +42,9 @@ class Compilation:
         Compilation.user_filename = _user_filename
 
     @staticmethod
-    def compile(disabling_opoverrider=True):
-        return _compile(disabling_opoverrider)
+    def compile(filename=None, disabling_opoverrider=True, verbose=1):
+        Compilation.set_filename(filename)
+        return _compile(disabling_opoverrider, verbose=verbose)
 
 
 def _load_options():
@@ -187,7 +188,7 @@ def default_data(filename):
     return Compilation.data
 
 
-def _compile(disabling_opoverrider=False):
+def _compile(disabling_opoverrider=False, verbose=1):
     # used to save data in jSON
     def prepare_for_json(obj):
         if is_namedtuple(obj):
@@ -237,7 +238,8 @@ def _compile(disabling_opoverrider=False):
         else:
             with open(filename, "w") as f:
                 f.write(pretty_text)
-                print("  * Generating the file " + filename + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.")
+                if verbose > 0:
+                    print("  * Generating the file " + filename + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.")
         if options.compress:
             with lzma.open(filename + ".lzma", "w") as f:
                 f.write(bytes(pretty_text, 'utf-8'))
@@ -252,9 +254,7 @@ def _compile(disabling_opoverrider=False):
             json_prefix = str(options.dataexport)
         with open(json_prefix + '.json', 'w') as f:
             json.dump(prepare_for_json(Compilation.data), f)
-        print("  Generation for data saving of the file " + json_prefix + '.json' + " completed.")
-
-    # print("  Total wall clock time:", Compilation.stopwatch.elapsed_time(), "seconds")
+        print("  Saving data in the file " + json_prefix + '.json' + " completed.")
 
     Compilation.done = True
     cop = root is not None and root.attrib and root.attrib["type"] == "COP"

@@ -378,8 +378,8 @@ class OpOverrider:
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
-        if isinstance(other, bool):
-            return self if other is False else True
+        # if isinstance(other, bool):
+        #     return self if other is False else True
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Or(self, other)
@@ -389,8 +389,8 @@ class OpOverrider:
         return Node.disjunction(self, other)
 
     def __and__(self, other):
-        if isinstance(other, bool):
-            return self if other is True else False
+        # if isinstance(other, bool):
+        #     return self if other is True else False
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.And(self, other)

@@ -104,12 +104,13 @@ def process_options(solving):
 
 
 class Logger:
-    def __init__(self, extend_filename=""):
+    def __init__(self, extend_filename="", verbose=0):
         mac, pid = hex(uuid.getnode()), str(os.getpid())
         filename = "solver_" + mac + "_" + pid + "_" + (str(extend_filename) if extend_filename else "") + ".log"
         self.log_file = os.getcwd() + os.sep + filename
         # self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + filename  # old code
-        print("    - logfile:", self.log_file)
+        if verbose > 0:
+            print("    - logfile:", self.log_file)
         if os.path.exists(self.log_file):
             os.remove(self.log_file)
         self.log = open(self.log_file, "a")
@@ -178,7 +179,7 @@ class SolverProcess:
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
-    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=False, automatic=False):
+    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False):
         model, cop = instance
 
         def _int_from(s, left):
@@ -238,7 +239,7 @@ class SolverProcess:
                 self.n_solutions = _int_from(stdout, j)
             return TypeStatus.OPTIMUM if optimal else TypeStatus.SAT
 
-        def execute(command, verbose):
+        def execute(command):
             if not is_windows():
                 p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
             else:
@@ -253,10 +254,10 @@ class SolverProcess:
 
             signal.signal(signal.SIGINT, new_handler)
             log = Logger(
-                self.log_filename_suffix if self.log_filename_suffix is not None else str(self.n_executions))  # To record the output of the solver
+                self.log_filename_suffix if self.log_filename_suffix is not None else str(self.n_executions), verbose)  # To record the output of the solver
             self.last_log = log.log_file
             for line in p.stdout:
-                if verbose:
+                if verbose == 2:
                     sys.stdout.write(line)
                 log.write(line)
             p.wait()
@@ -286,25 +287,27 @@ class SolverProcess:
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""
         solver_args += self.options
 
-        verbose = verbose or options.solve or "verbose" in dict_simplified_options
+        verbose = 2 if options.solve or "verbose" in dict_simplified_options else verbose
         command = self.command + " " + (model if model is not None else "") + " " + solver_args
 
-        print("\n  * Solving by " + self.name + " in progress ... ")
-        print("    - command:", command)
-        out_err, stopped = execute(command, verbose)
+        if verbose > 0:
+            print("\n  * Solving by " + self.name + " in progress ... ")
+            print("    - command:", command)
+        out_err, stopped = execute(command)
         # print()
         missing = out_err is not None and out_err.find("Missing Implementation") != -1
         self.last_command_wck = stopwatch.elapsed_time()
-        if stopped:
-            print("  * Solving process stopped (SIGINT) by " + self.name + " after " + GREEN + self.last_command_wck + WHITE + " seconds")
-        else:
-            print("  * Solved by " + self.name + " in " + GREEN + self.last_command_wck + WHITE + " seconds")
-        if missing:
-            print("\n   This is due to a missing implementation")
-        if automatic:
-            print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[ace,v] to see directly the output of the solver.\n")
-        else:
-            print()
+        if verbose > 0:
+            if stopped:
+                print("  * Solving process stopped (SIGINT) by " + self.name + " after " + GREEN + self.last_command_wck + WHITE + " seconds")
+            else:
+                print("\n  * Solved by " + self.name + " in " + GREEN + self.last_command_wck + WHITE + " seconds")
+            if missing:
+                print("\n   This is due to a missing implementation")
+            if automatic and verbose < 2:
+                print("\n  NB: use the solver option v, as in -solver=[choco,v] or -solver=[ace,v] to see directly the output of the solver.")
+            else:
+                print()
         self.n_executions += 1
         return extract_result_and_solution(out_err) if out_err else TypeStatus.UNKNOWN
 

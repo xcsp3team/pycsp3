@@ -277,13 +277,13 @@ class ConstraintExtension(Constraint):
                 # if ever we would want to use caching, we should include domains when computing hashes
                 table = ConstraintExtension.convert_smart_to_ordinary(scope, table)
                 table = ConstraintExtension.remove_redundant_tuples(table)
-                
+
                 return table_to_string(table, restricting_domains=[x.dom for x in scope] if self.restrictTablesWrtDomains else None,
                                        parallel=possible_parallelism)
-      
+
     def __init__(self, scope, table, positive=True, keepsmartconditions=False, restrictTablesWrtDomains=False):
         super().__init__(TypeCtr.EXTENSION)
-        
+
         self.keepsmartconditions = keepsmartconditions
         self.restrictTablesWrtDomains = restrictTablesWrtDomains
         assert is_1d_list(scope, Variable)
@@ -291,9 +291,6 @@ class ConstraintExtension(Constraint):
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)
         self.arg(TypeCtrArg.SUPPORTS if positive else TypeCtrArg.CONFLICTS, self.process_table(scope, table), content_compressible=False)
 
-        
-
-        
     def close_to(self, other):
         if not self.similar_structure(other):
             return False
@@ -837,7 +834,7 @@ class _Auxiliary:
             self._introduced_variables = EVarArray([var], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
         else:
             self._introduced_variables.extend_with(var)
-        #if obj:
+        # if obj:
         self._collected_constraints.append((obj, var))
         return var
 
@@ -926,7 +923,10 @@ def manage_global_indirection(*args):
         return None
     t = []
     for arg in args:
-        if isinstance(arg, ECtr):
+        if arg is True:  # means that we must have a unary constraint of the form x in S in an expression
+            (values, x) = curser.queue_in.pop()
+            arg = functions.belong(x, values)
+        elif isinstance(arg, ECtr):
             gi = global_indirection(arg.constraint)
             if gi is None:
                 return None

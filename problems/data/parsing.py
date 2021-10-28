@@ -17,6 +17,8 @@ def register_fields(data_value):
 
 class DataParser:
     def __init__(self, data_value):
+        if data_value is None:
+            return  # if everything is loaded directly in the dataparser (although not recommended)
         if data_value[0] == '[':
             assert data_value[-1] == ']'
             values = data_value[1:-1].split(',')
