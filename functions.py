@@ -117,7 +117,9 @@ def VarArray(*, size, dom, comment=None):
         return tuple(var_objects)
     else:
         EVarArray(var_objects, name, comment, tags)  # object wrapping the array of variables
-        return ListVar(var_objects)
+        lv = ListVar(var_objects)
+        Variable.arrays.append(lv)
+        return lv
 
 
 ''' Posting constraints (through satisfy()) '''

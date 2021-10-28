@@ -7,7 +7,7 @@ import uuid
 from lxml import etree
 
 from pycsp3.classes.auxiliary.ptypes import TypeStatus
-from pycsp3.classes.entities import VarEntities, EVar
+from pycsp3.classes.entities import VarEntities, EVar, EVarArray
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows, ANY
@@ -231,7 +231,14 @@ class SolverProcess:
                 if variables[i]:
                     if isinstance(variables[i], VariableInteger):
                         values[i] = int(values[i]) if values[i] != "*" else ANY
-                    variables[i].value = values[i]  # we add a new field (may be useful)
+                    variables[i].value = values[i]  # we add a new field
+
+            def _array_values(t):
+                return None if t is None else t.value if isinstance(t, Variable) else [_array_values(v) for v in t]
+
+            for array in Variable.arrays:
+                array.values = _array_values(array)  # we add a new field
+
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
             self.last_solution = Instantiation(root, variables, values, pretty_solution)
             j = stdout.find("d NUMBER OF SOLUTIONS")

@@ -7,6 +7,8 @@ from pycsp3.classes.main.domains import Domain
 class Variable:
     name2obj = dict()  # Dictionary (keys: names of variables - values: variable objects)
 
+    arrays = []  # the arrays of variables, as introduced by the user in the model
+
     @staticmethod
     def build_names_array(name, sizes, mins, indexes=[]):
         if sizes:
@@ -83,7 +85,7 @@ class Variable:
         return isinstance(other, Variable) and self.id == other.id
 
     def __eq__(self, other):
-        return self.eq__safe(other)  #isinstance(other, Variable) and self.id == other.id
+        return self.eq__safe(other)  # isinstance(other, Variable) and self.id == other.id
 
     def __invert__(self):
         return Variable(self.id, self.dom, negation=not self.negation)
