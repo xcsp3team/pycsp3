@@ -385,6 +385,11 @@ def belong(x, values):
     return Node.build(TypeNode.IN, x, Node.build(TypeNode.SET, values))
 
 
+def not_belong(x, values):
+    assert isinstance(x, Variable) and isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
+    return Node.build(TypeNode.NOTIN, x, Node.build(TypeNode.SET, values))
+
+
 def expr(operator, *args):
     return Node.build(operator, *args)
 

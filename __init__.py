@@ -14,6 +14,7 @@ from pycsp3.solvers.ace.ace import Ace
 from pycsp3.solvers.choco.choco import Choco
 from pycsp3.solvers.solver import process_options
 from pycsp3.classes.auxiliary.ptypes import TypeSolver
+from pycsp3.tools.utilities import Error
 
 __version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt'), encoding='utf-8').read()
 
@@ -114,5 +115,5 @@ def solve(*, solver=TypeSolver.ACE, options=None, filename=None, disabling_opove
 
 @atexit.register
 def end():
-    if not Compilation.done:
+    if not Compilation.done and not Error.errorOccurrence:
         compile(disabling_opoverrider=True)

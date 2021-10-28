@@ -10,7 +10,7 @@ from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
-from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, \
+from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, error_if, \
     to_ordinary_table, warning, is_windows
 
 
@@ -230,10 +230,8 @@ class ConstraintExtension(Constraint):
         return table
 
     def process_table(self, scope, table):
-
         if len(table) == 0:
             return None
-
         # we compute the hash code of the table
         try:
             h = hash(tuple(table))
@@ -921,11 +919,22 @@ def manage_global_indirection(*args):
     assert len(args) > 1
     if any(isinstance(arg, EMetaCtr) for arg in args):
         return None
+
+    msg = "A subexpression node is evaluated as a Boolean (False or True)" + \
+          "\n\tIt is likely a problem with the use of logical operators" + \
+          "\n\tFor example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])" + \
+          "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide\n"
+
     t = []
     for arg in args:
-        if arg is True:  # means that we must have a unary constraint of the form x in S in an expression
+        if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression
+            error_if(len(curser.queue_in) == 0, msg)
             (values, x) = curser.queue_in.pop()
             arg = functions.belong(x, values)
+        elif arg is False:  # means that we must have a unary subexpression of the form 'x not in S' in a more general expression
+            error_if(len(curser.queue_in) == 0, msg)
+            (values, x) = curser.queue_in.pop()
+            arg = functions.not_belong(x, values)
         elif isinstance(arg, ECtr):
             gi = global_indirection(arg.constraint)
             if gi is None:
