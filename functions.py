@@ -9,8 +9,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOp
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
-    AnnEntities,
-    TypeNode, Node, reset)
+    AnnEntities, TypeNode, Node, reset, CtrEntities)
 from pycsp3.classes.main.annotations import (
     AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
     AnnotationRestarts)
@@ -121,7 +120,7 @@ def VarArray(*, size, dom, comment=None):
                 return None
             if isinstance(t, Variable):
                 return t
-            assert isinstance(t,list)
+            assert isinstance(t, list)
             return ListVar([_to_ListVar(x) for x in t])
 
         lv = _to_ListVar(var_objects)
@@ -854,6 +853,20 @@ def cp_array(*l):
         return ListVar(l)
     else:
         raise NotImplemented
+
+
+def posted():
+    def _rec_posted(it):
+        if isinstance(it, ECtr):
+            t.append(str(it.constraint))
+        elif isinstance(it, ECtrs):
+            for i in it.entities:
+                _rec_posted(i)
+
+    t = []
+    for item in CtrEntities.items:
+        _rec_posted(item)
+    return "\n".join(t)
 
 
 # The two next lines are added, so as to be able to use these constants directly in user code

@@ -141,7 +141,7 @@ class Constraint:
         return " ".join("%" + str(v + self.n_parameters - length) for v in range(length))
 
     def __str__(self):
-        return str(self.name) + ": " + " ".join(str(a) for a in self.attributes) + " ".join(str(v) for k, v in self.arguments.items())
+        return str(self.name) + "(" + " ".join(str(a) for a in self.attributes) + ", ".join(str(v) for k, v in self.arguments.items()) + ")"
 
 
 class ConstraintUnmergeable(Constraint):
