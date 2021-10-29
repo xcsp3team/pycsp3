@@ -855,18 +855,25 @@ def cp_array(*l):
         raise NotImplemented
 
 
-def posted():
+def posted(i=None):
     def _rec_posted(it):
         if isinstance(it, ECtr):
             t.append(str(it.constraint))
         elif isinstance(it, ECtrs):
-            for i in it.entities:
-                _rec_posted(i)
+            for e in it.entities:
+                _rec_posted(e)
 
     t = []
     for item in CtrEntities.items:
         _rec_posted(item)
-    return "\n".join(t)
+    return t[i] if isinstance(i, int) else "\n".join(t)
+
+
+def values(m):
+    if isinstance(m, Variable):
+        return m.value
+    if isinstance(m, list):
+        return [values(v) for v in m]
 
 
 # The two next lines are added, so as to be able to use these constants directly in user code

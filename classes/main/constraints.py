@@ -66,7 +66,8 @@ class ConstraintArgument:
         # return self.content == other.content
 
     def __str__(self):
-        return str(self.name) + ":" + str(self.content)
+        content = "[" + ", ".join(str(v) for v in self.content) +"]" if isinstance(self.content, list) else self.content
+        return str(self.name) + ":" + str(content)
 
 
 class Constraint:
