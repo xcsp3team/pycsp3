@@ -231,13 +231,19 @@ class SolverProcess:
                 if variables[i]:
                     if isinstance(variables[i], VariableInteger):
                         values[i] = int(values[i]) if values[i] != "*" else ANY
-                    variables[i].value = values[i]  # we add a new field
+                    variables[i].value = values[i]  # we set the value of the field 'value'
 
             def _array_values(t):
-                return None if t is None else t.value if isinstance(t, Variable) else [_array_values(v) for v in t]
+                if t is None:
+                    return None
+                if isinstance(t, Variable):
+                    return t.value
+                t.values = [_array_values(v) for v in t]
+                return t.values
 
             for array in Variable.arrays:
-                array.values = _array_values(array)  # we add a new field
+                _array_values(array)  # we set the value of the field 'values'
+                # (currently, the recursive mode does not work; superficial copy when getting an item)
 
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
             self.last_solution = Instantiation(root, variables, values, pretty_solution)

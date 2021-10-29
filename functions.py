@@ -116,8 +116,16 @@ def VarArray(*, size, dom, comment=None):
             EVar(variable, None, None)  # object wrapping the variables
         return tuple(var_objects)
     else:
-        EVarArray(var_objects, name, comment, tags)  # object wrapping the array of variables
-        lv = ListVar(var_objects)
+        def _to_ListVar(t):
+            if t is None:
+                return None
+            if isinstance(t, Variable):
+                return t
+            assert isinstance(t,list)
+            return ListVar([_to_ListVar(x) for x in t])
+
+        lv = _to_ListVar(var_objects)
+        EVarArray(lv, name, comment, tags)  # object wrapping the array of variables
         Variable.arrays.append(lv)
         return lv
 

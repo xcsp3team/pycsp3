@@ -561,6 +561,7 @@ class ListVar(list):
 
     def __init__(self, variables):
         super().__init__(variables)
+        self.values = None
 
     def __getslice__(self, i, j):
         return ListVar(super().__getslice__(i, j))

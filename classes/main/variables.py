@@ -80,6 +80,7 @@ class Variable:
             self.indexes = [int(v) for v in re.split("\]\[", self.suffix[1:-1])]
         self.inverse = inverse  # arithmetic inverse
         self.negation = negation  # logical negation
+        self.value = None   # value of the last found solution
 
     def eq__safe(self, other):
         return isinstance(other, Variable) and self.id == other.id
