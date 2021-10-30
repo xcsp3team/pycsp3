@@ -866,7 +866,7 @@ def posted(i=None):
     t = []
     for item in CtrEntities.items:
         _rec_posted(item)
-    return t[i] if isinstance(i, int) else "\n".join(t)
+    return t[i] if isinstance(i, int) else "\n".join(v for v in t[i]) if isinstance(i, slice) else "\n".join(t)
 
 
 def values(m):
