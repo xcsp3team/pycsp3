@@ -66,7 +66,7 @@ class ConstraintArgument:
         # return self.content == other.content
 
     def __str__(self):
-        content = "[" + ", ".join(str(v) for v in self.content) +"]" if isinstance(self.content, list) else self.content
+        content = "[" + ", ".join(str(v) for v in self.content) + "]" if isinstance(self.content, list) else self.content
         return str(self.name) + ":" + str(content)
 
 
@@ -142,7 +142,9 @@ class Constraint:
         return " ".join("%" + str(v + self.n_parameters - length) for v in range(length))
 
     def __str__(self):
-        return str(self.name) + "(" + " ".join(str(a) for a in self.attributes) + ", ".join(str(v) for k, v in self.arguments.items()) + ")"
+        s_attributes = " ".join(str(a) for a in self.attributes)
+        s_arguments = ", ".join(str(v) for k, v in self.arguments.items() if v.content is not None)
+        return str(self.name) + "(" + s_attributes + s_arguments + ")"
 
 
 class ConstraintUnmergeable(Constraint):

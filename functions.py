@@ -9,7 +9,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOp
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
-    AnnEntities, TypeNode, Node, reset, CtrEntities)
+    AnnEntities, TypeNode, Node, clear, CtrEntities)
 from pycsp3.classes.main.annotations import (
     AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
     AnnotationRestarts)
@@ -882,5 +882,5 @@ ACE, CHOCO = [s for s in TypeSolver]
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, eq, complement, reset, ANY,
+    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, eq, complement, clear, ANY,
          to_ordinary_table(), product, ACE, CHOCO, UNSAT, SAT, OPTIMUM, UNKNOWN)

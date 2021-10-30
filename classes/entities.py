@@ -302,7 +302,7 @@ class AnnEntities:
     items_types = []
 
 
-def reset():
+def clear():
     VarEntities.items = []
     VarEntities.varToEVar = dict()
     VarEntities.varToEVarArray = dict()
