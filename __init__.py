@@ -108,6 +108,8 @@ def solve(*, solver=TypeSolver.ACE, options=None, filename=None, disabling_opove
         print("Problem when compiling")
     else:
         last_solver = Ace() if solver == TypeSolver.ACE else Choco()
+        if solver == TypeSolver.ACE and all_solutions:
+            options = "-xe -xc=false" if options is None else options + " -xe -xc=false"
         last_solver.setting(options)
         result = last_solver.solve(instance, dict_simplified_options={"nolimit": True} if all_solutions else {}, verbose=verbose)
         return result

@@ -869,11 +869,16 @@ def posted(i=None):
     return t[i] if isinstance(i, int) else "\n".join(v for v in t[i]) if isinstance(i, slice) else "\n".join(t)
 
 
-def values(m):
+def value(x, *, sol=-1):
+    assert isinstance(x, Variable) and len(x.values) > 0 and (sol == -1 or 0 <= sol < len(x.values))
+    return x.values[sol]
+
+
+def values(m, *, sol=-1):
     if isinstance(m, Variable):
-        return m.value
+        return value(m, sol=sol)
     if isinstance(m, list):
-        return [values(v) for v in m]
+        return [values(v, sol=sol) for v in m]
 
 
 # The two next lines are added, so as to be able to use these constants directly in user code

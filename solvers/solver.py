@@ -3,6 +3,7 @@ import signal
 import subprocess
 import sys
 import uuid
+import re
 
 from lxml import etree
 
@@ -159,6 +160,7 @@ class SolverProcess:
         self.n_executions = 0
         self.last_log = None
         self.last_solution = None
+        self.all_solutions = None
         self.n_solutions = None
         self.bound = None
 
@@ -181,33 +183,18 @@ class SolverProcess:
 
     def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False):
         model, cop = instance
+        all_solutions = "nolimit" in dict_simplified_options
 
         def _int_from(s, left):
             right = left + s[left:].find("\n")
             left = right - 1
             while s[left].isdigit():
                 left -= 1
-            return s[left + 1:right]
+            return int(s[left + 1:right])
 
-        def extract_result_and_solution(stdout):
-            if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
-                return TypeStatus.UNSAT
-            if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
-                print("  Actually, the instance was not solved")
-                return TypeStatus.UNKNOWN
-            left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
-            s = stdout[left:right + len("</instantiation>")].replace("\nv", "")
-            root = etree.fromstring(s, etree.XMLParser(remove_blank_text=True))
-            optimal = stdout.find("s OPTIMUM") != -1
-            if cop:
-                root.attrib['type'] = "optimum" if optimal else "solution"
-                if "cost" not in root.attrib:
-                    root.attrib['cost'] = _int_from(stdout, stdout.rfind("o ") + 2)
-                self.bound = root.attrib['cost']
-                if "id" in root.attrib:
-                    del root.attrib['id']
+        def _record_solution(roots, i):
             variables = []
-            for token in root[0].text.split():
+            for token in roots[i][0].text.split():
                 r = VarEntities.get_item_with_name(token)
                 if isinstance(r, EVar):
                     variables.append(r.variable)
@@ -216,8 +203,12 @@ class SolverProcess:
                 else:
                     for x in flatten(r.variables, keep_none=True):
                         variables.append(x)
+            if i == 0:  # reset the history in that case
+                for x in variables:
+                    if x:
+                        x.values = []
             values = []
-            for tok in root[1].text.split():
+            for tok in roots[i][1].text.split():
                 if 'x' in tok:  # in order to handle compact forms in solutions
                     vk = tok.split('x')
                     assert len(vk) == 2
@@ -231,7 +222,38 @@ class SolverProcess:
                 if variables[i]:
                     if isinstance(variables[i], VariableInteger):
                         values[i] = int(values[i]) if values[i] != "*" else ANY
-                    variables[i].value = values[i]  # we set the value of the field 'value'
+                    variables[i].value = values[i]  # we record the last found solution value
+                    variables[i].values.append(values[i])  # we record it in the history
+            return variables, values
+
+        def extract_result_and_solution(stdout):
+            if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
+                return TypeStatus.UNSAT
+            if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
+                print("  Actually, the instance was not solved")
+                return TypeStatus.UNKNOWN
+
+            if all_solutions:
+                # TODo findall does not seem to work with the output of Choco. why?
+                roots = [etree.fromstring(("<instantiation" + tok + "</instantiation>").replace("\nv", ""), etree.XMLParser(remove_blank_text=True))
+                         for tok in re.findall(r"<instantiation(.*?)</instantiation>", stdout)]
+            else:
+                left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
+                roots = [etree.fromstring(stdout[left:right + len("</instantiation>")].replace("\nv", ""), etree.XMLParser(remove_blank_text=True))]
+
+            for i in range(len(roots) - 1):  # all roots except the last one to record the history
+                _record_solution(roots, i)
+
+            root = roots[-1]
+            variables, values = _record_solution(roots, len(roots) - 1)
+            optimal = stdout.find("s OPTIMUM") != -1
+            if cop:
+                root.attrib['type'] = "optimum" if optimal else "solution"
+                if "cost" not in root.attrib:
+                    root.attrib['cost'] = _int_from(stdout, stdout.rfind("o ") + 2)
+                self.bound = root.attrib['cost']
+                if "id" in root.attrib:
+                    del root.attrib['id']
 
             def _array_values(t):
                 if t is None:
@@ -298,7 +320,7 @@ class SolverProcess:
         stopwatch = Stopwatch()
         solver_args = self.parse_general_options(string_options, dict_options, dict_simplified_options)
         solver_args += " " + dict_options["args"] if "args" in dict_options else ""
-        solver_args += self.options
+        solver_args += " " + self.options
 
         verbose = 2 if options.solve or "verbose" in dict_simplified_options else verbose
         command = self.command + " " + (model if model is not None else "") + " " + solver_args
@@ -307,7 +329,7 @@ class SolverProcess:
             print("\n  * Solving by " + self.name + " in progress ... ")
             print("    - command:", command)
         out_err, stopped = execute(command)
-        # print()
+
         missing = out_err is not None and out_err.find("Missing Implementation") != -1
         self.last_command_wck = stopwatch.elapsed_time()
         if verbose > 0:
