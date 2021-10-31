@@ -160,7 +160,6 @@ class SolverProcess:
         self.n_executions = 0
         self.last_log = None
         self.last_solution = None
-        self.all_solutions = None
         self.n_solutions = None
         self.bound = None
 

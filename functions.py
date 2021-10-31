@@ -9,7 +9,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOp
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
-    AnnEntities, TypeNode, Node, clear, CtrEntities)
+    AnnEntities, TypeNode, Node, clear, CtrEntities, ObjEntities)
 from pycsp3.classes.main.annotations import (
     AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
     AnnotationRestarts)
@@ -743,6 +743,7 @@ def Clause(term, *others, phases=None):
 
 
 def _optimize(term, minimization):
+    ObjEntities.items = []  # TODO currently, we overwrite the objective is one was posted
     if isinstance(term, PartialConstraint) and isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):
         l = term.constraint.arguments[TypeCtrArg.LIST]
         if len(l.content) == 1 and TypeCtrArg.COEFFS not in term.constraint.arguments:
