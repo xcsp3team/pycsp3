@@ -250,7 +250,7 @@ class SolverProcess:
                 root.attrib['type'] = "optimum" if optimal else "solution"
                 if "cost" not in root.attrib:
                     root.attrib['cost'] = _int_from(stdout, stdout.rfind("o ") + 2)
-                self.bound = root.attrib['cost']
+                self.bound = int(root.attrib['cost'])
                 if "id" in root.attrib:
                     del root.attrib['id']
 

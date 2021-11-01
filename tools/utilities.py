@@ -254,6 +254,16 @@ def display_constraints(ctr_entities, separator=""):
                 print(separator + str(ce.constraint))
 
 
+def structured_list(m, level=1):
+    if m is None or not isinstance(m, (list, tuple)) or len(m) == 0:
+        return str(m)
+    gap = "  "
+    if isinstance(m[0], (list, tuple)):
+        s = ("\n" + gap * level).join(structured_list(v, level + 1) for v in m)
+        return "[\n" + gap * level + s + "\n" + (gap * (level - 1) + "]") + ("," if level > 1 else "")
+    return "[" + ", ".join(str(v) for v in m) + "]"
+
+
 def is_windows():
     return os.name == 'nt'
 

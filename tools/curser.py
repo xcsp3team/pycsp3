@@ -9,7 +9,7 @@ from pycsp3.classes.main.constraints import (
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, ANY, warning, error_if, error
+from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, ANY, structured_list, warning, error_if, error
 
 from pycsp3 import functions
 
@@ -601,6 +601,9 @@ class ListVar(list):
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
         return ListVar([self[i][j]] + [self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
+
+    def __str__(self):
+        return structured_list(self)
 
 
 def convert_to_namedtuples(obj):

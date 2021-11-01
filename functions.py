@@ -27,7 +27,7 @@ from pycsp3.tools import curser
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import ANY, flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, \
-    integer_scaling, to_ordinary_table
+    integer_scaling, to_ordinary_table, structured_list
 
 ''' Global Variables '''
 
@@ -889,4 +889,4 @@ ACE, CHOCO = [s for s in TypeSolver]
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
     _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, eq, complement, clear, ANY,
-         to_ordinary_table(), product, ACE, CHOCO, UNSAT, SAT, OPTIMUM, UNKNOWN)
+         to_ordinary_table(), product, ACE, CHOCO, UNSAT, SAT, OPTIMUM, UNKNOWN, structured_list())
