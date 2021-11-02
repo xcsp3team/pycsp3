@@ -879,7 +879,7 @@ def values(m, *, sol=-1):
     if isinstance(m, Variable):
         return value(m, sol=sol)
     if isinstance(m, list):
-        return [values(v, sol=sol) for v in m]
+        return ListInt(values(v, sol=sol) for v in m)
 
 
 # The two next lines are added, so as to be able to use these constants directly in user code

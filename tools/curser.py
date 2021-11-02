@@ -549,6 +549,9 @@ class ListInt(list):
                 # error("It seems that you build tables whose elements are lists instead of tuples: " + str(other) + " in " + str(self))
         return list.__contains__(self, other)
 
+    def __str__(self):
+        return structured_list(self)
+
 
 def columns(m):
     assert is_matrix(m), "columns() can only be called on matrices"
