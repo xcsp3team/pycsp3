@@ -654,6 +654,18 @@ def convert_to_namedtuples(obj):
     return recursive_convert_to_namedtuples(obj)
 
 
+class ListCtr(list):  # currently, mainly introduced for __str__ when calling posted()
+
+    def __init__(self, ectrs):
+        super().__init__(ectrs)
+
+    def __getslice__(self, i, j):
+        return ListCtr(super().__getslice__(i, j))
+
+    def __str__(self):
+        return "\n".join(str(e) for e in self)
+
+
 def is_namedtuple(obj):  # imperfect way of checking, but must be enough for our use (when JSON dumping Compilation.data)
     t = type(obj)
     if len(t.__bases__) != 1 or t.__bases__[0] != tuple:

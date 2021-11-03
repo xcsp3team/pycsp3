@@ -142,9 +142,9 @@ class Constraint:
         return " ".join("%" + str(v + self.n_parameters - length) for v in range(length))
 
     def __str__(self):
-        s_attributes = " ".join(str(a) for a in self.attributes)
+        s_attributes = " ".join(str(t.name) + ": " + str(v) for (t, v) in self.attributes)
         s_arguments = ", ".join(str(v) for k, v in self.arguments.items() if v.content is not None)
-        return str(self.name) + "(" + s_attributes + s_arguments + ")"
+        return str(self.name) + ("[" + s_attributes + "]" if len(s_attributes) > 0 else "") + "(" + s_arguments + ")"
 
 
 class ConstraintUnmergeable(Constraint):
@@ -773,7 +773,7 @@ class ScalarProduct:
     def __init__(self, variables, coefficients):
         variables = list(variables) if isinstance(variables, tuple) else variables
         coefficients = list(coefficients) if isinstance(coefficients, tuple) else coefficients
-        assert isinstance(variables, list) and isinstance(coefficients, (int, list, range)), variables
+        assert isinstance(variables, list) and isinstance(coefficients, (int, list, range)), str(variables) + " " + str(coefficients)
         self.variables = flatten(variables)  # for example, in order to remove None occurrences
         self.coeffs = flatten([coefficients] * len(variables) if isinstance(coefficients, int) else coefficients)
         assert len(self.variables) == len(self.coeffs), str(self.variables) + " " + str(self.coeffs)

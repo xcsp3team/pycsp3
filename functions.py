@@ -27,7 +27,7 @@ from pycsp3.tools import curser
 from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import ANY, flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, \
-    integer_scaling, to_ordinary_table, structured_list
+    integer_scaling, to_ordinary_table
 
 ''' Global Variables '''
 
@@ -224,7 +224,10 @@ def satisfy(*args):
     global no_parameter_satisfy, nb_parameter_satisfy
 
     def _group(*_args):
-        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
+        t = flatten(*_args)
+        if len(t) == 0:
+            return None
+        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(t))
         checkType(entities, [ECtr, ECtrs, EMetaCtr])
         return EToGather(entities)
 
@@ -308,7 +311,9 @@ def satisfy(*args):
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
             #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
-    t.append(_group(pc == var for (pc, var) in auxiliary().collected()))
+    to_post = _group(pc == var for (pc, var) in auxiliary().collected())
+    if to_post is not None:
+        t.append(to_post)
     return EToSatisfy(t)
 
 
@@ -841,7 +846,7 @@ def different_values(*args):
 def cp_array(*l):
     if len(l) == 1:
         l = l[0]
-    if isinstance(l, (tuple, set, types.GeneratorType)):
+    if isinstance(l, (tuple, set, frozenset, types.GeneratorType)):
         l = list(l)
     assert isinstance(l, list) and len(l) > 0
     if isinstance(l[0], (list, types.GeneratorType)):
@@ -857,21 +862,32 @@ def cp_array(*l):
 
 
 def posted(i=None):
-    def _rec_posted(it):
-        if isinstance(it, ECtr):
-            t.append(str(it.constraint))
-        elif isinstance(it, ECtrs):
-            for e in it.entities:
-                _rec_posted(e)
-
     t = []
     for item in CtrEntities.items:
-        _rec_posted(item)
-    return t[i] if isinstance(i, int) else "\n".join(v for v in t[i]) if isinstance(i, slice) else "\n".join(t)
+        assert isinstance(item, EToSatisfy)
+        t.extend(c for c in item.flat_constraints())
+    if len(t) == 0:
+        return t
+    return t[i] if isinstance(i, int) else curser.ListCtr(t[i] if isinstance(i, slice) else t)
+
+
+def objective():
+    assert 0 <= len(ObjEntities.items) <= 1
+    return ObjEntities.items[0].constraint if len(ObjEntities.items) == 1 else None
+
+
+def unpost(i=None, j=None):
+    if i is None:
+        i = -1
+    assert isinstance(i, int)
+    if j is None:
+        del CtrEntities.items[i]
+    else:
+        CtrEntities.items[i].delete(j)
 
 
 def value(x, *, sol=-1):
-    assert isinstance(x, Variable) and len(x.values) > 0 and (sol == -1 or 0 <= sol < len(x.values))
+    assert isinstance(x, Variable) and len(x.values) > 0
     return x.values[sol]
 
 
@@ -889,4 +905,4 @@ ACE, CHOCO = [s for s in TypeSolver]
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
     _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, eq, complement, clear, ANY,
-         to_ordinary_table(), product, ACE, CHOCO, UNSAT, SAT, OPTIMUM, UNKNOWN, structured_list())
+         to_ordinary_table, product, ACE, CHOCO, UNSAT, SAT, OPTIMUM, UNKNOWN)

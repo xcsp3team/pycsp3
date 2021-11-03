@@ -48,3 +48,8 @@ minimize(
     # minimizing the position of the rightmost tick
     Maximum(x)
 )
+
+
+""" Comments
+1) one can minimize(x[-1]) provided that symmetry-breaking constraints are not discarded
+"""

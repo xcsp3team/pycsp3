@@ -147,6 +147,20 @@ class ECtrs(Entity):
         assert isinstance(constraints, list)
         self.entities = [c for c in constraints if c is not None]
 
+    def _flat_constraints(self, t):
+        for e in self.entities:
+            if isinstance(e, ECtr):
+                t.append(e.constraint)
+            elif isinstance(e, ECtrs):
+                e._flat_constraints(t)
+        return t
+
+    def flat_constraints(self):
+        return self._flat_constraints([])
+
+    def __repr__(self):
+        return "\n".join(str(e) for e in self.flat_constraints())
+
 
 class EToGather(ECtrs):
     ''' Constraints possibly stored in a group (the user asked to gather these constraints)'''
@@ -168,6 +182,8 @@ class EToSatisfy(ECtrs):
     def delete(self, i=None):
         if i is None:
             self.entities = []
+        elif len(self.entities) == 1 and isinstance(self.entities[0], ECtrs):
+            del self.entities[0].entities[i]
         else:
             del self.entities[i]
 
@@ -290,7 +306,7 @@ class VarEntities:
 
 
 class CtrEntities:
-    items = []
+    items = []  # contains EToSatisfy objects
 
 
 class ObjEntities:
