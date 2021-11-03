@@ -894,7 +894,7 @@ def value(x, *, sol=-1):
 def values(m, *, sol=-1):
     if isinstance(m, Variable):
         return value(m, sol=sol)
-    if isinstance(m, list):
+    if isinstance(m, (list, tuple, set, frozenset, types.GeneratorType)):
         return ListInt(values(v, sol=sol) for v in m)
 
 

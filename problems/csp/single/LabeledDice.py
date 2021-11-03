@@ -1,6 +1,6 @@
 """
 From http://jimorlin.wordpress.com/2009/02/17/colored-letters-labeled-dice-a-logic-puzzle/
-There are 13 words as follows: buoy, cave, celt, flub, fork, hemp, judy, junk, limn, quip, swag, visa.
+There are 13 words as follows: buoy, cave, celt, flub, fork, hemp, judy, junk, limn, quip, swag, visa, wish.
 There are 24 different letters that appear in the 13 words.
 The question is: can one assign the 24 letters to 4 different cubes so that the four letters of each word appears on different cubes.
 There is one letter from each word on each cube.
@@ -12,10 +12,11 @@ Execution:
 
 from pycsp3 import *
 
-words = ["buoy", "cave", "celt", "flub", "fork", "hemp", "judy", "junk", "limn", "quip", "swag", "visa"]
+words = ["buoy", "cave", "celt", "flub", "fork", "hemp", "judy", "junk", "limn", "quip", "swag", "visa", "wish"]
+letters = set(alphabet_positions("".join(words)))  # actually, set of indexes of present letters
 
 # x[i] is the cube where the ith letter of the alphabet is put
-x = VarArray(size=26, dom=lambda i: range(1, 5) if i in alphabet_positions("".join(words)) else None)
+x = VarArray(size=26, dom=lambda i: range(1, 5) if i in letters else None)
 
 satisfy(
     # the four letters of each word appear on different cubes
