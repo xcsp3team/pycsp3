@@ -20,7 +20,7 @@ run(Tester("csp" + os.sep + "single")
     .add("Dinner")  # 2 solutions
     .add("Dudeney")  # 5 solutions
     .add("Grocery")  # 1 solution
-    .add("LabeledDice")  # 48 solutions
+    .add("LabeledDice")  # 24 solutions
     .add("MagicModuloNumber")  # 3 solutions
     .add("NFractions")  # 22 solutions
     .add("Picnic")  # 1 solution

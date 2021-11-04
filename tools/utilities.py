@@ -121,7 +121,13 @@ def transpose(m):
 
 
 def alphabet_positions(s):
-    assert isinstance(s, str)
+    '''
+
+    @param s:
+    @return:
+    '''
+    if isinstance(s, (list, tuple, set, frozenset, types.GeneratorType)):
+        s = "".join(t for t in s)
     return tuple(ord(c) - ord('a') for c in s.lower())
 
 
