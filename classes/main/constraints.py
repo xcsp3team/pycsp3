@@ -349,9 +349,10 @@ class ConstraintAllDifferentList(ConstraintUnmergeable):
 
 
 class ConstraintAllDifferentMatrix(ConstraintUnmergeable):
-    def __init__(self, lst):
+    def __init__(self, lst, excepting):
         super().__init__(TypeCtr.ALL_DIFFERENT)
         self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst)
+        self.arg(TypeCtrArg.EXCEPT, excepting)
 
 
 class ConstraintAllEqual(Constraint):

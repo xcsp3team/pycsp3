@@ -436,19 +436,18 @@ def Mdd(*, scope, mdd):
 ''' Comparison-based Constraints '''
 
 
-def AllDifferent(term, *others, excepting=None, matrix=None):
+def AllDifferent(term, *others, excepting=None, matrix=False):
     terms = flatten(term, others)
     if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (int, Variable, Node))):
         return None
-    if matrix is not None:
-        assert excepting is None, "excepting values are currently not supported for AllDifferentMatrix"
+    excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
+    checkType(excepting, ([int], type(None)))
+    if matrix:
         matrix = [flatten(row) for row in terms]
         assert all(len(row) == len(matrix[0]) for row in matrix), "The matrix id badly formed"
         assert all(checkType(l, [Variable]) for l in matrix)
-        return ECtr(ConstraintAllDifferentMatrix(matrix))
-    excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
+        return ECtr(ConstraintAllDifferentMatrix(matrix, excepting))
     checkType(terms, ([Variable, Node]))
-    checkType(excepting, ([int], type(None)))
     return ECtr(ConstraintAllDifferent(terms, excepting))
 
 
@@ -593,7 +592,7 @@ def Count(term, *others, value=None, values=None, condition=None):
 
 def NValues(term, *others, excepting=None, condition=None):
     terms = flatten(term, others)
-    checkType(terms, [Variable])
+    checkType(terms, ([Variable], [Node]))
     if excepting is not None:
         excepting = flatten(excepting)
         checkType(excepting, [int])
