@@ -182,7 +182,6 @@ class SolverProcess:
 
     def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False):
         model, cop = instance
-        all_solutions = "limit=no" in string_options
 
         def _int_from(s, left):
             right = left + s[left:].find("\n")

@@ -1,11 +1,10 @@
 import inspect
 import math
 import types
-from collections import namedtuple
-from itertools import combinations, product, permutations
+from itertools import combinations
 
-from pycsp3.classes.auxiliary.conditions import Condition, lt, le, ge, gt, ne, eq, complement
-from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank, TypeSolver, TypeStatus
+from pycsp3.classes.auxiliary.conditions import Condition
+from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
@@ -23,11 +22,9 @@ from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
 from pycsp3.compiler import default_data
 from pycsp3.dashboard import options
-from pycsp3.tools import curser
-from pycsp3.tools.curser import OpOverrider, ListInt, ListVar
+from pycsp3.tools.curser import queue_in, OpOverrider, columns, ListInt, ListVar, ListCtr
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import ANY, flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix, transpose, alphabet_positions, all_primes, \
-    integer_scaling, to_ordinary_table
+from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix
 
 ''' Global Variables '''
 
@@ -46,9 +43,6 @@ def protect():
 
 
 def variant(name=None):
-    """"
-       test
-    """
     pos = -1 if not options.variant else options.variant.find("-")  # position of dash ('-') in options.variant
     if not name:
         return options.variant[0:pos] if pos != -1 else options.variant
@@ -137,10 +131,10 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     if isinstance(left_operand, Variable) and isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
         return None
     if isinstance(left_operand, Variable) and isinstance(right_operand, range):
-        ctr = Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
+        ctr = _Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
     elif isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
-        ctr = Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))
+        ctr = _Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))
     # elif isinstance(left_operand, Node) and isinstance(right_operand, range):
     #     if bool_value:
     #         ctr = Intension(conjunction(left_operand >= right_operand.start, left_operand <= right_operand.stop - 1))
@@ -149,9 +143,9 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
         ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
-        ctr = Regular(scope=left_operand, automaton=right_operand)
+        ctr = _Regular(scope=left_operand, automaton=right_operand)
     elif isinstance(right_operand, MDD):  # it is a MDD constraint
-        ctr = Mdd(scope=left_operand, mdd=right_operand)
+        ctr = _Mdd(scope=left_operand, mdd=right_operand)
     elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
         ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1))  # atLeast1 TODO to be replaced by a member/element constraint ?
     # elif isinstance(left_operand, Node):
@@ -162,15 +156,15 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         if not bool_value and len(right_operand) == 0:
             return None
         # TODO what to do if the table is empty and bool_value is true? an error message ?
-        ctr = Extension(scope=flatten(left_operand), table=right_operand, positive=bool_value)  # TODO ok for using flatten? (before it was list())
+        ctr = _Extension(scope=flatten(left_operand), table=right_operand, positive=bool_value)  # TODO ok for using flatten? (before it was list())
     return ctr
 
 
 def _complete_partial_forms_of_constraints(entities):
     for i, c in enumerate(entities):
         if isinstance(c, bool):
-            assert len(curser.queue_in) > 0, "A boolean that does not represent a constraint is in the list of constraints in satisfy(): " + str(entities)
-            right_operand, left_operand = curser.queue_in.popleft()
+            assert len(queue_in) > 0, "A boolean that does not represent a constraint is in the list of constraints in satisfy(): " + str(entities)
+            right_operand, left_operand = queue_in.popleft()
             entities[i] = _bool_interpretation_for_in(left_operand, right_operand, c)
         elif isinstance(c, ESlide):
             for ent in c.entities:
@@ -181,7 +175,7 @@ def _complete_partial_forms_of_constraints(entities):
 def _wrap_intension_constraints(entities):
     for i, c in enumerate(entities):
         if isinstance(c, Node):
-            entities[i] = Intension(c)  # the node is wrapped by a Constraint object (Intension)
+            entities[i] = _Intension(c)  # the node is wrapped by a Constraint object (Intension)
     return entities
 
 
@@ -289,12 +283,12 @@ def satisfy(*args):
         if isinstance(arg, (ECtr, EMetaCtr, ESlide)):  # case: simple constraint or slide
             to_post = _complete_partial_forms_of_constraints([arg])[0]
         elif isinstance(arg, Node):  # a predicate to be wrapped by a constraint (intension)
-            to_post = Intension(arg)
+            to_post = _Intension(arg)
         elif isinstance(arg, bool):  # a Boolean representing the case of a partial constraint or a node with operator in {IN, NOT IN}
-            assert curser.queue_in, "An argument of satisfy() before position " + str(i) + " is badly formed"
+            assert queue_in, "An argument of satisfy() before position " + str(i) + " is badly formed"
             # assert queue_in, "A boolean that do not represents a constraint is in the list of constraints in satisfy(): " \
             #                 + str(args) + " " + str(i) + ".\nA constraint is certainly badly formed"
-            other, partial = curser.queue_in.popleft()
+            other, partial = queue_in.popleft()
             to_post = _bool_interpretation_for_in(partial, other, arg)
         elif any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide
             to_post = _block(arg)
@@ -320,7 +314,7 @@ def satisfy(*args):
 ''' Generic Constraints (intension, extension) '''
 
 
-def Extension(*, scope, table, positive=True):
+def _Extension(*, scope, table, positive=True):
     scope = flatten(scope)
     checkType(scope, [Variable])
     assert isinstance(table, list)
@@ -337,7 +331,7 @@ def Extension(*, scope, table, positive=True):
     return ECtr(ConstraintExtension(scope, table, positive, options.keepsmartconditions, options.restricttableswrtdomains))
 
 
-def Intension(node):
+def _Intension(node):
     checkType(node, Node)
     ctr = ECtr(ConstraintIntension(node))
     if ctr.blank_basic_attributes():
@@ -419,14 +413,14 @@ def disjunction(*args):
 ''' Language-based Constraints '''
 
 
-def Regular(*, scope, automaton):
+def _Regular(*, scope, automaton):
     scope = flatten(scope)
     checkType(scope, [Variable])
     checkType(automaton, Automaton)
     return ECtr(ConstraintRegular(scope, automaton))
 
 
-def Mdd(*, scope, mdd):
+def _Mdd(*, scope, mdd):
     scope = flatten(scope)
     checkType(scope, [Variable])
     checkType(mdd, MDD)
@@ -799,10 +793,6 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
 ''' Helpers '''
 
 
-def columns(m):
-    return curser.columns(m)
-
-
 def diagonal_down(m, i=-1, j=-1, check=True):
     if check is True:
         assert is_square_matrix(m), "The specified first parameter must be a square matrix."
@@ -867,7 +857,7 @@ def posted(i=None):
         t.extend(c for c in item.flat_constraints())
     if len(t) == 0:
         return t
-    return t[i] if isinstance(i, int) else curser.ListCtr(t[i] if isinstance(i, slice) else t)
+    return t[i] if isinstance(i, int) else ListCtr(t[i] if isinstance(i, slice) else t)
 
 
 def objective():
@@ -898,10 +888,7 @@ def values(m, *, sol=-1):
 
 
 # The two next lines are added, so as to be able to use these constants directly in user code
-UNSAT, SAT, OPTIMUM, UNKNOWN = [s for s in TypeStatus]
-ACE, CHOCO = [s for s in TypeSolver]
-ALL = "all"
+
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, eq, complement, clear, ANY,
-         to_ordinary_table, product, ACE, CHOCO, UNSAT, SAT, OPTIMUM, UNKNOWN, ALL)
+    _ = (default_data, clear, columns)

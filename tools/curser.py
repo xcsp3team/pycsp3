@@ -554,8 +554,11 @@ class ListInt(list):
 
 
 def columns(m):
-    assert is_matrix(m), "columns() can only be called on matrices"
-    return ListVar(ListVar(row[j] for row in m) for j in range(len(m[0])))
+    if is_matrix(m, Variable):
+        return ListVar(ListVar(row[j] for row in m) for j in range(len(m[0])))
+    if is_matrix(m, int):
+        return ListInt(ListInt(row[j] for row in m) for j in range(len(m[0])))
+    assert False, "columns() can only be called on matrices of variables or integers"
 
 
 class ListVar(list):
