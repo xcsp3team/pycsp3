@@ -182,7 +182,7 @@ class SolverProcess:
 
     def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False):
         model, cop = instance
-        all_solutions = "nolimit" in dict_simplified_options
+        all_solutions = "limit=no" in string_options
 
         def _int_from(s, left):
             right = left + s[left:].find("\n")
@@ -232,7 +232,7 @@ class SolverProcess:
                 print("  Actually, the instance was not solved")
                 return TypeStatus.UNKNOWN
 
-            if all_solutions:
+            if "limit=no" in string_options or ("limit_sols" in dict_simplified_options and int(dict_simplified_options["limit_sols"]) > 1):
                 # TODo findall does not seem to work with the output of Choco. why?
                 roots = [etree.fromstring(("<instantiation" + tok + "</instantiation>").replace("\nv", ""), etree.XMLParser(remove_blank_text=True))
                          for tok in re.findall(r"<instantiation(.*?)</instantiation>", stdout)]
@@ -268,7 +268,7 @@ class SolverProcess:
 
             pretty_solution = etree.tostring(root, pretty_print=True, xml_declaration=False).decode("UTF-8").strip()
             self.last_solution = Instantiation(root, variables, values, pretty_solution)
-            j = stdout.find("d NUMBER OF SOLUTIONS")
+            j = stdout.find("d FOUND SOLUTIONS")
             if j != -1:
                 self.n_solutions = _int_from(stdout, j)
             return TypeStatus.OPTIMUM if optimal else TypeStatus.SAT

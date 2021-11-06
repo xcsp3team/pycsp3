@@ -101,17 +101,18 @@ def bound():
     return None if last_solver is None else last_solver.bound
 
 
-def solve(*, solver=TypeSolver.ACE, options=None, filename=None, disabling_opoverrider=False, verbose=0, all_solutions=False):
+def solve(*, solver=TypeSolver.ACE, options=None, filename=None, disabling_opoverrider=False, verbose=0, sols=None):
     global last_solver
     instance = compile(filename, disabling_opoverrider=disabling_opoverrider, verbose=verbose)
     if instance is None:
         print("Problem when compiling")
     else:
         last_solver = Ace() if solver == TypeSolver.ACE else Choco()
-        if solver == TypeSolver.ACE and all_solutions:
+        if solver == TypeSolver.ACE and (sols == ALL or isinstance(sols, int) and sols > 1):
             options = "-xe -xc=false" if options is None else options + " -xe -xc=false"
         last_solver.setting(options)
-        result = last_solver.solve(instance, dict_simplified_options={"nolimit": True} if all_solutions else {}, verbose=verbose)
+        limit = "limit=no" if sols == ALL else "limit=" + str(sols) + "sols" if isinstance(sols, int) else ""
+        result = last_solver.solve(instance, string_options=limit, dict_options=dict(), dict_simplified_options=dict(), verbose=verbose)
         return result
 
 

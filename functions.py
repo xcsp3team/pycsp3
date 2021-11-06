@@ -900,8 +900,8 @@ def values(m, *, sol=-1):
 # The two next lines are added, so as to be able to use these constants directly in user code
 UNSAT, SAT, OPTIMUM, UNKNOWN = [s for s in TypeStatus]
 ACE, CHOCO = [s for s in TypeSolver]
-
+ALL = "all"
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
     _ = (permutations, transpose, alphabet_positions, all_primes, integer_scaling, namedtuple, default_data, lt, le, ge, gt, ne, eq, complement, clear, ANY,
-         to_ordinary_table, product, ACE, CHOCO, UNSAT, SAT, OPTIMUM, UNKNOWN)
+         to_ordinary_table, product, ACE, CHOCO, UNSAT, SAT, OPTIMUM, UNKNOWN, ALL)
