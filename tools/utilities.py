@@ -3,7 +3,7 @@ import sys
 import types
 from collections.abc import Iterable
 from decimal import Decimal
-from itertools import product
+from itertools import product, combinations
 from multiprocessing import cpu_count, Pool
 from time import time
 
@@ -35,6 +35,17 @@ class _Star(float):
 
 
 ANY = _Star("Inf")  #: used to represent * in short tables
+
+combinationsItertools = combinations
+
+
+def combinations(n, size):
+    return combinationsItertools(n, size) if not isinstance(n, int) else combinationsItertools(range(n), size)
+
+
+def different_values(*args):
+    assert all(isinstance(arg, int) for arg in args)
+    return all(a != b for (a, b) in combinations(args, 2))
 
 
 def flatten(*args, keep_none=False):
@@ -113,11 +124,6 @@ def is_matrix(m, types=None):
 
 def is_square_matrix(m, types=None):
     return is_matrix(m, types) and len(m) == len(m[0])
-
-
-def transpose(m):
-    assert is_matrix(m)
-    return [[m[j][i] for j in range(len(m))] for i in range(len(m[0]))]
 
 
 def alphabet_positions(s):

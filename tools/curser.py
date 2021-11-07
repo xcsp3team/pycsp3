@@ -1,6 +1,7 @@
 import types
 from collections import deque, namedtuple
 
+from pycsp3 import functions
 from pycsp3.classes.entities import Node, TypeNode, ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix,
@@ -9,9 +10,8 @@ from pycsp3.classes.main.constraints import (
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, ANY, structured_list, warning, error_if, error
-
-from pycsp3 import functions
+from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, is_square_matrix, ANY, structured_list, warning, \
+    error_if
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -553,14 +553,6 @@ class ListInt(list):
         return structured_list(self)
 
 
-def columns(m):
-    if is_matrix(m, Variable):
-        return ListVar(ListVar(row[j] for row in m) for j in range(len(m[0])))
-    if is_matrix(m, int):
-        return ListInt(ListInt(row[j] for row in m) for j in range(len(m[0])))
-    assert False, "columns() can only be called on matrices of variables or integers"
-
-
 class ListVar(list):
     # def __new__(self, variables):  # if we subclass tuple instead of list (while removing __init__)
     #     return super().__new__(ListVar, variables)
@@ -593,9 +585,6 @@ class ListVar(list):
 
     # def __rmul__(self, other): return ListVar.__mul__(other, self)
 
-    def columns(self):
-        return columns(self)
-
     def around(self, i, j):
         assert is_matrix(self), "calling around should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])
@@ -610,6 +599,18 @@ class ListVar(list):
 
     def __str__(self):
         return structured_list(self)
+
+
+class ListCtr(list):  # currently, mainly introduced for __str__ when calling posted()
+
+    def __init__(self, ectrs):
+        super().__init__(ectrs)
+
+    def __getslice__(self, i, j):
+        return ListCtr(super().__getslice__(i, j))
+
+    def __str__(self):
+        return "\n".join(str(e) for e in self)
 
 
 def convert_to_namedtuples(obj):
@@ -657,24 +658,86 @@ def convert_to_namedtuples(obj):
     return recursive_convert_to_namedtuples(obj)
 
 
-class ListCtr(list):  # currently, mainly introduced for __str__ when calling posted()
-
-    def __init__(self, ectrs):
-        super().__init__(ectrs)
-
-    def __getslice__(self, i, j):
-        return ListCtr(super().__getslice__(i, j))
-
-    def __str__(self):
-        return "\n".join(str(e) for e in self)
-
-
 def is_namedtuple(obj):  # imperfect way of checking, but must be enough for our use (when JSON dumping Compilation.data)
     t = type(obj)
     if len(t.__bases__) != 1 or t.__bases__[0] != tuple:
         return False
     fields = getattr(t, '_fields', None)
     return isinstance(fields, tuple) and all(type(field) == str for field in fields)
+
+
+def _list(t, mode):
+    return ListVar(v for v in t) if mode == 0 else ListInt(v for v in t) if mode == 1 else list(v for v in t)
+
+
+def columns(m):
+    assert is_matrix(m)
+    mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
+    return _list((_list((row[j] for row in m), mode) for j in range(len(m[0]))), mode)
+
+
+def transpose(m):
+    assert is_matrix(m)
+    mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
+    return _list((_list((m[j][i] for j in range(len(m))), mode) for i in range(len(m[0]))), mode)
+
+
+def diagonal_down(m, i=-1, j=-1, check=True):
+    if check is True:
+        assert is_square_matrix(m), "The specified first parameter must be a square matrix."
+    if i == -1 and j == -1:
+        return diagonal_down(m, 0, 0, False)
+    mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
+    if j == -1:
+        return _list((m[k][len(m) - (i - k) if k < i else k - i] for k in range(len(m))), mode)
+    return _list((m[i + k][j + k] for k in range(len(m) - max(i, j))), mode)
+
+
+def diagonals_down(m, *, broken=False):
+    assert is_square_matrix(m), "The specified first parameter must be a square matrix."
+    mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
+    if broken:
+        return _list((diagonal_down(m, i, -1, False) for i in range(len(m))), mode)
+    return _list((diagonal_down(m, i, 0, False) for i in reversed(range(len(m) - 1))), mode) + \
+           _list((diagonal_down(m, 0, j, False) for j in range(1, len(m) - 1)), mode)
+
+
+def diagonal_up(m, i=-1, j=-1, check=True):
+    if check is True:
+        assert is_square_matrix(m), "The specified first parameter must be a square matrix."
+    if i == -1 and j == -1:
+        return diagonal_up(m, len(m) - 1, 0, False)
+    mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
+    if j == -1:
+        return _list((m[k][len(m) - i - k - 1 if k < len(m) - i else 2 * len(m) - i - k - 1] for k in range(len(m))), mode)
+    return _list((m[i - k][j + k] for k in range(min(i + 1, len(m) - j))), mode)
+
+
+def diagonals_up(m, *, broken=False):
+    assert is_square_matrix(m), "The specified first parameter must be a square matrix."
+    mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
+    if broken:
+        return _list((diagonal_up(m, i, -1, False) for i in range(len(m))), mode)
+    return _list((diagonal_up(m, i, 0, False) for i in range(1, len(m))), mode) + \
+           _list((diagonal_up(m, len(m) - 1, j, False) for j in range(1, len(m) - 1)), mode)
+
+
+def cp_array(*l):
+    if len(l) == 1:
+        l = l[0]
+    if isinstance(l, (tuple, set, frozenset, types.GeneratorType)):
+        l = list(l)
+    assert isinstance(l, list) and len(l) > 0
+    if isinstance(l[0], (list, types.GeneratorType)):
+        assert all(isinstance(t, (list, types.GeneratorType)) for t in l)
+        res = [cp_array(t) for t in l]
+        return ListInt(res) if isinstance(res[0], ListInt) else ListVar(res)
+    if all(isinstance(v, int) for v in l):
+        return ListInt(l)
+    elif all(isinstance(v, Variable) for v in l):
+        return ListVar(l)
+    else:
+        raise NotImplemented
 
 # def to_special_list(t):
 #     assert is_1d_list(t)

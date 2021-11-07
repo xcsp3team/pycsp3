@@ -17,6 +17,7 @@
       <args> x[8] x[15..16] x[20] </args>
       <args> x[0] x[6] x[18] x[22] </args>
       <args> x[0] x[8] x[18] x[21] </args>
+      <args> x[7..8] x[18] x[22] </args>
     </group>
     <cardinality note="each cube is assigned 6 letters">
       <list> x[0..22] x[24] </list>

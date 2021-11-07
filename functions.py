@@ -1,14 +1,13 @@
 import inspect
 import math
 import types
-from itertools import combinations
 
 from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
-    AnnEntities, TypeNode, Node, clear, CtrEntities, ObjEntities)
+    AnnEntities, TypeNode, Node, CtrEntities, ObjEntities)
 from pycsp3.classes.main.annotations import (
     AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
     AnnotationRestarts)
@@ -20,19 +19,14 @@ from pycsp3.classes.main.constraints import (
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
-from pycsp3.compiler import default_data
 from pycsp3.dashboard import options
-from pycsp3.tools.curser import queue_in, OpOverrider, columns, ListInt, ListVar, ListCtr
+from pycsp3.tools.curser import queue_in, OpOverrider, ListInt, ListVar, ListCtr
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, is_square_matrix
+from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix
 
 ''' Global Variables '''
 
-absPython, maxPython, minPython, combinationsPython = abs, max, min, combinations
-
-
-def combinations(n, size):
-    return combinationsPython(n, size) if not isinstance(n, int) else combinationsPython(range(n), size)
+absPython, maxPython, minPython = abs, max, min
 
 
 def protect():
@@ -115,7 +109,7 @@ def VarArray(*, size, dom, comment=None):
             if isinstance(t, Variable):
                 return t
             assert isinstance(t, list)
-            return ListVar([_to_ListVar(x) for x in t])
+            return ListVar(_to_ListVar(x) for x in t)
 
         lv = _to_ListVar(var_objects)
         EVarArray(lv, name, comment, tags)  # object wrapping the array of variables
@@ -718,7 +712,7 @@ def Circuit(term, *others, start_index=0, size=None):
     terms = flatten(term, others)
     checkType(terms, [Variable])
     checkType(start_index, int)
-    checkType(size, (int, type(None)))
+    checkType(size, (int, Variable, type(None)))
     return ECtr(ConstraintCircuit(terms, start_index, size))
 
 
@@ -793,63 +787,6 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
 ''' Helpers '''
 
 
-def diagonal_down(m, i=-1, j=-1, check=True):
-    if check is True:
-        assert is_square_matrix(m), "The specified first parameter must be a square matrix."
-    if i == -1 and j == -1:
-        return diagonal_down(m, 0, 0, False)
-    if j == -1:
-        return ListVar(m[k][len(m) - (i - k) if k < i else k - i] for k in range(len(m)))
-    return ListVar(m[i + k][j + k] for k in range(len(m) - max(i, j)))
-
-
-def diagonals_down(m, *, broken=False):
-    assert is_square_matrix(m), "The specified first parameter must be a square matrix."
-    if broken:
-        return ListVar(diagonal_down(m, i, -1, False) for i in range(len(m)))
-    return ListVar(diagonal_down(m, i, 0, False) for i in reversed(range(len(m) - 1))) + ListVar(diagonal_down(m, 0, j, False) for j in range(1, len(m) - 1))
-
-
-def diagonal_up(m, i=-1, j=-1, check=True):
-    if check is True:
-        assert is_square_matrix(m), "The specified first parameter must be a square matrix."
-    if i == -1 and j == -1:
-        return diagonal_up(m, len(m) - 1, 0, False)
-    if j == -1:
-        return ListVar(m[k][len(m) - i - k - 1 if k < len(m) - i else 2 * len(m) - i - k - 1] for k in range(len(m)))
-    return ListVar(m[i - k][j + k] for k in range(min(i + 1, len(m) - j)))
-
-
-def diagonals_up(m, *, broken=False):
-    assert is_square_matrix(m), "The specified first parameter must be a square matrix."
-    if broken:
-        return ListVar(diagonal_up(m, i, -1, False) for i in range(len(m)))
-    return ListVar(diagonal_up(m, i, 0, False) for i in range(1, len(m))) + ListVar(diagonal_up(m, len(m) - 1, j, False) for j in range(1, len(m) - 1))
-
-
-def different_values(*args):
-    assert all(isinstance(arg, int) for arg in args)
-    return all(a != b for (a, b) in combinations(args, 2))
-
-
-def cp_array(*l):
-    if len(l) == 1:
-        l = l[0]
-    if isinstance(l, (tuple, set, frozenset, types.GeneratorType)):
-        l = list(l)
-    assert isinstance(l, list) and len(l) > 0
-    if isinstance(l[0], (list, types.GeneratorType)):
-        assert all(isinstance(t, (list, types.GeneratorType)) for t in l)
-        res = [cp_array(t) for t in l]
-        return ListInt(res) if isinstance(res[0], ListInt) else ListVar(res)
-    if all(isinstance(v, int) for v in l):
-        return ListInt(l)
-    elif all(isinstance(v, Variable) for v in l):
-        return ListVar(l)
-    else:
-        raise NotImplemented
-
-
 def posted(i=None):
     t = []
     for item in CtrEntities.items:
@@ -885,10 +822,3 @@ def values(m, *, sol=-1):
         return value(m, sol=sol)
     if isinstance(m, (list, tuple, set, frozenset, types.GeneratorType)):
         return ListInt(values(v, sol=sol) for v in m)
-
-
-# The two next lines are added, so as to be able to use these constants directly in user code
-
-
-def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (default_data, clear, columns)

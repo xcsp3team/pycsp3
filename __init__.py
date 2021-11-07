@@ -1,40 +1,53 @@
 import atexit
-import math
 import os
 import sys
-import types
+
 from collections import namedtuple
 from itertools import product, permutations
 
 __python_version__ = str(sys.version).split(os.linesep)[0].split(' ')[0]
+__pycsp3_version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt'), encoding='utf-8').read()
 
 if sys.version_info[0] < 3 or sys.version_info[1] < 6:
-    __message_version__ = os.linesep + " Python should be at least 3.6" + os.linesep + " Your version is Python " + __python_version__
-    raise Exception(__message_version__)
+    raise Exception(os.linesep + " Python should be at least 3.6" + os.linesep + " Your version is Python " + __python_version__)
 
-from pycsp3.classes.auxiliary.conditions import lt, le, ge, gt, ne, eq, complement
+from pycsp3.functions import protect, variant, subvariant, Var, VarArray, satisfy, minimize, maximize, annotate
+from pycsp3.functions import And, Or, Not, Xor, IfThen, IfThenElse, Iff, Slide
+from pycsp3.functions import col, abs, min, max, xor, iff, imply, ift, belong, not_belong, expr, conjunction, disjunction
+from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, Increasing, Decreasing, LexIncreasing, LexDecreasing, Sum, Count, NValues, Cardinality,
+                              Maximum, Minimum, Channel, NoOverlap, Cumulative, BinPacking, Circuit, Clause)
+from pycsp3.functions import posted, objective, unpost, value, values
+
+from pycsp3.tools.curser import columns, transpose, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
+from pycsp3.tools.utilities import ANY, combinations, different_values, flatten, alphabet_positions, all_primes, integer_scaling, to_ordinary_table
+
+from pycsp3.classes.auxiliary.conditions import lt, le, ge, gt, eq, ne, complement
 from pycsp3.classes.auxiliary.ptypes import TypeStatus, TypeSolver
-from pycsp3.tools.utilities import ANY, flatten, transpose, alphabet_positions, all_primes, integer_scaling, to_ordinary_table
-from pycsp3.functions import (
-    combinations, Automaton, MDD, clear, default_data, options, columns, protect, variant, subvariant)
-from pycsp3.functions import (
-    Var, VarArray, And, Or, Not, Xor, IfThen, IfThenElse, Iff, Slide, satisfy, col, abs, min, max, xor, iff, imply, ift, belong, not_belong, expr, conjunction,
-    disjunction)
-from pycsp3.functions import (
-    AllDifferent, AllDifferentList, AllEqual, Increasing, Decreasing, LexIncreasing, LexDecreasing, Sum, Count, NValues, Cardinality, Maximum, Minimum, Channel,
-    NoOverlap, Cumulative, BinPacking, Circuit, Clause, minimize, maximize, annotate)
-from pycsp3.functions import (
-    diagonal_down, diagonals_down, diagonal_up, diagonals_up, different_values, cp_array, posted, objective, unpost, value, values)
+from pycsp3.classes.entities import clear
+from pycsp3.classes.auxiliary.structures import Automaton, MDD  # KEEP it here after other imports
 
-# from pycsp3.compiler import Compilation  # keep it after other imports
-# from pycsp3.solvers.ace import Ace
-# from pycsp3.solvers.choco import Choco
+from pycsp3.compiler import default_data
 
-UNSAT, SAT, OPTIMUM, UNKNOWN = [s for s in TypeStatus]
-ACE, CHOCO = [s for s in TypeSolver]
+UNSAT = TypeStatus.UNSAT
+""" solver status: unsatisfiable (means that no solution is found by the solver) """
+
+SAT = TypeStatus.SAT
+""" solver status: satisfiable (means that at least one solution is found by the solver) """
+
+OPTIMUM = TypeStatus.OPTIMUM
+""" solver status: optimum (means that an optimal solution is found by the solver) """
+
+UNKNOWN = TypeStatus.UNKNOWN
+""" solver status: unknown (means that the solver is unable to solve the problem instance)  """
+
+ACE = TypeSolver.ACE
+""" Solver ACE (AbsCon Essence) """
+
+CHOCO = TypeSolver.CHOCO
+""" Solver Choco """
+
 ALL = "all"
-
-__version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt'), encoding='utf-8').read()
+""" constant used to indicate that all solutions must be sought """
 
 if sys.argv:
     if len(sys.argv) == 1 and sys.argv[0] == "-m":  # copy of models
@@ -42,7 +55,7 @@ if sys.argv:
         import pycsp3
 
         print("Python version: ", __python_version__)
-        print("PyCSP3 version: ", __version__)
+        print("PyCSP3 version: ", __pycsp3_version__)
         problems = os.sep.join(pycsp3.__file__.split(os.sep)[:-1]) + os.sep + "problems" + os.sep
         target = os.getcwd() + os.sep + "problems" + os.sep
         print("Source of files found: ", problems)
@@ -93,12 +106,20 @@ def _set_solver(name):
 
 
 def solver(name=None):
+    """
+    With no argument (name being None), the function returns the current solver (the last one that has been built).
+    With an argument (name not being None), the function builds the solver whose name is specified, and returns it.
+
+    :param name: the name of the solver to be built, or None (by default)
+    :return: either the current solver if the specified name is None, or a newly created solver whose name is specified
+    """
     return _solver if name is None else _set_solver(name)
 
 
 def compile(filename=None, *, disabling_opoverrider=False, verbose=1):
     global _solver
     from pycsp3.compiler import Compilation
+    from pycsp3.dashboard import options
     filename, cop = Compilation.compile(filename, disabling_opoverrider, verbose=verbose)
     solving = ACE.name if options.solve else options.solver
     if solving:
@@ -129,13 +150,22 @@ def bound():
 
 
 def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=False, verbose=0, sols=None):
+    """
+
+    :param solver:
+    :param options:
+    :param filename:
+    :param disabling_opoverrider:
+    :param verbose:
+    :param sols:
+    :return:
+    """
     global _solver
     instance = compile(filename, disabling_opoverrider=disabling_opoverrider, verbose=verbose)
     if instance is None:
         print("Problem when compiling")
     else:
         _solver = _set_solver(solver)
-        # we cannot call the function solver there is a conflict with the parameter of same name
         if solver == ACE and (sols == ALL or isinstance(sols, int) and sols > 1):
             options = "-xe -xc=false" if options is None else options + " -xe -xc=false"
         _solver.setting(options)
@@ -144,7 +174,7 @@ def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=Fals
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (math, types, namedtuple, product, permutations)
+    _ = (namedtuple, product, permutations)
 
 
 @atexit.register
