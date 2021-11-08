@@ -668,7 +668,11 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
         assert any(isinstance(task, (tuple, list)) and len(task) == 2 for task in tasks)
         origins, lengths = zip(*tasks)
     checkType(origins, [Variable])
+    if not isinstance(origins[0], Variable) and not isinstance(origins[0], tuple):  # if 2d but not tuples
+        origins = [tuple(origin) for origin in origins]
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else lengths
+    if not isinstance(lengths[0], (int, Variable)) and not isinstance(lengths[0], tuple):  # if 2d but not tuples
+        lengths = [tuple(length) for length in lengths]
     checkType(lengths, ([Variable], [int]))
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
