@@ -787,14 +787,34 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
 ''' Helpers '''
 
 
-def posted(i=None):
+def posted(i=None, j=None, *, absolute=False):
     t = []
-    for item in CtrEntities.items:
-        assert isinstance(item, EToSatisfy)
-        t.extend(c for c in item.flat_constraints())
-    if len(t) == 0:
-        return t
-    return t[i] if isinstance(i, int) else ListCtr(t[i] if isinstance(i, slice) else t)
+    if i is None:  # all posted constraints are returned
+        assert j is None and absolute is False
+        for item in CtrEntities.items:
+            assert isinstance(item, EToSatisfy)
+            t.extend(c for c in item.flat_constraints())
+        return ListCtr(t)
+    assert isinstance(i, (int, slice))
+    if absolute is False:
+        if j is None:
+            for item in [CtrEntities.items[i]] if isinstance(i, int) else CtrEntities.items[i]:
+                assert isinstance(item, EToSatisfy)
+                t.extend(c for c in item.flat_constraints())
+        else:
+            assert isinstance(i, int) and isinstance(j, (int, slice))
+            item = CtrEntities.items[i]
+            if isinstance(j, int):
+                t.append(item.flat_constraints()[j])
+            else:
+                t.extend(c for c in item.flat_constraints()[j])
+        return ListCtr(t)
+    else:
+        assert j is None
+        for item in CtrEntities.items:
+            assert isinstance(item, EToSatisfy)
+            t.extend(c for c in item.flat_constraints())
+        return t[i] if isinstance(i, int) else ListCtr(t[i])
 
 
 def objective():
@@ -805,10 +825,11 @@ def objective():
 def unpost(i=None, j=None):
     if i is None:
         i = -1
-    assert isinstance(i, int)
     if j is None:
+        assert isinstance(i, (int, slice))
         del CtrEntities.items[i]
     else:
+        assert isinstance(i, int)
         CtrEntities.items[i].delete(j)
 
 

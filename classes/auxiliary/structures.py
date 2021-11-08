@@ -18,7 +18,7 @@ class Diagram:
         return True
 
     def __str__(self):
-        return "transitions=" + str(self.transitions)
+        return "transitions={" + ",".join("(" + s1 + "," + str(v) + "," + s2 + ")" for (s1, v, s2) in self.transitions) + "}"
 
     MSG_STATE = "states must given under the form of strings"
 
@@ -57,6 +57,9 @@ class Automaton(Diagram):
         self.final = [final] if isinstance(final, str) else sorted(q for q in set(final) if q in self.states)
         assert isinstance(self.start, str) and all(isinstance(f, str) for f in self.final), Diagram.MSG_STATE
 
+    def __str__(self):
+        return "Automaton(start=" + str(self.start) + ", " + Diagram.__str__(self) + ", final=[" + ",".join(str(v) for v in self.final) + "])"
+
 
 class MDD(Diagram):
     def __init__(self, transitions):
@@ -64,3 +67,6 @@ class MDD(Diagram):
             transitions = [t for t in transitions]
         assert isinstance(transitions, list)  # currently, a list is wanted for a MDD (and not a set); to be changed?
         super().__init__(transitions)
+
+    def __str__(self):
+        return "MDD(" + Diagram.__str__(self) + ")"
