@@ -17,29 +17,29 @@ def match_number(t1, t2):
     return nMatches - ((nTeams - t1) * (nTeams - t1 - 1)) // 2 + (t2 - t1 - 1)
 
 
-table = {(t1, t2, match_number(t1, t2)) for t1, t2 in combinations(range(nTeams),2)}
-
-# h[w][p] is the home team at week w and period p
-h = VarArray(size=[nWeeks, nPeriods], dom=range(nTeams))
-
-# a[w][p] is the away team at week w and period p
-a = VarArray(size=[nWeeks, nPeriods], dom=range(nTeams))
+table = {(t1, t2, match_number(t1, t2)) for t1, t2 in combinations(range(nTeams), 2)}
 
 # m[w][p] is the number of the match at week w and period p
 m = VarArray(size=[nWeeks, nPeriods], dom=range(nMatches))
 
-satisfy(
-    # linking variables through ternary table constraints
-    [(h[w][p], a[w][p], m[w][p]) in table for w in range(nWeeks) for p in range(nPeriods)],
+# x[w][p] is the first team for the match at week w and period p
+x = VarArray(size=[nWeeks, nPeriods], dom=range(nTeams))
 
+# y[w][p] is the second team for the match at week w and period p
+y = VarArray(size=[nWeeks, nPeriods], dom=range(nTeams))
+
+satisfy(
     # all matches are different (no team can play twice against another team)
     AllDifferent(m),
 
+    # linking variables through ternary table constraints
+    [(x[w][p], y[w][p], m[w][p]) in table for w in range(nWeeks) for p in range(nPeriods)],
+
     # each week, all teams are different (each team plays each week)
-    [AllDifferent(h[w] + a[w]) for w in range(nWeeks)],
+    [AllDifferent(x[w] + y[w]) for w in range(nWeeks)],
 
     # each team plays at most two times in each period
-    [Cardinality(h[:, p] + a[:, p], occurrences={t: range(1, 3) for t in range(nTeams)}) for p in range(nPeriods)],
+    [Cardinality(x[:, p] + y[:, p], occurrences={t: range(1, 3) for t in range(nTeams)}) for p in range(nPeriods)],
 
     # tag(symmetry-breaking)
     [
@@ -52,22 +52,22 @@ satisfy(
 )
 
 if variant("dummy"):
-    # hd[p] is the home team for the dummy match of period p  tag(dummy-week)
-    hd = VarArray(size=nPeriods, dom=range(nTeams))
+    # xd[p] is the first team for the dummy match of period p  tag(dummy-week)
+    xd = VarArray(size=nPeriods, dom=range(nTeams))
 
-    # ad[p] is the away team for the dummy match of period p  tag(dummy-week)
-    ad = VarArray(size=nPeriods, dom=range(nTeams))
+    # yd[p] is the second team for the dummy match of period p  tag(dummy-week)
+    yd = VarArray(size=nPeriods, dom=range(nTeams))
 
     satisfy(
         # handling dummy week (variables and constraints)  tag(dummy-week)
         [
             # all teams are different in the dummy week
-            AllDifferent(hd + ad),
+            AllDifferent(xd + yd),
 
             # each team plays two times in each period
-            [Cardinality(h[:, p] + a[:, p] + [hd[p], ad[p]], occurrences={t: 2 for t in range(nTeams)}) for p in range(nPeriods)],
+            [Cardinality(x[:, p] + y[:, p] + [xd[p], yd[p]], occurrences={t: 2 for t in range(nTeams)}) for p in range(nPeriods)],
 
             # tag(symmetry-breaking)
-            [hd[p] < ad[p] for p in range(nPeriods)]
+            [xd[p] < yd[p] for p in range(nPeriods)]
         ]
     )

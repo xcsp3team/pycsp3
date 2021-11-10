@@ -26,7 +26,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeStatus, TypeSolver
 from pycsp3.classes.entities import clear
 from pycsp3.classes.auxiliary.structures import Automaton, MDD  # KEEP it here after other imports
 
-from pycsp3.compiler import default_data
+from pycsp3.compiler import default_data, load_json_data
 
 UNSAT = TypeStatus.UNSAT
 """ solver status: unsatisfiable (means that no solution is found by the solver) """
@@ -137,6 +137,10 @@ def compile(filename=None, *, disabling_opoverrider=False, verbose=1):
     return filename, cop
 
 
+def status():
+    return None if _solver is None else _solver.status
+
+
 def solution():
     return None if _solver is None else _solver.last_solution
 
@@ -172,6 +176,8 @@ def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=Fals
         limit = "limit=no" if sols == ALL else "limit=" + str(sols) + "sols" if isinstance(sols, int) else ""
         return _solver.solve(instance, string_options=limit, dict_options=dict(), dict_simplified_options=dict(), verbose=verbose)
 
+
+# def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=False, verbose=0, sols=None):
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
     _ = (namedtuple, product, permutations)

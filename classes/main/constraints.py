@@ -142,9 +142,12 @@ class Constraint:
         return " ".join("%" + str(v + self.n_parameters - length) for v in range(length))
 
     def __str__(self):
-        s_attributes = " ".join(str(t.name) + ": " + str(v) for (t, v) in self.attributes)
+        s_attributes = " ".join(str(t.name) + ": " + str(v) for (t, v) in self.attributes if t is not TypeCtrArg.TYPE)
         s_arguments = ", ".join(str(v) for k, v in self.arguments.items() if v.content is not None)
-        return str(self.name) + ("[" + s_attributes + "]" if len(s_attributes) > 0 else "") + "(" + s_arguments + ")"
+        body = ("[" + s_attributes + "]" if len(s_attributes) > 0 else "") + "(" + s_arguments + ")"
+        if len(self.attributes) > 0 and self.attributes[0][0] is TypeCtrArg.TYPE:  # objective
+            return str(self.name) + "(" + str(self.attributes[0][1]) + body + ")"
+        return str(self.name) + body
 
 
 class ConstraintUnmergeable(Constraint):

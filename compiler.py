@@ -188,6 +188,25 @@ def default_data(filename):
     return Compilation.data
 
 
+def load_json_data(filename):
+    assert filename.endswith(".json")
+    if filename.startswith("http"):
+        from urllib.request import urlopen
+        response = urlopen(filename)
+        data = json.loads(response.read(), object_pairs_hook=OrderedDict)
+        # test it with https://www.cril.univ-artois.fr/~lecoutre/students.json
+    else:
+        assert os.path.exists(filename), "The file " + filename + " does not exist (in the specified directory)."
+        with open(filename) as f:
+            data = json.loads(f.read(), object_pairs_hook=OrderedDict)
+    data = convert_to_namedtuples(data)
+    if len(data) == 0:
+        data = None
+    elif len(data) == 1:
+        data = data[0]  # the value instead of a tuple of size 1
+    return data
+
+
 def _compile(disabling_opoverrider=False, verbose=1):
     # used to save data in jSON
     def prepare_for_json(obj):

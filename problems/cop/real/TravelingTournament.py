@@ -14,14 +14,15 @@ assert nTeams % 2 == 0, "An even number of teams is expected"
 nConsecutiveGames = 2 if variant("a2") else 3  # used in one comment
 
 
-def table(i, at_end=False):  # # when at_end is True, this is for the first or last game of the ith team
-    if at_end:  # note that when playing at home (whatever the opponent), the travel distance is 0
-        return {(1, ANY, 0)} | {(0, j, distances[i][j]) for j in range(nTeams) if j != i}
-    else:
-        return ({(1, 1, ANY, ANY, 0)} |
-                {(0, 1, j, ANY, distances[i][j]) for j in range(nTeams) if j != i} |
-                {(1, 0, ANY, j, distances[i][j]) for j in range(nTeams) if j != i} |
-                {(0, 0, j, k, distances[j][k]) for j in range(nTeams) for k in range(nTeams) if different_values(i, j, k)})
+def table(i):  # this is for the a game that is not the first or last one of the ith team
+    return ({(1, 1, ANY, ANY, 0)} |
+            {(0, 1, j, ANY, distances[i][j]) for j in range(nTeams) if j != i} |
+            {(1, 0, ANY, j, distances[i][j]) for j in range(nTeams) if j != i} |
+            {(0, 0, j1, j2, distances[j1][j2]) for j1 in range(nTeams) for j2 in range(nTeams) if different_values(i, j1, j2)})
+
+
+def table_end(i):  # this is for the first or last game of the ith team
+    return {(1, ANY, 0)} | {(0, j, distances[i][j]) for j in range(nTeams) if j != i}
 
 
 def automaton():
@@ -37,25 +38,18 @@ o = VarArray(size=[nTeams, nRounds], dom=range(nTeams))
 # h[i][k] is 1 iff the ith team plays at home at the kth round
 h = VarArray(size=[nTeams, nRounds], dom={0, 1})
 
-# a[i][k] is 0 iff the ith team plays away at the kth round
-a = VarArray(size=[nTeams, nRounds], dom={0, 1})
-
-# t[i][k] is the travelled distance by the ith team at the kth round. An additional round is considered for returning at home.
+# t[i][k] is the traveled distance by the ith team at the kth round. An additional round is considered for returning at home.
 t = VarArray(size=[nTeams, nRounds + 1], dom=distances)
 
 satisfy(
-
     # each team must play exactly two times against each other team
-    [Cardinality(o[i], occurrences={j: 2 for j in range(nTeams) if j != i}, closed=True) for i in range(nTeams)],
+    [Cardinality(o[i], occurrences={j: 2 for j in range(nTeams) if j != i}) for i in range(nTeams)],
 
     # ensuring symmetry of games: if team i plays against j at round k, then team j plays against i at round k
     [o[o[i][k]][k] == i for i in range(nTeams) for k in range(nRounds)],
 
-    # playing home at round k iff not playing away at round k
-    [h[i][k] == ~a[i][k] for i in range(nTeams) for k in range(nRounds)],
-
-    # channeling the three arrays
-    [h[o[i][k]][k] == a[i][k] for i in range(nTeams) for k in range(nRounds)],
+    # channeling the arrays o and h
+    [h[o[i][k]][k] != h[i][k] for i in range(nTeams) for k in range(nRounds)],
 
     # playing against the same team must be done once at home and once away
     [imply(o[i][k1] == o[i][k2], h[i][k1] != h[i][k2]) for i in range(nTeams) for k1, k2 in combinations(range(nRounds), 2)],
@@ -69,23 +63,24 @@ satisfy(
     # at most 'nConsecutiveGames' consecutive games at home, or consecutive games away
     [h[i] in automaton() for i in range(nTeams)],
 
-    # handling travelling for the first game
-    [(h[i][0], o[i][0], t[i][0]) in table(i, at_end=True) for i in range(nTeams)],
+    # handling traveling for the first game
+    [(h[i][0], o[i][0], t[i][0]) in table_end(i) for i in range(nTeams)],
 
-    # handling travelling for the last game
-    [(h[i][-1], o[i][-1], t[i][-1]) in table(i, at_end=True) for i in range(nTeams)],
+    # handling traveling for the last game
+    [(h[i][-1], o[i][-1], t[i][-1]) in table_end(i) for i in range(nTeams)],
 
-    # handling travelling for two successive games
+    # handling traveling for two successive games
     [(h[i][k], h[i][k + 1], o[i][k], o[i][k + 1], t[i][k + 1]) in table(i) for i in range(nTeams) for k in range(nRounds - 1)]
 )
 
 minimize(
-    # minimizing summed up travelled distance
+    # minimizing summed up traveled distance
     Sum(t)
 )
 
 """ Comments
 1) with a cache, we could avoid building systematically similar automata (and tables)
-2) we write dom=distances, which is equivalent to (and more compact than) dom={d for row in distances for d in row}
-3) we write final=states[1:], which is equivalent to (and more compact than) final={q for q in states if q != qi}
+2) note that when playing at home (whatever the opponent), the travel distance is 0
+3) one can specify 'closed=True' as a parameter of Cardinality constraints, but this is
+   not a requirement 
 """

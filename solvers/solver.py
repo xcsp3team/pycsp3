@@ -159,9 +159,11 @@ class SolverProcess:
         self.log_filename_suffix = None
         self.n_executions = 0
         self.last_log = None
+        # concerning the last execution:
         self.last_solution = None
         self.n_solutions = None
         self.bound = None
+        self.status = None
 
     def command(self, _command):
         self.command = _command
@@ -180,7 +182,7 @@ class SolverProcess:
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
-    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False):
+    def _solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False):
         model, cop = instance
 
         def _int_from(s, left):
@@ -343,6 +345,10 @@ class SolverProcess:
                 print()
         self.n_executions += 1
         return extract_result_and_solution(out_err) if out_err else TypeStatus.UNKNOWN
+
+    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False):
+        self.status = self._solve(instance, string_options, dict_options, dict_simplified_options, compiler, verbose=verbose, automatic=automatic)
+        return self.status
 
 # class SolverPy4J(SolverProcess):  # TODO in progress
 #     gateways = []

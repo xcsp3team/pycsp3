@@ -798,7 +798,7 @@ def posted(i=None, j=None, *, absolute=False):
         for item in CtrEntities.items:
             assert isinstance(item, EToSatisfy)
             t.extend(c for c in item.flat_constraints())
-        return ListCtr(t)
+        return t if len(t) == 0 else ListCtr(t)
     assert isinstance(i, (int, slice))
     if absolute is False:
         if j is None:
@@ -846,4 +846,5 @@ def values(m, *, sol=-1):
     if isinstance(m, Variable):
         return value(m, sol=sol)
     if isinstance(m, (list, tuple, set, frozenset, types.GeneratorType)):
-        return ListInt(values(v, sol=sol) for v in m)
+        g = [values(v, sol=sol) for v in m]
+        return ListInt(g) if len(g) > 0 and isinstance(g[0], (int, ListInt)) else g

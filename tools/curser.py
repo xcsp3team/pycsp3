@@ -561,7 +561,7 @@ class ListVar(list):
         super().__init__(variables)
         self.values = None
 
-    def __getslice__(self, i, j):
+    def __getslice__(self, i, j):  # TODO using getitem instead? as for ListCtr?
         return ListVar(super().__getslice__(i, j))
 
     def __add__(self, other):
@@ -606,8 +606,8 @@ class ListCtr(list):  # currently, mainly introduced for __str__ when calling po
     def __init__(self, ectrs):
         super().__init__(ectrs)
 
-    def __getslice__(self, i, j):
-        return ListCtr(super().__getslice__(i, j))
+    def __getitem__(self, k):
+        return ListCtr(super().__getitem__(k)) if isinstance(k, slice) else super().__getitem__(k)
 
     def __str__(self):
         return "\n".join(str(e) for e in self)

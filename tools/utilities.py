@@ -313,3 +313,4 @@ def error(s):
 def error_if(test, s):
     if test:
         error(s)
+
