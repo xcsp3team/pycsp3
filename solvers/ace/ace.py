@@ -10,6 +10,9 @@ class Ace(SolverProcess):
     def __init__(self):
         super().__init__(name="ACE", command="java -jar " + ACE_CP, cp=ACE_CP)
 
+    def switch_to_extraction(self):
+        self.command = "java -cp " + self.cp + " main.HeadExtraction"
+
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):
         args_solver = ""
         if "limit_time" in dict_simplified_options:

@@ -184,7 +184,7 @@ class TypeSolver(Enum):
 
 @unique
 class TypeStatus(Enum):
-    UNSAT, SAT, OPTIMUM, UNKNOWN = auto(4)
+    UNSAT, SAT, OPTIMUM, CORE, UNKNOWN = auto(5)
 
     def __str__(self):
         return self.name

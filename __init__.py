@@ -37,6 +37,9 @@ SAT = TypeStatus.SAT
 OPTIMUM = TypeStatus.OPTIMUM
 """ solver status: optimum (means that an optimal solution is found by the solver) """
 
+CORE = TypeStatus.CORE
+""" solver status: core (means that an unsatisfiable core has been extracted by the solver) """
+
 UNKNOWN = TypeStatus.UNKNOWN
 """ solver status: unknown (means that the solver is unable to solve the problem instance)  """
 
@@ -153,7 +156,11 @@ def bound():
     return None if _solver is None else _solver.bound
 
 
-def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=False, verbose=0, sols=None):
+def core():
+    return None if _solver is None else _solver.core
+
+
+def solve(*, solver=ACE, options="", filename=None, disabling_opoverrider=False, verbose=-1, sols=None, extraction=False):
     """
 
     :param solver:
@@ -170,11 +177,13 @@ def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=Fals
         print("Problem when compiling")
     else:
         _solver = _set_solver(solver)
-        if solver == ACE and (sols == ALL or isinstance(sols, int) and sols > 1):
-            options = "-xe -xc=false" if options is None else options + " -xe -xc=false"
+        if solver == ACE:
+            options += " -v=" + str(verbose)
+            if sols == ALL or isinstance(sols, int) and sols > 1:
+                options += " -xe -xc=false"
         _solver.setting(options)
         limit = "limit=no" if sols == ALL else "limit=" + str(sols) + "sols" if isinstance(sols, int) else ""
-        return _solver.solve(instance, string_options=limit, dict_options=dict(), dict_simplified_options=dict(), verbose=verbose)
+        return _solver.solve(instance, string_options=limit, dict_options=dict(), dict_simplified_options=dict(), verbose=verbose, extraction=extraction)
 
 
 # def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=False, verbose=0, sols=None):

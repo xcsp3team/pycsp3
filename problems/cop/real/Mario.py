@@ -56,7 +56,7 @@ else:
 
 maximize(
     # maximizing collected gold
-    Sum((s[i] != i) * golds[i] for i in range(nHouses) if i not in {marioHouse, luigiHouse})
+    Sum((s[i] != i) * golds[i] for i in range(nHouses) if golds[i] != 0)
 )
 
 """ Comments
@@ -68,7 +68,7 @@ maximize(
  # g[i] is the gold earned at house i
  g = VarArray(size=nHouses, dom=lambda i: {0, houses[i].gold})
  
-  We need to introduce additional constraints, while the objective becomes:
+  in that case, We need to introduce additional constraints, while the objective becomes:
  maximize(
    # maximizing collected gold
    Sum(g)

@@ -164,6 +164,8 @@ class SolverProcess:
         self.n_solutions = None
         self.bound = None
         self.status = None
+        # concerning extraction:
+        self.core = None
 
     def command(self, _command):
         self.command = _command
@@ -182,8 +184,11 @@ class SolverProcess:
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
-    def _solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False):
+    def _solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False,
+               extraction=False):
         model, cop = instance
+        if extraction:
+            self.switch_to_extraction()
 
         def _int_from(s, left):
             right = left + s[left:].find("\n")
@@ -227,6 +232,14 @@ class SolverProcess:
             return variables, values
 
         def extract_result_and_solution(stdout):
+            if extraction:
+                left = stdout.rfind("c CORE")
+                if left == -1:
+                    return TypeStatus.UNKNOWN
+                right = left + stdout[left:].find("\n")
+                self.core = stdout[left:right]
+                return TypeStatus.CORE
+
             if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
                 return TypeStatus.UNSAT
             if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
@@ -346,9 +359,14 @@ class SolverProcess:
         self.n_executions += 1
         return extract_result_and_solution(out_err) if out_err else TypeStatus.UNKNOWN
 
-    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False):
-        self.status = self._solve(instance, string_options, dict_options, dict_simplified_options, compiler, verbose=verbose, automatic=automatic)
+    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False,
+              extraction=False):
+        self.status = self._solve(instance, string_options, dict_options, dict_simplified_options, compiler, verbose=verbose, automatic=automatic,
+                                  extraction=extraction)
         return self.status
+
+    def switch_to_extraction(self):
+        pass
 
 # class SolverPy4J(SolverProcess):  # TODO in progress
 #     gateways = []
