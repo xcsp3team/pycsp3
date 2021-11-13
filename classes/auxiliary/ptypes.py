@@ -156,6 +156,25 @@ class TypeConditionOperator(AbstractType):
             return UTF_COMPLEMENT
         assert False
 
+    def to_str(self):
+        if self is TypeConditionOperator.LT:
+            return "<"
+        if self is TypeConditionOperator.LE:
+            return "<="
+        if self is TypeConditionOperator.GE:
+            return ">="
+        if self is TypeConditionOperator.GT:
+            return ">"
+        if self is TypeConditionOperator.EQ:
+            return "="
+        if self is TypeConditionOperator.NE:
+            return "!="
+        if self is TypeConditionOperator.IN:
+            return "in"
+        if self is TypeConditionOperator.NOTIN:
+            return "not in"
+        assert False
+
 
 @unique
 class TypeOrderedOperator(Enum):

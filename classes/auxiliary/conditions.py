@@ -57,6 +57,9 @@ class Condition:
     def right_operand(self):
         pass
 
+    def infix_string(self):
+        return self.operator.to_str() + " " + str(self.right_operand())
+
     def __str__(self):
         return "(" + str(self.operator) + "," + str(self.right_operand()) + ")"
 

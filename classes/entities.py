@@ -382,17 +382,17 @@ class TypeNode(Enum):
         if isinstance(v, TypeNode):
             return v
         if isinstance(v, str):
-            if v == "<":
+            if v in ("<", "lt"):
                 return TypeNode.LT
-            if v == "<=":
+            if v in ("<=", "le"):
                 return TypeNode.LE
-            if v == ">=":
+            if v in (">=", "ge"):
                 return TypeNode.GE
-            if v == ">":
+            if v in (">", "gt"):
                 return TypeNode.GT
-            if v in ("=", "=="):
+            if v in ("=", "==", "eq"):
                 return TypeNode.EQ
-            if v in ("!=", "<>"):
+            if v in ("!=", "<>", "ne"):
                 return TypeNode.NE
             return TypeNode[v.upper()]
         if isinstance(v, TypeConditionOperator):

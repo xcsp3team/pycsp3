@@ -60,6 +60,12 @@ def Var(term=None, *others, dom=None):
     if term is not None:
         dom = flatten(term, others)
     if not isinstance(dom, Domain):
+        if isinstance(dom, (set, frozenset)):
+            dom = list(dom)
+        if isinstance(dom, (tuple, list)) and len(dom) > 1 and isinstance(dom[0], int):
+            dom = sorted(dom)
+            if dom[-1] - dom[0] + 1 == len(dom):
+                dom = range(dom[0], dom[-1] + 1)
         dom = Domain(dom)
     name = extract_declaration_for("Var")
     comment, tags = comment_and_tags_of(function_name="Var")
@@ -174,34 +180,93 @@ def _wrap_intension_constraints(entities):
 
 
 def And(*args):
+    """
+    Builds a meta-constraint And from the specified arguments.
+    For example: And(Sum(x) > 10, AllDifferent(x))
+
+    :param args: a tuple of constraints
+    :return: a meta-constraint And
+    """
     return EAnd(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def Or(*args):
+    """
+    Builds a meta-constraint Or from the specified arguments.
+    For example: Or(Sum(x) > 10, AllDifferent(x))
+
+    :param args: a tuple of constraints
+    :return: a meta-constraint Or
+    """
     return EOr(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def Not(*args):
+    """
+    Builds a meta-constraint Not from the specified argument.
+    For example: Not(AllDifferent(x))
+
+    :param args: a constraint
+    :return: a meta-constraint Not
+    """
     return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def Xor(*args):
+    """
+    Builds a meta-constraint Xor from the specified arguments.
+    For example: Xor(Sum(x) > 10, AllDifferent(x))
+
+    :param args: a tuple of constraints
+    :return: a meta-constraint Xor
+    """
     return EXor(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def IfThen(*args):
+    """
+    Builds a meta-constraint IfThen from the specified arguments.
+    For example: IfThen(Sum(x) > 10, AllDifferent(x))
+
+    :param args: a tuple of two constraints
+    :return: a meta-constraint IfThen
+    """
     return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def IfThenElse(*args):
+    """
+    Builds a meta-constraint IfThenElse from the specified arguments.
+    For example: IfThenElse(Sum(x) > 10, AllDifferent(x), AllEqual(x))
+
+    :param args: a tuple of three constraints
+    :return: a meta-constraint IfThenElse
+    """
     return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def Iff(*args):
+    """
+    Builds a meta-constraint Iff from the specified arguments.
+    For example: Iff(Sum(x) > 10, AllDifferent(x))
+
+    :param args: a tuple of two constraints
+    :return: a meta-constraint Iff
+    """
     return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
 def Slide(*args):
+    """
+    Builds a meta-constraint Slide from the specified arguments.
+    Slide((x[i], x[i + 1]) in table for i in range(n - 1))
+
+    According to the specified constraints, the compiler may or may not succeed
+    in generating a slide meta-constraint.
+
+    :param args: a tuple of constraints
+    :return: a meta-constraint Slide
+    """
     entities = _wrap_intension_constraints(
         flatten(*args))  # we cannot directly complete partial forms (because it is executed before the analysis of the parameters of satisfy
     checkType(entities, [ECtr, bool])
@@ -339,25 +404,59 @@ def col(*args):
     return Node(TypeNode.COL, args[0])
 
 
-def abs(*args):
-    if len(args) == 1 and isinstance(args[0], Node) and args[0].type == TypeNode.SUB:
-        return Node.build(TypeNode.DIST, *args[0].sons)
-    return Node.build(TypeNode.ABS, *args) if len(args) == 1 and isinstance(args[0], (Node, Variable)) else absPython(*args)
+def abs(arg):
+    """
+    If the specified argument is a node or a variable of the model, the function builds
+    and returns a node 'abs', root of a tree expression where the specified argument is a child.
+    Otherwise, the function returns, as usual, the absolute value of the specified argument
+
+    :return: either a node, root of a tree expression, or the absolute value of the specified argument
+    """
+    if isinstance(arg, Node) and arg.type == TypeNode.SUB:
+        return Node.build(TypeNode.DIST, arg.sons)
+    return Node.build(TypeNode.ABS, arg) if isinstance(arg, (Node, Variable)) else absPython(arg)
 
 
 def min(*args):
+    """
+    When one of the specified arguments is a node or a variable of the model, the function builds
+    and returns a node 'min', root of a tree expression where specified arguments are children.
+    Otherwise, the function returns, as usual, the smallest item of the specified arguments
+
+    :return: either a node, root of a tree expression, or the smallest item of the specified arguments
+    """
     return Node.build(TypeNode.MIN, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 
 
 def max(*args):
+    """
+    When one of the specified arguments is a node or a variable of the model, the function builds
+    and returns a node 'max', root of a tree expression where specified arguments are children.
+    Otherwise, the function returns, as usual, the largest item of the specified arguments
+
+    :return: either a node, root of a tree expression, or the largest item of the specified arguments
+    """
     return Node.build(TypeNode.MAX, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else maxPython(*args)
 
 
 def xor(*args):
+    """
+    If there is only one argument, returns it.
+    Otherwise, builds and returns a node 'xor', root of a tree expression where specified arguments are children.
+    Without any parent, it becomes a constraint.
+
+    :return: a node, root of a tree expression or the argument if there is only one
+    """
     return args[0] ^ args[1] if len(args) == 2 else Node.build(TypeNode.XOR, *args) if len(args) > 1 else args[0]
 
 
 def iff(*args):
+    """
+    Builds and returns a node 'iff', root of a tree expression where specified arguments are children.
+    Without any parent, it becomes a constraint.
+
+    :return: a node, root of a tree expression
+    """
     assert len(args) >= 2
     res = manage_global_indirection(*args)
     if res is None:
@@ -367,6 +466,13 @@ def iff(*args):
 
 
 def imply(*args):
+    """
+    Builds and returns a node 'imply', root of a tree expression where specified arguments are children.
+    Without any parent, it becomes a constraint.
+
+    :param args: a tuple of two arguments
+    :return: a node, root of a tree expression
+    """
     assert len(args) == 2
     res = manage_global_indirection(*args)
     if res is None:
@@ -375,6 +481,13 @@ def imply(*args):
 
 
 def ift(*args):
+    """
+    Builds and returns a node 'ifthenelse', root of a tree expression where specified arguments are children.
+    Without any parent, it becomes a constraint.
+
+    :param args: a tuple of three arguments
+    :return: a node, root of a tree expression
+    """
     assert len(args) == 3
     res = manage_global_indirection(*args)
     if res is None:
@@ -393,14 +506,35 @@ def not_belong(x, values):
 
 
 def expr(operator, *args):
+    """
+    Builds and returns a node, root of a tree expression where specified arguments are children.
+    The type of the new node is given by the specified operator.
+    When it is a string, it can be among {"<", "lt", "<=", "le", ">=", "ge", ">", "gt", "=", "==", "eq", "!=", "<>", "ne"}
+    Without any parent, it becomes a constraint.
+
+    :param operator: a string, or a constant from TypeNode or a constant from TypeConditionOperator
+    :return: a node, root of a tree expression
+    """
     return Node.build(operator, *args)
 
 
 def conjunction(*args):
+    """
+    Builds and returns a node 'and', root of a tree expression where specified arguments are children.
+    Without any parent, it becomes a constraint.
+
+    :return: a node, root of a tree expression
+    """
     return Node.conjunction(*args)
 
 
 def disjunction(*args):
+    """
+    Builds and returns a node 'or', root of a tree expression where specified arguments are children.
+    Without any parent, it becomes a constraint.
+
+    :return: a node, root of a tree expression
+    """
     return Node.disjunction(*args)
 
 

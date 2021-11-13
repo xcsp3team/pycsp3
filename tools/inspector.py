@@ -271,6 +271,8 @@ def extract_declaration_for(function_name):
     else:
         assert False, " the object returned by " + function_name + " should be assigned to a variable"
     declaration = line[:pos].strip()
+    if declaration.endswith("pycsp3."):  # if the name of the package is present as a suffix, we remove it
+        declaration = declaration[:-8]
     if declaration[-1] == '=':
         declaration = declaration[:-1].strip()
     assert declaration.count('=') < 2
