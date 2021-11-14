@@ -222,7 +222,7 @@ class ConstraintExtension(Constraint):
             if tpl:
                 table[i] = tuple(tpl)
 
-        return sorted(list(to_ordinary_table(table, [x.dom for x in scope], keep_any=True)))
+        return sorted(list(to_ordinary_table(table, [x.dom for x in scope], starred=True)))
 
     @staticmethod
     def remove_redundant_tuples(table):

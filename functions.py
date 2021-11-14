@@ -22,7 +22,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSym
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, OpOverrider, ListInt, ListVar, ListCtr
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix
+from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, ANY
 
 ''' Global Variables '''
 
@@ -30,6 +30,16 @@ absPython, maxPython, minPython = abs, max, min
 
 
 def protect():
+    """
+    Disables the redefined operators, and returns the object OpOverrider.
+    On can then execute some code in protected mode by calling execute().
+    Once the code is executed, the redefined operators are reactivated.
+
+    The code typically looks like:
+      protect().execute(...)
+
+    :return: the object OpOverrider
+    """
     return OpOverrider.disable()
 
 
@@ -457,6 +467,8 @@ def iff(*args):
 
     :return: a node, root of a tree expression
     """
+    if len(args) == 1 and isinstance(args[0], types.GeneratorType):
+        args = tuple(args[0])
     assert len(args) >= 2
     res = manage_global_indirection(*args)
     if res is None:
@@ -559,6 +571,15 @@ def _Mdd(*, scope, mdd):
 
 
 def AllDifferent(term, *others, excepting=None, matrix=False):
+    """
+    Builds and returns a constraint AllDifferent.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :param excepting: the value(s) that must be ignored (None, most of the time)
+    :param matrix: if True, the matrix version must be considered
+    :return: a constraint AllDifferent
+    """
     terms = flatten(term, others)
     if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (int, Variable, Node))):
         return None
@@ -574,6 +595,14 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
 
 
 def AllDifferentList(term, *others, excepting=None):
+    """
+    Builds and returns a constraint AllDifferentList.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :param excepting: the tuple(s) that must be ignored (None, most of the time)
+    :return: a constraint AllDifferentList
+    """
     if isinstance(term, types.GeneratorType):
         term = [l for l in term]
     elif len(others) > 0:
@@ -587,6 +616,13 @@ def AllDifferentList(term, *others, excepting=None):
 
 
 def AllEqual(term, *others):
+    """
+    Builds and returns a constraint AllEqual.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :return: a constraint AllEqual
+    """
     terms = flatten(term, others)
     checkType(terms, ([Variable], [Node]))
     return ECtr(ConstraintAllEqual(terms))
@@ -605,10 +641,28 @@ def _ordered(term, others, operator, lengths):
 
 
 def Increasing(term, *others, strict=False, lengths=None):
+    """
+    Builds and returns a constraint Increasing.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :param strict: if True, strict ordering must be considered
+    :param lengths: the lengths (durations) that must separate the values
+    :return: a constraint Increasing
+    """
     return _ordered(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, lengths)
 
 
 def Decreasing(term, *others, strict=False, lengths=None):
+    """
+    Builds and returns a constraint Decreasing.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :param strict: if True, strict ordering must be considered
+    :param lengths: the lengths (durations) that must separate the values
+    :return: a constraint Decreasing
+    """
     return _ordered(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, lengths)
 
 
@@ -627,10 +681,28 @@ def _lex(term, others, operator, matrix):
 
 
 def LexIncreasing(term, *others, strict=False, matrix=False):
+    """
+    Builds and returns a constraint (increasing) Lexicographic.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :param strict: if True, strict ordering must be considered
+    :param matrix: if True, the matrix version must be considered
+    :return: a constraint Lexicographic
+    """
     return _lex(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, matrix)
 
 
 def LexDecreasing(term, *others, strict=False, matrix=False):
+    """
+    Builds and returns a constraint (decreasing) Lexicographic.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :param strict: if True, strict ordering must be considered
+    :param matrix: if True, the matrix version must be considered
+    :return: a constraint Lexicographic
+    """
     return _lex(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix)
 
 
@@ -646,6 +718,15 @@ def _wrapping_by_complete_or_partial_constraint(ctr):
 
 
 def Sum(term, *others, condition=None):
+    """
+    Builds and returns a component Sum (that becomes a constraint when subject to a condition)
+
+    :param term: the first term on which the sum applies
+    :param others: the other terms (if any) on which the sum applies
+    :param condition: a condition directly specified for the sum (typically, None)
+    :return: a component/constraint Sum
+    """
+
     def _get_terms_coeffs(terms):
         if len(terms) == 1 and isinstance(terms[0], ScalarProduct):
             return flatten(terms[0].variables), flatten(terms[0].coeffs)
@@ -701,6 +782,17 @@ def Sum(term, *others, condition=None):
 
 
 def Count(term, *others, value=None, values=None, condition=None):
+    """
+    Builds and returns a component Count (that becomes a constraint when subject to a condition).
+    Either the named parameter value or the name parameter values must be used.
+
+    :param term: the first term on which the count applies
+    :param others: the other terms (if any) on which the count applies
+    :param value: the value to be counted
+    :param values: the values to be counted
+    :param condition: a condition directly specified for the count (typically, None)
+    :return: a component/constraint Count
+    """
     terms = flatten(term, others)
     assert len(terms) > 0, "A count with an empty scope"
     checkType(terms, ([Variable], [Node]))
@@ -713,6 +805,15 @@ def Count(term, *others, value=None, values=None, condition=None):
 
 
 def NValues(term, *others, excepting=None, condition=None):
+    """
+    Builds and returns a component NValues (that becomes a constraint when subject to a condition).
+
+    :param term: the first term on which the NValues applies
+    :param others: the other terms (if any) on which the NValues applies
+    :param excepting: the value(s) that must be ignored (None, most of the time)
+    :param condition: a condition directly specified for the count (typically, None)
+    :return: a component/constraint NValues
+    """
     terms = flatten(term, others)
     checkType(terms, ([Variable], [Node]))
     if excepting is not None:
@@ -726,6 +827,15 @@ def NValues(term, *others, excepting=None, condition=None):
 
 
 def Cardinality(term, *others, occurrences, closed=False):
+    """
+    Builds and returns a constraint Cardinality.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :param occurrences: a dictionary indicating the restriction (constant, range or variable) of occurrences per value
+    :param closed: if True, variables must be assigned to values (keys of the dictionary)
+    :return: a Cardinality constraint
+    """
     terms = flatten(term, others)
     checkType(terms, [Variable])
     assert isinstance(occurrences, dict)
@@ -761,25 +871,42 @@ def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     return ConstraintMaximum(terms, index, start_index, type_rank, condition) if maximum else ConstraintMinimum(terms, index, start_index, type_rank, condition)
 
 
-def Maximum(term, *others, index=None, start_index=0, type_rank=TypeRank.ANY, condition=None):
-    return _wrapping_by_complete_or_partial_constraint(_extremum(term, others, index, start_index, type_rank, condition, True))
+def Maximum(term, *others, index=None, condition=None):
+    """
+    Builds and returns a component Maximum (that becomes a constraint when subject to a condition).
+
+    :param term: the first term on which the maximum applies
+    :param others: the other terms (if any) on which the maximum applies
+    :param index: the index of a term with the maximum value (typically, None)
+    :param condition: a condition directly specified for the maximum (typically, None)
+    :return: a component/constraint Maximum
+    """
+    return _wrapping_by_complete_or_partial_constraint(_extremum(term, others, index, 0, TypeRank.ANY, condition, True))
 
 
-def Minimum(term, *others, index=None, start_index=0, type_rank=TypeRank.ANY, condition=None):
-    return _wrapping_by_complete_or_partial_constraint(_extremum(term, others, index, start_index, type_rank, condition, False))
+def Minimum(term, *others, index=None, condition=None):
+    """
+    Builds and returns a component Minimum (that becomes a constraint when subject to a condition).
 
-
-# def Element(*, vector, index=None, value, rank=TypeRank.ANY):
-#    vector = flatten(vector)
-#    checkType(vector, ([Variable], [int]))
-#    checkType(index, (Variable, type(None)))
-#    checkType(value, (Variable, int))
-#    checkType(rank, TypeRank)
-#    assert index is not None or rank is None, "rank is defined while index is not specified"
-#    return ECtr(ConstraintElement(vector, value, index, rank if rank != TypeRank.ANY else None))
+    :param term: the first term on which the minimum applies
+    :param others: the other terms (if any) on which the minimum applies
+    :param index: the index of a term with the minimum value (typically, None)
+    :param condition: a condition directly specified for the minimum (typically, None)
+    :return: a component/constraint Minimum
+    """
+    return _wrapping_by_complete_or_partial_constraint(_extremum(term, others, index, 0, TypeRank.ANY, condition, False))
 
 
 def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
+    """
+    Builds a constraint Channel between the two specified lists.
+
+    :param list1: the first list to be channeled
+    :param list2: the second list to be channeled
+    :param start_index1: the number used for indexing the first variable in the first list (0, by default)
+    :param start_index2: the number used for indexing the first variable in the second list (0, by default)
+    :return: a constraint Channel
+    """
     list1 = flatten(list1)
     checkType(list1, [Variable])
     if list2:
@@ -795,6 +922,16 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
 
 
 def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
+    """
+    Builds and returns a constraint NoOverlap.
+    Either the tasks are specified as pairs, or the tasks are given by the name parameters origins and lengths.
+
+    :param tasks: the tasks given as pairs composed of an origin and a length
+    :param origins: the origins of the tasks
+    :param lengths: the lengths of the tasks
+    :param zero_ignored: if True, the tasks with length 0 must be discarded
+    :return: a constraint NoOverlap
+    """
     if tasks:
         assert origins is None and lengths is None
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
@@ -812,6 +949,19 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
 
 
 def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=None, condition=None):
+    """
+    Builds and returns a component Cumulative (that becomes a constraint when subject to a condition).
+    Either the tasks are specified as tuples of size 3 or 4, or the tasks are given by the name parameters
+    origins, lengths and heights (and possibly ends).
+
+    :param tasks:
+    :param origins: the origins of the tasks
+    :param lengths: the lengths of the tasks
+    :param ends: the ends of the tasks (typically, None)
+    :param heights: the heights (amounts of resource consumption) of the tasks
+    :param condition: a condition directly specified for the Cumulative (typically, None)
+    :return: a component/constraint Cumulative
+    """
     if tasks:
         assert origins is None and lengths is None and ends is None and heights is None
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
@@ -834,6 +984,15 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
 
 
 def BinPacking(term, *others, sizes, condition=None):
+    """
+    Builds and returns a component BinPacking (that becomes a constraint when subject to a condition).
+
+    :param term: the first term on which the component applies
+    :param others: the other terms (if any) on which the component applies
+    :param sizes: the sizes of the available bins
+    :param condition: a condition directly specified for the BinPacking (typically, None)
+    :return: a component/constraint BinPacking
+    """
     terms = flatten(term, others)
     assert len(terms) > 0, "A binPacking with an empty scope"
     checkType(terms, [Variable])
@@ -847,6 +1006,15 @@ def BinPacking(term, *others, sizes, condition=None):
 
 
 def Circuit(term, *others, start_index=0, size=None):
+    """
+    Builds and returns a constraint Circuit.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :param start_index: the number used for indexing the first variable/node in the list of terms
+    :param size: the size of the circuit (a constant, a variable or None)
+    :return: a constraint Circuit
+    """
     terms = flatten(term, others)
     checkType(terms, [Variable])
     checkType(start_index, int)
@@ -893,10 +1061,24 @@ def _optimize(term, minimization):
 
 
 def minimize(term):
+    """
+    Builds and returns an objective that corresponds to minimizing the specified term.
+    This term can be a variable, an expression, a component Sum, Count, NValues, Maximum, Minimum, etc.
+
+    :param term: the term to be minimized
+    :return: the objective to be minimized
+    """
     return _optimize(term, True)
 
 
 def maximize(term):
+    """
+    Builds and returns an objective that corresponds to maximizing the specified term.
+    This term can be a variable, an expression, a component Sum, Count, NValues, Maximum, Minimum, etc.
+
+    :param term: the term to be maximized
+    :return: the objective to be maximized
+    """
     return _optimize(term, False)
 
 
@@ -956,11 +1138,24 @@ def posted(i=None, j=None, *, absolute=False):
 
 
 def objective():
+    """
+    Returns the objective of the model, or None if no one has been defined by calling either the function minimize() or the function maximize()
+    """
     assert 0 <= len(ObjEntities.items) <= 1
     return ObjEntities.items[0].constraint if len(ObjEntities.items) == 1 else None
 
 
 def unpost(i=None, j=None):
+    """
+    If no parameter is specified, discards the last posting operation (call to satisfy).
+    If two parameters are specified, discards the constraint(s) whose index(es) is specified
+    by the second argument j (possibly a slice) inside the posting operation whose index is specified by the first parameter.
+    If one parameter is specified, discards the posting operation whose index is specified.
+
+    :param i: the index of the posting operation (call to satisfy) to be discarded (if j is None)
+    :param j: the index (or slice) of the constraint(s) to be removed inside the group of constraints
+              corresponding to the specified posting operation
+    """
     if i is None:
         i = -1
     if j is None:
@@ -972,13 +1167,27 @@ def unpost(i=None, j=None):
 
 
 def value(x, *, sol=-1):
+    """
+    Returns the value assigned to the specified variable when the solution at the specified index has been found
+
+    :param x: a variable
+    :param sol: the index of a found solution
+    """
     assert isinstance(x, Variable) and len(x.values) > 0
     return x.values[sol]
 
 
 def values(m, *, sol=-1):
+    """
+    Returns a list similar to the specified structure with the values assigned to the involved variables
+    when the solution at the specified index has been found
+
+    :param m: a structure (typically list) of any dimension involving variables
+    :param sol: the index of a found solution
+    :return:
+    """
     if isinstance(m, Variable):
         return value(m, sol=sol)
     if isinstance(m, (list, tuple, set, frozenset, types.GeneratorType)):
         g = [values(v, sol=sol) for v in m]
-        return ListInt(g) if len(g) > 0 and isinstance(g[0], (int, ListInt)) else g
+        return ListInt(g) if len(g) > 0 and (isinstance(g[0], (int, ListInt)) or g[0] == ANY) else g

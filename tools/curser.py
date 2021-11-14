@@ -671,18 +671,28 @@ def _list(t, mode):
 
 
 def columns(m):
+    """
+    Returns the transpose matrix of the specified matrix
+
+    :param m: a matrix (i.e. a two-dimensional list)
+    :return: the transpose matrix
+    """
     assert is_matrix(m)
     mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
     return _list((_list((row[j] for row in m), mode) for j in range(len(m[0]))), mode)
 
 
-def transpose(m):
-    assert is_matrix(m)
-    mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
-    return _list((_list((m[j][i] for j in range(len(m))), mode) for i in range(len(m[0]))), mode)
-
-
 def diagonal_down(m, i=-1, j=-1, check=True):
+    """
+    Returns the main downward diagonal, or another downward diagonal when the values
+    of the parameters i and j are not both equal to -1
+
+    :param m: a matrix (i.e. a two-dimensional list)
+    :param i: index of row (possibly -1)
+    :param j: index of column (possibly -1)
+    :param check: true when the structure of the matrix must be controlled
+    :return: the main downward diagonal (or another stipulated downward diagonal)
+    """
     if check is True:
         assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     if i == -1 and j == -1:
@@ -694,6 +704,13 @@ def diagonal_down(m, i=-1, j=-1, check=True):
 
 
 def diagonals_down(m, *, broken=False):
+    """
+    Returns the list of downward diagonals of the specified matrix
+
+    :param m: a matrix (i.e. a two-dimensional list)
+    :param broken: true when broken diagonals must be completed
+    :return: the list of downward diagonals
+    """
     assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
     if broken:
@@ -703,6 +720,16 @@ def diagonals_down(m, *, broken=False):
 
 
 def diagonal_up(m, i=-1, j=-1, check=True):
+    """
+       Returns the main upward diagonal, or another upward diagonal when the values
+       of the parameters i and j are not both equal to -1
+
+       :param m: a matrix (i.e. a two-dimensional list)
+       :param i: index of row (possibly -1)
+       :param j: index of column (possibly -1)
+       :param check: true when the structure of the matrix must be controlled
+       :return: the main upward diagonal (or another stipulated upward diagonal)
+       """
     if check is True:
         assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     if i == -1 and j == -1:
@@ -714,6 +741,13 @@ def diagonal_up(m, i=-1, j=-1, check=True):
 
 
 def diagonals_up(m, *, broken=False):
+    """
+      Returns the list of upward diagonals of the specified matrix
+
+      :param m: a matrix (i.e. a two-dimensional list)
+      :param broken: true when broken diagonals must be completed
+      :return: the list of upward diagonals
+      """
     assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
     if broken:
@@ -723,6 +757,15 @@ def diagonals_up(m, *, broken=False):
 
 
 def cp_array(*l):
+    """
+    Converts and returns a list containing integers into a list from the more specific type ListInt.
+    Converts and returns a list containing variables into a list from the more specific type ListVar.
+    Returns the same list in all other cases.
+    This method may be required for posting constraints Element.
+
+    :param l: a list (of any dimension)
+    :return: the same list, possibly converted into one of the two more specific types ListInt and ListVar
+    """
     if len(l) == 1:
         l = l[0]
     if isinstance(l, (tuple, set, frozenset, types.GeneratorType)):
@@ -732,9 +775,9 @@ def cp_array(*l):
         assert all(isinstance(t, (list, types.GeneratorType)) for t in l)
         res = [cp_array(t) for t in l]
         return ListInt(res) if isinstance(res[0], ListInt) else ListVar(res)
-    if all(isinstance(v, int) for v in l):
+    if all(isinstance(v, int) for v in l):  # and None ?
         return ListInt(l)
-    elif all(isinstance(v, Variable) for v in l):
+    elif all(isinstance(v, Variable) for v in l):  # and None ?
         return ListVar(l)
     else:
         raise NotImplemented

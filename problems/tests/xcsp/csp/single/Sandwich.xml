@@ -1,6 +1,6 @@
 <instance format="XCSP3" type="CSP">
   <variables>
-    <var id="culprit" note="culprit is among alice (0), bob (1) and sascha (2)"> 0 1 2 </var>
+    <var id="culprit" note="culprit is among alice (0), bob (1) and sascha (2)"> 0..2 </var>
     <array id="liking" note="liking[i][j] is 1 iff the ith guy likes the jth guy" size="[3][3]"> 0 1 </array>
     <array id="taller" note="taller[i][j] is 1 iff the ith guy is taller than the jth guy" size="[3][3]"> 0 1 </array>
   </variables>

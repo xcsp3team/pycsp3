@@ -44,11 +44,22 @@ def combinations(n, size):
 
 
 def different_values(*args):
+    """
+    Returns True if
+     all specified integers are different
+    :return: True if all specified integers are different
+    """
     assert all(isinstance(arg, int) for arg in args)
     return all(a != b for (a, b) in combinations(args, 2))
 
 
 def flatten(*args, keep_none=False):
+    """
+    Returns a list with all elements that can be encountered when looking into the specified arguments.
+    Typically, this is a list (of possibly any dimension).
+
+    :param keep_none: if True, None values are not discarded
+    """
     # if not hasattr(flatten, "cache"):  # cannot work (changing to TupleInt and TupleVar instead of ListInt and ListVar while guaranteeing the lifetime? how?)
     #     flatten.cache = {}
     # elif len(args) == 1 and id(args[0]) in flatten.cache:
@@ -128,9 +139,9 @@ def is_square_matrix(m, types=None):
 
 def alphabet_positions(s):
     '''
+    Returns a list with the indexes of the letters (with respect to the 26 letters of the Latin alphabet) of the specified string.
 
-    @param s:
-    @return:
+    @param s: a string
     '''
     if isinstance(s, (list, tuple, set, frozenset, types.GeneratorType)):
         s = "".join(t for t in s)
@@ -138,7 +149,11 @@ def alphabet_positions(s):
 
 
 def all_primes(limit):
-    """ Returns a list of primes < limit """
+    """
+    Returns a list with all prime numbers that are strictly less than the specified limit.
+
+    :param limit: an integer
+    """
     sieve = [True] * limit
     for i in range(3, int(limit ** 0.5) + 1, 2):
         if sieve[i]:
@@ -156,8 +171,12 @@ def value_in_base(decimal_value, length, base):
     return value
 
 
-def integer_scaling(values):  # convert all (possibly decimal) specified values into integers by means of scaling
+def integer_scaling(values):
+    """
+    Returns a list with all specified values after possibly converting them (when decimal) into integers by means of automatic scaling
+    """
     values = list(values) if isinstance(values, types.GeneratorType) else values
+    values = [str(v) for v in values]
     scale = 0
     for v in values:
         pos = v.find('.')
@@ -238,19 +257,33 @@ def integers_to_string(numbers):
     return ' '.join(str(i[0]) if len(i) == 1 else str(i[0]) + ('..' if i[0] != i[1] - 1 else ' ') + str(i[1]) for i in t)
 
 
-def to_ordinary_table(table, domains, *, keep_any=False):
+def to_ordinary_table(table, domains, *, starred=False):
+    """
+    Converts the specified table that may contain hybrid restrictions and stars into an ordinary table (or a starred table).
+    The table contains r-tuples and the domain to be considered are any index i of the tuples is given by domains[i].
+    In case, domains[i] is an integer, it is automatically transformed into a range.
+
+    :param table: a table (possibly hybrid or starred)
+    :param domains: the domains of integers to be considered for each column of the table
+    :param starred: if True, the returned table may be starred (and not purely ordinary)
+    :return: an ordinary or starred table
+    """
     doms = [range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]
     tbl = set()
-    if keep_any:
+    if starred:
         for t in table:
             if any(isinstance(v, conditions.Condition) for v in t):  # v may be a Condition object (with method 'filtering')
-                tbl.update(product(*({v} if isinstance(v, int) or v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
+                tbl.update(product(
+                    *({v} if isinstance(v, int) or v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple))
+                    else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
                 tbl.add(t)
     else:
         for t in table:
             if any(v == ANY or isinstance(v, conditions.Condition) for v in t):  # v may be a ConditionValue object (with method 'filtering')
-                tbl.update(product(*({v} if isinstance(v, int) else doms[i] if v == ANY else v.filtering(doms[i]) for i, v in enumerate(t))))
+                tbl.update(product(*(
+                    {v} if isinstance(v, int) else doms[i] if v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple))
+                    else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
                 tbl.add(t)
     return tbl
@@ -313,4 +346,3 @@ def error(s):
 def error_if(test, s):
     if test:
         error(s)
-

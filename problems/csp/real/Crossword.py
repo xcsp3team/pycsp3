@@ -36,7 +36,7 @@ def find_holes(matrix, transposed):
     return t
 
 
-holes = find_holes(spots, False) + find_holes(transpose(spots), True)
+holes = find_holes(spots, False) + find_holes(columns(spots), True)
 arities = sorted(set(size for (_, _, size) in holes))
 n, m, nHoles = len(spots), len(spots[0]), len(holes)
 

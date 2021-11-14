@@ -199,6 +199,9 @@ class ConditionSet(Condition):
     def right_operand(self):
         return "{" + ",".join(str(v) for v in self.t) + "}"
 
+    def __repr__(self):
+        return self.str_tuple()
+
 
 def _build_condition(operator, v):
     if isinstance(v, int):
@@ -210,26 +213,68 @@ def _build_condition(operator, v):
 
 
 def lt(v):
+    """
+    Builds an object Condition whose operator is lt (strictly less than)
+    and the (right operand) is the specified argument
+
+    :param v: either an integer or the root node of an expression
+    :return: an object Condition
+    """
     return _build_condition(LT, v)
 
 
 def le(v):
+    """
+    Builds an object Condition whose operator is le (less than or equal)
+    and the (right operand) is the specified argument
+
+    :param v: either an integer or the root node of an expression
+    :return: an object Condition
+    """
     return _build_condition(LE, v)
 
 
 def ge(v):
+    """
+    Builds an object Condition whose operator is ge (greater than or equal)
+    and the (right operand) is the specified argument
+
+    :param v: either an integer or the root node of an expression
+    :return: an object Condition
+    """
     return _build_condition(GE, v)
 
 
 def gt(v):
+    """
+    Builds an object Condition whose operator is gt (strictly greater than)
+    and the (right operand) is the specified argument
+
+    :param v: either an integer or the root node of an expression
+    :return: an object Condition
+    """
     return _build_condition(GT, v)
 
 
 def eq(v):
+    """
+    Builds an object Condition whose operator is eq (equal to)
+    and the (right operand) is the specified argument
+
+    :param v: either an integer or the root node of an expression
+    :return: an object Condition
+    """
     return _build_condition(EQ, v)
 
 
 def ne(v):
+    """
+    Builds an object Condition whose operator is ne (not equal to)
+    and the (right operand) is the specified argument
+
+    :param v: either an integer or the root node of an expression
+    :return: an object Condition
+    """
     return _build_condition(NE, v)
 
 
@@ -244,8 +289,22 @@ def _inside_outside(v, op):
 
 
 def inside(*v):
+    """
+    Builds an object Condition whose operator is 'in'
+    and the (right operand) is defined from the specified argument(s)
+
+    :param v: a range, a set, a tuple or a list of integers
+    :return: an object Condition
+    """
     return _inside_outside(v, IN)
 
 
 def complement(*v):
+    """
+     Builds an object Condition whose operator is 'not in'
+    and the (right operand) is defined from the specified argument(s)
+
+    :param v: a range, a set, a tuple or a list of integers
+    :return: an object Condition
+    """
     return _inside_outside(v, NOTIN)

@@ -47,11 +47,26 @@ class Diagram:
 
 
 class Automaton(Diagram):
+
     @staticmethod
     def q(i, j=None):
+        """
+        Returns the name of a state from the specified argument(s)
+
+        :param i: the index of the state
+        :param j: a secondary index
+        :return: the name of a state from the specified argument(s)
+        """
         return "q" + str(i) + ("" if j is None else "x" + str(j))
 
     def __init__(self, *, start, transitions, final):
+        """
+        Builds an automaton from the specified arguments: a starting state, a set of transitions and a set of final states
+
+        :param start: the starting state
+        :param transitions: a set of transitions
+        :param final: the final state(s)
+        """
         super().__init__(transitions)
         self.start = start
         self.final = [final] if isinstance(final, str) else sorted(q for q in set(final) if q in self.states)
@@ -63,6 +78,11 @@ class Automaton(Diagram):
 
 class MDD(Diagram):
     def __init__(self, transitions):
+        """
+        Builds an MDD from the specified set of transitions
+
+        :param transitions: a set of transitions
+        """
         if isinstance(transitions, types.GeneratorType):
             transitions = [t for t in transitions]
         assert isinstance(transitions, list)  # currently, a list is wanted for a MDD (and not a set); to be changed?
