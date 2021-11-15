@@ -35,6 +35,7 @@ class _Star(float):
 
 
 ANY = _Star("Inf")  #: used to represent * in short tables
+""" Constant used to  represent * in starred tables """
 
 combinationsItertools = combinations
 

@@ -11,9 +11,9 @@ __pycsp3_version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt')
 if sys.version_info[0] < 3 or sys.version_info[1] < 6:
     raise Exception(os.linesep + " Python should be at least 3.6" + os.linesep + " Your version is Python " + __python_version__)
 
-from pycsp3.functions import protect, variant, subvariant, Var, VarArray, satisfy, minimize, maximize, annotate
+from pycsp3.functions import variant, subvariant, Var, VarArray, satisfy, minimize, maximize, annotate
 from pycsp3.functions import And, Or, Not, Xor, IfThen, IfThenElse, Iff, Slide
-from pycsp3.functions import col, abs, min, max, xor, iff, imply, ift, expr, conjunction, disjunction
+from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, conjunction, disjunction
 from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, Increasing, Decreasing, LexIncreasing, LexDecreasing, Sum, Count, NValues, Cardinality,
                               Maximum, Minimum, Channel, NoOverlap, Cumulative, BinPacking, Circuit, Clause)
 from pycsp3.functions import posted, objective, unpost, value, values
@@ -29,19 +29,19 @@ from pycsp3.classes.auxiliary.structures import Automaton, MDD  # KEEP it here a
 from pycsp3.compiler import default_data, load_json_data
 
 UNSAT = TypeStatus.UNSAT
-""" solver status: unsatisfiable (means that no solution is found by the solver) """
+""" Solver status: unsatisfiable (means that no solution is found by the solver) """
 
 SAT = TypeStatus.SAT
-""" solver status: satisfiable (means that at least one solution is found by the solver) """
+""" Solver status: satisfiable (means that at least one solution is found by the solver) """
 
 OPTIMUM = TypeStatus.OPTIMUM
-""" solver status: optimum (means that an optimal solution is found by the solver) """
+""" Solver status: optimum (means that an optimal solution is found by the solver) """
 
 CORE = TypeStatus.CORE
-""" solver status: core (means that an unsatisfiable core has been extracted by the solver) """
+""" Solver status: core (means that an unsatisfiable core has been extracted by the solver) """
 
 UNKNOWN = TypeStatus.UNKNOWN
-""" solver status: unknown (means that the solver is unable to solve the problem instance)  """
+""" Solver status: unknown (means that the solver is unable to solve the problem instance)  """
 
 ACE = TypeSolver.ACE
 """ Solver ACE (AbsCon Essence) """
@@ -50,7 +50,7 @@ CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
 
 ALL = "all"
-""" constant used to indicate that all solutions must be sought """
+""" Constant used to indicate that all solutions must be sought """
 
 if sys.argv:
     if len(sys.argv) == 1 and sys.argv[0] == "-m":  # copy of models
@@ -119,11 +119,18 @@ def solver(name=None):
     return _solver if name is None else _set_solver(name)
 
 
-def compile(filename=None, *, disabling_opoverrider=False, verbose=1):
+def compile(filename=None, *, verbose=1):
+    """
+    Compiles the current model
+
+    :param filename: the filename of the compiled problem instance
+    :param verbose: verbosity level from -1 to 2
+    :return: a pair composed of a string (filename) and a Boolean (True if a COP, False otherwise)
+    """
     global _solver
     from pycsp3.compiler import Compilation
     from pycsp3.dashboard import options
-    filename, cop = Compilation.compile(filename, disabling_opoverrider, verbose=verbose)
+    filename, cop = Compilation.compile(filename, verbose=verbose)
     solving = ACE.name if options.solve else options.solver
     if solving:
         if options.display:
@@ -172,19 +179,20 @@ def core():
     return None if _solver is None else _solver.core
 
 
-def solve(*, solver=ACE, options="", filename=None, disabling_opoverrider=False, verbose=-1, sols=None, extraction=False):
+def solve(*, solver=ACE, options="", filename=None, verbose=-1, sols=None, extraction=False):
     """
+    Solves the current model (after compiling it) and returns the status of this operation.
 
-    :param solver:
-    :param options:
-    :param filename:
-    :param disabling_opoverrider:
-    :param verbose:
-    :param sols:
-    :return:
+    :param solver: name of the solver (ACE or CHOCO)
+    :param options: specific options for the solver
+    :param filename: the filename of the compiled problem instance
+    :param verbose: verbosity level from -1 to 2
+    :param sols: number of solutions to be found (ALL if no limit)
+    :param extraction: True if an unsatisfiable core of constraints must be sought
+    :return: the status of the solving operation
     """
     global _solver
-    instance = compile(filename, disabling_opoverrider=disabling_opoverrider, verbose=verbose)
+    instance = compile(filename, verbose=verbose)
     if instance is None:
         print("Problem when compiling")
     else:
@@ -208,4 +216,4 @@ def _pycharm_security():  # for avoiding that imports are removed when reformatt
 def end():
     from pycsp3.tools.utilities import Error
     if not Compilation.done and not Error.errorOccurrence:
-        compile(disabling_opoverrider=True)
+        Compilation.compile(disabling_opoverrider=True)

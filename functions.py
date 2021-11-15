@@ -31,7 +31,7 @@ absPython, maxPython, minPython = abs, max, min
 
 def protect():
     """
-    Disables the redefined operators, and returns the object OpOverrider.
+    Disables the redefined operators (==, >, >=, etc.) , and returns the object OpOverrider.
     On can then execute some code in protected mode by calling execute().
     Once the code is executed, the redefined operators are reactivated.
 
@@ -47,23 +47,54 @@ def protect():
 
 
 def variant(name=None):
-    pos = -1 if not options.variant else options.variant.find("-")  # position of dash ('-') in options.variant
-    if not name:
-        return options.variant[0:pos] if pos != -1 else options.variant
-    return options.variant[0:pos] == name if pos != -1 else options.variant == name
+    """
+    Returns the name of the variant given on the command line (option -variant) if the specified argument is None.
+    Returns True iff the variant given on the command line is equal to the argument otherwise.
+    Note that the variant given on the command line is the substring until the symbol '-' (after this symbol,
+    the name of the sub-variant starts), or the end of the string
+
+    :param name: the name of a variant, or None
+    :return: the name of the variant specified by the user, or a Boolean
+    """
+    assert options.variant is None or isinstance(options.variant, str)
+    pos = -1 if options.variant is None else options.variant.find("-")  # position of dash ('-') in options.variant
+    option_variant = options.variant[0:pos] if pos != -1 else options.variant
+    return option_variant if name is None else option_variant == name
 
 
 def subvariant(name=None):
-    pos = -1 if not options.variant else options.variant.find("-")  # position of dash ('-') in options.variant
-    if not name:
-        return None if pos == -1 else options.variant[pos + 1:]
-    return pos != -1 and options.variant[pos + 1:] == name
+    """
+    Returns the name of the sub-variant given on the command line (option -variant) if the specified argument is None.
+    Returns True iff the sub-variant given on the command line is equal to the argument otherwise.
+    Note that the sub-variant given on the command line is the substring starting after the symbol '-' (before this symbol,
+    this is the name of the variant).
+
+    :param name: the name of a sub-variant, or None
+    :return: the name of the sub-variant specified by the user, or a Boolean
+    """
+    assert options.variant is None or isinstance(options.variant, str)
+    pos = -1 if options.variant is None else options.variant.find("-")  # position of dash ('-') in options.variant
+    option_subvariant = options.variant[pos + 1:] if pos != -1 else None
+    return option_subvariant if name is None else option_subvariant == name
 
 
 ''' Declaring stand-alone variables and arrays '''
 
 
 def Var(term=None, *others, dom=None):
+    """
+    Builds a stand-alone variable with the specified domain.
+    The domain is either given by the named parameter dom, or given
+    by the sequence of terms passed as parameters. For example:
+      x = Var(0,1)
+      y = Var(range(10))
+      z = Var(v for v in range(100) if v%3 == 0)
+
+    :param term: the first term defining the domain, or None
+    :param others: the other terms defining the domain, or None
+    :param dom: the domain of the variable, or None
+    :return: a stand-alone Variable with the specified domain
+    """
     if term is None and dom is None:
         dom = Domain(math.inf)
     assert not (term and dom)
@@ -92,6 +123,18 @@ def Var(term=None, *others, dom=None):
 
 
 def VarArray(*, size, dom, comment=None):
+    """
+    Builds an array of variables.
+    The number of dimensions of the array is given by the number of values in size.
+    The size of the ith dimension is given by the ith value of size.
+    The domain is either the same for all variables, and then directly given by dom,
+    or specific to each variable, in which case dom must a function.
+
+    :param size: the size of each dimension of the array
+    :param dom: the domain of the variables
+    :param comment: a string
+    :return: an array of variables
+    """
     size = [size] if isinstance(size, int) else size
     assert all(dimension != 0 for dimension in size), "No dimension must not be equal to 0"
     checkType(size, [int])
@@ -284,6 +327,12 @@ def Slide(*args):
 
 
 def satisfy(*args):
+    """
+    Posts all constraints that are specified as arguments
+
+    :param args: the different constraints to be posted
+    :return: an object wrapping the posted constraints
+    """
     global no_parameter_satisfy, nb_parameter_satisfy
 
     def _group(*_args):

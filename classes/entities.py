@@ -319,6 +319,9 @@ class AnnEntities:
 
 
 def clear():
+    """
+    Removes everything that was declared (variables) or posted (constraints, objective)
+    """
     VarEntities.items = []
     VarEntities.varToEVar = dict()
     VarEntities.varToEVarArray = dict()

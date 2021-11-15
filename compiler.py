@@ -42,7 +42,7 @@ class Compilation:
         Compilation.user_filename = _user_filename
 
     @staticmethod
-    def compile(filename=None, disabling_opoverrider=True, verbose=1):
+    def compile(filename=None, disabling_opoverrider=False, verbose=1):
         Compilation.set_filename(filename)
         return _compile(disabling_opoverrider, verbose=verbose)
 
@@ -174,11 +174,11 @@ def _load(*, console=False):
 
 
 def default_data(filename):
+    assert filename.endswith(".json")
     if filename[0] == '.':
         fn = os.path.abspath('.') + filename[1:]
     else:
         fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
-    assert fn.endswith(".json")
     assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
     with open(fn) as f:
         Compilation.data = convert_to_namedtuples(json.loads(f.read(), object_pairs_hook=OrderedDict))
