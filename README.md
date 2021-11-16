@@ -16,7 +16,7 @@ Note that:
 * PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
 
 At this stage, one can run two embedded solvers:
-* the constraint solver 'Ace' (AbsCon Essence), with the option -solve or the option -solver=ace
+* the constraint solver 'ACE' (AbsCon Essence), with the option -solve or the option -solver=ace
 * the constraint solver 'Choco, with the option -solver=choco
 
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
@@ -38,7 +38,7 @@ Note that, in the medium/long term, we also plan to develop an interface that wi
 
 This is the easiest way of installing PySCP3.
 
-Note that you need first Python 3 (version 3.5, or later) to be installed.
+Note that you need first Python 3 (version 3.6, or later) to be installed.
 You can do it, for example, from [python.org](https://www.python.org/downloads/)
 
 
