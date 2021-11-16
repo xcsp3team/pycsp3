@@ -196,6 +196,12 @@ def default_data(filename):
 
 
 def load_json_data(filename):
+    """
+    Loads the data from the file (possibly from an URL)
+
+    :param filename: filemane or ULR for a JSON content
+    :return: the loaded data
+    """
     assert filename.endswith(".json")
     if filename.startswith("http"):
         from urllib.request import urlopen
