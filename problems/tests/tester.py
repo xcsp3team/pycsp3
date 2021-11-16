@@ -227,7 +227,6 @@ class Tester:
                                                                 python_exec[0]))
                 if not os.path.isfile(self.name_xml):
                     print(RED + "file not found " + self.name_xml + WHITE)
-                    print("kkk ", self.xml_path_py())
                     continue
                 shutil.move(self.name_xml, self.xml_path_py())
                 if mode == 1:  # comparison with jv
