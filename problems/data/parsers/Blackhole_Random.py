@@ -1,5 +1,5 @@
 """
-Example: python3 pycsp3/problems/csp/real/Blackhole.py  -dataparser=pycsp3/problems/data/parsers/Blackhole_Random.py 13 3 0
+Example: python3 pycsp3/problems/csp/complex/Blackhole.py  -dataparser=pycsp3/problems/data/parsers/Blackhole_Random.py 13 3 0
 """
 
 import random

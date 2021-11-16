@@ -127,23 +127,8 @@ def compile(filename=None, *, verbose=1):
     :param verbose: verbosity level from -1 to 2
     :return: a pair composed of a string (filename) and a Boolean (True if a COP, False otherwise)
     """
-    global _solver
     from pycsp3.compiler import Compilation
-    from pycsp3.dashboard import options
     filename, cop = Compilation.compile(filename, verbose=verbose)
-    solving = ACE.name if options.solve else options.solver
-    if solving:
-        if options.display:
-            print("Warning: options -display and -solve should not be used together.")
-            return filename
-        from pycsp3.solvers.solver import process_options
-        solver_name, args, args_recursive = process_options(solving)
-        solver_name = next(ss for ss in TypeSolver if ss.name.lower() == solver_name.lower())
-        _solver = _set_solver(solver_name)
-        result = _solver.solve((filename, cop), solving, args, args_recursive, compiler=True, verbose=verbose, automatic=True)
-        print("\nResult: ", result)
-        if solution():
-            print(solution())
     return filename, cop
 
 
@@ -214,6 +199,24 @@ def _pycharm_security():  # for avoiding that imports are removed when reformatt
 
 @atexit.register
 def end():
+    from pycsp3.dashboard import options
     from pycsp3.tools.utilities import Error
+    global _solver
+    verbose = 1
     if not Compilation.done and not Error.errorOccurrence:
-        Compilation.compile(disabling_opoverrider=True)
+        filename, cop = Compilation.compile(disabling_opoverrider=True)
+        solving = ACE.name if options.solve else options.solver
+        if solving:
+            if options.display:
+                print("Warning: options -display and -solve should not be used together.")
+                return filename
+            from pycsp3.solvers.solver import process_options
+            solver_name, args, args_recursive = process_options(solving)
+            t = [ss for ss in TypeSolver if ss.name.lower() == solver_name.lower()]
+            assert len(t) == 1, "The name of the solver is not valid"
+            solver_name = t[0]
+            _solver = _set_solver(solver_name)
+            result = _solver.solve((filename, cop), solving, args, args_recursive, compiler=True, verbose=verbose, automatic=True)
+            print("\nResult: ", result)
+            if solution():
+                print(solution())

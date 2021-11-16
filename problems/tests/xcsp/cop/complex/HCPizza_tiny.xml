@@ -1,0 +1,121 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[i][j][k] is 1 iff the slice with left top cell at (i,j) and pattern k is selected" size="[3][5][9]"> 0 1 </array>
+    <array id="s" note="s[i][j][k] is the size of the slice with left top cell at (i,j) and pattern k (0 if the slice is not selected)" size="[3][5][9]">
+      <domain for="s[0][0..3][5] s[0][3][6] s[1][0][2] s[1][0][5] s[1][0][8] s[1][1][2..3] s[1][1][5] s[1][1][8] s[1][2][5] s[1][2][8] s[1][3][5..6] s[1][3][8]"> 0 4 </domain>
+      <domain for="s[0][0][6] s[0][0][8] s[0][1][6] s[0][1][8] s[0][2][6] s[0][2..3][8] s[1][0..2][6]"> 0 6 </domain>
+      <domain for="s[0][1..3][4] s[1][0][0] s[1][1][4] s[1][1][7] s[1][2][4] s[1][2][7] s[1][3][0..4] s[1][3][7]"> 0 2 </domain>
+      <domain for="s[0][1..3][7] s[1][0][1] s[1][2][1..3]"> 0 3 </domain>
+      <domain for="s[1][0][3]"> 0 5 </domain>
+    </array>
+    <var id="z" note="z is the number of selected pizza cells"> 0..15 </var>
+  </variables>
+  <constraints>
+    <block note="computing sizes of selected slices">
+      <group>
+        <extension>
+          <list> %0 %1 </list>
+          <supports> (0,0)(1,4) </supports>
+        </extension>
+        <args> x[0][0][5] s[0][0][5] </args>
+        <args> x[0][1][5] s[0][1][5] </args>
+        <args> x[0][2][5] s[0][2][5] </args>
+        <args> x[0][3][5] s[0][3][5] </args>
+        <args> x[0][3][6] s[0][3][6] </args>
+        <args> x[1][0][2] s[1][0][2] </args>
+        <args> x[1][0][5] s[1][0][5] </args>
+        <args> x[1][0][8] s[1][0][8] </args>
+        <args> x[1][1][2] s[1][1][2] </args>
+        <args> x[1][1][3] s[1][1][3] </args>
+        <args> x[1][1][5] s[1][1][5] </args>
+        <args> x[1][1][8] s[1][1][8] </args>
+        <args> x[1][2][5] s[1][2][5] </args>
+        <args> x[1][2][8] s[1][2][8] </args>
+        <args> x[1][3][5] s[1][3][5] </args>
+        <args> x[1][3][6] s[1][3][6] </args>
+        <args> x[1][3][8] s[1][3][8] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 %1 </list>
+          <supports> (0,0)(1,6) </supports>
+        </extension>
+        <args> x[0][0][6] s[0][0][6] </args>
+        <args> x[0][0][8] s[0][0][8] </args>
+        <args> x[0][1][6] s[0][1][6] </args>
+        <args> x[0][1][8] s[0][1][8] </args>
+        <args> x[0][2][6] s[0][2][6] </args>
+        <args> x[0][2][8] s[0][2][8] </args>
+        <args> x[0][3][8] s[0][3][8] </args>
+        <args> x[1][0][6] s[1][0][6] </args>
+        <args> x[1][1][6] s[1][1][6] </args>
+        <args> x[1][2][6] s[1][2][6] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 %1 </list>
+          <supports> (0,0)(1,2) </supports>
+        </extension>
+        <args> x[0][1][4] s[0][1][4] </args>
+        <args> x[0][2][4] s[0][2][4] </args>
+        <args> x[0][3][4] s[0][3][4] </args>
+        <args> x[1][0][0] s[1][0][0] </args>
+        <args> x[1][1][4] s[1][1][4] </args>
+        <args> x[1][1][7] s[1][1][7] </args>
+        <args> x[1][2][4] s[1][2][4] </args>
+        <args> x[1][2][7] s[1][2][7] </args>
+        <args> x[1][3][0] s[1][3][0] </args>
+        <args> x[1][3][1] s[1][3][1] </args>
+        <args> x[1][3][2] s[1][3][2] </args>
+        <args> x[1][3][3] s[1][3][3] </args>
+        <args> x[1][3][4] s[1][3][4] </args>
+        <args> x[1][3][7] s[1][3][7] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 %1 </list>
+          <supports> (0,0)(1,3) </supports>
+        </extension>
+        <args> x[0][1][7] s[0][1][7] </args>
+        <args> x[0][2][7] s[0][2][7] </args>
+        <args> x[0][3][7] s[0][3][7] </args>
+        <args> x[1][0][1] s[1][0][1] </args>
+        <args> x[1][2][1] s[1][2][1] </args>
+        <args> x[1][2][2] s[1][2][2] </args>
+        <args> x[1][2][3] s[1][2][3] </args>
+      </group>
+      <extension>
+        <list> x[1][0][3] s[1][0][3] </list>
+        <supports> (0,0)(1,5) </supports>
+      </extension>
+    </block>
+    <group note="ensuring that no two slices overlap">
+      <sum>
+        <list> %... </list>
+        <condition> (le,1) </condition>
+      </sum>
+      <args> x[0][0][5..6] x[0][0][8] </args>
+      <args> x[0][0][5..6] x[0][0][8] x[0][1][4..8] </args>
+      <args> x[0][0][6] x[0][1][5..6] x[0][1][8] x[0][2][4..8] </args>
+      <args> x[0][1][6] x[0][2][5..6] x[0][2][8] x[0][3][4..8] </args>
+      <args> x[0][2][6] x[0][3][5..6] x[0][3][8] </args>
+      <args> x[0][0][5..6] x[0][0][8] x[1][0][0..3] x[1][0][5..6] x[1][0][8] </args>
+      <args> x[0][0][5..6] x[0][0][8] x[0][1][4..8] x[1][0][0..3] x[1][0][5..6] x[1][0][8] x[1][1][2..8] </args>
+      <args> x[0][0][6] x[0][1][5..6] x[0][1][8] x[0][2][4..8] x[1][0][1..3] x[1][0][6] x[1][1][2..3] x[1][1][5..6] x[1][1][8] x[1][2][1..8] </args>
+      <args> x[0][1][6] x[0][2][5..6] x[0][2][8] x[0][3][4..8] x[1][0][2..3] x[1][1][2..3] x[1][1][6] x[1][2][1..3] x[1][2][5..6] x[1][2][8] x[1][3][] </args>
+      <args> x[0][2][6] x[0][3][5..6] x[0][3][8] x[1][0][3] x[1][1][2..3] x[1][2][1..3] x[1][2][6] x[1][3][0..3] x[1][3][5..6] x[1][3][8] </args>
+      <args> x[0][0][8] x[1][0][5..6] x[1][0][8] </args>
+      <args> x[0][0][8] x[0][1][7..8] x[1][0][5..6] x[1][0][8] x[1][1][4..8] </args>
+      <args> x[0][1][8] x[0][2][7..8] x[1][0][6] x[1][1][5..6] x[1][1][8] x[1][2][4..8] </args>
+      <args> x[0][2][8] x[0][3][7..8] x[1][1][6] x[1][2][5..6] x[1][2][8] x[1][3][4..8] </args>
+      <args> x[0][3][8] x[1][2][6] x[1][3][5..6] x[1][3][8] </args>
+    </group>
+    <sum>
+      <list> s[0][0][5..6] s[0][0][8] s[0][1][4..8] s[0][2][4..8] s[0][3][4..8] s[1][0][0..3] s[1][0][5..6] s[1][0][8] s[1][1][2..8] s[1][2][1..8] s[1][3][] </list>
+      <condition> (eq,z) </condition>
+    </sum>
+  </constraints>
+  <objectives>
+    <maximize note="maximizing the number of selected pizza cells"> z </maximize>
+  </objectives>
+</instance>

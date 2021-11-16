@@ -1,0 +1,161 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="o" note="o[i] is the piece played in slot (order) i" size="[9]"> 0..8 </array>
+    <array id="a" note="a[p] is the (beginning of the) slot  when the player p arrives" size="[5]"> 0..8 </array>
+    <array id="l" note="l[p] is the (end of the) slot when the player p leaves" size="[5]"> 0..8 </array>
+    <array id="ep" note="ep[p][i] is 1 iff the player p must effectively play in slot i" size="[5][9]"> 0 1 </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[9]"> 1..7 </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all pieces of music must be played in some order"> o[] </allDifferent>
+    <block note="determining when players must effectively play">
+      <group>
+        <element>
+          <list> 1 1 0 1 0 1 1 0 1 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[0] ep[0][0] </args>
+        <args> o[1] ep[0][1] </args>
+        <args> o[2] ep[0][2] </args>
+        <args> o[3] ep[0][3] </args>
+        <args> o[4] ep[0][4] </args>
+        <args> o[5] ep[0][5] </args>
+        <args> o[6] ep[0][6] </args>
+        <args> o[7] ep[0][7] </args>
+        <args> o[8] ep[0][8] </args>
+      </group>
+      <group>
+        <element>
+          <list> 1 1 0 1 1 1 0 1 0 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[0] ep[1][0] </args>
+        <args> o[1] ep[1][1] </args>
+        <args> o[2] ep[1][2] </args>
+        <args> o[3] ep[1][3] </args>
+        <args> o[4] ep[1][4] </args>
+        <args> o[5] ep[1][5] </args>
+        <args> o[6] ep[1][6] </args>
+        <args> o[7] ep[1][7] </args>
+        <args> o[8] ep[1][8] </args>
+      </group>
+      <group>
+        <element>
+          <list> 1 1 0 0 0 0 1 1 0 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[0] ep[2][0] </args>
+        <args> o[1] ep[2][1] </args>
+        <args> o[2] ep[2][2] </args>
+        <args> o[3] ep[2][3] </args>
+        <args> o[4] ep[2][4] </args>
+        <args> o[5] ep[2][5] </args>
+        <args> o[6] ep[2][6] </args>
+        <args> o[7] ep[2][7] </args>
+        <args> o[8] ep[2][8] </args>
+      </group>
+      <group>
+        <element>
+          <list> 1 0 0 0 1 1 0 0 1 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[0] ep[3][0] </args>
+        <args> o[1] ep[3][1] </args>
+        <args> o[2] ep[3][2] </args>
+        <args> o[3] ep[3][3] </args>
+        <args> o[4] ep[3][4] </args>
+        <args> o[5] ep[3][5] </args>
+        <args> o[6] ep[3][6] </args>
+        <args> o[7] ep[3][7] </args>
+        <args> o[8] ep[3][8] </args>
+      </group>
+      <group>
+        <element>
+          <list> 0 0 1 0 1 1 1 1 0 </list>
+          <index> %0 </index>
+          <value> %1 </value>
+        </element>
+        <args> o[0] ep[4][0] </args>
+        <args> o[1] ep[4][1] </args>
+        <args> o[2] ep[4][2] </args>
+        <args> o[3] ep[4][3] </args>
+        <args> o[4] ep[4][4] </args>
+        <args> o[5] ep[4][5] </args>
+        <args> o[6] ep[4][6] </args>
+        <args> o[7] ep[4][7] </args>
+        <args> o[8] ep[4][8] </args>
+      </group>
+    </block>
+    <group note="a player must be present when a piece of music requires him/her">
+      <intension> or(eq(%0,0),and(le(%1,%2),ge(%3,%2))) </intension>
+      <args> ep[0][0] a[0] 0 l[0] </args>
+      <args> ep[0][1] a[0] 1 l[0] </args>
+      <args> ep[0][2] a[0] 2 l[0] </args>
+      <args> ep[0][3] a[0] 3 l[0] </args>
+      <args> ep[0][4] a[0] 4 l[0] </args>
+      <args> ep[0][5] a[0] 5 l[0] </args>
+      <args> ep[0][6] a[0] 6 l[0] </args>
+      <args> ep[0][7] a[0] 7 l[0] </args>
+      <args> ep[0][8] a[0] 8 l[0] </args>
+      <args> ep[1][0] a[1] 0 l[1] </args>
+      <args> ep[1][1] a[1] 1 l[1] </args>
+      <args> ep[1][2] a[1] 2 l[1] </args>
+      <args> ep[1][3] a[1] 3 l[1] </args>
+      <args> ep[1][4] a[1] 4 l[1] </args>
+      <args> ep[1][5] a[1] 5 l[1] </args>
+      <args> ep[1][6] a[1] 6 l[1] </args>
+      <args> ep[1][7] a[1] 7 l[1] </args>
+      <args> ep[1][8] a[1] 8 l[1] </args>
+      <args> ep[2][0] a[2] 0 l[2] </args>
+      <args> ep[2][1] a[2] 1 l[2] </args>
+      <args> ep[2][2] a[2] 2 l[2] </args>
+      <args> ep[2][3] a[2] 3 l[2] </args>
+      <args> ep[2][4] a[2] 4 l[2] </args>
+      <args> ep[2][5] a[2] 5 l[2] </args>
+      <args> ep[2][6] a[2] 6 l[2] </args>
+      <args> ep[2][7] a[2] 7 l[2] </args>
+      <args> ep[2][8] a[2] 8 l[2] </args>
+      <args> ep[3][0] a[3] 0 l[3] </args>
+      <args> ep[3][1] a[3] 1 l[3] </args>
+      <args> ep[3][2] a[3] 2 l[3] </args>
+      <args> ep[3][3] a[3] 3 l[3] </args>
+      <args> ep[3][4] a[3] 4 l[3] </args>
+      <args> ep[3][5] a[3] 5 l[3] </args>
+      <args> ep[3][6] a[3] 6 l[3] </args>
+      <args> ep[3][7] a[3] 7 l[3] </args>
+      <args> ep[3][8] a[3] 8 l[3] </args>
+      <args> ep[4][0] a[4] 0 l[4] </args>
+      <args> ep[4][1] a[4] 1 l[4] </args>
+      <args> ep[4][2] a[4] 2 l[4] </args>
+      <args> ep[4][3] a[4] 3 l[4] </args>
+      <args> ep[4][4] a[4] 4 l[4] </args>
+      <args> ep[4][5] a[4] 5 l[4] </args>
+      <args> ep[4][6] a[4] 6 l[4] </args>
+      <args> ep[4][7] a[4] 7 l[4] </args>
+      <args> ep[4][8] a[4] 8 l[4] </args>
+    </group>
+    <group>
+      <element>
+        <list> 2 4 1 3 3 2 5 7 6 </list>
+        <index> %0 </index>
+        <value> %1 </value>
+      </element>
+      <args> o[0] aux_gb[0] </args>
+      <args> o[1] aux_gb[1] </args>
+      <args> o[2] aux_gb[2] </args>
+      <args> o[3] aux_gb[3] </args>
+      <args> o[4] aux_gb[4] </args>
+      <args> o[5] aux_gb[5] </args>
+      <args> o[6] aux_gb[6] </args>
+      <args> o[7] aux_gb[7] </args>
+      <args> o[8] aux_gb[8] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the waiting time of players (i.e. without playing)" type="sum"> mul(aux_gb[0],and(eq(ep[0][0],0),le(a[0],0),ge(l[0],0))) mul(aux_gb[1],and(eq(ep[0][1],0),le(a[0],1),ge(l[0],1))) mul(aux_gb[2],and(eq(ep[0][2],0),le(a[0],2),ge(l[0],2))) mul(aux_gb[3],and(eq(ep[0][3],0),le(a[0],3),ge(l[0],3))) mul(aux_gb[4],and(eq(ep[0][4],0),le(a[0],4),ge(l[0],4))) mul(aux_gb[5],and(eq(ep[0][5],0),le(a[0],5),ge(l[0],5))) mul(aux_gb[6],and(eq(ep[0][6],0),le(a[0],6),ge(l[0],6))) mul(aux_gb[7],and(eq(ep[0][7],0),le(a[0],7),ge(l[0],7))) mul(aux_gb[8],and(eq(ep[0][8],0),le(a[0],8),ge(l[0],8))) mul(aux_gb[0],and(eq(ep[1][0],0),le(a[1],0),ge(l[1],0))) mul(aux_gb[1],and(eq(ep[1][1],0),le(a[1],1),ge(l[1],1))) mul(aux_gb[2],and(eq(ep[1][2],0),le(a[1],2),ge(l[1],2))) mul(aux_gb[3],and(eq(ep[1][3],0),le(a[1],3),ge(l[1],3))) mul(aux_gb[4],and(eq(ep[1][4],0),le(a[1],4),ge(l[1],4))) mul(aux_gb[5],and(eq(ep[1][5],0),le(a[1],5),ge(l[1],5))) mul(aux_gb[6],and(eq(ep[1][6],0),le(a[1],6),ge(l[1],6))) mul(aux_gb[7],and(eq(ep[1][7],0),le(a[1],7),ge(l[1],7))) mul(aux_gb[8],and(eq(ep[1][8],0),le(a[1],8),ge(l[1],8))) mul(aux_gb[0],and(eq(ep[2][0],0),le(a[2],0),ge(l[2],0))) mul(aux_gb[1],and(eq(ep[2][1],0),le(a[2],1),ge(l[2],1))) mul(aux_gb[2],and(eq(ep[2][2],0),le(a[2],2),ge(l[2],2))) mul(aux_gb[3],and(eq(ep[2][3],0),le(a[2],3),ge(l[2],3))) mul(aux_gb[4],and(eq(ep[2][4],0),le(a[2],4),ge(l[2],4))) mul(aux_gb[5],and(eq(ep[2][5],0),le(a[2],5),ge(l[2],5))) mul(aux_gb[6],and(eq(ep[2][6],0),le(a[2],6),ge(l[2],6))) mul(aux_gb[7],and(eq(ep[2][7],0),le(a[2],7),ge(l[2],7))) mul(aux_gb[8],and(eq(ep[2][8],0),le(a[2],8),ge(l[2],8))) mul(aux_gb[0],and(eq(ep[3][0],0),le(a[3],0),ge(l[3],0))) mul(aux_gb[1],and(eq(ep[3][1],0),le(a[3],1),ge(l[3],1))) mul(aux_gb[2],and(eq(ep[3][2],0),le(a[3],2),ge(l[3],2))) mul(aux_gb[3],and(eq(ep[3][3],0),le(a[3],3),ge(l[3],3))) mul(aux_gb[4],and(eq(ep[3][4],0),le(a[3],4),ge(l[3],4))) mul(aux_gb[5],and(eq(ep[3][5],0),le(a[3],5),ge(l[3],5))) mul(aux_gb[6],and(eq(ep[3][6],0),le(a[3],6),ge(l[3],6))) mul(aux_gb[7],and(eq(ep[3][7],0),le(a[3],7),ge(l[3],7))) mul(aux_gb[8],and(eq(ep[3][8],0),le(a[3],8),ge(l[3],8))) mul(aux_gb[0],and(eq(ep[4][0],0),le(a[4],0),ge(l[4],0))) mul(aux_gb[1],and(eq(ep[4][1],0),le(a[4],1),ge(l[4],1))) mul(aux_gb[2],and(eq(ep[4][2],0),le(a[4],2),ge(l[4],2))) mul(aux_gb[3],and(eq(ep[4][3],0),le(a[4],3),ge(l[4],3))) mul(aux_gb[4],and(eq(ep[4][4],0),le(a[4],4),ge(l[4],4))) mul(aux_gb[5],and(eq(ep[4][5],0),le(a[4],5),ge(l[4],5))) mul(aux_gb[6],and(eq(ep[4][6],0),le(a[4],6),ge(l[4],6))) mul(aux_gb[7],and(eq(ep[4][7],0),le(a[4],7),ge(l[4],7))) mul(aux_gb[8],and(eq(ep[4][8],0),le(a[4],8),ge(l[4],8))) </minimize>
+  </objectives>
+</instance>

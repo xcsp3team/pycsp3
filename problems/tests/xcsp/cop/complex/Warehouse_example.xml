@@ -1,0 +1,107 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="w" note="w[i] is the warehouse supplying the ith store" size="[10]"> 0..4 </array>
+    <array id="c" note="c[i] is the cost of supplying the ith store" size="[10]">
+      <domain for="c[0]"> 11 24 25 30 100 </domain>
+      <domain for="c[1]"> 27 28 74 82 83 </domain>
+      <domain for="c[2]"> 70 71 74 96 97 </domain>
+      <domain for="c[3]"> 2 55 61 69 73 </domain>
+      <domain for="c[4]"> 4 46 59 83 96 </domain>
+      <domain for="c[5]"> 22 29 42 59 67 </domain>
+      <domain for="c[6]"> 1 5 56 59 73 </domain>
+      <domain for="c[7]"> 10 13 43 73 96 </domain>
+      <domain for="c[8]"> 35 46 63 85 93 </domain>
+      <domain for="c[9]"> 47 55 65 71 95 </domain>
+    </array>
+    <array id="o" note="o[j] is 1 if the jth warehouse is open" size="[5]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <group note="capacities of warehouses must not be exceeded">
+      <count>
+        <list> w[] </list>
+        <values> %0 </values>
+        <condition> (le,%1) </condition>
+      </count>
+      <args> 0 1 </args>
+      <args> 1 4 </args>
+      <args> 2 2 </args>
+      <args> 3 1 </args>
+      <args> 4 3 </args>
+    </group>
+    <group note="the warehouse supplier of the ith store must be open">
+      <element>
+        <list> o[] </list>
+        <index> %0 </index>
+        <value> 1 </value>
+      </element>
+      <args> w[0] </args>
+      <args> w[1] </args>
+      <args> w[2] </args>
+      <args> w[3] </args>
+      <args> w[4] </args>
+      <args> w[5] </args>
+      <args> w[6] </args>
+      <args> w[7] </args>
+      <args> w[8] </args>
+      <args> w[9] </args>
+    </group>
+    <block note="computing the cost of supplying the ith store">
+      <element>
+        <list> 100 24 11 25 30 </list>
+        <index> w[0] </index>
+        <value> c[0] </value>
+      </element>
+      <element>
+        <list> 28 27 82 83 74 </list>
+        <index> w[1] </index>
+        <value> c[1] </value>
+      </element>
+      <element>
+        <list> 74 97 71 96 70 </list>
+        <index> w[2] </index>
+        <value> c[2] </value>
+      </element>
+      <element>
+        <list> 2 55 73 69 61 </list>
+        <index> w[3] </index>
+        <value> c[3] </value>
+      </element>
+      <element>
+        <list> 46 96 59 83 4 </list>
+        <index> w[4] </index>
+        <value> c[4] </value>
+      </element>
+      <element>
+        <list> 42 22 29 67 59 </list>
+        <index> w[5] </index>
+        <value> c[5] </value>
+      </element>
+      <element>
+        <list> 1 5 73 59 56 </list>
+        <index> w[6] </index>
+        <value> c[6] </value>
+      </element>
+      <element>
+        <list> 10 73 13 43 96 </list>
+        <index> w[7] </index>
+        <value> c[7] </value>
+      </element>
+      <element>
+        <list> 93 35 63 85 46 </list>
+        <index> w[8] </index>
+        <value> c[8] </value>
+      </element>
+      <element>
+        <list> 47 65 55 71 95 </list>
+        <index> w[9] </index>
+        <value> c[9] </value>
+      </element>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the overall cost" type="sum">
+      <list> c[] o[] </list>
+      <coeffs> 1x10 30x5 </coeffs>
+    </minimize>
+  </objectives>
+</instance>

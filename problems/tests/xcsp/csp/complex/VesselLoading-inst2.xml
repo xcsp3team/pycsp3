@@ -1,0 +1,99 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i] is the x-coordinate of the ith container" size="[10]"> 0..15 </array>
+    <array id="y" note="y[i] is the y-coordinate of the ith container" size="[10]"> 0..15 </array>
+    <array id="w" note="w[i] is the width of the ith container" size="[10]">
+      <domain for="w[0]"> 6 8 </domain>
+      <domain for="w[1] w[5] w[8..9]"> 4 6 </domain>
+      <domain for="w[2..4]"> 4 </domain>
+      <domain for="w[6] w[7]"> 4 8 </domain>
+    </array>
+    <array id="h" note="h[i] is the height of the ith container" size="[10]">
+      <domain for="h[0]"> 6 8 </domain>
+      <domain for="h[1] h[5] h[8..9]"> 4 6 </domain>
+      <domain for="h[2..4]"> 4 </domain>
+      <domain for="h[6] h[7]"> 4 8 </domain>
+    </array>
+    <array id="r" note="r[i] is 1 iff the ith container is rotated by 90 degrees" size="[10]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <group note="horizontal control">
+      <intension> le(add(%0,%1),16) </intension>
+      <args> x[0] w[0] </args>
+      <args> x[1] w[1] </args>
+      <args> x[2] w[2] </args>
+      <args> x[3] w[3] </args>
+      <args> x[4] w[4] </args>
+      <args> x[5] w[5] </args>
+      <args> x[6] w[6] </args>
+      <args> x[7] w[7] </args>
+      <args> x[8] w[8] </args>
+      <args> x[9] w[9] </args>
+    </group>
+    <group note="vertical control">
+      <intension> le(add(%0,%1),16) </intension>
+      <args> y[0] h[0] </args>
+      <args> y[1] h[1] </args>
+      <args> y[2] h[2] </args>
+      <args> y[3] h[3] </args>
+      <args> y[4] h[4] </args>
+      <args> y[5] h[5] </args>
+      <args> y[6] h[6] </args>
+      <args> y[7] h[7] </args>
+      <args> y[8] h[8] </args>
+      <args> y[9] h[9] </args>
+    </group>
+    <block note="managing rotation">
+      <extension>
+        <list> r[0] w[0] h[0] </list>
+        <supports> (0,6,8)(1,8,6) </supports>
+      </extension>
+      <group>
+        <extension>
+          <list> %0 %1 %2 </list>
+          <supports> (0,4,6)(1,6,4) </supports>
+        </extension>
+        <args> r[1] w[1] h[1] </args>
+        <args> r[5] w[5] h[5] </args>
+        <args> r[8] w[8] h[8] </args>
+        <args> r[9] w[9] h[9] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 %1 %2 </list>
+          <supports> (0,4,4)(1,4,4) </supports>
+        </extension>
+        <args> r[2] w[2] h[2] </args>
+        <args> r[3] w[3] h[3] </args>
+        <args> r[4] w[4] h[4] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 %1 %2 </list>
+          <supports> (0,4,8)(1,8,4) </supports>
+        </extension>
+        <args> r[6] w[6] h[6] </args>
+        <args> r[7] w[7] h[7] </args>
+      </group>
+    </block>
+    <noOverlap note="no overlapping between containers">
+      <origins> (x[0],y[0])(x[1],y[1])(x[2],y[2])(x[3],y[3])(x[4],y[4])(x[5],y[5])(x[6],y[6])(x[7],y[7])(x[8],y[8])(x[9],y[9]) </origins>
+      <lengths> (w[0],h[0])(w[1],h[1])(w[2],h[2])(w[3],h[3])(w[4],h[4])(w[5],h[5])(w[6],h[6])(w[7],h[7])(w[8],h[8])(w[9],h[9]) </lengths>
+    </noOverlap>
+    <group note="respecting separations between containers according to their types">
+      <intension> or(le(add(%0,%1,2),%2),le(add(%2,%3,2),%0),le(add(%4,%5,2),%6),le(add(%6,%7,2),%4)) </intension>
+      <args> x[3] w[3] x[6] w[6] y[3] h[3] y[6] h[6] </args>
+      <args> x[3] w[3] x[7] w[7] y[3] h[3] y[7] h[7] </args>
+      <args> x[3] w[3] x[8] w[8] y[3] h[3] y[8] h[8] </args>
+      <args> x[3] w[3] x[9] w[9] y[3] h[3] y[9] h[9] </args>
+      <args> x[4] w[4] x[6] w[6] y[4] h[4] y[6] h[6] </args>
+      <args> x[4] w[4] x[7] w[7] y[4] h[4] y[7] h[7] </args>
+      <args> x[4] w[4] x[8] w[8] y[4] h[4] y[8] h[8] </args>
+      <args> x[4] w[4] x[9] w[9] y[4] h[4] y[9] h[9] </args>
+      <args> x[5] w[5] x[6] w[6] y[5] h[5] y[6] h[6] </args>
+      <args> x[5] w[5] x[7] w[7] y[5] h[5] y[7] h[7] </args>
+      <args> x[5] w[5] x[8] w[8] y[5] h[5] y[8] h[8] </args>
+      <args> x[5] w[5] x[9] w[9] y[5] h[5] y[9] h[9] </args>
+    </group>
+  </constraints>
+</instance>

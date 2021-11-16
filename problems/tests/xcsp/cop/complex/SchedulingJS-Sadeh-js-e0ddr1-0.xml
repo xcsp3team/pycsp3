@@ -1,0 +1,49 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[i][j] is the start time of the jth operation for the ith job" size="[10][5]"> 0..148 </array>
+  </variables>
+  <constraints>
+    <group note="operations must be ordered on each job">
+      <ordered>
+        <list> %0 %1 %2 %3 %4 </list>
+        <lengths> %... </lengths>
+        <operator> le </operator>
+      </ordered>
+      <args> s[0][] 3 4 14 7 </args>
+      <args> s[1][] 4 4 15 6 </args>
+      <args> s[2][] 3 8 10 11 </args>
+      <args> s[3][] 11 4 12 8 </args>
+      <args> s[4][] 6 6 14 5 </args>
+      <args> s[5][] 7 9 10 5 </args>
+      <args> s[6][] 6 9 15 4 </args>
+      <args> s[7][] 6 10 15 4 </args>
+      <args> s[8][] 9 9 8 10 </args>
+      <args> s[9][] 4 10 16 7 </args>
+    </group>
+    <block note="no overlap on resources">
+      <noOverlap>
+        <origins> s[0][1] s[1][0] s[2][0] s[3][3] s[4][1] s[5][3] s[6][1] s[7][1] s[8][0] s[9][4] </origins>
+        <lengths> 4 4 3 8 6 5 9 10 9 11 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[0][4] s[1][4] s[2][4] s[3][1] s[4][3] s[5][0] s[6][4] s[7][4] s[8][3] s[9][3] </origins>
+        <lengths> 3 10 9 4 5 7 8 3 10 7 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[0][2] s[1][2] s[2][2] s[3][2] s[4][2] s[5][2] s[6][2] s[7][2] s[8][2] s[9][2] </origins>
+        <lengths> 14 15 10 12 14 10 15 15 8 16 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[0][3] s[1][3] s[2][3] s[3][4] s[4][4] s[5][1] s[6][0] s[7][3] s[8][1] s[9][0] </origins>
+        <lengths> 7 6 11 3 7 9 6 4 9 4 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[0][0] s[1][1] s[2][1] s[3][0] s[4][0] s[5][4] s[6][3] s[7][0] s[8][4] s[9][1] </origins>
+        <lengths> 3 4 8 11 6 5 4 6 6 10 </lengths>
+      </noOverlap>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the makespan" type="maximum"> add(s[0][4],3) add(s[1][4],10) add(s[2][4],9) add(s[3][4],3) add(s[4][4],7) add(s[5][4],5) add(s[6][4],8) add(s[7][4],3) add(s[8][4],6) add(s[9][4],11) </minimize>
+  </objectives>
+</instance>

@@ -1,0 +1,161 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="o" note="o[i] is the piece played in slot (order) i" size="[9]"> 0..8 </array>
+    <array id="a" note="a[p] is the (beginning of the) slot  when the player p arrives" size="[5]"> 0..8 </array>
+    <array id="l" note="l[p] is the (end of the) slot when the player p leaves" size="[5]"> 0..8 </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[54]">
+      <domain for="aux_gb[0..44]"> 0 1 </domain>
+      <domain for="aux_gb[45..53]"> 1..7 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <allDifferent note="all pieces of music must be played in some order"> o[] </allDifferent>
+    <group note="a player must be present when a piece of music requires him/her">
+      <intension> or(eq(%0,0),and(le(%1,%2),ge(%3,%2))) </intension>
+      <args> aux_gb[0] a[0] 0 l[0] </args>
+      <args> aux_gb[1] a[0] 1 l[0] </args>
+      <args> aux_gb[2] a[0] 2 l[0] </args>
+      <args> aux_gb[3] a[0] 3 l[0] </args>
+      <args> aux_gb[4] a[0] 4 l[0] </args>
+      <args> aux_gb[5] a[0] 5 l[0] </args>
+      <args> aux_gb[6] a[0] 6 l[0] </args>
+      <args> aux_gb[7] a[0] 7 l[0] </args>
+      <args> aux_gb[8] a[0] 8 l[0] </args>
+      <args> aux_gb[9] a[1] 0 l[1] </args>
+      <args> aux_gb[10] a[1] 1 l[1] </args>
+      <args> aux_gb[11] a[1] 2 l[1] </args>
+      <args> aux_gb[12] a[1] 3 l[1] </args>
+      <args> aux_gb[13] a[1] 4 l[1] </args>
+      <args> aux_gb[14] a[1] 5 l[1] </args>
+      <args> aux_gb[15] a[1] 6 l[1] </args>
+      <args> aux_gb[16] a[1] 7 l[1] </args>
+      <args> aux_gb[17] a[1] 8 l[1] </args>
+      <args> aux_gb[18] a[2] 0 l[2] </args>
+      <args> aux_gb[19] a[2] 1 l[2] </args>
+      <args> aux_gb[20] a[2] 2 l[2] </args>
+      <args> aux_gb[21] a[2] 3 l[2] </args>
+      <args> aux_gb[22] a[2] 4 l[2] </args>
+      <args> aux_gb[23] a[2] 5 l[2] </args>
+      <args> aux_gb[24] a[2] 6 l[2] </args>
+      <args> aux_gb[25] a[2] 7 l[2] </args>
+      <args> aux_gb[26] a[2] 8 l[2] </args>
+      <args> aux_gb[27] a[3] 0 l[3] </args>
+      <args> aux_gb[28] a[3] 1 l[3] </args>
+      <args> aux_gb[29] a[3] 2 l[3] </args>
+      <args> aux_gb[30] a[3] 3 l[3] </args>
+      <args> aux_gb[31] a[3] 4 l[3] </args>
+      <args> aux_gb[32] a[3] 5 l[3] </args>
+      <args> aux_gb[33] a[3] 6 l[3] </args>
+      <args> aux_gb[34] a[3] 7 l[3] </args>
+      <args> aux_gb[35] a[3] 8 l[3] </args>
+      <args> aux_gb[36] a[4] 0 l[4] </args>
+      <args> aux_gb[37] a[4] 1 l[4] </args>
+      <args> aux_gb[38] a[4] 2 l[4] </args>
+      <args> aux_gb[39] a[4] 3 l[4] </args>
+      <args> aux_gb[40] a[4] 4 l[4] </args>
+      <args> aux_gb[41] a[4] 5 l[4] </args>
+      <args> aux_gb[42] a[4] 6 l[4] </args>
+      <args> aux_gb[43] a[4] 7 l[4] </args>
+      <args> aux_gb[44] a[4] 8 l[4] </args>
+    </group>
+    <group>
+      <element>
+        <list> 1 1 0 1 0 1 1 0 1 </list>
+        <index> %0 </index>
+        <value> %1 </value>
+      </element>
+      <args> o[0] aux_gb[0] </args>
+      <args> o[1] aux_gb[1] </args>
+      <args> o[2] aux_gb[2] </args>
+      <args> o[3] aux_gb[3] </args>
+      <args> o[4] aux_gb[4] </args>
+      <args> o[5] aux_gb[5] </args>
+      <args> o[6] aux_gb[6] </args>
+      <args> o[7] aux_gb[7] </args>
+      <args> o[8] aux_gb[8] </args>
+    </group>
+    <group>
+      <element>
+        <list> 1 1 0 1 1 1 0 1 0 </list>
+        <index> %0 </index>
+        <value> %1 </value>
+      </element>
+      <args> o[0] aux_gb[9] </args>
+      <args> o[1] aux_gb[10] </args>
+      <args> o[2] aux_gb[11] </args>
+      <args> o[3] aux_gb[12] </args>
+      <args> o[4] aux_gb[13] </args>
+      <args> o[5] aux_gb[14] </args>
+      <args> o[6] aux_gb[15] </args>
+      <args> o[7] aux_gb[16] </args>
+      <args> o[8] aux_gb[17] </args>
+    </group>
+    <group>
+      <element>
+        <list> 1 1 0 0 0 0 1 1 0 </list>
+        <index> %0 </index>
+        <value> %1 </value>
+      </element>
+      <args> o[0] aux_gb[18] </args>
+      <args> o[1] aux_gb[19] </args>
+      <args> o[2] aux_gb[20] </args>
+      <args> o[3] aux_gb[21] </args>
+      <args> o[4] aux_gb[22] </args>
+      <args> o[5] aux_gb[23] </args>
+      <args> o[6] aux_gb[24] </args>
+      <args> o[7] aux_gb[25] </args>
+      <args> o[8] aux_gb[26] </args>
+    </group>
+    <group>
+      <element>
+        <list> 1 0 0 0 1 1 0 0 1 </list>
+        <index> %0 </index>
+        <value> %1 </value>
+      </element>
+      <args> o[0] aux_gb[27] </args>
+      <args> o[1] aux_gb[28] </args>
+      <args> o[2] aux_gb[29] </args>
+      <args> o[3] aux_gb[30] </args>
+      <args> o[4] aux_gb[31] </args>
+      <args> o[5] aux_gb[32] </args>
+      <args> o[6] aux_gb[33] </args>
+      <args> o[7] aux_gb[34] </args>
+      <args> o[8] aux_gb[35] </args>
+    </group>
+    <group>
+      <element>
+        <list> 0 0 1 0 1 1 1 1 0 </list>
+        <index> %0 </index>
+        <value> %1 </value>
+      </element>
+      <args> o[0] aux_gb[36] </args>
+      <args> o[1] aux_gb[37] </args>
+      <args> o[2] aux_gb[38] </args>
+      <args> o[3] aux_gb[39] </args>
+      <args> o[4] aux_gb[40] </args>
+      <args> o[5] aux_gb[41] </args>
+      <args> o[6] aux_gb[42] </args>
+      <args> o[7] aux_gb[43] </args>
+      <args> o[8] aux_gb[44] </args>
+    </group>
+    <group>
+      <element>
+        <list> 2 4 1 3 3 2 5 7 6 </list>
+        <index> %0 </index>
+        <value> %1 </value>
+      </element>
+      <args> o[0] aux_gb[45] </args>
+      <args> o[1] aux_gb[46] </args>
+      <args> o[2] aux_gb[47] </args>
+      <args> o[3] aux_gb[48] </args>
+      <args> o[4] aux_gb[49] </args>
+      <args> o[5] aux_gb[50] </args>
+      <args> o[6] aux_gb[51] </args>
+      <args> o[7] aux_gb[52] </args>
+      <args> o[8] aux_gb[53] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the waiting time of players (i.e. without playing)" type="sum"> mul(aux_gb[45],and(eq(aux_gb[0],0),le(a[0],0),ge(l[0],0))) mul(aux_gb[46],and(eq(aux_gb[1],0),le(a[0],1),ge(l[0],1))) mul(aux_gb[47],and(eq(aux_gb[2],0),le(a[0],2),ge(l[0],2))) mul(aux_gb[48],and(eq(aux_gb[3],0),le(a[0],3),ge(l[0],3))) mul(aux_gb[49],and(eq(aux_gb[4],0),le(a[0],4),ge(l[0],4))) mul(aux_gb[50],and(eq(aux_gb[5],0),le(a[0],5),ge(l[0],5))) mul(aux_gb[51],and(eq(aux_gb[6],0),le(a[0],6),ge(l[0],6))) mul(aux_gb[52],and(eq(aux_gb[7],0),le(a[0],7),ge(l[0],7))) mul(aux_gb[53],and(eq(aux_gb[8],0),le(a[0],8),ge(l[0],8))) mul(aux_gb[45],and(eq(aux_gb[9],0),le(a[1],0),ge(l[1],0))) mul(aux_gb[46],and(eq(aux_gb[10],0),le(a[1],1),ge(l[1],1))) mul(aux_gb[47],and(eq(aux_gb[11],0),le(a[1],2),ge(l[1],2))) mul(aux_gb[48],and(eq(aux_gb[12],0),le(a[1],3),ge(l[1],3))) mul(aux_gb[49],and(eq(aux_gb[13],0),le(a[1],4),ge(l[1],4))) mul(aux_gb[50],and(eq(aux_gb[14],0),le(a[1],5),ge(l[1],5))) mul(aux_gb[51],and(eq(aux_gb[15],0),le(a[1],6),ge(l[1],6))) mul(aux_gb[52],and(eq(aux_gb[16],0),le(a[1],7),ge(l[1],7))) mul(aux_gb[53],and(eq(aux_gb[17],0),le(a[1],8),ge(l[1],8))) mul(aux_gb[45],and(eq(aux_gb[18],0),le(a[2],0),ge(l[2],0))) mul(aux_gb[46],and(eq(aux_gb[19],0),le(a[2],1),ge(l[2],1))) mul(aux_gb[47],and(eq(aux_gb[20],0),le(a[2],2),ge(l[2],2))) mul(aux_gb[48],and(eq(aux_gb[21],0),le(a[2],3),ge(l[2],3))) mul(aux_gb[49],and(eq(aux_gb[22],0),le(a[2],4),ge(l[2],4))) mul(aux_gb[50],and(eq(aux_gb[23],0),le(a[2],5),ge(l[2],5))) mul(aux_gb[51],and(eq(aux_gb[24],0),le(a[2],6),ge(l[2],6))) mul(aux_gb[52],and(eq(aux_gb[25],0),le(a[2],7),ge(l[2],7))) mul(aux_gb[53],and(eq(aux_gb[26],0),le(a[2],8),ge(l[2],8))) mul(aux_gb[45],and(eq(aux_gb[27],0),le(a[3],0),ge(l[3],0))) mul(aux_gb[46],and(eq(aux_gb[28],0),le(a[3],1),ge(l[3],1))) mul(aux_gb[47],and(eq(aux_gb[29],0),le(a[3],2),ge(l[3],2))) mul(aux_gb[48],and(eq(aux_gb[30],0),le(a[3],3),ge(l[3],3))) mul(aux_gb[49],and(eq(aux_gb[31],0),le(a[3],4),ge(l[3],4))) mul(aux_gb[50],and(eq(aux_gb[32],0),le(a[3],5),ge(l[3],5))) mul(aux_gb[51],and(eq(aux_gb[33],0),le(a[3],6),ge(l[3],6))) mul(aux_gb[52],and(eq(aux_gb[34],0),le(a[3],7),ge(l[3],7))) mul(aux_gb[53],and(eq(aux_gb[35],0),le(a[3],8),ge(l[3],8))) mul(aux_gb[45],and(eq(aux_gb[36],0),le(a[4],0),ge(l[4],0))) mul(aux_gb[46],and(eq(aux_gb[37],0),le(a[4],1),ge(l[4],1))) mul(aux_gb[47],and(eq(aux_gb[38],0),le(a[4],2),ge(l[4],2))) mul(aux_gb[48],and(eq(aux_gb[39],0),le(a[4],3),ge(l[4],3))) mul(aux_gb[49],and(eq(aux_gb[40],0),le(a[4],4),ge(l[4],4))) mul(aux_gb[50],and(eq(aux_gb[41],0),le(a[4],5),ge(l[4],5))) mul(aux_gb[51],and(eq(aux_gb[42],0),le(a[4],6),ge(l[4],6))) mul(aux_gb[52],and(eq(aux_gb[43],0),le(a[4],7),ge(l[4],7))) mul(aux_gb[53],and(eq(aux_gb[44],0),le(a[4],8),ge(l[4],8))) </minimize>
+  </objectives>
+</instance>

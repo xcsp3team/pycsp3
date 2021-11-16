@@ -1,5 +1,5 @@
 """
-Example: python3 pycsp3/problems/cop/real/Warehouse.py  -dataparser=pycsp3/problems/data/parsers/Warehouse_Random.py 20 50 100 10 1000 0
+Example: python3 pycsp3/problems/cop/complex/Warehouse.py  -dataparser=pycsp3/problems/data/parsers/Warehouse_Random.py 20 50 100 10 1000 0
 """
 
 import random

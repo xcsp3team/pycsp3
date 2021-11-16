@@ -1,0 +1,396 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="c" note="c[i] is the color of the ith bin" size="[19]"> 0..3 </array>
+    <array id="p" note="p[i][j] is the number of components of the jth material put in the ith bin" size="[19][5]">
+      <domain for="p[][0]"> 0..2 </domain>
+      <domain for="p[0][1] p[0][3..4] p[1][1] p[1][3..4] p[2][1] p[2][3..4] p[3][1] p[3][3..4] p[4][1] p[4][3..4] p[5][1] p[5][3..4] p[6][1] p[6][3..4] p[7][1] p[7][3..4] p[8][1] p[8][3..4] p[9][1] p[9][3..4] p[10][1] p[10][3..4] p[11][1] p[11][3..4] p[12][1] p[12][3..4] p[13][1] p[13][3..4] p[14][1] p[14][3..4] p[15][1] p[15][3..4] p[16][1] p[16][3..4] p[17][1] p[17][3..4] p[18][1] p[18][3..4]"> 0..4 </domain>
+      <domain for="p[][2]"> 0..3 </domain>
+    </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[38]">
+      <domain for="aux_gb[0..18]"> 0..17 </domain>
+      <domain for="aux_gb[19..37]"> 0..4 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <group note="every bin with a real colour must contain something, and vice versa">
+      <intension> iff(eq(%0,0),eq(%1,0)) </intension>
+      <args> c[0] aux_gb[0] </args>
+      <args> c[1] aux_gb[1] </args>
+      <args> c[2] aux_gb[2] </args>
+      <args> c[3] aux_gb[3] </args>
+      <args> c[4] aux_gb[4] </args>
+      <args> c[5] aux_gb[5] </args>
+      <args> c[6] aux_gb[6] </args>
+      <args> c[7] aux_gb[7] </args>
+      <args> c[8] aux_gb[8] </args>
+      <args> c[9] aux_gb[9] </args>
+      <args> c[10] aux_gb[10] </args>
+      <args> c[11] aux_gb[11] </args>
+      <args> c[12] aux_gb[12] </args>
+      <args> c[13] aux_gb[13] </args>
+      <args> c[14] aux_gb[14] </args>
+      <args> c[15] aux_gb[15] </args>
+      <args> c[16] aux_gb[16] </args>
+      <args> c[17] aux_gb[17] </args>
+      <args> c[18] aux_gb[18] </args>
+    </group>
+    <group note="all components of each material are spread across all bins">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> 2 p[][0] </args>
+      <args> 4 p[][1] </args>
+      <args> 3 p[][2] </args>
+      <args> 6 p[][3] </args>
+      <args> 4 p[][4] </args>
+    </group>
+    <group note="the capacity of each bin is not exceeded">
+      <sum>
+        <list> %... </list>
+        <condition> (le,%0) </condition>
+      </sum>
+      <args> aux_gb[19] p[0][] </args>
+      <args> aux_gb[20] p[1][] </args>
+      <args> aux_gb[21] p[2][] </args>
+      <args> aux_gb[22] p[3][] </args>
+      <args> aux_gb[23] p[4][] </args>
+      <args> aux_gb[24] p[5][] </args>
+      <args> aux_gb[25] p[6][] </args>
+      <args> aux_gb[26] p[7][] </args>
+      <args> aux_gb[27] p[8][] </args>
+      <args> aux_gb[28] p[9][] </args>
+      <args> aux_gb[29] p[10][] </args>
+      <args> aux_gb[30] p[11][] </args>
+      <args> aux_gb[31] p[12][] </args>
+      <args> aux_gb[32] p[13][] </args>
+      <args> aux_gb[33] p[14][] </args>
+      <args> aux_gb[34] p[15][] </args>
+      <args> aux_gb[35] p[16][] </args>
+      <args> aux_gb[36] p[17][] </args>
+      <args> aux_gb[37] p[18][] </args>
+    </group>
+    <group note="red bins cannot contain plastic or steel">
+      <intension> or(ne(%0,1),and(eq(%1,0),eq(%2,0))) </intension>
+      <args> c[0] p[0][1] p[0][2] </args>
+      <args> c[1] p[1][1] p[1][2] </args>
+      <args> c[2] p[2][1] p[2][2] </args>
+      <args> c[3] p[3][1] p[3][2] </args>
+      <args> c[4] p[4][1] p[4][2] </args>
+      <args> c[5] p[5][1] p[5][2] </args>
+      <args> c[6] p[6][1] p[6][2] </args>
+      <args> c[7] p[7][1] p[7][2] </args>
+      <args> c[8] p[8][1] p[8][2] </args>
+      <args> c[9] p[9][1] p[9][2] </args>
+      <args> c[10] p[10][1] p[10][2] </args>
+      <args> c[11] p[11][1] p[11][2] </args>
+      <args> c[12] p[12][1] p[12][2] </args>
+      <args> c[13] p[13][1] p[13][2] </args>
+      <args> c[14] p[14][1] p[14][2] </args>
+      <args> c[15] p[15][1] p[15][2] </args>
+      <args> c[16] p[16][1] p[16][2] </args>
+      <args> c[17] p[17][1] p[17][2] </args>
+      <args> c[18] p[18][1] p[18][2] </args>
+    </group>
+    <group note="blue bins cannot contain wood or plastic">
+      <intension> or(ne(%0,2),and(eq(%1,0),eq(%2,0))) </intension>
+      <args> c[0] p[0][3] p[0][1] </args>
+      <args> c[1] p[1][3] p[1][1] </args>
+      <args> c[2] p[2][3] p[2][1] </args>
+      <args> c[3] p[3][3] p[3][1] </args>
+      <args> c[4] p[4][3] p[4][1] </args>
+      <args> c[5] p[5][3] p[5][1] </args>
+      <args> c[6] p[6][3] p[6][1] </args>
+      <args> c[7] p[7][3] p[7][1] </args>
+      <args> c[8] p[8][3] p[8][1] </args>
+      <args> c[9] p[9][3] p[9][1] </args>
+      <args> c[10] p[10][3] p[10][1] </args>
+      <args> c[11] p[11][3] p[11][1] </args>
+      <args> c[12] p[12][3] p[12][1] </args>
+      <args> c[13] p[13][3] p[13][1] </args>
+      <args> c[14] p[14][3] p[14][1] </args>
+      <args> c[15] p[15][3] p[15][1] </args>
+      <args> c[16] p[16][3] p[16][1] </args>
+      <args> c[17] p[17][3] p[17][1] </args>
+      <args> c[18] p[18][3] p[18][1] </args>
+    </group>
+    <group note="green bins cannot contain steel or glass">
+      <intension> or(ne(%0,3),and(eq(%1,0),eq(%2,0))) </intension>
+      <args> c[0] p[0][2] p[0][0] </args>
+      <args> c[1] p[1][2] p[1][0] </args>
+      <args> c[2] p[2][2] p[2][0] </args>
+      <args> c[3] p[3][2] p[3][0] </args>
+      <args> c[4] p[4][2] p[4][0] </args>
+      <args> c[5] p[5][2] p[5][0] </args>
+      <args> c[6] p[6][2] p[6][0] </args>
+      <args> c[7] p[7][2] p[7][0] </args>
+      <args> c[8] p[8][2] p[8][0] </args>
+      <args> c[9] p[9][2] p[9][0] </args>
+      <args> c[10] p[10][2] p[10][0] </args>
+      <args> c[11] p[11][2] p[11][0] </args>
+      <args> c[12] p[12][2] p[12][0] </args>
+      <args> c[13] p[13][2] p[13][0] </args>
+      <args> c[14] p[14][2] p[14][0] </args>
+      <args> c[15] p[15][2] p[15][0] </args>
+      <args> c[16] p[16][2] p[16][0] </args>
+      <args> c[17] p[17][2] p[17][0] </args>
+      <args> c[18] p[18][2] p[18][0] </args>
+    </group>
+    <group note="red bins contain at most one wooden component">
+      <intension> or(ne(%0,1),le(%1,1)) </intension>
+      <args> c[0] p[0][3] </args>
+      <args> c[1] p[1][3] </args>
+      <args> c[2] p[2][3] </args>
+      <args> c[3] p[3][3] </args>
+      <args> c[4] p[4][3] </args>
+      <args> c[5] p[5][3] </args>
+      <args> c[6] p[6][3] </args>
+      <args> c[7] p[7][3] </args>
+      <args> c[8] p[8][3] </args>
+      <args> c[9] p[9][3] </args>
+      <args> c[10] p[10][3] </args>
+      <args> c[11] p[11][3] </args>
+      <args> c[12] p[12][3] </args>
+      <args> c[13] p[13][3] </args>
+      <args> c[14] p[14][3] </args>
+      <args> c[15] p[15][3] </args>
+      <args> c[16] p[16][3] </args>
+      <args> c[17] p[17][3] </args>
+      <args> c[18] p[18][3] </args>
+    </group>
+    <group note="green bins contain at most two wooden components">
+      <intension> or(ne(%0,3),le(%1,2)) </intension>
+      <args> c[0] p[0][3] </args>
+      <args> c[1] p[1][3] </args>
+      <args> c[2] p[2][3] </args>
+      <args> c[3] p[3][3] </args>
+      <args> c[4] p[4][3] </args>
+      <args> c[5] p[5][3] </args>
+      <args> c[6] p[6][3] </args>
+      <args> c[7] p[7][3] </args>
+      <args> c[8] p[8][3] </args>
+      <args> c[9] p[9][3] </args>
+      <args> c[10] p[10][3] </args>
+      <args> c[11] p[11][3] </args>
+      <args> c[12] p[12][3] </args>
+      <args> c[13] p[13][3] </args>
+      <args> c[14] p[14][3] </args>
+      <args> c[15] p[15][3] </args>
+      <args> c[16] p[16][3] </args>
+      <args> c[17] p[17][3] </args>
+      <args> c[18] p[18][3] </args>
+    </group>
+    <group note="wood requires plastic">
+      <intension> or(eq(%0,0),gt(%1,0)) </intension>
+      <args> p[0][3] p[0][1] </args>
+      <args> p[1][3] p[1][1] </args>
+      <args> p[2][3] p[2][1] </args>
+      <args> p[3][3] p[3][1] </args>
+      <args> p[4][3] p[4][1] </args>
+      <args> p[5][3] p[5][1] </args>
+      <args> p[6][3] p[6][1] </args>
+      <args> p[7][3] p[7][1] </args>
+      <args> p[8][3] p[8][1] </args>
+      <args> p[9][3] p[9][1] </args>
+      <args> p[10][3] p[10][1] </args>
+      <args> p[11][3] p[11][1] </args>
+      <args> p[12][3] p[12][1] </args>
+      <args> p[13][3] p[13][1] </args>
+      <args> p[14][3] p[14][1] </args>
+      <args> p[15][3] p[15][1] </args>
+      <args> p[16][3] p[16][1] </args>
+      <args> p[17][3] p[17][1] </args>
+      <args> p[18][3] p[18][1] </args>
+    </group>
+    <group note="glass excludes copper">
+      <intension> or(eq(%0,0),eq(%1,0)) </intension>
+      <args> p[0][0] p[0][4] </args>
+      <args> p[1][0] p[1][4] </args>
+      <args> p[2][0] p[2][4] </args>
+      <args> p[3][0] p[3][4] </args>
+      <args> p[4][0] p[4][4] </args>
+      <args> p[5][0] p[5][4] </args>
+      <args> p[6][0] p[6][4] </args>
+      <args> p[7][0] p[7][4] </args>
+      <args> p[8][0] p[8][4] </args>
+      <args> p[9][0] p[9][4] </args>
+      <args> p[10][0] p[10][4] </args>
+      <args> p[11][0] p[11][4] </args>
+      <args> p[12][0] p[12][4] </args>
+      <args> p[13][0] p[13][4] </args>
+      <args> p[14][0] p[14][4] </args>
+      <args> p[15][0] p[15][4] </args>
+      <args> p[16][0] p[16][4] </args>
+      <args> p[17][0] p[17][4] </args>
+      <args> p[18][0] p[18][4] </args>
+    </group>
+    <group note="copper excludes plastic">
+      <intension> or(eq(%0,0),eq(%1,0)) </intension>
+      <args> p[0][4] p[0][1] </args>
+      <args> p[1][4] p[1][1] </args>
+      <args> p[2][4] p[2][1] </args>
+      <args> p[3][4] p[3][1] </args>
+      <args> p[4][4] p[4][1] </args>
+      <args> p[5][4] p[5][1] </args>
+      <args> p[6][4] p[6][1] </args>
+      <args> p[7][4] p[7][1] </args>
+      <args> p[8][4] p[8][1] </args>
+      <args> p[9][4] p[9][1] </args>
+      <args> p[10][4] p[10][1] </args>
+      <args> p[11][4] p[11][1] </args>
+      <args> p[12][4] p[12][1] </args>
+      <args> p[13][4] p[13][1] </args>
+      <args> p[14][4] p[14][1] </args>
+      <args> p[15][4] p[15][1] </args>
+      <args> p[16][4] p[16][1] </args>
+      <args> p[17][4] p[17][1] </args>
+      <args> p[18][4] p[18][1] </args>
+    </group>
+    <block class="symmetry-breaking">
+      <lex>
+        <list> p[0][] </list>
+        <list> p[1][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[1][] </list>
+        <list> p[2][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[2][] </list>
+        <list> p[3][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[3][] </list>
+        <list> p[4][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[4][] </list>
+        <list> p[5][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[5][] </list>
+        <list> p[6][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[6][] </list>
+        <list> p[7][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[7][] </list>
+        <list> p[8][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[8][] </list>
+        <list> p[9][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[9][] </list>
+        <list> p[10][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[10][] </list>
+        <list> p[11][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[11][] </list>
+        <list> p[12][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[12][] </list>
+        <list> p[13][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[13][] </list>
+        <list> p[14][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[14][] </list>
+        <list> p[15][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[15][] </list>
+        <list> p[16][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[16][] </list>
+        <list> p[17][] </list>
+        <operator> le </operator>
+      </lex>
+      <lex>
+        <list> p[17][] </list>
+        <list> p[18][] </list>
+        <operator> le </operator>
+      </lex>
+    </block>
+    <group>
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> aux_gb[0] p[0][] </args>
+      <args> aux_gb[1] p[1][] </args>
+      <args> aux_gb[2] p[2][] </args>
+      <args> aux_gb[3] p[3][] </args>
+      <args> aux_gb[4] p[4][] </args>
+      <args> aux_gb[5] p[5][] </args>
+      <args> aux_gb[6] p[6][] </args>
+      <args> aux_gb[7] p[7][] </args>
+      <args> aux_gb[8] p[8][] </args>
+      <args> aux_gb[9] p[9][] </args>
+      <args> aux_gb[10] p[10][] </args>
+      <args> aux_gb[11] p[11][] </args>
+      <args> aux_gb[12] p[12][] </args>
+      <args> aux_gb[13] p[13][] </args>
+      <args> aux_gb[14] p[14][] </args>
+      <args> aux_gb[15] p[15][] </args>
+      <args> aux_gb[16] p[16][] </args>
+      <args> aux_gb[17] p[17][] </args>
+      <args> aux_gb[18] p[18][] </args>
+    </group>
+    <group>
+      <element>
+        <list> 0 3 1 4 </list>
+        <index> %0 </index>
+        <value> %1 </value>
+      </element>
+      <args> c[0] aux_gb[19] </args>
+      <args> c[1] aux_gb[20] </args>
+      <args> c[2] aux_gb[21] </args>
+      <args> c[3] aux_gb[22] </args>
+      <args> c[4] aux_gb[23] </args>
+      <args> c[5] aux_gb[24] </args>
+      <args> c[6] aux_gb[25] </args>
+      <args> c[7] aux_gb[26] </args>
+      <args> c[8] aux_gb[27] </args>
+      <args> c[9] aux_gb[28] </args>
+      <args> c[10] aux_gb[29] </args>
+      <args> c[11] aux_gb[30] </args>
+      <args> c[12] aux_gb[31] </args>
+      <args> c[13] aux_gb[32] </args>
+      <args> c[14] aux_gb[33] </args>
+      <args> c[15] aux_gb[34] </args>
+      <args> c[16] aux_gb[35] </args>
+      <args> c[17] aux_gb[36] </args>
+      <args> c[18] aux_gb[37] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the number of used bins" type="sum"> ne(c[0],0) ne(c[1],0) ne(c[2],0) ne(c[3],0) ne(c[4],0) ne(c[5],0) ne(c[6],0) ne(c[7],0) ne(c[8],0) ne(c[9],0) ne(c[10],0) ne(c[11],0) ne(c[12],0) ne(c[13],0) ne(c[14],0) ne(c[15],0) ne(c[16],0) ne(c[17],0) ne(c[18],0) </minimize>
+  </objectives>
+</instance>

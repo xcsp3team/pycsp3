@@ -1,0 +1,119 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="wf" note="wf[m] is the wife of the man m" size="[5]"> 0..4 </array>
+    <array id="hb" note="hb[w] is the husband of the woman w" size="[5]"> 0..4 </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[10]"> 1..5 </array>
+  </variables>
+  <constraints>
+    <channel note="spouses must match">
+      <list> wf[] </list>
+      <list> hb[] </list>
+    </channel>
+    <group note="whenever m prefers an other woman o to w, o prefers her husband to m">
+      <intension> or(le(%0,%1),lt(%2,%3)) </intension>
+      <args> aux_gb[0] 5 aux_gb[1] 1 </args>
+      <args> aux_gb[0] 1 aux_gb[2] 3 </args>
+      <args> aux_gb[0] 2 aux_gb[3] 5 </args>
+      <args> aux_gb[0] 4 aux_gb[4] 1 </args>
+      <args> aux_gb[0] 3 aux_gb[5] 4 </args>
+      <args> aux_gb[6] 4 aux_gb[1] 2 </args>
+      <args> aux_gb[6] 1 aux_gb[2] 5 </args>
+      <args> aux_gb[6] 3 aux_gb[3] 4 </args>
+      <args> aux_gb[6] 2 aux_gb[4] 3 </args>
+      <args> aux_gb[6] 5 aux_gb[5] 2 </args>
+      <args> aux_gb[7] 5 aux_gb[1] 4 </args>
+      <args> aux_gb[7] 3 aux_gb[2] 1 </args>
+      <args> aux_gb[7] 2 aux_gb[3] 2 </args>
+      <args> aux_gb[7] 4 aux_gb[4] 5 </args>
+      <args> aux_gb[7] 1 aux_gb[5] 3 </args>
+      <args> aux_gb[8] 1 aux_gb[1] 3 </args>
+      <args> aux_gb[8] 5 aux_gb[2] 2 </args>
+      <args> aux_gb[8] 4 aux_gb[3] 1 </args>
+      <args> aux_gb[8] 3 aux_gb[4] 4 </args>
+      <args> aux_gb[8] 2 aux_gb[5] 5 </args>
+      <args> aux_gb[9] 4 aux_gb[1] 5 </args>
+      <args> aux_gb[9] 3 aux_gb[2] 4 </args>
+      <args> aux_gb[9] 2 aux_gb[3] 3 </args>
+      <args> aux_gb[9] 1 aux_gb[4] 2 </args>
+      <args> aux_gb[9] 5 aux_gb[5] 1 </args>
+    </group>
+    <group note="whenever w prefers an other man o to m, o prefers his wife to w">
+      <intension> or(le(%0,%1),lt(%2,%3)) </intension>
+      <args> aux_gb[1] 1 aux_gb[0] 5 </args>
+      <args> aux_gb[1] 2 aux_gb[6] 4 </args>
+      <args> aux_gb[1] 4 aux_gb[7] 5 </args>
+      <args> aux_gb[1] 3 aux_gb[8] 1 </args>
+      <args> aux_gb[1] 5 aux_gb[9] 4 </args>
+      <args> aux_gb[2] 3 aux_gb[0] 1 </args>
+      <args> aux_gb[2] 5 aux_gb[6] 1 </args>
+      <args> aux_gb[2] 1 aux_gb[7] 3 </args>
+      <args> aux_gb[2] 2 aux_gb[8] 5 </args>
+      <args> aux_gb[2] 4 aux_gb[9] 3 </args>
+      <args> aux_gb[3] 5 aux_gb[0] 2 </args>
+      <args> aux_gb[3] 4 aux_gb[6] 3 </args>
+      <args> aux_gb[3] 2 aux_gb[7] 2 </args>
+      <args> aux_gb[3] 1 aux_gb[8] 4 </args>
+      <args> aux_gb[3] 3 aux_gb[9] 2 </args>
+      <args> aux_gb[4] 1 aux_gb[0] 4 </args>
+      <args> aux_gb[4] 3 aux_gb[6] 2 </args>
+      <args> aux_gb[4] 5 aux_gb[7] 4 </args>
+      <args> aux_gb[4] 4 aux_gb[8] 3 </args>
+      <args> aux_gb[4] 2 aux_gb[9] 1 </args>
+      <args> aux_gb[5] 4 aux_gb[0] 3 </args>
+      <args> aux_gb[5] 2 aux_gb[6] 5 </args>
+      <args> aux_gb[5] 3 aux_gb[7] 1 </args>
+      <args> aux_gb[5] 5 aux_gb[8] 2 </args>
+      <args> aux_gb[5] 1 aux_gb[9] 5 </args>
+    </group>
+    <element>
+      <list> 5 1 2 4 3 </list>
+      <index> wf[0] </index>
+      <value> aux_gb[0] </value>
+    </element>
+    <element>
+      <list> 1 2 4 3 5 </list>
+      <index> hb[0] </index>
+      <value> aux_gb[1] </value>
+    </element>
+    <element>
+      <list> 3 5 1 2 4 </list>
+      <index> hb[1] </index>
+      <value> aux_gb[2] </value>
+    </element>
+    <element>
+      <list> 5 4 2 1 3 </list>
+      <index> hb[2] </index>
+      <value> aux_gb[3] </value>
+    </element>
+    <element>
+      <list> 1 3 5 4 2 </list>
+      <index> hb[3] </index>
+      <value> aux_gb[4] </value>
+    </element>
+    <element>
+      <list> 4 2 3 5 1 </list>
+      <index> hb[4] </index>
+      <value> aux_gb[5] </value>
+    </element>
+    <element>
+      <list> 4 1 3 2 5 </list>
+      <index> wf[1] </index>
+      <value> aux_gb[6] </value>
+    </element>
+    <element>
+      <list> 5 3 2 4 1 </list>
+      <index> wf[2] </index>
+      <value> aux_gb[7] </value>
+    </element>
+    <element>
+      <list> 1 5 4 3 2 </list>
+      <index> wf[3] </index>
+      <value> aux_gb[8] </value>
+    </element>
+    <element>
+      <list> 4 3 2 1 5 </list>
+      <index> wf[4] </index>
+      <value> aux_gb[9] </value>
+    </element>
+  </constraints>
+</instance>

@@ -96,7 +96,7 @@ class Tester:
         return self.main_dir + "data" + os.sep
 
     def __init__(self, name=None, *, dir_pbs_py=None, dir_pbs_jv=None, dir_tmp=None, dir_prs_py=None, dir_prs_jv=None):
-        # we assume that testing files (e.g., cop_acad.py) are in a subdirectory of problems
+        # we assume that testing files (e.g., cop_academic.py) are in a subdirectory of problems
         base_dir = ".." if str(Path(sys.argv[0]).parent) == '.' else Path(sys.argv[0]).parent.parent
         self.main_dir = str(base_dir) + os.sep
 
@@ -134,23 +134,25 @@ class Tester:
         self.instances = []
 
     def xml_name(self, model, data, variant, prs_py, prs_jv, nameXML):
-        s = model + ("-" + variant if variant else "")
+        s = model + (("-" + variant) if variant else "")
         if nameXML:
             s += nameXML + ".xml"
         else:
             if data:
+                sep = "-" if not data.startswith(model) else ""  # because if same prefix between model and data, one is removed
+                data = data if sep else data[len(model):]
                 if prs_py is None and prs_jv is None:
                     if data.endswith(".json"):
-                        s += "-" + data[:-5] + ".xml"
+                        s += sep + data[:-5] + ".xml"
                     else:
                         if "," in data and "[" in data and "]" in data:
-                            s += "-" + "-".join(data[1:-1].split(",")) + ".xml"
+                            s += sep + "-".join(data[1:-1].split(",")) + ".xml"
                         elif "[" in data and "]" in data:
-                            s += "-" + data[1:-1] + ".xml"
+                            s += sep + data[1:-1] + ".xml"
                         else:
-                            s += "-" + data + ".xml"
+                            s += sep + data + ".xml"
                 else:
-                    s += "-" + data.split(".")[0] + ".xml"
+                    s += sep + data.split(".")[0] + ".xml"
             else:
                 s += ".xml"
         return s
@@ -223,6 +225,10 @@ class Tester:
 
                 self.execute_compiler("PyCSP", self._command_py(model, data, variant, prs_py if not prs_py or prs_py[-1] == 'y' else prs_py + ".py", options_py,
                                                                 python_exec[0]))
+                if not os.path.isfile(self.name_xml):
+                    print(RED + "file not found " + self.name_xml + WHITE)
+                    print("kkk ", self.xml_path_py())
+                    continue
                 shutil.move(self.name_xml, self.xml_path_py())
                 if mode == 1:  # comparison with jv
                     self.execute_compiler("JvCSP", self._command_jv(model, data, variant, prs_jv, special, dataSpecial))

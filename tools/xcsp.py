@@ -41,7 +41,7 @@ def _element(name, entity=None, *, id=None, attributes=[], text=None):
         assert isinstance(entity, Entity)
         if len(entity.tags) > 0:
             elt.set(str(TypeXML.CLASS), ' '.join(tag for tag in entity.tags))
-        if entity.comment and options.nocomments is False:
+        if entity.comment and options.sober is False:
             elt.set(str(TypeXML.NOTE), entity.comment)
     attributes = attributes if isinstance(attributes, list) else [attributes]
     for (k, v) in attributes:

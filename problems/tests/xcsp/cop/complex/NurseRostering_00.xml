@@ -1,0 +1,531 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="x" note="x[d][p] is the shift at day d for person p (value 1 denotes off)" size="[14][5]"> 0 1 </array>
+    <array id="nd" note="nd[p][s] is the number of days such that person p works with shift s" size="[5][2]"> 0..14 </array>
+    <array id="np" note="np[d][s] is the number of persons working on day d with shift s" size="[14][2]"> 0..5 </array>
+    <array id="wk" note="wk[p][w] is 1 iff the week-end w is worked by person p" size="[5][2]"> 0 1 </array>
+    <array id="cn" note="cn[p][d] is the cost of not satisfying the on-request (if it exists) of person p on day d" size="[5][14]">
+      <domain for="cn[0][2..3] cn[3][8..9]"> 0 2 </domain>
+      <domain for="cn[1][0..4]"> 0 3 </domain>
+      <domain for="cn[2][0..4]"> 0 1 </domain>
+    </array>
+    <array id="cf" note="cf[p][d] is the cost of not satisfying the off-request (if it exists) of person p on day d" size="[5][14]"> 0 1 </array>
+    <array id="cc" note="cc[d][s] is the cost of not satisfying cover for shift s on day d" size="[14][2]">
+      <domain for="cc[0][0] cc[3][0] cc[9][0] cc[13][0]"> 0 1 2 100 200 300 </domain>
+      <domain for="cc[][1]"> 0 </domain>
+      <domain for="cc[1..2][0] cc[7..8][0] cc[12][0]"> 0 100 200 300 400 500 </domain>
+      <domain for="cc[4..6][0] cc[11][0]"> 0 1 100 200 300 400 </domain>
+      <domain for="cc[10][0]"> 0 1 2 3 100 200 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <instantiation note="days off for staff">
+      <list> x[0][0] x[2][3] x[5][1] x[8][2] x[9][4] </list>
+      <values> 1x5 </values>
+    </instantiation>
+    <block note="computing number of days">
+      <group>
+        <count>
+          <list> x[][0] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 nd[0][0] </args>
+        <args> 1 nd[0][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[][1] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 nd[1][0] </args>
+        <args> 1 nd[1][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[][2] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 nd[2][0] </args>
+        <args> 1 nd[2][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[][3] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 nd[3][0] </args>
+        <args> 1 nd[3][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[][4] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 nd[4][0] </args>
+        <args> 1 nd[4][1] </args>
+      </group>
+    </block>
+    <block note="computing number of persons">
+      <group>
+        <count>
+          <list> x[0][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[0][0] </args>
+        <args> 1 np[0][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[1][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[1][0] </args>
+        <args> 1 np[1][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[2][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[2][0] </args>
+        <args> 1 np[2][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[3][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[3][0] </args>
+        <args> 1 np[3][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[4][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[4][0] </args>
+        <args> 1 np[4][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[5][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[5][0] </args>
+        <args> 1 np[5][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[6][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[6][0] </args>
+        <args> 1 np[6][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[7][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[7][0] </args>
+        <args> 1 np[7][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[8][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[8][0] </args>
+        <args> 1 np[8][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[9][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[9][0] </args>
+        <args> 1 np[9][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[10][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[10][0] </args>
+        <args> 1 np[10][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[11][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[11][0] </args>
+        <args> 1 np[11][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[12][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[12][0] </args>
+        <args> 1 np[12][1] </args>
+      </group>
+      <group>
+        <count>
+          <list> x[13][] </list>
+          <values> %0 </values>
+          <condition> (eq,%1) </condition>
+        </count>
+        <args> 0 np[13][0] </args>
+        <args> 1 np[13][1] </args>
+      </group>
+    </block>
+    <group note="computing worked week-ends">
+      <intension> imp(ne(%0,1),%1) </intension>
+      <args> x[5][0] wk[0][0] </args>
+      <args> x[12][0] wk[0][1] </args>
+      <args> x[5][1] wk[1][0] </args>
+      <args> x[12][1] wk[1][1] </args>
+      <args> x[5][2] wk[2][0] </args>
+      <args> x[12][2] wk[2][1] </args>
+      <args> x[5][3] wk[3][0] </args>
+      <args> x[12][3] wk[3][1] </args>
+      <args> x[5][4] wk[4][0] </args>
+      <args> x[12][4] wk[4][1] </args>
+      <args> x[6][0] wk[0][0] </args>
+      <args> x[13][0] wk[0][1] </args>
+      <args> x[6][1] wk[1][0] </args>
+      <args> x[13][1] wk[1][1] </args>
+      <args> x[6][2] wk[2][0] </args>
+      <args> x[13][2] wk[2][1] </args>
+      <args> x[6][3] wk[3][0] </args>
+      <args> x[13][3] wk[3][1] </args>
+      <args> x[6][4] wk[4][0] </args>
+      <args> x[13][4] wk[4][1] </args>
+    </group>
+    <group note="maximum number of worked week-ends">
+      <sum>
+        <list> %0 %1 </list>
+        <condition> (le,1) </condition>
+      </sum>
+      <args> wk[0][0] wk[0][1] </args>
+      <args> wk[1][0] wk[1][1] </args>
+      <args> wk[2][0] wk[2][1] </args>
+      <args> wk[3][0] wk[3][1] </args>
+      <args> wk[4][0] wk[4][1] </args>
+    </group>
+    <group note="minimum and maximum number of total worked minutes">
+      <sum>
+        <list> %0 %1 </list>
+        <coeffs> 480 0 </coeffs>
+        <condition> (in,3360..4320) </condition>
+      </sum>
+      <args> nd[0][0] nd[0][1] </args>
+      <args> nd[1][0] nd[1][1] </args>
+      <args> nd[2][0] nd[2][1] </args>
+      <args> nd[3][0] nd[3][1] </args>
+      <args> nd[4][0] nd[4][1] </args>
+    </group>
+    <group note="maximum consecutive worked shifts">
+      <count>
+        <list> %... </list>
+        <values> 1 </values>
+        <condition> (ge,1) </condition>
+      </count>
+      <args> x[0..5][0] </args>
+      <args> x[1..6][0] </args>
+      <args> x[2..7][0] </args>
+      <args> x[3..8][0] </args>
+      <args> x[4..9][0] </args>
+      <args> x[5..10][0] </args>
+      <args> x[6..11][0] </args>
+      <args> x[7..12][0] </args>
+      <args> x[8..13][0] </args>
+      <args> x[0..5][1] </args>
+      <args> x[1..6][1] </args>
+      <args> x[2..7][1] </args>
+      <args> x[3..8][1] </args>
+      <args> x[4..9][1] </args>
+      <args> x[5..10][1] </args>
+      <args> x[6..11][1] </args>
+      <args> x[7..12][1] </args>
+      <args> x[8..13][1] </args>
+      <args> x[0..5][2] </args>
+      <args> x[1..6][2] </args>
+      <args> x[2..7][2] </args>
+      <args> x[3..8][2] </args>
+      <args> x[4..9][2] </args>
+      <args> x[5..10][2] </args>
+      <args> x[6..11][2] </args>
+      <args> x[7..12][2] </args>
+      <args> x[8..13][2] </args>
+      <args> x[0..5][3] </args>
+      <args> x[1..6][3] </args>
+      <args> x[2..7][3] </args>
+      <args> x[3..8][3] </args>
+      <args> x[4..9][3] </args>
+      <args> x[5..10][3] </args>
+      <args> x[6..11][3] </args>
+      <args> x[7..12][3] </args>
+      <args> x[8..13][3] </args>
+      <args> x[0..5][4] </args>
+      <args> x[1..6][4] </args>
+      <args> x[2..7][4] </args>
+      <args> x[3..8][4] </args>
+      <args> x[4..9][4] </args>
+      <args> x[5..10][4] </args>
+      <args> x[6..11][4] </args>
+      <args> x[7..12][4] </args>
+      <args> x[8..13][4] </args>
+    </group>
+    <group note="minimum consecutive worked shifts">
+      <regular>
+        <list> %0 %1 %2 </list>
+        <transitions> (q0,1,q1)(q0,0,q3)(q1,1,q3)(q1,0,q2)(q2,0,q3)(q3,0,q3)(q3,1,q3) </transitions>
+        <start> q0 </start>
+        <final> q3 </final>
+      </regular>
+      <args> x[0..2][0] </args>
+      <args> x[1..3][0] </args>
+      <args> x[2..4][0] </args>
+      <args> x[3..5][0] </args>
+      <args> x[4..6][0] </args>
+      <args> x[5..7][0] </args>
+      <args> x[6..8][0] </args>
+      <args> x[7..9][0] </args>
+      <args> x[8..10][0] </args>
+      <args> x[9..11][0] </args>
+      <args> x[10..12][0] </args>
+      <args> x[11..13][0] </args>
+      <args> x[0..2][1] </args>
+      <args> x[1..3][1] </args>
+      <args> x[2..4][1] </args>
+      <args> x[3..5][1] </args>
+      <args> x[4..6][1] </args>
+      <args> x[5..7][1] </args>
+      <args> x[6..8][1] </args>
+      <args> x[7..9][1] </args>
+      <args> x[8..10][1] </args>
+      <args> x[9..11][1] </args>
+      <args> x[10..12][1] </args>
+      <args> x[11..13][1] </args>
+      <args> x[0..2][2] </args>
+      <args> x[1..3][2] </args>
+      <args> x[2..4][2] </args>
+      <args> x[3..5][2] </args>
+      <args> x[4..6][2] </args>
+      <args> x[5..7][2] </args>
+      <args> x[6..8][2] </args>
+      <args> x[7..9][2] </args>
+      <args> x[8..10][2] </args>
+      <args> x[9..11][2] </args>
+      <args> x[10..12][2] </args>
+      <args> x[11..13][2] </args>
+      <args> x[0..2][3] </args>
+      <args> x[1..3][3] </args>
+      <args> x[2..4][3] </args>
+      <args> x[3..5][3] </args>
+      <args> x[4..6][3] </args>
+      <args> x[5..7][3] </args>
+      <args> x[6..8][3] </args>
+      <args> x[7..9][3] </args>
+      <args> x[8..10][3] </args>
+      <args> x[9..11][3] </args>
+      <args> x[10..12][3] </args>
+      <args> x[11..13][3] </args>
+      <args> x[0..2][4] </args>
+      <args> x[1..3][4] </args>
+      <args> x[2..4][4] </args>
+      <args> x[3..5][4] </args>
+      <args> x[4..6][4] </args>
+      <args> x[5..7][4] </args>
+      <args> x[6..8][4] </args>
+      <args> x[7..9][4] </args>
+      <args> x[8..10][4] </args>
+      <args> x[9..11][4] </args>
+      <args> x[10..12][4] </args>
+      <args> x[11..13][4] </args>
+    </group>
+    <group note="managing off days on schedule ends">
+      <intension> imp(ne(%0,1),ne(%1,1)) </intension>
+      <args> x[0][0] x[1][0] </args>
+      <args> x[0][1] x[1][1] </args>
+      <args> x[0][2] x[1][2] </args>
+      <args> x[0][3] x[1][3] </args>
+      <args> x[0][4] x[1][4] </args>
+      <args> x[13][0] x[12][0] </args>
+      <args> x[13][1] x[12][1] </args>
+      <args> x[13][2] x[12][2] </args>
+      <args> x[13][3] x[12][3] </args>
+      <args> x[13][4] x[12][4] </args>
+    </group>
+    <group note="minimum consecutive days off">
+      <regular>
+        <list> %0 %1 %2 </list>
+        <transitions> (q0,0,q1)(q0,1,q3)(q1,0,q3)(q1,1,q2)(q2,1,q3)(q3,0,q3)(q3,1,q3) </transitions>
+        <start> q0 </start>
+        <final> q3 </final>
+      </regular>
+      <args> x[0..2][0] </args>
+      <args> x[1..3][0] </args>
+      <args> x[2..4][0] </args>
+      <args> x[3..5][0] </args>
+      <args> x[4..6][0] </args>
+      <args> x[5..7][0] </args>
+      <args> x[6..8][0] </args>
+      <args> x[7..9][0] </args>
+      <args> x[8..10][0] </args>
+      <args> x[9..11][0] </args>
+      <args> x[10..12][0] </args>
+      <args> x[11..13][0] </args>
+      <args> x[0..2][1] </args>
+      <args> x[1..3][1] </args>
+      <args> x[2..4][1] </args>
+      <args> x[3..5][1] </args>
+      <args> x[4..6][1] </args>
+      <args> x[5..7][1] </args>
+      <args> x[6..8][1] </args>
+      <args> x[7..9][1] </args>
+      <args> x[8..10][1] </args>
+      <args> x[9..11][1] </args>
+      <args> x[10..12][1] </args>
+      <args> x[11..13][1] </args>
+      <args> x[0..2][2] </args>
+      <args> x[1..3][2] </args>
+      <args> x[2..4][2] </args>
+      <args> x[3..5][2] </args>
+      <args> x[4..6][2] </args>
+      <args> x[5..7][2] </args>
+      <args> x[6..8][2] </args>
+      <args> x[7..9][2] </args>
+      <args> x[8..10][2] </args>
+      <args> x[9..11][2] </args>
+      <args> x[10..12][2] </args>
+      <args> x[11..13][2] </args>
+      <args> x[0..2][3] </args>
+      <args> x[1..3][3] </args>
+      <args> x[2..4][3] </args>
+      <args> x[3..5][3] </args>
+      <args> x[4..6][3] </args>
+      <args> x[5..7][3] </args>
+      <args> x[6..8][3] </args>
+      <args> x[7..9][3] </args>
+      <args> x[8..10][3] </args>
+      <args> x[9..11][3] </args>
+      <args> x[10..12][3] </args>
+      <args> x[11..13][3] </args>
+      <args> x[0..2][4] </args>
+      <args> x[1..3][4] </args>
+      <args> x[2..4][4] </args>
+      <args> x[3..5][4] </args>
+      <args> x[4..6][4] </args>
+      <args> x[5..7][4] </args>
+      <args> x[6..8][4] </args>
+      <args> x[7..9][4] </args>
+      <args> x[8..10][4] </args>
+      <args> x[9..11][4] </args>
+      <args> x[10..12][4] </args>
+      <args> x[11..13][4] </args>
+    </group>
+    <group note="cost of not satisfying on requests">
+      <intension> iff(eq(%0,0),eq(%1,0)) </intension>
+      <args> x[2][0] cn[0][2] </args>
+      <args> x[3][0] cn[0][3] </args>
+      <args> x[0][1] cn[1][0] </args>
+      <args> x[1][1] cn[1][1] </args>
+      <args> x[2][1] cn[1][2] </args>
+      <args> x[3][1] cn[1][3] </args>
+      <args> x[4][1] cn[1][4] </args>
+      <args> x[0][2] cn[2][0] </args>
+      <args> x[1][2] cn[2][1] </args>
+      <args> x[2][2] cn[2][2] </args>
+      <args> x[3][2] cn[2][3] </args>
+      <args> x[4][2] cn[2][4] </args>
+      <args> x[8][3] cn[3][8] </args>
+      <args> x[9][3] cn[3][9] </args>
+    </group>
+    <group note="cost of not satisfying off requests">
+      <intension> iff(eq(%0,0),ne(%1,0)) </intension>
+      <args> x[12][2] cf[2][12] </args>
+      <args> x[13][2] cf[2][13] </args>
+    </group>
+    <block note="cost of under or over covering">
+      <group>
+        <extension>
+          <list> %0 %1 </list>
+          <supports> (0,300)(1,200)(2,100)(3,0)(4,1)(5,2) </supports>
+        </extension>
+        <args> np[0][0] cc[0][0] </args>
+        <args> np[3][0] cc[3][0] </args>
+        <args> np[9][0] cc[9][0] </args>
+        <args> np[13][0] cc[13][0] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 %1 </list>
+          <supports> (0,0)(1,0)(2,0)(3,0)(4,0)(5,0) </supports>
+        </extension>
+        <args> np[0][1] cc[0][1] </args>
+        <args> np[1][1] cc[1][1] </args>
+        <args> np[2][1] cc[2][1] </args>
+        <args> np[3][1] cc[3][1] </args>
+        <args> np[4][1] cc[4][1] </args>
+        <args> np[5][1] cc[5][1] </args>
+        <args> np[6][1] cc[6][1] </args>
+        <args> np[7][1] cc[7][1] </args>
+        <args> np[8][1] cc[8][1] </args>
+        <args> np[9][1] cc[9][1] </args>
+        <args> np[10][1] cc[10][1] </args>
+        <args> np[11][1] cc[11][1] </args>
+        <args> np[12][1] cc[12][1] </args>
+        <args> np[13][1] cc[13][1] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 %1 </list>
+          <supports> (0,500)(1,400)(2,300)(3,200)(4,100)(5,0) </supports>
+        </extension>
+        <args> np[1][0] cc[1][0] </args>
+        <args> np[2][0] cc[2][0] </args>
+        <args> np[7][0] cc[7][0] </args>
+        <args> np[8][0] cc[8][0] </args>
+        <args> np[12][0] cc[12][0] </args>
+      </group>
+      <group>
+        <extension>
+          <list> %0 %1 </list>
+          <supports> (0,400)(1,300)(2,200)(3,100)(4,0)(5,1) </supports>
+        </extension>
+        <args> np[4][0] cc[4][0] </args>
+        <args> np[5][0] cc[5][0] </args>
+        <args> np[6][0] cc[6][0] </args>
+        <args> np[11][0] cc[11][0] </args>
+      </group>
+      <extension>
+        <list> np[10][0] cc[10][0] </list>
+        <supports> (0,200)(1,100)(2,0)(3,1)(4,2)(5,3) </supports>
+      </extension>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize type="sum"> cn[0][2..3] cn[1][0..4] cn[2][0..4] cn[3][8..9] cf[2][12] cf[2][13] cc[][] </minimize>
+  </objectives>
+</instance>

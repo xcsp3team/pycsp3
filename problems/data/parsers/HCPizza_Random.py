@@ -1,5 +1,5 @@
 """
-Example: python3 pycsp3/problems/cop/real/HCPizza.py  -dataparser=pycsp3/problems/data/parsers/HCPizza_Random.py 10 10 2 6 0
+Example: python3 pycsp3/problems/cop/complex/HCPizza.py  -dataparser=pycsp3/problems/data/parsers/HCPizza_Random.py 10 10 2 6 0
 """
 
 import random

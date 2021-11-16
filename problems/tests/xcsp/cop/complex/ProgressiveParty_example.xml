@@ -1,0 +1,294 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="h" note="h[b] indicates if the boat b is a host boat" size="[6]"> 0 1 </array>
+    <array id="s" note="s[b][p] is the scheduled (visited) boat by the crew of boat b at period p" size="[6][5]"> 0..5 </array>
+    <array id="g" note="g[b1][p][b2] is 1 if s[b1][p] = b2" size="[6][5][6]"> 0 1 </array>
+  </variables>
+  <constraints>
+    <group note="identifying host boats">
+      <intension> eq(eq(%0,%1),%2) </intension>
+      <args> s[0][0] 0 h[0] </args>
+      <args> s[0][1] 0 h[0] </args>
+      <args> s[0][2] 0 h[0] </args>
+      <args> s[0][3] 0 h[0] </args>
+      <args> s[0][4] 0 h[0] </args>
+      <args> s[1][0] 1 h[1] </args>
+      <args> s[1][1] 1 h[1] </args>
+      <args> s[1][2] 1 h[1] </args>
+      <args> s[1][3] 1 h[1] </args>
+      <args> s[1][4] 1 h[1] </args>
+      <args> s[2][0] 2 h[2] </args>
+      <args> s[2][1] 2 h[2] </args>
+      <args> s[2][2] 2 h[2] </args>
+      <args> s[2][3] 2 h[2] </args>
+      <args> s[2][4] 2 h[2] </args>
+      <args> s[3][0] 3 h[3] </args>
+      <args> s[3][1] 3 h[3] </args>
+      <args> s[3][2] 3 h[3] </args>
+      <args> s[3][3] 3 h[3] </args>
+      <args> s[3][4] 3 h[3] </args>
+      <args> s[4][0] 4 h[4] </args>
+      <args> s[4][1] 4 h[4] </args>
+      <args> s[4][2] 4 h[4] </args>
+      <args> s[4][3] 4 h[4] </args>
+      <args> s[4][4] 4 h[4] </args>
+      <args> s[5][0] 5 h[5] </args>
+      <args> s[5][1] 5 h[5] </args>
+      <args> s[5][2] 5 h[5] </args>
+      <args> s[5][3] 5 h[5] </args>
+      <args> s[5][4] 5 h[5] </args>
+    </group>
+    <group note="identifying host boats (from visitors)">
+      <element>
+        <list> h[] </list>
+        <index> %0 </index>
+        <value> 1 </value>
+      </element>
+      <args> s[0][0] </args>
+      <args> s[0][1] </args>
+      <args> s[0][2] </args>
+      <args> s[0][3] </args>
+      <args> s[0][4] </args>
+      <args> s[1][0] </args>
+      <args> s[1][1] </args>
+      <args> s[1][2] </args>
+      <args> s[1][3] </args>
+      <args> s[1][4] </args>
+      <args> s[2][0] </args>
+      <args> s[2][1] </args>
+      <args> s[2][2] </args>
+      <args> s[2][3] </args>
+      <args> s[2][4] </args>
+      <args> s[3][0] </args>
+      <args> s[3][1] </args>
+      <args> s[3][2] </args>
+      <args> s[3][3] </args>
+      <args> s[3][4] </args>
+      <args> s[4][0] </args>
+      <args> s[4][1] </args>
+      <args> s[4][2] </args>
+      <args> s[4][3] </args>
+      <args> s[4][4] </args>
+      <args> s[5][0] </args>
+      <args> s[5][1] </args>
+      <args> s[5][2] </args>
+      <args> s[5][3] </args>
+      <args> s[5][4] </args>
+    </group>
+    <block note="channeling variables from arrays s and g">
+      <channel>
+        <list> g[0][0][] </list>
+        <value> s[0][0] </value>
+      </channel>
+      <channel>
+        <list> g[0][1][] </list>
+        <value> s[0][1] </value>
+      </channel>
+      <channel>
+        <list> g[0][2][] </list>
+        <value> s[0][2] </value>
+      </channel>
+      <channel>
+        <list> g[0][3][] </list>
+        <value> s[0][3] </value>
+      </channel>
+      <channel>
+        <list> g[0][4][] </list>
+        <value> s[0][4] </value>
+      </channel>
+      <channel>
+        <list> g[1][0][] </list>
+        <value> s[1][0] </value>
+      </channel>
+      <channel>
+        <list> g[1][1][] </list>
+        <value> s[1][1] </value>
+      </channel>
+      <channel>
+        <list> g[1][2][] </list>
+        <value> s[1][2] </value>
+      </channel>
+      <channel>
+        <list> g[1][3][] </list>
+        <value> s[1][3] </value>
+      </channel>
+      <channel>
+        <list> g[1][4][] </list>
+        <value> s[1][4] </value>
+      </channel>
+      <channel>
+        <list> g[2][0][] </list>
+        <value> s[2][0] </value>
+      </channel>
+      <channel>
+        <list> g[2][1][] </list>
+        <value> s[2][1] </value>
+      </channel>
+      <channel>
+        <list> g[2][2][] </list>
+        <value> s[2][2] </value>
+      </channel>
+      <channel>
+        <list> g[2][3][] </list>
+        <value> s[2][3] </value>
+      </channel>
+      <channel>
+        <list> g[2][4][] </list>
+        <value> s[2][4] </value>
+      </channel>
+      <channel>
+        <list> g[3][0][] </list>
+        <value> s[3][0] </value>
+      </channel>
+      <channel>
+        <list> g[3][1][] </list>
+        <value> s[3][1] </value>
+      </channel>
+      <channel>
+        <list> g[3][2][] </list>
+        <value> s[3][2] </value>
+      </channel>
+      <channel>
+        <list> g[3][3][] </list>
+        <value> s[3][3] </value>
+      </channel>
+      <channel>
+        <list> g[3][4][] </list>
+        <value> s[3][4] </value>
+      </channel>
+      <channel>
+        <list> g[4][0][] </list>
+        <value> s[4][0] </value>
+      </channel>
+      <channel>
+        <list> g[4][1][] </list>
+        <value> s[4][1] </value>
+      </channel>
+      <channel>
+        <list> g[4][2][] </list>
+        <value> s[4][2] </value>
+      </channel>
+      <channel>
+        <list> g[4][3][] </list>
+        <value> s[4][3] </value>
+      </channel>
+      <channel>
+        <list> g[4][4][] </list>
+        <value> s[4][4] </value>
+      </channel>
+      <channel>
+        <list> g[5][0][] </list>
+        <value> s[5][0] </value>
+      </channel>
+      <channel>
+        <list> g[5][1][] </list>
+        <value> s[5][1] </value>
+      </channel>
+      <channel>
+        <list> g[5][2][] </list>
+        <value> s[5][2] </value>
+      </channel>
+      <channel>
+        <list> g[5][3][] </list>
+        <value> s[5][3] </value>
+      </channel>
+      <channel>
+        <list> g[5][4][] </list>
+        <value> s[5][4] </value>
+      </channel>
+    </block>
+    <block note="boat capacities must be respected">
+      <group>
+        <sum>
+          <list> %... </list>
+          <coeffs> 2 2 2 2 4 4 </coeffs>
+          <condition> (le,6) </condition>
+        </sum>
+        <args> g[][0][0] </args>
+        <args> g[][1][0] </args>
+        <args> g[][2][0] </args>
+        <args> g[][3][0] </args>
+        <args> g[][4][0] </args>
+      </group>
+      <group>
+        <sum>
+          <list> %... </list>
+          <coeffs> 2 2 2 2 4 4 </coeffs>
+          <condition> (le,8) </condition>
+        </sum>
+        <args> g[][0][1] </args>
+        <args> g[][1][1] </args>
+        <args> g[][2][1] </args>
+        <args> g[][3][1] </args>
+        <args> g[][4][1] </args>
+      </group>
+      <group>
+        <sum>
+          <list> %... </list>
+          <coeffs> 2 2 2 2 4 4 </coeffs>
+          <condition> (le,12) </condition>
+        </sum>
+        <args> g[][0][2] </args>
+        <args> g[][1][2] </args>
+        <args> g[][2][2] </args>
+        <args> g[][3][2] </args>
+        <args> g[][4][2] </args>
+        <args> g[][0][3] </args>
+        <args> g[][1][3] </args>
+        <args> g[][2][3] </args>
+        <args> g[][3][3] </args>
+        <args> g[][4][3] </args>
+        <args> g[][0][4] </args>
+        <args> g[][1][4] </args>
+        <args> g[][2][4] </args>
+        <args> g[][3][4] </args>
+        <args> g[][4][4] </args>
+        <args> g[][0][5] </args>
+        <args> g[][1][5] </args>
+        <args> g[][2][5] </args>
+        <args> g[][3][5] </args>
+        <args> g[][4][5] </args>
+      </group>
+    </block>
+    <group note="a guest boat cannot revisit a host">
+      <allDifferent>
+        <list> %0 %1 %2 %3 %4 </list>
+        <except> %5 </except>
+      </allDifferent>
+      <args> s[0][] 0 </args>
+      <args> s[1][] 1 </args>
+      <args> s[2][] 2 </args>
+      <args> s[3][] 3 </args>
+      <args> s[4][] 4 </args>
+      <args> s[5][] 5 </args>
+    </group>
+    <group note="guest crews cannot meet more than once">
+      <sum>
+        <list> %... </list>
+        <condition> (le,1) </condition>
+      </sum>
+      <args> eq(s[0][0],s[1][0]) eq(s[0][1],s[1][1]) eq(s[0][2],s[1][2]) eq(s[0][3],s[1][3]) eq(s[0][4],s[1][4]) </args>
+      <args> eq(s[0][0],s[2][0]) eq(s[0][1],s[2][1]) eq(s[0][2],s[2][2]) eq(s[0][3],s[2][3]) eq(s[0][4],s[2][4]) </args>
+      <args> eq(s[0][0],s[3][0]) eq(s[0][1],s[3][1]) eq(s[0][2],s[3][2]) eq(s[0][3],s[3][3]) eq(s[0][4],s[3][4]) </args>
+      <args> eq(s[0][0],s[4][0]) eq(s[0][1],s[4][1]) eq(s[0][2],s[4][2]) eq(s[0][3],s[4][3]) eq(s[0][4],s[4][4]) </args>
+      <args> eq(s[0][0],s[5][0]) eq(s[0][1],s[5][1]) eq(s[0][2],s[5][2]) eq(s[0][3],s[5][3]) eq(s[0][4],s[5][4]) </args>
+      <args> eq(s[1][0],s[2][0]) eq(s[1][1],s[2][1]) eq(s[1][2],s[2][2]) eq(s[1][3],s[2][3]) eq(s[1][4],s[2][4]) </args>
+      <args> eq(s[1][0],s[3][0]) eq(s[1][1],s[3][1]) eq(s[1][2],s[3][2]) eq(s[1][3],s[3][3]) eq(s[1][4],s[3][4]) </args>
+      <args> eq(s[1][0],s[4][0]) eq(s[1][1],s[4][1]) eq(s[1][2],s[4][2]) eq(s[1][3],s[4][3]) eq(s[1][4],s[4][4]) </args>
+      <args> eq(s[1][0],s[5][0]) eq(s[1][1],s[5][1]) eq(s[1][2],s[5][2]) eq(s[1][3],s[5][3]) eq(s[1][4],s[5][4]) </args>
+      <args> eq(s[2][0],s[3][0]) eq(s[2][1],s[3][1]) eq(s[2][2],s[3][2]) eq(s[2][3],s[3][3]) eq(s[2][4],s[3][4]) </args>
+      <args> eq(s[2][0],s[4][0]) eq(s[2][1],s[4][1]) eq(s[2][2],s[4][2]) eq(s[2][3],s[4][3]) eq(s[2][4],s[4][4]) </args>
+      <args> eq(s[2][0],s[5][0]) eq(s[2][1],s[5][1]) eq(s[2][2],s[5][2]) eq(s[2][3],s[5][3]) eq(s[2][4],s[5][4]) </args>
+      <args> eq(s[3][0],s[4][0]) eq(s[3][1],s[4][1]) eq(s[3][2],s[4][2]) eq(s[3][3],s[4][3]) eq(s[3][4],s[4][4]) </args>
+      <args> eq(s[3][0],s[5][0]) eq(s[3][1],s[5][1]) eq(s[3][2],s[5][2]) eq(s[3][3],s[5][3]) eq(s[3][4],s[5][4]) </args>
+      <args> eq(s[4][0],s[5][0]) eq(s[4][1],s[5][1]) eq(s[4][2],s[5][2]) eq(s[4][3],s[5][3]) eq(s[4][4],s[5][4]) </args>
+    </group>
+    <sum class="redundant-constraint" note="ensuring a minimum number of hosts">
+      <list> h[] </list>
+      <condition> (ge,2) </condition>
+    </sum>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the number of host boats" type="sum"> h[] </minimize>
+  </objectives>
+</instance>

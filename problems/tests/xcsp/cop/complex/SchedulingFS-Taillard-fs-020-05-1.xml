@@ -1,0 +1,59 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[i][j] is the start time of the jth operation for the ith job" size="[20][5]"> 0..5196 </array>
+  </variables>
+  <constraints>
+    <group note="operations must be ordered on each job">
+      <ordered>
+        <list> %0 %1 %2 %3 %4 </list>
+        <lengths> %... </lengths>
+        <operator> le </operator>
+      </ordered>
+      <args> s[0][] 26 59 78 88 </args>
+      <args> s[1][] 38 62 90 54 </args>
+      <args> s[2][] 27 44 64 47 </args>
+      <args> s[3][] 88 10 49 83 </args>
+      <args> s[4][] 95 23 47 84 </args>
+      <args> s[5][] 55 64 20 9 </args>
+      <args> s[6][] 54 47 61 30 </args>
+      <args> s[7][] 63 68 93 11 </args>
+      <args> s[8][] 23 54 36 92 </args>
+      <args> s[9][] 45 9 47 63 </args>
+      <args> s[10][] 86 30 70 62 </args>
+      <args> s[11][] 43 31 54 75 </args>
+      <args> s[12][] 43 92 87 48 </args>
+      <args> s[13][] 40 7 13 23 </args>
+      <args> s[14][] 37 14 40 85 </args>
+      <args> s[15][] 54 95 34 23 </args>
+      <args> s[16][] 35 76 55 4 </args>
+      <args> s[17][] 59 82 13 31 </args>
+      <args> s[18][] 43 91 11 13 </args>
+      <args> s[19][] 50 37 5 98 </args>
+    </group>
+    <block note="no overlap on resources">
+      <noOverlap>
+        <origins> s[][0] </origins>
+        <lengths> 26 38 27 88 95 55 54 63 23 45 86 43 43 40 37 54 35 59 43 50 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[][1] </origins>
+        <lengths> 59 62 44 10 23 64 47 68 54 9 30 31 92 7 14 95 76 82 91 37 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[][2] </origins>
+        <lengths> 78 90 64 49 47 20 61 93 36 47 70 54 87 13 40 34 55 13 11 5 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[][3] </origins>
+        <lengths> 88 54 47 83 84 9 30 11 92 63 62 75 48 23 85 23 4 31 13 98 </lengths>
+      </noOverlap>
+      <noOverlap>
+        <origins> s[][4] </origins>
+        <lengths> 69 30 61 35 53 98 94 33 77 31 54 71 78 9 79 51 76 56 80 72 </lengths>
+      </noOverlap>
+    </block>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the makespan" type="maximum"> add(s[0][4],69) add(s[1][4],30) add(s[2][4],61) add(s[3][4],35) add(s[4][4],53) add(s[5][4],98) add(s[6][4],94) add(s[7][4],33) add(s[8][4],77) add(s[9][4],31) add(s[10][4],54) add(s[11][4],71) add(s[12][4],78) add(s[13][4],9) add(s[14][4],79) add(s[15][4],51) add(s[16][4],76) add(s[17][4],56) add(s[18][4],80) add(s[19][4],72) </minimize>
+  </objectives>
+</instance>

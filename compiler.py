@@ -39,7 +39,10 @@ class Compilation:
 
     @staticmethod
     def set_filename(_user_filename):
-        Compilation.user_filename = _user_filename
+        if _user_filename is None:
+            Compilation.user_filename = None
+        else:
+            Compilation.user_filename = _user_filename if _user_filename.endswith(".xml") else _user_filename + ".xml"
 
     @staticmethod
     def compile(filename=None, disabling_opoverrider=False, verbose=1):
@@ -49,8 +52,8 @@ class Compilation:
 
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver", "output")
-    options.set_flags("dataexport", "compress", "ev", "display", "time", "noComments", "recognizeSlides", "keepSmartConditions", "restrictTablesWrtDomains",
-                      "safe", "solve", "dontcompactValues", "usemeta", "debug", "verbose")
+    options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepSmartConditions",
+                      "restrictTablesWrtDomains", "dontcompactValues", "usemeta", "debug")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -124,12 +127,10 @@ def _load_data():
         compilation_data, ordered_data = _load_data_sequence([data])
     df = options.dataformat
     if df:
-        if df[0] == '[':
-            assert df[-1] == ']'
-            df = df[1:-1]
-        df = df.split(',')
-        assert len(df) == len(ordered_data)
-        ss = "-".join(df).format(*ordered_data)
+        assert df[0] == '{' and df[-1] == '}'
+        if len(ordered_data) > 1 and df.count("{") == 1:
+            df = "-".join(df for _ in range(len(ordered_data)))
+        ss = df.format(*ordered_data)
     else:
         ss = "-".join(str(v) for v in ordered_data)
     string_data = "-" + ss
@@ -170,10 +171,16 @@ def _load(*, console=False):
         Compilation.string_model = "Console"
         Compilation.string_data = ""
     OpOverrider.enable()
-    options.time and print("\tWCK for loading model and data:", Compilation.stopwatch.elapsed_time(), "seconds")
+    options.verbose and print("\tWCK for loading model and data:", Compilation.stopwatch.elapsed_time(), "seconds")
 
 
 def default_data(filename):
+    """
+    Loads and returns the data in the JSON file whose name is specified.
+
+    :param filename: the filename of the JSON file containing the data to be loaded by default
+    :return: the loaded data
+    """
     assert filename.endswith(".json")
     if filename[0] == '.':
         fn = os.path.abspath('.') + filename[1:]
@@ -236,18 +243,20 @@ def _compile(disabling_opoverrider=False, verbose=1):
         if filename.endswith(".xml"):
             filename_prefix = filename[:-4]  # can be useful if data are exported
     else:
-        filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + Compilation.string_data
+        same_prefix = Compilation.string_data.startswith("-" + Compilation.string_model)
+        suffix = Compilation.string_data if not same_prefix else Compilation.string_data[1 + len(Compilation.string_model):]
+        filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + suffix
         filename = filename_prefix + ".xml"
 
     stopwatch = Stopwatch()
     if options.verbose:
         print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
     build_similar_constraints()
-    options.time and print("\tWCK for generating groups:", stopwatch.elapsed_time(reset=True), "seconds")
+    options.verbose and print("\tWCK for generating groups:", stopwatch.elapsed_time(reset=True), "seconds")
     handle_slides()
-    options.time and print("\tWCK for handling slides:", stopwatch.elapsed_time(reset=True), "seconds")
+    options.verbose and print("\tWCK for handling slides:", stopwatch.elapsed_time(reset=True), "seconds")
     build_compact_forms()
-    options.time and print("\tWCK for compacting forms:", stopwatch.elapsed_time(reset=True), "seconds")
+    options.verbose and print("\tWCK for compacting forms:", stopwatch.elapsed_time(reset=True), "seconds")
 
     root = build_document()
     if root is not None:
@@ -259,11 +268,11 @@ def _compile(disabling_opoverrider=False, verbose=1):
                 f.write(pretty_text)
                 if verbose > 0:
                     print("  * Generating the file " + filename + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.")
-        if options.compress:
+        if options.lzma:
             with lzma.open(filename + ".lzma", "w") as f:
                 f.write(bytes(pretty_text, 'utf-8'))
                 print("\tGeneration of the file " + filename + ".lzma completed.\n")
-        options.time and print("\tWCK for generating files:", stopwatch.elapsed_time(reset=True), "seconds")
+        options.verbose and print("\tWCK for generating files:", stopwatch.elapsed_time(reset=True), "seconds")
 
     if options.dataexport:
         if isinstance(options.dataexport, bool):

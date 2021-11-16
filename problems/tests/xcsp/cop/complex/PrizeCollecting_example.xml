@@ -1,0 +1,208 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[i] is the node that succeeds to the ith node in the tour (value i if unused)" size="[15]"> 0..14 </array>
+    <array id="p" note="p[i] is the position (starting at 0) of the ith node in the tour (-1 if unused)" size="[15]"> -1..14 </array>
+    <array id="g" note="g[i] is the gain collected when going from the ith node to its successor in the tour" size="[15]">
+      <domain for="g[0]"> -1000 -5 -3 0 </domain>
+      <domain for="g[1]"> -1000 -3 0 1 7 </domain>
+      <domain for="g[2]"> -1000 -4 0 1 3 </domain>
+      <domain for="g[3]"> -1000 -2 0 1 3 </domain>
+      <domain for="g[4]"> -1000 0 1 3 </domain>
+      <domain for="g[5]"> -1000 -6 -5 -1 0 </domain>
+      <domain for="g[6]"> -1000 -1 0 7 </domain>
+      <domain for="g[7]"> -1000 -4 0 6 7 </domain>
+      <domain for="g[8]"> -1000 -4 -2 0 2 </domain>
+      <domain for="g[9]"> -1000 -4 -2 0 3 </domain>
+      <domain for="g[10]"> -1000 -6 0 5 </domain>
+      <domain for="g[11]"> -1000 0 5 </domain>
+      <domain for="g[12]"> -1000 0 6 </domain>
+      <domain for="g[13]"> -1000 0 2 4 6 </domain>
+      <domain for="g[14]"> -1000 -2 0 4 </domain>
+    </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[30]">
+      <domain for="aux_gb[0] aux_gb[2] aux_gb[4] aux_gb[6] aux_gb[8] aux_gb[10] aux_gb[12] aux_gb[14] aux_gb[16] aux_gb[18] aux_gb[20] aux_gb[22] aux_gb[24] aux_gb[26] aux_gb[28]"> 0..15 </domain>
+      <domain for="aux_gb[1] aux_gb[3] aux_gb[5] aux_gb[7] aux_gb[9] aux_gb[11] aux_gb[13] aux_gb[15] aux_gb[17] aux_gb[19] aux_gb[21] aux_gb[23] aux_gb[25] aux_gb[27] aux_gb[29]"> -1..14 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <intension note="node 0 is the first node of the tour"> eq(p[0],0) </intension>
+    <group note="managing unused nodes">
+      <intension> iff(ne(%0,-1),ne(%1,%2)) </intension>
+      <args> p[0] s[0] 0 </args>
+      <args> p[1] s[1] 1 </args>
+      <args> p[2] s[2] 2 </args>
+      <args> p[3] s[3] 3 </args>
+      <args> p[4] s[4] 4 </args>
+      <args> p[5] s[5] 5 </args>
+      <args> p[6] s[6] 6 </args>
+      <args> p[7] s[7] 7 </args>
+      <args> p[8] s[8] 8 </args>
+      <args> p[9] s[9] 9 </args>
+      <args> p[10] s[10] 10 </args>
+      <args> p[11] s[11] 11 </args>
+      <args> p[12] s[12] 12 </args>
+      <args> p[13] s[13] 13 </args>
+      <args> p[14] s[14] 14 </args>
+    </group>
+    <group note="each node appears at most once during the tour">
+      <count>
+        <list> s[] </list>
+        <values> %0 </values>
+        <condition> (le,1) </condition>
+      </count>
+      <args> 0 </args>
+      <args> 1 </args>
+      <args> 2 </args>
+      <args> 3 </args>
+      <args> 4 </args>
+      <args> 5 </args>
+      <args> 6 </args>
+      <args> 7 </args>
+      <args> 8 </args>
+      <args> 9 </args>
+      <args> 10 </args>
+      <args> 11 </args>
+      <args> 12 </args>
+      <args> 13 </args>
+      <args> 14 </args>
+    </group>
+    <block note="computing gains">
+      <element>
+        <list> 0 -3 -1000 -1000 -1000 -5 -1000 -1000 -1000 -1000 -1000 -1000 -1000 -1000 -1000 </list>
+        <index> s[0] </index>
+        <value> g[0] </value>
+      </element>
+      <element>
+        <list> -3 0 1 -1000 -1000 -1000 7 -1000 -1000 -1000 -1000 -1000 -1000 -1000 -1000 </list>
+        <index> s[1] </index>
+        <value> g[1] </value>
+      </element>
+      <element>
+        <list> -1000 1 0 3 -1000 -1000 -1000 -4 -1000 -1000 -1000 -1000 -1000 -1000 -1000 </list>
+        <index> s[2] </index>
+        <value> g[2] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 3 0 1 -1000 -1000 -1000 -2 -1000 -1000 -1000 -1000 -1000 -1000 </list>
+        <index> s[3] </index>
+        <value> g[3] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 -1000 1 0 -1000 -1000 -1000 -1000 3 -1000 -1000 -1000 -1000 -1000 </list>
+        <index> s[4] </index>
+        <value> g[4] </value>
+      </element>
+      <element>
+        <list> -5 -1000 -1000 -1000 -1000 0 -1 -1000 -1000 -1000 -6 -1000 -1000 -1000 -1000 </list>
+        <index> s[5] </index>
+        <value> g[5] </value>
+      </element>
+      <element>
+        <list> -1000 7 -1000 -1000 -1000 -1 0 7 -1000 -1000 -1000 0 -1000 -1000 -1000 </list>
+        <index> s[6] </index>
+        <value> g[6] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 -4 -1000 -1000 -1000 7 0 -4 -1000 -1000 -1000 6 -1000 -1000 </list>
+        <index> s[7] </index>
+        <value> g[7] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 -1000 -2 -1000 -1000 -1000 -4 0 -4 -1000 -1000 -1000 2 -1000 </list>
+        <index> s[8] </index>
+        <value> g[8] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 -1000 -1000 3 -1000 -1000 -1000 -4 0 -1000 -1000 -1000 -1000 -2 </list>
+        <index> s[9] </index>
+        <value> g[9] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 -1000 -1000 -1000 -6 -1000 -1000 -1000 -1000 0 5 -1000 -1000 -1000 </list>
+        <index> s[10] </index>
+        <value> g[10] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 -1000 -1000 -1000 -1000 0 -1000 -1000 -1000 5 0 0 -1000 -1000 </list>
+        <index> s[11] </index>
+        <value> g[11] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 -1000 -1000 -1000 -1000 -1000 6 -1000 -1000 -1000 0 0 6 -1000 </list>
+        <index> s[12] </index>
+        <value> g[12] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 -1000 -1000 -1000 -1000 -1000 -1000 2 -1000 -1000 -1000 6 0 4 </list>
+        <index> s[13] </index>
+        <value> g[13] </value>
+      </element>
+      <element>
+        <list> -1000 -1000 -1000 -1000 -1000 -1000 -1000 -1000 -1000 -2 -1000 -1000 -1000 4 0 </list>
+        <index> s[14] </index>
+        <value> g[14] </value>
+      </element>
+    </block>
+    <group note="linking variables from s and p">
+      <intension> or(eq(%0,%1),eq(%0,0),eq(%2,%3)) </intension>
+      <args> s[0] 0 aux_gb[1] aux_gb[0] </args>
+      <args> s[1] 1 aux_gb[3] aux_gb[2] </args>
+      <args> s[2] 2 aux_gb[5] aux_gb[4] </args>
+      <args> s[3] 3 aux_gb[7] aux_gb[6] </args>
+      <args> s[4] 4 aux_gb[9] aux_gb[8] </args>
+      <args> s[5] 5 aux_gb[11] aux_gb[10] </args>
+      <args> s[6] 6 aux_gb[13] aux_gb[12] </args>
+      <args> s[7] 7 aux_gb[15] aux_gb[14] </args>
+      <args> s[8] 8 aux_gb[17] aux_gb[16] </args>
+      <args> s[9] 9 aux_gb[19] aux_gb[18] </args>
+      <args> s[10] 10 aux_gb[21] aux_gb[20] </args>
+      <args> s[11] 11 aux_gb[23] aux_gb[22] </args>
+      <args> s[12] 12 aux_gb[25] aux_gb[24] </args>
+      <args> s[13] 13 aux_gb[27] aux_gb[26] </args>
+      <args> s[14] 14 aux_gb[29] aux_gb[28] </args>
+    </group>
+    <group>
+      <intension> eq(add(%0,1),%1) </intension>
+      <args> p[0] aux_gb[0] </args>
+      <args> p[1] aux_gb[2] </args>
+      <args> p[2] aux_gb[4] </args>
+      <args> p[3] aux_gb[6] </args>
+      <args> p[4] aux_gb[8] </args>
+      <args> p[5] aux_gb[10] </args>
+      <args> p[6] aux_gb[12] </args>
+      <args> p[7] aux_gb[14] </args>
+      <args> p[8] aux_gb[16] </args>
+      <args> p[9] aux_gb[18] </args>
+      <args> p[10] aux_gb[20] </args>
+      <args> p[11] aux_gb[22] </args>
+      <args> p[12] aux_gb[24] </args>
+      <args> p[13] aux_gb[26] </args>
+      <args> p[14] aux_gb[28] </args>
+    </group>
+    <group>
+      <element>
+        <list> p[] </list>
+        <index> %0 </index>
+        <value> %1 </value>
+      </element>
+      <args> s[0] aux_gb[1] </args>
+      <args> s[1] aux_gb[3] </args>
+      <args> s[2] aux_gb[5] </args>
+      <args> s[3] aux_gb[7] </args>
+      <args> s[4] aux_gb[9] </args>
+      <args> s[5] aux_gb[11] </args>
+      <args> s[6] aux_gb[13] </args>
+      <args> s[7] aux_gb[15] </args>
+      <args> s[8] aux_gb[17] </args>
+      <args> s[9] aux_gb[19] </args>
+      <args> s[10] aux_gb[21] </args>
+      <args> s[11] aux_gb[23] </args>
+      <args> s[12] aux_gb[25] </args>
+      <args> s[13] aux_gb[27] </args>
+      <args> s[14] aux_gb[29] </args>
+    </group>
+  </constraints>
+  <objectives>
+    <maximize note="maximizing the sum of collected gains" type="sum"> g[] </maximize>
+  </objectives>
+</instance>

@@ -1,0 +1,193 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="l" note="l[i] is the position of the left border of the ith room" size="[14]"> 0..10 </array>
+    <array id="r" note="r[i] is the position of the right border of the ith room" size="[14]"> 0..10 </array>
+    <array id="t" note="t[i] is the position of the top border of the ith room" size="[14]"> 0..10 </array>
+    <array id="b" note="b[i] is the position of the bottom border of the ith room" size="[14]"> 0..10 </array>
+  </variables>
+  <constraints>
+    <block note="each room must be surrounded by its borders">
+      <group>
+        <intension> le(%0,%1) </intension>
+        <args> l[0] 0 </args>
+        <args> l[1] 4 </args>
+        <args> l[2] 7 </args>
+        <args> l[3] 9 </args>
+        <args> l[4] 0 </args>
+        <args> l[5] 2 </args>
+        <args> l[6] 4 </args>
+        <args> l[7] 5 </args>
+        <args> l[8] 7 </args>
+        <args> l[9] 9 </args>
+        <args> l[10] 0 </args>
+        <args> l[11] 2 </args>
+        <args> l[12] 5 </args>
+        <args> l[13] 9 </args>
+        <args> t[0] 0 </args>
+        <args> t[1] 0 </args>
+        <args> t[2] 0 </args>
+        <args> t[3] 2 </args>
+        <args> t[4] 3 </args>
+        <args> t[5] 3 </args>
+        <args> t[6] 3 </args>
+        <args> t[7] 6 </args>
+        <args> t[8] 6 </args>
+        <args> t[9] 6 </args>
+        <args> t[10] 7 </args>
+        <args> t[11] 9 </args>
+        <args> t[12] 9 </args>
+        <args> t[13] 9 </args>
+      </group>
+      <group>
+        <intension> gt(%0,%1) </intension>
+        <args> r[0] 0 </args>
+        <args> r[1] 4 </args>
+        <args> r[2] 7 </args>
+        <args> r[3] 9 </args>
+        <args> r[4] 0 </args>
+        <args> r[5] 2 </args>
+        <args> r[6] 4 </args>
+        <args> r[7] 5 </args>
+        <args> r[8] 7 </args>
+        <args> r[9] 9 </args>
+        <args> r[10] 0 </args>
+        <args> r[11] 2 </args>
+        <args> r[12] 5 </args>
+        <args> r[13] 9 </args>
+        <args> b[0] 0 </args>
+        <args> b[1] 0 </args>
+        <args> b[2] 0 </args>
+        <args> b[3] 2 </args>
+        <args> b[4] 3 </args>
+        <args> b[5] 3 </args>
+        <args> b[6] 3 </args>
+        <args> b[7] 6 </args>
+        <args> b[8] 6 </args>
+        <args> b[9] 6 </args>
+        <args> b[10] 7 </args>
+        <args> b[11] 9 </args>
+        <args> b[12] 9 </args>
+        <args> b[13] 9 </args>
+      </group>
+    </block>
+    <group note="respecting the surface of each room">
+      <intension> eq(mul(sub(%0,%1),sub(%2,%3)),%4) </intension>
+      <args> r[0] l[0] b[0] t[0] 9 </args>
+      <args> r[1] l[1] b[1] t[1] 12 </args>
+      <args> r[2] l[2] b[2] t[2] 5 </args>
+      <args> r[3] l[3] b[3] t[3] 6 </args>
+      <args> r[4] l[4] b[4] t[4] 8 </args>
+      <args> r[5] l[5] b[5] t[5] 6 </args>
+      <args> r[6] l[6] b[6] t[6] 8 </args>
+      <args> r[7] l[7] b[7] t[7] 6 </args>
+      <args> r[8] l[8] b[8] t[8] 8 </args>
+      <args> r[9] l[9] b[9] t[9] 12 </args>
+      <args> r[10] l[10] b[10] t[10] 4 </args>
+      <args> r[11] l[11] b[11] t[11] 3 </args>
+      <args> r[12] l[12] b[12] t[12] 9 </args>
+      <args> r[13] l[13] b[13] t[13] 4 </args>
+    </group>
+    <block note="rooms must not overlap">
+      <group>
+        <intension> le(%0,%1) </intension>
+        <args> r[0] l[1] </args>
+        <args> r[0] l[2] </args>
+        <args> r[1] l[2] </args>
+        <args> r[4] l[5] </args>
+        <args> r[4] l[6] </args>
+        <args> r[5] l[6] </args>
+        <args> r[7] l[8] </args>
+        <args> r[7] l[9] </args>
+        <args> r[8] l[9] </args>
+        <args> r[11] l[12] </args>
+        <args> r[11] l[13] </args>
+        <args> r[12] l[13] </args>
+      </group>
+      <group>
+        <intension> or(le(%0,%1),le(%2,%3)) </intension>
+        <args> r[0] l[3] b[0] t[3] </args>
+        <args> r[0] l[4] b[0] t[4] </args>
+        <args> r[0] l[5] b[0] t[5] </args>
+        <args> r[0] l[6] b[0] t[6] </args>
+        <args> r[0] l[7] b[0] t[7] </args>
+        <args> r[0] l[8] b[0] t[8] </args>
+        <args> r[0] l[9] b[0] t[9] </args>
+        <args> r[0] l[10] b[0] t[10] </args>
+        <args> r[0] l[11] b[0] t[11] </args>
+        <args> r[0] l[12] b[0] t[12] </args>
+        <args> r[0] l[13] b[0] t[13] </args>
+        <args> r[1] l[3] b[1] t[3] </args>
+        <args> r[1] l[6] b[1] t[6] </args>
+        <args> r[1] l[7] b[1] t[7] </args>
+        <args> r[1] l[8] b[1] t[8] </args>
+        <args> r[1] l[9] b[1] t[9] </args>
+        <args> r[1] l[12] b[1] t[12] </args>
+        <args> r[1] l[13] b[1] t[13] </args>
+        <args> r[2] l[3] b[2] t[3] </args>
+        <args> r[2] l[8] b[2] t[8] </args>
+        <args> r[2] l[9] b[2] t[9] </args>
+        <args> r[2] l[13] b[2] t[13] </args>
+        <args> r[3] l[9] b[3] t[9] </args>
+        <args> r[3] l[13] b[3] t[13] </args>
+        <args> r[4] l[7] b[4] t[7] </args>
+        <args> r[4] l[8] b[4] t[8] </args>
+        <args> r[4] l[9] b[4] t[9] </args>
+        <args> r[4] l[10] b[4] t[10] </args>
+        <args> r[4] l[11] b[4] t[11] </args>
+        <args> r[4] l[12] b[4] t[12] </args>
+        <args> r[4] l[13] b[4] t[13] </args>
+        <args> r[5] l[7] b[5] t[7] </args>
+        <args> r[5] l[8] b[5] t[8] </args>
+        <args> r[5] l[9] b[5] t[9] </args>
+        <args> r[5] l[11] b[5] t[11] </args>
+        <args> r[5] l[12] b[5] t[12] </args>
+        <args> r[5] l[13] b[5] t[13] </args>
+        <args> r[6] l[7] b[6] t[7] </args>
+        <args> r[6] l[8] b[6] t[8] </args>
+        <args> r[6] l[9] b[6] t[9] </args>
+        <args> r[6] l[12] b[6] t[12] </args>
+        <args> r[6] l[13] b[6] t[13] </args>
+        <args> r[7] l[12] b[7] t[12] </args>
+        <args> r[7] l[13] b[7] t[13] </args>
+        <args> r[8] l[13] b[8] t[13] </args>
+        <args> r[9] l[13] b[9] t[13] </args>
+        <args> r[10] l[11] b[10] t[11] </args>
+        <args> r[10] l[12] b[10] t[12] </args>
+        <args> r[10] l[13] b[10] t[13] </args>
+      </group>
+      <group>
+        <intension> or(le(%0,%1),ge(%2,%3)) </intension>
+        <args> r[4] l[1] t[4] b[1] </args>
+        <args> r[5] l[1] t[5] b[1] </args>
+        <args> r[10] l[1] t[10] b[1] </args>
+        <args> r[11] l[1] t[11] b[1] </args>
+        <args> r[4] l[2] t[4] b[2] </args>
+        <args> r[5] l[2] t[5] b[2] </args>
+        <args> r[6] l[2] t[6] b[2] </args>
+        <args> r[7] l[2] t[7] b[2] </args>
+        <args> r[10] l[2] t[10] b[2] </args>
+        <args> r[11] l[2] t[11] b[2] </args>
+        <args> r[12] l[2] t[12] b[2] </args>
+        <args> r[4] l[3] t[4] b[3] </args>
+        <args> r[5] l[3] t[5] b[3] </args>
+        <args> r[6] l[3] t[6] b[3] </args>
+        <args> r[7] l[3] t[7] b[3] </args>
+        <args> r[8] l[3] t[8] b[3] </args>
+        <args> r[10] l[3] t[10] b[3] </args>
+        <args> r[11] l[3] t[11] b[3] </args>
+        <args> r[12] l[3] t[12] b[3] </args>
+        <args> r[10] l[5] t[10] b[5] </args>
+        <args> r[10] l[6] t[10] b[6] </args>
+        <args> r[11] l[6] t[11] b[6] </args>
+        <args> r[10] l[7] t[10] b[7] </args>
+        <args> r[11] l[7] t[11] b[7] </args>
+        <args> r[10] l[8] t[10] b[8] </args>
+        <args> r[11] l[8] t[11] b[8] </args>
+        <args> r[12] l[8] t[12] b[8] </args>
+        <args> r[10] l[9] t[10] b[9] </args>
+        <args> r[11] l[9] t[11] b[9] </args>
+        <args> r[12] l[9] t[12] b[9] </args>
+      </group>
+    </block>
+  </constraints>
+</instance>

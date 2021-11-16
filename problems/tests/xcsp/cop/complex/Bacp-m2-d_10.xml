@@ -1,0 +1,685 @@
+<instance format="XCSP3" type="COP">
+  <variables>
+    <array id="s" note="s[c] is the period (schedule) for course c" size="[50]"> 0..9 </array>
+    <array id="co" note="co[p] is the number of courses at period p" size="[10]"> 2..10 </array>
+    <array id="cr" note="cr[p] is the number of credits at period p" size="[10]"> 2..1000 </array>
+    <array id="pc" note="pc[p][c] is 1 iff the course c is at period p" size="[10][50]"> 0 1 </array>
+    <array id="aux_gb" note="aux_gb[i] is the ith auxiliary variable having been automatically introduced" size="[2]"> 2..1000 </array>
+  </variables>
+  <constraints>
+    <group class="channeling">
+      <intension> eq(%0,eq(%1,%2)) </intension>
+      <args> pc[0][0] s[0] 0 </args>
+      <args> pc[0][1] s[1] 0 </args>
+      <args> pc[0][2] s[2] 0 </args>
+      <args> pc[0][3] s[3] 0 </args>
+      <args> pc[0][4] s[4] 0 </args>
+      <args> pc[0][5] s[5] 0 </args>
+      <args> pc[0][6] s[6] 0 </args>
+      <args> pc[0][7] s[7] 0 </args>
+      <args> pc[0][8] s[8] 0 </args>
+      <args> pc[0][9] s[9] 0 </args>
+      <args> pc[0][10] s[10] 0 </args>
+      <args> pc[0][11] s[11] 0 </args>
+      <args> pc[0][12] s[12] 0 </args>
+      <args> pc[0][13] s[13] 0 </args>
+      <args> pc[0][14] s[14] 0 </args>
+      <args> pc[0][15] s[15] 0 </args>
+      <args> pc[0][16] s[16] 0 </args>
+      <args> pc[0][17] s[17] 0 </args>
+      <args> pc[0][18] s[18] 0 </args>
+      <args> pc[0][19] s[19] 0 </args>
+      <args> pc[0][20] s[20] 0 </args>
+      <args> pc[0][21] s[21] 0 </args>
+      <args> pc[0][22] s[22] 0 </args>
+      <args> pc[0][23] s[23] 0 </args>
+      <args> pc[0][24] s[24] 0 </args>
+      <args> pc[0][25] s[25] 0 </args>
+      <args> pc[0][26] s[26] 0 </args>
+      <args> pc[0][27] s[27] 0 </args>
+      <args> pc[0][28] s[28] 0 </args>
+      <args> pc[0][29] s[29] 0 </args>
+      <args> pc[0][30] s[30] 0 </args>
+      <args> pc[0][31] s[31] 0 </args>
+      <args> pc[0][32] s[32] 0 </args>
+      <args> pc[0][33] s[33] 0 </args>
+      <args> pc[0][34] s[34] 0 </args>
+      <args> pc[0][35] s[35] 0 </args>
+      <args> pc[0][36] s[36] 0 </args>
+      <args> pc[0][37] s[37] 0 </args>
+      <args> pc[0][38] s[38] 0 </args>
+      <args> pc[0][39] s[39] 0 </args>
+      <args> pc[0][40] s[40] 0 </args>
+      <args> pc[0][41] s[41] 0 </args>
+      <args> pc[0][42] s[42] 0 </args>
+      <args> pc[0][43] s[43] 0 </args>
+      <args> pc[0][44] s[44] 0 </args>
+      <args> pc[0][45] s[45] 0 </args>
+      <args> pc[0][46] s[46] 0 </args>
+      <args> pc[0][47] s[47] 0 </args>
+      <args> pc[0][48] s[48] 0 </args>
+      <args> pc[0][49] s[49] 0 </args>
+      <args> pc[1][0] s[0] 1 </args>
+      <args> pc[1][1] s[1] 1 </args>
+      <args> pc[1][2] s[2] 1 </args>
+      <args> pc[1][3] s[3] 1 </args>
+      <args> pc[1][4] s[4] 1 </args>
+      <args> pc[1][5] s[5] 1 </args>
+      <args> pc[1][6] s[6] 1 </args>
+      <args> pc[1][7] s[7] 1 </args>
+      <args> pc[1][8] s[8] 1 </args>
+      <args> pc[1][9] s[9] 1 </args>
+      <args> pc[1][10] s[10] 1 </args>
+      <args> pc[1][11] s[11] 1 </args>
+      <args> pc[1][12] s[12] 1 </args>
+      <args> pc[1][13] s[13] 1 </args>
+      <args> pc[1][14] s[14] 1 </args>
+      <args> pc[1][15] s[15] 1 </args>
+      <args> pc[1][16] s[16] 1 </args>
+      <args> pc[1][17] s[17] 1 </args>
+      <args> pc[1][18] s[18] 1 </args>
+      <args> pc[1][19] s[19] 1 </args>
+      <args> pc[1][20] s[20] 1 </args>
+      <args> pc[1][21] s[21] 1 </args>
+      <args> pc[1][22] s[22] 1 </args>
+      <args> pc[1][23] s[23] 1 </args>
+      <args> pc[1][24] s[24] 1 </args>
+      <args> pc[1][25] s[25] 1 </args>
+      <args> pc[1][26] s[26] 1 </args>
+      <args> pc[1][27] s[27] 1 </args>
+      <args> pc[1][28] s[28] 1 </args>
+      <args> pc[1][29] s[29] 1 </args>
+      <args> pc[1][30] s[30] 1 </args>
+      <args> pc[1][31] s[31] 1 </args>
+      <args> pc[1][32] s[32] 1 </args>
+      <args> pc[1][33] s[33] 1 </args>
+      <args> pc[1][34] s[34] 1 </args>
+      <args> pc[1][35] s[35] 1 </args>
+      <args> pc[1][36] s[36] 1 </args>
+      <args> pc[1][37] s[37] 1 </args>
+      <args> pc[1][38] s[38] 1 </args>
+      <args> pc[1][39] s[39] 1 </args>
+      <args> pc[1][40] s[40] 1 </args>
+      <args> pc[1][41] s[41] 1 </args>
+      <args> pc[1][42] s[42] 1 </args>
+      <args> pc[1][43] s[43] 1 </args>
+      <args> pc[1][44] s[44] 1 </args>
+      <args> pc[1][45] s[45] 1 </args>
+      <args> pc[1][46] s[46] 1 </args>
+      <args> pc[1][47] s[47] 1 </args>
+      <args> pc[1][48] s[48] 1 </args>
+      <args> pc[1][49] s[49] 1 </args>
+      <args> pc[2][0] s[0] 2 </args>
+      <args> pc[2][1] s[1] 2 </args>
+      <args> pc[2][2] s[2] 2 </args>
+      <args> pc[2][3] s[3] 2 </args>
+      <args> pc[2][4] s[4] 2 </args>
+      <args> pc[2][5] s[5] 2 </args>
+      <args> pc[2][6] s[6] 2 </args>
+      <args> pc[2][7] s[7] 2 </args>
+      <args> pc[2][8] s[8] 2 </args>
+      <args> pc[2][9] s[9] 2 </args>
+      <args> pc[2][10] s[10] 2 </args>
+      <args> pc[2][11] s[11] 2 </args>
+      <args> pc[2][12] s[12] 2 </args>
+      <args> pc[2][13] s[13] 2 </args>
+      <args> pc[2][14] s[14] 2 </args>
+      <args> pc[2][15] s[15] 2 </args>
+      <args> pc[2][16] s[16] 2 </args>
+      <args> pc[2][17] s[17] 2 </args>
+      <args> pc[2][18] s[18] 2 </args>
+      <args> pc[2][19] s[19] 2 </args>
+      <args> pc[2][20] s[20] 2 </args>
+      <args> pc[2][21] s[21] 2 </args>
+      <args> pc[2][22] s[22] 2 </args>
+      <args> pc[2][23] s[23] 2 </args>
+      <args> pc[2][24] s[24] 2 </args>
+      <args> pc[2][25] s[25] 2 </args>
+      <args> pc[2][26] s[26] 2 </args>
+      <args> pc[2][27] s[27] 2 </args>
+      <args> pc[2][28] s[28] 2 </args>
+      <args> pc[2][29] s[29] 2 </args>
+      <args> pc[2][30] s[30] 2 </args>
+      <args> pc[2][31] s[31] 2 </args>
+      <args> pc[2][32] s[32] 2 </args>
+      <args> pc[2][33] s[33] 2 </args>
+      <args> pc[2][34] s[34] 2 </args>
+      <args> pc[2][35] s[35] 2 </args>
+      <args> pc[2][36] s[36] 2 </args>
+      <args> pc[2][37] s[37] 2 </args>
+      <args> pc[2][38] s[38] 2 </args>
+      <args> pc[2][39] s[39] 2 </args>
+      <args> pc[2][40] s[40] 2 </args>
+      <args> pc[2][41] s[41] 2 </args>
+      <args> pc[2][42] s[42] 2 </args>
+      <args> pc[2][43] s[43] 2 </args>
+      <args> pc[2][44] s[44] 2 </args>
+      <args> pc[2][45] s[45] 2 </args>
+      <args> pc[2][46] s[46] 2 </args>
+      <args> pc[2][47] s[47] 2 </args>
+      <args> pc[2][48] s[48] 2 </args>
+      <args> pc[2][49] s[49] 2 </args>
+      <args> pc[3][0] s[0] 3 </args>
+      <args> pc[3][1] s[1] 3 </args>
+      <args> pc[3][2] s[2] 3 </args>
+      <args> pc[3][3] s[3] 3 </args>
+      <args> pc[3][4] s[4] 3 </args>
+      <args> pc[3][5] s[5] 3 </args>
+      <args> pc[3][6] s[6] 3 </args>
+      <args> pc[3][7] s[7] 3 </args>
+      <args> pc[3][8] s[8] 3 </args>
+      <args> pc[3][9] s[9] 3 </args>
+      <args> pc[3][10] s[10] 3 </args>
+      <args> pc[3][11] s[11] 3 </args>
+      <args> pc[3][12] s[12] 3 </args>
+      <args> pc[3][13] s[13] 3 </args>
+      <args> pc[3][14] s[14] 3 </args>
+      <args> pc[3][15] s[15] 3 </args>
+      <args> pc[3][16] s[16] 3 </args>
+      <args> pc[3][17] s[17] 3 </args>
+      <args> pc[3][18] s[18] 3 </args>
+      <args> pc[3][19] s[19] 3 </args>
+      <args> pc[3][20] s[20] 3 </args>
+      <args> pc[3][21] s[21] 3 </args>
+      <args> pc[3][22] s[22] 3 </args>
+      <args> pc[3][23] s[23] 3 </args>
+      <args> pc[3][24] s[24] 3 </args>
+      <args> pc[3][25] s[25] 3 </args>
+      <args> pc[3][26] s[26] 3 </args>
+      <args> pc[3][27] s[27] 3 </args>
+      <args> pc[3][28] s[28] 3 </args>
+      <args> pc[3][29] s[29] 3 </args>
+      <args> pc[3][30] s[30] 3 </args>
+      <args> pc[3][31] s[31] 3 </args>
+      <args> pc[3][32] s[32] 3 </args>
+      <args> pc[3][33] s[33] 3 </args>
+      <args> pc[3][34] s[34] 3 </args>
+      <args> pc[3][35] s[35] 3 </args>
+      <args> pc[3][36] s[36] 3 </args>
+      <args> pc[3][37] s[37] 3 </args>
+      <args> pc[3][38] s[38] 3 </args>
+      <args> pc[3][39] s[39] 3 </args>
+      <args> pc[3][40] s[40] 3 </args>
+      <args> pc[3][41] s[41] 3 </args>
+      <args> pc[3][42] s[42] 3 </args>
+      <args> pc[3][43] s[43] 3 </args>
+      <args> pc[3][44] s[44] 3 </args>
+      <args> pc[3][45] s[45] 3 </args>
+      <args> pc[3][46] s[46] 3 </args>
+      <args> pc[3][47] s[47] 3 </args>
+      <args> pc[3][48] s[48] 3 </args>
+      <args> pc[3][49] s[49] 3 </args>
+      <args> pc[4][0] s[0] 4 </args>
+      <args> pc[4][1] s[1] 4 </args>
+      <args> pc[4][2] s[2] 4 </args>
+      <args> pc[4][3] s[3] 4 </args>
+      <args> pc[4][4] s[4] 4 </args>
+      <args> pc[4][5] s[5] 4 </args>
+      <args> pc[4][6] s[6] 4 </args>
+      <args> pc[4][7] s[7] 4 </args>
+      <args> pc[4][8] s[8] 4 </args>
+      <args> pc[4][9] s[9] 4 </args>
+      <args> pc[4][10] s[10] 4 </args>
+      <args> pc[4][11] s[11] 4 </args>
+      <args> pc[4][12] s[12] 4 </args>
+      <args> pc[4][13] s[13] 4 </args>
+      <args> pc[4][14] s[14] 4 </args>
+      <args> pc[4][15] s[15] 4 </args>
+      <args> pc[4][16] s[16] 4 </args>
+      <args> pc[4][17] s[17] 4 </args>
+      <args> pc[4][18] s[18] 4 </args>
+      <args> pc[4][19] s[19] 4 </args>
+      <args> pc[4][20] s[20] 4 </args>
+      <args> pc[4][21] s[21] 4 </args>
+      <args> pc[4][22] s[22] 4 </args>
+      <args> pc[4][23] s[23] 4 </args>
+      <args> pc[4][24] s[24] 4 </args>
+      <args> pc[4][25] s[25] 4 </args>
+      <args> pc[4][26] s[26] 4 </args>
+      <args> pc[4][27] s[27] 4 </args>
+      <args> pc[4][28] s[28] 4 </args>
+      <args> pc[4][29] s[29] 4 </args>
+      <args> pc[4][30] s[30] 4 </args>
+      <args> pc[4][31] s[31] 4 </args>
+      <args> pc[4][32] s[32] 4 </args>
+      <args> pc[4][33] s[33] 4 </args>
+      <args> pc[4][34] s[34] 4 </args>
+      <args> pc[4][35] s[35] 4 </args>
+      <args> pc[4][36] s[36] 4 </args>
+      <args> pc[4][37] s[37] 4 </args>
+      <args> pc[4][38] s[38] 4 </args>
+      <args> pc[4][39] s[39] 4 </args>
+      <args> pc[4][40] s[40] 4 </args>
+      <args> pc[4][41] s[41] 4 </args>
+      <args> pc[4][42] s[42] 4 </args>
+      <args> pc[4][43] s[43] 4 </args>
+      <args> pc[4][44] s[44] 4 </args>
+      <args> pc[4][45] s[45] 4 </args>
+      <args> pc[4][46] s[46] 4 </args>
+      <args> pc[4][47] s[47] 4 </args>
+      <args> pc[4][48] s[48] 4 </args>
+      <args> pc[4][49] s[49] 4 </args>
+      <args> pc[5][0] s[0] 5 </args>
+      <args> pc[5][1] s[1] 5 </args>
+      <args> pc[5][2] s[2] 5 </args>
+      <args> pc[5][3] s[3] 5 </args>
+      <args> pc[5][4] s[4] 5 </args>
+      <args> pc[5][5] s[5] 5 </args>
+      <args> pc[5][6] s[6] 5 </args>
+      <args> pc[5][7] s[7] 5 </args>
+      <args> pc[5][8] s[8] 5 </args>
+      <args> pc[5][9] s[9] 5 </args>
+      <args> pc[5][10] s[10] 5 </args>
+      <args> pc[5][11] s[11] 5 </args>
+      <args> pc[5][12] s[12] 5 </args>
+      <args> pc[5][13] s[13] 5 </args>
+      <args> pc[5][14] s[14] 5 </args>
+      <args> pc[5][15] s[15] 5 </args>
+      <args> pc[5][16] s[16] 5 </args>
+      <args> pc[5][17] s[17] 5 </args>
+      <args> pc[5][18] s[18] 5 </args>
+      <args> pc[5][19] s[19] 5 </args>
+      <args> pc[5][20] s[20] 5 </args>
+      <args> pc[5][21] s[21] 5 </args>
+      <args> pc[5][22] s[22] 5 </args>
+      <args> pc[5][23] s[23] 5 </args>
+      <args> pc[5][24] s[24] 5 </args>
+      <args> pc[5][25] s[25] 5 </args>
+      <args> pc[5][26] s[26] 5 </args>
+      <args> pc[5][27] s[27] 5 </args>
+      <args> pc[5][28] s[28] 5 </args>
+      <args> pc[5][29] s[29] 5 </args>
+      <args> pc[5][30] s[30] 5 </args>
+      <args> pc[5][31] s[31] 5 </args>
+      <args> pc[5][32] s[32] 5 </args>
+      <args> pc[5][33] s[33] 5 </args>
+      <args> pc[5][34] s[34] 5 </args>
+      <args> pc[5][35] s[35] 5 </args>
+      <args> pc[5][36] s[36] 5 </args>
+      <args> pc[5][37] s[37] 5 </args>
+      <args> pc[5][38] s[38] 5 </args>
+      <args> pc[5][39] s[39] 5 </args>
+      <args> pc[5][40] s[40] 5 </args>
+      <args> pc[5][41] s[41] 5 </args>
+      <args> pc[5][42] s[42] 5 </args>
+      <args> pc[5][43] s[43] 5 </args>
+      <args> pc[5][44] s[44] 5 </args>
+      <args> pc[5][45] s[45] 5 </args>
+      <args> pc[5][46] s[46] 5 </args>
+      <args> pc[5][47] s[47] 5 </args>
+      <args> pc[5][48] s[48] 5 </args>
+      <args> pc[5][49] s[49] 5 </args>
+      <args> pc[6][0] s[0] 6 </args>
+      <args> pc[6][1] s[1] 6 </args>
+      <args> pc[6][2] s[2] 6 </args>
+      <args> pc[6][3] s[3] 6 </args>
+      <args> pc[6][4] s[4] 6 </args>
+      <args> pc[6][5] s[5] 6 </args>
+      <args> pc[6][6] s[6] 6 </args>
+      <args> pc[6][7] s[7] 6 </args>
+      <args> pc[6][8] s[8] 6 </args>
+      <args> pc[6][9] s[9] 6 </args>
+      <args> pc[6][10] s[10] 6 </args>
+      <args> pc[6][11] s[11] 6 </args>
+      <args> pc[6][12] s[12] 6 </args>
+      <args> pc[6][13] s[13] 6 </args>
+      <args> pc[6][14] s[14] 6 </args>
+      <args> pc[6][15] s[15] 6 </args>
+      <args> pc[6][16] s[16] 6 </args>
+      <args> pc[6][17] s[17] 6 </args>
+      <args> pc[6][18] s[18] 6 </args>
+      <args> pc[6][19] s[19] 6 </args>
+      <args> pc[6][20] s[20] 6 </args>
+      <args> pc[6][21] s[21] 6 </args>
+      <args> pc[6][22] s[22] 6 </args>
+      <args> pc[6][23] s[23] 6 </args>
+      <args> pc[6][24] s[24] 6 </args>
+      <args> pc[6][25] s[25] 6 </args>
+      <args> pc[6][26] s[26] 6 </args>
+      <args> pc[6][27] s[27] 6 </args>
+      <args> pc[6][28] s[28] 6 </args>
+      <args> pc[6][29] s[29] 6 </args>
+      <args> pc[6][30] s[30] 6 </args>
+      <args> pc[6][31] s[31] 6 </args>
+      <args> pc[6][32] s[32] 6 </args>
+      <args> pc[6][33] s[33] 6 </args>
+      <args> pc[6][34] s[34] 6 </args>
+      <args> pc[6][35] s[35] 6 </args>
+      <args> pc[6][36] s[36] 6 </args>
+      <args> pc[6][37] s[37] 6 </args>
+      <args> pc[6][38] s[38] 6 </args>
+      <args> pc[6][39] s[39] 6 </args>
+      <args> pc[6][40] s[40] 6 </args>
+      <args> pc[6][41] s[41] 6 </args>
+      <args> pc[6][42] s[42] 6 </args>
+      <args> pc[6][43] s[43] 6 </args>
+      <args> pc[6][44] s[44] 6 </args>
+      <args> pc[6][45] s[45] 6 </args>
+      <args> pc[6][46] s[46] 6 </args>
+      <args> pc[6][47] s[47] 6 </args>
+      <args> pc[6][48] s[48] 6 </args>
+      <args> pc[6][49] s[49] 6 </args>
+      <args> pc[7][0] s[0] 7 </args>
+      <args> pc[7][1] s[1] 7 </args>
+      <args> pc[7][2] s[2] 7 </args>
+      <args> pc[7][3] s[3] 7 </args>
+      <args> pc[7][4] s[4] 7 </args>
+      <args> pc[7][5] s[5] 7 </args>
+      <args> pc[7][6] s[6] 7 </args>
+      <args> pc[7][7] s[7] 7 </args>
+      <args> pc[7][8] s[8] 7 </args>
+      <args> pc[7][9] s[9] 7 </args>
+      <args> pc[7][10] s[10] 7 </args>
+      <args> pc[7][11] s[11] 7 </args>
+      <args> pc[7][12] s[12] 7 </args>
+      <args> pc[7][13] s[13] 7 </args>
+      <args> pc[7][14] s[14] 7 </args>
+      <args> pc[7][15] s[15] 7 </args>
+      <args> pc[7][16] s[16] 7 </args>
+      <args> pc[7][17] s[17] 7 </args>
+      <args> pc[7][18] s[18] 7 </args>
+      <args> pc[7][19] s[19] 7 </args>
+      <args> pc[7][20] s[20] 7 </args>
+      <args> pc[7][21] s[21] 7 </args>
+      <args> pc[7][22] s[22] 7 </args>
+      <args> pc[7][23] s[23] 7 </args>
+      <args> pc[7][24] s[24] 7 </args>
+      <args> pc[7][25] s[25] 7 </args>
+      <args> pc[7][26] s[26] 7 </args>
+      <args> pc[7][27] s[27] 7 </args>
+      <args> pc[7][28] s[28] 7 </args>
+      <args> pc[7][29] s[29] 7 </args>
+      <args> pc[7][30] s[30] 7 </args>
+      <args> pc[7][31] s[31] 7 </args>
+      <args> pc[7][32] s[32] 7 </args>
+      <args> pc[7][33] s[33] 7 </args>
+      <args> pc[7][34] s[34] 7 </args>
+      <args> pc[7][35] s[35] 7 </args>
+      <args> pc[7][36] s[36] 7 </args>
+      <args> pc[7][37] s[37] 7 </args>
+      <args> pc[7][38] s[38] 7 </args>
+      <args> pc[7][39] s[39] 7 </args>
+      <args> pc[7][40] s[40] 7 </args>
+      <args> pc[7][41] s[41] 7 </args>
+      <args> pc[7][42] s[42] 7 </args>
+      <args> pc[7][43] s[43] 7 </args>
+      <args> pc[7][44] s[44] 7 </args>
+      <args> pc[7][45] s[45] 7 </args>
+      <args> pc[7][46] s[46] 7 </args>
+      <args> pc[7][47] s[47] 7 </args>
+      <args> pc[7][48] s[48] 7 </args>
+      <args> pc[7][49] s[49] 7 </args>
+      <args> pc[8][0] s[0] 8 </args>
+      <args> pc[8][1] s[1] 8 </args>
+      <args> pc[8][2] s[2] 8 </args>
+      <args> pc[8][3] s[3] 8 </args>
+      <args> pc[8][4] s[4] 8 </args>
+      <args> pc[8][5] s[5] 8 </args>
+      <args> pc[8][6] s[6] 8 </args>
+      <args> pc[8][7] s[7] 8 </args>
+      <args> pc[8][8] s[8] 8 </args>
+      <args> pc[8][9] s[9] 8 </args>
+      <args> pc[8][10] s[10] 8 </args>
+      <args> pc[8][11] s[11] 8 </args>
+      <args> pc[8][12] s[12] 8 </args>
+      <args> pc[8][13] s[13] 8 </args>
+      <args> pc[8][14] s[14] 8 </args>
+      <args> pc[8][15] s[15] 8 </args>
+      <args> pc[8][16] s[16] 8 </args>
+      <args> pc[8][17] s[17] 8 </args>
+      <args> pc[8][18] s[18] 8 </args>
+      <args> pc[8][19] s[19] 8 </args>
+      <args> pc[8][20] s[20] 8 </args>
+      <args> pc[8][21] s[21] 8 </args>
+      <args> pc[8][22] s[22] 8 </args>
+      <args> pc[8][23] s[23] 8 </args>
+      <args> pc[8][24] s[24] 8 </args>
+      <args> pc[8][25] s[25] 8 </args>
+      <args> pc[8][26] s[26] 8 </args>
+      <args> pc[8][27] s[27] 8 </args>
+      <args> pc[8][28] s[28] 8 </args>
+      <args> pc[8][29] s[29] 8 </args>
+      <args> pc[8][30] s[30] 8 </args>
+      <args> pc[8][31] s[31] 8 </args>
+      <args> pc[8][32] s[32] 8 </args>
+      <args> pc[8][33] s[33] 8 </args>
+      <args> pc[8][34] s[34] 8 </args>
+      <args> pc[8][35] s[35] 8 </args>
+      <args> pc[8][36] s[36] 8 </args>
+      <args> pc[8][37] s[37] 8 </args>
+      <args> pc[8][38] s[38] 8 </args>
+      <args> pc[8][39] s[39] 8 </args>
+      <args> pc[8][40] s[40] 8 </args>
+      <args> pc[8][41] s[41] 8 </args>
+      <args> pc[8][42] s[42] 8 </args>
+      <args> pc[8][43] s[43] 8 </args>
+      <args> pc[8][44] s[44] 8 </args>
+      <args> pc[8][45] s[45] 8 </args>
+      <args> pc[8][46] s[46] 8 </args>
+      <args> pc[8][47] s[47] 8 </args>
+      <args> pc[8][48] s[48] 8 </args>
+      <args> pc[8][49] s[49] 8 </args>
+      <args> pc[9][0] s[0] 9 </args>
+      <args> pc[9][1] s[1] 9 </args>
+      <args> pc[9][2] s[2] 9 </args>
+      <args> pc[9][3] s[3] 9 </args>
+      <args> pc[9][4] s[4] 9 </args>
+      <args> pc[9][5] s[5] 9 </args>
+      <args> pc[9][6] s[6] 9 </args>
+      <args> pc[9][7] s[7] 9 </args>
+      <args> pc[9][8] s[8] 9 </args>
+      <args> pc[9][9] s[9] 9 </args>
+      <args> pc[9][10] s[10] 9 </args>
+      <args> pc[9][11] s[11] 9 </args>
+      <args> pc[9][12] s[12] 9 </args>
+      <args> pc[9][13] s[13] 9 </args>
+      <args> pc[9][14] s[14] 9 </args>
+      <args> pc[9][15] s[15] 9 </args>
+      <args> pc[9][16] s[16] 9 </args>
+      <args> pc[9][17] s[17] 9 </args>
+      <args> pc[9][18] s[18] 9 </args>
+      <args> pc[9][19] s[19] 9 </args>
+      <args> pc[9][20] s[20] 9 </args>
+      <args> pc[9][21] s[21] 9 </args>
+      <args> pc[9][22] s[22] 9 </args>
+      <args> pc[9][23] s[23] 9 </args>
+      <args> pc[9][24] s[24] 9 </args>
+      <args> pc[9][25] s[25] 9 </args>
+      <args> pc[9][26] s[26] 9 </args>
+      <args> pc[9][27] s[27] 9 </args>
+      <args> pc[9][28] s[28] 9 </args>
+      <args> pc[9][29] s[29] 9 </args>
+      <args> pc[9][30] s[30] 9 </args>
+      <args> pc[9][31] s[31] 9 </args>
+      <args> pc[9][32] s[32] 9 </args>
+      <args> pc[9][33] s[33] 9 </args>
+      <args> pc[9][34] s[34] 9 </args>
+      <args> pc[9][35] s[35] 9 </args>
+      <args> pc[9][36] s[36] 9 </args>
+      <args> pc[9][37] s[37] 9 </args>
+      <args> pc[9][38] s[38] 9 </args>
+      <args> pc[9][39] s[39] 9 </args>
+      <args> pc[9][40] s[40] 9 </args>
+      <args> pc[9][41] s[41] 9 </args>
+      <args> pc[9][42] s[42] 9 </args>
+      <args> pc[9][43] s[43] 9 </args>
+      <args> pc[9][44] s[44] 9 </args>
+      <args> pc[9][45] s[45] 9 </args>
+      <args> pc[9][46] s[46] 9 </args>
+      <args> pc[9][47] s[47] 9 </args>
+      <args> pc[9][48] s[48] 9 </args>
+      <args> pc[9][49] s[49] 9 </args>
+    </group>
+    <group note="ensuring that each course is assigned to a period">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,1) </condition>
+      </sum>
+      <args> pc[][0] </args>
+      <args> pc[][1] </args>
+      <args> pc[][2] </args>
+      <args> pc[][3] </args>
+      <args> pc[][4] </args>
+      <args> pc[][5] </args>
+      <args> pc[][6] </args>
+      <args> pc[][7] </args>
+      <args> pc[][8] </args>
+      <args> pc[][9] </args>
+      <args> pc[][10] </args>
+      <args> pc[][11] </args>
+      <args> pc[][12] </args>
+      <args> pc[][13] </args>
+      <args> pc[][14] </args>
+      <args> pc[][15] </args>
+      <args> pc[][16] </args>
+      <args> pc[][17] </args>
+      <args> pc[][18] </args>
+      <args> pc[][19] </args>
+      <args> pc[][20] </args>
+      <args> pc[][21] </args>
+      <args> pc[][22] </args>
+      <args> pc[][23] </args>
+      <args> pc[][24] </args>
+      <args> pc[][25] </args>
+      <args> pc[][26] </args>
+      <args> pc[][27] </args>
+      <args> pc[][28] </args>
+      <args> pc[][29] </args>
+      <args> pc[][30] </args>
+      <args> pc[][31] </args>
+      <args> pc[][32] </args>
+      <args> pc[][33] </args>
+      <args> pc[][34] </args>
+      <args> pc[][35] </args>
+      <args> pc[][36] </args>
+      <args> pc[][37] </args>
+      <args> pc[][38] </args>
+      <args> pc[][39] </args>
+      <args> pc[][40] </args>
+      <args> pc[][41] </args>
+      <args> pc[][42] </args>
+      <args> pc[][43] </args>
+      <args> pc[][44] </args>
+      <args> pc[][45] </args>
+      <args> pc[][46] </args>
+      <args> pc[][47] </args>
+      <args> pc[][48] </args>
+      <args> pc[][49] </args>
+    </group>
+    <group note="counting the number of courses in each period">
+      <sum>
+        <list> %... </list>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> co[0] pc[0][] </args>
+      <args> co[1] pc[1][] </args>
+      <args> co[2] pc[2][] </args>
+      <args> co[3] pc[3][] </args>
+      <args> co[4] pc[4][] </args>
+      <args> co[5] pc[5][] </args>
+      <args> co[6] pc[6][] </args>
+      <args> co[7] pc[7][] </args>
+      <args> co[8] pc[8][] </args>
+      <args> co[9] pc[9][] </args>
+    </group>
+    <group note="counting the number of credits in each period">
+      <sum>
+        <list> %... </list>
+        <coeffs> 2 2 4 2 1 2 6 8 9 7 4 6 4 7 9 3 4 9 9 9 8 4 4 1 9 6 6 2 4 7 8 7 8 3 9 1 7 4 10 7 2 3 2 7 1 1 2 4 1 10 </coeffs>
+        <condition> (eq,%0) </condition>
+      </sum>
+      <args> cr[0] pc[0][] </args>
+      <args> cr[1] pc[1][] </args>
+      <args> cr[2] pc[2][] </args>
+      <args> cr[3] pc[3][] </args>
+      <args> cr[4] pc[4][] </args>
+      <args> cr[5] pc[5][] </args>
+      <args> cr[6] pc[6][] </args>
+      <args> cr[7] pc[7][] </args>
+      <args> cr[8] pc[8][] </args>
+      <args> cr[9] pc[9][] </args>
+    </group>
+    <group note="handling prerequisites">
+      <intension> lt(%0,%1) </intension>
+      <args> s[4] s[1] </args>
+      <args> s[7] s[2] </args>
+      <args> s[8] s[2] </args>
+      <args> s[9] s[3] </args>
+      <args> s[11] s[3] </args>
+      <args> s[6] s[4] </args>
+      <args> s[8] s[4] </args>
+      <args> s[7] s[5] </args>
+      <args> s[8] s[5] </args>
+      <args> s[9] s[5] </args>
+      <args> s[10] s[5] </args>
+      <args> s[11] s[5] </args>
+      <args> s[13] s[6] </args>
+      <args> s[14] s[6] </args>
+      <args> s[13] s[7] </args>
+      <args> s[14] s[7] </args>
+      <args> s[16] s[7] </args>
+      <args> s[17] s[7] </args>
+      <args> s[17] s[8] </args>
+      <args> s[17] s[9] </args>
+      <args> s[18] s[9] </args>
+      <args> s[13] s[10] </args>
+      <args> s[13] s[11] </args>
+      <args> s[17] s[11] </args>
+      <args> s[18] s[11] </args>
+      <args> s[19] s[13] </args>
+      <args> s[22] s[13] </args>
+      <args> s[23] s[14] </args>
+      <args> s[22] s[15] </args>
+      <args> s[22] s[16] </args>
+      <args> s[21] s[18] </args>
+      <args> s[22] s[18] </args>
+      <args> s[25] s[20] </args>
+      <args> s[27] s[20] </args>
+      <args> s[29] s[20] </args>
+      <args> s[25] s[21] </args>
+      <args> s[27] s[21] </args>
+      <args> s[30] s[21] </args>
+      <args> s[25] s[22] </args>
+      <args> s[26] s[22] </args>
+      <args> s[26] s[23] </args>
+      <args> s[31] s[25] </args>
+      <args> s[33] s[25] </args>
+      <args> s[31] s[26] </args>
+      <args> s[33] s[26] </args>
+      <args> s[31] s[27] </args>
+      <args> s[32] s[27] </args>
+      <args> s[32] s[29] </args>
+      <args> s[33] s[29] </args>
+      <args> s[33] s[30] </args>
+      <args> s[37] s[31] </args>
+      <args> s[34] s[32] </args>
+      <args> s[36] s[32] </args>
+      <args> s[37] s[32] </args>
+      <args> s[34] s[33] </args>
+      <args> s[41] s[34] </args>
+      <args> s[42] s[34] </args>
+      <args> s[43] s[34] </args>
+      <args> s[41] s[36] </args>
+      <args> s[41] s[37] </args>
+      <args> s[39] s[38] </args>
+      <args> s[49] s[39] </args>
+      <args> s[45] s[41] </args>
+      <args> s[46] s[42] </args>
+      <args> s[46] s[43] </args>
+    </group>
+    <maximum>
+      <list> cr[] </list>
+      <condition> (eq,aux_gb[0]) </condition>
+    </maximum>
+    <minimum>
+      <list> cr[] </list>
+      <condition> (eq,aux_gb[1]) </condition>
+    </minimum>
+  </constraints>
+  <objectives>
+    <minimize note="minimizing the maximal distance in term of credits"> sub(aux_gb[0],aux_gb[1]) </minimize>
+  </objectives>
+  <annotations>
+    <decision> s[] </decision>
+  </annotations>
+</instance>

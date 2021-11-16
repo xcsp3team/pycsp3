@@ -1,0 +1,54 @@
+<instance format="XCSP3" type="CSP">
+  <variables>
+    <array id="x" note="x[i][j] is the region (number) where the square at row i and column j belongs (borders are inserted for simplicity)" size="[5][5]">
+      <domain for="x[0][] x[1][0] x[1][4] x[2][0] x[2][4] x[3][0] x[3][4] x[4][]"> -1 </domain>
+      <domain for="x[1..3][1..3]"> 0..2 </domain>
+    </array>
+    <array id="d" note="d[i][j] is the distance of the square at row i and column j wrt the starting square of the (same) region" size="[5][5]">
+      <domain for="d[0][] d[1][0] d[1][4] d[2][0] d[2][4] d[3][0] d[3][4] d[4][]"> -1 </domain>
+      <domain for="d[1..3][1..3]"> 0..3 </domain>
+    </array>
+  </variables>
+  <constraints>
+    <instantiation note="setting starting squares of regions">
+      <list> x[1][1] x[1][3] x[3][1] d[1][1] d[1][3] d[3][1] </list>
+      <values> 0 1 2 0x3 </values>
+    </instantiation>
+    <group note="respecting the size of each region">
+      <count>
+        <list> x[][] </list>
+        <values> %0 </values>
+        <condition> (eq,%1) </condition>
+      </count>
+      <args> 0 2 </args>
+      <args> 1 3 </args>
+      <args> 2 4 </args>
+    </group>
+    <block note="each starting square of a (non-unit) region must have at least one neighbor at distance 1">
+      <extension>
+        <list> x[1][1] x[1][0] x[1][2] x[0][1] x[2][1] d[1][1] d[1][0] d[1][2] d[0][1] d[2][1] </list>
+        <supports> (0,0,*,*,*,0,1,*,*,*)(0,*,0,*,*,0,*,1,*,*)(0,*,*,0,*,0,*,*,1,*)(0,*,*,*,0,0,*,*,*,1) </supports>
+      </extension>
+      <extension>
+        <list> x[1][3] x[1][2] x[1][4] x[0][3] x[2][3] d[1][3] d[1][2] d[1][4] d[0][3] d[2][3] </list>
+        <supports> (1,1,*,*,*,0,1,*,*,*)(1,*,1,*,*,0,*,1,*,*)(1,*,*,1,*,0,*,*,1,*)(1,*,*,*,1,0,*,*,*,1) </supports>
+      </extension>
+      <extension>
+        <list> x[3][1] x[3][0] x[3][2] x[2][1] x[4][1] d[3][1] d[3][0] d[3][2] d[2][1] d[4][1] </list>
+        <supports> (2,2,*,*,*,0,1,*,*,*)(2,*,2,*,*,0,*,1,*,*)(2,*,*,2,*,0,*,*,1,*)(2,*,*,*,2,0,*,*,*,1) </supports>
+      </extension>
+    </block>
+    <group note="each square must be connected to a neighbour at distance 1">
+      <extension>
+        <list> %... </list>
+        <supports> (0,0,*,*,*,1,0,*,*,*)(0,*,0,*,*,1,*,0,*,*)(0,*,*,0,*,1,*,*,0,*)(0,*,*,*,0,1,*,*,*,0)(1,1,*,*,*,1,0,*,*,*)(1,1,*,*,*,2,1,*,*,*)(1,*,1,*,*,1,*,0,*,*)(1,*,1,*,*,2,*,1,*,*)(1,*,*,1,*,1,*,*,0,*)(1,*,*,1,*,2,*,*,1,*)(1,*,*,*,1,1,*,*,*,0)(1,*,*,*,1,2,*,*,*,1)(2,2,*,*,*,1,0,*,*,*)(2,2,*,*,*,2,1,*,*,*)(2,2,*,*,*,3,2,*,*,*)(2,*,2,*,*,1,*,0,*,*)(2,*,2,*,*,2,*,1,*,*)(2,*,2,*,*,3,*,2,*,*)(2,*,*,2,*,1,*,*,0,*)(2,*,*,2,*,2,*,*,1,*)(2,*,*,2,*,3,*,*,2,*)(2,*,*,*,2,1,*,*,*,0)(2,*,*,*,2,2,*,*,*,1)(2,*,*,*,2,3,*,*,*,2) </supports>
+      </extension>
+      <args> x[1][2] x[1][1] x[1][3] x[0][2] x[2][2] d[1][2] d[1][1] d[1][3] d[0][2] d[2][2] </args>
+      <args> x[2][1] x[2][0] x[2][2] x[1][1] x[3][1] d[2][1] d[2][0] d[2][2] d[1][1] d[3][1] </args>
+      <args> x[2][2] x[2][1] x[2][3] x[1][2] x[3][2] d[2][2] d[2][1] d[2][3] d[1][2] d[3][2] </args>
+      <args> x[2][3] x[2][2] x[2][4] x[1][3] x[3][3] d[2][3] d[2][2] d[2][4] d[1][3] d[3][3] </args>
+      <args> x[3][2] x[3][1] x[3][3] x[2][2] x[4][2] d[3][2] d[3][1] d[3][3] d[2][2] d[4][2] </args>
+      <args> x[3][3] x[3][2] x[3][4] x[2][3] x[4][3] d[3][3] d[3][2] d[3][4] d[2][3] d[4][3] </args>
+    </group>
+  </constraints>
+</instance>

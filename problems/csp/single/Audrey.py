@@ -64,7 +64,7 @@ elif variant("display2"):
 
 """ Comments
 1) the main model variant is sufficient to compute solutions.
-   It is the fastest model. Hence, in a real-world application, 
+   It is the fastest model. Hence, in a complex-world application, 
    adding constraints for pure presentational issue should be carefully thought. 
 2) the variant 'display1' allows us to display the values (and not only the chaining).
    From this variant, to really get a matrix being printed, on can add:
