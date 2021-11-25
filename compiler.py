@@ -197,9 +197,9 @@ def default_data(filename):
 
 def load_json_data(filename):
     """
-    Loads the data from the file (possibly from an URL)
+    Loads data from the specified JSON file (possibly given by an URL)
 
-    :param filename: filemane or ULR for a JSON content
+    :param filename: mane (possibly ULR) of a JSON file
     :return: the loaded data
     """
     assert filename.endswith(".json")

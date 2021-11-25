@@ -15,7 +15,7 @@ pp, fp = d.get("voucherPayPart"), d.get("voucherFreePart")
 assert len(pp) == len(fp)
 
 data["pizzaPrices"] = d.get("pizzaPrices")
-data["vouchers"] = [OrderedDict([("payPart", pp[i]), ("freePart", fp[i])]) for i in range(len(pp))]
+data["vouchers"] = [OrderedDict([("pay", pp[i]), ("free", fp[i])]) for i in range(len(pp))]
 
 pos = name.rfind("/")
 Compilation.string_data = "-" + name[pos + 1:] if pos != -1 else name

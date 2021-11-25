@@ -833,6 +833,11 @@ class _Auxiliary:
         self.prefix = "aux_gb"
         self.cache = []
 
+    def __clear(self):
+        self._introduced_variables = []
+        self._collected_constraints = []
+        self.cache = []
+
     def __replace(self, obj, dom):
         assert dom.get_type() == TypeVar.INTEGER
         index = len(self._introduced_variables)

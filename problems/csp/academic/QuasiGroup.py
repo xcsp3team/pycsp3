@@ -36,19 +36,19 @@ if variant("base"):
         )
     elif subvariant("v4"):
         satisfy(
-            x[x[j, i], x[i, j]] == i for i in range(n) for j in range(n)
+            x[x[j][i], x[i][j]] == i for i in range(n) for j in range(n)
         )
     elif subvariant("v5"):
         satisfy(
-            x[x[x[j, i], j], j] == i for i in range(n) for j in range(n)
+            x[x[x[j][i], j], j] == i for i in range(n) for j in range(n)
         )
     elif subvariant("v6"):
         satisfy(
-            x[x[i, j], j] == x[i, x[i, j]] for i in range(n) for j in range(n)
+            x[x[i][j], j] == x[i, x[i][j]] for i in range(n) for j in range(n)
         )
     elif subvariant("v7"):
         satisfy(
-            x[x[j, i], j] == x[i, x[j, i]] for i in range(n) for j in range(n)
+            x[x[j][i], j] == x[i, x[j][i]] for i in range(n) for j in range(n)
         )
 elif variant("aux"):
     if subvariant("v3"):
