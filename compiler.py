@@ -102,6 +102,10 @@ def _load_data():
     if data is None:
         return OrderedDict(), ""
     if data.endswith(".json"):  # a single json file
+        if data.startswith("http"):
+            from urllib.request import urlopen
+            # example: python Nonogram.py -data=https://www.cril.univ-artois.fr/~lecoutre/heart.json
+            return json.loads(urlopen(data).read(), object_pairs_hook=OrderedDict), "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
         assert os.path.exists(data), "The file " + data + " does not exist (in the specified directory)."
         with open(data) as f:
             return json.loads(f.read(), object_pairs_hook=OrderedDict), "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
@@ -205,8 +209,7 @@ def load_json_data(filename):
     assert filename.endswith(".json")
     if filename.startswith("http"):
         from urllib.request import urlopen
-        response = urlopen(filename)
-        data = json.loads(response.read(), object_pairs_hook=OrderedDict)
+        data = json.loads(urlopen(filename).read(), object_pairs_hook=OrderedDict)
         # test it with https://www.cril.univ-artois.fr/~lecoutre/students.json
     else:
         assert os.path.exists(filename), "The file " + filename + " does not exist (in the specified directory)."

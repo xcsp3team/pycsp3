@@ -22,7 +22,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSym
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, OpOverrider, ListInt, ListVar, ListCtr
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, ANY
+from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL
 
 ''' Global Variables '''
 
@@ -1199,7 +1199,8 @@ def unpost(i=None, j=None):
     If no parameter is specified, discards the last posting operation (call to satisfy).
     If two parameters are specified, discards the constraint(s) whose index(es) is specified
     by the second argument j (possibly a slice) inside the posting operation whose index is specified by the first parameter.
-    If one parameter is specified, discards the posting operation whose index is specified.
+    If one parameter is specified, discards the posting operation whose index is specified,
+    except if the constant ALL is used, in which case all posted constraints are discarded.
 
     :param i: the index of the posting operation (call to satisfy) to be discarded (if j is None)
     :param j: the index (or slice) of the constraint(s) to be removed inside the group of constraints
@@ -1208,8 +1209,11 @@ def unpost(i=None, j=None):
     if i is None:
         i = -1
     if j is None:
-        assert isinstance(i, (int, slice))
-        del CtrEntities.items[i]
+        if i is ALL:
+            CtrEntities.items = []
+        else:
+            assert isinstance(i, (int, slice))
+            del CtrEntities.items[i]
     else:
         assert isinstance(i, int)
         CtrEntities.items[i].delete(j)

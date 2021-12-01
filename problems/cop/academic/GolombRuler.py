@@ -19,7 +19,7 @@ x = VarArray(size=n, dom=range(ub))
 if not variant():
     satisfy(
         # all distances are different
-        AllDifferent(abs(x[i] - x[j]) for i, j in combinations(range(n), 2))
+        AllDifferent(abs(x[i] - x[j]) for i, j in combinations(n, 2))
     )
 elif variant("dec"):
     satisfy(
@@ -35,7 +35,7 @@ elif variant("aux"):
         AllDifferent(y),
 
         # linking variables from both arrays
-        [x[j] == x[i] + y[i][j] for i, j in combinations(range(n), 2)]
+        [x[j] == x[i] + y[i][j] for i, j in combinations(n, 2)]
     )
     annotate(decision=x)
 

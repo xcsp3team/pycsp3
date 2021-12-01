@@ -838,7 +838,7 @@ class _Auxiliary:
         self._collected_constraints = []
         self.cache = []
 
-    def __replace(self, obj, dom):
+    def __replace(self, obj, dom, *, systematically_append_obj=True):
         assert dom.get_type() == TypeVar.INTEGER
         index = len(self._introduced_variables)
         name = self.prefix + "[" + str(index) + "]"
@@ -848,8 +848,8 @@ class _Auxiliary:
             self._introduced_variables = EVarArray([var], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
         else:
             self._introduced_variables.extend_with(var)
-        # if obj:
-        self._collected_constraints.append((obj, var))
+        if systematically_append_obj or obj:
+            self._collected_constraints.append((obj, var))
         return var
 
     def replace_partial_constraint(self, pc):
@@ -885,7 +885,7 @@ class _Auxiliary:
         if all(0 <= v < length for v in index.dom):
             return None
         values = possible_range({v for v in index.dom if 0 <= v < length})
-        return self.__replace(None, Domain(values))
+        return self.__replace(None, Domain(values), systematically_append_obj=False)
 
     def collected(self):
         t = self._collected_constraints
@@ -911,9 +911,9 @@ def global_indirection(c):
         index = c.arguments[TypeCtrArg.INDEX].content
         length = len(c.arguments[TypeCtrArg.LIST].content)
         aux = auxiliary().replace_element_index(length, index)
-        if aux:
+        if aux:  # this is the case if we need another variable to have a correct indexing
             c.arguments[TypeCtrArg.INDEX].content = aux
-            # below, should we replace ANY by a specific value (for avoid interchageable values)?
+            # below, should we replace ANY by a specific value (for avoid interchangeable values)?
             functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
     if isinstance(c, ConstraintAllDifferent):
         lst = c.arguments[TypeCtrArg.LIST].content

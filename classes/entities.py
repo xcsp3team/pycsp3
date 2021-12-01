@@ -153,6 +153,8 @@ class ECtrs(Entity):
                 t.append(e.constraint)
             elif isinstance(e, ECtrs):
                 e._flat_constraints(t)
+            elif isinstance(e, EMetaCtr):
+                t.append(e)
         return t
 
     def flat_constraints(self):
@@ -220,6 +222,9 @@ class EMetaCtr(Entity):
         checkType(self.entities, [ECtr, EMetaCtr])
         assert len(self.entities) >= min_arity, "At least " + str(min_arity) + " components must be specified in the meta-constraint"
         assert max_arity is None or len(self.entities) <= max_arity, "At most " + str(max_arity) + " components must be specified in the meta-constraint"
+
+    def __repr__(self):
+        return str(self.id) + "(" + ",".join(str(e.constraint) for e in self.entities) + ")"
 
 
 class EAnd(EMetaCtr):

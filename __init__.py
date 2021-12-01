@@ -19,7 +19,7 @@ from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, Increasi
 from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import columns, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
-from pycsp3.tools.utilities import ANY, combinations, different_values, flatten, alphabet_positions, all_primes, integer_scaling, to_ordinary_table
+from pycsp3.tools.utilities import ANY, ALL, combinations, different_values, flatten, alphabet_positions, all_primes, integer_scaling, to_ordinary_table
 
 from pycsp3.classes.auxiliary.conditions import lt, le, ge, gt, eq, ne, complement
 from pycsp3.classes.auxiliary.ptypes import TypeStatus, TypeSolver
@@ -49,8 +49,6 @@ ACE = TypeSolver.ACE
 CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
 
-ALL = "all"
-""" Constant used to indicate that all solutions must be sought """
 
 if sys.argv:
     if len(sys.argv) == 1 and sys.argv[0] == "-m":  # copy of models
@@ -161,6 +159,9 @@ def bound():
 
 
 def core():
+    """
+    returns core identified by the last extraction operation, or None
+    """
     return None if _solver is None else _solver.core
 
 

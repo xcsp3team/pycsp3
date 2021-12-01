@@ -35,7 +35,10 @@ class _Star(float):
 
 
 ANY = _Star("Inf")  #: used to represent * in short tables
-""" Constant used to  represent * in starred tables """
+""" Constant used to represent * in starred tables """
+
+ALL = "all"
+""" Constant used to indicate, for example, that all solutions must be sought """
 
 combinationsItertools = combinations
 

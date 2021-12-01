@@ -26,7 +26,12 @@ class DataParser:
             values = [data_value]
         self.lines = []
         for value in values:
-            if os.path.isfile(value):
+            if value.startswith("http"):
+                from urllib.request import urlopen
+                # example: python Nonogram.py -data=https://www.cril.univ-artois.fr/~lecoutre/heart.txt -dataparser=Nonogram_Parser.py
+                for l in urlopen(value):
+                    self.lines += [l.decode("utf-8").strip()]
+            elif os.path.isfile(value):
                 with open(value) as f:
                     self.lines += [line[:-1].strip() if line[-1] == '\n' else line.strip() for line in f.readlines() if len(line.strip()) > 0]
             else:
