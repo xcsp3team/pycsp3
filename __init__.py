@@ -117,7 +117,7 @@ def solver(name=None):
     return _solver if name is None else _set_solver(name)
 
 
-def compile(filename=None, *, verbose=1):
+def compile(filename=None, *, verbose=0):
     """
     Compiles the current model
 

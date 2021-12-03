@@ -178,49 +178,46 @@ def _load(*, console=False):
     options.verbose and print("\tWCK for loading model and data:", Compilation.stopwatch.elapsed_time(), "seconds")
 
 
-def default_data(filename):
+def load_json_data(filename, *, storing=False):
     """
-    Loads and returns the data in the JSON file whose name is specified.
+    Loads and returns the data from the specified JSON file (possibly given by an URL)
 
-    :param filename: the filename of the JSON file containing the data to be loaded by default
-    :return: the loaded data
-    """
-    assert filename.endswith(".json")
-    if filename[0] == '.':
-        fn = os.path.abspath('.') + filename[1:]
-    else:
-        fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
-    assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
-    with open(fn) as f:
-        Compilation.data = convert_to_namedtuples(json.loads(f.read(), object_pairs_hook=OrderedDict))
-        Compilation.string_data = "-" + filename.split(os.sep)[-1:][0].split(".")[:1][0]
-    if len(Compilation.data) == 1:
-        Compilation.data = Compilation.data[0]  # the value instead of a tuple of size 1
-    return Compilation.data
-
-
-def load_json_data(filename):
-    """
-    Loads data from the specified JSON file (possibly given by an URL)
-
-    :param filename: mane (possibly ULR) of a JSON file
+    :param filename: name (possibly ULR) of a JSON file
     :return: the loaded data
     """
     assert filename.endswith(".json")
     if filename.startswith("http"):
         from urllib.request import urlopen
         data = json.loads(urlopen(filename).read(), object_pairs_hook=OrderedDict)
-        # test it with https://www.cril.univ-artois.fr/~lecoutre/students.json
     else:
-        assert os.path.exists(filename), "The file " + filename + " does not exist (in the specified directory)."
-        with open(filename) as f:
+        if os.path.exists(filename):
+            fn = filename
+        elif filename[0] == '.':
+            fn = os.path.abspath('.') + filename[1:]
+        else:
+            fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
+        assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
+        with open(fn) as f:
             data = json.loads(f.read(), object_pairs_hook=OrderedDict)
     data = convert_to_namedtuples(data)
     if len(data) == 0:
         data = None
     elif len(data) == 1:
         data = data[0]  # the value instead of a tuple of size 1
+    if storing:
+        Compilation.data = data
+        Compilation.string_data = "-" + filename.split(os.sep)[-1:][0].split(".")[:1][0]
     return data
+
+
+def default_data(filename):
+    """
+    Loads data from the specified JSON file (possibly given by an URL)
+
+    :param filename: mane (possibly ULR) of a JSON file
+    :return: the loaded data
+    """
+    return load_json_data(filename, storing=True)
 
 
 def _compile(disabling_opoverrider=False, verbose=1):
