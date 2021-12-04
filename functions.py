@@ -1156,16 +1156,23 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
 ''' Helpers '''
 
 
-def posted(i=None, j=None, *, absolute=False):
+def posted(i=None, j=None):
+    """
+    Returns the list of posted constraints when no parameter is specified.
+    Returns the constraints of the ith posted operation, otherwise; possibly
+    a subset is returned if teh second parameter j is specified.
+
+    :param i: the number/index of the posting operation (i.e., call to satisfy())
+    :param j: the number (or slice) of the constraint wrt the ith posting operation
+    """
     t = []
-    if i is None:  # all posted constraints are returned
-        assert j is None and absolute is False
+    if i is None or i is ALL:  # all posted constraints are returned
+        assert j is None
         for item in CtrEntities.items:
             assert isinstance(item, EToSatisfy)
             t.extend(c for c in item.flat_constraints())
-        return t if len(t) == 0 else ListCtr(t)
-    assert isinstance(i, (int, slice))
-    if absolute is False:
+    else:
+        assert isinstance(i, (int, slice))
         if j is None:
             for item in [CtrEntities.items[i]] if isinstance(i, int) else CtrEntities.items[i]:
                 assert isinstance(item, EToSatisfy)
@@ -1177,13 +1184,7 @@ def posted(i=None, j=None, *, absolute=False):
                 t.append(item.flat_constraints()[j])
             else:
                 t.extend(c for c in item.flat_constraints()[j])
-        return ListCtr(t)
-    else:
-        assert j is None
-        for item in CtrEntities.items:
-            assert isinstance(item, EToSatisfy)
-            t.extend(c for c in item.flat_constraints())
-        return t[i] if isinstance(i, int) else ListCtr(t[i])
+    return t if len(t) == 0 else ListCtr(t)
 
 
 def objective():
@@ -1237,7 +1238,6 @@ def values(m, *, sol=-1):
 
     :param m: a structure (typically list) of any dimension involving variables
     :param sol: the index of a found solution
-    :return:
     """
     if isinstance(m, Variable):
         return value(m, sol=sol)
