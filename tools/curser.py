@@ -557,7 +557,7 @@ class ListVar(list):
     # def __new__(self, variables):  # if we subclass tuple instead of list (while removing __init__)
     #     return super().__new__(ListVar, variables)
 
-    def __init__(self, variables):
+    def __init__(self, variables=[]):
         super().__init__(variables)
         self.values = None
 

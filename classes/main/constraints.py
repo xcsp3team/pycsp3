@@ -756,6 +756,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         if isinstance(obj1, ScalarProduct):
             obj1 = PartialConstraint(ConstraintSum(obj1.variables, obj1.coeffs, None))  # to be sure to have at least one PartialConstraint
         assert isinstance(obj1, PartialConstraint) or isinstance(obj2, PartialConstraint)
+        if obj2 is None:
+            return obj1
         inverted, obj1, obj2 = (False, obj1, obj2) if isinstance(obj1, PartialConstraint) else (True, obj2, obj1)
         pair = obj2.var_val_if_binary_type(TypeNode.MUL) if isinstance(obj2, Node) else None
         if pair:

@@ -22,7 +22,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSym
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, OpOverrider, ListInt, ListVar, ListCtr
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL
+from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, warning
 
 ''' Global Variables '''
 
@@ -108,13 +108,19 @@ def Var(term=None, *others, dom=None):
             if dom[-1] - dom[0] + 1 == len(dom):
                 dom = range(dom[0], dom[-1] + 1)
         dom = Domain(dom)
-    name = extract_declaration_for("Var")
-    comment, tags = comment_and_tags_of(function_name="Var")
-
-    assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
-    assert name not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
     assert dom.get_type() in {TypeVar.INTEGER, TypeVar.SYMBOLIC}, "Currently, only integer and symbolic variables are supported. Problem with " + str(dom)
+
+    name = extract_declaration_for("Var")
+    if name is None:
+        if not hasattr(Var, "fly"):
+            Var.fly = True
+            warning("at least, one variable created on the fly")
+        return dom
+    assert name not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
     assert str(name) not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
+
+    comment, tags = comment_and_tags_of(function_name="Var")
+    assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
 
     var_object = VariableInteger(name, dom) if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name, dom)
     Variable.name2obj[name] = var_object
@@ -122,7 +128,7 @@ def Var(term=None, *others, dom=None):
     return var_object
 
 
-def VarArray(*, size, dom, comment=None):
+def VarArray(vars=None, *, size=None, dom=None, comment=None):
     """
     Builds an array of variables.
     The number of dimensions of the array is given by the number of values in size.
@@ -135,11 +141,17 @@ def VarArray(*, size, dom, comment=None):
     :param comment: a string
     :return: an array of variables
     """
+    if vars is not None:
+        assert isinstance(vars, list) and size is None and dom is None and comment is None
+        assert all(isinstance(v, Domain) or v is None for v in vars)
+        return VarArray(size=len(vars), dom=lambda i: vars[i])
+
     size = [size] if isinstance(size, int) else size
     assert all(dimension != 0 for dimension in size), "No dimension must not be equal to 0"
     checkType(size, [int])
     # checkType(dom, (range, Domain, [int, range, str, Domain, type(None)], type(lambda: 0)))  # TODO a problem with large sets
     name = extract_declaration_for("VarArray")
+    assert name is not None, " the object returned by VarArray should be assigned to a variable"
     if comment is None and not isinstance(name, list):
         comment, tags = comment_and_tags_of(function_name="VarArray")
     else:
@@ -820,6 +832,8 @@ def Sum(term, *others, condition=None):
 
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
+    # if len(terms) == 0:
+    #     return None
     auxiliary().replace_nodes_and_partial_constraints(terms)
 
     terms, coeffs = _get_terms_coeffs(terms)
@@ -911,6 +925,10 @@ def Cardinality(term, *others, occurrences, closed=False):
 def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
     terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have PartialConstraints
+    # if len(terms) == 0:
+    #     return None
+    # if len(terms) == 1:
+    #     return terms[0]
     checkType(terms, ([Variable, Node], [PartialConstraint]))
     auxiliary().replace_nodes_and_partial_constraints(terms)
     checkType(index, (Variable, type(None)))
@@ -930,7 +948,8 @@ def Maximum(term, *others, index=None, condition=None):
     :param condition: a condition directly specified for the maximum (typically, None)
     :return: a component/constraint Maximum
     """
-    return _wrapping_by_complete_or_partial_constraint(_extremum(term, others, index, 0, TypeRank.ANY, condition, True))
+    ex = _extremum(term, others, index, 0, TypeRank.ANY, condition, True)
+    return _wrapping_by_complete_or_partial_constraint(ex) if isinstance(ex, ConstraintMaximum) else ex
 
 
 def Minimum(term, *others, index=None, condition=None):
@@ -943,7 +962,8 @@ def Minimum(term, *others, index=None, condition=None):
     :param condition: a condition directly specified for the minimum (typically, None)
     :return: a component/constraint Minimum
     """
-    return _wrapping_by_complete_or_partial_constraint(_extremum(term, others, index, 0, TypeRank.ANY, condition, False))
+    ex = _extremum(term, others, index, 0, TypeRank.ANY, condition, False)
+    return _wrapping_by_complete_or_partial_constraint(ex) if isinstance(ex, ConstraintMinimum) else ex
 
 
 def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
