@@ -1,6 +1,6 @@
-<h1 align="center"> PyCSP3 v1.3 </h1>
+<h1 align="center"> PyCSP3 v2.0 (december 15, 2021) </h1>
 
-This is Version 1.3 of PyCSP3, a library in Python 3 (version 3.5 or later) for modeling combinatorial constrained problems.
+This is Version 2.0 of PyCSP3, a library in Python 3 (version 3.6 or later) for modeling combinatorial constrained problems.
 PyCSP3 is inspired from both [JvCSP3](http://www.xcsp.org/modeling) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). 
 
 With PyCSP3, it is possible to generate instances of:
@@ -24,7 +24,7 @@ Information about how piloting these embedded solvers can be found in [this docu
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
 It is, for example, immediate to run 'Ace' or 'Choco' on XCSP3 instances (files) as the respective executables (jar files) are 
 present in directories `pycsp3/solvers/abscon` and  `pycsp3/solvers/choco`.
-For example, for running 'Ace' on the XCSP3 instance 'zebra.xml', just execute:
+For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
 ```console
 java -jar ACE-YY-MM.jar zebra.xml 
 
