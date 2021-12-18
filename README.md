@@ -16,8 +16,8 @@ Note that:
 
 
 At this stage, one can run two embedded solvers:
-* the constraint solver 'ACE' (AbsCon Essence), with the option -solve or the option -solver=ace
-* the constraint solver 'Choco, with the option -solver=choco
+* the constraint solver [ACE](https://github.com/xcsp3team/ace) (AbsCon Essence), with the option -solve or the option -solver=ace
+* the constraint solver [Choco](https://choco-solver.org/), with the option -solver=choco
 
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
 
