@@ -160,6 +160,7 @@ export PYTHONPATH=$PYTHONPATH:.
 # 3) Compilation and Examples
 
 We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
+However, note that many illustrations are available on [www.pycsp.org](http://pycsp.org/), notably many [models](http://pycsp.org/documentation/models/) with Jupyter notebooks. 
 But first, we give some general information about compilation.
 
 ## Compiling PyCSP3 Models
