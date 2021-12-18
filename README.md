@@ -10,9 +10,10 @@ in format XCSP3; see [www.xcsp.org](www.xcsp.org).
 Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514),  which allows us to use integer variables (with finite domains) and popular constraints.
 
 Note that:
+* a dedicated [website](http://pycsp.org/) with more than 60 Jupyter notebooks is available
 * a [well-documented guide](https://arxiv.org/abs/2009.00326) is available
 * PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
-* a dedicated [website](http://pycsp.org/) with more than 60 Jupyter notebooks is available
+
 
 At this stage, one can run two embedded solvers:
 * the constraint solver 'ACE' (AbsCon Essence), with the option -solve or the option -solver=ace
