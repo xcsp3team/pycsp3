@@ -31,7 +31,7 @@ java -jar ACE-YY-MM.jar zebra.xml
 ```
 while replacing YY and MM with the current values that are present in the name of the jar file.
 
-Note that, it is also possible to pilot solvers with Python; see [PyCSP Solving Process](http://pycsp.org/documentation/solving-process/).
+Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](http://pycsp.org/documentation/solving-process/).
 
 
 # 1) Installation from PyPi
