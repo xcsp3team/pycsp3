@@ -1,4 +1,4 @@
-<h1 align="center"> PyCSP3 v2.0 (december 15, 2021) </h1>
+<h1 align="center"> PyCSP3 v2.0 (December 15, 2021) </h1>
 
 This is Version 2.0 of PyCSP3, a library in Python 3 (version 3.6 or later) for modeling combinatorial constrained problems.
 PyCSP3 is inspired from both [JvCSP3](http://www.xcsp.org/modeling) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). 
