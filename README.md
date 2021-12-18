@@ -14,6 +14,7 @@ Note that:
 * the code is available on [Github](https://github.com/xcsp3team/pycsp3)
 * a [well-documented guide](https://github.com/xcsp3team/pycsp3/blob/master/guidePyCSP3.pdf) is available
 * PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
+* a dedicated [website](http://pycsp.org/) with more than 60 Jupyter notebooks is available
 
 At this stage, one can run two embedded solvers:
 * the constraint solver 'ACE' (AbsCon Essence), with the option -solve or the option -solver=ace
