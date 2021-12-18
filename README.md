@@ -10,7 +10,6 @@ in format XCSP3; see [www.xcsp.org](www.xcsp.org).
 Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514),  which allows us to use integer variables (with finite domains) and popular constraints.
 
 Note that:
-* the code is available on [Github](https://github.com/xcsp3team/pycsp3)
 * a [well-documented guide](https://arxiv.org/abs/2009.00326) is available
 * PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
 * a dedicated [website](http://pycsp.org/) with more than 60 Jupyter notebooks is available
