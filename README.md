@@ -398,7 +398,7 @@ For compiling the second model variant, using the option `-variant`, the command
 python3 AllInterval.py -data=5 -variant=aux
 ```
 
-To generate and solve (with Ace) the instance of order 10 and variant 'aux', the command is:
+To generate and solve (with ACE) the instance of order 10 and variant 'aux', the command is:
 
 ```console
 python3 AllInterval.py -data=10 -variant=aux -solve
