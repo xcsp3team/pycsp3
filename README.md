@@ -143,7 +143,7 @@ python problems\csp\single\Zebra.py (For Windows)
 
 # 2) Installation (alternative) by Cloning from GitHub
 
-An alternative to Pypi is to clone the code from GitHub.
+An alternative to PyPi is to clone the code from GitHub.
 Here is an illustration for MAC OS.
 We assume that Python 3 is installed (otherwise, type `port install python38` for example), and consequently 'pip3' is also installed.
 In a console, type:
