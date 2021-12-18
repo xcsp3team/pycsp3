@@ -58,10 +58,10 @@ sudo pip3 install pycsp3
 
 ```
 
-For using the -solve or -solver options, you need to have Java (at least, version 8) installed:
+For using the -solve or -solver options, you need to have Java (at least, version 11) installed:
 
 ```console
-sudo apt-get install openjdk-8-jdk
+sudo apt-get install openjdk-11-jdk
 ```
 
 
