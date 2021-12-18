@@ -260,7 +260,7 @@ To generate the XCSP3 instance (file), the command is:
 python3 SendMore.py
 ```
 
-To generate and solve (with Ace) the XCSP3 instance, the command is:
+To generate and solve (with ACE) the XCSP3 instance, the command is:
 
 ```console
 python3 SendMore.py -solve
