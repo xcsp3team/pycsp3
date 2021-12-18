@@ -11,8 +11,8 @@ Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514),
 
 Note that:
 * a dedicated [website](http://pycsp.org/) with more than 60 Jupyter notebooks is available
-* a [well-documented guide](https://arxiv.org/abs/2009.00326) is available
-* PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
+* a well-documented [guide](https://arxiv.org/abs/2009.00326) is available
+* PyCSP3 is available as a [PyPi package](https://pypi.org/project/pycsp3/)
 
 
 At this stage, one can run two embedded solvers:
