@@ -187,6 +187,10 @@ def solve(*, solver=ACE, options="", filename=None, verbose=-1, sols=None, extra
             options += " -v=" + str(verbose)
             if sols == ALL or isinstance(sols, int) and sols > 1:
                 options += " -xe -xc=false"
+        elif solver == CHOCO:
+            #options += " -v=" + str(verbose)
+            if sols == ALL or isinstance(sols, int) and sols > 1:
+                options += " -a "
         _solver.setting(options)
         limit = "limit=no" if sols == ALL else "limit=" + str(sols) + "sols" if isinstance(sols, int) else ""
         return _solver.solve(instance, string_options=limit, dict_options=dict(), dict_simplified_options=dict(), verbose=verbose, extraction=extraction)
