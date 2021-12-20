@@ -1,8 +1,7 @@
-<h1 align="center"> PyCSP3 v2.0 (december 15, 2021) </h1>
+<h1 align="center"> PyCSP3 v2.0 (December 15, 2021) </h1>
 
-This is Version 2.0 of PyCSP3, a library in Python 3 (version 3.6 or later) for modeling combinatorial constrained problems.
-PyCSP3 is inspired from both [JvCSP3](http://www.xcsp.org/modeling) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). 
-
+This is Version 2.0 of PyCSP3, a library in Python 3 (version 3.6 or later) for modeling combinatorial constrained problems; see [www.pycsp.org](http://pycsp.org).
+PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). 
 With PyCSP3, it is possible to generate instances of:
 1. CSPs (Constraint Satisfaction Problems)
 1. COPs (Constraint Optimization Problems)
@@ -11,19 +10,20 @@ in format XCSP3; see [www.xcsp.org](www.xcsp.org).
 Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514),  which allows us to use integer variables (with finite domains) and popular constraints.
 
 Note that:
-* the code is available on [Github](https://github.com/xcsp3team/pycsp3)
-* a [well-documented guide](https://github.com/xcsp3team/pycsp3/blob/master/guidePyCSP3.pdf) is available
-* PyCSP3 is available as a PyPi package [here](https://pypi.org/project/pycsp3/)
+* a dedicated [website](http://pycsp.org/) with more than 60 Jupyter notebooks is available
+* a well-documented [guide](https://arxiv.org/abs/2009.00326) is available
+* PyCSP3 is available as a [PyPi package](https://pypi.org/project/pycsp3/)
+
 
 At this stage, one can run two embedded solvers:
-* the constraint solver 'ACE' (AbsCon Essence), with the option -solve or the option -solver=ace
-* the constraint solver 'Choco, with the option -solver=choco
+* the constraint solver [ACE](https://github.com/xcsp3team/ace) (AbsCon Essence), with the option -solve or the option -solver=ace
+* the constraint solver [Choco](https://choco-solver.org/), with the option -solver=choco
 
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-It is, for example, immediate to run 'Ace' or 'Choco' on XCSP3 instances (files) as the respective executables (jar files) are 
-present in directories `pycsp3/solvers/abscon` and  `pycsp3/solvers/choco`.
+It is, for example, immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are 
+present in directories `pycsp3/solvers/ace` and  `pycsp3/solvers/choco`.
 For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
 ```console
 java -jar ACE-YY-MM.jar zebra.xml 
@@ -31,7 +31,7 @@ java -jar ACE-YY-MM.jar zebra.xml
 ```
 while replacing YY and MM with the current values that are present in the name of the jar file.
 
-Note that, in the medium/long term, we also plan to develop an interface that will allow users to pilot solvers with Python.
+Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](http://pycsp.org/documentation/solving-process/).
 
 
 # 1) Installation from PyPi
@@ -58,10 +58,10 @@ sudo pip3 install pycsp3
 
 ```
 
-For using the -solve or -solver options, you need to have Java (at least, version 8) installed:
+For using the -solve or -solver options, you need to have Java (at least, version 11) installed:
 
 ```console
-sudo apt-get install openjdk-8-jdk
+sudo apt-get install openjdk-11-jdk
 ```
 
 
@@ -75,7 +75,7 @@ Install PyCSP3 with the command 'pip3':
 sudo pip3 install pycsp3
 ```
 
-For using the -solve or -solver options, you need to have Java (at least, version 8) installed.
+For using the -solve or -solver options, you need to have Java (at least, version 11) installed.
 
 
 ## Installing PyCSP3 (Windows)
@@ -92,7 +92,7 @@ Then, for installing pycsp3, type:
 python -m pip install pycsp3
 ```
 
-For using the -solve or -solver options, you need to install (at least) Java version 8:
+For using the -solve or -solver options, you need to install (at least) Java version 11:
 
 https://www.oracle.com/java/technologies/javase-downloads.html
 
@@ -143,7 +143,7 @@ python problems\csp\single\Zebra.py (For Windows)
 
 # 2) Installation (alternative) by Cloning from GitHub
 
-An alternative to Pypi is to clone the code from GitHub.
+An alternative to PyPi is to clone the code from GitHub.
 Here is an illustration for MAC OS.
 We assume that Python 3 is installed (otherwise, type `port install python38` for example), and consequently 'pip3' is also installed.
 In a console, type:
@@ -160,7 +160,9 @@ export PYTHONPATH=$PYTHONPATH:.
 # 3) Compilation and Examples
 
 We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
-But first, we give some general information about compilation.
+However, note that many illustrations are available on [www.pycsp.org](http://pycsp.org/), notably many [models](http://pycsp.org/documentation/models/) with Jupyter notebooks. 
+
+First, we give some general information about compilation.
 
 ## Compiling PyCSP3 Models
 
@@ -258,7 +260,7 @@ To generate the XCSP3 instance (file), the command is:
 python3 SendMore.py
 ```
 
-To generate and solve (with Ace) the XCSP3 instance, the command is:
+To generate and solve (with ACE) the XCSP3 instance, the command is:
 
 ```console
 python3 SendMore.py -solve
@@ -396,7 +398,7 @@ For compiling the second model variant, using the option `-variant`, the command
 python3 AllInterval.py -data=5 -variant=aux
 ```
 
-To generate and solve (with Ace) the instance of order 10 and variant 'aux', the command is:
+To generate and solve (with ACE) the instance of order 10 and variant 'aux', the command is:
 
 ```console
 python3 AllInterval.py -data=10 -variant=aux -solve
