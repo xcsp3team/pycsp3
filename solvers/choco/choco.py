@@ -3,7 +3,7 @@ import os
 from pycsp3.solvers.solver import SolverProcess  #, SolverPy4J
 
 CHOCO_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
-CHOCO_CP = CHOCO_DIR + "choco-parsers-4.10.5-jar-with-dependencies.jar"
+CHOCO_CP = CHOCO_DIR + "choco-parsers-4.10.8-beta.jar"
 
 
 class Choco(SolverProcess):
@@ -26,7 +26,7 @@ class Choco(SolverProcess):
         if "limit_sols" in dict_simplified_options:
             args_solver += "," + dict_simplified_options["limit_sols"] + "sols"
             free = True
-        args_solver += "]"
+        args_solver += "] -flt"
         if "varheuristic" in dict_simplified_options:
             dict_simplified_options["varh"] = dict_simplified_options["varHeuristic"]
         if "varh" in dict_simplified_options:
