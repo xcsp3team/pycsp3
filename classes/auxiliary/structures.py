@@ -1,6 +1,8 @@
 import types
 
 from pycsp3.tools.curser import queue_in
+from pycsp3.dashboard import options
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, inside, IN
 
 
 class Diagram:
@@ -32,17 +34,31 @@ class Diagram:
                 transition = tuple(transition)
             assert isinstance(transition, tuple), "A transition must be given under the form of a 3-tuple (or a list)"
             assert len(transition) == 3, "Error: each transition must be composed of 3 elements"
-            state1, state2 = transition[0], transition[2]
+            state1, label, state2 = transition
             assert isinstance(state1, str) and isinstance(state2, str), Diagram.MSG_STATE
-            values = transition[1] if isinstance(transition[1], (list, tuple, set, range)) else [transition[1]]
-            for value in values:
-                assert isinstance(value, int), "currently, the value of a transition is necessarily an integer"
-                t.append((state1, value, state2))
+            label = inside(label) if isinstance(label, range) else set(label) if isinstance(label, (tuple, list)) else label
+            if (state1, label, state2) not in t:
+                t.append((state1, label, state2))
         return t
 
-    def transitions_to_string(self):
+    def transitions_to_string(self, scp):
+        def _string(t):
+            return "".join(
+                ["(" + q1 + "," + (l.str_tuple() if isinstance(l, Condition) else str(l)) + "," + q2 + ")" for (q1, l, q2) in t])
+
         if self.num not in Diagram._cache:
-            Diagram._cache[self.num] = "".join(["(" + q1 + "," + str(v) + "," + q2 + ")" for (q1, v, q2) in self.transitions])
+            if options.keepsmarttransitions or all(isinstance(label, (int, str)) for _, label, _ in self.transitions):
+                Diagram._cache[self.num] = _string(self.transitions)
+            else:
+                values = scp[0].dom.all_values()
+                assert all(values == scp[i].dom.all_values() for i in range(1, len(scp)))
+                trs = []
+                for (q1, l, q2) in self.transitions:
+                    labels = [l] if isinstance(l, (int, str)) else l if isinstance(l, (list, tuple, set, frozenset)) else list(l.filtering(values))
+                    for label in labels:
+                        assert isinstance(label, (int, str)), "currently, the label of a transition is necessarily an integer or a symbol"
+                        trs.append((q1, label, q2))
+                return _string(trs)  # we don't put in the cache because domains of scopes may be different
         return Diagram._cache[self.num]
 
 

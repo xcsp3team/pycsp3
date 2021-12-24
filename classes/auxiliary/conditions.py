@@ -119,7 +119,7 @@ class ConditionNode(Condition):
     def _key(self):
         return super()._key() + (self.node,)
 
-    def filtering(self, values):  # To do not use it during the filtering
+    def filtering(self, values):  # TODO not use it during the filtering
         return {self}
 
     def str_tuple(self):

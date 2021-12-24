@@ -318,7 +318,7 @@ class ConstraintRegular(Constraint):
     def __init__(self, lst, automaton):
         super().__init__(TypeCtr.REGULAR)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
-        self.arg(TypeCtrArg.TRANSITIONS, automaton.transitions_to_string())
+        self.arg(TypeCtrArg.TRANSITIONS, automaton.transitions_to_string(lst))
         self.arg(TypeCtrArg.START, automaton.start)
         self.arg(TypeCtrArg.FINAL, automaton.final)
 
@@ -335,7 +335,7 @@ class ConstraintMdd(Constraint):
         # - the root as the src of the first transition
         # - the terminal as the dst of the last transition
         # - no transition with a src occurring before it was reached
-        self.arg(TypeCtrArg.TRANSITIONS, mdd.transitions_to_string())
+        self.arg(TypeCtrArg.TRANSITIONS, mdd.transitions_to_string(lst))
 
 
 ''' Comparison-based Constraints '''
