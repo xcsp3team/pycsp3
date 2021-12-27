@@ -13,8 +13,8 @@ from pycsp3.classes.main.annotations import (
     AnnotationRestarts)
 from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
-    ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintSum,
-    ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
+    ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence,
+    ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
     ConstraintCumulative, ConstraintBinPacking, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
@@ -765,6 +765,18 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
     :return: a constraint Lexicographic
     """
     return _lex(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix)
+
+
+def Precedence(scope, *, values, covered=False):
+    """
+    Builds and returns a constraint Precedence.
+
+    :param scope: the scope of the constraint
+    :param values: the values such that the ith value must precede the i+1th value in the scope
+    :param covered: if True, all specified values must be assigned to the variables of the scope
+    :return: a constraint Precedence
+    """
+    return ECtr(ConstraintPrecedence(scope, values, covered))
 
 
 ''' Method for handling complete/partial constraints '''

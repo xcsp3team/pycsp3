@@ -390,6 +390,13 @@ class ConstraintLexMatrix(ConstraintUnmergeable):
         self.arg(TypeCtrArg.OPERATOR, operator)
 
 
+class ConstraintPrecedence(Constraint):
+    def __init__(self, lst, values, covered=False):
+        super().__init__(TypeCtr.PRECEDENCE)
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
+        self.arg(TypeCtrArg.VALUES, values, attributes=[(TypeCtrArg.COVERED, "true")] if covered else [], content_ordered=True)
+
+
 ''' Counting and Summing Constraints '''
 
 

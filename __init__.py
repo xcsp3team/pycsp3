@@ -14,8 +14,8 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 6:
 from pycsp3.functions import variant, subvariant, Var, VarArray, satisfy, minimize, maximize, annotate
 from pycsp3.functions import And, Or, Not, Xor, IfThen, IfThenElse, Iff, Slide
 from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, conjunction, disjunction
-from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, Increasing, Decreasing, LexIncreasing, LexDecreasing, Sum, Count, NValues, Cardinality,
-                              Maximum, Minimum, Channel, NoOverlap, Cumulative, BinPacking, Circuit, Clause)
+from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, Increasing, Decreasing, LexIncreasing, LexDecreasing, Precedence, Sum, Count, NValues,
+                              Cardinality, Maximum, Minimum, Channel, NoOverlap, Cumulative, BinPacking, Circuit, Clause)
 from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import columns, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
@@ -48,7 +48,6 @@ ACE = TypeSolver.ACE
 
 CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
-
 
 if sys.argv:
     if len(sys.argv) == 1 and sys.argv[0] == "-m":  # copy of models
@@ -188,7 +187,7 @@ def solve(*, solver=ACE, options="", filename=None, verbose=-1, sols=None, extra
             if sols == ALL or isinstance(sols, int) and sols > 1:
                 options += " -xe -xc=false"
         elif solver == CHOCO:
-            #options += " -v=" + str(verbose)
+            # options += " -v=" + str(verbose)
             if sols == ALL or isinstance(sols, int) and sols > 1:
                 options += " -a "
         _solver.setting(options)
