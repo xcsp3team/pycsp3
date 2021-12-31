@@ -496,7 +496,8 @@ def min(*args):
 
     :return: either a node, root of a tree expression, or the smallest item of the specified arguments
     """
-    return Node.build(TypeNode.MIN, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
+    return args[0] if len(args) == 1 and isinstance(args[0], (int, str)) else Node.build(TypeNode.MIN, *args) if len(args) > 1 and any(
+        isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 
 
 def max(*args):
@@ -507,7 +508,8 @@ def max(*args):
 
     :return: either a node, root of a tree expression, or the largest item of the specified arguments
     """
-    return Node.build(TypeNode.MAX, *args) if len(args) > 0 and any(isinstance(a, (Node, Variable)) for a in args) else maxPython(*args)
+    return args[0] if len(args) == 1 and isinstance(args[0], (int, str)) else Node.build(TypeNode.MAX, *args) if len(args) > 1 and any(
+        isinstance(a, (Node, Variable)) for a in args) else maxPython(*args)
 
 
 def xor(*args):
@@ -767,15 +769,20 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
     return _lex(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix)
 
 
-def Precedence(scope, *, values, covered=False):
+def Precedence(scope, *, values=None, covered=False):
     """
     Builds and returns a constraint Precedence.
 
     :param scope: the scope of the constraint
-    :param values: the values such that the ith value must precede the i+1th value in the scope
+    :param values: the values such that the ith value must precede the i+1th value in the scope.
+    when None, all values in the scope of the first variable are considered
     :param covered: if True, all specified values must be assigned to the variables of the scope
     :return: a constraint Precedence
     """
+    assert len(scope) > 2
+    if values is None:
+        assert all(scope[i].dom == scope[0].dom for i in range(1, len(scope)))
+        values = scope[0].dom.original_values
     return ECtr(ConstraintPrecedence(scope, values, covered))
 
 

@@ -47,12 +47,15 @@ class Domain:
     def __iter__(self):
         if len(self.original_values) == 1 and isinstance(self.original_values[0], IntegerInterval):
             return self.original_values[0].__iter__()
-        return self.all_values().__iter__()  #original_values.__iter__()
+        return self.all_values().__iter__()  # original_values.__iter__()
 
     def __getitem__(self, item):
         if len(self.original_values) == 1 and isinstance(self.original_values[0], IntegerInterval):
             return self.original_values[0].__getitem__(item)
         return self.original_values.__getitem__(item)
+
+    def __eq__(self, other):
+        return isinstance(other, Domain) and self.type == other.type and self.original_values == other.original_values
 
     def __hash__(self):
         return super().__hash__()

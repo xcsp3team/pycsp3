@@ -590,7 +590,7 @@ class ListVar(list):
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
         t = [self[i][j]] if with_center else []
-        return ListVar(t + self[i + k][j + l] for k in [-1, 0, 1] for l in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + l < m and (k, l) != (0, 0))
+        return ListVar(t + [self[i + k][j + l] for k in [-1, 0, 1] for l in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + l < m and (k, l) != (0, 0)])
 
     def cross(self, i, j, with_center=True):
         assert is_matrix(self), "calling cross should be made on a 2-dimensional array"
