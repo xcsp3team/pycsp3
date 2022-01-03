@@ -857,7 +857,8 @@ def Sum(term, *others, condition=None):
 
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
-    # if len(terms) == 1 and coeffs is None: return terms
+    if len(terms) == 1 and coeffs is None:
+        return terms[0] # TODO is it always the right thing to do? and if coeffs si not None???
 
     # TODO control here some assumptions (empty list seems to be possible. See RLFAP)
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))

@@ -738,7 +738,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return Node.build(TypeNode.MOD, auxiliary().replace_partial_constraint(self), other)
 
     def __getitem__(self, i):
-        assert isinstance(self.constraint, ConstraintElement)
+        assert isinstance(self.constraint, ConstraintElement), "\nBad form. Did you forget to use parentheses? " + \
+                                                               "For example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])"
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
         if isinstance(i, Variable):
