@@ -1,7 +1,7 @@
 from enum import Enum, unique
 
 
-# This file is called ptypes because types is a reserved word in Python
+# NB: This file is called ptypes because types is a reserved word in Python
 
 def auto(n_occurrences=1):
     def _auto():  # To be replaced by auto() in python 3.6 ?
@@ -208,3 +208,13 @@ class TypeStatus(Enum):
 
     def __str__(self):
         return self.name
+
+
+@unique
+class TypeSquareSymmetry(Enum):
+    R0, R90, R180, R270, FX, FY, FD1, FD2 = auto(8)
+
+
+@unique
+class TypeRectangleSymmetry(Enum):
+    R0, FX, FY = auto(3)

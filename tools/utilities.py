@@ -8,6 +8,7 @@ from multiprocessing import cpu_count, Pool
 from time import time
 
 from pycsp3.classes.auxiliary import conditions
+from pycsp3.classes.auxiliary.ptypes import TypeSquareSymmetry, TypeRectangleSymmetry
 from pycsp3.classes.main.domains import Domain
 from pycsp3.dashboard import options
 
@@ -55,6 +56,58 @@ def different_values(*args):
     """
     assert all(isinstance(arg, int) for arg in args)
     return all(a != b for (a, b) in combinations(args, 2))
+
+
+def symmetric_cells(n, m, i=None, j=None, sym=None):
+    """
+    When i, j are specified (not None), returns the indexes of cells that are symmetric to cell (i,j) whose index is i*n + j.
+    Other uses are possible (check them).
+
+    :param n: the number of rows
+    :param m: the number of columns
+    :param i: the index of the row (possibly, None)
+    :param j: the index of the column (possibly, None)
+    :param sym: the symmetry (possibly, None)
+    :return: indexes of symmetric cells
+    """
+    assert (i is None) == (j is None)
+    if n == m:
+        def sqr_index(i, j, k):
+            if k == TypeSquareSymmetry.R0:
+                return i * n + j
+            if k == TypeSquareSymmetry.R90:
+                return j * n + (n - 1 - i)
+            if k == TypeSquareSymmetry.R180:
+                return (n - 1 - i) * n + (n - 1 - j)
+            if k == TypeSquareSymmetry.R270:
+                return (n - 1 - j) * n + i
+            if k == k == TypeSquareSymmetry.FX:  # x flip
+                return (n - 1 - i) * n + j
+            if k == TypeSquareSymmetry.FY:  # y flip
+                return i * n + (n - 1 - j)
+            if k == TypeSquareSymmetry.FD1:  # d1 flip
+                return j * n + i
+            return (n - 1 - j) * n + (n - 1 - i)  # d2 flip
+
+        if i is not None:
+            return [sqr_index(i, j, k) for k in TypeSquareSymmetry] if sym is None else sqr_index(i, j, sym)
+        if sym is None:
+            return [[sqr_index(i, j, k) for i in range(n) for j in range(m)] for k in TypeSquareSymmetry]
+        return [sqr_index(i, j, sym) for i in range(n) for j in range(m)]
+
+    else:
+        def rect_index(i, j, k):
+            if k == TypeRectangleSymmetry.R0:
+                return i * m + j
+            if k == TypeRectangleSymmetry.FX:  # x flip
+                return (n - 1 - i) * m + j
+            return i * m + (m - 1 - j)  # y flip
+
+        if i is not None:
+            return [rect_index(i, j, k) for k in TypeRectangleSymmetry] if sym is not None else rect_index(i, j, sym)
+        if sym is None:
+            return [[rect_index(i, j, k) for i in range(n) for j in range(m)] for k in TypeRectangleSymmetry]
+        return [rect_index(i, j, sym) for i in range(n) for j in range(m)]
 
 
 def flatten(*args, keep_none=False):

@@ -783,7 +783,7 @@ def Precedence(scope, *, values=None, covered=False):
     if values is None:
         assert all(scope[i].dom == scope[0].dom for i in range(1, len(scope)))
         values = scope[0].dom.original_values
-    return ECtr(ConstraintPrecedence(scope, values, covered))
+    return ECtr(ConstraintPrecedence(flatten(scope), values, covered))
 
 
 ''' Method for handling complete/partial constraints '''
