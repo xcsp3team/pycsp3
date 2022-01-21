@@ -43,5 +43,5 @@ minimize(
 """ Comments
 1) using nCells as coefficient for the beam-time (i.e., the sum in the objective) allows us to simulate
    a lexicographic order
-2) Ace is fairly competitive: on a fast laptop, e.g., the bound 4356 is found in 174 seconds for the instance i9-23    
+2) ACE is fairly competitive: on a fast laptop, e.g., the bound 4356 is found in 174 seconds for the instance i9-23  
 """

@@ -13,12 +13,12 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 6:
 
 from pycsp3.functions import variant, subvariant, Var, VarArray, satisfy, minimize, maximize, annotate
 from pycsp3.functions import And, Or, Not, Xor, IfThen, IfThenElse, Iff, Slide
-from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, conjunction, disjunction
+from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, belong, conjunction, disjunction
 from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, Increasing, Decreasing, LexIncreasing, LexDecreasing, Precedence, Sum, Count, NValues,
                               Cardinality, Maximum, Minimum, Channel, NoOverlap, Cumulative, BinPacking, Circuit, Clause)
 from pycsp3.functions import posted, objective, unpost, value, values
 
-from pycsp3.tools.curser import columns, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
+from pycsp3.tools.curser import columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
 from pycsp3.tools.utilities import ANY, ALL, combinations, different_values, symmetric_cells, flatten, alphabet_positions, all_primes, integer_scaling, to_ordinary_table
 
 from pycsp3.classes.auxiliary.conditions import lt, le, ge, gt, eq, ne, complement

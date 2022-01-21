@@ -858,7 +858,7 @@ def Sum(term, *others, condition=None):
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
     if len(terms) == 1 and coeffs is None:
-        return terms[0] # TODO is it always the right thing to do? and if coeffs si not None???
+        return terms[0]  # TODO is it always the right thing to do? and if coeffs si not None???
 
     # TODO control here some assumptions (empty list seems to be possible. See RLFAP)
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))
@@ -1027,6 +1027,10 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
         assert isinstance(tasks, list) and len(tasks) > 0
         assert any(isinstance(task, (tuple, list)) and len(task) == 2 for task in tasks)
         origins, lengths = zip(*tasks)
+    if len(origins) == 2 and len(lengths) == 2 and all(isinstance(t, list) for t in [origins[0], origins[1], lengths[0], lengths[1]]):
+        assert len(origins[0]) == len(origins[1]) == len(lengths[0]) == len(lengths[1])
+        origins = [(origins[0][i], origins[1][i]) for i in range(len(origins[0]))]
+        lengths = [(lengths[0][i], lengths[1][i]) for i in range(len(lengths[0]))]
     checkType(origins, [Variable])
     if not isinstance(origins[0], Variable) and not isinstance(origins[0], tuple):  # if 2d but not tuples
         origins = [tuple(origin) for origin in origins]
@@ -1085,6 +1089,8 @@ def BinPacking(term, *others, sizes, condition=None):
     terms = flatten(term, others)
     assert len(terms) > 0, "A binPacking with an empty scope"
     checkType(terms, [Variable])
+    if isinstance(sizes, int):
+        sizes = [sizes for _ in range(len(terms))]
     sizes = flatten(sizes)
     checkType(sizes, [int])
     assert len(terms) == len(sizes)
@@ -1231,7 +1237,7 @@ def objective():
     """
     Returns the objective of the model, or None if no one has been defined by calling either the function minimize() or the function maximize()
     """
-    assert 0 <= len(ObjEntities.items) <= 1
+    assert len(ObjEntities.items) <= 1
     return ObjEntities.items[0].constraint if len(ObjEntities.items) == 1 else None
 
 

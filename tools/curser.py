@@ -500,6 +500,8 @@ class OpOverrider:
                 return ListVar(result)  # TODO is it ListVar or ListInt ?
             except TypeError:
                 return result
+        if isinstance(indexes, Node):
+            return PartialConstraint(ConstraintElement(self, auxiliary().replace_node(indexes)))
         result = list.__getitem__(self, indexes)
         try:
             return ListInt(result)
@@ -682,6 +684,23 @@ def columns(m):
     assert is_matrix(m)
     mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
     return _list((_list((row[j] for row in m), mode) for j in range(len(m[0]))), mode)
+
+
+def ring(matrix, k):
+    """
+    Returns the kth ring of the specified matrix
+
+    :param matrix:  a matrix (i.e. a two-dimensional list)
+    :param k: the index of the ring (from the outside towards the inside, starting at 0)
+    :return: the list of variables forming the kth ring of the specified matrix
+    """
+    assert is_matrix(matrix) and isinstance(k, int) and k < min(len(matrix), len(matrix[0])) // 2
+    n, m = len(matrix), len(matrix[0])
+    top = matrix[k, k:m - k]
+    left = matrix[k + 1:-k - 1, m - k - 1]
+    bot = [matrix[n - k - 1][j] for j in range(m - k - 1, k - 1, -1)]
+    right = [matrix[j][k] for j in range(n - k - 2, k, -1)]
+    return top + left + bot + right
 
 
 def diagonal_down(m, i=-1, j=-1, check=True):

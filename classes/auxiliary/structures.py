@@ -1,6 +1,7 @@
 import types
 
 from pycsp3.tools.curser import queue_in
+from pycsp3.tools.utilities import flatten
 from pycsp3.dashboard import options
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, inside, IN
 
@@ -74,6 +75,21 @@ class Automaton(Diagram):
         :return: the name of a state from the specified argument(s)
         """
         return "q" + str(i) + ("" if j is None else "x" + str(j))
+
+    @staticmethod
+    def states_for(*values):
+        """
+        Returns a list with the names of states correspondign to the specified values
+
+        :param values: a list of integers (or strings)
+        :return: a list of names of states, one for each specified value
+        """
+        values = flatten(values)
+        # if len(values) == 1:
+        #     if isinstance(values[0], types.GeneratorType):
+        #     values = [v for v in values[0]]
+        assert len(values) > 0 and all(isinstance(v, (int, str)) for v in values), values
+        return [Automaton.q(v) for v in values]
 
     def __init__(self, *, start, transitions, final):
         """
