@@ -1027,11 +1027,11 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
         assert isinstance(tasks, list) and len(tasks) > 0
         assert any(isinstance(task, (tuple, list)) and len(task) == 2 for task in tasks)
         origins, lengths = zip(*tasks)
-    if len(origins) == 2 and len(lengths) == 2 and all(isinstance(t, list) for t in [origins[0], origins[1], lengths[0], lengths[1]]):
+    if len(origins) == 2 and len(lengths) == 2 and all(isinstance(t, (list, tuple)) for t in [origins[0], origins[1], lengths[0], lengths[1]]):
         assert len(origins[0]) == len(origins[1]) == len(lengths[0]) == len(lengths[1])
         origins = [(origins[0][i], origins[1][i]) for i in range(len(origins[0]))]
         lengths = [(lengths[0][i], lengths[1][i]) for i in range(len(lengths[0]))]
-    checkType(origins, [Variable])
+    checkType(origins, [int, Variable])
     if not isinstance(origins[0], Variable) and not isinstance(origins[0], tuple):  # if 2d but not tuples
         origins = [tuple(origin) for origin in origins]
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else lengths
