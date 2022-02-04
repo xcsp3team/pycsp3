@@ -1082,7 +1082,7 @@ def BinPacking(term, *others, sizes, condition=None):
 
     :param term: the first term on which the component applies
     :param others: the other terms (if any) on which the component applies
-    :param sizes: the sizes of the available bins
+    :param sizes: the sizes of the available bins 
     :param condition: a condition directly specified for the BinPacking (typically, None)
     :return: a component/constraint BinPacking
     """

@@ -22,7 +22,7 @@ def process_options(solving):
         if s is None:
             return None
         if s[0] != '[':
-            assert "," not in s and "]" not in s
+            assert "," not in s and "]" not in s, s
             return s
         assert s[-1] == ']'
         t = s[1:-1].split(",")
@@ -89,7 +89,7 @@ def process_options(solving):
 
     args = args_recursive = dict()
     if solving[0] != '[':
-        assert "," not in solving and "]" not in solving
+        assert "," not in solving and "]" not in solving, solving
         solver = solving
     else:
         assert solving[-1] == "]"
@@ -325,7 +325,8 @@ class SolverProcess:
 
         SolverProcess.automatic_call = automatic
         if compiler is False:  # To get options from the model
-            string_options = "[" + self.name.lower() + "," + string_options + "]"
+            if len(string_options) == 0 or string_options[0] != "[":
+                string_options = "[" + self.name.lower() + ("," + string_options if len(string_options) > 0 else "") + "]"
             solver, tmp_dict_options, tmp_dict_simplified_options = process_options(string_options)
             dict_simplified_options.update(tmp_dict_simplified_options)
             dict_options.update(tmp_dict_options)

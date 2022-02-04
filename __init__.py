@@ -19,7 +19,8 @@ from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, Increasi
 from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
-from pycsp3.tools.utilities import ANY, ALL, combinations, different_values, symmetric_cells, flatten, alphabet_positions, all_primes, integer_scaling, to_ordinary_table
+from pycsp3.tools.utilities import ANY, ALL, combinations, different_values, symmetric_cells, flatten, alphabet_positions, all_primes, integer_scaling, \
+    to_ordinary_table, warning
 
 from pycsp3.classes.auxiliary.conditions import lt, le, ge, gt, eq, ne, complement
 from pycsp3.classes.auxiliary.ptypes import TypeStatus, TypeSolver
@@ -62,6 +63,7 @@ if sys.argv:
         shutil.copytree(problems, target, ignore=shutil.ignore_patterns('g6_testing', 'g7_todo', 'tests', '__init__.py', '__pycache__*'))
         print("Successfully created the directory " + target + " containing the problems !")
         exit(0)
+
     from pycsp3.compiler import Compilation
 
     if sys.argv[-1] == '-debug':  # debug mode
@@ -159,16 +161,25 @@ def bound():
 
 def core():
     """
-    returns core identified by the last extraction operation, or None
+    returns the core identified by the last extraction operation, or None
     """
     return None if _solver is None else _solver.core
+
+
+def _process_solving(solving):
+    from pycsp3.solvers.solver import process_options
+    solver_name, args, args_recursive = process_options(solving)
+    t = [ss for ss in TypeSolver if ss.name.lower() == solver_name.lower()]
+    assert len(t) == 1, "The name of the solver is not valid"
+    return t[0], args, args_recursive
 
 
 def solve(*, solver=ACE, options="", filename=None, verbose=-1, sols=None, extraction=False):
     """
     Solves the current model (after compiling it) and returns the status of this operation.
 
-    :param solver: name of the solver (ACE or CHOCO)
+    :param solver: name of the solver (ACE or CHOCO), possibly accompanied with general options
+                   as defined in https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf
     :param options: specific options for the solver
     :param filename: the filename of the compiled problem instance
     :param verbose: verbosity level from -1 to 2
@@ -181,18 +192,41 @@ def solve(*, solver=ACE, options="", filename=None, verbose=-1, sols=None, extra
     if instance is None:
         print("Problem when compiling")
     else:
-        _solver = _set_solver(solver)
-        if solver == ACE:
-            options += " -v=" + str(verbose)
-            if sols == ALL or isinstance(sols, int) and sols > 1:
-                options += " -xe -xc=false"
-        elif solver == CHOCO:
-            # options += " -v=" + str(verbose)
-            if sols == ALL or isinstance(sols, int) and sols > 1:
-                options += " -a "
+        if isinstance(solver, TypeSolver):
+            if sols == ALL or isinstance(sols, int) and sols > 1:  # options for displaying all solution in XML format
+                options += " -xe -xc=false" if solver == ACE else " -a "
+            solver = "[" + solver.name.lower()
+            if verbose != -1:
+                solver += "," + ("v" if verbose == 0 else "vv" if verbose == 1 else "vvv")
+            if sols is not None:
+                solver += ",limit=" + ("no" if sols == ALL else str(sols) + "sols")
+            solver += "]"
+        else:
+            assert isinstance(solver, str)
+            msg = "As you use the parameter 'solver', you should not use the parameter"
+            if verbose != -1:
+                warning(msg + "'verbose' (which is then ignored); you can write e.g., [ace,v]")
+            if sols is not None:
+                warning(msg + "'sols' (which is then ignored); you can write e.g., [ace,limit=no]")
+            solver = ("[" if len(solver) > 0 and solver[0] != '[' else "") + solver + ("]" if len(solver) > 0 and solver[-1] != ']' else "")
+
+        solver_name, args, args_recursive = _process_solving(solver)
+        _solver = _set_solver(solver_name)
         _solver.setting(options)
-        limit = "limit=no" if sols == ALL else "limit=" + str(sols) + "sols" if isinstance(sols, int) else ""
-        return _solver.solve(instance, string_options=limit, dict_options=dict(), dict_simplified_options=dict(), verbose=verbose, extraction=extraction)
+        return _solver.solve(instance, solver, args, args_recursive, verbose=verbose, extraction=extraction)
+
+        # _solver = _set_solver(solver)
+        # if solver == ACE:
+        #     options += " -v=" + str(verbose)
+        #     if sols == ALL or isinstance(sols, int) and sols > 1:
+        #         options += " -xe -xc=false"
+        # elif solver == CHOCO:
+        #     # options += " -v=" + str(verbose)
+        #     if sols == ALL or isinstance(sols, int) and sols > 1:
+        #         options += " -a "
+        # _solver.setting(options)
+        # limit = "limit=no" if sols == ALL else "limit=" + str(sols) + "sols" if isinstance(sols, int) else ""
+        # return _solver.solve(instance, string_options=limit, dict_options=args, dict_simplified_options=args_recursive, verbose=verbose, extraction=extraction)
 
 
 # def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=False, verbose=0, sols=None):
@@ -212,13 +246,9 @@ def end():
         solving = ACE.name if options.solve else options.solver
         if solving:
             if options.display:
-                print("Warning: options -display and -solve should not be used together.")
+                warning("options -display and -solve should not be used together.")
                 return filename
-            from pycsp3.solvers.solver import process_options
-            solver_name, args, args_recursive = process_options(solving)
-            t = [ss for ss in TypeSolver if ss.name.lower() == solver_name.lower()]
-            assert len(t) == 1, "The name of the solver is not valid"
-            solver_name = t[0]
+            solver_name, args, args_recursive = _process_solving(solving)
             _solver = _set_solver(solver_name)
             result = _solver.solve((filename, cop), solving, args, args_recursive, compiler=True, verbose=verbose, automatic=True)
             print("\nResult: ", result)

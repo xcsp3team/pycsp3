@@ -14,19 +14,23 @@ class Choco(SolverProcess):
         )
 
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):
+        free, all = False, False
         args_solver = ""
-        tl = -1
-        if "limit_time" in dict_simplified_options:
-            tl = dict_simplified_options["limit_time"]
-        args_solver += " -limit=[" + str(tl) + ("s" if tl != -1 else "")
-        free = False
-        if "limit_runs" in dict_simplified_options:
-            args_solver += "," + dict_simplified_options["limit_runs"] + "runs"
-            free = True
-        if "limit_sols" in dict_simplified_options:
-            args_solver += "," + dict_simplified_options["limit_sols"] + "sols"
-            free = True
-        args_solver += "] -flt"
+        if "nolimit" in dict_simplified_options:
+            all = True
+        else:
+            tl = -1
+            if "limit_time" in dict_simplified_options:
+                tl = dict_simplified_options["limit_time"]
+            args_solver += " -limit=[" + str(tl) + ("s" if tl != -1 else "")
+            if "limit_runs" in dict_simplified_options:
+                args_solver += "," + dict_simplified_options["limit_runs"] + "runs"
+                free = True
+            if "limit_sols" in dict_simplified_options:
+                args_solver += "," + dict_simplified_options["limit_sols"] + "sols"
+                free = all = True
+            args_solver += "]"
+
         if "varheuristic" in dict_simplified_options:
             dict_simplified_options["varh"] = dict_simplified_options["varHeuristic"]
         if "varh" in dict_simplified_options:
@@ -85,13 +89,15 @@ class Choco(SolverProcess):
             print("  Bounding objective not implemented in Choco")
         if free:  # required when some solving options are defined
             args_solver += " -f"
+        if all:
+            args_solver += " -a"
         if "seed" in dict_simplified_options:
             args_solver += " -seed=" + dict_simplified_options["seed"]
         if "verbose" in dict_simplified_options:
             print("  Verbose log not implemented in Choco")
         if "trace" in dict_simplified_options:
             print("  Saving trace into a file not implemented in Choco")
-        return args_solver
+        return args_solver + " -flt"
 
 
 # class ChocoPy4J(SolverPy4J):  # TODO in progress
