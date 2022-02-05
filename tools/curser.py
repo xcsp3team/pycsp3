@@ -314,6 +314,7 @@ class OpOverrider:
         return Node.build(TypeNode.SUB, other, self)
 
     def __mul__(self, other):
+        # if isinstance(other, int) and other == 0: return Node(TypeNode.INT, 0)
         return Node.build(TypeNode.MUL, self, other)
 
     def __rmul__(self, other):

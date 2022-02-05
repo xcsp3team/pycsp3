@@ -11,19 +11,24 @@ Examples of Execution:
 from pycsp3 import *
 
 n = data or 8
-n2 = n * n
 
 # x[i] is the cell number where the ith knight is put
-x = VarArray(size=n2, dom=range(n2))
+x = VarArray(size=n * n, dom=range(n * n))
 
 satisfy(
-    AllDifferent(x)
+    # knights are put in different cells
+    AllDifferent(x),
+
+    # putting the first knight in the first cell, and the second knight in the first possible cell  tag(symmetry-breaking)
+    [x[0] == 0, x[1] == n + 2]
 )
 
 if not variant():
+    pairs = [(i, (i + 1) % (n * n)) for i in range(n * n)]
+
     satisfy(
-        (d1 == 1) & (d2 == 2) | (d1 == 2) & (d2 == 1) for d1, d2 in
-        [(abs(x[i] // n - x[(i + 1) % n2] // n), abs(x[i] % n - x[(i + 1) % n2] % n)) for i in range(n2)]
+        # two successive knights are at a knight jump apart
+        (d1 == 1) & (d2 == 2) | (d1 == 2) & (d2 == 1) for d1, d2 in [(abs(x[i] // n - x[ii] // n), abs(x[i] % n - x[ii] % n)) for i, ii in pairs]
     )
 
 elif variant("table"):
@@ -74,13 +79,9 @@ elif variant("table"):
         table_recursive(1, [i] + [0] * (r - 1))
 
     satisfy(
-        [x[(i + j) % n2] for j in range(r)] in table for i in range(0, n2, r - 1)
+        # two successive knights are at a knight jump apart
+        [x[(i + j) % (n * n)] for j in range(r)] in table for i in range(0, n * n, r - 1)
     )
-
-satisfy(
-    # breaking symmetries by putting the first knight in the first cell, and the second knight in the first possible cell  tag(symmetry-breaking)
-    [x[0] == 0, x[1] == n + 2]
-)
 
 """ Comments
 1) it is possible to use extension constraints instead of intension constraints (see, e.g., the problem QueensKnights)
