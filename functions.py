@@ -1076,13 +1076,14 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
 
 
-def BinPacking(term, *others, sizes, condition=None):
+def BinPacking(term, *others, sizes, loads=None, condition=None):
     """
     Builds and returns a component BinPacking (that becomes a constraint when subject to a condition).
 
     :param term: the first term on which the component applies
     :param others: the other terms (if any) on which the component applies
-    :param sizes: the sizes of the available bins 
+    :param sizes: the sizes of the available bins
+    :param loads: the loads of all bins
     :param condition: a condition directly specified for the BinPacking (typically, None)
     :return: a component/constraint BinPacking
     """
@@ -1094,7 +1095,10 @@ def BinPacking(term, *others, sizes, condition=None):
     sizes = flatten(sizes)
     checkType(sizes, [int])
     assert len(terms) == len(sizes)
-    return _wrapping_by_complete_or_partial_constraint(ConstraintBinPacking(terms, sizes, Condition.build_condition(condition)))
+    assert loads is None or condition is None
+    if loads is not None:
+        return ECtr(ConstraintBinPacking(terms, sizes, loads))
+    return _wrapping_by_complete_or_partial_constraint(ConstraintBinPacking(terms, sizes, loads, Condition.build_condition(condition)))
 
 
 ''' Constraints on Graphs'''

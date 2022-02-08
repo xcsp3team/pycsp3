@@ -604,11 +604,14 @@ class ConstraintCumulative(Constraint):  # TODO inheriting from ConstraintWithCo
 
 
 class ConstraintBinPacking(Constraint):
-    def __init__(self, lst, sizes, condition):
+    def __init__(self, lst, sizes, loads=None, condition=None):
         super().__init__(TypeCtr.BIN_PACKING)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
         self.arg(TypeCtrArg.SIZES, sizes, content_ordered=True)
-        self.arg(TypeCtrArg.CONDITION, condition)
+        if loads is not None:
+            self.arg(TypeCtrArg.CONDITIONS, "".join("(eq," + str(x) + ")" for x in loads))
+        else:
+            self.arg(TypeCtrArg.CONDITION, condition)
 
 
 ''' Constraints on Graphs'''
