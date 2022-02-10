@@ -338,7 +338,7 @@ def Slide(*args):
     return ESlide([EToGather(entities)])
 
 
-def satisfy(*args):
+def satisfy(*args, no_comment_tags_extraction=False):
     """
     Posts all constraints that are specified as arguments
 
@@ -390,7 +390,7 @@ def satisfy(*args):
 
     no_parameter_satisfy = 0
     nb_parameter_satisfy = len(args)
-    comments1, comments2, tags1, tags2 = comments_and_tags_of_parameters_of(function_name="satisfy", args=args)
+    comments1, comments2, tags1, tags2 = comments_and_tags_of_parameters_of(function_name="satisfy", args=args, no_extraction=no_comment_tags_extraction)
 
     t = []
     for i, arg in enumerate(args):

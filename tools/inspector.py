@@ -183,7 +183,7 @@ def _delete_bracket_part(code, nb_parameters):
     return code
 
 
-def comments_and_tags_of_parameters_of(*, function_name, args):
+def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=False):
     if len(args) == 0:
         return [], [], [], []
 
@@ -191,8 +191,10 @@ def comments_and_tags_of_parameters_of(*, function_name, args):
     comments2 = [[""] for _ in args]  # comments at second level (i.e, for elements of intern lists)
     tags1 = [""] * len(args)  # tags at first level
     tags2 = [[""] for _ in args]  # tags at second level
-    code = list(reversed(_extract_code(function_name)))
+    if no_extraction:
+        return comments1, comments2, tags1, tags2
 
+    code = list(reversed(_extract_code(function_name)))
     are_empty_lines = [is_empty_line(line) for line in code]
 
     code = _delete_bracket_part(code, len(args))

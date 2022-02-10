@@ -438,7 +438,7 @@ class OpOverrider:
             return self not in {tuple(other)}
         return list.__ne__(self, other)
 
-    def __getitem__lv(self, indexes):
+    def __getitem__lv(self, indexes):  #lv for ListVar
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         elif isinstance(indexes, Node):

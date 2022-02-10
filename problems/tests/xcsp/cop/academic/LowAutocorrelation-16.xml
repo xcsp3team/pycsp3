@@ -163,8 +163,8 @@
       <args> c[11] y[11][0..3] </args>
       <args> c[12] y[12][0..2] </args>
       <args> c[13] y[13][0] y[13][1] </args>
-      <args> c[14] y[14][0] </args>
     </group>
+    <intension> eq(y[14][0],c[14]) </intension>
   </constraints>
   <objectives>
     <minimize note="minimizing the sum of the squares of the auto-correlation" type="sum"> mul(c[0],c[0]) mul(c[1],c[1]) mul(c[2],c[2]) mul(c[3],c[3]) mul(c[4],c[4]) mul(c[5],c[5]) mul(c[6],c[6]) mul(c[7],c[7]) mul(c[8],c[8]) mul(c[9],c[9]) mul(c[10],c[10]) mul(c[11],c[11]) mul(c[12],c[12]) mul(c[13],c[13]) mul(c[14],c[14]) </minimize>

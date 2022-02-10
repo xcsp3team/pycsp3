@@ -524,7 +524,15 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         super().__init__(TypeCtr.ELEMENT)
         smallest = index.dom[0].smallest() if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
-        self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
+
+        lst_flatten = flatten(lst)
+        aux = auxiliary().replace_element_index(len(lst_flatten), index)
+        if aux:  # this is the case if we need another variable to have a correct indexing
+            self.arg(TypeCtrArg.INDEX, aux, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
+            # below, should we replace ANY by a specific value (for avoid interchangeable values)?
+            functions.satisfy((index, aux) in {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom}, no_comment_tags_extraction=True)
+        else:
+            self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
         if value:
             self.arg(TypeCtrArg.CONDITION, Condition.build_condition((TypeConditionOperator.EQ, value)))
         # self.arg(TypeCtrArg.VALUE, value)
