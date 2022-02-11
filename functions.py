@@ -783,7 +783,10 @@ def Precedence(scope, *, values=None, covered=False):
     if values is None:
         assert all(scope[i].dom == scope[0].dom for i in range(1, len(scope)))
         values = scope[0].dom.original_values
-    return ECtr(ConstraintPrecedence(flatten(scope), values, covered))
+    if len(values) > 1:
+        return ECtr(ConstraintPrecedence(flatten(scope), values, covered))
+    else:
+        return None
 
 
 ''' Method for handling complete/partial constraints '''
@@ -858,7 +861,7 @@ def Sum(term, *others, condition=None):
     terms, coeffs = _get_terms_coeffs(terms)
     terms, coeffs = _manage_coeffs(terms, coeffs)
     if len(terms) == 1 and coeffs is None:
-        return terms[0]  # TODO is it always the right thing to do? and if coeffs si not None???
+        return terms[0]  # TODO is it always the right thing to do? and if coeffs is not None???
 
     # TODO control here some assumptions (empty list seems to be possible. See RLFAP)
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))
@@ -1070,7 +1073,7 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     lengths = flatten(lengths)
     checkType(lengths, ([Variable], [int]))
     heights = [heights for _ in range(len(origins))] if isinstance(heights, int) else flatten(heights)
-    checkType(heights, ([Variable], [int]))
+    checkType(heights, ([Variable], [int], [Node]))
     ends = flatten(ends) if ends is not None else ends  # ends is optional
     checkType(ends, ([Variable], type(None)))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
