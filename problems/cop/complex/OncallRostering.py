@@ -73,10 +73,10 @@ minimize(
 )
 
 """ Comments
-1) Compared to the mzn model:
+1) Compared to the mzn model (used for Competitions 2013 and 2018):
    - nDays-2 is used instead of nDays- 1 when considering adjacency cost (seems to be a typo in the mzn model?)
    - instead of explicitly introducing auxiliary variables to deal with some penalties (costs), 
      we post everything inside the objective function
-2) Note how we can post a constraint according to a condition (by using ... else None)
-3) Ace is competitive: on a fast laptop, e.g., the bound 5 is found in 25 seconds for the instance 10s-150d 
+2) Note how we can post a constraint according to a condition (by using ... if ... else None)
+3) ACE is competitive: on a fast laptop, e.g., the bound 5 is found in 25 seconds for the instance 10s-150d 
 """

@@ -1070,7 +1070,7 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
             origins, lengths, ends, heights = zip(*tasks)
     origins = flatten(origins)
     checkType(origins, [Variable])
-    lengths = flatten(lengths)
+    lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else flatten(lengths)
     checkType(lengths, ([Variable], [int]))
     heights = [heights for _ in range(len(origins))] if isinstance(heights, int) else flatten(heights)
     checkType(heights, ([Variable], [int], [Node]))

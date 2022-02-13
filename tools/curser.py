@@ -64,6 +64,9 @@ def cursing():
             return self.__contains__(other)
         if isinstance(other, Node):
             other = auxiliary().replace_node(other)
+        if isinstance(other, PartialConstraint):
+            queue_in.append((list(self), other))
+            return True
         if isinstance(other, types.GeneratorType):
             other = list(other)
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
@@ -542,6 +545,9 @@ class ListInt(list):
         return ListInt.__mul__(other, self)
 
     def __contains__(self, other):
+        if isinstance(other, PartialConstraint):
+            queue_in.append((list(self), other))
+            return True
         if is_containing(other, Variable) and len(self) > 0:
             if isinstance(self[0], (tuple, int)):
                 queue_in.append((self, other))
