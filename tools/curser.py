@@ -441,7 +441,7 @@ class OpOverrider:
             return self not in {tuple(other)}
         return list.__ne__(self, other)
 
-    def __getitem__lv(self, indexes):  #lv for ListVar
+    def __getitem__lv(self, indexes):  # lv for ListVar
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         elif isinstance(indexes, Node):
@@ -456,7 +456,7 @@ class OpOverrider:
                     # we force the domain of the aux variable with the parameter indexing
                     indexes = auxiliary().replace_node(indexes, indexing=range(len(self)))
         if isinstance(indexes, Variable):
-            return PartialConstraint(ConstraintElement(self, indexes))
+            return PartialConstraint(ConstraintElement(self, index=indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
             indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
@@ -465,9 +465,9 @@ class OpOverrider:
                     return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
                     if isinstance(indexes[0], Variable) and isinstance(indexes[1], int):
-                        return PartialConstraint(ConstraintElement(self[:, indexes[1]], indexes[0]))
+                        return PartialConstraint(ConstraintElement(self[:, indexes[1]], index=indexes[0]))
                     elif isinstance(indexes[0], int) and isinstance(indexes[1], Variable):
-                        return PartialConstraint(ConstraintElement(self[indexes[0]], indexes[1]))
+                        return PartialConstraint(ConstraintElement(self[indexes[0]], index=indexes[1]))
                     else:
                         assert False
             result = OpOverrider.project_recursive(self, indexes, 0)
@@ -485,7 +485,7 @@ class OpOverrider:
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         if isinstance(indexes, Variable):
-            return PartialConstraint(ConstraintElement(self, indexes))
+            return PartialConstraint(ConstraintElement(self, index=indexes))
         if isinstance(indexes, tuple) and len(indexes) > 0:
             indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes))
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
@@ -494,9 +494,9 @@ class OpOverrider:
                     return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
                     if isinstance(indexes[0], Variable) and isinstance(indexes[1], int):
-                        return PartialConstraint(ConstraintElement(self[:, indexes[1]], indexes[0]))
+                        return PartialConstraint(ConstraintElement(self[:, indexes[1]], index=indexes[0]))
                     elif isinstance(indexes[0], int) and isinstance(indexes[1], Variable):
-                        return PartialConstraint(ConstraintElement(self[indexes[0]], indexes[1]))
+                        return PartialConstraint(ConstraintElement(self[indexes[0]], index=indexes[1]))
                     else:
                         assert False
             result = OpOverrider.project_recursive(self, indexes, 0)
@@ -587,7 +587,7 @@ class ListVar(list):
         return ScalarProduct(self, list(other) if isinstance(other, (tuple, range)) else other)
 
     def __contains__(self, other):
-        if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member constraint
+        if isinstance(other, (int, Variable)):  # member constraint
             queue_in.append((self, other))
             return True
         return list.__contains__(self, other)

@@ -14,7 +14,8 @@ from pycsp3.classes.main.annotations import (
 from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence,
-    ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintChannel, ConstraintNoOverlap,
+    ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintElement, ConstraintChannel,
+    ConstraintNoOverlap,
     ConstraintCumulative, ConstraintBinPacking, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
@@ -22,7 +23,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSym
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, OpOverrider, ListInt, ListVar, ListCtr
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, warning
+from pycsp3.tools.utilities import flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, warning
 
 ''' Global Variables '''
 
@@ -193,13 +194,17 @@ def VarArray(vars=None, *, size=None, dom=None, comment=None):
 
 def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     assert type(bool_value) is bool
-    if isinstance(left_operand, Variable) and isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
-        return None
-    if isinstance(left_operand, Variable) and isinstance(right_operand, range):
-        ctr = _Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
-    elif isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
+    if isinstance(left_operand, Variable):
+        if isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
+            return None
+        if isinstance(right_operand, (tuple, list, set, frozenset)) and is_containing(right_operand, Variable):
+            op = TypeConditionOperator.EQ if bool_value else TypeConditionOperator.NE
+            return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=Condition.build_condition((op, left_operand))))  # member
+        if isinstance(right_operand, range):
+            return _Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
+    if isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
-        ctr = _Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))
+        return _Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))
     # elif isinstance(left_operand, Node) and isinstance(right_operand, range):
     #     if bool_value:
     #         ctr = Intension(conjunction(left_operand >= right_operand.start, left_operand <= right_operand.stop - 1))
@@ -436,6 +441,9 @@ def satisfy(*args, no_comment_tags_extraction=False):
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
             #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
     to_post = _group(pc == var for (pc, var) in auxiliary().collected())
+    if to_post is not None:
+        t.append(to_post)
+    to_post = _group(auxiliary().raw_collected())
     if to_post is not None:
         t.append(to_post)
     return EToSatisfy(t)
@@ -853,7 +861,7 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
-    checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct]))
+    checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     # if len(terms) == 0:
     #     return None
     auxiliary().replace_nodes_and_partial_constraints(terms)
@@ -886,6 +894,9 @@ def Count(term, *others, value=None, values=None, condition=None):
         value = 1
     assert value is None or values is None, str(value) + " " + str(values)
     values = list(values) if isinstance(values, (tuple, set)) else [value] if isinstance(value, (int, Variable)) else values
+    if isinstance(value, PartialConstraint):
+        values = [auxiliary().replace_partial_constraint(value)]
+    # print("hhhh",type(value))
     checkType(values, ([int], [Variable]))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 

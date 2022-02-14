@@ -520,21 +520,21 @@ class ConstraintMinimum(ConstraintMaximum):
 
 
 class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with a general condition
-    def __init__(self, lst, index, value=None, type_rank=None):
+    def __init__(self, lst, *, index, type_rank=None, condition=None):
         super().__init__(TypeCtr.ELEMENT)
-        smallest = index.dom[0].smallest() if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
+        smallest = [] if index is None else index.dom[0].smallest() if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
-
-        lst_flatten = flatten(lst)
-        aux = auxiliary().replace_element_index(len(lst_flatten), index)
-        if aux:  # this is the case if we need another variable to have a correct indexing
-            self.arg(TypeCtrArg.INDEX, aux, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
-            # below, should we replace ANY by a specific value (for avoid interchangeable values)?
-            functions.satisfy((index, aux) in {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom}, no_comment_tags_extraction=True)
-        else:
-            self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
-        if value:
-            self.arg(TypeCtrArg.CONDITION, Condition.build_condition((TypeConditionOperator.EQ, value)))
+        if index is not None:
+            lst_flatten = flatten(lst)
+            aux = auxiliary().replace_element_index(len(lst_flatten), index)
+            if aux:  # this is the case if we need another variable to have a correct indexing
+                self.arg(TypeCtrArg.INDEX, aux, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
+                # below, should we replace ANY by a specific value (for avoid interchangeable values)?
+                functions.satisfy((index, aux) in {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom}, no_comment_tags_extraction=True)
+            else:
+                self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
+        if condition:
+            self.arg(TypeCtrArg.CONDITION, condition)  #Condition.build_condition((TypeConditionOperator.EQ, value)))
         # self.arg(TypeCtrArg.VALUE, value)
 
     def min_possible_value(self):
@@ -757,7 +757,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
             self.constraint = ConstraintElementMatrix(lst, index, i)
         elif isinstance(i, int):
-            self.constraint = ConstraintElement(lst[:, i], index)
+            self.constraint = ConstraintElement(lst[:, i], index= index)
         return self
 
     def __str__(self):
@@ -851,6 +851,7 @@ class _Auxiliary:
     def __init__(self):
         self._introduced_variables = []
         self._collected_constraints = []
+        self._collected_raw_constraints = []
         self.prefix = "aux_gb"
         self.cache = []
 
@@ -889,6 +890,15 @@ class _Auxiliary:
         for i, t in enumerate(terms):
             if isinstance(t, PartialConstraint):
                 terms[i] = self.replace_partial_constraint(t)
+            elif isinstance(t, ECtr):
+                assert isinstance(t.constraint, ConstraintWithCondition)
+                cond = t.constraint.arguments[TypeCtrArg.CONDITION].content
+                op, k = cond.operator, cond.right_operand()
+                aux = self.__replace(None, Domain(range(t.constraint.min_possible_value(), t.constraint.max_possible_value() + 1)),
+                                     systematically_append_obj=False)
+                t.constraint.set_condition(TypeConditionOperator.EQ, aux)
+                self._collected_raw_constraints.append(t)
+                terms[i] = functions.expr(op, aux, k)
             elif nodes_too and isinstance(t, Node):
                 terms[i] = self.replace_node(t)
         return terms
@@ -911,6 +921,11 @@ class _Auxiliary:
     def collected(self):
         t = self._collected_constraints
         self._collected_constraints = []
+        return t
+
+    def raw_collected(self):
+        t = self._collected_raw_constraints
+        self._collected_raw_constraints = []
         return t
 
 

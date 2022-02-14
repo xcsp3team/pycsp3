@@ -79,7 +79,7 @@ class Automaton(Diagram):
     @staticmethod
     def states_for(*values):
         """
-        Returns a list with the names of states correspondign to the specified values
+        Returns a list with the names of states corresponding to the specified values
 
         :param values: a list of integers (or strings)
         :return: a list of names of states, one for each specified value
