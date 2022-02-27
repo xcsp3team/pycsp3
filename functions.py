@@ -198,8 +198,12 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         if isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
             return None
         if isinstance(right_operand, (tuple, list, set, frozenset)) and is_containing(right_operand, Variable):
-            op = TypeConditionOperator.EQ if bool_value else TypeConditionOperator.NE
-            return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=Condition.build_condition((op, left_operand))))  # member
+            if bool_value:
+                return ECtr(ConstraintElement(flatten(right_operand), index=None,
+                                              condition=Condition.build_condition((TypeConditionOperator.EQ, left_operand))))  # member
+            else:
+                return [_Intension(Node.build(TypeNode.NE, left_operand, y)) for y in right_operand]
+            # return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=Condition.build_condition((TypeConditionOperator.NE, left_operand))))  # member
         if isinstance(right_operand, range):
             return _Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
     if isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
@@ -425,6 +429,8 @@ def satisfy(*args, no_comment_tags_extraction=False):
             #                 + str(args) + " " + str(i) + ".\nA constraint is certainly badly formed"
             other, partial = queue_in.popleft()
             to_post = _bool_interpretation_for_in(partial, other, arg)
+            if isinstance(to_post, list):
+                to_post = _group(to_post)
         elif any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide
             to_post = _block(arg)
         elif comment_at_2:  # Case: block
@@ -860,7 +866,7 @@ def Sum(term, *others, condition=None):
             OpOverrider.enable()
         return terms, coeffs
 
-    terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     # if len(terms) == 0:
     #     return None
@@ -1051,7 +1057,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else lengths
     if not isinstance(lengths[0], (int, Variable)) and not isinstance(lengths[0], tuple):  # if 2d but not tuples
         lengths = [tuple(length) for length in lengths]
-    checkType(lengths, ([Variable], [int]))
+    checkType(lengths, ([int, Variable]))
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
 

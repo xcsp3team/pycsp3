@@ -291,6 +291,7 @@ class OpOverrider:
                 if self.type == TypeNode.SUB:
                     return other + self.sons[0].sons - self.sons[1].sons
             return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other) if isinstance(other.constraint, ConstraintSum) else other + self
+        assert other is not None, "One argument is None (coming from an undefined variable from an array?)"
         return Node.build(TypeNode.ADD, self, other)
 
     def __radd__(self, other):
@@ -798,7 +799,9 @@ def cp_array(*l):
         l = l[0]
     if isinstance(l, (tuple, set, frozenset, types.GeneratorType)):
         l = list(l)
-    assert isinstance(l, list) and len(l) > 0
+    assert isinstance(l, list)
+    if len(l) == 0:
+        return l
     if isinstance(l[0], (list, types.GeneratorType)):
         assert all(isinstance(t, (list, types.GeneratorType)) for t in l)
         res = [cp_array(t) for t in l]
@@ -808,7 +811,7 @@ def cp_array(*l):
     elif all(isinstance(v, Variable) for v in l):  # and None ?
         return ListVar(l)
     else:
-        raise NotImplemented
+        return l  # raise NotImplemented
 
 # def to_special_list(t):
 #     assert is_1d_list(t)

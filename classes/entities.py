@@ -10,7 +10,8 @@ from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing, warning
 from pycsp3.classes.auxiliary.ptypes import TypeCtr, TypeConditionOperator
-
+from pycsp3 import tools
+from pycsp3.dashboard import options
 
 class Entity:
     def __init__(self, name, comment=None, tags=[]):
@@ -146,6 +147,17 @@ class ECtrs(Entity):
         super().__init__(None)  # no need to have an id here
         assert isinstance(constraints, list)
         self.entities = [c for c in constraints if c is not None]
+        if all(isinstance(c, ECtr) for c in self.entities):
+            t = []
+            for c in self.entities:
+                # if any(c.constraint == cc.constraint for cc in tr):
+                if any(tools.curser.OpOverrider.disable().execute(c.constraint == cc.constraint) for cc in t):
+                    continue
+                t.append(c)
+                if len(t) > 1:
+                    break
+            else:
+                self.entities = t
 
     def _flat_constraints(self, t):
         for e in self.entities:

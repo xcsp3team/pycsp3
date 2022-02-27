@@ -11,7 +11,7 @@ from pycsp3.classes.auxiliary import conditions
 from pycsp3.classes.auxiliary.ptypes import TypeSquareSymmetry, TypeRectangleSymmetry
 from pycsp3.classes.main.domains import Domain
 from pycsp3.dashboard import options
-
+from pycsp3 import tools
 
 class Stopwatch:
     def __init__(self):
@@ -136,7 +136,7 @@ def flatten(*args, keep_none=False):
             t.append(arg)
     # if len(args) == 1:
     #     flatten.cache[id(args[0])] = t
-    return t
+    return tools.curser.cp_array(t)  # previously: return t
 
 
 def is_containing(l, types, *, check_first_only=False):
