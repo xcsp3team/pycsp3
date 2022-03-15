@@ -499,10 +499,8 @@ class OpOverrider:
                     elif isinstance(indexes[0], int) and isinstance(indexes[1], Variable):
                         return PartialConstraint(ConstraintElement(self[indexes[0]], index=indexes[1]))
                     else:
-                        print("hhhh", indexes[0], indexes[1])
                         assert False
             result = OpOverrider.project_recursive(self, indexes, 0)
-            #print("jjjj ", result)
             try:
                 return ListVar(result)  # TODO is it ListVar or ListInt ?
             except TypeError:
