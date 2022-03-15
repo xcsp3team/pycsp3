@@ -2,7 +2,7 @@
 See "CP and IP approaches to cancer radiotherapy delivery optimization" by D. Baatar, N. Boland, S. Brand, and P. Stuckey.
     Constraints Jounral, 16(2): 173-194 (2011)
 See Model in MiniZinc -- https://github.com/MiniZinc/minizinc-benchmarks/blob/master/radiation/radiation.mzn
-
+    used for competitions 2012, 2013, 2015 and 2020
 Examples of Execution:
   python3 Radiation.py -data=Radiation-01.json
   python3 Radiation.py -data=Radiation-01.dzn -dataparser=Radiation_ParserZ.py

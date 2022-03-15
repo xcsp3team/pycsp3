@@ -20,9 +20,9 @@ class Ace(SolverProcess):
         if "limit_runs" in dict_simplified_options:
             args_solver += " -r_n=" + dict_simplified_options["limit_runs"]
         if "limit_sols" in dict_simplified_options:
-            args_solver += " -s=" + dict_simplified_options["limit_sols"] #+ " -xe -xc=false"
+            args_solver += " -s=" + dict_simplified_options["limit_sols"] + " -xe -xc=false"
         if "nolimit" in dict_simplified_options:
-            args_solver += " -s=all " # -xe -xc=false"
+            args_solver += " -s=all -xe -xc=false"
         if "varheuristic" in dict_simplified_options:
             dict_simplified_options["varh"] = dict_simplified_options["varHeuristic"]
         if "varh" in dict_simplified_options:

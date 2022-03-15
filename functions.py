@@ -534,6 +534,8 @@ def xor(*args):
 
     :return: a node, root of a tree expression or the argument if there is only one
     """
+    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
+        args = tuple(args[0])
     return args[0] ^ args[1] if len(args) == 2 else Node.build(TypeNode.XOR, *args) if len(args) > 1 else args[0]
 
 
@@ -544,7 +546,7 @@ def iff(*args):
 
     :return: a node, root of a tree expression
     """
-    if len(args) == 1 and isinstance(args[0], types.GeneratorType):
+    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
     assert len(args) >= 2
     res = manage_global_indirection(*args)

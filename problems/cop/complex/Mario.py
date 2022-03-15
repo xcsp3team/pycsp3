@@ -1,5 +1,6 @@
 """
-Problem proposed by A. Ollagnier and J.-G. Fages for the 2013 Minizinc Competition.
+Problem proposed by A. Ollagnier and J.-G. Fages for the 2013 (and 2014 and 2017) Minizinc Competition.
+
 
 Examples of Execution:
   python3 Mario.py -data=Mario_easy-2.json
@@ -11,6 +12,27 @@ from pycsp3 import *
 marioHouse, luigiHouse, fuelLimit, houses = data
 fuels, golds = zip(*houses)  # using cp_array is not necessary since intern arrays have the right type (for the constraint Element)
 nHouses = len(houses)
+
+"""
+/mario_medium_3.dzn = 1618 at the minizinc challenge 2017
+but not the same bound with this Pycsp3 model
+
+t = [5, 15]
+
+cnt = 0
+for row in fuels:
+    m = min(v for v in row if v != 0)
+    print("i ", m)
+    cnt += m
+print(cnt)
+print(golds)
+print(sum(golds), " ", sum(golds[i] for i in range(nHouses) if i not in t))
+
+satisfy(
+    [s[i] == i for i in t],
+    [s[i] != i for i in range(nHouses) if i not in t]
+)
+"""
 
 # s[i] is the house succeeding to the ith house (itself if not part of the route)
 s = VarArray(size=nHouses, dom=range(nHouses))

@@ -611,7 +611,7 @@ class ConstraintCumulative(Constraint):  # TODO inheriting from ConstraintWithCo
         self.arg(TypeCtrArg.CONDITION, condition)
 
 
-class ConstraintBinPacking(Constraint):
+class ConstraintBinPacking(ConstraintUnmergeable):
     def __init__(self, lst, sizes, loads=None, condition=None):
         super().__init__(TypeCtr.BIN_PACKING)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
