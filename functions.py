@@ -15,8 +15,8 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence,
     ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintElement, ConstraintChannel,
-    ConstraintNoOverlap,
-    ConstraintCumulative, ConstraintBinPacking, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
+    ConstraintNoOverlap, ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct,
+    auxiliary, manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -1121,6 +1121,14 @@ def BinPacking(term, *others, sizes, loads=None, condition=None):
     if loads is not None:
         return ECtr(ConstraintBinPacking(terms, sizes, loads))
     return _wrapping_by_complete_or_partial_constraint(ConstraintBinPacking(terms, sizes, loads, Condition.build_condition(condition)))
+
+
+def Knapsack(term, *others, weights, profits, limit, condition=None):
+    terms = flatten(term, others)
+    assert len(terms) > 0, "A Knapsack with an empty scope"
+    assert len(terms) == len(weights) == len(profits)
+    checkType(limit, (int, Variable))
+    return _wrapping_by_complete_or_partial_constraint(ConstraintKnapsack(terms, weights, profits, limit, Condition.build_condition(condition)))
 
 
 ''' Constraints on Graphs'''

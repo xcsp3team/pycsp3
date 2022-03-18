@@ -534,7 +534,7 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             else:
                 self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
         if condition:
-            self.arg(TypeCtrArg.CONDITION, condition)  #Condition.build_condition((TypeConditionOperator.EQ, value)))
+            self.arg(TypeCtrArg.CONDITION, condition)  # Condition.build_condition((TypeConditionOperator.EQ, value)))
         # self.arg(TypeCtrArg.VALUE, value)
 
     def min_possible_value(self):
@@ -620,6 +620,27 @@ class ConstraintBinPacking(ConstraintUnmergeable):
             self.arg(TypeCtrArg.CONDITIONS, "".join("(eq," + str(x) + ")" for x in loads))
         else:
             self.arg(TypeCtrArg.CONDITION, condition)
+
+
+class ConstraintKnapsack(ConstraintWithCondition):
+    def __init__(self, lst, weights, profits, limit, condition):
+        super().__init__(TypeCtr.KNAPSACK)
+        self.vars = lst
+        self.profits = profits
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
+        self.arg(TypeCtrArg.WEIGHTS, weights, content_ordered=True)
+        self.arg(TypeCtrArg.PROFITS, profits, content_ordered=True)
+        self.arg(TypeCtrArg.LIMIT, limit)
+        self.arg(TypeCtrArg.CONDITION, condition)
+
+    def min_possible_value(self):
+        return sum(self.vars[i].dom.smallest_value() * self.profits[i] for i in len(self.vars))
+
+    def max_possible_value(self):
+        return sum(self.vars[i].dom.greatest_value() * self.profits[i] for i in len(self.vars))
+
+    def close_to(self, other):
+        return False
 
 
 ''' Constraints on Graphs'''
@@ -757,7 +778,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
             self.constraint = ConstraintElementMatrix(lst, index, i)
         elif isinstance(i, int):
-            self.constraint = ConstraintElement(lst[:, i], index= index)
+            self.constraint = ConstraintElement(lst[:, i], index=index)
         return self
 
     def __str__(self):
