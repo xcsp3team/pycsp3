@@ -13,6 +13,7 @@ from pycsp3.classes.main.domains import Domain
 from pycsp3.dashboard import options
 from pycsp3 import tools
 
+
 class Stopwatch:
     def __init__(self):
         self.initial_time = time()
@@ -128,10 +129,12 @@ def flatten(*args, keep_none=False):
                 t.append(arg)
         elif isinstance(arg, (str, range, Domain)):  # Iterable but must be appended, not extended
             t.append(arg)
+        elif isinstance(arg, types.GeneratorType):
+            res = list(arg)
+            if len(res) > 0:
+                t.extend(flatten(*res, keep_none=keep_none))
         elif isinstance(arg, Iterable):
             t.extend(flatten(*arg, keep_none=keep_none))
-        elif isinstance(arg, types.GeneratorType):
-            t.extend(flatten(*list(arg), keep_none=keep_none))
         else:
             t.append(arg)
     # if len(args) == 1:
@@ -244,6 +247,19 @@ def integer_scaling(values):
             if i - pos > scale:
                 scale = i - pos
     return [int(w * (10 ** scale)) for w in [Decimal(v) for v in values]]
+
+
+def decrement(t):
+    if isinstance(t, types.GeneratorType):
+        t = list(t)
+    assert isinstance(t, list)
+    for i in range(len(t)):
+        if isinstance(t[i], list):
+            t[i] = decrement(t[i])
+        else:
+            assert isinstance(t[i], int)
+            t[i] -= 1
+    return t
 
 
 def matrix_to_string(m):

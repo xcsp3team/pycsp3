@@ -3,6 +3,7 @@ import re
 from collections import OrderedDict
 
 from pycsp3.dashboard import options
+from pycsp3.tools.utilities import decrement
 
 data = None
 _dataParser = None
@@ -111,20 +112,25 @@ def numbers_in_lines_until(stop):
     return numbers_in(s + line())
 
 
-def decrement(t):
-    assert isinstance(t, list)
-    for i in range(len(t)):
-        if isinstance(t[i], list):
-            decrement(t[i])
-        else:
-            assert isinstance(t[i], int)
-            t[i] -= 1
-    return t
+
+def split_with_structure(t, *k):
+    assert isinstance(t, list) and len(k) > 0 and all(isinstance(v, int) for v in k) and len(t) % k[0] == 0
+    width = len(t) // k[0]
+    m = [[t[i * width + j] for j in range(width)] for i in range(k[0])]
+    if len(k) > 1:
+        for i in range(len(m)):
+            m[i] = split_with_structure(m[i], *tuple(k[1:]))
+    return m
 
 
-def split_with_rows_of_size(t, k):
-    assert isinstance(t, list) and len(t) % k == 0, str(type(list)) + " " + str(len(t)) + " " + str(k)
-    return [[t[i * k + j] for j in range(k)] for i in range(len(t) // k)]
+def split_with_rows_of_size(t, k1, k2=None, k3=None):
+    print("t", t, k1, k2, k3)
+    assert isinstance(t, list) and len(t) % k1 == 0, str(t) + str(type(list)) + " " + str(len(t)) + " " + str(k1)
+    m = [[t[i * k1 + j] for j in range(k1)] for i in range(len(t) // k1)]
+    if k2 is not None:
+        for i in range(len(m)):
+            m[i] = split_with_rows_of_size(m[i], k2, k3)
+    return m
 
 
 def ask_number(message):
@@ -135,3 +141,7 @@ def ask_number(message):
 def ask_string(message):
     parameter = options.consume_parameter()
     return parameter if parameter else input(message + " ")
+
+
+def _pycharm_security():  # for avoiding that imports are removed when reformatting code
+    _ = (decrement)
