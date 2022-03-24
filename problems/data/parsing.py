@@ -112,7 +112,6 @@ def numbers_in_lines_until(stop):
     return numbers_in(s + line())
 
 
-
 def split_with_structure(t, *k):
     assert isinstance(t, list) and len(k) > 0 and all(isinstance(v, int) for v in k) and len(t) % k[0] == 0
     width = len(t) // k[0]
@@ -123,14 +122,9 @@ def split_with_structure(t, *k):
     return m
 
 
-def split_with_rows_of_size(t, k1, k2=None, k3=None):
-    print("t", t, k1, k2, k3)
-    assert isinstance(t, list) and len(t) % k1 == 0, str(t) + str(type(list)) + " " + str(len(t)) + " " + str(k1)
-    m = [[t[i * k1 + j] for j in range(k1)] for i in range(len(t) // k1)]
-    if k2 is not None:
-        for i in range(len(m)):
-            m[i] = split_with_rows_of_size(m[i], k2, k3)
-    return m
+def split_with_rows_of_size(t, k1):
+    assert isinstance(t, list) and len(t) % k1 == 0, str(type(list)) + " " + str(len(t)) + " " + str(k1)
+    return split_with_structure(t, len(t) // k1)
 
 
 def ask_number(message):
