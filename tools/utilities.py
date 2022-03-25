@@ -256,6 +256,8 @@ def decrement(t):
     for i in range(len(t)):
         if isinstance(t[i], list):
             t[i] = decrement(t[i])
+        elif isinstance(t[i], tuple):
+            t[i] = tuple(v - 1 for v in t[i])
         else:
             assert isinstance(t[i], int)
             t[i] -= 1

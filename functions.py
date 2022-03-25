@@ -875,6 +875,13 @@ def Sum(term, *others, condition=None):
     auxiliary().replace_nodes_and_partial_constraints(terms)
 
     terms, coeffs = _get_terms_coeffs(terms)
+    if all(isinstance(v, Variable) for v in terms) and coeffs is None:
+        # maybe some variables occurs several times
+        d = dict()
+        for t in terms:
+            d[t] = d.get(t, 0) + 1
+        if any(v > 1 for v in d.values()):
+            terms, coeffs = [list(v) for v in zip(*d.items())]
     terms, coeffs = _manage_coeffs(terms, coeffs)
     if len(terms) == 1 and coeffs is None:
         return terms[0]  # TODO is it always the right thing to do? and if coeffs is not None???
@@ -1049,6 +1056,10 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
         assert isinstance(tasks, list) and len(tasks) > 0
         assert any(isinstance(task, (tuple, list)) and len(task) == 2 for task in tasks)
         origins, lengths = zip(*tasks)
+    if isinstance(origins, zip):
+        origins = list(origins)
+    if isinstance(lengths, zip):
+        lengths = list(lengths)
     if len(origins) == 2 and len(lengths) == 2 and all(isinstance(t, (list, tuple)) for t in [origins[0], origins[1], lengths[0], lengths[1]]):
         assert len(origins[0]) == len(origins[1]) == len(lengths[0]) == len(lengths[1])
         origins = [(origins[0][i], origins[1][i]) for i in range(len(origins[0]))]
