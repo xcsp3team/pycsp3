@@ -179,7 +179,7 @@ def _delete_bracket_part(code, nb_parameters):
     # else:
     code = [line.strip() if is_comment_line(line) else _remove_matching_brackets(line).strip() for line in code]
     if len(code) > 0 and len(code[-1]) > 0 and code[-1][-1] == ',':  # removing useless trailing comma of specify() if any
-        code[-1] = code[:-1]
+        code[-1] = code[-1][:-1]
     return code
 
 
