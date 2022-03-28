@@ -53,7 +53,7 @@ class Compilation:
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver", "output")
     options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepSmartConditions",
-                      "keepSmartTransitions", "restrictTablesWrtDomains", "dontcompactValues", "usemeta", "debug")
+                      "keepSmartTransitions", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues", "usemeta", "debug")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -261,8 +261,9 @@ def _compile(disabling_opoverrider=False, verbose=1):
     options.verbose and print("\tWCK for generating groups:", stopwatch.elapsed_time(reset=True), "seconds")
     handle_slides()
     options.verbose and print("\tWCK for handling slides:", stopwatch.elapsed_time(reset=True), "seconds")
-    build_compact_forms()
-    options.verbose and print("\tWCK for compacting forms:", stopwatch.elapsed_time(reset=True), "seconds")
+    if options.dontruncompactor is False:
+        build_compact_forms()
+        options.verbose and print("\tWCK for compacting forms:", stopwatch.elapsed_time(reset=True), "seconds")
 
     root = build_document()
     if root is not None:

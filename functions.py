@@ -903,7 +903,9 @@ def Count(term, *others, value=None, values=None, condition=None):
     :return: a component/constraint Count
     """
     terms = flatten(term, others)
-    assert len(terms) > 0, "A count with an empty scope"
+    if len(terms) == 0:
+        return 0
+    #assert len(terms) > 0, "A count with an empty scope"
     checkType(terms, ([Variable], [Node]))
     if value is None and values is None:
         value = 1
