@@ -905,7 +905,10 @@ def Count(term, *others, value=None, values=None, condition=None):
     terms = flatten(term, others)
     if len(terms) == 0:
         return 0
-    #assert len(terms) > 0, "A count with an empty scope"
+    # assert len(terms) > 0, "A count with an empty scope"
+    for i, t in enumerate(terms):
+        if isinstance(t, PartialConstraint):
+            terms[i] = auxiliary().replace_partial_constraint(t)
     checkType(terms, ([Variable], [Node]))
     if value is None and values is None:
         value = 1
@@ -913,7 +916,6 @@ def Count(term, *others, value=None, values=None, condition=None):
     values = list(values) if isinstance(values, (tuple, set)) else [value] if isinstance(value, (int, Variable)) else values
     if isinstance(value, PartialConstraint):
         values = [auxiliary().replace_partial_constraint(value)]
-    # print("hhhh",type(value))
     checkType(values, ([int], [Variable]))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
@@ -1105,7 +1107,12 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else flatten(lengths)
     checkType(lengths, ([Variable], [int]))
     heights = [heights for _ in range(len(origins))] if isinstance(heights, int) else flatten(heights)
-    checkType(heights, ([Variable], [int], [Node]))
+    for i, h in enumerate(heights):
+        if isinstance(h, PartialConstraint):
+            heights[i] = auxiliary().replace_partial_constraint(h)
+        elif isinstance(h, Node):
+            heights[i] = auxiliary().replace_node(h)
+    checkType(heights, ([Variable], [int]))
     ends = flatten(ends) if ends is not None else ends  # ends is optional
     checkType(ends, ([Variable], type(None)))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
