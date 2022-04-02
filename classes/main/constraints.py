@@ -643,6 +643,17 @@ class ConstraintKnapsack(ConstraintWithCondition):
         return False
 
 
+class ConstraintFlow(Constraint):  # TODO inheriting from ConstraintWithCondition instead?
+    def __init__(self, lst, balance, arcs, weights, condition):
+        super().__init__(TypeCtr.FLOW)
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
+        self.arg(TypeCtrArg.BALANCE, balance, content_ordered=True)
+        self.arg(TypeCtrArg.ARCS, arcs, content_ordered=True)
+        if weights is not None:
+            self.arg(TypeCtrArg.WEIGHTS, weights, content_ordered=True)
+            self.arg(TypeCtrArg.CONDITION, condition)
+
+
 ''' Constraints on Graphs'''
 
 

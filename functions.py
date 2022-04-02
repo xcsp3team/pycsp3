@@ -15,8 +15,8 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence,
     ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintElement, ConstraintChannel,
-    ConstraintNoOverlap, ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct,
-    auxiliary, manage_global_indirection)
+    ConstraintNoOverlap, ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause,
+    PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -1149,6 +1149,22 @@ def Knapsack(term, *others, weights, profits, limit, condition=None):
     assert len(terms) == len(weights) == len(profits)
     checkType(limit, (int, Variable))
     return _wrapping_by_complete_or_partial_constraint(ConstraintKnapsack(terms, weights, profits, limit, Condition.build_condition(condition)))
+
+
+def Flow(term, *others, balance, arcs, weights=None, condition=None):
+    terms = flatten(term, others)
+    assert len(terms) > 0, "A Flow with an empty scope"
+    if isinstance(weights, int):
+        weights = [weights for _ in range(len(terms))]
+    assert len(terms) == len(arcs) and (weights is None or len(terms) == len(weights))
+    assert isinstance(arcs, list) and all(
+        isinstance(arc, (tuple, list)) and len(arc) == 2 and isinstance(arc[0], int) and isinstance(arc[1], int) for arc in arcs)
+    all_nodes = {node for arc in arcs for node in arc}
+    mina, maxa = min(all_nodes), max(all_nodes)
+    if isinstance(balance, int):
+        balance = [balance for _ in range(maxa - mina + 1)]
+    assert maxa - mina + 1 == len(balance) and all(v in all_nodes for v in range(mina, maxa + 1))
+    return _wrapping_by_complete_or_partial_constraint(ConstraintFlow(terms, balance, arcs, weights, Condition.build_condition(condition)))
 
 
 ''' Constraints on Graphs'''

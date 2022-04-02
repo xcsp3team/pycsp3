@@ -113,7 +113,9 @@ def numbers_in_lines_until(stop):
 
 
 def split_with_structure(t, *k):
-    assert isinstance(t, list) and len(k) > 0 and all(isinstance(v, int) for v in k) and len(t) % k[0] == 0
+    assert isinstance(t, list) and all(isinstance(v, int) for v in k) and len(t) % k[0] == 0
+    if len(k) == 0:
+        return t
     width = len(t) // k[0]
     m = [[t[i * width + j] for j in range(width)] for i in range(k[0])]
     if len(k) > 1:
@@ -124,6 +126,8 @@ def split_with_structure(t, *k):
 
 def split_with_rows_of_size(t, k1):
     assert isinstance(t, list) and len(t) % k1 == 0, str(type(list)) + " " + str(len(t)) + " " + str(k1)
+    if len(t) == 0:
+        return t
     return split_with_structure(t, len(t) // k1)
 
 
