@@ -14,9 +14,9 @@ from pycsp3.classes.main.annotations import (
 from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence,
-    ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintElement, ConstraintChannel,
-    ConstraintNoOverlap, ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause,
-    PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
+    ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg,
+    ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow,
+    ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -975,7 +975,7 @@ def Cardinality(term, *others, occurrences, closed=False):
 ''' Connection Constraints '''
 
 
-def _extremum(term, others, index, start_index, type_rank, condition, maximum):
+def _extremum(term, others, condition, is_maximum):
     terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
     terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have PartialConstraints
     # if len(terms) == 0:
@@ -984,39 +984,76 @@ def _extremum(term, others, index, start_index, type_rank, condition, maximum):
     #     return terms[0]
     checkType(terms, ([Variable, Node], [PartialConstraint]))
     auxiliary().replace_nodes_and_partial_constraints(terms)
-    checkType(index, (Variable, type(None)))
-    checkType(start_index, int)
+    return ConstraintMaximum(terms, condition) if is_maximum else ConstraintMinimum(terms, condition)
+
+
+def _extremum_arg(term, others, type_rank, condition, is_maximum):
+    terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have PartialConstraints
+    # if len(terms) == 0:
+    #     return None
+    # if len(terms) == 1:
+    #     return terms[0]
+    checkType(terms, ([Variable, Node], [PartialConstraint]))
+    auxiliary().replace_nodes_and_partial_constraints(terms)
+    if type_rank is None:
+        type_rank= TypeRank.ANY
     checkType(type_rank, TypeRank)
-    assert index is not None or (start_index == 0 and type_rank is TypeRank.ANY)
-    return ConstraintMaximum(terms, index, start_index, type_rank, condition) if maximum else ConstraintMinimum(terms, index, start_index, type_rank, condition)
+    return ConstraintMaximumArg(terms, type_rank, condition) if is_maximum else ConstraintMinimumArg(terms, type_rank, condition)
 
 
-def Maximum(term, *others, index=None, condition=None):
+def Maximum(term, *others, condition=None):
     """
     Builds and returns a component Maximum (that becomes a constraint when subject to a condition).
 
     :param term: the first term on which the maximum applies
     :param others: the other terms (if any) on which the maximum applies
-    :param index: the index of a term with the maximum value (typically, None)
     :param condition: a condition directly specified for the maximum (typically, None)
     :return: a component/constraint Maximum
     """
-    ex = _extremum(term, others, index, 0, TypeRank.ANY, condition, True)
+    ex = _extremum(term, others, condition, True)
     return _wrapping_by_complete_or_partial_constraint(ex) if isinstance(ex, ConstraintMaximum) else ex
 
 
-def Minimum(term, *others, index=None, condition=None):
+def Minimum(term, *others, condition=None):
     """
     Builds and returns a component Minimum (that becomes a constraint when subject to a condition).
 
     :param term: the first term on which the minimum applies
     :param others: the other terms (if any) on which the minimum applies
-    :param index: the index of a term with the minimum value (typically, None)
     :param condition: a condition directly specified for the minimum (typically, None)
     :return: a component/constraint Minimum
     """
-    ex = _extremum(term, others, index, 0, TypeRank.ANY, condition, False)
+    ex = _extremum(term, others, condition, False)
     return _wrapping_by_complete_or_partial_constraint(ex) if isinstance(ex, ConstraintMinimum) else ex
+
+
+def MaximumArg(term, *others, type_rank=None, condition=None):
+    """
+    Builds and returns a component MaximumArg (that becomes a constraint when subject to a condition).
+
+    :param term: the first term on which the maximum applies
+    :param others: the other terms (if any) on which the maximum applies
+    :param type_rank: ranking condition on the index (ANY, FIRST or LAST)
+    :param condition: a condition directly specified for the maximum (typically, None)
+    :return: a component/constraint MaximumArg
+    """
+    ex = _extremum_arg(term, others, type_rank, condition, True)
+    return _wrapping_by_complete_or_partial_constraint(ex) if isinstance(ex, ConstraintMaximumArg) else ex
+
+
+def MinimumArg(term, *others, type_rank=None, condition=None):
+    """
+    Builds and returns a component MinimumArg (that becomes a constraint when subject to a condition).
+
+    :param term: the first term on which the maximum applies
+    :param others: the other terms (if any) on which the maximum applies
+    :param type_rank: ranking condition on the index (ANY, FIRST or LAST)
+    :param condition: a condition directly specified for the maximum (typically, None)
+    :return: a component/constraint MinimumArg
+    """
+    ex = _extremum_arg(term, others, type_rank, condition, False)
+    return _wrapping_by_complete_or_partial_constraint(ex) if isinstance(ex, ConstraintMinimumArg) else ex
 
 
 def Channel(list1, list2=None, *, start_index1=0, start_index2=0):

@@ -60,7 +60,7 @@ class TypeCtr(AbstractType):
     REGULAR, GRAMMAR, MDD = auto(3)
     ALL_DIFFERENT, ALL_EQUAL, ALL_DISTANT, ORDERED, LEX, ALL_INTERSECTING = auto(6)
     SUM, COUNT, N_VALUES, CARDINALITY, BALANCE, SPREAD, DEVIATION, SUM_COSTS, RANGE, ROOTS = auto(10)
-    MINIMUM, MAXIMUM, ELEMENT, CHANNEL, PERMUTATION, PRECEDENCE, PARTITION = auto(7)
+    MINIMUM, MAXIMUM, MINIMUM_ARG, MAXIMUM_ARG, ELEMENT, CHANNEL, PERMUTATION, PRECEDENCE, PARTITION = auto(9)
     STRETCH, NO_OVERLAP, CUMULATIVE, BIN_PACKING, KNAPSACK, FLOW = auto(6)
     CIRCUIT, N_CIRCUITS, PATH, N_PATHS, TREE, N_TREES, ARBO, N_ARBOS, N_CLIQUES = auto(9)
     CLAUSE, INSTANTIATION = auto(2)
@@ -76,7 +76,7 @@ class TypeCtrArg(AbstractType):
     EXCEPT, VALUE, VALUES, TOTAL, COEFFS, CONDITION = auto(6)
     COST, OPERATOR, NUMBER = auto(3)
     TRANSITIONS, START, FINAL, TERMINAL, RULES = auto(5)
-    INDEX = auto()
+    INDEX, RANK = auto(2)
     MAPPING = auto()
     OCCURS, ROW_OCCURS, COL_OCCURS = auto(3)
     WIDTHS, PATTERNS = auto(2)
@@ -195,6 +195,13 @@ class TypeOrderedOperator(Enum):
 @unique
 class TypeRank(Enum):
     FIRST, LAST, ANY = auto(3)
+
+    def __str__(self):
+        if self == TypeRank.FIRST:
+            return "first"
+        if self == TypeRank.LAST:
+            return "last"
+        return "any"
 
 
 @unique

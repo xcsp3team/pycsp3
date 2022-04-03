@@ -408,6 +408,23 @@ class ConstraintSum(ConstraintWithCondition):
             self.arg(TypeCtrArg.COEFFS, coefficients, content_ordered=True)
         self.arg(TypeCtrArg.CONDITION, condition)
 
+    def _new_term(self, x, c, is_min):
+        if isinstance(x, Variable):
+            xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
+        else:
+            assert isinstance(x, Node)
+            values = x.possible_values()
+            xmin, xmax = values[0], values[-1]
+        if isinstance(c, int):
+            return min(xmin * c, xmax * c) if is_min else max(xmin * c, xmax * c)
+        if isinstance(c, Variable):
+            cmin, cmax = c.dom.smallest_value(), c.dom.greatest_value()
+        else:
+            assert isinstance(c, Node)
+            values = c.possible_values()
+            cmin, cmax = values[0], values[-1]
+        return min(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax) if is_min else max(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax)
+
     def min_possible_value(self):
         vs = self.arguments[TypeCtrArg.LIST].content
         cs = self.arguments[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in self.arguments else None
@@ -416,12 +433,24 @@ class ConstraintSum(ConstraintWithCondition):
         assert len(vs) == len(cs)
         t = []
         for i, x in enumerate(vs):
-            xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
-            if isinstance(cs[i], int):
-                t.append(min(xmin * cs[i], xmax * cs[i]))
-            else:
-                cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
-                t.append(min(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
+            t.append(self._new_term(x, cs[i], True))
+            # if isinstance(x, Variable):
+            #     xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
+            # else:
+            #     assert isinstance(x, Node)
+            #     values = x.possible_values()
+            #     xmin, xmax = values[0], values[-1]
+            # if isinstance(cs[i], int):
+            #     t.append(min(xmin * cs[i], xmax * cs[i]))
+            # else:
+            #     if isinstance(cs[i], Variable):
+            #         cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
+            #     else:
+            #         assert isinstance(cs[i], Node)
+            #         values = cs[i].possible_values()
+            #         cmin, cmax = values[0], values[-1]
+            #     # cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
+            #     t.append(min(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
         return sum(t)
 
     def max_possible_value(self):
@@ -432,12 +461,13 @@ class ConstraintSum(ConstraintWithCondition):
         assert len(vs) == len(cs)
         t = []
         for i, x in enumerate(vs):
-            xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
-            if isinstance(cs[i], int):
-                t.append(max(xmin * cs[i], xmax * cs[i]))
-            else:
-                cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
-                t.append(max(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
+            t.append(self._new_term(x, cs[i], False))
+            # xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
+            # if isinstance(cs[i], int):
+            #     t.append(max(xmin * cs[i], xmax * cs[i]))
+            # else:
+            #     cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
+            #     t.append(max(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
         return sum(t)
 
     def revert_coeffs(self):
@@ -493,11 +523,9 @@ def _index_att(v):
 
 
 class ConstraintMaximum(ConstraintWithCondition):
-    def __init__(self, lst, index=None, start_index=0, type_rank=TypeRank.ANY, condition=None):
+    def __init__(self, lst, condition=None):
         super().__init__(TypeCtr.MAXIMUM)
-        self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(start_index))
-        if index:
-            self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
+        self.arg(TypeCtrArg.LIST, lst)
         self.arg(TypeCtrArg.CONDITION, condition)
 
     def min_possible_value(self):
@@ -507,16 +535,45 @@ class ConstraintMaximum(ConstraintWithCondition):
         return max(x.dom.greatest_value() if isinstance(x, Variable) else x.possible_values()[-1] for x in self.arguments[TypeCtrArg.LIST].content)
 
 
-class ConstraintMinimum(ConstraintMaximum):
-    def __init__(self, lst, index=None, start_index=0, type_rank=TypeRank.ANY, condition=None):
-        super().__init__(lst, index, start_index, type_rank, condition)
-        self.name = TypeCtr.MINIMUM
+class ConstraintMinimum(ConstraintWithCondition):
+    def __init__(self, lst, condition=None):
+        super().__init__(TypeCtr.MINIMUM)
+        self.arg(TypeCtrArg.LIST, lst)
+        self.arg(TypeCtrArg.CONDITION, condition)
 
     def min_possible_value(self):
         return min(x.dom.smallest_value() if isinstance(x, Variable) else x.possible_values()[0] for x in self.arguments[TypeCtrArg.LIST].content)
 
     def max_possible_value(self):
         return min(x.dom.greatest_value() if isinstance(x, Variable) else x.possible_values()[-1] for x in self.arguments[TypeCtrArg.LIST].content)
+
+
+class ConstraintMaximumArg(ConstraintWithCondition):
+    def __init__(self, lst, type_rank=None, condition=None):
+        super().__init__(TypeCtr.MAXIMUM_ARG)
+        self.attributes = [(TypeCtrArg.RANK, type_rank)] if type_rank and type_rank != TypeRank.ANY else []
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
+        self.arg(TypeCtrArg.CONDITION, condition)
+
+    def min_possible_value(self):
+        return 0
+
+    def max_possible_value(self):
+        return len(self.arguments[TypeCtrArg.LIST].content) - 1
+
+
+class ConstraintMinimumArg(ConstraintWithCondition):
+    def __init__(self, lst, type_rank=None, condition=None):
+        super().__init__(TypeCtr.MINIMUM_ARG)
+        self.attributes = [(TypeCtrArg.RANK, type_rank)] if type_rank and type_rank != TypeRank.ANY else []
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
+        self.arg(TypeCtrArg.CONDITION, condition)
+
+    def min_possible_value(self):
+        return 0
+
+    def max_possible_value(self):
+        return len(self.arguments[TypeCtrArg.LIST].content) - 1
 
 
 class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with a general condition

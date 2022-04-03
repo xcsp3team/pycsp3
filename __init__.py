@@ -15,15 +15,17 @@ from pycsp3.functions import variant, subvariant, Var, VarArray, satisfy, minimi
 from pycsp3.functions import And, Or, Not, Xor, IfThen, IfThenElse, Iff, Slide
 from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, belong, not_belong, conjunction, disjunction
 from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, Increasing, Decreasing, LexIncreasing, LexDecreasing, Precedence, Sum, Count, NValues,
-                              Cardinality, Maximum, Minimum, Channel, NoOverlap, Cumulative, BinPacking, Knapsack, Flow, Circuit, Clause)
+                              Cardinality, Maximum, Minimum, MaximumArg, MinimumArg, Channel, NoOverlap, Cumulative, BinPacking, Knapsack, Flow, Circuit,
+                              Clause)
 from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
-from pycsp3.tools.utilities import ANY, ALL, combinations, different_values, symmetric_cells, decrement, flatten, alphabet_positions, all_primes, integer_scaling, \
+from pycsp3.tools.utilities import ANY, ALL, combinations, different_values, symmetric_cells, decrement, flatten, alphabet_positions, all_primes, \
+    integer_scaling, \
     to_ordinary_table, warning
 
 from pycsp3.classes.auxiliary.conditions import lt, le, ge, gt, eq, ne, complement
-from pycsp3.classes.auxiliary.ptypes import TypeStatus, TypeSolver
+from pycsp3.classes.auxiliary.ptypes import TypeStatus, TypeSolver, TypeRank
 from pycsp3.classes.entities import clear
 from pycsp3.classes.auxiliary.structures import Automaton, MDD  # KEEP it here after other imports
 
