@@ -408,7 +408,7 @@ class ConstraintSum(ConstraintWithCondition):
             self.arg(TypeCtrArg.COEFFS, coefficients, content_ordered=True)
         self.arg(TypeCtrArg.CONDITION, condition)
 
-    def _new_term(self, x, c, is_min):
+    def _min_or_max_term_value(self, x, c, is_min):
         if isinstance(x, Variable):
             xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
         else:
@@ -431,27 +431,7 @@ class ConstraintSum(ConstraintWithCondition):
         if cs is None:
             return sum(x.dom.smallest_value() if isinstance(x, Variable) else x.possible_values()[0] for x in vs)
         assert len(vs) == len(cs)
-        t = []
-        for i, x in enumerate(vs):
-            t.append(self._new_term(x, cs[i], True))
-            # if isinstance(x, Variable):
-            #     xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
-            # else:
-            #     assert isinstance(x, Node)
-            #     values = x.possible_values()
-            #     xmin, xmax = values[0], values[-1]
-            # if isinstance(cs[i], int):
-            #     t.append(min(xmin * cs[i], xmax * cs[i]))
-            # else:
-            #     if isinstance(cs[i], Variable):
-            #         cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
-            #     else:
-            #         assert isinstance(cs[i], Node)
-            #         values = cs[i].possible_values()
-            #         cmin, cmax = values[0], values[-1]
-            #     # cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
-            #     t.append(min(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
-        return sum(t)
+        return sum(self._min_or_max_term_value(x, cs[i], True) for i, x in enumerate(vs))
 
     def max_possible_value(self):
         vs = self.arguments[TypeCtrArg.LIST].content
@@ -459,16 +439,7 @@ class ConstraintSum(ConstraintWithCondition):
         if cs is None:
             return sum(x.dom.greatest_value() if isinstance(x, Variable) else x.possible_values()[-1] for x in vs)
         assert len(vs) == len(cs)
-        t = []
-        for i, x in enumerate(vs):
-            t.append(self._new_term(x, cs[i], False))
-            # xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
-            # if isinstance(cs[i], int):
-            #     t.append(max(xmin * cs[i], xmax * cs[i]))
-            # else:
-            #     cmin, cmax = cs[i].dom.smallest_value(), cs[i].dom.greatest_value()
-            #     t.append(max(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax))
-        return sum(t)
+        return sum(self._min_or_max_term_value(x, cs[i], False) for i, x in enumerate(vs))
 
     def revert_coeffs(self):
         if TypeCtrArg.COEFFS in self.arguments:
