@@ -587,12 +587,32 @@ def ift(*args):
 
 
 def belong(x, values):
-    assert isinstance(x, Variable) and isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
+    if isinstance(x, PartialConstraint):
+        x = auxiliary().replace_partial_constraint(x)
+    assert isinstance(x, Variable)
+    if isinstance(values, range):
+        if values.step != 1 or len(values) < 10:
+            values = list(values)
+        else:
+            return Node.in_range(x, values)
+    assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
+    if len(values) == 1:
+        return Node.build(TypeNode.EQ, x, values[0])
     return Node.build(TypeNode.IN, x, Node.build(TypeNode.SET, values))
 
 
 def not_belong(x, values):
-    assert isinstance(x, Variable) and isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
+    if isinstance(x, PartialConstraint):
+        x = auxiliary().replace_partial_constraint(x)
+    assert isinstance(x, Variable)
+    if isinstance(values, range):
+        if values.step != 1 or len(values) < 10:
+            values = list(values)
+        else:
+            return Node.not_in_range(x, values)
+    assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
+    if len(values) == 1:
+        return Node.build(TypeNode.NE, x, values[0])
     return Node.build(TypeNode.NOTIN, x, Node.build(TypeNode.SET, values))
 
 
@@ -1185,8 +1205,11 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
     if isinstance(weights, int):
         weights = [weights for _ in range(len(terms))]
     assert len(terms) == len(arcs) and (weights is None or len(terms) == len(weights))
-    assert isinstance(arcs, list) and all(
-        isinstance(arc, (tuple, list)) and len(arc) == 2 and isinstance(arc[0], int) and isinstance(arc[1], int) for arc in arcs)
+    assert isinstance(arcs, list)
+    for i, arc in enumerate(arcs):
+        if isinstance(arc, list):
+            arcs[i] = tuple(arc)
+    assert all(isinstance(arc, tuple) and len(arc) == 2 and isinstance(arc[0], int) and isinstance(arc[1], int) for arc in arcs)
     all_nodes = {node for arc in arcs for node in arc}
     mina, maxa = min(all_nodes), max(all_nodes)
     if isinstance(balance, int):

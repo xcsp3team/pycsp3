@@ -676,7 +676,7 @@ class ConstraintFlow(Constraint):  # TODO inheriting from ConstraintWithConditio
         super().__init__(TypeCtr.FLOW)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
         self.arg(TypeCtrArg.BALANCE, balance, content_ordered=True)
-        self.arg(TypeCtrArg.ARCS, arcs, content_ordered=True)
+        self.arg(TypeCtrArg.ARCS, matrix_to_string(arcs), content_ordered=True)
         if weights is not None:
             self.arg(TypeCtrArg.WEIGHTS, weights, content_ordered=True)
             self.arg(TypeCtrArg.CONDITION, condition)

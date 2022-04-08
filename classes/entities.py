@@ -13,6 +13,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeCtr, TypeConditionOperator
 from pycsp3 import tools
 from pycsp3.dashboard import options
 
+
 class Entity:
     def __init__(self, name, comment=None, tags=[]):
         self.id = name
@@ -714,3 +715,13 @@ class Node(Entity):
     @staticmethod
     def disjunction(*args):
         return Node._and_or(TypeNode.OR, *args)
+
+    @staticmethod
+    def in_range(x, r):
+        assert isinstance(r, range) and r.step == 1
+        return Node.build(TypeNode.AND, Node.build(TypeNode.GE, x, r.start), Node.build(TypeNode.LT, x, r.stop))
+
+    @staticmethod
+    def not_in_range(x, r):
+        assert isinstance(r, range) and r.step == 1
+        return Node.build(TypeNode.OR, Node.build(TypeNode.LT, x, r.start), Node.build(TypeNode.GE, x, r.stop))
