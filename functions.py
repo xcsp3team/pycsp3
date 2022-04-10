@@ -434,11 +434,12 @@ def satisfy(*args, no_comment_tags_extraction=False):
         elif any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide
             to_post = _block(arg)
         elif comment_at_2:  # Case: block
-            for j, ele in enumerate(arg):
-                if isinstance(arg[j], (ECtr, ESlide)):
-                    arg[j].note(comments2[i][j]).tag(tags2[i][j])
-                elif comments2[i][j] or tags2[i][j]:
-                    arg[j] = _group(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
+            if len(arg) == len(comments2[i]) == len(tags2[i]):  # if comments are not too wildly put
+                for j, ele in enumerate(arg):
+                    if isinstance(arg[j], (ECtr, ESlide)):
+                        arg[j].note(comments2[i][j]).tag(tags2[i][j])
+                    elif comments2[i][j] or tags2[i][j]:
+                        arg[j] = _group(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
             to_post = _block(arg)
         else:  # Group
             to_post = _group(arg)
@@ -890,8 +891,8 @@ def Sum(term, *others, condition=None):
 
     terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct], [ECtr]))
-    # if len(terms) == 0:
-    #     return None
+    if len(terms) == 0:
+        return 0  # None
     auxiliary().replace_nodes_and_partial_constraints(terms)
 
     terms, coeffs = _get_terms_coeffs(terms)
