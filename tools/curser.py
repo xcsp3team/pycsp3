@@ -19,12 +19,15 @@ unsafe_cache = False  # see for example Pic since the table is released as it oc
 
 
 def cursing():
-    def _plus_add(self, other):
+    def _int_add(self, other):
+        assert isinstance(self,int)
         if isinstance(other, (Node, PartialConstraint)):
             if self == 0:
                 return other
             if isinstance(other, Node):
                 return Node.build(TypeNode.ADD, self, other)
+            if isinstance(other, PartialConstraint):
+                return Node.build(TypeNode.ADD, self, auxiliary().replace_partial_constraint(other))
             # other cases ???  PartialConstraint of type sum ??
         return int.__add__(self, other)
 
@@ -159,7 +162,7 @@ def cursing():
                 return True
         return self.__contains__(other)
 
-    curse(int, "__add__", _plus_add)
+    curse(int, "__add__", _int_add)
     curse(dict, "__add__", _dict_add)
     curse(tuple, "__mul__", _tuple_mul)
     curse(list, "__mul__", _list_mul)

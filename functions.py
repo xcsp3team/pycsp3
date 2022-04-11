@@ -435,6 +435,8 @@ def satisfy(*args, no_comment_tags_extraction=False):
             to_post = _block(arg)
         elif comment_at_2:  # Case: block
             if len(arg) == len(comments2[i]) == len(tags2[i]):  # if comments are not too wildly put
+                if isinstance(arg, tuple):
+                    arg = list(arg)
                 for j, ele in enumerate(arg):
                     if isinstance(arg[j], (ECtr, ESlide)):
                         arg[j].note(comments2[i][j]).tag(tags2[i][j])

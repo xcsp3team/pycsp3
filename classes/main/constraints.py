@@ -739,6 +739,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     def _simplify_operation(self, other):
         assert isinstance(self.constraint, ConstraintWithCondition)
+        if isinstance(other, int):
+            return auxiliary().replace_partial_constraint(self), other
         if isinstance(self.constraint, ConstraintSum) and (not isinstance(other, PartialConstraint) or isinstance(other.constraint, ConstraintSum)):
             return None  # we can combine partial sums and terms
         if not isinstance(self.constraint, ConstraintSum) and not isinstance(other, PartialConstraint):
