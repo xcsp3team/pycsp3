@@ -683,6 +683,10 @@ class Node(Entity):
         args = flatten(Node.build(TypeNode.SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args)
         assert type.is_valid_arity(len(args)), "Problem: Bad arity for node " + type.name + ". It is " + str(
             len(args)) + " but it should be between " + str(type.min_arity) + " and " + str(type.max_arity)
+        # Do we activate these simple modifications below?
+        # if len(args) == 2 and isinstance(args[0], Variable) and isinstance(args[1], int):
+        #     if (args[1] == 1 and type in (TypeNode.MUL, TypeNode.DIV)) or (args[1] == 0 and type in (TypeNode.ADD, TypeNode.SUB)):
+        #         return Node(TypeNode.VAR,args[0])
         node = Node(type, Node._create_sons(*args))
         if type == TypeNode.EQ and all(son.type.is_predicate_operator() for son in node.sons):
             node = Node(TypeNode.IFF, node.sons)

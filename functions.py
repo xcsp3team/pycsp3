@@ -906,8 +906,8 @@ def Sum(term, *others, condition=None):
         if any(v > 1 for v in d.values()):
             terms, coeffs = [list(v) for v in zip(*d.items())]
     terms, coeffs = _manage_coeffs(terms, coeffs)
-    if len(terms) == 1 and coeffs is None:
-        return terms[0]  # TODO is it always the right thing to do? and if coeffs is not None???
+    if len(terms) == 1 and (coeffs is None or coeffs[0] == 1):
+        return terms[0]  # TODO is it always the right thing to do?
 
     # TODO control here some assumptions (empty list seems to be possible. See RLFAP)
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))
