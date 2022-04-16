@@ -525,7 +525,7 @@ class OpOverrider:
             except TypeError:
                 return result
         if isinstance(indexes, Node):
-            return PartialConstraint(ConstraintElement(self, auxiliary().replace_node(indexes)))
+            return PartialConstraint(ConstraintElement(self, index=auxiliary().replace_node(indexes)))
         result = list.__getitem__(self, indexes)
         try:
             return ListInt(result)

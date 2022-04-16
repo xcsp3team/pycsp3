@@ -545,7 +545,7 @@ class Node(Entity):
                     return res
 
                 if all_ranges and all(pv.start >= 0 and pv.step == 1 for pv in pvs):
-                    return range(multiply(pv.start for pv in pvs), multiply(pv.stop for pv in pvs))
+                    return range(multiply(pv.start for pv in pvs), multiply(pv.stop-1 for pv in pvs)+1)
                 return possible_range({self._product(p) for p in product(*(pv for pv in pvs))})  # or numpy.prod ?
             # TODO: in case of all_ranges being False, possibility of improving the efficiency of the code below for MIN and MAX
             if self.type == TypeNode.MIN:
