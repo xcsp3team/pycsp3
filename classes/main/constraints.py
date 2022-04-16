@@ -910,6 +910,9 @@ class ScalarProduct:
 
 
 class _Auxiliary:
+    cache_ints = dict()
+    cache_nodes = dict()
+
     def __init__(self):
         self._introduced_variables = []
         self._collected_constraints = []
@@ -964,6 +967,14 @@ class _Auxiliary:
             elif nodes_too and isinstance(t, Node):
                 terms[i] = self.replace_node(t)
         return terms
+
+    def replace_int(self, v):
+        assert isinstance(v, int)
+        # if v in _Auxiliary.cache_ints:  # for the moment, we do not use it
+        #     return _Auxiliary.cache_ints[v]
+        aux = self.__replace(None, Domain(v), systematically_append_obj=False)
+        _Auxiliary.cache_ints[v] = aux
+        return aux
 
     def replace_node(self, node, indexing=None):
         assert isinstance(node, Node)

@@ -4,14 +4,13 @@ from collections import deque, namedtuple
 from pycsp3 import functions
 from pycsp3.classes.entities import Node, TypeNode, ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
-    ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix,
-    ConstraintInstantiation,
+    ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
     auxiliary, global_indirection, manage_global_indirection)
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, is_square_matrix, ANY, structured_list, warning, \
-    error_if
+from pycsp3.tools.utilities import (
+    flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, is_square_matrix, ANY, structured_list, warning, error_if)
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -20,7 +19,7 @@ unsafe_cache = False  # see for example Pic since the table is released as it oc
 
 def cursing():
     def _int_add(self, other):
-        assert isinstance(self,int)
+        assert isinstance(self, int)
         if isinstance(other, (Node, PartialConstraint)):
             if self == 0:
                 return other
@@ -70,6 +69,13 @@ def cursing():
             queue_in.append((self, other))
             return True
         return self.__contains__(other)
+
+    def _list_getitem(self, other):
+        if not OpOverrider.activated:
+            return self.__getitem__(other)
+        # if isinstance(other, Variable):
+        #     return cp_array(self)[other]
+        return list.__getitem__(self, other)
 
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
@@ -165,6 +171,7 @@ def cursing():
     curse(int, "__add__", _int_add)
     curse(dict, "__add__", _dict_add)
     curse(tuple, "__mul__", _tuple_mul)
+    # curse(list, "__getitem__", _list_getitem) # TODO: not working. why? because of forbiddenfruit?
     curse(list, "__mul__", _list_mul)
     # curse(list, "__rmul__", _list_rmul)
     curse(tuple, "__contains__", _tuple_contains)
@@ -644,6 +651,23 @@ class ListCtr(list):  # currently, mainly introduced for __str__ when calling po
         return "\n".join(str(e) for e in self)
 
 
+class ListMix(list):  # list that may contain together integers, variables and nodes
+
+    def __init__(self, elements):
+        super().__init__(elements)
+        assert all(isinstance(v, (int, Variable, Node)) for v in elements)
+
+    def __getitem__(self, k):
+        # for the moment, we do not use caching when replacing integers or nodes
+        if isinstance(k, Variable):  # we transform into a list of variables to be able to handle a constraint Element
+            return ListVar([v if isinstance(v, Variable) else auxiliary().replace_int(v) if isinstance(v, int) else auxiliary().replace_node(v) for v in self])[
+                k]
+        return super().__getitem__(k)
+
+    def __str__(self):
+        return structured_list(self)
+
+
 def convert_to_namedtuples(obj):
     def with_only_alphanumeric_keys(obj):  # alphanum or '_'
         if isinstance(obj, dict):
@@ -825,12 +849,18 @@ def cp_array(*l):
         assert all(isinstance(t, (list, types.GeneratorType)) for t in l)
         res = [cp_array(t) for t in l]
         return ListInt(res) if isinstance(res[0], ListInt) else ListVar(res)
-    if all(isinstance(v, int) for v in l):  # and None ?
+    typ = unique_type_in(l)
+    if typ is int:
         return ListInt(l)
-    elif all(isinstance(v, Variable) for v in l):  # and None ?
+    if typ is Variable:
         return ListVar(l)
-    else:
-        return l  # raise NotImplemented
+    if typ is ECtr:  # TODO: is it the right type?
+        return ListCtr(l)
+    if all(isinstance(v, (int, Variable, Node)) for v in l):
+        return ListMix(l)
+    return l
+    # else:
+    #     return l  # raise NotImplemented
 
 # def to_special_list(t):
 #     assert is_1d_list(t)
