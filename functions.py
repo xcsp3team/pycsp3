@@ -1005,7 +1005,7 @@ def _extremum_terms(term, others):
     #     return None
     # if len(terms) == 1:
     #     return terms[0]
-    checkType(terms, ([Variable, Node], [PartialConstraint]))
+    checkType(terms, ([Variable, Node, int], [PartialConstraint]))
     auxiliary().replace_nodes_and_partial_constraints(terms)
     return terms
 

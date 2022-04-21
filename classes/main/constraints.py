@@ -496,7 +496,7 @@ def _index_att(v):
 class ConstraintMaximum(ConstraintWithCondition):
     def __init__(self, lst, condition=None):
         super().__init__(TypeCtr.MAXIMUM)
-        self.arg(TypeCtrArg.LIST, lst)
+        self.arg(TypeCtrArg.LIST, auxiliary().replace_ints(lst))
         self.arg(TypeCtrArg.CONDITION, condition)
 
     def min_possible_value(self):
@@ -505,11 +505,18 @@ class ConstraintMaximum(ConstraintWithCondition):
     def max_possible_value(self):
         return max(x.dom.greatest_value() if isinstance(x, Variable) else x.possible_values()[-1] for x in self.arguments[TypeCtrArg.LIST].content)
 
+    def all_possible_values(self):  # be careful: may be costly
+        max_min = self.min_possible_value()
+        s = set()
+        for x in self.arguments[TypeCtrArg.LIST].content:
+            s.update(v for v in (x.dom.all_values() if isinstance(x, Variable) else x.possible_values()) if v >= max_min)
+        return s
+
 
 class ConstraintMinimum(ConstraintWithCondition):
     def __init__(self, lst, condition=None):
         super().__init__(TypeCtr.MINIMUM)
-        self.arg(TypeCtrArg.LIST, lst)
+        self.arg(TypeCtrArg.LIST, auxiliary().replace_ints(lst))
         self.arg(TypeCtrArg.CONDITION, condition)
 
     def min_possible_value(self):
@@ -517,6 +524,13 @@ class ConstraintMinimum(ConstraintWithCondition):
 
     def max_possible_value(self):
         return min(x.dom.greatest_value() if isinstance(x, Variable) else x.possible_values()[-1] for x in self.arguments[TypeCtrArg.LIST].content)
+
+    def all_possible_values(self):  # be careful: may be costly
+        min_max = self.max_possible_value()
+        s = set()
+        for x in self.arguments[TypeCtrArg.LIST].content:
+            s.update(v for v in (x.dom.all_values() if isinstance(x, Variable) else x.possible_values()) if v <= min_max)
+        return s
 
 
 class ConstraintMaximumArg(ConstraintWithCondition):
@@ -946,7 +960,12 @@ class _Auxiliary:
                 # if functions.protect().execute(pc.constraint.equal_except_condition(c)):
                 # if functions.protect().execute(pc.constraint == c):
                 return x
-        aux = self.__replace(pc, Domain(range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
+        if isinstance(pc.constraint, (ConstraintMinimum, ConstraintMaximum)):
+            values = possible_range(pc.constraint.all_possible_values())
+        else:
+            values = range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)
+
+        aux = self.__replace(pc, Domain(values))  # range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
         self.cache.append((pc.constraint, aux))
         return aux
 
@@ -990,6 +1009,12 @@ class _Auxiliary:
             return None
         values = possible_range({v for v in index.dom if 0 <= v < length})
         return self.__replace(None, Domain(values), systematically_append_obj=False)
+
+    def replace_ints(self, lst):
+        return curser.cp_array(self.replace_int(v) if isinstance(v, int) else v for v in lst)
+
+    def normalize_list(self, lst):
+        return curser.ListVar([v if isinstance(v, Variable) else self.replace_int(v) if isinstance(v, int) else self.replace_node(v) for v in lst])
 
     def collected(self):
         t = self._collected_constraints
