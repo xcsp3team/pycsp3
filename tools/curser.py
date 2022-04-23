@@ -579,7 +579,7 @@ class ListInt(list):
             if isinstance(self[0], (tuple, int)):
                 queue_in.append((self, other))
                 return True
-            if isinstance(other, list) and isinstance(self[0], list):  # TODO more precise test? and/or make a warning (this should be tuples instead of lists)
+            if isinstance(other, (list, tuple)) and isinstance(self[0], list):
                 queue_in.append(([tuple(t) for t in self], other))
                 return True
                 # error("It seems that you build tables whose elements are lists instead of tuples: " + str(other) + " in " + str(self))
