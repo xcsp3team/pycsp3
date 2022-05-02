@@ -297,7 +297,7 @@ class OpOverrider:
         return t
 
     def __neg__(self):
-        return Node.build(TypeNode.NEG, self)
+        return self.sons[0] if isinstance(self, Node) and self.type == TypeNode.NEG else Node.build(TypeNode.NEG, self)
 
     def __add__(self, other):
         if isinstance(other, ScalarProduct):
@@ -339,6 +339,10 @@ class OpOverrider:
 
     def __mul__(self, other):
         # if isinstance(other, int) and other == 0: return Node(TypeNode.INT, 0)
+        if isinstance(self, Node) and self.type == TypeNode.NEG and isinstance(self.sons[0], Node) and self.sons[0].type == TypeNode.MUL:
+            return Node.build(TypeNode.NEG, Node.build(TypeNode.MUL, *self.sons[0].sons, other))
+        if isinstance(other, Node) and other.type == TypeNode.NEG and isinstance(other.sons[0], Node) and other.sons[0].type == TypeNode.MUL:
+            return Node.build(TypeNode.NEG, Node.build(TypeNode.MUL, self, *other.sons[0].sons))
         return Node.build(TypeNode.MUL, self, other)
 
     def __rmul__(self, other):

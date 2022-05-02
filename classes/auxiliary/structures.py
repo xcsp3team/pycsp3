@@ -42,6 +42,17 @@ class Diagram:
                 t.append((state1, label, state2))
         return t
 
+    def flat_transitions(self, scp):
+        values = scp[0].dom.all_values()
+        assert all(values == scp[i].dom.all_values() for i in range(1, len(scp)))
+        trs = []
+        for (q1, l, q2) in self.transitions:
+            labels = [l] if isinstance(l, (int, str)) else l if isinstance(l, (list, tuple, set, frozenset)) else list(l.filtering(values))
+            for label in labels:
+                assert isinstance(label, (int, str)), "currently, the label of a transition is necessarily an integer or a symbol"
+                trs.append((q1, label, q2))
+        return trs
+
     def transitions_to_string(self, scp):
         def _string(t):
             return "".join(
@@ -51,14 +62,7 @@ class Diagram:
             if options.keepsmarttransitions or all(isinstance(label, (int, str)) for _, label, _ in self.transitions):
                 Diagram._cache[self.num] = _string(self.transitions)
             else:
-                values = scp[0].dom.all_values()
-                assert all(values == scp[i].dom.all_values() for i in range(1, len(scp)))
-                trs = []
-                for (q1, l, q2) in self.transitions:
-                    labels = [l] if isinstance(l, (int, str)) else l if isinstance(l, (list, tuple, set, frozenset)) else list(l.filtering(values))
-                    for label in labels:
-                        assert isinstance(label, (int, str)), "currently, the label of a transition is necessarily an integer or a symbol"
-                        trs.append((q1, label, q2))
+                trs = self.flat_transitions(scp)
                 return _string(trs)  # we don't put in the cache because domains of scopes may be different
         return Diagram._cache[self.num]
 
