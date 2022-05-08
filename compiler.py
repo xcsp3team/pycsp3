@@ -167,6 +167,7 @@ def _load(*, console=False):
             Compilation.data, Compilation.string_data = _load_data()
         Compilation.data = convert_to_namedtuples(Compilation.data)
         Compilation.string_data = Compilation.string_data.replace("/", "-")
+        Compilation.original_data = Compilation.data
         if len(Compilation.data) == 0:
             Compilation.data = None
         elif len(Compilation.data) == 1:
@@ -283,12 +284,15 @@ def _compile(disabling_opoverrider=False, verbose=1):
 
     if options.dataexport:
         if isinstance(options.dataexport, bool):
-            json_prefix = options.data.split("/")[-1:][0].split(".")[:1][0] if options.dataparser else filename_prefix
+            if options.data is None:
+                json_prefix = "data" + Compilation.string_data
+            else:
+                json_prefix = options.data.split("/")[-1:][0].split(".")[:1][0] if options.dataparser else filename_prefix
             # TODO if data are given with name as e.g., in [k=3,l=9,b=0,r=0,v=9] for Bibd, maybe we should sort them
         else:
             json_prefix = str(options.dataexport)
         with open(json_prefix + '.json', 'w') as f:
-            json.dump(prepare_for_json(Compilation.data), f)
+            json.dump(prepare_for_json(Compilation.original_data if Compilation.original_data else Compilation.data), f)
         print("  Saving data in the file " + json_prefix + '.json' + " completed.")
 
     Compilation.done = True

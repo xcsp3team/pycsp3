@@ -942,6 +942,8 @@ def Count(term, *others, value=None, values=None, condition=None):
     values = list(values) if isinstance(values, (tuple, set)) else [value] if isinstance(value, (int, Variable)) else values
     if isinstance(value, PartialConstraint):
         values = [auxiliary().replace_partial_constraint(value)]
+    elif isinstance(value,Node):
+         values = [auxiliary().replace_node(value)]
     checkType(values, ([int], [Variable]))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
