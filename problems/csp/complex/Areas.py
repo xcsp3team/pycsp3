@@ -9,7 +9,7 @@ Important: we assume in the model below that each specified integer delimits its
 (i.e., we cannot use two equal specified integers for the same region).
 
 Example of Execution:
-  python3 Auction.py -data=Areas-3-3-3.json
+  python3 Areas.py -data=Areas-3-3-3.json
 """
 
 from pycsp3 import *

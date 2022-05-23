@@ -10,7 +10,7 @@ in the grid, one must reach the following final state:
   0  1  2  3
   4  5  6  7
   8  9 10  11
-  12 13 14  15
+  12 13 14 15
 by applying a minimal sequence of rotations. We can observe that the effect
 of rotations on the final state is given by the following cycles:
 - (0, 1, 2, 6, 10, 9, 8, 4)
@@ -26,9 +26,12 @@ Examples of Execution:
 from collections import OrderedDict
 from pycsp3 import *
 
-# preset data (series of 4 instances)
+# preset data (series of 4 instances, followed by 4 artificial instances)
 series = [([7, 11, 6, 14, 0, 13, 15, 12, 2, 9, 10, 8, 4, 1, 3, 5], 11), ([1, 6, 3, 7, 0, 2, 10, 11, 4, 5, 8, 9, 12, 13, 14, 15], 4),
-          ([7, 11, 6, 14, 0, 3, 1, 9, 2, 5, 10, 13, 4, 8, 12, 15], 8), ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 14], 55)]
+          ([7, 11, 6, 14, 0, 3, 1, 9, 2, 5, 10, 13, 4, 8, 12, 15], 8), ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 14], 55),
+          ([5, 3, 1, 4, 0, 13, 15, 12, 2, 9, 10, 8, 14, 6, 11, 7], 21), ([3, 6, 7, 1, 0, 2, 10, 11, 4, 5, 8, 9, 12, 13, 14, 15], 17),
+          ([3, 11, 6, 14, 0, 7, 1, 9, 2, 5, 10, 13, 4, 8, 12, 15], 20), ([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 15, 11, 12, 13, 14, 10], 18),
+          ]
 rotations = [[0, 1, 2, 6, 10, 9, 8, 4], [1, 2, 3, 7, 11, 10, 9, 5], [4, 5, 6, 10, 14, 13, 12, 8], [5, 6, 7, 11, 15, 14, 13, 9]]
 nCells, nRotations = 16, len(rotations)
 

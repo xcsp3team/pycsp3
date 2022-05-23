@@ -10,6 +10,20 @@ from pycsp3.tools.utilities import error
 
 LIMIT_FOR_VAR_ARGS = 3
 
+_in_slide = False
+
+
+def switch_limit_for_var_args():
+    global _in_slide
+
+    _in_slide = not _in_slide
+
+
+def _limit_for_var_args(from_slide):
+    if from_slide:
+        return float('inf')
+    return LIMIT_FOR_VAR_ARGS
+
 
 def build_similar_constraints():
     detecting_groups_recursively(CtrEntities.items)
@@ -139,7 +153,7 @@ def _compute_group_abstraction_intension(group):
     return abstract_tree, all_args
 
 
-def _compute_group_abstraction_other(group):
+def _compute_group_abstraction_other(group, *, from_slide=False):
     c = group.entities[0].constraint
     abstraction = OrderedDict()
     var_args_argument = None
@@ -159,7 +173,7 @@ def _compute_group_abstraction_other(group):
                 abstraction[arg.name] = "%..."
                 var_args_argument = arg.name
             elif var_args_argument is None and group.diff_argument_names[-1] == arg.name and isinstance(arg.content, list) and len(
-                    arg.content) > LIMIT_FOR_VAR_ARGS:
+                    arg.content) > _limit_for_var_args(from_slide):  # LIMIT_FOR_VAR_ARGS:
                 abstraction[arg.name] = "%..."
             else:
                 if arg.name == TypeCtrArg.CONDITION:
@@ -195,20 +209,20 @@ def _compute_group_abstraction_other(group):
     return abstraction, all_args
 
 
-def building_groups_recursively(entities, previous=None):
-    def _build_group(group):
+def building_groups_recursively(entities, previous=None, from_slide=False):
+    def _build_group(group, from_slide):
         if isinstance(group.entities[0].constraint, ConstraintIntension):
             group.abstraction, group.all_args = _compute_group_abstraction_intension(group)
         else:
-            group.abstraction, group.all_args = _compute_group_abstraction_other(group)
+            group.abstraction, group.all_args = _compute_group_abstraction_other(group, from_slide=from_slide)
 
     for e in entities:
         if isinstance(e, EGroup):
-            _build_group(e)
+            _build_group(e, from_slide)
             e.copy_basic_attributes_of(previous)
             # previous.clearBasicAttributes()
         if isinstance(e, (ESlide, EToGather, EBlock, EToSatisfy)):
-            building_groups_recursively(e.entities, e)
+            building_groups_recursively(e.entities, e, from_slide or isinstance(e, ESlide))
 
 
 # Phase 3: adding/removing some blocks

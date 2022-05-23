@@ -7,7 +7,7 @@ Examples of Execution:
 
 from pycsp3 import *
 
-fleet, rowSums, colSums, hints = data
+fleet, hints, rowSums, colSums = data
 surfaces = [ship.size * ship.cnt for ship in fleet]
 pos, neg = [ship.size for ship in fleet], [-ship.size for ship in fleet]
 n, nTypes = len(colSums), len(pos)
