@@ -364,6 +364,31 @@ def to_ordinary_table(table, domains, *, starred=False):
     return tbl
 
 
+def _non_overlapping_tuples_for(t, dom1, dom2, offset, first, x_axis=None):
+    for va in dom1:
+        for vb in reversed(dom2.all_values()):
+            if va + offset > vb:
+                break
+            sub = (va, vb) if first else (vb, va)
+            t.append(sub if x_axis is None else sub + (ANY, ANY) if x_axis else (ANY, ANY) + sub)
+
+
+def to_starred_table_for_no_overlap1(x1, x2, w1, w2):
+    t = []
+    _non_overlapping_tuples_for(t, x1.dom, x2.dom, w1, True)
+    _non_overlapping_tuples_for(t, x2.dom, x1.dom, w2, False)
+    return t
+
+
+def to_starred_table_for_no_overlap2(x1, x2, y1, y2, w1, w2, h1, h2):
+    t = []
+    _non_overlapping_tuples_for(t, x1.dom, x2.dom, w1, True, True)
+    _non_overlapping_tuples_for(t, x2.dom, x1.dom, w2, False, True)
+    _non_overlapping_tuples_for(t, y1.dom, y2.dom, h1, True, False)
+    _non_overlapping_tuples_for(t, y2.dom, y1.dom, h2, False, False)
+    return t
+
+
 def display_constraints(ctr_entities, separator=""):
     for ce in ctr_entities:
         if ce is not None:

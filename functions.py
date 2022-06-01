@@ -21,9 +21,11 @@ from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
 from pycsp3.dashboard import options
-from pycsp3.tools.curser import queue_in, OpOverrider, ListInt, ListVar, ListCtr
+from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListCtr
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, warning
+from pycsp3.tools.utilities import (
+    flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2, warning
+)
 
 ''' Global Variables '''
 
@@ -629,7 +631,7 @@ def expr(operator, *args):
     When it is a string, it can be among {"<", "lt", "<=", "le", ">=", "ge", ">", "gt", "=", "==", "eq", "!=", "<>", "ne"}
     Without any parent, it becomes a constraint.
 
-    :param operator: a string, or a constant from TypeNode or a constant from TypeConditionOperator
+    :param operator: a string, or a constant from TypeNode or a constant from TypeConditionOperator or TypeOrderedOperator
     :return: a node, root of a tree expression
     """
     return Node.build(operator, *args)
@@ -685,17 +687,22 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     :param matrix: if True, the matrix version must be considered
     :return: a constraint AllDifferent
     """
-    terms = flatten(term, others)
-    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (int, Variable, Node))):
-        return None
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
     checkType(excepting, ([int], type(None)))
     if matrix:
-        matrix = [flatten(row) for row in terms]
+        assert len(others) == 0
+        matrix = [flatten(row) for row in term]
         assert all(len(row) == len(matrix[0]) for row in matrix), "The matrix id badly formed"
         assert all(checkType(l, [Variable]) for l in matrix)
-        return ECtr(ConstraintAllDifferentMatrix(matrix, excepting))
+        if not options.mini:
+            return ECtr(ConstraintAllDifferentMatrix(matrix, excepting))
+        else:
+            return [AllDifferent(row) for row in matrix] + [AllDifferent(col) for col in columns(matrix)]
+    terms = flatten(term, others)
+    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (int, Variable, Node))):
+        return None
     checkType(terms, ([Variable, Node]))
+    auxiliary().replace_nodes_and_partial_constraints(terms, nodes_too=options.mini)  # only if mini
     return ECtr(ConstraintAllDifferent(terms, excepting))
 
 
@@ -742,6 +749,8 @@ def _ordered(term, others, operator, lengths):
         if len(terms) == len(lengths):
             lengths = lengths[:-1]  # we assume that the last value is useless
         assert len(terms) == len(lengths) + 1
+    if options.mini:
+        return [expr(operator, terms[i] if lengths is None else terms[i] + lengths[i], terms[i + 1]) for i in range(len(terms) - 1)]
     return ECtr(ConstraintOrdered(terms, operator, lengths))
 
 
@@ -898,7 +907,7 @@ def Sum(term, *others, condition=None):
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     if len(terms) == 0:
         return 0  # None
-    auxiliary().replace_nodes_and_partial_constraints(terms)
+    auxiliary().replace_nodes_and_partial_constraints(terms, nodes_too=options.mini)
 
     terms, coeffs = _get_terms_coeffs(terms)
     if all(isinstance(v, Variable) for v in terms) and coeffs is None:
@@ -1131,6 +1140,28 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
     if not isinstance(lengths[0], (int, Variable)) and not isinstance(lengths[0], tuple):  # if 2d but not tuples
         lengths = [tuple(length) for length in lengths]
     checkType(lengths, ([int, Variable]))
+    if options.mini:
+        assert zero_ignored is False  # for the moment
+        t = []
+        if isinstance(origins[0], Variable):  # 1D
+            for i in range(len(origins)):
+                for j in range(i + 1, len(origins)):
+                    xi, xj = origins[i], origins[j]
+                    li, lj = lengths[i], lengths[j]
+                    if xi.dom.greatest_value() + li <= xj.dom.smallest_value() or xj.dom.greatest_value() + lj <= xi.dom.smallest_value():
+                        continue
+                    t.append((xi, xj) in to_starred_table_for_no_overlap1(xi, xj, li, lj))
+        else:  # 2D
+            for i in range(len(origins)):
+                for j in range(i + 1, len(origins)):
+                    xi, xj, yi, yj = origins[i][0], origins[j][0], origins[i][1], origins[j][1]
+                    wi, wj, hi, hj = lengths[i][0], lengths[j][0], lengths[i][1], lengths[j][1]
+                    if xi.dom.greatest_value() + wi <= xj.dom.smallest_value or xj.dom.greatest_value() + wj <= xi.dom.smallest_value():
+                        continue
+                    if yi.dom.greatest_value + hi <= yj.dom.smallest_value or yj.dom.greatest_value() + hj <= yi.dom.smallest_value():
+                        continue;
+                    t.append((xi, xj, yi, yj) in to_starred_table_for_no_overlap2(xi, xj, yi, yj, wi, wj, hi, hj))
+        return t
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
 
@@ -1275,13 +1306,13 @@ def _optimize(term, minimization):
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"
     satisfy(pc == var for (pc, var) in auxiliary().collected())
     comment, _, tag, _ = comments_and_tags_of_parameters_of(function_name="minimize" if minimization else "maximize", args=[term])
-    otype = TypeCtr.MINIMIZE if minimization else TypeCtr.MAXIMIZE
+    way = TypeCtr.MINIMIZE if minimization else TypeCtr.MAXIMIZE
     if isinstance(term, (Variable, Node)):
         if isinstance(term, Node):
             term.mark_as_used()
-        return EObjective(ObjectiveExpression(otype, term)).note(comment[0]).tag(tag[0])  # TODO why only one tag?
+        return EObjective(ObjectiveExpression(way, term)).note(comment[0]).tag(tag[0])  # TODO why only one tag?
     else:
-        return EObjective(ObjectivePartial(otype, term)).note(comment[0]).tag(tag[0])
+        return EObjective(ObjectivePartial(way, term)).note(comment[0]).tag(tag[0])
 
 
 def minimize(term):

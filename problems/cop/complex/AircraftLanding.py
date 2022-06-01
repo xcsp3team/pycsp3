@@ -63,4 +63,7 @@ minimize(
    For example, by introducing a new array r where r[i] is the runway ; 
    a new array s where s[i] is x[i]*k+r[i] where k is the number of runways
    and posting new constraints (AllDifferent(s), ...) TODO
+   
+2) for the 2022 competition, we used as objective for the mini-track:
+   Sum(e) + Sum(t)
 """

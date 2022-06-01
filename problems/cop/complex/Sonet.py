@@ -18,7 +18,7 @@ satisfy(
     [(x[i][j1] if k == 0 else x[i][j2] for i in range(m) for k in range(2)) in table for (j1, j2) in connections],
 
     # respecting the capacity of rings
-    [Count(x[i], value=1) <= r for i in range(m)],
+    [Sum(x[i]) <= r for i in range(m)],
 
     # tag(symmetry-breaking)
     LexIncreasing(x)

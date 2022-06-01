@@ -9,9 +9,8 @@ from pycsp3.classes.auxiliary.ptypes import auto
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing, warning
-from pycsp3.classes.auxiliary.ptypes import TypeCtr, TypeConditionOperator
+from pycsp3.classes.auxiliary.ptypes import TypeCtr, TypeConditionOperator, TypeOrderedOperator
 from pycsp3 import tools
-from pycsp3.dashboard import options
 
 
 class Entity:
@@ -402,6 +401,8 @@ class TypeNode(Enum):
     def value_of(v):
         if isinstance(v, TypeNode):
             return v
+        if isinstance(v, TypeOrderedOperator):
+            v = str(v)  # so as to be intercepted just below
         if isinstance(v, str):
             if v in ("<", "lt"):
                 return TypeNode.LT
@@ -486,12 +487,6 @@ class Node(Entity):
     def __str__(self):
         return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
 
-    def _product(t):
-        p = 1
-        for i in t:
-            p *= i
-        return p
-
     def possible_values(self):
         if self.type.is_predicate_operator():
             return range(0, 2)  # we use a range instead of [0,1] because it simplifies computation (see code below)
@@ -545,8 +540,8 @@ class Node(Entity):
                     return res
 
                 if all_ranges and all(pv.start >= 0 and pv.step == 1 for pv in pvs):
-                    return range(multiply(pv.start for pv in pvs), multiply(pv.stop-1 for pv in pvs)+1)
-                return possible_range({self._product(p) for p in product(*(pv for pv in pvs))})  # or numpy.prod ?
+                    return range(multiply(pv.start for pv in pvs), multiply(pv.stop - 1 for pv in pvs) + 1)
+                return possible_range({multiply(p) for p in product(*(pv for pv in pvs))})  # or numpy.prod ?
             # TODO: in case of all_ranges being False, possibility of improving the efficiency of the code below for MIN and MAX
             if self.type == TypeNode.MIN:
                 return range(min(pv.start for pv in pvs), min(pv.stop for pv in pvs)) if all_ranges \

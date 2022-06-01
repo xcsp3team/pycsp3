@@ -7,7 +7,6 @@ from pycsp3.classes.entities import Entity, EVar, EVarArray, ECtr, EMetaCtr, EOb
     EBlock, ESlide, EIfThenElse, EToGather, EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities
 from pycsp3.classes.main.constraints import ConstraintIntension
 from pycsp3.dashboard import options
-from pycsp3.tools.aggregator import switch_limit_for_var_args
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.slider import _identify_slide
 from pycsp3.classes.auxiliary.conditions import Condition

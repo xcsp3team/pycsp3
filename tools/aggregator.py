@@ -7,6 +7,7 @@ from pycsp3.classes.entities import CtrEntities, ECtr, ECtrs, EMetaCtr, EGroup, 
 from pycsp3.classes.main.constraints import ConstraintIntension, Diffs, ConstraintInstantiation
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import error
+from pycsp3.dashboard import options
 
 LIMIT_FOR_VAR_ARGS = 3
 
@@ -29,7 +30,8 @@ def build_similar_constraints():
     detecting_groups_recursively(CtrEntities.items)
     building_groups_recursively(CtrEntities.items)
     canonizing_groups_and_blocks(CtrEntities.items)
-    recognizing_instantiations(CtrEntities.items)
+    if not options.mini:
+        recognizing_instantiations(CtrEntities.items)
 
 
 # Phase 1: Detecting groups of similar constraints
