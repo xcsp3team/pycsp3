@@ -1,6 +1,7 @@
 """
 Problem 076 on CSPLib, and NumberJack example
 
+See https://en.wikipedia.org/wiki/Costas_array
 
 Examples of Execution:
   python3 CostasArray.py

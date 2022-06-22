@@ -146,7 +146,13 @@ def _load_dataparser(parser_file, data_value):
         compilation_data = parsing.register_fields(data_value)  # the object used for recording data is returned, available in the model
         specification = util.spec_from_file_location("", parser_file)
         specification.loader.exec_module(util.module_from_spec(specification))
-        string_data = "-" + options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.data else None
+        string_data = None
+        if options.data:
+            if options.data[0] == '[':
+                assert options.data[-1] == ']'
+                string_data = "-" + "-".join(tok.split(os.sep)[-1:][0].split(".")[:1][0] for tok in options.data[1:-1].split(","))
+            else:
+                string_data = "-" + options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.data else None
         if string_data is None:
             string_data = Compilation.string_data if Compilation.string_data else ""  # in case data are recorded through the dataparser (after asking the user)
         return compilation_data, string_data
@@ -286,8 +292,15 @@ def _compile(disabling_opoverrider=False, verbose=1):
         if isinstance(options.dataexport, bool):
             if options.data is None:
                 json_prefix = "data" + Compilation.string_data
+            elif options.dataparser is None:
+                json_prefix = filename_prefix
             else:
-                json_prefix = options.data.split("/")[-1:][0].split(".")[:1][0] if options.dataparser else filename_prefix
+                if options.data[0] == '[':
+                    assert options.data[-1] == ']'
+                    json_prefix = "-".join(tok.split(os.sep)[-1:][0].split(".")[:1][0] for tok in options.data[1:-1].split(","))
+                else:
+                    json_prefix = options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.data else None
+                #json_prefix = options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.dataparser else filename_prefix
             # TODO if data are given with name as e.g., in [k=3,l=9,b=0,r=0,v=9] for Bibd, maybe we should sort them
         else:
             json_prefix = str(options.dataexport)
