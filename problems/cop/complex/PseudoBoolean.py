@@ -7,6 +7,8 @@ Example of Execution:
 
 from pycsp3 import *
 
+print(data)
+
 n, e, constraints, objective = data  # n and e respectively denote the numbers of variables and constraints
 
 x = VarArray(size=n, dom={0, 1})
