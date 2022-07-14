@@ -4,6 +4,7 @@ See "Scheduling aircraft landings - the static case" by J.E. Beasley, M. Krishna
     Transportation Science, vol.34, 2000, pp180-197.
 See "Displacement problem and dynamically scheduling aircraft landings" by J.E. Beasley, M. Krishnamoorthy, Y.M. Sharaiha and D. Abramson,
     Journal of the Operational Research Society, vol.55, 2004, pp54-64.
+See http://people.brunel.ac.uk/~mastjjb/jeb/orlib/airlandinfo.html
 
 See the model proposed in the Choco Tutorial, where the following short description is taken:
 "Given a set of planes and runways, the objective is to minimize the total (weighted) deviation from the target landing time for each plane.

@@ -7,15 +7,13 @@ Example of Execution:
 
 from pycsp3 import *
 
-print(data)
-
 n, e, constraints, objective = data  # n and e respectively denote the numbers of variables and constraints
 
 x = VarArray(size=n, dom={0, 1})
 
 satisfy(
     # respecting each linear constraint
-    Sum([x[i] for i in nums] * coeffs, condition=(op, limit)) for (coeffs, nums, op, limit) in constraints
+    Sum(x[nums] * coeffs, condition=(op, limit)) for (coeffs, nums, op, limit) in constraints
 )
 
 if objective:

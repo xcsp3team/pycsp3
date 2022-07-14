@@ -15,11 +15,13 @@ n, nTypes = len(colSums), len(pos)
 
 def automaton(horizontal):
     q = Automaton.q  # for building state names
-    transitions = [(q(0), 0, q(0)), (q(0), neg if horizontal else pos, "qq"), ("qq", 0, q(0))]
+    t = [(q(0), 0, q(0)), (q(0), neg if horizontal else pos, "qq"), ("qq", 0, q(0))]
     for i in pos:
         v = i if horizontal else -i
-        transitions += [(q(0), v, q(i, 1))] + [(q(i, j), v, q(i, j + 1)) for j in range(1, i)] + [(q(i, i), 0, q(0))]
-    return Automaton(start=q(0), final=q(0), transitions=transitions)
+        t.append((q(0), v, q(i, 1)))
+        t.extend((q(i, j), v, q(i, j + 1)) for j in range(1, i))
+        t.append((q(i, i), 0, q(0)))
+    return Automaton(start=q(0), final=q(0), transitions=t)
 
 
 horizontal_automaton, vertical_automaton = automaton(True), automaton(False)  # automata for ships online

@@ -31,6 +31,7 @@ from pycsp3.classes.auxiliary.structures import Automaton, MDD  # KEEP it here a
 
 from pycsp3.compiler import default_data, load_json_data
 
+
 UNSAT = TypeStatus.UNSAT
 """ Solver status: unsatisfiable (means that no solution is found by the solver) """
 

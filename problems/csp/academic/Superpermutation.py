@@ -50,7 +50,7 @@ elif variant("table"):
     gap = nPatterns - nPermutations  # the gap corresponds to the flexibility we have
 
     table = [(i, *t) for i, t in enumerate(permutations)]
-    table += [(-1, *(v if k in (i, j) else ANY for k in range(n))) for v in range(n) for i, j in combinations(range(n), 2)]
+    table.extend((-1, *(v if k in (i, j) else ANY for k in range(n))) for v in range(n) for i, j in combinations(n, 2))
 
     # y[i] is the index of the permutation x[i:i+n] or -1 if this is not a permutation
     y = VarArray(size=nPatterns, dom=range(-1, nPermutations))

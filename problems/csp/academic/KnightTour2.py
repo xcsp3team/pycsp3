@@ -17,7 +17,7 @@ def domain_x(i):
     return {k * n + l for (k, l) in t if 0 <= k < n and 0 <= l < n}
 
 
-# x[i] is the cell number of the knight that comes in the tour after the one in cell i
+# x[i] is the cell number that comes in the tour (by the knight) after cell i
 x = VarArray(size=n * n, dom=domain_x)
 
 satisfy(

@@ -482,6 +482,10 @@ class OpOverrider:
                     indexes = auxiliary().replace_node(indexes, indexing=range(len(self)))
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, index=indexes))
+        if isinstance(indexes, list):
+            indexes = tuple(indexes)
+        if is_1d_list(self, Variable) and is_1d_tuple(indexes, int):
+            return ListVar(list.__getitem__(self, v) for v in indexes)
         if isinstance(indexes, tuple) and len(indexes) > 0:
             indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
@@ -511,6 +515,10 @@ class OpOverrider:
             indexes = auxiliary().replace_partial_constraint(indexes)
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, index=indexes))
+        if isinstance(indexes, list):
+            indexes = tuple(indexes)
+        if is_1d_list(self, int) and is_1d_tuple(indexes, int):
+            return ListInt(list.__getitem__(self, v) for v in indexes)
         if isinstance(indexes, tuple):
             assert len(indexes) > 0
             if isinstance(indexes[0], int):

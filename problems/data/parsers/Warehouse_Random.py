@@ -22,4 +22,4 @@ data["storeSupplyCosts"] = [[random.randrange(minSupplyCost, maxSupplyCost) for 
 
 Compilation.string_data = "-" + "-".join(str(v) for v in (nWarehouses, nStores, "{:02d}".format(seed)))
 
-# for the new series, fixedCost =100 and min/max supply cost was 10..1000
+# for the series used in the 2022 competition, fixedCost was set to 100 and min/max supply cost was 10..1000
