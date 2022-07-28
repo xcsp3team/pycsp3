@@ -31,8 +31,23 @@ pref, rank = pref_rank()
 # x[i] is the value of k, meaning that j = pref[i][k] is the paired agent
 x = VarArray(size=n, dom=lambda i: range(len(preferences[i])))
 
-satisfy(
-    (imply(x[i] > rank[i][k], x[k] < rank[k][i]), imply(x[i] == rank[i][k], x[k] == rank[k][i])) for i in range(n) for k in pref[i] if k != i
-)
+if not variant():
+    satisfy(
+        (imply(x[i] > rank[i][k], x[k] < rank[k][i]), imply(x[i] == rank[i][k], x[k] == rank[k][i])) for i in range(n) for k in pref[i] if k != i
+    )
+
+elif variant('table'):
+
+    def table(i, k):
+        return [(a, ANY) for a in x[i].dom if a < rank[i][k]] + [(rank[i][k], rank[k][i])] + \
+               [(a, b) for a in x[i].dom if a > rank[i][k] for b in x[k].dom if b < rank[k][i]]
 
 
+    satisfy(
+        (x[i], x[k]) in table(i, k) for i in range(n) for k in pref[i] if k != i
+    )
+
+""" Comments
+1) It is very expensive to build starred tables for large instances.
+   One solution would be to use hybrid tables
+"""

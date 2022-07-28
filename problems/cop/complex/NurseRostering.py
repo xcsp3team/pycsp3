@@ -8,17 +8,18 @@ Example of Execution:
 from pycsp3 import *
 
 nDays, shifts, staffs, covers = data
+
 if shifts[-1].id != "_off":  # if not present, we add first a dummy 'off' shift (a named tuple of the right class)
     shifts.append(shifts[0].__class__("_off", 0, None))
 off = len(shifts) - 1  # value for _off
+lengths = [shift.length for shift in shifts]
 nWeeks, nShifts, nStaffs = nDays // 7, len(shifts), len(staffs)
 
 on_r = [[next((r for r in staff.onRequests if r.day == day), None) if staff.onRequests else None for day in range(nDays)] for staff in staffs]
 off_r = [[next((r for r in staff.offRequests if r.day == day), None) if staff.offRequests else None for day in range(nDays)] for staff in staffs]
-lengths = [shift.length for shift in shifts]
 
 # kmin for minConsecutiveShifts, kmax for maxConsecutiveShifts, kday for minConsecutiveDaysOff
-_, maxShifts, minTotalMinutes, maxTotalMinutes, kmin, kmax, kday, maxWeekends, daysOff, _, _ = zip(*staffs)
+_, maxShifts, minTimes, maxTimes, kmin, kmax, kday, maxWeekends, daysOff, _, _ = zip(*staffs)
 
 sp = {shifts[i].id: i for i in range(nShifts)}  # position of shifts in the list 'shifts'
 table = {(sp[s1.id], sp[s2]) for s1 in shifts if s1.forbiddenFollowingShifts for s2 in s1.forbiddenFollowingShifts}  # rotation
@@ -35,10 +36,10 @@ def automaton(k, for_shifts):  # automaton_min_consecutive
     q = Automaton.q  # for building state names
     range_off = range(nShifts - 1, nShifts)  # a range with only one value (off)
     range_others = range(nShifts - 1)  # a range with all other values
-    r1, r2 = range_off if for_shifts else range_others, range_others if for_shifts else range_off
-    t = ([(q(0), r1, q(1)), (q(0), r2, q(k + 1)), (q(1), r1, q(k + 1))]
-         + [(q(i), r2, q(i + 1)) for i in range(1, k + 1)]
-         + [(q(k + 1), range(nShifts), q(k + 1))])
+    r1, r2 = (range_off, range_others) if for_shifts else (range_others, range_off)
+    t = [(q(0), r1, q(1)), (q(0), r2, q(k + 1)), (q(1), r1, q(k + 1))]
+    t.extend((q(i), r2, q(i + 1)) for i in range(1, k + 1))
+    t.append((q(k + 1), range(nShifts), q(k + 1)))
     return Automaton(start=q(0), final=q(k + 1), transitions=t)
 
 
@@ -83,7 +84,7 @@ satisfy(
     [Sum(wk[p]) <= maxWeekends[p] for p in range(nStaffs)],
 
     # minimum and maximum number of total worked minutes
-    [nd[p] * lengths in range(minTotalMinutes[p], maxTotalMinutes[p] + 1) for p in range(nStaffs)],
+    [nd[p] * lengths in range(minTimes[p], maxTimes[p] + 1) for p in range(nStaffs)],
 
     # maximum consecutive worked shifts
     [Count(x[i:i + kmax[p] + 1, p], value=off) >= 1 for p in range(nStaffs) for i in range(nDays - kmax[p])],

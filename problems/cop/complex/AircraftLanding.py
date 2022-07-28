@@ -36,7 +36,7 @@ satisfy(
     AllDifferent(x),
 
     # the separation time required between any two planes must be satisfied:
-    [NoOverlap(origins=[x[i], x[j]], lengths=[separations[i][j], separations[j][i]]) for i, j in combinations(range(nPlanes), 2)]
+    [NoOverlap(origins=[x[i], x[j]], lengths=[separations[i][j], separations[j][i]]) for i, j in combinations(nPlanes, 2)]
 )
 
 if not variant():
