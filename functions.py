@@ -736,6 +736,7 @@ def AllEqual(term, *others):
     :return: a constraint AllEqual
     """
     terms = flatten(term, others)
+    auxiliary().replace_nodes_and_partial_constraints(terms, nodes_too=False)
     checkType(terms, ([Variable], [Node]))
     return ECtr(ConstraintAllEqual(terms))
 

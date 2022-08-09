@@ -467,6 +467,7 @@ class OpOverrider:
         return list.__ne__(self, other)
 
     def __getitem__lv(self, indexes):  # lv for ListVar
+        #print("hhhhh1", indexes, type(indexes))
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         elif isinstance(indexes, Node):
@@ -487,12 +488,19 @@ class OpOverrider:
         if is_1d_list(self, Variable) and is_1d_tuple(indexes, int):
             return ListVar(list.__getitem__(self, v) for v in indexes)
         if isinstance(indexes, tuple) and len(indexes) > 0:
+            #print("hhhhh2", indexes, type(indexes))
             indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
+            #print("hhhhh3", indexes, type(indexes))
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
-                assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
+                #print("hhhhh4", indexes, type(indexes), type(indexes[0]), type(indexes[1]), isinstance(indexes[0],Variable), isinstance(indexes[1],Variable))
+                # b = all(isinstance(i, Variable) for i in indexes)
+                # print("b=",b)
+                # assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
+                    # print("hhhhh5", indexes, type(indexes))
                     return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
+                    # print("hhhh6")
                     if isinstance(indexes[0], Variable) and isinstance(indexes[1], int):
                         return PartialConstraint(ConstraintElement(self[:, indexes[1]], index=indexes[0]))
                     elif isinstance(indexes[0], int) and isinstance(indexes[1], Variable):

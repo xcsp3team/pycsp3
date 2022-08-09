@@ -60,11 +60,21 @@ def _load_options():
     options.parse(sys.argv[1:])
 
 
+def _basic_token(name):
+    pos = name.rfind(os.sep)
+    if pos != -1:
+        name = name[pos + 1:]
+    pos = name.rfind(".")
+    if pos != -1:
+        name = name[:pos]
+    return name
+
+
 def _load_model():
     try:
         name = sys.argv[0]
         assert name.strip().endswith(".py"), "The first argument has to be a python file." + str(name)
-        model_string = name[name.rfind(os.sep) + 1:name.rfind(".")]
+        model_string = _basic_token(name)
         specification = util.spec_from_file_location("", name)
         model = util.module_from_spec(specification)
         return model, model_string
@@ -95,7 +105,7 @@ def _load_data():
                 assert os.path.exists(arg), "The file " + arg + " does not exist (in the specified directory)." + str(os.path)
                 with open(arg) as f:
                     compilation_data.update(json.loads(f.read(), object_pairs_hook=OrderedDict))
-                    s += "-" + arg.split(os.sep)[-1:][0].split(".")[:1][0]
+                    s += "-" + _basic_token(arg)
         return compilation_data, s
 
     data = options.data
@@ -105,10 +115,10 @@ def _load_data():
         if data.startswith("http"):
             from urllib.request import urlopen
             # example: python Nonogram.py -data=https://www.cril.univ-artois.fr/~lecoutre/heart.json
-            return json.loads(urlopen(data).read(), object_pairs_hook=OrderedDict), "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
+            return json.loads(urlopen(data).read(), object_pairs_hook=OrderedDict), "-" + _basic_token(data)
         assert os.path.exists(data), "The file " + data + " does not exist (in the specified directory)."
         with open(data) as f:
-            return json.loads(f.read(), object_pairs_hook=OrderedDict), "-" + data.split(os.sep)[-1:][0].split(".")[:1][0]
+            return json.loads(f.read(), object_pairs_hook=OrderedDict), "-" + _basic_token(data)
     compilation_data = OrderedDict()  # the object used for recording the data, available in the model
     # if '{' in data and '}' in data:
     #    compilation_data = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()), object_pairs_hook=OrderedDict)
@@ -150,9 +160,9 @@ def _load_dataparser(parser_file, data_value):
         if options.data:
             if options.data[0] == '[':
                 assert options.data[-1] == ']'
-                string_data = "-" + "-".join(tok.split(os.sep)[-1:][0].split(".")[:1][0] for tok in options.data[1:-1].split(","))
+                string_data = "-" + "-".join(_basic_token(tok) for tok in options.data[1:-1].split(","))
             else:
-                string_data = "-" + options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.data else None
+                string_data = "-" + _basic_token(options.data) if options.data else None
         if string_data is None:
             string_data = Compilation.string_data if Compilation.string_data else ""  # in case data are recorded through the dataparser (after asking the user)
         return compilation_data, string_data
@@ -213,7 +223,7 @@ def load_json_data(filename, *, storing=False):
         data = data[0]  # the value instead of a tuple of size 1
     if storing:
         Compilation.data = data
-        Compilation.string_data = "-" + filename.split(os.sep)[-1:][0].split(".")[:1][0]
+        Compilation.string_data = "-" + _basic_token(filename)
     return data
 
 
@@ -297,10 +307,10 @@ def _compile(disabling_opoverrider=False, verbose=1):
             else:
                 if options.data[0] == '[':
                     assert options.data[-1] == ']'
-                    json_prefix = "-".join(tok.split(os.sep)[-1:][0].split(".")[:1][0] for tok in options.data[1:-1].split(","))
+                    json_prefix = "-".join(_basic_token(tok) for tok in options.data[1:-1].split(","))
                 else:
-                    json_prefix = options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.data else None
-                #json_prefix = options.data.split(os.sep)[-1:][0].split(".")[:1][0] if options.dataparser else filename_prefix
+                    json_prefix = _basic_token(options.data) if options.data else None
+                # json_prefix = options.data.split(os.sep)[-1].split(".")[:1][0] if options.dataparser else filename_prefix
             # TODO if data are given with name as e.g., in [k=3,l=9,b=0,r=0,v=9] for Bibd, maybe we should sort them
         else:
             json_prefix = str(options.dataexport)
