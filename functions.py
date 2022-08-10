@@ -721,9 +721,9 @@ def AllDifferentList(term, *others, excepting=None):
         term = list((term,) + others)
     lists = [flatten(l) for l in term]
     assert all(checkType(l, [Variable]) for l in lists)
-    excepting = list(excepting) if isinstance(excepting, (tuple, set)) else excepting
+    excepting = list(excepting) if isinstance(excepting, tuple) else excepting
     checkType(excepting, ([int], type(None)))
-    assert all(len(l) == len(lists[0]) for l in lists) and (excepting is None or len(excepting) == len(list[0]))
+    assert all(len(l) == len(lists[0]) for l in lists) and (excepting is None or len(excepting) == len(lists[0]))
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 

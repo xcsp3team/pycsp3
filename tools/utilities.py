@@ -348,16 +348,16 @@ def to_ordinary_table(table, domains, *, starred=False):
     if starred:
         for t in table:
             if any(isinstance(v, conditions.Condition) for v in t):  # v may be a Condition object (with method 'filtering')
-                tbl.update(product(
-                    *({v} if isinstance(v, int) or v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple))
-                    else v.filtering(doms[i]) for i, v in enumerate(t))))
+                l = ({v} if isinstance(v, int) or v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset)) else v.filtering(
+                    doms[i]) for i, v in enumerate(t))
+                tbl.update(product(*l))
             else:
                 tbl.add(t)
     else:
         for t in table:
             if any(v == ANY or isinstance(v, conditions.Condition) for v in t):  # v may be a ConditionValue object (with method 'filtering')
                 tbl.update(product(*(
-                    {v} if isinstance(v, int) else doms[i] if v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple))
+                    {v} if isinstance(v, int) else doms[i] if v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset))
                     else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
                 tbl.add(t)

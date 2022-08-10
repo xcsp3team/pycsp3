@@ -221,7 +221,6 @@ class ConstraintExtension(Constraint):
                             tpl.append(v)
             if tpl:
                 table[i] = tuple(tpl)
-
         return sorted(list(to_ordinary_table(table, [x.dom for x in scope], starred=True)))
 
     @staticmethod
@@ -352,7 +351,7 @@ class ConstraintAllDifferentList(ConstraintUnmergeable):
     def __init__(self, lst, excepting):
         super().__init__(TypeCtr.ALL_DIFFERENT)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True, lifted=True)
-        self.arg(TypeCtrArg.EXCEPT, excepting)
+        self.arg(TypeCtrArg.EXCEPT, "(" + ",".join(str(v) for v in excepting) + ")")
 
 
 class ConstraintAllDifferentMatrix(ConstraintUnmergeable):
