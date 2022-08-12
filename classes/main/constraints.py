@@ -351,7 +351,7 @@ class ConstraintAllDifferentList(ConstraintUnmergeable):
     def __init__(self, lst, excepting):
         super().__init__(TypeCtr.ALL_DIFFERENT)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True, lifted=True)
-        self.arg(TypeCtrArg.EXCEPT, "(" + ",".join(str(v) for v in excepting) + ")")
+        self.arg(TypeCtrArg.EXCEPT, "(" + ",".join(str(v) for v in excepting) + ")" if excepting else excepting)
 
 
 class ConstraintAllDifferentMatrix(ConstraintUnmergeable):
