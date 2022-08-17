@@ -21,11 +21,10 @@
       <args> x[0][5] x[0][7] x[1][5] x[1][7] x[2][5] x[2][7] x[3][5] x[3][7] x[4][5] x[4][7] x[5][5] x[5][7] x[6][5] x[6][7] x[7][5] x[7][7] x[8][5] x[8][7] x[9][5] x[9][7] </args>
     </group>
     <group note="respecting the capacity of rings">
-      <count>
+      <sum>
         <list> %... </list>
-        <values> 1 </values>
         <condition> (le,4) </condition>
-      </count>
+      </sum>
       <args> x[0][] </args>
       <args> x[1][] </args>
       <args> x[2][] </args>

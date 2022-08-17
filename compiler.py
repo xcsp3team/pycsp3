@@ -16,7 +16,7 @@ from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
 from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtuple
 from pycsp3.tools.slider import handle_slides
-from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE, Error
+from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE, Error, error
 from pycsp3.tools.xcsp import build_document
 
 None_Values = ['None', '', 'null']  # adding 'none'?
@@ -79,7 +79,7 @@ def _load_model():
         model = util.module_from_spec(specification)
         return model, model_string
     except Exception:
-        usage("It was not possible to read the file: " + sys.argv[0])
+        error("It was not possible to read the file: " + sys.argv[0])
         raise
 
 
@@ -167,7 +167,7 @@ def _load_dataparser(parser_file, data_value):
             string_data = Compilation.string_data if Compilation.string_data else ""  # in case data are recorded through the dataparser (after asking the user)
         return compilation_data, string_data
     except Exception:
-        usage("It was not possible to correctly read the file: " + parser_file)
+        error("It was not possible to correctly read the file: " + parser_file)
         raise
 
 

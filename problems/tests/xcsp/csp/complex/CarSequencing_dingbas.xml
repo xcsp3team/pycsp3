@@ -9,7 +9,7 @@
       <values> 0 1 2 3 4 5 </values>
       <occurs> 1 1 2 2 2 2 </occurs>
     </cardinality>
-    <group note="constraints about options">
+    <group note="computing assembled car options">
       <intension> imp(eq(%0,%1),eq(%2,%3)) </intension>
       <args> c[0] 0 o[0][0] 1 </args>
       <args> c[0] 0 o[0][1] 0 </args>
@@ -312,7 +312,7 @@
       <args> c[9] 5 o[9][3] 0 </args>
       <args> c[9] 5 o[9][4] 0 </args>
     </group>
-    <block note="constraints about option frequencies">
+    <block note="respecting option frequencies">
       <group>
         <sum>
           <list> %... </list>
@@ -363,7 +363,7 @@
         <args> o[5..9][3] </args>
       </group>
     </block>
-    <group class="redundant-constraints">
+    <group class="redundant-constraints" note="additional constraints by reasoning from consecutive blocks">
       <sum>
         <list> %... </list>
         <condition> (ge,%0) </condition>

@@ -3,7 +3,7 @@ import re
 from collections import OrderedDict
 
 from pycsp3.dashboard import options
-from pycsp3.tools.utilities import decrement
+from pycsp3.tools.utilities import decrement, error_if
 
 data = None
 _dataParser = None
@@ -25,6 +25,7 @@ class DataParser:
             values = data_value[1:-1].split(',')
         else:
             values = [data_value]
+        error_if(len(values) == 1 and not values[0].startswith("http") and not os.path.isfile(values[0]), " It seems that the filename " + values[0] + " is not found")
         self.lines = []
         for value in values:
             if value.startswith("http"):

@@ -271,6 +271,7 @@ def _compact_constraint_arguments(arguments):
             elif arg.lifted is True:
                 arg.content = [compact(l, preserve_order=arg.content_ordered) for l in arg.content]
         elif arg.name == TypeCtrArg.MATRIX:  # Special case for matrix
+            # sc = None if is_containing(arg.content, int) else _simple_compact(flatten(arg.content))
             sc = None if is_containing(arg.content_compressible, int) else _simple_compact(flatten(arg.content_compressible))
             arg.content = sc if sc is not None else arg.content
 

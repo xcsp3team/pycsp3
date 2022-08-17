@@ -226,7 +226,8 @@ class Tester:
                 self.execute_compiler("PyCSP", self._command_py(model, data, variant, prs_py if not prs_py or prs_py[-1] == 'y' else prs_py + ".py", options_py,
                                                                 python_exec[0]))
                 if not os.path.isfile(self.name_xml):
-                    print(RED + "file not found " + self.name_xml + WHITE)
+                    warning("file not found " + self.name_xml)
+                    self.counters["err"] += 1
                     continue
                 shutil.move(self.name_xml, self.xml_path_py())
                 if mode == 1:  # comparison with jv
@@ -291,10 +292,10 @@ class Tester:
             os.remove(xml_to_compare)
 
         # Count differences
-        diff = (RED if self.counters["diff"] > 0 else GREEN) + str(self.counters["diff"])
-        err = (RED if self.counters["err"] > 0 else GREEN) + str(self.counters["err"])
-        print("\n" + WHITE_BOLD + "[Currently] " + diff + WHITE + " difference(s) on " + str(
-            self.counters["total"]) + " test(s) (" + err + WHITE + " error(s))\n")
+        n_diffs, n_errs, n_tests = self.counters["diff"], self.counters["err"], self.counters["total"]
+        n_diffs_colored, n_errs_colored = (RED if n_diffs > 0 else GREEN) + str(n_diffs), (RED if n_errs > 0 else GREEN) + str(n_errs)
+        print("\n" + WHITE_BOLD + "[Currently:] " + n_diffs_colored + WHITE + (" differences" if n_diffs > 0 else " difference") + " on " + str(
+            n_tests) + (" tests" if n_tests > 0 else " test") + " (and " + n_errs_colored + WHITE + (" errors" if n_errs > 0 else " error") + ")\n")
 
     def print_differences(self, lines, limit, xcsp=False):
         print(COLOR_PY + "PyCSP" + WHITE + " vs. " + COLOR_JV + ("JvCSP" if not xcsp else "XCSP") + WHITE + " differences:\n")

@@ -19,7 +19,7 @@ unsafe_cache = False  # see for example Pic since the table is released as it oc
 
 def cursing():
     def _int_add(self, other):
-        assert isinstance(self, int)
+        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
         if isinstance(other, (Node, PartialConstraint)):
             if self == 0:
                 return other
@@ -29,6 +29,18 @@ def cursing():
                 return Node.build(TypeNode.ADD, self, auxiliary().replace_partial_constraint(other))
             # other cases ???  PartialConstraint of type sum ??
         return int.__add__(self, other)
+
+    def _int_sub(self, other):
+        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
+        if isinstance(other, (Node, PartialConstraint)):
+            if self == 0:
+                return other
+            if isinstance(other, Node):
+                return Node.build(TypeNode.SUB, self, other)
+            if isinstance(other, PartialConstraint):
+                return Node.build(TypeNode.SUB, self, auxiliary().replace_partial_constraint(other))
+            # other cases ???  PartialConstraint of type sum ??
+        return int.__sub__(self, other)
 
     def _dict_add(self, other):  # for being able to merge dictionaries (to be removed when python 3.9 will be widely adopted)
         if isinstance(other, dict):
@@ -87,6 +99,8 @@ def cursing():
             return True
         if isinstance(other, types.GeneratorType):
             other = list(other)
+        if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
+            other = [v for v in other if v]
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
             queue_in.append((self, other))
             return True
@@ -113,6 +127,8 @@ def cursing():
             other = auxiliary().replace_node(other)
         if isinstance(other, types.GeneratorType):
             other = list(other)
+        if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
+            other = [v for v in other if v]
         tself = unique_type_in(self)
         # if isinstance(other, Variable) and len(self) > 0 and is_containing(self, int):  # unary table constraint
         if isinstance(other, Variable) and tself in {int, str}:  # unary table constraint
@@ -169,6 +185,7 @@ def cursing():
         return self.__contains__(other)
 
     curse(int, "__add__", _int_add)
+    curse(int, "__sub__", _int_sub)
     curse(dict, "__add__", _dict_add)
     curse(tuple, "__mul__", _tuple_mul)
     # curse(list, "__getitem__", _list_getitem) # TODO: not working. why? because of forbiddenfruit?
@@ -338,6 +355,8 @@ class OpOverrider:
         return Node.build(TypeNode.SUB, other, self)
 
     def __mul__(self, other):
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
         # if isinstance(other, int) and other == 0: return Node(TypeNode.INT, 0)
         if isinstance(self, Node) and self.type == TypeNode.NEG and isinstance(self.sons[0], Node) and self.sons[0].type == TypeNode.MUL:
             return Node.build(TypeNode.NEG, Node.build(TypeNode.MUL, *self.sons[0].sons, other))
@@ -467,7 +486,6 @@ class OpOverrider:
         return list.__ne__(self, other)
 
     def __getitem__lv(self, indexes):  # lv for ListVar
-        #print("hhhhh1", indexes, type(indexes))
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         elif isinstance(indexes, Node):
@@ -488,19 +506,12 @@ class OpOverrider:
         if is_1d_list(self, Variable) and is_1d_tuple(indexes, int):
             return ListVar(list.__getitem__(self, v) for v in indexes)
         if isinstance(indexes, tuple) and len(indexes) > 0:
-            #print("hhhhh2", indexes, type(indexes))
             indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
-            #print("hhhhh3", indexes, type(indexes))
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
-                #print("hhhhh4", indexes, type(indexes), type(indexes[0]), type(indexes[1]), isinstance(indexes[0],Variable), isinstance(indexes[1],Variable))
-                # b = all(isinstance(i, Variable) for i in indexes)
-                # print("b=",b)
                 # assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
                 if all(isinstance(i, Variable) for i in indexes):
-                    # print("hhhhh5", indexes, type(indexes))
                     return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:
-                    # print("hhhh6")
                     if isinstance(indexes[0], Variable) and isinstance(indexes[1], int):
                         return PartialConstraint(ConstraintElement(self[:, indexes[1]], index=indexes[0]))
                     elif isinstance(indexes[0], int) and isinstance(indexes[1], Variable):

@@ -31,6 +31,8 @@ from pycsp3.tools.utilities import (
 
 absPython, maxPython, minPython = abs, max, min
 
+EQ, NE, IN, NOTIN, SET = TypeNode.EQ, TypeNode.NE, TypeNode.IN, TypeNode.NOTIN, TypeNode.SET
+
 
 def protect():
     """
@@ -200,17 +202,20 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         if isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
             return None
         if isinstance(right_operand, (tuple, list, set, frozenset)) and is_containing(right_operand, Variable):
+            if len(right_operand) < 4:  # TODO hard coding (introducing an option to adjust that?)
+                return _Intension(Node.build(IN, left_operand, right_operand) if bool_value else Node.build(NOTIN, left_operand, right_operand))
             if bool_value:
-                return ECtr(ConstraintElement(flatten(right_operand), index=None,
-                                              condition=Condition.build_condition((TypeConditionOperator.EQ, left_operand))))  # member
+                condition = Condition.build_condition(TypeConditionOperator.EQ, left_operand)
+                return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=condition))  # member
             else:
-                return [_Intension(Node.build(TypeNode.NE, left_operand, y)) for y in right_operand]
-            # return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=Condition.build_condition((TypeConditionOperator.NE, left_operand))))  # member
+                return [_Intension(Node.build(NE, left_operand, y)) for y in right_operand]
+                # condition = Condition.build_condition(TypeConditionOperator.NE, left_operand)
+                # return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=condition))  # member
         if isinstance(right_operand, range):
             return _Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
     if isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
-        return _Intension(Node.build(TypeNode.IN, left_operand, right_operand) if bool_value else Node.build(TypeNode.NOTIN, left_operand, right_operand))
+        return _Intension(Node.build(IN, left_operand, right_operand) if bool_value else Node.build(NOTIN, left_operand, right_operand))
     # elif isinstance(left_operand, Node) and isinstance(right_operand, range):
     #     if bool_value:
     #         ctr = Intension(conjunction(left_operand >= right_operand.start, left_operand <= right_operand.stop - 1))
@@ -605,8 +610,8 @@ def belong(x, values):
             return Node.in_range(x, values)
     assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
     if len(values) == 1:
-        return Node.build(TypeNode.EQ, x, values[0])
-    return Node.build(TypeNode.IN, x, Node.build(TypeNode.SET, values))
+        return Node.build(EQ, x, values[0])
+    return Node.build(IN, x, Node.build(SET, values))
 
 
 def not_belong(x, values):
@@ -620,8 +625,8 @@ def not_belong(x, values):
             return Node.not_in_range(x, values)
     assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
     if len(values) == 1:
-        return Node.build(TypeNode.NE, x, values[0])
-    return Node.build(TypeNode.NOTIN, x, Node.build(TypeNode.SET, values))
+        return Node.build(NE, x, values[0])
+    return Node.build(NOTIN, x, Node.build(SET, values))
 
 
 def expr(operator, *args):
@@ -957,6 +962,17 @@ def Count(term, *others, value=None, values=None, condition=None):
         values = [auxiliary().replace_node(value)]
     checkType(values, ([int], [Variable]))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
+
+
+def Exist(term, *others):
+    """
+    Builds and returns a constraint Count that checks if at least one of the term evaluates to true
+
+    :param term: the first term on which the count applies
+    :param others: the other terms (if any) on which the count applies
+    :return: a constraint Count
+    """
+    return Count(term, others) >= 1
 
 
 def NValues(term, *others, excepting=None, condition=None):

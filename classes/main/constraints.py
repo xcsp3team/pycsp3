@@ -53,7 +53,9 @@ class ConstraintArgument:
     def __eq__(self, other):  # must be called in protection mode (see in functions.py the function protect())
         if not isinstance(other, ConstraintArgument) or self.name != other.name or len(self.attributes) > 0 or len(other.attributes) > 0:
             return False  # attributes not currently completely taken into account
-        if self.content_compressible != other.content_compressible or self.content_ordered != other.content_ordered or self.lifted != other.lifted:
+        if self.name != TypeCtrArg.MATRIX and self.content_compressible != other.content_compressible:  # because for matrix, the argument may be a list
+            return False
+        if self.content_ordered != other.content_ordered or self.lifted != other.lifted:
             return False
         return curser.OpOverrider.eq_protected(self.content, other.content)
 
@@ -593,7 +595,7 @@ class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
         self.matrix = lst
-        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst,
+        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst,  # side-effect use of content_compressible for matrix
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
                      [(TypeCtrArg.START_COL_INDEX, start_col_index)] if start_col_index else []))
         self.arg(TypeCtrArg.INDEX, [index1, index2], content_ordered=True)
@@ -963,7 +965,6 @@ class _Auxiliary:
             values = possible_range(pc.constraint.all_possible_values())
         else:
             values = range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)
-
         aux = self.__replace(pc, Domain(values))  # range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
         self.cache.append((pc.constraint, aux))
         return aux
