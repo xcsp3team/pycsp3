@@ -831,6 +831,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         assert isinstance(self.constraint, ConstraintElement), "\nBad form. Did you forget to use parentheses? " + \
                                                                "For example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])"
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
+        assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
         if isinstance(i, Variable):
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
@@ -838,7 +839,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         elif isinstance(i, int):
             self.constraint = ConstraintElement(lst[:, i], index=index)
         elif isinstance(i, Node):
-            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i))
+            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i, values=range(max(len(row) for row in lst))))
         return self
 
     def __str__(self):
@@ -973,23 +974,43 @@ class _Auxiliary:
         self.cache.append((pc.constraint, aux))
         return aux
 
-    def replace_nodes_and_partial_constraints(self, terms, nodes_too=False):
+    def replace_constraint_with_condition(self, cc):
+        assert isinstance(cc, ECtr) and isinstance(cc.constraint, ConstraintWithCondition)
+        cond = cc.constraint.arguments[TypeCtrArg.CONDITION].content
+        op, k = cond.operator, cond.right_operand()
+        aux = self.__replace(None, Domain(range(cc.constraint.min_possible_value(), cc.constraint.max_possible_value() + 1)),
+                             systematically_append_obj=False)
+        cc.constraint.set_condition(TypeConditionOperator.EQ, aux)
+        self._collected_raw_constraints.append(cc)
+        return functions.expr(op, aux, k)
+
+    def replace_node(self, node, *, values=None):
+        assert isinstance(node, Node)
+        if values is None:  # otherwise, for the moment, this parameter is used when this is a range for an Element constraint
+            values = node.possible_values()
+            values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
+        return self.__replace(node, Domain(values))
+
+    def replace_partial_constraint_and_constraint_with_condition_and_possibly_node(self, term, *, node_too=False, values=None):
+        if isinstance(term, PartialConstraint):
+            return self.replace_partial_constraint(term)
+        if isinstance(term, ECtr):
+            return self.replace_constraint_with_condition(term)
+        if node_too and isinstance(term, Node):
+            return self.replace_node(term, values=values)
+        return term
+
+    def replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(self, terms, *, nodes_too=False, values=None):
         assert isinstance(terms, list)
-        for i, t in enumerate(terms):
-            if isinstance(t, PartialConstraint):
-                terms[i] = self.replace_partial_constraint(t)
-            elif isinstance(t, ECtr):
-                assert isinstance(t.constraint, ConstraintWithCondition)
-                cond = t.constraint.arguments[TypeCtrArg.CONDITION].content
-                op, k = cond.operator, cond.right_operand()
-                aux = self.__replace(None, Domain(range(t.constraint.min_possible_value(), t.constraint.max_possible_value() + 1)),
-                                     systematically_append_obj=False)
-                t.constraint.set_condition(TypeConditionOperator.EQ, aux)
-                self._collected_raw_constraints.append(t)
-                terms[i] = functions.expr(op, aux, k)
-            elif nodes_too and isinstance(t, Node):
-                terms[i] = self.replace_node(t)
+        for i, term in enumerate(terms):
+            terms[i] = self.replace_partial_constraint_and_constraint_with_condition_and_possibly_node(term, node_too=nodes_too, values=values)
         return terms
+
+    def replace_element_index(self, length, index):
+        if all(0 <= v < length for v in index.dom):
+            return None
+        values = possible_range({v for v in index.dom if 0 <= v < length})
+        return self.__replace(None, Domain(values), systematically_append_obj=False)
 
     def replace_int(self, v):
         assert isinstance(v, int)
@@ -998,21 +1019,6 @@ class _Auxiliary:
         aux = self.__replace(None, Domain(v), systematically_append_obj=False)
         _Auxiliary.cache_ints[v] = aux
         return aux
-
-    def replace_node(self, node, indexing=None):
-        assert isinstance(node, Node)
-        if indexing:
-            values = indexing  # for the moment, because this is a range for an Element constraint
-        else:
-            values = node.possible_values()
-            values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
-        return self.__replace(node, Domain(values))
-
-    def replace_element_index(self, length, index):
-        if all(0 <= v < length for v in index.dom):
-            return None
-        values = possible_range({v for v in index.dom if 0 <= v < length})
-        return self.__replace(None, Domain(values), systematically_append_obj=False)
 
     def replace_ints(self, lst):
         return curser.cp_array(self.replace_int(v) if isinstance(v, int) else v for v in lst)

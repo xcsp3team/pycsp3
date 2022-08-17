@@ -707,7 +707,7 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (int, Variable, Node))):
         return None
     checkType(terms, ([Variable, Node]))
-    auxiliary().replace_nodes_and_partial_constraints(terms, nodes_too=options.mini)  # only if mini
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)  # only if mini
     return ECtr(ConstraintAllDifferent(terms, excepting))
 
 
@@ -741,7 +741,7 @@ def AllEqual(term, *others):
     :return: a constraint AllEqual
     """
     terms = flatten(term, others)
-    auxiliary().replace_nodes_and_partial_constraints(terms, nodes_too=False)
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
     checkType(terms, ([Variable], [Node]))
     return ECtr(ConstraintAllEqual(terms))
 
@@ -913,7 +913,7 @@ def Sum(term, *others, condition=None):
     checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     if len(terms) == 0:
         return 0  # None
-    auxiliary().replace_nodes_and_partial_constraints(terms, nodes_too=options.mini)
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
 
     terms, coeffs = _get_terms_coeffs(terms)
     if all(isinstance(v, Variable) for v in terms) and coeffs is None:
@@ -1038,7 +1038,7 @@ def _extremum_terms(term, others):
     # if len(terms) == 1:
     #     return terms[0]
     checkType(terms, ([Variable, Node, int], [PartialConstraint]))
-    auxiliary().replace_nodes_and_partial_constraints(terms)
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms)
     return terms
 
 

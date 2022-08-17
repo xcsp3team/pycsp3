@@ -485,15 +485,20 @@ class OpOverrider:
             return self not in {tuple(other)}
         return list.__ne__(self, other)
 
-    def __getitem__lv(self, indexes):  # lv for ListVar
+    @staticmethod
+    def __getitem__shared_by_lv_and_li(array, indexes, *, lv):  # lv=True for ListVar, lv=False for ListInt
         if isinstance(indexes, list):
             indexes = tuple(indexes)
         if isinstance(indexes, tuple) and len(indexes) == 1:
             indexes = indexes[0]
-        if is_1d_list(self, Variable) and is_1d_tuple(indexes, int):  # we can this way select arbitrary elements of the list
-            return ListVar(list.__getitem__(self, v) for v in indexes)
+        if lv:
+            if is_1d_list(array, Variable) and is_1d_tuple(indexes, int):  # we can this way select arbitrary elements of the list
+                return ListVar(list.__getitem__(array, v) for v in indexes)
+        else:
+            if is_1d_list(array, int) and is_1d_tuple(indexes, int):  # we can this way select arbitrary elements of the list
+                return ListInt(list.__getitem__(array, v) for v in indexes)
         if isinstance(indexes, tuple) and isinstance(indexes[0], int):
-            return self[indexes[0]][indexes[1:]]
+            return array[indexes[0]][indexes[1:]]
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         elif isinstance(indexes, Node):
@@ -505,82 +510,42 @@ class OpOverrider:
                 if res is not None and res[1] == 1:  # in case we had x*1 or 1*x, we replace by x
                     indexes = res[0]
                 else:
-                    # note that we force the domain of the aux variable with the parameter indexing
-                    indexes = auxiliary().replace_node(indexes, indexing=range(len(self)))
+                    n = len(array)  # note that we force the domain of the aux variable with the parameter values
+                    indexes = auxiliary().replace_node(indexes, values=range(n))
         if isinstance(indexes, Variable):
-            return PartialConstraint(ConstraintElement(self, index=indexes))
-        if isinstance(indexes, tuple) and len(indexes) > 0:
-            indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
-            if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
-                assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
-                # n, m = len(self), max(len(row) for row in self)
-                # TODO: should we restrict the domain of the indexes variables with respect to n and m
-                if all(isinstance(i, Variable) for i in indexes):
-                    return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
-                else:
-                    if isinstance(indexes[0], Variable) and isinstance(indexes[1], int):
-                        return PartialConstraint(ConstraintElement(self[:, indexes[1]], index=indexes[0]))
-                    elif isinstance(indexes[0], int) and isinstance(indexes[1], Variable):
-                        return PartialConstraint(ConstraintElement(self[indexes[0]], index=indexes[1]))
-                    else:
-                        assert False
-            result = OpOverrider.project_recursive(self, indexes, 0)
+            return PartialConstraint(ConstraintElement(array, index=indexes))
+        if isinstance(indexes, tuple):
+            assert len(indexes) > 1
+            if any(isinstance(i, (Variable, Node, PartialConstraint, ECtr)) for i in indexes):  # this must be a constraint Element or Element-Matrix
+                assert is_matrix(array) and len(indexes) == 2, "A matrix is expected, with two indexes"
+                n, m = len(array), max(len(row) for row in array)
+                index0 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[0], node_too=True, values=range(n))
+                index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True, values=range(m))
+                if all(isinstance(i, Variable) for i in (index0, index1)):
+                    return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
+                if isinstance(index0, Variable) and isinstance(index1, int):
+                    return PartialConstraint(ConstraintElement(array[:, index1], index=index0))
+                if isinstance(index0, int) and isinstance(index1, Variable):
+                    return PartialConstraint(ConstraintElement(array[index0], index=index1))
+                assert False
+            # indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
+            result = OpOverrider.project_recursive(array, indexes, 0)
             try:
-                return ListVar(result)  # TODO are sublists also guaranteed to be ListVar?
+                # TODO for lv, are sublists also guaranteed to be ListVar? and for li, should we return a ListInt instead of a ListVar?
+                return ListVar(result)
             except TypeError:
                 return result
-        result = list.__getitem__(self, indexes)
+        result = list.__getitem__(array, indexes)
         try:
-            return ListVar(result)
+            return ListVar(result) if lv else ListInt(result)
         except TypeError:
             return result
+
+    def __getitem__lv(self, indexes):  # lv for ListVar
+        return OpOverrider.__getitem__shared_by_lv_and_li(self, indexes, lv=True)
 
     def __getitem__li(self, indexes):  # li for ListInt
-        if isinstance(indexes, PartialConstraint):
-            indexes = auxiliary().replace_partial_constraint(indexes)
-        if isinstance(indexes, Variable):
-            return PartialConstraint(ConstraintElement(self, index=indexes))
-        if isinstance(indexes, list):
-            indexes = tuple(indexes)
-        if is_1d_list(self, int) and is_1d_tuple(indexes, int):
-            return ListInt(list.__getitem__(self, v) for v in indexes)
-        if isinstance(indexes, tuple):
-            assert len(indexes) > 0
-            if isinstance(indexes[0], int):
-                if len(indexes) == 1:
-                    return self[indexes[0]]
-                rest = indexes[1:]
-                return self[indexes[0]][rest[0] if len(rest) == 1 else tuple(rest)]
-            indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
-            if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
-                assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
-                if all(isinstance(i, Variable) for i in indexes):
-                    return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
-                else:
-                    if isinstance(indexes[0], Variable) and isinstance(indexes[1], int):
-                        return PartialConstraint(ConstraintElement(self[:, indexes[1]], index=indexes[0]))
-                    elif isinstance(indexes[0], int) and isinstance(indexes[1], Variable):
-                        return PartialConstraint(ConstraintElement(self[indexes[0]], index=indexes[1]))
-                    else:
-                        assert False
-            result = OpOverrider.project_recursive(self, indexes, 0)
-            try:
-                return ListVar(result)  # TODO is it ListVar or ListInt ?
-            except TypeError:
-                return result
-        if isinstance(indexes, Node):
-            return PartialConstraint(ConstraintElement(self, index=auxiliary().replace_node(indexes)))
-        result = list.__getitem__(self, indexes)
-        try:
-            return ListInt(result)
-        except TypeError:
-            return result
-
-    # def __contains__li(self, other):
-    #     if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
-    #         queue_in.append((self, other))
-    #         return True
-    #     return list.__contains__(self, other)
+        return OpOverrider.__getitem__shared_by_lv_and_li(self, indexes, lv=False)
 
 
 class ListInt(list):

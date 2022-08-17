@@ -19,6 +19,7 @@ Example of Execution:
 
 from pycsp3 import *
 
+
 words, n = data  # each word has 4 symbols from {C,G} and is such that its reverse and Watson-Crick complement differ in at least 4 positions
 
 # x[i][k] is the kth letter (0-A, 1-C, 2-G, 3-T) of the ith word

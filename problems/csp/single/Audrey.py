@@ -56,7 +56,7 @@ elif variant("display2"):
 
     satisfy(
         # linking values of the board
-        [b[x[i] // n, x[i] % n] == (b[i // n][i % n] + 1) % n2 for i in range(n2)],
+        [b[x[i] // n][x[i] % n] == (b[i // n][i % n] + 1) % n2 for i in range(n2)],
 
         # putting 0 in the first cell  tag(symmetry-breaking)
         b[0][0] == 0
@@ -74,6 +74,5 @@ elif variant("display2"):
      )
 3) the variant 'display2' allows us to directly print the values in a matrix.
    This involves a constraint 'ElementMatrix' whose computed value must be equal to a variable.    
-4) note that b[x[i] // n][x[i] % n] is not correct: we need to use indexing extension based on slices (as in numpy)
-5) we obtain 96 solutions for n=5 with the three variants.
+4) we obtain 96 solutions for n=5 with the three variants.
 """
