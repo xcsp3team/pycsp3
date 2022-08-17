@@ -38,7 +38,7 @@ satisfy(
     LexIncreasing(x, strict=True),
 
     # each pair of distinct words differ in at least 4 positions
-    [Sum(x[i][k] != x[j][k] for k in range(8)) >= 4 for i, j in combinations(range(n), 2)],
+    [Sum(x[i][k] != x[j][k] for k in range(8)) >= 4 for i, j in combinations(n, 2)],
 
     # each pair of distinct words are such that the reverse of the former and the Watson-Crick complement of the latter differ in at least 4 positions
     [Sum(x[i][7 - k] != y[j][k] for k in range(8)) >= 4 for i in range(n) for j in range(n) if i != j]

@@ -486,6 +486,14 @@ class OpOverrider:
         return list.__ne__(self, other)
 
     def __getitem__lv(self, indexes):  # lv for ListVar
+        if isinstance(indexes, list):
+            indexes = tuple(indexes)
+        if isinstance(indexes, tuple) and len(indexes) == 1:
+            indexes = indexes[0]
+        if is_1d_list(self, Variable) and is_1d_tuple(indexes, int):  # we can this way select arbitrary elements of the list
+            return ListVar(list.__getitem__(self, v) for v in indexes)
+        if isinstance(indexes, tuple) and isinstance(indexes[0], int):
+            return self[indexes[0]][indexes[1:]]
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         elif isinstance(indexes, Node):
@@ -497,18 +505,16 @@ class OpOverrider:
                 if res is not None and res[1] == 1:  # in case we had x*1 or 1*x, we replace by x
                     indexes = res[0]
                 else:
-                    # we force the domain of the aux variable with the parameter indexing
+                    # note that we force the domain of the aux variable with the parameter indexing
                     indexes = auxiliary().replace_node(indexes, indexing=range(len(self)))
         if isinstance(indexes, Variable):
             return PartialConstraint(ConstraintElement(self, index=indexes))
-        if isinstance(indexes, list):
-            indexes = tuple(indexes)
-        if is_1d_list(self, Variable) and is_1d_tuple(indexes, int):
-            return ListVar(list.__getitem__(self, v) for v in indexes)
         if isinstance(indexes, tuple) and len(indexes) > 0:
             indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
             if any(isinstance(i, Variable) for i in indexes):  # this must be a constraint Element-Matrix
-                # assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
+                assert is_matrix(self) and len(indexes) == 2, "A matrix is expected, with two indexes"
+                # n, m = len(self), max(len(row) for row in self)
+                # TODO: should we restrict the domain of the indexes variables with respect to n and m
                 if all(isinstance(i, Variable) for i in indexes):
                     return PartialConstraint(ConstraintElementMatrix(self, indexes[0], indexes[1]))
                 else:

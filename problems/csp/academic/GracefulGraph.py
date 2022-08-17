@@ -29,7 +29,7 @@ satisfy(
 
     # computing colors of edges from colors of nodes
     [
-        [ce[i][j1][j2] == abs(cn[i][j1] - cn[i][j2]) for i in range(p) for j1, j2 in combinations(range(k), 2)],
+        [ce[i][j1][j2] == abs(cn[i][j1] - cn[i][j2]) for i in range(p) for j1, j2 in combinations(k, 2)],
 
         [cp[i][j] == abs(cn[i][j] - cn[i + 1][j]) for i in range(p - 1) for j in range(k)]
     ]

@@ -10,7 +10,7 @@ Execution:
 
 from pycsp3 import *
 
-n = data or 8 # number of pigeons
+n = data or 8  # number of pigeons
 
 # p[i] is the hole where is put the ith pigeon
 p = VarArray(size=n, dom=range(n - 1))
@@ -22,5 +22,5 @@ if not variant():
 
 elif variant("dec"):
     satisfy(
-        p[i] != p[j] for i in range(n) for j in range(i + 1, n)
+        p[i] != p[j] for i, j in combinations(n, 2)
     )

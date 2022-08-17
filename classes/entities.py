@@ -514,9 +514,9 @@ class Node(Entity):
             if self.type == TypeNode.SUB:
                 return add_range(pv1, neg_range(pv2)) if all_ranges else possible_range({v1 - v2 for v1 in pv1 for v2 in pv2})
             if self.type == TypeNode.DIV:
-                return possible_range({v1 // v2 for v1 in pv1 for v2 in pv2})
+                return possible_range({v1 // v2 for v1 in pv1 for v2 in pv2 if v2 != 0})
             if self.type == TypeNode.MOD:
-                return possible_range({v1 % v2 for v1 in pv1 for v2 in pv2})
+                return possible_range({v1 % v2 for v1 in pv1 for v2 in pv2 if v2 != 0})
             if self.type == TypeNode.POW:
                 return possible_range({v1 ** v2 for v1 in pv1 for v2 in pv2}, control_int=True)
             if self.type == TypeNode.DIST:

@@ -565,6 +565,8 @@ class ConstraintMinimumArg(ConstraintWithCondition):
 class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with a general condition
     def __init__(self, lst, *, index, type_rank=None, condition=None):
         super().__init__(TypeCtr.ELEMENT)
+        if len(lst) == 0:
+            error("A constraint Element on an empty list of variables is encountered. Did you write something like x[:j] instead of x[:,j]?")
         smallest = [] if index is None else index.dom[0].smallest() if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
         if index is not None:
@@ -835,6 +837,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             self.constraint = ConstraintElementMatrix(lst, index, i)
         elif isinstance(i, int):
             self.constraint = ConstraintElement(lst[:, i], index=index)
+        elif isinstance(i, Node):
+            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i))
         return self
 
     def __str__(self):

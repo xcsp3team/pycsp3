@@ -40,10 +40,10 @@ elif variant("aux"):
         [Sum(x[:, j]) == k for j in range(b)],
 
         # computing scalar variables
-        [s[i][j][k] == x[i][k] * x[j][k] for i, j in combinations(range(v), 2) for k in range(b)],
+        [s[i][j][k] == x[i][k] * x[j][k] for i, j in combinations(v, 2) for k in range(b)],
 
         # scalar constraints with respect to lambda
-        [Sum(s[i][j]) == l for i, j in combinations(range(v), 2)]
+        [Sum(s[i][j]) == l for i, j in combinations(v, 2)]
     )
 
 satisfy(

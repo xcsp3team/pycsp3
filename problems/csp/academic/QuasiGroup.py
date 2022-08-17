@@ -18,6 +18,8 @@ from pycsp3 import *
 
 n = data or 8
 
+pairs = [(i, j) for i in range(n) for j in range(n)]
+
 # x[i][j] is the value at row i and column j of the quasi-group
 x = VarArray(size=[n, n], dom=range(n))
 
@@ -32,52 +34,53 @@ satisfy(
 if variant("base"):
     if subvariant("v3"):
         satisfy(
-            x[x[i][j], x[j][i]] == i for i in range(n) for j in range(n)
+            x[x[i][j], x[j][i]] == i for i, j in pairs
         )
     elif subvariant("v4"):
         satisfy(
-            x[x[j][i], x[i][j]] == i for i in range(n) for j in range(n)
+            x[x[j][i], x[i][j]] == i for i, j in pairs
         )
     elif subvariant("v5"):
         satisfy(
-            x[x[x[j][i], j], j] == i for i in range(n) for j in range(n)
+            x[x[x[j][i], j], j] == i for i, j in pairs
         )
     elif subvariant("v6"):
         satisfy(
-            x[x[i][j], j] == x[i, x[i][j]] for i in range(n) for j in range(n)
+            x[x[i][j], j] == x[i, x[i][j]] for i, j in pairs
         )
     elif subvariant("v7"):
         satisfy(
-            x[x[j][i], j] == x[i, x[j][i]] for i in range(n) for j in range(n)
+            x[x[j][i], j] == x[i, x[j][i]] for i, j in pairs
         )
 elif variant("aux"):
     if subvariant("v3"):
         y = VarArray(size=[n, n], dom=range(n * n))
 
         satisfy(
-            [x[y[i][j]] == i for i in range(n) for j in range(n) if i != j],
-
-            [y[i][j] == x[i][j] * n + x[j][i] for i in range(n) for j in range(n) if i != j]
+            [x[y[i][j]] == i for i, j in pairs if i != j],
+            [y[i][j] == x[i][j] * n + x[j][i] for i, j in pairs if i != j]
         )
     elif subvariant("v4"):
         y = VarArray(size=[n, n], dom=range(n * n))
 
         satisfy(
-            [x[y[i][j]] == i for i in range(n) for j in range(n) if i != j],
-
-            [y[i][j] == x[j][i] * n + x[i][j] for i in range(n) for j in range(n) if i != j]
+            [x[y[i][j]] == i for i, j in pairs if i != j],
+            [y[i][j] == x[j][i] * n + x[i][j] for i, j in pairs if i != j]
         )
     elif subvariant("v5"):
         y = VarArray(size=[n, n], dom=range(n))
 
         satisfy(
-            [x[:, i][x[i][j]] == y[i][j] for i in range(n) for j in range(n) if i != j],
-
-            [x[:, i][y[i][j]] == j for i in range(n) for j in range(n) if i != j]
+            [x[:, i][x[i][j]] == y[i][j] for i, j in pairs if i != j],
+            [x[:, i][y[i][j]] == j for i, j in pairs if i != j]
         )
     elif subvariant("v7"):
         y = VarArray(size=[n, n], dom=range(n))
 
         satisfy(
-            (col[x[j][i]] == y[i][j], x[i][x[j][i]] == y[i][j]) for i in range(n) for j, col in enumerate(columns(x)) if i != j
+            (x[:, j][x[j][i]] == y[i][j], x[i][x[j][i]] == y[i][j]) for i, j in pairs if i != j
         )
+
+""" Comments
+1) note that we can post tuples of constraints instead of individually, as demonstrated in aux-v7
+"""

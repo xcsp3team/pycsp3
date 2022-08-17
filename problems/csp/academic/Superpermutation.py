@@ -25,7 +25,7 @@ n = data
 m = sum(factorial(i) for i in range(1, n + 1))  # the length of the sequence; this is valid for 2 <= n <= 5 (see above)
 assert 2 <= n <= 5, "for the moment, the model is valid for n between 2 and 5"
 
-permutations = list(permutations(list(range(1, n + 1))))
+permutations = list(permutations(v for v in range(1, n + 1)))
 nPermutations = len(permutations)
 
 # x[i] is the ith value of the sequence
