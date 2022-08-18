@@ -43,7 +43,7 @@ satisfy(
     [(r[i] - l[i]) * (b[i] - t[i]) == val for i, (_, _, val) in enumerate(rooms)],
 
     # rooms must not overlap
-    [no_overlapping(i, j) for i, j in combinations(range(nRooms), 2)]
+    [no_overlapping(i, j) for i, j in combinations(nRooms, 2)]
 )
 
 

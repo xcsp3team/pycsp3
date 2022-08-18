@@ -992,6 +992,7 @@ class _Auxiliary:
         return self.__replace(node, Domain(values))
 
     def replace_partial_constraint_and_constraint_with_condition_and_possibly_node(self, term, *, node_too=False, values=None):
+        # TODO: for the moment, values is only used for a node
         if isinstance(term, PartialConstraint):
             return self.replace_partial_constraint(term)
         if isinstance(term, ECtr):

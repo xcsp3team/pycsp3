@@ -61,13 +61,11 @@ elif variant("table"):
         if key in cache:
             return cache[key]
         tuples = set()
-        combs = list(combinations(range(n_values), arity))
-        perms = list(permutations(range(arity)))
-        for comb in combs:
+        for comb in combinations(range(n_values), arity):
             if offset != 0:
                 comb = [v + offset for v in comb]
             if sum(comb) == limit:
-                for perm in perms:
+                for perm in permutations(range(arity)):
                     tuples.add(tuple(comb[perm[i]] for i in range(arity)))
         cache[key] = tuples
         return tuples

@@ -38,7 +38,7 @@ def find_holes(matrix, transposed):
 
 
 holes = find_holes(spots, False) + find_holes(columns(spots), True)
-arities = sorted(set(size for (_, _, size) in holes))
+arities = sorted({size for (_, _, size) in holes})
 n, m, nHoles = len(spots), len(spots[0]), len(holes)
 
 if not variant():
@@ -55,7 +55,7 @@ if not variant():
 
 elif variant("alt"):
     def offset(hole1, hole2):
-        if type(hole1.i) == type(hole2.i):  # it means that they are both horizontal or vertical
+        if type(hole1.i) == type(hole2.i):  # it means that they are both horizontal or vertical (type is int or slice)
             return None
         if isinstance(hole1.i, int):  # if hole1 is horizontal (and so hole2 is vertical)
             ofs1, ofs2 = hole2.j - hole1.j.start, hole1.i - hole2.i.start
@@ -75,10 +75,10 @@ elif variant("alt"):
 
     satisfy(
         # words must intersect correctly
-        [(w[i], w[j]) in table_compatible_words(holes[i], holes[j]) for i, j in combinations(range(nHoles), 2) if offset(holes[i], holes[j])],
+        [(w[i], w[j]) in table_compatible_words(holes[i], holes[j]) for i, j in combinations(nHoles, 2) if offset(holes[i], holes[j])],
 
         # tag(distinct-words)
-        [w[i] != w[j] for i, j in combinations(range(nHoles), 2) if holes[i].r == holes[j].r]
+        [w[i] != w[j] for i, j in combinations(nHoles, 2) if holes[i].r == holes[j].r]
     )
 
 """ Comments

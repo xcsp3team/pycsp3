@@ -24,7 +24,7 @@ from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListCtr
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import (
-    flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2, warning
+    flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2, warning, error_if
 )
 
 ''' Global Variables '''
@@ -86,7 +86,7 @@ def subvariant(name=None):
 ''' Declaring stand-alone variables and arrays '''
 
 
-def Var(term=None, *others, dom=None):
+def Var(term=None, *others, dom=None, name=None):
     """
     Builds a stand-alone variable with the specified domain.
     The domain is either given by the named parameter dom, or given
@@ -98,6 +98,7 @@ def Var(term=None, *others, dom=None):
     :param term: the first term defining the domain, or None
     :param others: the other terms defining the domain, or None
     :param dom: the domain of the variable, or None
+    :param name: the name of the variable, or None (usually, None)
     :return: a stand-alone Variable with the specified domain
     """
     if term is None and dom is None:
@@ -115,25 +116,31 @@ def Var(term=None, *others, dom=None):
         dom = Domain(dom)
     assert dom.get_type() in {TypeVar.INTEGER, TypeVar.SYMBOLIC}, "Currently, only integer and symbolic variables are supported. Problem with " + str(dom)
 
-    name = extract_declaration_for("Var")
-    if name is None:
-        if not hasattr(Var, "fly"):
-            Var.fly = True
-            warning("at least, one variable created on the fly")
-        return dom
-    assert name not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
-    assert str(name) not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
+    ext_name = extract_declaration_for("Var")
+    assert not (ext_name is None and name is None)
+    name1 = ext_name if ext_name else name
+    name2 = name if ext_name and name else None
+    # if ex_name is None:
+    #     if not hasattr(Var, "fly"):
+    #         Var.fly = True
+    #         warning("at least, one variable created on the fly")
+    #     return dom
+    error_if(name1 in Variable.name2obj, "The identifier " + name1 + " is used twice. This is not possible")
+    if name2:
+        error_if(name2 in Variable.name2obj, "The identifier " + name2 + " is used twice. This is not possible")
 
     comment, tags = comment_and_tags_of(function_name="Var")
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
 
-    var_object = VariableInteger(name, dom) if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name, dom)
-    Variable.name2obj[name] = var_object
+    var_object = VariableInteger(name1, dom) if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name1, dom)
+    Variable.name2obj[name1] = var_object
+    if name2:
+        Variable.name2obj[name2] = var_object
     EVar(var_object, comment, tags)  # object wrapping the variable x
     return var_object
 
 
-def VarArray(vars=None, *, size=None, dom=None, comment=None):
+def VarArray(doms=None, *, size=None, dom=None, comment=None):
     """
     Builds an array of variables.
     The number of dimensions of the array is given by the number of values in size.
@@ -146,10 +153,10 @@ def VarArray(vars=None, *, size=None, dom=None, comment=None):
     :param comment: a string
     :return: an array of variables
     """
-    if vars is not None:
-        assert isinstance(vars, list) and size is None and dom is None and comment is None
-        assert all(isinstance(v, Domain) or v is None for v in vars)
-        return VarArray(size=len(vars), dom=lambda i: vars[i])
+    if doms is not None:
+        assert isinstance(doms, list) and size is None and dom is None and comment is None
+        assert all(isinstance(dom, Domain) or dom is None for dom in doms)
+        return VarArray(size=len(doms), dom=lambda i: doms[i])
 
     size = [size] if isinstance(size, int) else size
     assert all(dimension != 0 for dimension in size), "No dimension must not be equal to 0"
@@ -191,6 +198,16 @@ def VarArray(vars=None, *, size=None, dom=None, comment=None):
         EVarArray(lv, name, comment, tags)  # object wrapping the array of variables
         Variable.arrays.append(lv)
         return lv
+
+
+def var(name):
+    """
+
+    :param name:
+    """
+    assert isinstance(name, str)
+    error_if(name not in Variable.name2obj, "the variable specified when calling the function 'var()' with the name " + name + " has not been declared")
+    return Variable.name2obj[name]
 
 
 ''' Posting constraints (through satisfy()) '''
