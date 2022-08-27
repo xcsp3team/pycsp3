@@ -2,7 +2,7 @@ from functools import total_ordering
 from types import GeneratorType
 
 from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator
-from pycsp3.classes.entities import Node
+from pycsp3.classes.entities import Node, TypeNode
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
@@ -126,7 +126,27 @@ class ConditionNode(Condition):
         return (TypeConditionOperator.to_utf(self.operator) if self.operator != EQ else "") + self.node.__strsmart__()
 
     def right_operand(self):
-        return self.variable
+        return self.node
+
+    def evaluate(self, t, domains):  # used when converting hybrid tables to ordinary tables
+        if self.node.type is TypeNode.COL:
+            i = self.node.sons
+            assert t[i] is ANY or isinstance(t[i], int)
+            values = domains[i] if t[i] is ANY else [t[i]]
+            return [i], [(v, v) for v in values]  # v is evaluated as v
+        if self.node.type in (TypeNode.ADD, TypeNode.SUB):
+            sons = self.node.sons
+            assert sons[0].type is TypeNode.COL and sons[1].type in (TypeNode.COL, TypeNode.INT)
+            i = sons[0].sons
+            assert t[i] is ANY or isinstance(t[i], int)
+            values0 = domains[i] if t[i] is ANY else [t[i]]
+            if sons[1].type == TypeNode.INT:
+                v1 = sons[1].sons
+                return [i], [(v0, v0 + v1 if self.node.type is TypeNode.ADD else v0 - v1) for v0 in values0]
+            j = sons[1].sons
+            assert t[j] is ANY or isinstance(t[j], int)
+            values1 = domains[j] if t[j] is ANY else [t[j]]
+            return [i, j], [(v0, v1, v0 + v1 if self.node.type is TypeNode.ADD else v0 - v1) for v0 in values0 for v1 in values1]
 
 
 class ConditionVariable(Condition):

@@ -332,6 +332,29 @@ def integers_to_string(numbers):
     return ' '.join(str(i[0]) if len(i) == 1 else str(i[0]) + ('..' if i[0] != i[1] - 1 else ' ') + str(i[1]) for i in t)
 
 
+def _remove_condition_nodes_of_table(table, doms):  # convert hybrid binary and ternary conditions into ordinary tuples
+    def _remove_condition_nodes_of_tuple():
+        r = len(t)
+        pos = next((i for i in range(r) if isinstance(t[i], conditions.ConditionNode)), -1)
+        if pos == -1:
+            return t
+        ind, res = t[pos].evaluate(t, doms)
+        assert len(ind) in (1, 2)
+        return [tuple(v if i == pos else st[0] if i == ind[0] else st[1] if len(ind) == 2 and i == ind[1] else t[i] for i in range(r))
+                for v in doms[pos] for st in res if t[pos].operator.check(v, st[-1])]
+
+    done = []
+    todo = table
+    while len(todo) > 0:
+        t = todo.pop(0)
+        res = _remove_condition_nodes_of_tuple()
+        if res is t:
+            done.append(t)
+        else:
+            todo.extend(res)
+    return done
+
+
 def to_ordinary_table(table, domains, *, starred=False):
     """
     Converts the specified table that may contain hybrid restrictions and stars into an ordinary table (or a starred table).
@@ -345,9 +368,12 @@ def to_ordinary_table(table, domains, *, starred=False):
     """
     doms = [range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]
     tbl = set()
+    contains_node_condition = False
     if starred:
         for t in table:
             if any(isinstance(v, conditions.Condition) for v in t):  # v may be a Condition object (with method 'filtering')
+                if contains_node_condition is False and any(isinstance(v, conditions.ConditionNode) for v in t):
+                    contains_node_condition = True
                 l = ({v} if isinstance(v, int) or v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset)) else v.filtering(
                     doms[i]) for i, v in enumerate(t))
                 tbl.update(product(*l))
@@ -356,12 +382,14 @@ def to_ordinary_table(table, domains, *, starred=False):
     else:
         for t in table:
             if any(v == ANY or isinstance(v, conditions.Condition) for v in t):  # v may be a ConditionValue object (with method 'filtering')
+                if contains_node_condition is False and any(isinstance(v, conditions.ConditionNode) for v in t):
+                    contains_node_condition = True
                 tbl.update(product(*(
                     {v} if isinstance(v, int) else doms[i] if v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset))
                     else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
                 tbl.add(t)
-    return tbl
+    return tbl if not contains_node_condition else _remove_condition_nodes_of_table(list(tbl), doms)  # this must be performed after removing other kind of conditions
 
 
 def _non_overlapping_tuples_for(t, dom1, dom2, offset, first, x_axis=None):

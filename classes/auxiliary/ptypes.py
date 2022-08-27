@@ -176,6 +176,28 @@ class TypeConditionOperator(AbstractType):
             return "not in"
         assert False
 
+    def check(self, left_operand, right_operand):
+        assert isinstance(left_operand, int)
+        assert isinstance(right_operand, (tuple, list, set, frozenset)) if self in (TypeConditionOperator.IN, TypeConditionOperator.NOTIN) else isinstance(
+            right_operand, int)
+        if self is TypeConditionOperator.LT:
+            return left_operand < right_operand
+        if self is TypeConditionOperator.LE:
+            return left_operand <= right_operand
+        if self is TypeConditionOperator.GE:
+            return left_operand >= right_operand
+        if self is TypeConditionOperator.GT:
+            return left_operand > right_operand
+        if self is TypeConditionOperator.EQ:
+            return left_operand == right_operand
+        if self is TypeConditionOperator.NE:
+            return left_operand != right_operand
+        if self is TypeConditionOperator.IN:
+            return left_operand in right_operand
+        if self is TypeConditionOperator.NOTIN:
+            return left_operand not in right_operand
+        assert False
+
 
 @unique
 class TypeOrderedOperator(Enum):

@@ -485,6 +485,8 @@ class Node(Entity):
             assert False, "Smart tuple must be of the form col(x)[+or-][integer]"
 
     def __str__(self):
+        if self.type == TypeNode.COL:
+            return "%" + str(self.sons)
         return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
 
     def possible_values(self):
