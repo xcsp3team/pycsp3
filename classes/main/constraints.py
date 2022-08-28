@@ -197,7 +197,7 @@ class ConstraintIntension(Constraint):
 
 class ConstraintExtension(Constraint):
     cache = dict()
-    cache_smart = dict()
+    cache_for_knowing_if_hybrid = dict()
 
     @staticmethod
     def convert_smart_to_ordinary(scope, table):
@@ -258,43 +258,52 @@ class ConstraintExtension(Constraint):
             return ConstraintExtension.cache[h]
 
         possible_parallelism = not options.safe and not is_windows()
-        if h in ConstraintExtension.cache_smart:
-            smart = ConstraintExtension.cache_smart[h]
+        if h in ConstraintExtension.cache_for_knowing_if_hybrid:
+            hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[h]
         else:
-            smart = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelisation attempt showed no gain.
-            ConstraintExtension.cache_smart[h] = smart
-        if not smart:
-            if not self.restrictTablesWrtDomains:
-                # we can use caching here
-                if h not in ConstraintExtension.cache:
+            hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelisation attempt showed no gain.
+            ConstraintExtension.cache_for_knowing_if_hybrid[h] = hybrid
+
+        if not hybrid:
+            if not self.restrict_table_wrt_domains:
+                if h not in ConstraintExtension.cache:  # we can directly use caching here (without paying attention to domains)
                     table.sort()
                     table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=possible_parallelism)
                 return ConstraintExtension.cache[h]
             else:
-                # if ever we would want to use caching, we should include domains when computing hashes
+                domains = [x.dom for x in scope]
+                if h in ConstraintExtension.cache:  # we need to be careful about domains when caching here
+                    domains_cache, table_cache = ConstraintExtension.cache[h]
+                    if domains == domains_cache:
+                        return table_cache
                 table.sort()
-                return table_to_string(table, restricting_domains=[x.dom for x in scope], parallel=possible_parallelism)
-        else:  # it is smart
-            if self.keepsmartconditions:  # currently, no restriction of tables (wrt domains) in that case
-                self.attributes.append((TypeXML.TYPE, "smart"))
+                table_s = table_to_string(table, restricting_domains=domains, parallel=possible_parallelism)
+                ConstraintExtension.cache[h] = (domains, table_s)
+                return table_s
+        else:  # it is hybrid
+            if self.keep_hybrid:  # currently, no restriction of tables (wrt domains) in that case
+                self.attributes.append((TypeXML.TYPE, "hybrid"))
                 if h not in ConstraintExtension.cache:
                     table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=possible_parallelism)
                 return ConstraintExtension.cache[h]
             else:
-                # if ever we would want to use caching, we should include domains when computing hashes
+                domains = [x.dom for x in scope]
+                if h in ConstraintExtension.cache:  # we need to be careful about domains when caching here
+                    domains_cache, table_cache = ConstraintExtension.cache[h]
+                    if domains == domains_cache:
+                        return table_cache
                 table = ConstraintExtension.convert_smart_to_ordinary(scope, table)
                 table = ConstraintExtension.remove_redundant_tuples(table)
+                table_s = table_to_string(table, restricting_domains=domains if self.restrict_table_wrt_domains else None, parallel=possible_parallelism)
+                ConstraintExtension.cache[h] = (domains, table_s)
+                return table_s
 
-                return table_to_string(table, restricting_domains=[x.dom for x in scope] if self.restrictTablesWrtDomains else None,
-                                       parallel=possible_parallelism)
-
-    def __init__(self, scope, table, positive=True, keepsmartconditions=False, restrictTablesWrtDomains=False):
+    def __init__(self, scope, table, positive=True, keep_hybrid=False, restrict_table_wrt_domains=False):
         super().__init__(TypeCtr.EXTENSION)
-
-        self.keepsmartconditions = keepsmartconditions
-        self.restrictTablesWrtDomains = restrictTablesWrtDomains
+        self.keep_hybrid = keep_hybrid
+        self.restrict_table_wrt_domains = restrict_table_wrt_domains
         assert is_1d_list(scope, Variable)
         assert len(table) == 0 or (len(scope) == 1 and (is_1d_list(table, int) or is_1d_list(table, str))) or (len(scope) > 1 and len(scope) == len(table[0]))
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)

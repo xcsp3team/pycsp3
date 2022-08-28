@@ -502,7 +502,7 @@ def _Extension(*, scope, table, positive=True):
                 assert isinstance(t, tuple), str(t)
             assert len(t) == len(scope), ("The length of each tuple must be the same as the arity."
                                           + "Maybe a problem with slicing: you must for example write x#[i:i+3,0] instead of x[i:i+3][0]")
-    return ECtr(ConstraintExtension(scope, table, positive, options.keepsmartconditions, options.restricttableswrtdomains))
+    return ECtr(ConstraintExtension(scope, table, positive, options.keephybrid, options.restricttableswrtdomains))
 
 
 def _Intension(node):
