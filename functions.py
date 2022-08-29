@@ -86,6 +86,10 @@ def subvariant(name=None):
 ''' Declaring stand-alone variables and arrays '''
 
 
+def _valid_identifier(s):
+    return isinstance(s, str) and all(c.isalnum() or c == '_' for c in s)  # other characters to be allowed?
+
+
 def Var(term=None, *others, dom=None, name=None):
     """
     Builds a stand-alone variable with the specified domain.
@@ -114,33 +118,28 @@ def Var(term=None, *others, dom=None, name=None):
             if dom[-1] - dom[0] + 1 == len(dom):
                 dom = range(dom[0], dom[-1] + 1)
         dom = Domain(dom)
-    assert dom.get_type() in {TypeVar.INTEGER, TypeVar.SYMBOLIC}, "Currently, only integer and symbolic variables are supported. Problem with " + str(dom)
+    error_if(dom.get_type() not in {TypeVar.INTEGER, TypeVar.SYMBOLIC},
+             "Currently, only integer and symbolic variables are supported. Problem with " + str(dom))
 
-    ext_name = extract_declaration_for("Var")
-    assert not (ext_name is None and name is None)
-    name1 = ext_name if ext_name else name
-    name2 = name if ext_name and name else None
-    # if ex_name is None:
+    var_name = name if name else extract_declaration_for("Var")  # the specified name, if present, has priority
+    # if var_name is None:  # TODO: I do not remember the use of that piece of code
     #     if not hasattr(Var, "fly"):
     #         Var.fly = True
     #         warning("at least, one variable created on the fly")
     #     return dom
-    error_if(name1 in Variable.name2obj, "The identifier " + name1 + " is used twice. This is not possible")
-    if name2:
-        error_if(name2 in Variable.name2obj, "The identifier " + name2 + " is used twice. This is not possible")
+    error_if(not _valid_identifier(var_name), "The variable identifier " + str(var_name) + " is not valid")
+    error_if(var_name in Variable.name2obj, "The identifier " + str(var_name) + " is used twice. This is not possible")
 
     comment, tags = comment_and_tags_of(function_name="Var")
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
 
-    var_object = VariableInteger(name1, dom) if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name1, dom)
-    Variable.name2obj[name1] = var_object
-    if name2:
-        Variable.name2obj[name2] = var_object
+    var_object = VariableInteger(var_name, dom) if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(var_name, dom)
+    Variable.name2obj[var_name] = var_object
     EVar(var_object, comment, tags)  # object wrapping the variable x
     return var_object
 
 
-def VarArray(doms=None, *, size=None, dom=None, comment=None):
+def VarArray(doms=None, *, size=None, dom=None, name=None, comment=None):
     """
     Builds an array of variables.
     The number of dimensions of the array is given by the number of values in size.
@@ -150,6 +149,7 @@ def VarArray(doms=None, *, size=None, dom=None, comment=None):
 
     :param size: the size of each dimension of the array
     :param dom: the domain of the variables
+    :param name: the name of the array, or None (usually, None)
     :param comment: a string
     :return: an array of variables
     """
@@ -159,12 +159,22 @@ def VarArray(doms=None, *, size=None, dom=None, comment=None):
         return VarArray(size=len(doms), dom=lambda i: doms[i])
 
     size = [size] if isinstance(size, int) else size
-    assert all(dimension != 0 for dimension in size), "No dimension must not be equal to 0"
+    error_if(any(dimension == 0 for dimension in size), "No dimension must not be equal to 0")
     checkType(size, [int])
     # checkType(dom, (range, Domain, [int, range, str, Domain, type(None)], type(lambda: 0)))  # TODO a problem with large sets
-    name = extract_declaration_for("VarArray")
-    assert name is not None, " the object returned by VarArray should be assigned to a variable"
-    if comment is None and not isinstance(name, list):
+
+    ext_name = extract_declaration_for("VarArray")
+    if isinstance(ext_name, list):
+        array_name = ext_name
+        error_if(name, "The parameter 'name' is not compatible with the specification of a list of individual names")
+        error_if(any(not _valid_identifier(v) for v in ext_name), "Some identifiers in " + str(ext_name) + " are not valid")
+        error_if(any(v in Variable.name2obj for v in ext_name), "Some identifiers in " + str(ext_name) + " are used twice.")
+    else:
+        array_name = name if name else ext_name  # the specified name, if present, has priority
+        error_if(array_name is None or not _valid_identifier(array_name), "The variable identifier " + str(array_name) + " is not valid")
+        error_if(array_name in Variable.name2obj, "The identifier " + str(array_name) + " is used twice. This is not possible")
+
+    if comment is None and not isinstance(array_name, list):
         comment, tags = comment_and_tags_of(function_name="VarArray")
     else:
         tags = []
@@ -173,17 +183,19 @@ def VarArray(doms=None, *, size=None, dom=None, comment=None):
     assert not isinstance(dom, type(lambda: 0)) or len(size) == len(inspect.signature(dom).parameters), \
         "The number of arguments of the lambda must be equal to the number of dimensions of the multidimensional array"
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
-    assert str(name) not in Variable.name2obj, "The identifier " + name + " is used twice. This is not possible"
 
     if isinstance(dom, (tuple, list, set)):
         domain = flatten(dom)
         assert all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)
         dom = Domain(set(domain))
 
-    var_objects = Variable.build_variables_array(name, size, dom)
-    if isinstance(name, list):
-        for variable in var_objects:
-            EVar(variable, None, None)  # object wrapping the variables
+    var_objects = Variable.build_variables_array(array_name, size, dom)
+
+    if isinstance(array_name, list):
+        assert (len(array_name) == len(var_objects))
+        for i in range(len(array_name)):
+            Variable.name2obj[array_name[i]] = var_objects[i]
+            EVar(var_objects[i], None, None)  # object wrapping the variables
         return tuple(var_objects)
     else:
         def _to_ListVar(t):
@@ -194,19 +206,21 @@ def VarArray(doms=None, *, size=None, dom=None, comment=None):
             assert isinstance(t, list)
             return ListVar(_to_ListVar(x) for x in t)
 
+        Variable.name2obj[array_name] = var_objects
         lv = _to_ListVar(var_objects)
-        EVarArray(lv, name, comment, tags)  # object wrapping the array of variables
+        EVarArray(lv, array_name, comment, tags)  # object wrapping the array of variables
         Variable.arrays.append(lv)
         return lv
 
 
 def var(name):
     """
-
-    :param name:
+    Returns the variable or variable array whose name is specified
+    :param name: the name of the variable or variable array to be returned
     """
     assert isinstance(name, str)
-    error_if(name not in Variable.name2obj, "the variable specified when calling the function 'var()' with the name " + name + " has not been declared")
+    error_if(name not in Variable.name2obj,
+             "the variable, or variable array, specified when calling the function 'var()' with the name " + name + " has not been declared")
     return Variable.name2obj[name]
 
 

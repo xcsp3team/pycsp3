@@ -271,7 +271,7 @@ def extract_declaration_for(function_name):
             if "=" in line[:pos]:
                 break
     else:
-        return None #assert False, " the object returned by " + function_name + " should be assigned to a variable"
+        return None  # assert False, " the object returned by " + function_name + " should be assigned to a variable"
     declaration = line[:pos].strip()
     if declaration.endswith("pycsp3."):  # if the name of the package is present as a suffix, we remove it
         declaration = declaration[:-8]
@@ -287,7 +287,7 @@ def extract_declaration_for(function_name):
         return declaration
     elif function_name == "VarArray":
         assert ")" not in declaration
-        return declaration if "," not in declaration else declaration.split(",")
+        return declaration if "," not in declaration else [v.strip() for v in declaration.split(",")]
 
 
 # def docstringOf(name):
