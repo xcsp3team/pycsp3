@@ -20,7 +20,7 @@ assert base * base == n
 # x[i][j] is the value in cell at row i and col j.
 x = VarArray(size=[n, n], dom=range(1, n + 1))
 
-if not variant():
+if not variant() or variant("opt"):
     satisfy(
         # imposing distinct values on each row and each column
         AllDifferent(x, matrix=True),
@@ -44,6 +44,11 @@ satisfy(
     x[i][j] == clues[i][j] for i in range(n) for j in range(n) if clues and clues[i][j] > 0
 )
 
+if variant("opt"):
+    minimize(
+        Sum(x[i][j] * ((-1) ** (i + j)) for i in range(n) for j in range(n))
+    )
+
 """ Comments
-1) using set(permutations(range(1, n + 1))) instead of list(permutations(range(1, n + 1))) is far less time efficient
+1) using set(permutations(range(1, n + 1))) instead of list(permutations(range(1, n + 1))) is far less time-efficient
 """

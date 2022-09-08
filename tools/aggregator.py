@@ -40,6 +40,7 @@ def detecting_groups_recursively(ctr_entities):
     def _detecting_groups(entities):
         flags = [False] * len(entities)  # indicate (indexes of) constraints that are similar at a given moment (see intern loop)
         removal = False
+        groups = []
         for i, e1 in enumerate(entities):
             if flags[i] or e1 is None or isinstance(e1, EGroup):
                 continue
@@ -60,7 +61,10 @@ def detecting_groups_recursively(ctr_entities):
                 group.diff_argument_names = Diffs.fusion.argument_names
                 group.diff_argument_flags = Diffs.fusion.argument_flags
                 entities[i] = group  # constraint replaced by the new group (and other constraints of the group will be now ignored since flagged to False)
-
+            groups.append(group)
+            if len(entities) > 100 and len(groups) == 2 and len(groups[0].entities) + len(groups[1].entities) < 5:  #len(entities) // 5:
+                print("\tStopping to detect groups")  # because it may be very expensive (and not very efficient)
+                break
         return [e for e in entities if e is not None] if removal else entities
 
     for e in ctr_entities:

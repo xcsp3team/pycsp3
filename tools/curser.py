@@ -19,6 +19,8 @@ unsafe_cache = False  # see for example Pic since the table is released as it oc
 
 def cursing():
     def _int_add(self, other):
+        if not OpOverrider.activated:
+            return self.__add__(other)
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
         if isinstance(other, (Node, PartialConstraint)):
             if self == 0:
@@ -28,9 +30,11 @@ def cursing():
             if isinstance(other, PartialConstraint):
                 return Node.build(TypeNode.ADD, self, auxiliary().replace_partial_constraint(other))
             # other cases ???  PartialConstraint of type sum ??
-        return int.__add__(self, other)
+        return self.__add__(other)
 
     def _int_sub(self, other):
+        if not OpOverrider.activated:
+            return self.__sub__(other)
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
         if isinstance(other, (Node, PartialConstraint)):
             if self == 0:
@@ -40,7 +44,7 @@ def cursing():
             if isinstance(other, PartialConstraint):
                 return Node.build(TypeNode.SUB, self, auxiliary().replace_partial_constraint(other))
             # other cases ???  PartialConstraint of type sum ??
-        return int.__sub__(self, other)
+        return self.__sub__(other)
 
     def _dict_add(self, other):  # for being able to merge dictionaries (to be removed when python 3.9 will be widely adopted)
         if isinstance(other, dict):
@@ -50,18 +54,22 @@ def cursing():
         raise NotImplementedError  # return save_dict_add(self, other)
 
     def _tuple_mul(self, other):  # for being able to use scalar products
+        if not OpOverrider.activated:
+            return self.__mul__(other)
         if is_containing(self, (Variable, Node), check_first_only=True):
             return ScalarProduct(self, other)
         if is_containing(self, int) and isinstance(other, (list, tuple)) and is_containing(other, (Variable, Node), check_first_only=True):
             return ScalarProduct(other, self)
-        return tuple.__mul__(self, other)
+        return self.__mul__(other)
 
     def _list_mul(self, other):  # for being able to use scalar products
+        if not OpOverrider.activated:
+            return self.__mul__(other)
         if is_containing(self, (Variable, Node), check_first_only=True):
             return ScalarProduct(self, other)
         # if is_containing(self, int) and is_containing(other, (Variable, Node)):
         #     return ScalarProduct(self, other)
-        return list.__mul__(self, other)
+        return self.__mul__(other)
 
     # def _list_rmul(self, other):
     #     return _list_mul(other, self)
@@ -82,12 +90,12 @@ def cursing():
             return True
         return self.__contains__(other)
 
-    def _list_getitem(self, other):
-        if not OpOverrider.activated:
-            return self.__getitem__(other)
-        # if isinstance(other, Variable):
-        #     return cp_array(self)[other]
-        return list.__getitem__(self, other)
+    # def _list_getitem(self, other):
+    #     if not OpOverrider.activated:
+    #         return self.__getitem__(other)
+    #     # if isinstance(other, Variable):
+    #     #     return cp_array(self)[other]
+    #     return list.__getitem__(self, other)
 
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
@@ -158,7 +166,7 @@ def cursing():
 
     def _range_contains(self, other):  # for being able to use 'in' when expressing conditions of constraints
         if not OpOverrider.activated:
-            return range.__contains__(other)
+            return self.__contains__(other)
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))  # functions.Sum(other)
         if isinstance(other, Variable):  # unary table constraint (based on a range)
@@ -171,8 +179,7 @@ def cursing():
             other = auxiliary().replace_node(other)
             queue_in.append((self, other))
             return True
-
-        return range.__contains__(self, other)
+        return self.__contains__(other)
 
     def _enumerate_contains(self, other):
         if not OpOverrider.activated:
@@ -198,7 +205,7 @@ def cursing():
     curse(enumerate, "__contains__", _enumerate_contains)
 
 
-cursing()
+#  cursing()
 
 
 class OpOverrider:

@@ -21,7 +21,7 @@ from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
 from pycsp3.dashboard import options
-from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListCtr
+from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListCtr, cursing
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import (
     flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2, warning, error_if
@@ -32,6 +32,8 @@ from pycsp3.tools.utilities import (
 absPython, maxPython, minPython = abs, max, min
 
 EQ, NE, IN, NOTIN, SET = TypeNode.EQ, TypeNode.NE, TypeNode.IN, TypeNode.NOTIN, TypeNode.SET
+
+started_modeling = False  # It becomes true when the first variable or array of variables is defined (cursing is then activated)
 
 
 def protect():
@@ -90,7 +92,7 @@ def _valid_identifier(s):
     return isinstance(s, str) and all(c.isalnum() or c == '_' for c in s)  # other characters to be allowed?
 
 
-def Var(term=None, *others, dom=None, name=None):
+def Var(term=None, *others, dom=None, id=None):
     """
     Builds a stand-alone variable with the specified domain.
     The domain is either given by the named parameter dom, or given
@@ -102,9 +104,13 @@ def Var(term=None, *others, dom=None, name=None):
     :param term: the first term defining the domain, or None
     :param others: the other terms defining the domain, or None
     :param dom: the domain of the variable, or None
-    :param name: the name of the variable, or None (usually, None)
+    :param id: the id (name) of the variable, or None (usually, None)
     :return: a stand-alone Variable with the specified domain
     """
+    global started_modeling
+    if not started_modeling and not options.uncurse:
+        cursing()
+        started_modeling = True
     if term is None and dom is None:
         dom = Domain(math.inf)
     assert not (term and dom)
@@ -121,7 +127,7 @@ def Var(term=None, *others, dom=None, name=None):
     error_if(dom.get_type() not in {TypeVar.INTEGER, TypeVar.SYMBOLIC},
              "Currently, only integer and symbolic variables are supported. Problem with " + str(dom))
 
-    var_name = name if name else extract_declaration_for("Var")  # the specified name, if present, has priority
+    var_name = id if id else extract_declaration_for("Var")  # the specified name, if present, has priority
     # if var_name is None:  # TODO: I do not remember the use of that piece of code
     #     if not hasattr(Var, "fly"):
     #         Var.fly = True
@@ -139,7 +145,7 @@ def Var(term=None, *others, dom=None, name=None):
     return var_object
 
 
-def VarArray(doms=None, *, size=None, dom=None, name=None, comment=None):
+def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
     """
     Builds an array of variables.
     The number of dimensions of the array is given by the number of values in size.
@@ -149,10 +155,14 @@ def VarArray(doms=None, *, size=None, dom=None, name=None, comment=None):
 
     :param size: the size of each dimension of the array
     :param dom: the domain of the variables
-    :param name: the name of the array, or None (usually, None)
+    :param id: the id (name) of the array, or None (usually, None)
     :param comment: a string
     :return: an array of variables
     """
+    global started_modeling
+    if not started_modeling and not options.uncurse:
+        cursing()
+        started_modeling = True
     if doms is not None:
         assert isinstance(doms, list) and size is None and dom is None and comment is None
         assert all(isinstance(dom, Domain) or dom is None for dom in doms)
@@ -166,11 +176,11 @@ def VarArray(doms=None, *, size=None, dom=None, name=None, comment=None):
     ext_name = extract_declaration_for("VarArray")
     if isinstance(ext_name, list):
         array_name = ext_name
-        error_if(name, "The parameter 'name' is not compatible with the specification of a list of individual names")
+        error_if(id, "The parameter 'id' is not compatible with the specification of a list of individual names")
         error_if(any(not _valid_identifier(v) for v in ext_name), "Some identifiers in " + str(ext_name) + " are not valid")
         error_if(any(v in Variable.name2obj for v in ext_name), "Some identifiers in " + str(ext_name) + " are used twice.")
     else:
-        array_name = name if name else ext_name  # the specified name, if present, has priority
+        array_name = id if id else ext_name  # the specified name, if present, has priority
         error_if(array_name is None or not _valid_identifier(array_name), "The variable identifier " + str(array_name) + " is not valid")
         error_if(array_name in Variable.name2obj, "The identifier " + str(array_name) + " is used twice. This is not possible")
 

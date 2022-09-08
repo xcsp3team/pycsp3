@@ -47,6 +47,13 @@ elif variant('table'):
         (x[i], x[k]) in table(i, k) for i in range(n) for k in pref[i] if k != i
     )
 
+elif variant('hybrid'):
+
+    satisfy(
+        [(x[i], x[k]) in {(le(rank[i][k]), ANY), (ANY, lt(rank[k][i]))} for i in range(n) for k in pref[i] if k != i],
+        [(x[i], x[k]) in {(ne(rank[i][k]), ANY), (ANY, rank[k][i])} for i in range(n) for k in pref[i] if k != i]
+    )
+
 """ Comments
 1) It is very expensive to build starred tables for large instances.
    One solution would be to use hybrid tables
