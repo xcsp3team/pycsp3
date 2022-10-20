@@ -272,10 +272,10 @@ def matrix_to_string(m):
 def table_to_string(table, restricting_domains=None, *, parallel=False):
     def _tuple_to_string(t):
         return "(" + ",".join(
-            str(v) if isinstance(v, (int)) else
-            str(set(v)) if isinstance(v, tuple) else
+            str(v) if isinstance(v, int) else
+            ("{" + ",".join(str(w) for w in sorted(v)) + "}") if isinstance(v, tuple) else
             conditions.inside(v).str_tuple() if isinstance(v, range) else
-            v if isinstance(v, (str)) else
+            v if isinstance(v, str) else
             "*" if v == ANY else v.str_tuple()
             for v in t) + ")"
 
@@ -389,7 +389,8 @@ def to_ordinary_table(table, domains, *, starred=False):
                     else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
                 tbl.add(t)
-    return tbl if not contains_node_condition else _remove_condition_nodes_of_table(list(tbl), doms)  # this must be performed after removing other kind of conditions
+    return tbl if not contains_node_condition else _remove_condition_nodes_of_table(list(tbl),
+                                                                                    doms)  # this must be performed after removing other kind of conditions
 
 
 def _non_overlapping_tuples_for(t, dom1, dom2, offset, first, x_axis=None):

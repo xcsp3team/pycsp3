@@ -53,7 +53,8 @@ class Compilation:
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver", "output")
     options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
-                      "keepSmartTransitions", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues", "usemeta", "debug", "mini", "uncurse")
+                      "keepSmartTransitions", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues", "groupsumcoeffs",
+                      "usemeta", "debug", "mini", "uncurse")
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
@@ -272,8 +273,7 @@ def _compile(disabling_opoverrider=False, verbose=1):
         filename = filename_prefix + ".xml"
 
     stopwatch = Stopwatch()
-    if options.verbose:
-        print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
+    options.verbose and print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
     build_similar_constraints()
     options.verbose and print("\tWCK for generating groups:", stopwatch.elapsed_time(reset=True), "seconds")
     handle_slides()

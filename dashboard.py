@@ -55,5 +55,10 @@ class _Options:
             else:
                 self.parameters.append(arg)
 
+    def __str__(self):
+        s1 = ", ".join(str(value) + ":" + str(self.get(value)) for value in self.values)
+        s2 = ", ".join(str(flag) + ":" + str(self.get(flag)) for flag in self.flags)
+        return "\noptions=(" + s1 + ")\nflags=(" + s2 + ")"
+
 
 options = _Options()

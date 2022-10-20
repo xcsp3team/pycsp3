@@ -957,7 +957,7 @@ def Sum(term, *others, condition=None):
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
 
     terms, coeffs = _get_terms_coeffs(terms)
-    if all(isinstance(v, Variable) for v in terms) and coeffs is None:
+    if options.groupsumcoeffs and all(isinstance(v, Variable) for v in terms) and coeffs is None:
         # maybe some variables occurs several times
         d = dict()
         for t in terms:

@@ -31,6 +31,7 @@ if not variant() or variant("opt"):
 
 elif variant("table"):
     table = list(permutations(range(1, n + 1)))
+
     satisfy(
         # imposing distinct values on each row and each column
         [line in table for line in x + columns(x)],
@@ -51,4 +52,6 @@ if variant("opt"):
 
 """ Comments
 1) using set(permutations(range(1, n + 1))) instead of list(permutations(range(1, n + 1))) is far less time-efficient
+
+2) opt is used in the 2022 Minizinc Challenge
 """

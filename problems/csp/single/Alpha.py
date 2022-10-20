@@ -73,3 +73,10 @@ elif variant("var"):
          Sum(v, i, o, l, i, n) == 100,
          Sum(w, a, l, t, z) == 34]
     )
+
+""" Comments
+1) if ever you want to merge occurrences of the same variable, at compiling time, 
+   you must add at the top fo the file:
+      from pycsp3.dashboard import options
+      options.groupsumcoeffs=True
+"""
