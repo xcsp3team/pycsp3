@@ -12,7 +12,7 @@ from pycsp3.classes.entities import VarEntities, EVar, EVarArray
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows, ANY
-
+from pycsp3.compiler import Compilation
 
 # from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
@@ -105,10 +105,10 @@ def process_options(solving):
 
 
 class Logger:
-    def __init__(self, extend_filename="", verbose=0):
+    def __init__(self, prefix_end="", verbose=0, path=None):
         mac, pid = hex(uuid.getnode()), str(os.getpid())
-        filename = "solver_" + mac + "_" + pid + "_" + (str(extend_filename) if extend_filename else "") + ".log"
-        self.log_file = os.getcwd() + os.sep + filename
+        filename = "solver_" + mac + "_" + pid + "_" + (str(prefix_end) if prefix_end else "") + ".log"
+        self.log_file = (path if path else os.getcwd()) + os.sep + filename
         # self.log_file = os.path.dirname(os.path.realpath(__file__)) + os.sep + filename  # old code
         if verbose > 0:
             print("    - logfile:", self.log_file)
@@ -301,8 +301,8 @@ class SolverProcess:
                 os.killpg(os.getpgid(p.pid), signal.SIGINT)
 
             signal.signal(signal.SIGINT, new_handler)
-            log = Logger(
-                self.log_filename_suffix if self.log_filename_suffix is not None else str(self.n_executions), verbose)  # To record the output of the solver
+            end_prefix = self.log_filename_suffix if self.log_filename_suffix is not None else str(self.n_executions)
+            log = Logger(end_prefix, verbose, Compilation.pathname)  # To record the output of the solver
             self.last_log = log.log_file
             for line in p.stdout:
                 if verbose == 2:

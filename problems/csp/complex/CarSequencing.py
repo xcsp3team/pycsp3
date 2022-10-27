@@ -52,7 +52,7 @@ satisfy(
     [sum_from_full_consecutive_blocks(k, nb) for k in range(nOptions) for nb in range(ceil(nCars // limits[k].den) + 1)]
 )
 
-"""
+""" Comments
 1) the table variant seems far more efficient
 2) (c[i], o[i]) is a possible shortcut for (c[i], *o[i])
 3) the redundant constraints seem very important

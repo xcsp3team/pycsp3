@@ -31,22 +31,32 @@ class Compilation:
     stopwatch = None
     stopwatch2 = None
     done = False
-    user_filename = None
+    pathname = ""
+    filename = ""
 
     @staticmethod
     def load(console=False):
         _load(console=console)
 
     @staticmethod
-    def set_filename(_user_filename):
-        if _user_filename is None:
-            Compilation.user_filename = None
+    def set_path_file_name(name):
+        if name is None or len(name) == 0:
+            Compilation.pathname = ""
+            Compilation.filename = ""
         else:
-            Compilation.user_filename = _user_filename if _user_filename.endswith(".xml") else _user_filename + ".xml"
+            if os.path.isdir(name) and not name.endswith(os.sep):
+                name += os.sep
+            i = name.rfind(os.sep)
+            if i != -1:
+                Compilation.pathname = name[:i + len(os.sep)]
+                name = name[i + len(os.sep):]
+            else:
+                Compilation.pathname = ""
+            Compilation.filename = name if len(name) == 0 or name.endswith(".xml") else name + ".xml"
 
     @staticmethod
-    def compile(filename=None, disabling_opoverrider=False, verbose=1):
-        Compilation.set_filename(filename)
+    def compile(filename="", disabling_opoverrider=False, verbose=1):
+        Compilation.set_path_file_name(filename)
         return _compile(disabling_opoverrider, verbose=verbose)
 
 
@@ -258,19 +268,17 @@ def _compile(disabling_opoverrider=False, verbose=1):
     if disabling_opoverrider:
         OpOverrider.disable()
 
-    if Compilation.user_filename is None and options.output is not None:
-        Compilation.set_filename(options.output)
-    if Compilation.user_filename is not None:
-        if options.output is None and options.verbose:
-            print("  * User-defined XML file name:", Compilation.user_filename)
-        filename = Compilation.user_filename
-        if filename.endswith(".xml"):
-            filename_prefix = filename[:-4]  # can be useful if data are exported
+    if Compilation.filename is "" and options.output is not None:  # why the first part of the condition?
+        Compilation.set_path_file_name(options.output)
+    if len(Compilation.filename) > 0:
+        if Compilation.filename.endswith(".xml"):
+            filename_prefix = Compilation.filename[:-4]  # can be useful if data are exported
+        fullname = Compilation.pathname + Compilation.filename
     else:
         same_prefix = Compilation.string_data.startswith("-" + Compilation.string_model)
         suffix = Compilation.string_data if not same_prefix else Compilation.string_data[1 + len(Compilation.string_model):]
         filename_prefix = Compilation.string_model + ("-" + options.variant if options.variant else "") + suffix
-        filename = filename_prefix + ".xml"
+        fullname = Compilation.pathname + filename_prefix + ".xml"
 
     stopwatch = Stopwatch()
     options.verbose and print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
@@ -288,14 +296,14 @@ def _compile(disabling_opoverrider=False, verbose=1):
         if options.display:
             print("\n", pretty_text)
         else:
-            with open(filename, "w") as f:
+            with open(fullname, "w") as f:
                 f.write(pretty_text)
                 if verbose > 0:
-                    print("  * Generating the file " + filename + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.")
+                    print("  * Generating the file " + fullname + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.")
         if options.lzma:
-            with lzma.open(filename + ".lzma", "w") as f:
+            with lzma.open(fullname + ".lzma", "w") as f:
                 f.write(bytes(pretty_text, 'utf-8'))
-                print("\tGeneration of the file " + filename + ".lzma completed.\n")
+                print("\tGeneration of the file " + fullname + ".lzma completed.\n")
         options.verbose and print("\tWCK for generating files:", stopwatch.elapsed_time(reset=True), "seconds")
 
     if options.dataexport:
@@ -314,13 +322,13 @@ def _compile(disabling_opoverrider=False, verbose=1):
             # TODO if data are given with name as e.g., in [k=3,l=9,b=0,r=0,v=9] for Bibd, maybe we should sort them
         else:
             json_prefix = str(options.dataexport)
-        with open(json_prefix + '.json', 'w') as f:
+        with open(Compilation.pathname + json_prefix + '.json', 'w') as f:
             json.dump(prepare_for_json(Compilation.original_data if Compilation.original_data else Compilation.data), f)
-        print("  Saving data in the file " + json_prefix + '.json' + " completed.")
+        print("  Saving data in the file " + (Compilation.pathname + json_prefix) + '.json' + " completed.")
 
     Compilation.done = True
     cop = root is not None and root.attrib and root.attrib["type"] == "COP"
-    return filename, cop
+    return fullname, cop
 
 
 def usage(message):
