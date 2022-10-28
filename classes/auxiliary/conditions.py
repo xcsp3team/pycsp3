@@ -227,6 +227,8 @@ class ConditionSet(Condition):
 def _build_condition(operator, v):
     if isinstance(v, int):
         return ConditionValue(operator, v)
+    if isinstance(v, Variable):
+        return ConditionVariable(operator, v)
     if isinstance(v, Node):
         # {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
         return ConditionNode(operator, v)

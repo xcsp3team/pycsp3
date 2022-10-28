@@ -2,7 +2,7 @@ import inspect
 import math
 import types
 
-from pycsp3.classes.auxiliary.conditions import Condition
+from pycsp3.classes.auxiliary.conditions import Condition, le
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
@@ -1289,12 +1289,16 @@ def BinPacking(term, *others, sizes, loads=None, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintBinPacking(terms, sizes, loads, Condition.build_condition(condition)))
 
 
-def Knapsack(term, *others, weights, profits, limit, condition=None):
+def Knapsack(term, *others, weights, wlimit=None, wcondition=None, profits, pcondition=None):
     terms = flatten(term, others)
     assert len(terms) > 0, "A Knapsack with an empty scope"
     assert len(terms) == len(weights) == len(profits)
-    checkType(limit, (int, Variable))
-    return _wrapping_by_complete_or_partial_constraint(ConstraintKnapsack(terms, weights, profits, limit, Condition.build_condition(condition)))
+    assert (wlimit is None) != (wcondition is None)
+    if wlimit:
+        checkType(wlimit, (int, Variable))
+        wcondition = le(wlimit)
+    checkType(wcondition, Condition)
+    return _wrapping_by_complete_or_partial_constraint(ConstraintKnapsack(terms, weights, wcondition, profits, Condition.build_condition(pcondition)))
 
 
 def Flow(term, *others, balance, arcs, weights=None, condition=None):

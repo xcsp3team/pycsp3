@@ -677,15 +677,15 @@ class ConstraintBinPacking(ConstraintUnmergeable):
 
 
 class ConstraintKnapsack(ConstraintWithCondition):
-    def __init__(self, lst, weights, profits, limit, condition):
+    def __init__(self, lst, weights, wcondition, profits, pcondition):
         super().__init__(TypeCtr.KNAPSACK)
         self.vars = lst
         self.profits = profits
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
         self.arg(TypeCtrArg.WEIGHTS, weights, content_ordered=True)
+        self.arg(TypeCtrArg.LIMIT, wcondition)  # temporarily, we use LIMIT (but will be replaced by CONDITION later)
         self.arg(TypeCtrArg.PROFITS, profits, content_ordered=True)
-        self.arg(TypeCtrArg.LIMIT, limit)
-        self.arg(TypeCtrArg.CONDITION, condition)
+        self.arg(TypeCtrArg.CONDITION, pcondition)
 
     def min_possible_value(self):
         return sum(self.vars[i].dom.smallest_value() * self.profits[i] for i in len(self.vars))

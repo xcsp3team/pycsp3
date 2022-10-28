@@ -98,6 +98,8 @@ def _variables():
 
 def _argument(elt, arg, key, value, change_element_value=False):
     assert value is not None
+    if key == TypeCtrArg.LIMIT:  # we modify the name of the argument for constraint knapsack
+        key = TypeCtrArg.CONDITION
     if arg.lifted is True:  # TODO do we have an example? (3-tuples for attributes in this case?)
         for i, l in enumerate(value):
             subelt = _element(key, text=l)
