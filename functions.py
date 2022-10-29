@@ -1111,35 +1111,35 @@ def Minimum(term, *others, condition=None):
     return _wrapping_by_complete_or_partial_constraint(c) if isinstance(c, ConstraintMinimum) else c
 
 
-def MaximumArg(term, *others, type_rank=None, condition=None):
+def MaximumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MaximumArg (that becomes a constraint when subject to a condition).
 
     :param term: the first term on which the maximum applies
     :param others: the other terms (if any) on which the maximum applies
-    :param type_rank: ranking condition on the index (ANY, FIRST or LAST)
+    :param rank: ranking condition on the index (ANY, FIRST or LAST); ANY if None
     :param condition: a condition directly specified for the maximum (typically, None)
     :return: a component/constraint MaximumArg
     """
     terms = _extremum_terms(term, others)
-    checkType(type_rank, (type(None), TypeRank))
-    c = ConstraintMaximumArg(terms, type_rank, condition)
+    checkType(rank, (type(None), TypeRank))
+    c = ConstraintMaximumArg(terms, rank, condition)
     return _wrapping_by_complete_or_partial_constraint(c) if isinstance(c, ConstraintMaximumArg) else c
 
 
-def MinimumArg(term, *others, type_rank=None, condition=None):
+def MinimumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MinimumArg (that becomes a constraint when subject to a condition).
 
     :param term: the first term on which the maximum applies
     :param others: the other terms (if any) on which the maximum applies
-    :param type_rank: ranking condition on the index (ANY, FIRST or LAST)
+    :param rank: ranking condition on the index (ANY, FIRST or LAST); ANY if None
     :param condition: a condition directly specified for the maximum (typically, None)
     :return: a component/constraint MinimumArg
     """
     terms = _extremum_terms(term, others)
-    checkType(type_rank, (type(None), TypeRank))
-    c = ConstraintMinimumArg(terms, type_rank, condition)
+    checkType(rank, (type(None), TypeRank))
+    c = ConstraintMinimumArg(terms, rank, condition)
     return _wrapping_by_complete_or_partial_constraint(c) if isinstance(c, ConstraintMinimumArg) else c
 
 

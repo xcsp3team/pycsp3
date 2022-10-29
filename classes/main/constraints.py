@@ -670,6 +670,7 @@ class ConstraintBinPacking(ConstraintUnmergeable):
         super().__init__(TypeCtr.BIN_PACKING)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
         self.arg(TypeCtrArg.SIZES, sizes, content_ordered=True)
+        assert (loads is None) or (condition is None)
         if loads is not None:
             self.arg(TypeCtrArg.CONDITIONS, "".join("(eq," + str(x) + ")" for x in loads))
         else:
