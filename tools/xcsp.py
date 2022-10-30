@@ -3,8 +3,8 @@ from collections import OrderedDict
 from lxml import etree
 
 from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeConditionOperator, TypeXML, TypeVar, TypeCtr, TypeCtrArg
-from pycsp3.classes.entities import Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, \
-    EBlock, ESlide, EIfThenElse, EToGather, EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities
+from pycsp3.classes.entities import (Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, EBlock, ESlide, EIfThenElse, EToGather,
+                                     EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities)
 from pycsp3.classes.main.constraints import ConstraintIntension
 from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact

@@ -7,6 +7,7 @@ Example of Execution:
 
 from pycsp3 import *
 
+print("iiii")
 m, piles = data  # m denotes the number of cards per suit
 nCards = 4 * m
 

@@ -401,10 +401,12 @@ class ConstraintLexMatrix(ConstraintUnmergeable):
 
 
 class ConstraintPrecedence(Constraint):
-    def __init__(self, lst, values, covered=False):
+    def __init__(self, lst, *, values=None, covered=False):
         super().__init__(TypeCtr.PRECEDENCE)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
-        self.arg(TypeCtrArg.VALUES, list(values), attributes=[(TypeCtrArg.COVERED, "true")] if covered else [], content_ordered=True)
+        assert covered is False or values is not None
+        if values is not None:
+            self.arg(TypeCtrArg.VALUES, values, attributes=[(TypeCtrArg.COVERED, "true")] if covered else [], content_ordered=True)
 
 
 ''' Counting and Summing Constraints '''
@@ -666,13 +668,13 @@ class ConstraintCumulative(Constraint):  # TODO inheriting from ConstraintWithCo
 
 
 class ConstraintBinPacking(ConstraintUnmergeable):
-    def __init__(self, lst, sizes, loads=None, condition=None):
+    def __init__(self, lst, sizes, *, capacities=None, condition=None):
         super().__init__(TypeCtr.BIN_PACKING)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
         self.arg(TypeCtrArg.SIZES, sizes, content_ordered=True)
-        assert (loads is None) or (condition is None)
-        if loads is not None:
-            self.arg(TypeCtrArg.CONDITIONS, "".join("(eq," + str(x) + ")" for x in loads))
+        if capacities is not None:
+            assert isinstance(capacities, list) and condition is None
+            self.arg(TypeCtrArg.CAPACITIES, capacities, content_ordered=True)
         else:
             self.arg(TypeCtrArg.CONDITION, condition)
 
