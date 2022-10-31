@@ -668,13 +668,16 @@ class ConstraintCumulative(Constraint):  # TODO inheriting from ConstraintWithCo
 
 
 class ConstraintBinPacking(ConstraintUnmergeable):
-    def __init__(self, lst, sizes, *, capacities=None, condition=None):
+    def __init__(self, lst, sizes, *, limits=None, loads=None, condition=None):
         super().__init__(TypeCtr.BIN_PACKING)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
         self.arg(TypeCtrArg.SIZES, sizes, content_ordered=True)
-        if capacities is not None:
-            assert isinstance(capacities, list) and condition is None
-            self.arg(TypeCtrArg.CAPACITIES, capacities, content_ordered=True)
+        if limits is not None:
+            assert isinstance(limits, list) and loads is None and condition is None
+            self.arg(TypeCtrArg.LIMITS, limits, content_ordered=True)
+        elif loads is not None:
+            assert isinstance(loads, list) and limits is None and condition is None
+            self.arg(TypeCtrArg.LOADS, loads, content_ordered=True)
         else:
             self.arg(TypeCtrArg.CONDITION, condition)
 

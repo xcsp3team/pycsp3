@@ -1268,19 +1268,20 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
 
 
-def BinPacking(term, *others, sizes, capacities=None, condition=None):
+def BinPacking(term, *others, sizes, limits=None, loads=None, condition=None):
     """
     Builds and returns a component BinPacking that:
-      - either is directly a constraint when capacities are given
+      - either is directly a constraint when capacities (limits or loads) are given
       - or becomes a constraint when subject to a condition (specified outside the function)
-    Capacities can be given by integers (representing limits on bins) or variables (representing loads of bins).
-    When capacities are absent (None), BinPacking is a component that must be subject to a condition, typically '<= k'
-    where k is a value used as the same limit for all bins.
+    Capacities can be given by integers or variables, by specifying either limits or loads.
+    When capacities are absent (both limits and loads being None), BinPacking is a component
+    that must be subject to a condition, typically '<= k' where k is a value used as the same limit for all bins.
 
     :param term: the first term on which the component applies
     :param others: the other terms (if any) on which the component applies
     :param sizes: the sizes of the available items
-    :param capacities: the capacities (or loads) of bins
+    :param limits: the limits of bins (if loads is None)
+    :param loads: the loads of bins (if limits is None)
     :param condition: a condition directly specified for the BinPacking (typically, None)
     :return: a component/constraint BinPacking
     """
@@ -1292,10 +1293,15 @@ def BinPacking(term, *others, sizes, capacities=None, condition=None):
     sizes = flatten(sizes)
     checkType(sizes, [int])
     assert len(terms) == len(sizes)
-    assert capacities is None or condition is None
-    if capacities is not None:
-        checkType(capacities, ([Variable], [int]))
-        return ECtr(ConstraintBinPacking(terms, sizes, capacities=capacities))
+    assert limits is None or loads is None
+    if limits is not None:
+        assert condition is None
+        checkType(limits, ([Variable], [int]))
+        return ECtr(ConstraintBinPacking(terms, sizes, limits=limits))
+    if loads is not None:
+        assert condition is None
+        checkType(loads, ([Variable], [int]))
+        return ECtr(ConstraintBinPacking(terms, sizes, loads=loads))
     return _wrapping_by_complete_or_partial_constraint(ConstraintBinPacking(terms, sizes, condition=Condition.build_condition(condition)))
 
 
