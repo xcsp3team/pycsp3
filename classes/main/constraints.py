@@ -2,7 +2,7 @@ import os
 from collections import OrderedDict
 
 from pycsp3 import functions
-from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, ConditionNode
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr, TypeNode, Node, possible_range
@@ -245,7 +245,7 @@ class ConstraintExtension(Constraint):
             return None
         # we compute the hash code of the table
         try:
-            h = hash(tuple(table))
+            h = hash(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
         except TypeError:
             for i, t in enumerate(table):
                 if any(isinstance(v, set) for v in t):
@@ -261,10 +261,20 @@ class ConstraintExtension(Constraint):
         if h in ConstraintExtension.cache_for_knowing_if_hybrid:
             hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[h]
         else:
-            hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelisation attempt showed no gain.
+            hybrid = 0
+            for t in table:
+                for v in t:
+                    if isinstance(v, ConditionNode):
+                        hybrid = 2
+                        break
+                    elif hybrid == 0 and not (isinstance(v, (int, str)) or v == ANY):
+                        hybrid = 1
+                if hybrid == 2:
+                    break
+            # hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelisation attempt showed no gain.
             ConstraintExtension.cache_for_knowing_if_hybrid[h] = hybrid
 
-        if not hybrid:
+        if hybrid == 0:
             if not self.restrict_table_wrt_domains:
                 if h not in ConstraintExtension.cache:  # we can directly use caching here (without paying attention to domains)
                     table.sort()
@@ -283,7 +293,7 @@ class ConstraintExtension(Constraint):
                 return table_s
         else:  # it is hybrid
             if self.keep_hybrid:  # currently, no restriction of tables (wrt domains) in that case
-                self.attributes.append((TypeXML.TYPE, "hybrid"))
+                self.attributes.append((TypeXML.TYPE, "hybrid-" + str(hybrid)))
                 if h not in ConstraintExtension.cache:
                     table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=possible_parallelism)
