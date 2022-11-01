@@ -36,7 +36,7 @@ Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving 
 
 # 1) Installation from PyPi
 
-This is the easiest way of installing PySCP3.
+This is the easiest way of installing PyCSP3.
 
 Note that you need first Python 3 (version 3.6, or later) to be installed.
 You can do it, for example, from [python.org](https://www.python.org/downloads/)
