@@ -1073,6 +1073,11 @@ def global_indirection(c):
     pc = None
     if options.usemeta:
         return None  # to force using meta-constraints
+    if isinstance(c, ConstraintInstantiation):  # we transform instantiation into a conjunction (Node)
+        lst = c.arguments[TypeCtrArg.LIST].content
+        values = c.arguments[TypeCtrArg.VALUES].content
+        assert len(lst) == len(values)
+        return functions.conjunction(lst[i] == values[i] for i in range(len(lst)))
     if isinstance(c, ConstraintWithCondition):
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
@@ -1117,10 +1122,16 @@ def manage_global_indirection(*args):
             error_if(len(curser.queue_in) == 0, msg)
             (values, x) = curser.queue_in.pop()
             arg = functions.belong(x, values)
-        elif arg is False:  # means that we must have a unary subexpression of the form 'x not in S' in a more general expression
+        elif arg is False:  # means that we must have:
+            # either a unary subexpression of the form 'x not in S' in a more general expression
+            # or a nogood of the form x != t where x a list of variables and t a list of values
             error_if(len(curser.queue_in) == 0, msg)
             (values, x) = curser.queue_in.pop()
-            arg = functions.not_belong(x, values)
+            if isinstance(x, list) and len(x) > 1 and isinstance(values, list) and len(values) == 1:
+                assert len(x) == len(values[0])
+                arg = functions.disjunction(x[i] != values[0][i] for i in range(len(x)))
+            else:
+                arg = functions.not_belong(x, values)
         elif isinstance(arg, ECtr):
             gi = global_indirection(arg.constraint)
             if gi is None:
