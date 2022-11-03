@@ -896,7 +896,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             error("The type of the operand of the partial constraint is wrong as it is " + str(type(obj2)))
         obj1, obj2 = (obj1, obj2) if not inverted else (obj2, obj1)  # we invert back
         assert isinstance(obj1, PartialConstraint) and isinstance(obj2, PartialConstraint)
-        assert isinstance(obj1.constraint, ConstraintSum) and isinstance(obj2.constraint, ConstraintSum)
+        assert isinstance(obj1.constraint, ConstraintSum) and isinstance(obj2.constraint, ConstraintSum), str(type(obj1.constraint)) + " " + str(
+            type(obj2.constraint))
         args1, args2 = obj1.constraint.arguments, obj2.constraint.arguments
         vs1, vs2 = args1[TypeCtrArg.LIST].content, args2[TypeCtrArg.LIST].content
         cs1 = args1[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args1 else [1] * len(vs1)
@@ -915,7 +916,22 @@ class ScalarProduct:
         assert len(self.variables) == len(self.coeffs), str(self.variables) + " " + str(self.coeffs)
 
     def _combine_with(self, operator, right_operand):
-        return PartialConstraint(ConstraintSum(self.variables, self.coeffs, None)).add_condition(operator, right_operand)
+        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+        if isinstance(right_operand, Node) and right_operand.var_val_if_binary_type(TypeNode.MUL):
+            return pc.add_condition(operator, right_operand)
+        if operator == TypeConditionOperator.LT:
+            return pc < right_operand
+        if operator == TypeConditionOperator.LE:
+            return pc <= right_operand
+        if operator == TypeConditionOperator.GE:
+            return pc >= right_operand
+        if operator == TypeConditionOperator.GT:
+            return pc > right_operand
+        if operator == TypeConditionOperator.EQ:
+            return pc == right_operand
+        if operator == TypeConditionOperator.NE:
+            return pc != right_operand
+        assert False
 
     def __lt__(self, other):
         return self._combine_with(TypeConditionOperator.LT, other)
@@ -1122,8 +1138,8 @@ def manage_global_indirection(*args):
             error_if(len(curser.queue_in) == 0, msg)
             (values, x) = curser.queue_in.pop()
             arg = functions.belong(x, values)
-        elif arg is False:  # means that we must have:
-            # either a unary subexpression of the form 'x not in S' in a more general expression
+        elif arg is False:  # means that we must have in a more general expression:
+            # either a unary subexpression of the form 'x not in S'
             # or a nogood of the form x != t where x a list of variables and t a list of values
             error_if(len(curser.queue_in) == 0, msg)
             (values, x) = curser.queue_in.pop()

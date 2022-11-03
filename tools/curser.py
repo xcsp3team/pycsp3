@@ -221,8 +221,8 @@ class OpOverrider:
         ListInt.__getitem__ = OpOverrider.__getitem__li
         # ListInt.__contains__ = OpOverrider.__contains__li
 
-        EMetaCtr.__eq__ = Variable.__eq__ = Node.__eq__ = OpOverrider.__eq__
-        EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = OpOverrider.__ne__
+        ECtr.__eq__ = EMetaCtr.__eq__ = Variable.__eq__ = Node.__eq__ = OpOverrider.__eq__
+        ECtr.__ne__ = EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = OpOverrider.__ne__
         Variable.__lt__ = Node.__lt__ = OpOverrider.__lt__
         Variable.__le__ = Node.__le__ = OpOverrider.__le__
         Variable.__ge__ = Node.__ge__ = OpOverrider.__ge__
@@ -255,10 +255,9 @@ class OpOverrider:
         ListInt.__getitem__ = list.__getitem__
         # ListInt.__contains__ = list.__contains__
 
-        EMetaCtr.__eq__ = Node.__eq__ = object.__eq__
+        ECtr.__eq__ = EMetaCtr.__eq__ = Node.__eq__ = object.__eq__
         Variable.__eq__ = Variable.eq__safe  # TODO are there other methods in the same situation?
-
-        EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = object.__ne__
+        ECtr.__ne__ = EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = object.__ne__
         Variable.__lt__ = Node.__lt__ = object.__lt__
         Variable.__le__ = Node.__le__ = object.__le__
         Variable.__ge__ = Node.__ge__ = object.__ge__
