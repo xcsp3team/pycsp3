@@ -3,7 +3,7 @@ import os
 from pycsp3.solvers.solver import SolverProcess  # , SolverPy4J
 
 ACE_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
-ACE_CP = ACE_DIR + (os.pathsep + ACE_DIR).join(["ACE-2.0.jar"])
+ACE_CP = ACE_DIR + (os.pathsep + ACE_DIR).join(["ACE-2.1.jar"])
 
 
 class Ace(SolverProcess):
