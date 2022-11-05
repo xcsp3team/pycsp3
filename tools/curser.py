@@ -860,7 +860,7 @@ def cp_array(*l):
     typ = unique_type_in(l)
     if typ is int:
         return ListInt(l)
-    if typ is Variable:
+    if typ in (Variable, VariableInteger):
         return ListVar(l)
     if typ is ECtr:  # TODO: is it the right type?
         return ListCtr(l)
