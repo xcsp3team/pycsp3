@@ -22,7 +22,7 @@ At this stage, one can run two embedded solvers:
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-For example, see the results of the [2022 Competition](http://www.xcsp.org/competitions/).
+For example, see the solvers involved in the [2022 Competition](http://www.xcsp.org/competitions/).
 It is also immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are 
 present in directories `pycsp3/solvers/ace` and  `pycsp3/solvers/choco`.
 For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
