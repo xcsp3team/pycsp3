@@ -5,7 +5,14 @@ from pycsp3.dashboard import options
 from pycsp3.tools.utilities import flatten, is_windows
 
 if not is_windows():
-    import readline
+    try:
+        import readline
+    except ImportError:
+        if "Intel" in sys.version:
+            s = 'With Intel compilers, the module readline must be installed by the user.'
+        else:
+            s = 'Problem when importing the module readline'
+        raise ImportError(s)
 
 fileToTrace = [arg for arg in sys.argv if arg.endswith(".py") and "compiler.py" not in arg] + ["<stdin>"]
 
