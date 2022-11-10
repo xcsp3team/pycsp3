@@ -482,8 +482,16 @@ class OpOverrider:
                 values = [values[0]] * len(variables)
             return ConstraintInstantiation(variables, values)
 
-        if isinstance(other, (list, tuple)) and any(isinstance(v, int) for v in other):
-            return ECtr(Instantiation(variables=self, values=other))
+        if isinstance(other, (list, tuple)):
+            if any(isinstance(v, int) for v in other):
+                return ECtr(Instantiation(variables=self, values=other))
+            if is_matrix(other) and unique_type_in(other, int):
+                n, m = len(other), len(other[0])
+                assert n > 0 and m > 0 and unique_type_in(other, int) and is_matrix(self) and len(self) == n and len(self[0]) == m
+                vars = [self[i][j] for i in range(n) for j in range(m) if self[i][j] is not None and other[i][j] is not None]
+                vals = [other[i][j] for i in range(n) for j in range(m) if self[i][j] is not None and other[i][j] is not None]
+                return ECtr(Instantiation(variables=vars, values=vals))
+            # TODO other cases for n-ary dimensions?
         return list.__eq__(self, other)
 
     def __ne__lv(self, other):  # lv for ListVar
