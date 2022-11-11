@@ -1,16 +1,16 @@
 <h1 align="center"> PyCSP3 v2.1 (November 10, 2022) </h1>
 
-This is Version 2.1 of PyCSP3, a library in Python 3 (version 3.6 or later) for modeling combinatorial constrained problems; see [www.pycsp.org](http://pycsp.org).
+This is Version 2.1 of PyCSP3, a library in Python 3 (version 3.6 or later) for modeling combinatorial constrained problems; see [www.pycsp.org](https://pycsp.org).
 PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). 
 With PyCSP3, it is possible to generate instances of:
 1. CSPs (Constraint Satisfaction Problems)
 1. COPs (Constraint Optimization Problems)
 
-in format XCSP3; see [www.xcsp.org](www.xcsp.org).
+in format XCSP3; see [www.xcsp.org](https://xcsp.org).
 Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514),  which allows us to use integer variables (with finite domains) and popular constraints.
 
 Note that:
-* a dedicated [website](http://pycsp.org/) with more than 60 Jupyter notebooks is available
+* a dedicated [website](https://pycsp.org/) with more than 60 Jupyter notebooks is available
 * a well-documented [guide](https://arxiv.org/abs/2009.00326) is available
 * PyCSP3 is available as a [PyPi package](https://pypi.org/project/pycsp3/)
 
@@ -22,7 +22,7 @@ At this stage, one can run two embedded solvers:
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-For example, see the solvers involved in the [2022 Competition](http://www.xcsp.org/competitions/).
+For example, see the solvers involved in the [2022 Competition](https://www.xcsp.org/competitions/).
 It is also immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are 
 present in directories `pycsp3/solvers/ace` and  `pycsp3/solvers/choco`.
 For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
@@ -32,7 +32,7 @@ java -jar ACE-YY-MM.jar zebra.xml
 ```
 while replacing YY and MM with the current values that are present in the name of the jar file.
 
-Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](http://pycsp.org/documentation/solving-process/).
+Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](https://pycsp.org/documentation/solving-process/).
 
 
 # 1) Installation from PyPi
@@ -161,7 +161,7 @@ export PYTHONPATH=$PYTHONPATH:.
 # 3) Compilation and Examples
 
 We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
-However, note that many illustrations are available on [www.pycsp.org](http://pycsp.org/), notably many [models](http://pycsp.org/documentation/models/) with Jupyter notebooks. 
+However, note that many illustrations are available on [www.pycsp.org](https://pycsp.org/), notably many [models](https://pycsp.org/documentation/models/) with Jupyter notebooks. 
 
 First, we give some general information about compilation.
 
@@ -277,7 +277,7 @@ python3 SendMore.py -solver=choco
 ## Example 3: All-Interval Series
 
 This example shows how you can simply specify an integer (as unique data) for a model.
-For our illustration, we consider the problem [All-Interval Series](http://www.csplib.org/Problems/prob007/).
+For our illustration, we consider the problem [All-Interval Series](https://www.csplib.org/Problems/prob007/).
 
 A classical model is:
 
@@ -409,7 +409,7 @@ python3 AllInterval.py -data=10 -variant=aux -solve
 ## Example 4: BIBD
 
 This example shows how you can specify a list of integers to be used as data for a model.
-For our illustration, we consider the problem [BIBD](http://www.csplib.org/Problems/prob028/).
+For our illustration, we consider the problem [BIBD](https://www.csplib.org/Problems/prob028/).
 We need five integers `v, b, r, k, l` for specifying a unique instance (possibly, `b` and `r` can be set to 0, so that these values are automatically computed according to a template for this problem).
 The model is:
 
@@ -453,7 +453,7 @@ python3 Bibd.py -data=\[9,0,0,3,9\]
 ## Example 5: Rack Configuration
 
 This example shows how you can specify a JSON file to be used as data for a model.
-For our illustration, we consider the problem [Rack Configuration](http://www.csplib.org/Problems/prob031/).
+For our illustration, we consider the problem [Rack Configuration](https://www.csplib.org/Problems/prob031/).
 The data (for a specific instance) are then initially given in a JSON file, as for example:
 
 #### File **`Rack_r2.json`**
@@ -565,7 +565,7 @@ python3 Rack2.py -data=Rack_r2b.json
 ## Example 6: Nonogram
 
 This example shows how you can use an auxiliary Python file for parsing data that are not initially given under JSON format.
-For our illustration, we consider the problem [Nonogram](http://www.csplib.org/Problems/prob012/).
+For our illustration, we consider the problem [Nonogram](https://www.csplib.org/Problems/prob012/).
 The data (for a specific Nonogram puzzle) are initially given in a text file as follows:
 1. a line stating the numbers of rows and columns,
 1. then, for each row a line stating the number of blocks followed by the sizes of all these blocks (on the same line),
