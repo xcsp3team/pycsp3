@@ -173,16 +173,16 @@ def unique_type_in(l, tpe=None):
         return None if l is None else type(l) if tpe is None else tpe if isinstance(l, tpe) else False
 
 
-def is_1d_list(l, types=None):
-    if not isinstance(l, list) or types is not None and len(l) == 0:
-        return False
-    return all(isinstance(v, types) if types else not isinstance(v, list) for v in l)
-
-
 def is_1d_tuple(l, types):
     if not isinstance(l, tuple) or types is not None and len(l) == 0:
         return False
     return all(isinstance(v, types) for v in l)
+
+
+def is_1d_list(l, types=None):
+    if not isinstance(l, list) or types is not None and len(l) == 0:
+        return False
+    return all(isinstance(v, types) if types else not isinstance(v, list) for v in l)
 
 
 def is_2d_list(m, types=None):
@@ -195,6 +195,14 @@ def is_matrix(m, types=None):
 
 def is_square_matrix(m, types=None):
     return is_matrix(m, types) and len(m) == len(m[0])
+
+
+def is_3d_list(c, types=None):
+    return isinstance(c, list) and all(is_2d_list(m, types) for m in c)
+
+
+def is_cube(c, types=None):
+    return is_3d_list(c, types) and all(len(m) == len(c[0]) for m in c) and all(all(len(l) == len(m[0]) for l in m) for m in c)
 
 
 def alphabet_positions(s):

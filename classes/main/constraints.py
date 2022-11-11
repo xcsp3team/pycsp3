@@ -748,6 +748,7 @@ class ConstraintClause(Constraint):
 class ConstraintInstantiation(Constraint):
     def __init__(self, variables, values):
         super().__init__(TypeCtr.INSTANTIATION)
+        assert len(variables) == len(values)
         self.arg(TypeCtrArg.LIST, variables, content_ordered=True)
         self.arg(TypeCtrArg.VALUES, values, content_ordered=True)
 

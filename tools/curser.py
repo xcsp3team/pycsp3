@@ -4,13 +4,13 @@ from collections import deque, namedtuple
 from pycsp3 import functions
 from pycsp3.classes.entities import Node, TypeNode, ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
-    ScalarProduct, PartialConstraint, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
+    ScalarProduct, PartialConstraint, ConstraintAllDifferentList, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
     auxiliary, global_indirection, manage_global_indirection)
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import (
-    flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, is_square_matrix, ANY, structured_list, warning, error_if)
+    flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, is_square_matrix, is_cube, ANY, structured_list, warning, error_if)
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -470,33 +470,53 @@ class OpOverrider:
             return object.__xor__(self, other)
         return Node.build(TypeNode.XOR, self, other)
 
-    def __eq__lv(self, other):  # lv for ListVar
-        def Instantiation(*, variables, values):
-            variables = flatten(variables)
-            values = flatten(values) if not isinstance(values, range) else list(values)
-            checkType(variables, [Variable])
-            checkType(values, (int, [int]))
-            if len(variables) == 0:
-                return None
-            if len(values) == 1 and len(variables) > 1:
-                values = [values[0]] * len(variables)
-            return ConstraintInstantiation(variables, values)
+    @staticmethod
+    def __extract_vars_vals(self, other):
+        if is_1d_list(other):
+            n = len(other)
+            assert is_1d_list(self) and n == len(self)
+            indexes = [i for i in range(n) if self[i] is not None and other[i] is not None]
+            return [self[i] for i in indexes], [other[i] for i in indexes]
+        if is_matrix(other):
+            n, m = len(other), len(other[0])
+            assert is_matrix(self) and 0 < n == len(self) and 0 < m == len(self[0])
+            indexes = [(i, j) for i in range(n) for j in range(m) if self[i][j] is not None and other[i][j] is not None]
+            return [self[i][j] for i, j in indexes], [other[i][j] for i, j in indexes]
+        if is_cube(other):
+            n, m, p = len(other), len(other[0]), len(other[0][0])
+            assert is_cube(self) and 0 < n == len(self) and 0 < m == len(self[0]) and 0 < p == len(self[0][0])
+            indexes = [(i, j, k) for i in range(n) for j in range(m) for k in range(p) if self[i][j][k] is not None and other[i][j][k] is not None]
+            return [self[i][j][k] for i, j, k in indexes], [other[i][j][k] for i, j, k in indexes]
+        return None
 
-        if isinstance(other, (list, tuple)):
-            if any(isinstance(v, int) for v in other):
-                return ECtr(Instantiation(variables=self, values=other))
-            if is_matrix(other) and unique_type_in(other, int):
-                n, m = len(other), len(other[0])
-                assert n > 0 and m > 0 and unique_type_in(other, int) and is_matrix(self) and len(self) == n and len(self[0]) == m
-                vars = [self[i][j] for i in range(n) for j in range(m) if self[i][j] is not None and other[i][j] is not None]
-                vals = [other[i][j] for i in range(n) for j in range(m) if self[i][j] is not None and other[i][j] is not None]
-                return ECtr(Instantiation(variables=vars, values=vals))
-            # TODO other cases for n-ary dimensions?
+    def __eq__lv(self, other):  # lv for ListVar
+        if isinstance(other, (tuple, range)):
+            other = list(other)
+        if isinstance(other, list):
+            if unique_type_in(other, int):
+                res = OpOverrider.__extract_vars_vals(self, other)
+                if res is not None:
+                    return ECtr(ConstraintInstantiation(res[0], res[1]))
+            if unique_type_in(other, Variable):
+                res = OpOverrider.__extract_vars_vals(self, other)
+                if res is not None:
+                    return [res[0][i] == res[1][i] for i in range(len(res[0]))]
+            # TODO other cases ?
         return list.__eq__(self, other)
 
     def __ne__lv(self, other):  # lv for ListVar
-        if isinstance(other, (list, tuple)) and any(isinstance(v, int) for v in other):
-            return self not in {tuple(other)}
+        if isinstance(other, (tuple, range)):
+            other = list(other)
+        if isinstance(other, list):
+            if unique_type_in(other, int):
+                res = OpOverrider.__extract_vars_vals(self, other)
+                if res is not None:
+                    return res[0] not in {tuple(res[1])}
+            if unique_type_in(other, Variable):
+                res = OpOverrider.__extract_vars_vals(self, other)
+                if res is not None:
+                    return ECtr(ConstraintAllDifferentList(res, None))
+            # TODO other cases ?
         return list.__ne__(self, other)
 
     @staticmethod
