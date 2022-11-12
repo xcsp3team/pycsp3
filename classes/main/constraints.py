@@ -200,7 +200,7 @@ class ConstraintExtension(Constraint):
     cache_for_knowing_if_hybrid = dict()
 
     @staticmethod
-    def convert_smart_to_ordinary(scope, table):
+    def convert_hybrid_to_ordinary(scope, table):
         for i, t in enumerate(table):
             tpl = None
             for j, v in enumerate(t):
@@ -261,20 +261,25 @@ class ConstraintExtension(Constraint):
         if h in ConstraintExtension.cache_for_knowing_if_hybrid:
             hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[h]
         else:
+            check_hybrid2 = True
             hybrid = 0
             for t in table:
                 for v in t:
                     if isinstance(v, ConditionNode):
                         hybrid = 2
-                        break
+                        if not check_hybrid2:
+                            break
+                        else:
+                            assert True  # TODO test to be written
                     elif hybrid == 0 and not (isinstance(v, (int, str)) or v == ANY):
                         hybrid = 1
                 if hybrid == 2:
-                    break
+                    if not check_hybrid2:
+                        break
             # hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelisation attempt showed no gain.
             ConstraintExtension.cache_for_knowing_if_hybrid[h] = hybrid
 
-        if hybrid == 0:
+        if hybrid == 0:  # if not hybrid
             if not self.restrict_table_wrt_domains:
                 if h not in ConstraintExtension.cache:  # we can directly use caching here (without paying attention to domains)
                     table.sort()
@@ -291,7 +296,7 @@ class ConstraintExtension(Constraint):
                 table_s = table_to_string(table, restricting_domains=domains, parallel=possible_parallelism)
                 ConstraintExtension.cache[h] = (domains, table_s)
                 return table_s
-        else:  # it is hybrid
+        else:  # it is hybrid (level 1 or 2)
             if self.keep_hybrid:  # currently, no restriction of tables (wrt domains) in that case
                 self.attributes.append((TypeXML.TYPE, "hybrid-" + str(hybrid)))
                 if h not in ConstraintExtension.cache:
@@ -304,7 +309,7 @@ class ConstraintExtension(Constraint):
                     domains_cache, table_cache = ConstraintExtension.cache[h]
                     if domains == domains_cache:
                         return table_cache
-                table = ConstraintExtension.convert_smart_to_ordinary(scope, table)
+                table = ConstraintExtension.convert_hybrid_to_ordinary(scope, table)
                 table = ConstraintExtension.remove_redundant_tuples(table)
                 table_s = table_to_string(table, restricting_domains=domains if self.restrict_table_wrt_domains else None, parallel=possible_parallelism)
                 ConstraintExtension.cache[h] = (domains, table_s)

@@ -108,7 +108,7 @@ def cursing():
         if isinstance(other, types.GeneratorType):
             other = list(other)
         if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
-            other = [v for v in other if v]
+            other = flatten(other)  # [v for v in other if v]
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
             queue_in.append((self, other))
             return True
