@@ -46,8 +46,8 @@ if not variant():
 
         # computing tardinesses of planes
         [t[i] == max(0, x[i] - target[i]) for i in range(nPlanes)],
-
     )
+
 elif variant("table"):
     satisfy(
         # computing earlinesses and tardinesses of planes

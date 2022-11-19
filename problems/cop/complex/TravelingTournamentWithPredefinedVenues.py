@@ -4,7 +4,6 @@
 Examples of Execution:
   python3 TravelingTournamentWithPredefinedVenues.py -data=Ttppv_circ8bbal.json -variant=a2
   python3 TravelingTournamentWithPredefinedVenues.py -data=Ttppv_circ8bbal.json -variant=a3
-python3 pycsp3/problems/g4_world/TravelingTournamentWithPredefinedVenues.py -data=pycsp3/problems/data/json/Ttppv_circ8bbal.json -variant=a2
 """
 
 from pycsp3 import *

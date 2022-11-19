@@ -1,4 +1,6 @@
 """
+Problem 133 on CSPLib
+
 See https://en.wikipedia.org/wiki/Knapsack_problem
 
 Example of Execution:

@@ -37,12 +37,12 @@ minimize(
 )
 
 """ Comments
-1) the table contains (smart) conditions, which makes code more compact than:
+1) the table contains (hybrid) conditions, which makes code more compact than:
   table = ({(0, ANY, ANY, ANY, ANY)}
       | {(v, v, v, v1, v2) for v in range(1, nValues) for v1 in range(nValues) for v2 in range(nValues) if v1 != v and v2 != v}
       | {(v, v, v1, v, v2) for v in range(1, nValues) for v1 in range(nValues) for v2 in range(nValues) if v1 != v and v2 != v}
           ...
-  currently, the smart conditions are automatically converted to form starred tuples (in the future, we will deal with them)
+  the hybrid conditions are automatically converted to form starred tuples except if the option -keephybrid is set
 
 2) even if  data come from a text file via a parser that builds tuples (and not lists)
    so, we have to write tuple(p) because tuples (in data) are automatically converted to lists

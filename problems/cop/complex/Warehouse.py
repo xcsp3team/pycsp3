@@ -48,7 +48,7 @@ elif variant("compact"):
 
 """ Comments
 1) when compiling the 'compact' variant, some auxiliary variables are automatically introduced
-   in order to remain in the perimeter of XCP3-core   
+   in order to remain in the perimeter of XCSP3-core   
 2) it is possible to replace the first group of constraints Count by:
       Cardinality(w, occurrences={j: range(capacities[j]+1) for j in range(nWarehouses)})
     or

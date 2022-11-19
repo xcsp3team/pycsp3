@@ -31,6 +31,5 @@ minimize(
 )
 
 """ Comments 
-1) for the objective, c * c is possible, but this needs an extension of XCSP3 specifications 
-   (allowing objective coefficients to be variables) TODO
+1) for the objective, c * c is possible, but parsers must be updated
 """
