@@ -416,6 +416,8 @@ class OpOverrider:
         self, other = res
         if self is None or other is None:  # we must not write None in (self,other) because recursive behaviour
             return object.__eq__(self, other)
+        if isinstance(other, (tuple, list)):
+            other = other[0] if len(other) == 1 else functions.conjunction(other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
         return other.__eq__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.EQ, self, other)
@@ -427,6 +429,8 @@ class OpOverrider:
         self, other = res
         if self is None or other is None:
             return object.__ne__(self, other)
+        if isinstance(other, (tuple, list)):
+            other = other[0] if len(other) == 1 else functions.conjunction(other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
@@ -440,6 +444,8 @@ class OpOverrider:
         self, other = res
         if self is None or other is None:
             return object.__or__(self, other)
+        if isinstance(other, (tuple, list)):
+            other = other[0] if len(other) == 1 else functions.conjunction(other)
         return Node.disjunction(self, other)
 
     def __and__(self, other):
@@ -468,6 +474,8 @@ class OpOverrider:
         self, other = res
         if self is None or other is None:
             return object.__xor__(self, other)
+        if isinstance(other, (tuple, list)):
+            other = other[0] if len(other) == 1 else functions.conjunction(other)
         return Node.build(TypeNode.XOR, self, other)
 
     @staticmethod

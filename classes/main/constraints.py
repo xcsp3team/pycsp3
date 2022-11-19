@@ -805,6 +805,11 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return auxiliary().replace_partial_constraint(self), auxiliary().replace_partial_constraint(other)
 
     def __eq__(self, other):
+        if isinstance(self.constraint, ConstraintElement) and is_1d_list(other, int):
+            tab = self.constraint.arguments[TypeCtrArg.LIST].content
+            idx = self.constraint.arguments[TypeCtrArg.INDEX].content
+            assert is_matrix(tab, Variable) and len(tab[0]) == len(other)
+            return [tab[idx][i] == other[i] for i in range(len(other))]
         other = self._simplify_with_auxiliary_variables(other)
         if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)) and isinstance(other, (int, Variable)):
             if isinstance(self.constraint, ConstraintElement):

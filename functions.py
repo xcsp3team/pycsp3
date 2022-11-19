@@ -590,6 +590,7 @@ def xor(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    args = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args]
     return args[0] ^ args[1] if len(args) == 2 else Node.build(TypeNode.XOR, *args) if len(args) > 1 else args[0]
 
 
@@ -606,8 +607,8 @@ def iff(*args):
     res = manage_global_indirection(*args)
     if res is None:
         return Iff(args)
-    args = res
-    return args[0] == args[1] if len(args) == 2 else Node.build(TypeNode.IFF, *args)
+    res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
+    return res[0] == res[1] if len(res) == 2 else Node.build(TypeNode.IFF, *res)
 
 
 def imply(*args):
@@ -622,6 +623,7 @@ def imply(*args):
     res = manage_global_indirection(*args)
     if res is None:
         return IfThen(args)
+    res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     return Node.build(TypeNode.IMP, *res)
 
 
@@ -637,6 +639,7 @@ def ift(*args):
     res = manage_global_indirection(*args)
     if res is None:
         return IfThenElse(args)
+    res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     return Node.build(TypeNode.IF, *res)
 
 
@@ -767,7 +770,7 @@ def AllDifferentList(term, *others, excepting=None):
         term = list((term,) + others)
     lists = [flatten(l) for l in term]
     assert all(checkType(l, [Variable]) for l in lists)
-    excepting = list(excepting) if isinstance(excepting, (tuple,range)) else excepting
+    excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
     assert all(len(l) == len(lists[0]) for l in lists) and (excepting is None or len(excepting) == len(lists[0]))
     return ECtr(ConstraintAllDifferentList(lists, excepting))
@@ -806,7 +809,7 @@ def AllEqualList(term, *others, excepting=None):
         term = list((term,) + others)
     lists = [flatten(l) for l in term]
     assert all(checkType(l, [Variable]) for l in lists)
-    excepting = list(excepting) if isinstance(excepting, (tuple,range)) else excepting
+    excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
     assert all(len(l) == len(lists[0]) for l in lists) and (excepting is None or len(excepting) == len(lists[0]))
     if len(lists) == 2 and excepting is None:
