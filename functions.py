@@ -13,10 +13,10 @@ from pycsp3.classes.main.annotations import (
     AnnotationRestarts)
 from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
-    ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence,
-    ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg,
-    ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow,
-    ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
+    ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
+    ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintMaximumArg,
+    ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack,
+    ConstraintFlow, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -767,24 +767,51 @@ def AllDifferentList(term, *others, excepting=None):
         term = list((term,) + others)
     lists = [flatten(l) for l in term]
     assert all(checkType(l, [Variable]) for l in lists)
-    excepting = list(excepting) if isinstance(excepting, tuple) else excepting
+    excepting = list(excepting) if isinstance(excepting, (tuple,range)) else excepting
     checkType(excepting, ([int], type(None)))
     assert all(len(l) == len(lists[0]) for l in lists) and (excepting is None or len(excepting) == len(lists[0]))
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 
-def AllEqual(term, *others):
+def AllEqual(term, *others, excepting=None):
     """
     Builds and returns a constraint AllEqual.
 
     :param term: the first term on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
+    :param excepting: the value(s) that must be ignored (None, most of the time)
     :return: a constraint AllEqual
     """
+    excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
+    checkType(excepting, ([int], type(None)))
     terms = flatten(term, others)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
     checkType(terms, ([Variable], [Node]))
-    return ECtr(ConstraintAllEqual(terms))
+    return ECtr(ConstraintAllEqual(terms, excepting))
+
+
+def AllEqualList(term, *others, excepting=None):
+    """
+    Builds and returns a constraint AllEqualList. In case only two lists are given, and excepting is None,
+    a group of intensional constraints of the form x[i] == y[i] is posted
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :param excepting: the tuple(s) that must be ignored (None, most of the time)
+    :return: a constraint AllEqualList
+    """
+    if isinstance(term, types.GeneratorType):
+        term = [l for l in term]
+    elif len(others) > 0:
+        term = list((term,) + others)
+    lists = [flatten(l) for l in term]
+    assert all(checkType(l, [Variable]) for l in lists)
+    excepting = list(excepting) if isinstance(excepting, (tuple,range)) else excepting
+    checkType(excepting, ([int], type(None)))
+    assert all(len(l) == len(lists[0]) for l in lists) and (excepting is None or len(excepting) == len(lists[0]))
+    if len(lists) == 2 and excepting is None:
+        return [lists[0][i] == lists[1][i] for i in range(len(lists[0]))]
+    return ECtr(ConstraintAllEqualList(lists, excepting))
 
 
 def _ordered(term, others, operator, lengths):
