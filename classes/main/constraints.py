@@ -265,13 +265,14 @@ class ConstraintExtension(Constraint):
             hybrid = 0
             for t in table:
                 for v in t:
+                    error_if(isinstance(v, Node), "Bad form")
                     if isinstance(v, ConditionNode):
                         hybrid = 2
                         if not check_hybrid2:
                             break
                         else:
                             assert True  # TODO test to be written
-                    elif hybrid == 0 and not (isinstance(v, (int, str)) or v == ANY):
+                    elif hybrid == 0 and not (isinstance(v, (int, str)) or v is ANY):
                         hybrid = 1
                 if hybrid == 2:
                     if not check_hybrid2:

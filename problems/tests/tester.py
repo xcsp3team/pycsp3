@@ -294,7 +294,7 @@ class Tester:
         # Count differences
         n_diffs, n_errs, n_tests = self.counters["diff"], self.counters["err"], self.counters["total"]
         n_diffs_colored, n_errs_colored = (RED if n_diffs > 0 else GREEN) + str(n_diffs), (RED if n_errs > 0 else GREEN) + str(n_errs)
-        print("\n" + WHITE_BOLD + "[Currently:] " + n_diffs_colored + WHITE + (" differences" if n_diffs > 0 else " difference") + " on " + str(
+        print("\n" + WHITE_BOLD + "Currently: " + n_diffs_colored + WHITE + (" differences" if n_diffs > 0 else " difference") + " on " + str(
             n_tests) + (" tests" if n_tests > 0 else " test") + " (and " + n_errs_colored + WHITE + (" errors" if n_errs > 0 else " error") + ")\n")
 
     def print_differences(self, lines, limit, xcsp=False):

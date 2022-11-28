@@ -2,7 +2,7 @@ import inspect
 import math
 import types
 
-from pycsp3.classes.auxiliary.conditions import Condition, le
+from pycsp3.classes.auxiliary.conditions import Condition, eq, le
 from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
@@ -524,6 +524,9 @@ def _Extension(*, scope, table, positive=True):
                 table[i] = tuple(t)
             else:
                 assert isinstance(t, tuple), str(t)
+            # we now manage shortcut expressions as in col(i) instead of eq(col(i)), and discard trivial ranges
+            if any(isinstance(v, (range, Node)) for v in t):
+                table[i] = tuple(eq(v) if isinstance(v, Node) else v.start if isinstance(v, range) and len(v) == 1 else v for v in t)
             assert len(t) == len(scope), ("The length of each tuple must be the same as the arity."
                                           + "Maybe a problem with slicing: you must for example write x#[i:i+3,0] instead of x[i:i+3][0]")
     return ECtr(ConstraintExtension(scope, table, positive, options.keephybrid, options.restricttableswrtdomains))

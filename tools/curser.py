@@ -205,9 +205,6 @@ def cursing():
     curse(enumerate, "__contains__", _enumerate_contains)
 
 
-#  cursing()
-
-
 class OpOverrider:
     activated = False
 

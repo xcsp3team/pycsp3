@@ -76,7 +76,7 @@ elif variant("var"):
 
 """ Comments
 1) if ever you want to merge occurrences of the same variable, at compiling time, 
-   you must add at the top fo the file:
+   you must add at the top of the file:
       from pycsp3.dashboard import options
       options.groupsumcoeffs=True
 """

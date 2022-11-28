@@ -474,7 +474,7 @@ class Node(Entity):
     def __strsmart__(self):
         if self.type.is_leaf():
             if self.type == TypeNode.COL:
-                return "%" + str(self.sons)
+                return "%" + str(self.sons)  # return "#" + str(self.sons)
             return str(self.sons)
         if self.type == TypeNode.ADD or self.type == TypeNode.SUB:
             msg = "Smart tuple must be of the form {eq|lt|le|ge|gt|ne}{var|integer}{+|-}{var|integer}"
