@@ -554,6 +554,8 @@ def abs(arg):
 
     :return: either a node, root of a tree expression, or the absolute value of the specified argument
     """
+    if isinstance(arg, PartialConstraint):
+        arg = auxiliary().replace_partial_constraint(arg)
     if isinstance(arg, Node) and arg.type == TypeNode.SUB:
         return Node.build(TypeNode.DIST, arg.sons)
     return Node.build(TypeNode.ABS, arg) if isinstance(arg, (Node, Variable)) else absPython(arg)
