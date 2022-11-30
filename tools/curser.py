@@ -495,6 +495,8 @@ class OpOverrider:
         return None
 
     def __eq__lv(self, other):  # lv for ListVar
+        if isinstance(other, int):
+            return [x == other for x in flatten(self)]
         if isinstance(other, (tuple, range)):
             other = list(other)
         if isinstance(other, list):
@@ -510,6 +512,8 @@ class OpOverrider:
         return list.__eq__(self, other)
 
     def __ne__lv(self, other):  # lv for ListVar
+        if isinstance(other, int):
+            return [x != other for x in flatten(self)]
         if isinstance(other, (tuple, range)):
             other = list(other)
         if isinstance(other, list):

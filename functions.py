@@ -866,6 +866,10 @@ def _lex(term, others, operator, matrix):
     if len(others) == 0:
         assert is_matrix(term, Variable)
         lists = [flatten(l) for l in term]
+    elif not is_1d_list(term, Variable):
+        l1, l2 = flatten(term), flatten(others)
+        assert len(l1) == len(l2)
+        lists = [l1, l2]
     else:
         assert is_1d_list(term, Variable) and all(is_1d_list(l, Variable) for l in others)
         lists = [flatten(term)] + [flatten(l) for l in others]
