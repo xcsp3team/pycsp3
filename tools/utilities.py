@@ -90,7 +90,7 @@ def symmetric_cells(n, m, i=None, j=None, sym=None):
                 return j * n + i
             return (n - 1 - j) * n + (n - 1 - i)  # d2 flip
 
-        if i is not None:
+        if i is not None:  # and so j is not None
             return [sqr_index(i, j, k) for k in TypeSquareSymmetry] if sym is None else sqr_index(i, j, sym)
         if sym is None:
             return [[sqr_index(i, j, k) for i in range(n) for j in range(m)] for k in TypeSquareSymmetry]

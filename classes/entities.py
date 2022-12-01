@@ -471,18 +471,18 @@ class Node(Entity):
             return len(self.sons) == len(other.sons) and all(self.sons[i].eq__safe(other.sons[i]) for i in range(len(self.sons)))
         return self.sons.eq__safe(other.sons) if isinstance(self.sons, Variable) else self.sons == other.sons
 
-    def __strsmart__(self):
+    def __str_hybrid__(self):
         if self.type.is_leaf():
             if self.type == TypeNode.COL:
-                return "%" + str(self.sons)  # return "#" + str(self.sons)
+                return "c" + str(self.sons)  # return "%" + str(self.sons)
             return str(self.sons)
         if self.type == TypeNode.ADD or self.type == TypeNode.SUB:
-            msg = "Smart tuple must be of the form {eq|lt|le|ge|gt|ne}{var|integer}{+|-}{var|integer}"
+            msg = "An hybrid tuple must be of the form {eq|lt|le|ge|gt|ne}{var|integer}{+|-}{var|integer}"
             assert len(self.sons) == 2, msg
             assert self.sons[0].type in (TypeNode.INT, TypeNode.COL) and self.sons[1].type in (TypeNode.INT, TypeNode.COL), msg
-            return self.sons[0].__strsmart__() + ("+" if self.type == TypeNode.ADD else "-") + self.sons[1].__strsmart__()
+            return self.sons[0].__str_hybrid__() + ("+" if self.type == TypeNode.ADD else "-") + self.sons[1].__str_hybrid__()
         else:
-            assert False, "Smart tuple must be of the form col(x)[+or-][integer]"
+            assert False, "An hybrid tuple must be of the form col(x)[+or-][integer]"
 
     def __str__(self):
         if self.type == TypeNode.COL:
