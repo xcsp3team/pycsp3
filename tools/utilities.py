@@ -100,6 +100,8 @@ def symmetric_cells(n, m, i=None, j=None, sym=None):
         def rect_index(i, j, k):
             if k == TypeRectangleSymmetry.R0:
                 return i * m + j
+            if k == TypeSquareSymmetry.R180:  # not present in Minizinc models
+                return (n - 1 - i) * m + (m - 1 - j)
             if k == TypeRectangleSymmetry.FX:  # x flip
                 return (n - 1 - i) * m + j
             return i * m + (m - 1 - j)  # y flip
@@ -109,6 +111,31 @@ def symmetric_cells(n, m, i=None, j=None, sym=None):
         if sym is None:
             return [[rect_index(i, j, k) for i in range(n) for j in range(m)] for k in TypeRectangleSymmetry]
         return [rect_index(i, j, sym) for i in range(n) for j in range(m)]
+
+
+def symmetries_of_pattern(pattern):
+    """
+    Returns all symmetric patterns of the specified one (can be useful for computing symmetric variants of polyominoes)
+
+    :param pattern: a pattern given as a set of relative coordinates
+    :return: all symmetric patterns of the specified one
+    """
+
+    def _normalize(p):
+        minx, miny = min(i for i, _ in p), min(j for _, j in p)
+        return tuple((i - minx, j - miny) for i, j in p) if minx != 0 or miny != 0 else tuple(p)
+
+    pattern = _normalize(pattern)
+    # computing the size of the square (so as to be able to produce symmetric patterns)
+    n = max(max(i, j) for i, j in pattern) + 1  # +1 because starting at 0
+    s1 = [tuple(sorted(list(symmetric_cells(n, n, i, j, k) for i, j in pattern))) for k in TypeSquareSymmetry]
+    s2 = {_normalize([(v // n, v % n) for v in t]) for t in s1}
+    s3 = []
+    for t in s2:
+        assert min(i for i, _ in t) == 0
+        gap = min(j for i, j in t if i == 0)
+        s3.append(tuple((i, j - gap) for i, j in t))
+    return s3  # [tuple(i * n + j for i, j in t) for t in s3]
 
 
 def flatten(*args, keep_none=False):

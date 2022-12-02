@@ -21,7 +21,7 @@ from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
 from pycsp3.tools.utilities import (
-    ANY, ALL, combinations, different_values, symmetric_cells, decrement, flatten, alphabet_positions, all_primes,
+    ANY, ALL, combinations, different_values, symmetric_cells, symmetries_of_pattern, decrement, flatten, alphabet_positions, all_primes,
     integer_scaling, to_ordinary_table, warning)
 
 from pycsp3.classes.auxiliary.conditions import lt, le, ge, gt, eq, ne, complement
