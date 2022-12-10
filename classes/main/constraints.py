@@ -912,6 +912,9 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             obj2 = PartialConstraint(ConstraintSum([obj2], [1], None))
         elif isinstance(obj2, ScalarProduct):
             obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))
+        elif isinstance(obj2, int):
+            aux = auxiliary().replace_partial_constraint(obj1)
+            return aux + obj2 if operator is TypeNode.ADD else aux - obj2
         elif not isinstance(obj2, PartialConstraint):
             error("The type of the operand of the partial constraint is wrong as it is " + str(type(obj2)))
         obj1, obj2 = (obj1, obj2) if not inverted else (obj2, obj1)  # we invert back

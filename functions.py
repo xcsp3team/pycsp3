@@ -921,7 +921,7 @@ def Precedence(scope, *, values=None, covered=False):
         return ECtr(ConstraintPrecedence(flatten(scope)))
         # assert all(scope[i].dom == scope[0].dom for i in range(1, len(scope)))
         # values = scope[0].dom.all_values()
-    assert isinstance(values, (range, list))
+    assert isinstance(values, (range, tuple, list))
     values = list(values)
     if len(values) > 1:
         return ECtr(ConstraintPrecedence(flatten(scope), values=values, covered=covered))
