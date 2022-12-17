@@ -247,3 +247,8 @@ class TypeSquareSymmetry(Enum):
 @unique
 class TypeRectangleSymmetry(Enum):
     R0, FX, FY = auto(3)
+
+
+@unique
+class TypeHexagonSymmetry(Enum):
+    R0, R60, R120, R180, R240, R300, L1, L2, L3, L4, L5, L6 = auto(12)  # 6 lines of symmetry (reflection)
