@@ -243,12 +243,170 @@ class TypeStatus(Enum):
 class TypeSquareSymmetry(Enum):
     R0, R90, R180, R270, FX, FY, FD1, FD2 = auto(8)
 
+    @staticmethod
+    def rotations():
+        return TypeSquareSymmetry.RO, TypeSquareSymmetry.R9O, TypeSquareSymmetry.R18O, TypeSquareSymmetry.R270
+
+    @staticmethod
+    def reflections():  # 4 lines of symmetry (reflection)
+        return TypeSquareSymmetry.FX, TypeSquareSymmetry.FY, TypeSquareSymmetry.FD1, TypeSquareSymmetry.FD2
+
+    def is_rotation(self):
+        return self in TypeSquareSymmetry.rotations()
+
+    def is_reflection(self):
+        return self in TypeSquareSymmetry.reflections()
+
+    def apply_on(self, n):
+        if not hasattr(TypeSquareSymmetry, '_cache'):
+            TypeSquareSymmetry._cache = {}
+        key = (self, n)
+        if key not in TypeSquareSymmetry._cache:
+            def rot(i, j):
+                if self is TypeSquareSymmetry.R0:
+                    return i * n + j
+                if self is TypeSquareSymmetry.R90:
+                    return j * n + (n - 1 - i)
+                if self is TypeSquareSymmetry.R180:
+                    return (n - 1 - i) * n + (n - 1 - j)
+                if self is TypeSquareSymmetry.R270:
+                    return (n - 1 - j) * n + i
+                if self is TypeSquareSymmetry.FX:  # x flip
+                    return (n - 1 - i) * n + j
+                if self is TypeSquareSymmetry.FY:  # y flip
+                    return i * n + (n - 1 - j)
+                if self is TypeSquareSymmetry.FD1:  # d1 flip
+                    return j * n + i
+                assert self is TypeSquareSymmetry.FD2  # d2 flip
+                return (n - 1 - j) * n + (n - 1 - i)
+
+            TypeSquareSymmetry._cache[key] = [[rot(i, j) for j in range(n)] for i in range(n)]
+
+        return TypeSquareSymmetry._cache[key]
+
 
 @unique
 class TypeRectangleSymmetry(Enum):
-    R0, FX, FY = auto(3)
+    R0, R180, FX, FY = auto(4)
+
+    @staticmethod
+    def rotations():
+        return TypeRectangleSymmetry.RO, TypeRectangleSymmetry.R18O
+
+    @staticmethod
+    def reflections():  # 2 lines of symmetry (reflection)
+        return TypeRectangleSymmetry.FX, TypeRectangleSymmetry.FY
+
+    def is_rotation(self):
+        return self in TypeRectangleSymmetry.rotations()
+
+    def is_reflection(self):
+        return self in TypeRectangleSymmetry.reflections()
+
+    def apply_on(self, n, m):
+        if not hasattr(TypeRectangleSymmetry, '_cache'):
+            TypeRectangleSymmetry._cache = {}
+        key = (self, n)
+        if key not in TypeRectangleSymmetry._cache:
+            def rot(i, j):
+                if self is TypeRectangleSymmetry.R0:
+                    return i * m + j
+                if self is TypeRectangleSymmetry.R180:  # not present in Minizinc models
+                    return (n - 1 - i) * m + (m - 1 - j)
+                if self is TypeRectangleSymmetry.FX:  # x flip
+                    return (n - 1 - i) * m + j
+                assert self is TypeRectangleSymmetry.FY  # y flip
+                return i * m + (m - 1 - j)
+
+            TypeRectangleSymmetry._cache[key] = [[rot(i, j) for j in range(m)] for i in range(n)]
+
+        return TypeRectangleSymmetry._cache[key]
 
 
 @unique
 class TypeHexagonSymmetry(Enum):
-    R0, R60, R120, R180, R240, R300, L1, L2, L3, L4, L5, L6 = auto(12)  # 6 lines of symmetry (reflection)
+    R0, R60, R120, R180, R240, R300, L1, L2, L3, L4, L5, L6 = auto(12)
+
+    # _cache = {}  # not possible with enum (so, it is built dynamically in Method apply_on)
+
+    @staticmethod
+    def rotations():
+        return (TypeHexagonSymmetry.R0, TypeHexagonSymmetry.R60, TypeHexagonSymmetry.R120,
+                TypeHexagonSymmetry.R180, TypeHexagonSymmetry.R240, TypeHexagonSymmetry.R300)
+
+    @staticmethod
+    def reflections():  # 6 lines of symmetry (reflection)
+        return (TypeHexagonSymmetry.L1, TypeHexagonSymmetry.L2, TypeHexagonSymmetry.L3,
+                TypeHexagonSymmetry.L4, TypeHexagonSymmetry.L5, TypeHexagonSymmetry.L6)
+
+    def is_rotation(self):
+        return self in TypeHexagonSymmetry.rotations()
+
+    def is_reflection(self):
+        return self in TypeHexagonSymmetry.reflections()
+
+    @staticmethod
+    def ring_cells(ring):
+        assert ring >= 2
+        base = 2 * ring - 2
+        return ([(0, j) for j in range(ring)]
+                + [(i + 1, ring + i) for i in range(ring - 1)]
+                + [(ring + i, base - i - 1) for i in range(ring - 1)]
+                + [(base, ring - i - 2) for i in range(ring - 1)]
+                + [(base - i - 1, 0) for i in range(base - 1)]
+                )
+
+    def apply_on(self, n):
+        if not hasattr(TypeHexagonSymmetry, '_cache'):
+            TypeHexagonSymmetry._cache = {}
+        key = (self, n)
+        if key not in TypeHexagonSymmetry._cache:
+            w = 2 * n - 1  # maximal width
+            widths = [w - abs(n - i - 1) for i in range(w)]
+            rings = [[], [(0, 0)]] + [TypeHexagonSymmetry.ring_cells(ring) for ring in range(2, n + 1)]
+            which_rings = [[n - min(i, w - 1 - i, j, widths[i] - 1 - j) for j in range(widths[i])] for i in range(w)]
+
+            if self.is_rotation():
+                def rot(i, j):
+                    ring = which_rings[i][j]
+                    skip = coeff * (ring - 1)
+                    gap = n - ring
+                    t = rings[ring]
+                    idx = t.index((i - gap, j - gap))
+                    k, l = t[(idx + skip) % len(t)]
+                    return k + gap, l + gap
+
+                coeff = TypeHexagonSymmetry.rotations().index(self)
+                TypeHexagonSymmetry._cache[key] = [[rot(i, j) for j in range(widths[i])] for i in range(w)]
+            else:
+                def rot(i, j):
+                    ring = which_rings[i][j]
+                    center = (ring + 1) // 2 - 1
+                    if self is TypeHexagonSymmetry.L1:
+                        pivot, offset = (ring - 1, 0), 0
+                    elif self is TypeHexagonSymmetry.L2:
+                        pivot, offset = (center, 0), -1 if ring % 2 == 0 else 0
+                    elif self is TypeHexagonSymmetry.L3:
+                        pivot, offset = (0, 0), 0
+                    elif self is TypeHexagonSymmetry.L4:
+                        pivot, offset = (0, center), 1 if ring % 2 == 0 else 0
+                    elif self is TypeHexagonSymmetry.L5:
+                        pivot, offset = (0, ring - 1), 0
+                    else:
+                        assert self is TypeHexagonSymmetry.L6
+                        pivot, offset = (center, ring - 1 + center), 1 if ring % 2 == 0 else 0
+                    gap = n - ring
+                    t = rings[ring]
+                    ind_pivot = t.index(pivot)
+                    ind_cell = t.index((i - gap, j - gap))
+                    diff = abs(ind_pivot - ind_cell)
+                    if ind_pivot <= ind_cell:  # pivot before
+                        ind = ind_pivot - diff + offset
+                    else:
+                        ind = ind_pivot + diff + offset
+                    k, l = t[(ind + len(t)) % len(t)]
+                    return k + gap, l + gap
+
+                TypeHexagonSymmetry._cache[key] = [[rot(i, j) for j in range(widths[i])] for i in range(w)]
+
+        return TypeHexagonSymmetry._cache[key]

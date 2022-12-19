@@ -73,44 +73,46 @@ def symmetric_cells(n, m, i=None, j=None, sym=None):
     """
     assert (i is None) == (j is None)
     if n == m:
-        def sqr_index(i, j, k):
-            if k == TypeSquareSymmetry.R0:
+        def square_index(i, j, sym):
+            if sym == TypeSquareSymmetry.R0:
                 return i * n + j
-            if k == TypeSquareSymmetry.R90:
+            if sym == TypeSquareSymmetry.R90:
                 return j * n + (n - 1 - i)
-            if k == TypeSquareSymmetry.R180:
+            if sym == TypeSquareSymmetry.R180:
                 return (n - 1 - i) * n + (n - 1 - j)
-            if k == TypeSquareSymmetry.R270:
+            if sym == TypeSquareSymmetry.R270:
                 return (n - 1 - j) * n + i
-            if k == k == TypeSquareSymmetry.FX:  # x flip
+            if sym == TypeSquareSymmetry.FX:  # x flip
                 return (n - 1 - i) * n + j
-            if k == TypeSquareSymmetry.FY:  # y flip
+            if sym == TypeSquareSymmetry.FY:  # y flip
                 return i * n + (n - 1 - j)
-            if k == TypeSquareSymmetry.FD1:  # d1 flip
+            if sym == TypeSquareSymmetry.FD1:  # d1 flip
                 return j * n + i
-            return (n - 1 - j) * n + (n - 1 - i)  # d2 flip
+            assert sym == TypeSquareSymmetry.FD2  # d2 flip
+            return (n - 1 - j) * n + (n - 1 - i)
 
         if i is not None:  # and so j is not None
-            return [sqr_index(i, j, k) for k in TypeSquareSymmetry] if sym is None else sqr_index(i, j, sym)
+            return [square_index(i, j, sym) for sym in TypeSquareSymmetry] if sym is None else square_index(i, j, sym)
         if sym is None:
-            return [[sqr_index(i, j, k) for i in range(n) for j in range(m)] for k in TypeSquareSymmetry]
-        return [sqr_index(i, j, sym) for i in range(n) for j in range(m)]
+            return [[square_index(i, j, sym) for i in range(n) for j in range(m)] for sym in TypeSquareSymmetry]
+        return [square_index(i, j, sym) for i in range(n) for j in range(m)]
 
     else:
-        def rect_index(i, j, k):
-            if k == TypeRectangleSymmetry.R0:
+        def rectangle_index(i, j, sym):
+            if sym == TypeRectangleSymmetry.R0:
                 return i * m + j
-            if k == TypeSquareSymmetry.R180:  # not present in Minizinc models
+            if sym == TypeRectangleSymmetry.R180:  # not present in Minizinc models
                 return (n - 1 - i) * m + (m - 1 - j)
-            if k == TypeRectangleSymmetry.FX:  # x flip
+            if sym == TypeRectangleSymmetry.FX:  # x flip
                 return (n - 1 - i) * m + j
-            return i * m + (m - 1 - j)  # y flip
+            assert sym == TypeRectangleSymmetry.FY  # y flip
+            return i * m + (m - 1 - j)
 
         if i is not None:
-            return [rect_index(i, j, k) for k in TypeRectangleSymmetry] if sym is not None else rect_index(i, j, sym)
+            return [rectangle_index(i, j, sym) for sym in TypeRectangleSymmetry] if sym is not None else rectangle_index(i, j, sym)
         if sym is None:
-            return [[rect_index(i, j, k) for i in range(n) for j in range(m)] for k in TypeRectangleSymmetry]
-        return [rect_index(i, j, sym) for i in range(n) for j in range(m)]
+            return [[rectangle_index(i, j, sym) for i in range(n) for j in range(m)] for sym in TypeRectangleSymmetry]
+        return [rectangle_index(i, j, sym) for i in range(n) for j in range(m)]
 
 
 def symmetries_of_pattern(pattern):
