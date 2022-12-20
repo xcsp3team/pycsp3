@@ -241,11 +241,11 @@ class TypeStatus(Enum):
 
 @unique
 class TypeSquareSymmetry(Enum):
-    R0, R90, R180, R270, FX, FY, FD1, FD2 = auto(8)
+    R90, R180, R270, FX, FY, FD1, FD2 = auto(7)  # R0 not indicated
 
     @staticmethod
     def rotations():
-        return TypeSquareSymmetry.RO, TypeSquareSymmetry.R9O, TypeSquareSymmetry.R18O, TypeSquareSymmetry.R270
+        return TypeSquareSymmetry.R9O, TypeSquareSymmetry.R18O, TypeSquareSymmetry.R270
 
     @staticmethod
     def reflections():  # 4 lines of symmetry (reflection)
@@ -257,28 +257,54 @@ class TypeSquareSymmetry(Enum):
     def is_reflection(self):
         return self in TypeSquareSymmetry.reflections()
 
+    @staticmethod
+    def symmetric_patterns(pattern):
+        """
+        Returns all symmetric patterns (including identity) of the specified one (can be useful for computing symmetric variants of polyominoes)
+
+        :param pattern: a pattern given as a set of relative coordinates
+        :return: all symmetric patterns of the specified one
+        """
+
+        def _normalize(p):
+            minx, miny = min(i for i, _ in p), min(j for _, j in p)
+            return tuple((i - minx, j - miny) for i, j in p) if minx != 0 or miny != 0 else tuple(p)
+
+        pattern = _normalize(pattern)
+        # computing the size of the square (so as to be able to produce symmetric patterns)
+        n = max(max(i, j) for i, j in pattern) + 1  # +1 because starting at 0
+        symmetries = [sym.apply_on(n) for sym in TypeSquareSymmetry]
+        s1 = [tuple(sorted(pattern))] + [tuple(sorted(sym[i][j] for i, j in pattern)) for sym in symmetries]
+        s2 = {_normalize(t) for t in s1}
+        s3 = []
+        for t in s2:
+            assert min(i for i, _ in t) == 0
+            gap = min(j for i, j in t if i == 0)
+            s3.append(tuple((i, j - gap) for i, j in t))
+        return s3  # [tuple(i * n + j for i, j in t) for t in s3]
+
     def apply_on(self, n):
         if not hasattr(TypeSquareSymmetry, '_cache'):
             TypeSquareSymmetry._cache = {}
         key = (self, n)
         if key not in TypeSquareSymmetry._cache:
             def rot(i, j):
-                if self is TypeSquareSymmetry.R0:
-                    return i * n + j
+                # if self is TypeSquareSymmetry.R0:
+                #     return i, j
                 if self is TypeSquareSymmetry.R90:
-                    return j * n + (n - 1 - i)
+                    return j, n - 1 - i
                 if self is TypeSquareSymmetry.R180:
-                    return (n - 1 - i) * n + (n - 1 - j)
+                    return n - 1 - i, n - 1 - j
                 if self is TypeSquareSymmetry.R270:
-                    return (n - 1 - j) * n + i
+                    return n - 1 - j, i
                 if self is TypeSquareSymmetry.FX:  # x flip
-                    return (n - 1 - i) * n + j
+                    return n - 1 - i, j
                 if self is TypeSquareSymmetry.FY:  # y flip
-                    return i * n + (n - 1 - j)
+                    return i, n - 1 - j
                 if self is TypeSquareSymmetry.FD1:  # d1 flip
-                    return j * n + i
+                    return j, i
                 assert self is TypeSquareSymmetry.FD2  # d2 flip
-                return (n - 1 - j) * n + (n - 1 - i)
+                return n - 1 - j, n - 1 - i
 
             TypeSquareSymmetry._cache[key] = [[rot(i, j) for j in range(n)] for i in range(n)]
 
@@ -287,11 +313,11 @@ class TypeSquareSymmetry(Enum):
 
 @unique
 class TypeRectangleSymmetry(Enum):
-    R0, R180, FX, FY = auto(4)
+    R180, FX, FY = auto(3)  # R0 not indicated
 
     @staticmethod
     def rotations():
-        return TypeRectangleSymmetry.RO, TypeRectangleSymmetry.R18O
+        return (TypeRectangleSymmetry.R18O,)
 
     @staticmethod
     def reflections():  # 2 lines of symmetry (reflection)
@@ -309,14 +335,14 @@ class TypeRectangleSymmetry(Enum):
         key = (self, n)
         if key not in TypeRectangleSymmetry._cache:
             def rot(i, j):
-                if self is TypeRectangleSymmetry.R0:
-                    return i * m + j
+                # if self is TypeRectangleSymmetry.R0:
+                #     return i, j
                 if self is TypeRectangleSymmetry.R180:  # not present in Minizinc models
-                    return (n - 1 - i) * m + (m - 1 - j)
+                    return n - 1 - i, m - 1 - j
                 if self is TypeRectangleSymmetry.FX:  # x flip
-                    return (n - 1 - i) * m + j
+                    return n - 1 - i, j
                 assert self is TypeRectangleSymmetry.FY  # y flip
-                return i * m + (m - 1 - j)
+                return i, m - 1 - j
 
             TypeRectangleSymmetry._cache[key] = [[rot(i, j) for j in range(m)] for i in range(n)]
 
@@ -325,13 +351,13 @@ class TypeRectangleSymmetry(Enum):
 
 @unique
 class TypeHexagonSymmetry(Enum):
-    R0, R60, R120, R180, R240, R300, L1, L2, L3, L4, L5, L6 = auto(12)
+    R60, R120, R180, R240, R300, L1, L2, L3, L4, L5, L6 = auto(11)  # R0 not included
 
     # _cache = {}  # not possible with enum (so, it is built dynamically in Method apply_on)
 
     @staticmethod
     def rotations():
-        return (TypeHexagonSymmetry.R0, TypeHexagonSymmetry.R60, TypeHexagonSymmetry.R120,
+        return (TypeHexagonSymmetry.R60, TypeHexagonSymmetry.R120,
                 TypeHexagonSymmetry.R180, TypeHexagonSymmetry.R240, TypeHexagonSymmetry.R300)
 
     @staticmethod
@@ -376,7 +402,7 @@ class TypeHexagonSymmetry(Enum):
                     k, l = t[(idx + skip) % len(t)]
                     return k + gap, l + gap
 
-                coeff = TypeHexagonSymmetry.rotations().index(self)
+                coeff = 1 + TypeHexagonSymmetry.rotations().index(self)
                 TypeHexagonSymmetry._cache[key] = [[rot(i, j) for j in range(widths[i])] for i in range(w)]
             else:
                 def rot(i, j):
