@@ -229,7 +229,7 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
     def _tuple_to_string(t):
         return "(" + ",".join(
             str(v) if isinstance(v, int) else
-            ("{" + ",".join(str(w) for w in sorted(v)) + "}") if isinstance(v, tuple) else
+            ("{" + ",".join(str(w) for w in sorted(v)) + "}") if isinstance(v, (tuple,list,set,frozenset)) else
             conditions.inside(v).str_tuple() if isinstance(v, range) else
             v if isinstance(v, str) else
             "*" if v == ANY else v.str_tuple()

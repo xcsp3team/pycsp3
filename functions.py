@@ -417,7 +417,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
             reordered_entities = []
             g = []
             for c in _entities:
-                if isinstance(c, ECtr):
+                if isinstance(c, ECtr) and c.blank_basic_attributes():
                     g.append(c)
                 else:
                     if len(g) != 0:

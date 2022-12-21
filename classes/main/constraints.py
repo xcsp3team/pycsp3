@@ -213,10 +213,11 @@ class ConstraintExtension(Constraint):
                             tpl = list(t[:j])
                         tpl.append(ConditionInterval(TypeConditionOperator.IN, v.start, v.stop - 1))
                     elif isinstance(v, (tuple, list, set, frozenset)):
-                        assert all(isinstance(w, int) for w in v)
+                        assert all(isinstance(w, (int, range)) for w in v)
                         if not tpl:
                             tpl = list(t[:j])
-                        tpl.append(ConditionSet(TypeConditionOperator.IN, set(v)))
+                        values = {u for w in v for u in ([w] if isinstance(w, int) else list(w))}
+                        tpl.append(ConditionSet(TypeConditionOperator.IN, values))  # set(v)))
                     else:
                         assert isinstance(v, Condition), "An element of this table should not be of type: " + str(type(v))
                         if tpl:
@@ -248,8 +249,8 @@ class ConstraintExtension(Constraint):
             h = hash(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
         except TypeError:
             for i, t in enumerate(table):
-                if any(isinstance(v, set) for v in t):
-                    table[i] = tuple(tuple(v) if isinstance(v, set) else v for v in t)
+                if any(isinstance(v, (list, set, frozenset)) for v in t):
+                    table[i] = tuple(tuple(v) if isinstance(v, (list, set, frozenset)) else v for v in t)
             h = hash(tuple(table))
 
         if len(scope) == 1:  # if arity 1
