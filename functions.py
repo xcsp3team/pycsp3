@@ -824,6 +824,7 @@ def AllEqualList(term, *others, excepting=None):
 
 def _ordered(term, others, operator, lengths):
     terms = flatten(term, others)
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
     checkType(terms, [Variable])
     checkType(operator, TypeOrderedOperator)
     checkType(lengths, ([int, Variable], type(None)))
