@@ -9,7 +9,7 @@ from pycsp3.tools.utilities import is_windows, BLUE, GREEN, ORANGE, RED, WHITE, 
 
 COLOR_PY, COLOR_JV = BLUE, ORANGE
 
-PYTHON_VERSIONS = ["python"]
+PYTHON_VERSIONS = ["python3"]
 waiting = False
 solver = Ace()
 
