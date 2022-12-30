@@ -1061,6 +1061,23 @@ def Exist(term, *others):
     return Count(term, others) >= 1
 
 
+def Hamming(term, *others):
+    """
+    Builds and returns a constraint Sum, corresponding to the Hamming distance of the two specified lists.
+
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :return: a constraint Sum
+    """
+    if isinstance(term, types.GeneratorType):
+        term = [l for l in term]
+    elif len(others) > 0:
+        term = list((term,) + others)
+    lists = [flatten(l) for l in term]
+    assert all(checkType(l, [Variable]) for l in lists) and len(lists) == 2 and len(lists[0]) == len(lists[1])
+    return Sum(lists[0][j] != lists[1][j] for j in range(len(lists[0])))
+
+
 def NValues(term, *others, excepting=None, condition=None):
     """
     Builds and returns a component NValues (that becomes a constraint when subject to a condition).
