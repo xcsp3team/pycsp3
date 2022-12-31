@@ -22,6 +22,8 @@ def cursing():
         if not OpOverrider.activated:
             return self.__add__(other)
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
+        if isinstance(other, ScalarProduct):
+            other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, (Node, PartialConstraint)):
             if self == 0:
                 return other
@@ -36,6 +38,8 @@ def cursing():
         if not OpOverrider.activated:
             return self.__sub__(other)
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
+        if isinstance(other, ScalarProduct):
+            other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, (Node, PartialConstraint)):
             if self == 0:
                 return other
