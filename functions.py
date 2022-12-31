@@ -872,11 +872,15 @@ def _lex(term, others, operator, matrix):
         assert len(l1) == len(l2)
         lists = [l1, l2]
     else:
-        assert is_1d_list(term, Variable) and all(is_1d_list(l, Variable) for l in others)
-        lists = [flatten(term)] + [flatten(l) for l in others]
-    assert is_matrix(lists, Variable)  # new check because some null cells (variables) may have been discarded
+        if len(others) == 1 and is_1d_list(others[0], int):
+            assert matrix is False
+            lists = [flatten(term)] + [flatten(others[0])]
+        else:
+            assert all(is_1d_list(l, Variable) for l in others)
+            lists = [flatten(term)] + [flatten(l) for l in others]
+    assert is_matrix(lists)  # new check because some null cells (variables) may have been discarded
     assert all(len(l) == len(lists[0]) for l in lists)
-    checkType(lists, [Variable])
+    assert all(checkType(l, [int, Variable] if i == 1 else [Variable]) for i, l in enumerate(lists))
     checkType(operator, TypeOrderedOperator)
     return ECtr(ConstraintLexMatrix(lists, operator)) if matrix else ECtr(ConstraintLex(lists, operator))
 
