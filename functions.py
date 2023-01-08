@@ -1021,6 +1021,24 @@ def Sum(term, *others, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))
 
 
+def Product(term, *others):
+    """
+    Builds and returns a node 'mul', root of a tree expression where specified arguments are children
+
+    :param term: the first term on which the product applies
+    :param others: the other terms (if any) on which the product applies
+    :return: a node, root of a tree expression
+    """
+
+    terms = flatten(term, others)
+    assert len(terms) > 0
+    for i, t in enumerate(terms):
+        if isinstance(t, PartialConstraint):
+            terms[i] = auxiliary().replace_partial_constraint(t)
+    checkType(terms, ([Variable], [Node]))
+    return Node.build(TypeNode.MUL, *terms)
+
+
 def Count(term, *others, value=None, values=None, condition=None):
     """
     Builds and returns a component Count (that becomes a constraint when subject to a condition).

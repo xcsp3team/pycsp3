@@ -155,7 +155,7 @@ def is_cube(c, types=None):
 
 def alphabet_positions(s):
     '''
-    Returns a list with the indexes of the letters (with respect to the 26 letters of the Latin alphabet) of the specified string.
+    Returns a tuple with the indexes of the letters (with respect to the 26 letters of the Latin alphabet) of the specified string.
 
     @param s: a string
     '''

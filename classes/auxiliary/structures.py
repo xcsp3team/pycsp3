@@ -70,15 +70,18 @@ class Diagram:
 class Automaton(Diagram):
 
     @staticmethod
-    def q(i, j=None):
+    def q(i, j=None, k=None):
         """
         Returns the name of a state from the specified argument(s)
 
         :param i: the index of the state
         :param j: a secondary index
+        :param k: a third index
         :return: the name of a state from the specified argument(s)
         """
-        return "q" + str(i) + ("" if j is None else "x" + str(j))
+        assert j is not None or k is None
+        suffix = ("x" + str(j) if j is not None else "") + ("x" + str(k) if k is not None else "")
+        return "q" + str(i) + suffix
 
     @staticmethod
     def states_for(*values):

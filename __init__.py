@@ -15,8 +15,8 @@ from pycsp3.functions import variant, subvariant, Var, VarArray, var, satisfy, m
 from pycsp3.functions import And, Or, Not, Xor, IfThen, IfThenElse, Iff, Slide
 from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, belong, not_belong, conjunction, disjunction
 from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, AllEqualList, Increasing, Decreasing, LexIncreasing, LexDecreasing, Precedence, Sum,
-                              Count, Exist, Hamming, NValues, Cardinality, Maximum, Minimum, MaximumArg, MinimumArg, Channel, NoOverlap, Cumulative, BinPacking,
-                              Knapsack, Flow, Circuit, Clause)
+                              Product, Count, Exist, Hamming, NValues, Cardinality, Maximum, Minimum, MaximumArg, MinimumArg, Channel, NoOverlap, Cumulative,
+                              BinPacking, Knapsack, Flow, Circuit, Clause)
 from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
