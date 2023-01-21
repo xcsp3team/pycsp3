@@ -1472,7 +1472,30 @@ def Clause(term, *others, phases=None):
 
 
 def _optimize(term, minimization):
-    ObjEntities.items = []  # TODO currently, we overwrite the objective is one was posted
+    if options.tocsp:
+        if options.tocsp[0] in ('(', '['):
+            assert len(options.tocsp) > 5 and options.tocsp[-1] in (')', ']') and options.tocsp[3] == ','
+            op, k = options.tocsp[1:3], int(options.tocsp[4:-1])
+        else:
+            op, k = "eq", int(options.tocsp)
+        if isinstance(term, Node):
+            #  term.mark_as_used() # TODO do we need to do that?
+            return satisfy(expr(op, term, k), no_comment_tags_extraction=True)
+        op = TypeConditionOperator.value_of(op)
+        if op == TypeConditionOperator.LT:
+            return satisfy(term < k)
+        if op == TypeConditionOperator.LE:
+            return satisfy(term <= k)
+        if op == TypeConditionOperator.GE:
+            return satisfy(term >= k)
+        if op == TypeConditionOperator.GT:
+            return satisfy(term > k)
+        if op == TypeConditionOperator.EQ:
+            return satisfy(term == k)
+        assert op == TypeConditionOperator.NE
+        return satisfy(term != k)
+
+    ObjEntities.items = []  # TODO currently, we overwrite the objective if one was posted
     if isinstance(term, PartialConstraint) and isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):
         l = term.constraint.arguments[TypeCtrArg.LIST]
         if len(l.content) == 1 and TypeCtrArg.COEFFS not in term.constraint.arguments:
@@ -1481,6 +1504,7 @@ def _optimize(term, minimization):
         term = Sum(term)  # to have a PartialConstraint
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"
     satisfy(pc == var for (pc, var) in auxiliary().collected())
+
     comment, _, tag, _ = comments_and_tags_of_parameters_of(function_name="minimize" if minimization else "maximize", args=[term])
     way = TypeCtr.MINIMIZE if minimization else TypeCtr.MAXIMIZE
     if isinstance(term, (Variable, Node)):

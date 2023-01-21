@@ -61,7 +61,7 @@ class Compilation:
 
 
 def _load_options():
-    options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "checker", "solver", "output")
+    options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output")
     options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
                       "keepSmartTransitions", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues", "groupsumcoeffs",
                       "usemeta", "debug", "mini", "uncurse")
