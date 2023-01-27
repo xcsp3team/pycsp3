@@ -1063,11 +1063,11 @@ def Count(term, *others, value=None, values=None, condition=None):
         value = 1
     assert value is None or values is None, str(value) + " " + str(values)
     values = list(values) if isinstance(values, (tuple, set)) else [value] if isinstance(value, (int, Variable)) else values
-    values = sorted(set(values))  # ordered set of values
     if isinstance(value, PartialConstraint):
         values = [auxiliary().replace_partial_constraint(value)]
     elif isinstance(value, Node):
         values = [auxiliary().replace_node(value)]
+    values = sorted(set(values))  # ordered set of values
     checkType(values, ([int], [Variable]))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 

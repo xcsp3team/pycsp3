@@ -534,7 +534,7 @@ class OpOverrider:
 
     @staticmethod
     def __getitem__shared_by_lv_and_li(array, indexes, *, lv):  # lv=True for ListVar, lv=False for ListInt
-        if isinstance(indexes, list):
+        if isinstance(indexes, (list, range)):
             indexes = tuple(indexes)
         if isinstance(indexes, tuple) and len(indexes) == 1:
             indexes = indexes[0]

@@ -147,7 +147,7 @@ class Constraint:
         items = list(self.arguments.items())
         condition = None  # items[-1][1].content.infix_string() if items[-1][0] == TypeCtrArg.CONDITION else None
         s_attributes = " ".join(str(t.name) + ": " + str(v) for (t, v) in self.attributes if t is not TypeCtrArg.TYPE)
-        s_arguments = ", ".join(str(v) for k, v in (items if condition is None else items[:-1]) if v.content is not None)
+        s_arguments = ", ".join(str(v) for k, v in (items if condition is None else items[:-1]) if v and v.content is not None)
         body = ("[" + s_attributes + "]" if len(s_attributes) > 0 else "") + "(" + s_arguments + ")"
         if len(self.attributes) > 0 and self.attributes[0][0] is TypeCtrArg.TYPE:  # objective
             s = str(self.name) + "(" + str(self.attributes[0][1]) + body + ")"
@@ -1026,11 +1026,22 @@ class _Auxiliary:
 
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
-        for c, x in self.cache:
-            if pc.constraint.equal_except_condition(c):
-                # if functions.protect().execute(pc.constraint.equal_except_condition(c)):
-                # if functions.protect().execute(pc.constraint == c):
-                return x
+        if not options.dontuseauxcache:
+            for c, x in self.cache:
+                if pc.constraint.equal_except_condition(c):
+                    # if functions.protect().execute(pc.constraint.equal_except_condition(c)):
+                    # if functions.protect().execute(pc.constraint == c):
+                    return x
+        else:  # partial use
+            if len(self.cache) > 0:
+                c, x = self.cache[0]
+                if pc.constraint.equal_except_condition(c):
+                    return x
+            if len(self.cache) > 1:
+                c, x = self.cache[-1]
+                if pc.constraint.equal_except_condition(c):
+                    return x
+
         if isinstance(pc.constraint, (ConstraintMinimum, ConstraintMaximum)):
             values = possible_range(pc.constraint.all_possible_values())
         else:
