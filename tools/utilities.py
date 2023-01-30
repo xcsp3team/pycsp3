@@ -385,7 +385,7 @@ def display_constraints(ctr_entities, separator=""):
 
 
 def structured_list(m, level=1):
-    if m is None or len(m) == 0:
+    if m is None or isinstance(m, (list, tuple)) and len(m) == 0:
         return "[]"
     if not isinstance(m, (list, tuple)):
         return str(m)

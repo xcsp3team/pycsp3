@@ -22,33 +22,46 @@ def cursing():
         if not OpOverrider.activated:
             return self.__add__(other)
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
+        if self == 0:
+            return other
         if isinstance(other, ScalarProduct):
             other = functions.Sum(other)  # to get a partial constraint
-        if isinstance(other, (Node, PartialConstraint)):
-            if self == 0:
-                return other
-            if isinstance(other, Node):
-                return Node.build(TypeNode.ADD, self, other)
-            if isinstance(other, PartialConstraint):
-                return Node.build(TypeNode.ADD, self, auxiliary().replace_partial_constraint(other))
-            # other cases ???  PartialConstraint of type sum ??
+        if isinstance(other, Node):
+            return Node.build(TypeNode.ADD, self, other)
+        if isinstance(other, PartialConstraint):
+            return Node.build(TypeNode.ADD, self, auxiliary().replace_partial_constraint(other))
+        # other cases ???  PartialConstraint of type sum ??
         return self.__add__(other)
 
     def _int_sub(self, other):
         if not OpOverrider.activated:
             return self.__sub__(other)
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
+        if self == 0:
+            return -other
         if isinstance(other, ScalarProduct):
             other = functions.Sum(other)  # to get a partial constraint
-        if isinstance(other, (Node, PartialConstraint)):
-            if self == 0:
-                return other
-            if isinstance(other, Node):
-                return Node.build(TypeNode.SUB, self, other)
-            if isinstance(other, PartialConstraint):
-                return Node.build(TypeNode.SUB, self, auxiliary().replace_partial_constraint(other))
-            # other cases ???  PartialConstraint of type sum ??
+        if isinstance(other, Node):
+            return Node.build(TypeNode.SUB, self, other)
+        if isinstance(other, PartialConstraint):
+            return Node.build(TypeNode.SUB, self, auxiliary().replace_partial_constraint(other))
+        # other cases ???  PartialConstraint of type sum ??
         return self.__sub__(other)
+
+    def _int_mod(self, other):
+        if not OpOverrider.activated:
+            return self.__mod__(other)
+        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
+        if self == 0:
+            return 0
+        if isinstance(other, ScalarProduct):
+            other = functions.Sum(other)  # to get a partial constraint
+        if isinstance(other, (Variable,Node)):
+            return Node.build(TypeNode.MOD, self, other)
+        if isinstance(other, PartialConstraint):
+            return Node.build(TypeNode.MOD, self, auxiliary().replace_partial_constraint(other))
+        # other cases ???  PartialConstraint of type sum ??
+        return self.__mod__(other)
 
     def _dict_add(self, other):  # for being able to merge dictionaries (to be removed when python 3.9 will be widely adopted)
         if isinstance(other, dict):
@@ -197,6 +210,7 @@ def cursing():
 
     curse(int, "__add__", _int_add)
     curse(int, "__sub__", _int_sub)
+    curse(int, "__mod__", _int_mod)
     curse(dict, "__add__", _dict_add)
     curse(tuple, "__mul__", _tuple_mul)
     # curse(list, "__getitem__", _list_getitem) # TODO: not working. why? because of forbiddenfruit?
@@ -564,7 +578,7 @@ class OpOverrider:
         if isinstance(indexes, tuple):
             assert len(indexes) > 1
             if any(isinstance(i, (Variable, Node, PartialConstraint, ECtr)) for i in indexes):  # this must be a constraint Element or Element-Matrix
-                assert is_matrix(array) and len(indexes) == 2, "A matrix is expected, with two indexes"
+                assert is_matrix(array) and len(indexes) == 2, "A matrix is expected, with two indexes" + str(array) + " " + str(indexes)
                 n, m = len(array), max(len(row) for row in array)
                 index0 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[0], node_too=True, values=range(n))
                 index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True, values=range(m))
@@ -613,6 +627,11 @@ class ListInt(list):
             assert is_containing(t2, (Variable, Node))
             return ScalarProduct(list(t2), list(t1))
         if is_containing(flatten(other), (Variable, Node)):
+            if len(self) == 1:
+                if isinstance(other, Variable):
+                    return self[0] * other
+                if isinstance(other, (tuple, list)) and len(other) == 1:
+                    return self[0] * other[0]
             return ScalarProduct(other, self)
         assert is_containing(self, (Variable, Node))
         return ScalarProduct(self, other)
