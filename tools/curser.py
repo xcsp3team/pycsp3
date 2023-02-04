@@ -56,7 +56,7 @@ def cursing():
             return 0
         if isinstance(other, ScalarProduct):
             other = functions.Sum(other)  # to get a partial constraint
-        if isinstance(other, (Variable,Node)):
+        if isinstance(other, (Variable, Node)):
             return Node.build(TypeNode.MOD, self, other)
         if isinstance(other, PartialConstraint):
             return Node.build(TypeNode.MOD, self, auxiliary().replace_partial_constraint(other))
@@ -461,6 +461,8 @@ class OpOverrider:
             return object.__or__(self, other)
         if isinstance(other, (tuple, list)):
             other = other[0] if len(other) == 1 else functions.conjunction(other)
+        if isinstance(other, (tuple, list)):
+            return Node.disjunction(self, *other)
         return Node.disjunction(self, other)
 
     def __and__(self, other):

@@ -181,7 +181,7 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
         error_if(any(v in Variable.name2obj for v in ext_name), "Some identifiers in " + str(ext_name) + " are used twice.")
     else:
         array_name = id if id else ext_name  # the specified name, if present, has priority
-        error_if(array_name is None or not _valid_identifier(array_name), "The variable identifier " + str(array_name) + " is not valid")
+        error_if(not _valid_identifier(array_name), "The variable identifier " + str(array_name) + " is not valid")
         error_if(array_name in Variable.name2obj, "The identifier " + str(array_name) + " is used twice. This is not possible")
 
     if comment is None and not isinstance(array_name, list):

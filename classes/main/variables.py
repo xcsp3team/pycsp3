@@ -2,6 +2,7 @@ import re
 
 from pycsp3.classes.auxiliary.ptypes import TypeVar
 from pycsp3.classes.main.domains import Domain
+from pycsp3.tools.utilities import error_if
 
 
 class Variable:
@@ -82,6 +83,14 @@ class Variable:
         self.negation = negation  # logical negation
         self.value = None  # value of the last found solution
         self.values = []  # values of the successive found solutions
+
+    def name(self, name):
+        def _valid_identifier(s):
+            return isinstance(s, str) and all(c.isalnum() or c == '_' for c in s)  # other characters to be allowed?
+
+        error_if(not _valid_identifier(name), "The identifier " + str(name) + " is not valid")
+        error_if(name in Variable.name2obj, "The identifier " + str(name) + " is used twice. This is not possible")
+        Variable.name2obj[name] = self
 
     def eq__safe(self, other):
         return isinstance(other, Variable) and self.id == other.id

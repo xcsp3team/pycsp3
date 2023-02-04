@@ -701,12 +701,13 @@ class Node(Entity):
     def _and_or(t, *args):
         assert t in {TypeNode.AND, TypeNode.OR}
         if len(args) == 1:
-            if isinstance(args[0], list):
+            if isinstance(args[0], (tuple, list, set, frozenset)):
                 args = tuple(args[0])
             if isinstance(args[0], types.GeneratorType):
                 args = tuple(list(args[0]))
         if len(args) == 0:
-            return True if t == TypeNode.AND else False
+            return t == TypeNode.AND
+        args = [Node.conjunction(arg) if isinstance(arg, (tuple, list, set, frozenset)) else arg for arg in args]
         return Node.build(t, *args) if len(args) > 1 else args[0]
 
     @staticmethod
