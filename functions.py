@@ -999,7 +999,7 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
-    checkType(terms, ([Variable], [Node], [PartialConstraint], [ScalarProduct], [ECtr]))
+    checkType(terms, ([Variable], [Node], [Variable,Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     if len(terms) == 0:
         return 0  # None
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
@@ -1081,6 +1081,17 @@ def Exist(term, *others):
     :return: a constraint Count
     """
     return Count(term, others) >= 1
+
+
+def Neither(term, *others):
+    """
+    Builds and returns a constraint Sum that checks if all terms evaluate to false
+
+    :param term: the first term on which the sum applies
+    :param others: the other terms (if any) on which the sum applies
+    :return: a constraint Sum
+    """
+    return Sum(term, others) == 0
 
 
 def Hamming(term, *others):

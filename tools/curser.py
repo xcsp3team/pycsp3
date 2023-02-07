@@ -622,6 +622,9 @@ class ListInt(list):
         return ListInt(super().__add__(other))
 
     def __mul__(self, other):
+        if is_1d_list(self, int) and is_1d_list(other, int):
+            assert len(self) == len(other)
+            return sum(self[i] * other[i] for i in range(len(self)))
         if is_matrix(self):
             assert is_matrix(other) and len(self) == len(other) and len(self[0]) == len(other[0])
             t1, t2 = zip(
