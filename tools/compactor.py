@@ -4,7 +4,7 @@ from collections import defaultdict
 from pycsp3.classes.auxiliary.ptypes import TypeCtrArg
 from pycsp3.classes.entities import CtrEntities, ObjEntities, AnnEntities, ESlide, EGroup, VarEntities
 from pycsp3.classes.main.variables import Variable
-from pycsp3.tools.utilities import flatten, is_containing
+from pycsp3.tools.utilities import flatten, is_containing, is_1d_list
 from pycsp3.dashboard import options
 
 
@@ -215,23 +215,26 @@ def compact(variables, *, preserve_order=False, group_args=False):
     t = []
     for part in partition:
         if isinstance(part, list):
-            if not preserve_order:
-                part = sorted(part, key=lambda x: [int(v) for v in re.split("\]\[", x.id[x.id.index("[") + 1:-1])])
-            if len(part) > 2:
-                compact = _simple_compact(part)
-                if compact is None:
-                    t.append(_complex_compact(part))
-                else:
-                    if preserve_order:
-                        expand = " ".join([_expand(e) for e in compact.split()])
-                        if expand not in complete_expanded_form:
-                            t.append(_complex_compact(part))
+            if not is_1d_list(part, Variable):
+                t.extend(part)
+            else:
+                if not preserve_order:
+                    part = sorted(part, key=lambda x: [int(v) for v in re.split("\]\[", x.id[x.id.index("[") + 1:-1])])
+                if len(part) > 2:
+                    compact = _simple_compact(part)
+                    if compact is None:
+                        t.append(_complex_compact(part))
+                    else:
+                        if preserve_order:
+                            expand = " ".join([_expand(e) for e in compact.split()])
+                            if expand not in complete_expanded_form:
+                                t.append(_complex_compact(part))
+                            else:
+                                t.append(compact)
                         else:
                             t.append(compact)
-                    else:
-                        t.append(compact)
-            else:
-                t.extend(part)
+                else:
+                    t.extend(part)
         else:
             t.append(part)
     return " ".join(str(s) for s in t)

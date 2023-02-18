@@ -645,6 +645,10 @@ def ift(*args):
     if res is None:
         return IfThenElse(args)
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
+    assert len(res) == 3
+    if isinstance(res[0], int):
+        assert res[0] in (0, 1)
+        return res[1] if res[0] == 1 else res[2]
     return Node.build(TypeNode.IF, *res)
 
 
@@ -999,7 +1003,7 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
-    checkType(terms, ([Variable], [Node], [Variable,Node], [PartialConstraint], [ScalarProduct], [ECtr]))
+    checkType(terms, ([Variable], [Node], [Variable, Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     if len(terms) == 0:
         return 0  # None
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
@@ -1080,7 +1084,16 @@ def Exist(term, *others):
     :param others: the other terms (if any) on which the count applies
     :return: a constraint Count
     """
-    return Count(term, others) >= 1
+    # terms = flatten(term, others)
+    # if len(terms) == 0:
+    #     return 0
+    # if len(terms) == 1:
+    #     return terms[0]
+    res = Count(term, others)
+    if isinstance(res, int):
+        assert res == 0
+        return 0  # for false
+    return res >= 1
 
 
 def Neither(term, *others):
@@ -1144,6 +1157,11 @@ def Cardinality(term, *others, occurrences, closed=False):
     :return: a Cardinality constraint
     """
     terms = flatten(term, others)
+    for i, t in enumerate(terms):
+        if isinstance(t, PartialConstraint):
+            terms[i] = auxiliary().replace_partial_constraint(t)
+        elif isinstance(t, Node):
+            terms[i] = [auxiliary().replace_node(t)]
     checkType(terms, [Variable])
     assert isinstance(occurrences, dict)
     values = list(occurrences.keys())
