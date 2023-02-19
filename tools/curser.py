@@ -48,6 +48,21 @@ def cursing():
         # other cases ???  PartialConstraint of type sum ??
         return self.__sub__(other)
 
+    def _int_floordiv(self, other):
+        if not OpOverrider.activated:
+            return self.__floordiv__(other)
+        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
+        if self == 0:
+            return 0
+        if isinstance(other, ScalarProduct):
+            other = functions.Sum(other)  # to get a partial constraint
+        if isinstance(other, (Variable, Node)):
+            return Node.build(TypeNode.DIV, self, other)
+        if isinstance(other, PartialConstraint):
+            return Node.build(TypeNode.DIV, self, auxiliary().replace_partial_constraint(other))
+        # other cases ???  PartialConstraint of type sum ??
+        return self.__floordiv__(other)
+
     def _int_mod(self, other):
         if not OpOverrider.activated:
             return self.__mod__(other)
@@ -210,6 +225,7 @@ def cursing():
 
     curse(int, "__add__", _int_add)
     curse(int, "__sub__", _int_sub)
+    curse(int, "__floordiv__", _int_floordiv)
     curse(int, "__mod__", _int_mod)
     curse(dict, "__add__", _dict_add)
     curse(tuple, "__mul__", _tuple_mul)
