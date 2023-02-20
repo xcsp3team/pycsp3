@@ -128,9 +128,9 @@ class Constraint:
                 records.append((args1[i].name, b))
         if len(records) > 2:
             return False  # too many differences
-        diffs = Diffs(records)
         if len(records) == 0:
-            return diffs
+            return False   # or None
+        diffs = Diffs(records)
         if Diffs.fusion and not all(
                 name in Diffs.fusion.argument_names for name in diffs.argument_names):  # diffs.argument_names != Diffs.fusion.argument_names:
             return False  # because arguments are not the same (so it is not possible to make a unique abstraction)

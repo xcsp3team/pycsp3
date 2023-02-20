@@ -49,8 +49,12 @@ def detecting_groups_recursively(ctr_entities):
             group.entities.append(e1)  # first constraint of the new group
             for j in range(i + 1, len(entities)):
                 e2 = entities[j]
-                if flags[j] is False and not isinstance(e2, EGroup):
+                if flags[j] is False and e2 is not None and not isinstance(e2, EGroup):
                     diffs = e2.constraint.close_to(e1.constraint)
+                    # if diffs is None:
+                    #     flags[j] = True
+                    #     entities[j] = None
+                    #     removal = True
                     if diffs is not False:
                         diffs.merge()  # merging flags of two lists, indicating if the length of argument contents is different
                         group.entities.append(e2)  # adding the constraint to the new group

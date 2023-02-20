@@ -1351,9 +1351,10 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     :param condition: a condition directly specified for the Cumulative (typically, None)
     :return: a component/constraint Cumulative
     """
-    if tasks:
+    if tasks is not None:
         assert origins is None and lengths is None and ends is None and heights is None
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
+        assert len(tasks) > 0, "a cumulative constraint without no tasks"
         assert isinstance(tasks, list) and len(tasks) > 0
         v = len(tasks[0])
         assert v in (3, 4) and any(isinstance(task, (tuple, list)) and len(task) == v for task in tasks)
