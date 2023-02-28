@@ -420,14 +420,28 @@ class OpOverrider:
     def __rfloordiv__(self, other):
         return Node.build(TypeNode.DIV, other, self)
 
+    @staticmethod
+    def _replace(arg1, arg2):
+        if isinstance(arg1, PartialConstraint) and isinstance(arg2, Node):
+            return auxiliary().replace_partial_constraint(arg1), arg2
+        if isinstance(arg2, PartialConstraint) and isinstance(arg1, Node):
+            return arg1, auxiliary().replace_partial_constraint(arg2)
+        return arg1, arg2
+
     def __lt__(self, other):
         if self is None or other is None:
             return object.__lt__(self, other)
+        if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
+            return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
+        self, other = OpOverrider._replace(self, other)
         return other.__gt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LT, self, other)
 
     def __le__(self, other):
         if self is None or other is None:
             return object.__le__(self, other)
+        if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
+            return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
+        self, other = OpOverrider._replace(self, other)
         return other.__ge__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LE, self, other)
 
     def __ge__(self, other):
@@ -435,6 +449,7 @@ class OpOverrider:
             return object.__ge__(self, other)
         if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
+        self, other = OpOverrider._replace(self, other)
         return other.__le__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GE, self, other)
 
     def __gt__(self, other):
@@ -442,6 +457,7 @@ class OpOverrider:
             return object.__gt__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
+        self, other = OpOverrider._replace(self, other)
         return other.__lt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GT, self, other)
 
     def __eq__(self, other):
@@ -455,6 +471,7 @@ class OpOverrider:
             other = other[0] if len(other) == 1 else functions.conjunction(other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
+        self, other = OpOverrider._replace(self, other)
         return other.__eq__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.EQ, self, other)
 
     def __ne__(self, other):
@@ -468,6 +485,7 @@ class OpOverrider:
             other = other[0] if len(other) == 1 else functions.conjunction(other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
+        self, other = OpOverrider._replace(self, other)
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):

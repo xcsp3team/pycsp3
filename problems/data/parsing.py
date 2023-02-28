@@ -25,7 +25,8 @@ class DataParser:
             values = data_value[1:-1].split(',')
         else:
             values = [data_value]
-        error_if(len(values) == 1 and not values[0].startswith("http") and not os.path.isfile(values[0]), " It seems that the filename " + values[0] + " is not found")
+        error_if(len(values) == 1 and not values[0].startswith("http") and not os.path.isfile(values[0]),
+                 " It seems that the filename " + values[0] + " is not found")
         self.lines = []
         for value in values:
             if value.startswith("http"):
@@ -94,6 +95,16 @@ def remaining_lines(skip_curr=False):
     if skip_curr:
         next_line()
     return _dataParser.lines[_dataParser.curr_line_index:]
+
+
+def next_lines(skip_curr=False, *, prefix_stop):
+    if skip_curr:
+        next_line()
+    left = _dataParser.curr_line_index
+    right = next((j for j in range(left, len(_dataParser.lines)) if _dataParser.lines[j].startswith(prefix_stop)), -1)
+    _dataParser.curr_line_index = right
+    _dataParser.curr_line_tokens = None
+    return _dataParser.lines[left:right]
 
 
 def number_in(line, offset=0):
