@@ -503,6 +503,9 @@ def satisfy(*args, no_comment_tags_extraction=False):
     to_post = _group(auxiliary().raw_collected())
     if to_post is not None:
         t.append(to_post)
+    to_post = _group((index, aux) in table for (index, aux, table) in auxiliary().collected_extension_for_element())
+    if to_post is not None:
+        t.append(to_post)
     return EToSatisfy(t)
 
 

@@ -129,7 +129,7 @@ class Constraint:
         if len(records) > 2:
             return False  # too many differences
         if len(records) == 0:
-            return False   # or None
+            return False  # or None
         diffs = Diffs(records)
         if Diffs.fusion and not all(
                 name in Diffs.fusion.argument_names for name in diffs.argument_names):  # diffs.argument_names != Diffs.fusion.argument_names:
@@ -610,8 +610,9 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             aux = auxiliary().replace_element_index(len(lst_flatten), index)
             if aux:  # this is the case if we need another variable to have a correct indexing
                 self.arg(TypeCtrArg.INDEX, aux, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
-                # below, should we replace ANY by a specific value (for avoid interchangeable values)?
-                functions.satisfy((index, aux) in {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom}, no_comment_tags_extraction=True)
+                # below, should we replace ANY by a specific value (for avoiding interchangeable values)?
+                auxiliary().extension_for_element(index, aux, {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom})
+                # functions.satisfy((index, aux) in {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom}, no_comment_tags_extraction=True)
             else:
                 self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
         if condition:
@@ -1002,6 +1003,7 @@ class _Auxiliary:
         self._introduced_variables = []
         self._collected_constraints = []
         self._collected_raw_constraints = []
+        self._collected_extension_for_element_constraints = []
         self.prefix = "aux_gb"
         self.cache = []
 
@@ -1103,6 +1105,9 @@ class _Auxiliary:
     def normalize_list(self, lst):
         return curser.ListVar([v if isinstance(v, Variable) else self.replace_int(v) if isinstance(v, int) else self.replace_node(v) for v in lst])
 
+    def extension_for_element(self, index, aux, table):
+        self._collected_extension_for_element_constraints.append((index, aux, table))
+
     def collected(self):
         t = self._collected_constraints
         self._collected_constraints = []
@@ -1111,6 +1116,11 @@ class _Auxiliary:
     def raw_collected(self):
         t = self._collected_raw_constraints
         self._collected_raw_constraints = []
+        return t
+
+    def collected_extension_for_element(self):
+        t = self._collected_extension_for_element_constraints
+        self._collected_extension_for_element_constraints = []
         return t
 
 
@@ -1140,7 +1150,8 @@ def global_indirection(c):
         if aux:  # this is the case if we need another variable to have a correct indexing
             c.arguments[TypeCtrArg.INDEX].content = aux
             # below, should we replace ANY by a specific value (for avoid interchangeable values)?
-            functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
+            auxiliary().extension_for_element(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
+            # functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
     if isinstance(c, ConstraintAllDifferent):
         lst = c.arguments[TypeCtrArg.LIST].content
         pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))
