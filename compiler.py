@@ -268,7 +268,7 @@ def _compile(disabling_opoverrider=False, verbose=1):
     if disabling_opoverrider:
         OpOverrider.disable()
 
-    if Compilation.filename is "" and options.output is not None:  # why the first part of the condition?
+    if Compilation.filename == "" and options.output is not None:  # why the first part of the condition?
         Compilation.set_path_file_name(options.output)
     if len(Compilation.filename) > 0:
         if Compilation.filename.endswith(".xml"):
