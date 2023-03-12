@@ -1366,6 +1366,7 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         else:
             origins, lengths, ends, heights = zip(*tasks)
     origins = flatten(origins)
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(origins, nodes_too=True)
     checkType(origins, [Variable])
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else flatten(lengths)
     checkType(lengths, ([Variable], [int]))
