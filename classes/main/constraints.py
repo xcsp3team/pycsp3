@@ -519,6 +519,7 @@ class ConstraintCardinality(Constraint):
         super().__init__(TypeCtr.CARDINALITY)
         self.arg(TypeCtrArg.LIST, lst)
         assert len(values) == len(occurs)
+        #  values = integers_to_string(values)  TODO (and compact form for occurs)
         self.arg(TypeCtrArg.VALUES, values, content_ordered=True, attributes=[(TypeXML.CLOSED, "true")] if closed else [])
         self.arg(TypeCtrArg.OCCURS, occurs, content_ordered=True)
 

@@ -700,10 +700,12 @@ class Node(Entity):
     @staticmethod
     def _and_or(t, *args):
         assert t in {TypeNode.AND, TypeNode.OR}
+        if len(args) > 0:
+            args = [arg for arg in args if not (isinstance(arg, (tuple, list, set, frozenset)) and len(arg) == 0)]
         if len(args) == 1:
             if isinstance(args[0], (tuple, list, set, frozenset)):
                 args = tuple(args[0])
-            if isinstance(args[0], types.GeneratorType):
+            if len(args) > 0 and isinstance(args[0], types.GeneratorType):
                 args = tuple(list(args[0]))
         if len(args) == 0:
             return t == TypeNode.AND
