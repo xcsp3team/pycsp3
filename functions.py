@@ -467,6 +467,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
             continue
         arg = list(arg) if isinstance(arg, types.GeneratorType) else arg
         comment_at_2 = any(comment != '' for comment in comments2[i])
+        tag_at_2 = any(tag != '' for tag in tags2[i])
         if isinstance(arg, (ECtr, EMetaCtr, ESlide)):  # case: simple constraint or slide
             to_post = _complete_partial_forms_of_constraints([arg])[0]
         elif isinstance(arg, Node):  # a predicate to be wrapped by a constraint (intension)
@@ -481,7 +482,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
                 to_post = _group(to_post)
         elif any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide
             to_post = _block(arg)
-        elif comment_at_2:  # Case: block
+        elif comment_at_2 or tag_at_2:  # Case: block
             if len(arg) == len(comments2[i]) == len(tags2[i]):  # if comments are not too wildly put
                 if isinstance(arg, tuple):
                     arg = list(arg)
