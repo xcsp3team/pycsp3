@@ -206,6 +206,8 @@ def integer_scaling(values):
 
 
 def decrement(t):
+    if isinstance(t, int):
+        return t-1
     if isinstance(t, types.GeneratorType):
         t = list(t)
     assert isinstance(t, list)
