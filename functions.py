@@ -483,6 +483,10 @@ def satisfy(*args, no_comment_tags_extraction=False):
         elif any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide
             to_post = _block(arg)
         elif comment_at_2 or tag_at_2:  # Case: block
+            if len(arg) == len(comments2[i]) - 1 == len(tags2[i]) - 1 and comments2[i][-1] == "" and tags2[i][-1] == "":
+                # this avoids the annoying case where there is a comma at the end of the last line in a block
+                comments2[i] = comments2[i][:-1]
+                tags2[i] = tags2[i][:-1]
             if len(arg) == len(comments2[i]) == len(tags2[i]):  # if comments are not too wildly put
                 if isinstance(arg, tuple):
                     arg = list(arg)
@@ -1109,6 +1113,17 @@ def Neither(term, *others):
     :return: a constraint Sum
     """
     return Sum(term, others) == 0
+
+
+def ExactlyOne(term, *others):
+    """
+    Builds and returns a constraint Sum that checks if exactly one term evaluates to true
+
+    :param term: the first term on which the sum applies
+    :param others: the other terms (if any) on which the sum applies
+    :return: a constraint Sum
+    """
+    return Sum(term, others) == 1
 
 
 def Hamming(term, *others):

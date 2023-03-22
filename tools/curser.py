@@ -18,6 +18,20 @@ unsafe_cache = False  # see for example Pic since the table is released as it oc
 
 
 def cursing():
+    def _bool_or(self, other):
+        if not OpOverrider.activated:
+            return self.__or__(other)
+        if isinstance(self, bool):
+            return True if self is True else other
+        return self.__or__(other)
+
+    def _bool_and(self, other):
+        if not OpOverrider.activated:
+            return self.__and__(other)
+        if isinstance(self, bool):
+            return False if self is False else other
+        return self.__and__(other)
+
     def _int_add(self, other):
         if not OpOverrider.activated:
             return self.__add__(other)
@@ -223,6 +237,8 @@ def cursing():
                 return True
         return self.__contains__(other)
 
+    curse(bool, "__or__", _bool_or)
+    curse(bool, "__and__", _bool_and)
     curse(int, "__add__", _int_add)
     curse(int, "__sub__", _int_sub)
     curse(int, "__floordiv__", _int_floordiv)
@@ -489,8 +505,8 @@ class OpOverrider:
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
-        # if isinstance(other, bool):
-        #     return self if other is False else True
+        if isinstance(other, bool):  # TODO should we keep it? or use an option -dontcombinebool
+            return self if other is False else True
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Or(self, other)
@@ -504,8 +520,8 @@ class OpOverrider:
         return Node.disjunction(self, other)
 
     def __and__(self, other):
-        # if isinstance(other, bool):
-        #     return self if other is True else False
+        if isinstance(other, bool):  # TODO should we keep it? or use an option -dontcombinebool
+            return self if other is True else False
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.And(self, other)
