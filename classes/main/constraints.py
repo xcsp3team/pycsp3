@@ -1027,6 +1027,9 @@ class _Auxiliary:
             self._collected_constraints.append((obj, var))
         return var
 
+    def n_introduced_variables(self):
+        return len(self._introduced_variables)
+
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
         if not options.dontuseauxcache:
@@ -1062,6 +1065,10 @@ class _Auxiliary:
         cc.constraint.set_condition(TypeConditionOperator.EQ, aux)
         self._collected_raw_constraints.append(cc)
         return functions.expr(op, aux, k)
+
+    def replace_constant(self, cst):
+        assert isinstance(cst, int)
+        return self.__replace(cst, Domain({cst}), systematically_append_obj=False)
 
     def replace_node(self, node, *, values=None):
         assert isinstance(node, Node)

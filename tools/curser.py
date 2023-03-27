@@ -748,18 +748,23 @@ class ListVar(list):
 
     # def __rmul__(self, other): return ListVar.__mul__(other, self)
 
-    def around(self, i, j, with_center=False):
-        assert is_matrix(self), "calling around should be made on a 2-dimensional array"
+    def around(self, i, j):
+        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
-        t = [self[i][j]] if with_center else []
-        return ListVar(t + [self[i + k][j + l] for k in [-1, 0, 1] for l in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + l < m and (k, l) != (0, 0)])
+        return ListVar([self[i + k][j + l] for k in [-1, 0, 1] for l in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + l < m and (k, l) != (0, 0)])
 
-    def cross(self, i, j, with_center=True):
-        assert is_matrix(self), "calling cross should be made on a 2-dimensional array"
+    def beside(self, i, j):
+        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
-        t = [self[i][j]] if with_center else []
+        return ListVar([self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
+
+    def cross(self, i, j, without_center=False):
+        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
+        n, m = len(self), len(self[i])
+        assert 0 <= i < n and 0 <= j < m
+        t = [self[i][j]] if without_center is False else []
         return ListVar(t + [self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
 
     def __str__(self):

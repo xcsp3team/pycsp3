@@ -451,6 +451,14 @@ def satisfy(*args, no_comment_tags_extraction=False):
 
     t = []
     for i, arg in enumerate(args):
+        if isinstance(arg, list) and any(v is None for v in arg):
+            # TODO: what if there is a trailing comma?
+            if len(arg) == len(comments2[i]):
+                comments2[i] = [c for i, c in enumerate(comments2[i]) if arg[i] is not None]
+            if len(arg) == len(tags2[i]):
+                tags2[i] = [c for i, c in enumerate(tags2[i]) if arg[i] is not None]
+            arg = [v for v in arg if v is not None]
+
         if isinstance(arg, list) and len(arg) > 0:
             if isinstance(arg[0], tuple):
                 arg = _reorder(arg)
@@ -1325,12 +1333,19 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
         origins = [(origins[0][i], origins[1][i]) for i in range(len(origins[0]))]
         lengths = [(lengths[0][i], lengths[1][i]) for i in range(len(lengths[0]))]
     checkType(origins, [int, Variable])
-    if not isinstance(origins[0], Variable) and not isinstance(origins[0], tuple):  # if 2d but not tuples
+    if not isinstance(origins[0], Variable) and not isinstance(origins[0], tuple):  # if 2D but not tuples
         origins = [tuple(origin) for origin in origins]
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else lengths
-    if not isinstance(lengths[0], (int, Variable)) and not isinstance(lengths[0], tuple):  # if 2d but not tuples
+    if not isinstance(lengths[0], (int, Variable)) and not isinstance(lengths[0], tuple):  # if 2D but not tuples
         lengths = [tuple(length) for length in lengths]
     checkType(lengths, ([int, Variable]))
+    if isinstance(origins, list) and len(origins) > 0 and isinstance(origins[0], tuple) and len(origins[0]) == 2:  # if 2D
+        n = auxiliary().n_introduced_variables()
+        # we replace constants (if any) by variables
+        xs = [auxiliary().replace_int(v) if isinstance(v, int) else v for (v, _) in origins]
+        ys = [auxiliary().replace_int(v) if isinstance(v, int) else v for (_, v) in origins]
+        if auxiliary().n_introduced_variables() != n:  # we rebuild origins so as to get only variables
+            origins = [(xs[i], ys[i]) for i in range(len(xs))]
     if options.mini:
         assert zero_ignored is False  # for the moment
         t = []

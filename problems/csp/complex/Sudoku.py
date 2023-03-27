@@ -17,7 +17,7 @@ n, clues = data  # n (order of the grid) is typically 9 -- if not 0, clues[i][j]
 base = int(math.sqrt(n))
 assert base * base == n
 
-# x[i][j] is the value in cell at row i and col j.
+# x[i][j] is the value of cell with coordinates (i,j)
 x = VarArray(size=[n, n], dom=range(1, n + 1))
 
 if not variant() or variant("opt"):
