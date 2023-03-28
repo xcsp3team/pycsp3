@@ -507,6 +507,9 @@ class OpOverrider:
     def __or__(self, other):
         if isinstance(other, bool):  # TODO should we keep it? or use an option -dontcombinebool
             return self if other is False else True
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+            assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Or(self, other)
@@ -522,6 +525,9 @@ class OpOverrider:
     def __and__(self, other):
         if isinstance(other, bool):  # TODO should we keep it? or use an option -dontcombinebool
             return self if other is True else False
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+            assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.And(self, other)
@@ -531,6 +537,10 @@ class OpOverrider:
         return Node.conjunction(self, other)
 
     def __invert__(self):
+        if isinstance(self, PartialConstraint):
+            x = auxiliary().replace_partial_constraint(self)
+            assert 0 <= x.dom.smallest_value() and x.dom.greatest_value() <= 1
+            self = x
         if isinstance(self, ECtr):
             gi = global_indirection(self.constraint)
             if gi is None:
@@ -539,6 +549,9 @@ class OpOverrider:
         return Variable.__invert__(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+            assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Xor(self, other)

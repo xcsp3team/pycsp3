@@ -6,8 +6,8 @@
   </variables>
   <constraints>
     <allDifferent note="all queens are put in different columns"> q[] </allDifferent>
-    <allDifferent note="controlling no two queens on the same upward diagonal"> add(q[0],0) add(q[1],1) add(q[2],2) add(q[3],3) add(q[4],4) add(q[5],5) add(q[6],6) add(q[7],7) add(q[8],8) add(q[9],9) </allDifferent>
-    <allDifferent note="controlling no two queens on the same downward diagonal"> sub(q[0],0) sub(q[1],1) sub(q[2],2) sub(q[3],3) sub(q[4],4) sub(q[5],5) sub(q[6],6) sub(q[7],7) sub(q[8],8) sub(q[9],9) </allDifferent>
+    <allDifferent note="controlling no two queens on the same upward diagonal"> q[0] add(q[1],1) add(q[2],2) add(q[3],3) add(q[4],4) add(q[5],5) add(q[6],6) add(q[7],7) add(q[8],8) add(q[9],9) </allDifferent>
+    <allDifferent note="controlling no two queens on the same downward diagonal"> q[0] sub(q[1],1) sub(q[2],2) sub(q[3],3) sub(q[4],4) sub(q[5],5) sub(q[6],6) sub(q[7],7) sub(q[8],8) sub(q[9],9) </allDifferent>
     <allDifferent note="all knights are put in different cells"> k[] </allDifferent>
     <group note="all knights form a cycle">
       <extension>

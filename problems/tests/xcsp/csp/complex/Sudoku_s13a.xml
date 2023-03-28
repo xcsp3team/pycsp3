@@ -1,6 +1,6 @@
 <instance format="XCSP3" type="CSP">
   <variables>
-    <array id="x" note="x[i][j] is the value in cell at row i and col j." size="[9][9]"> 1..9 </array>
+    <array id="x" note="x[i][j] is the value of cell with coordinates (i,j)" size="[9][9]"> 1..9 </array>
   </variables>
   <constraints>
     <allDifferent note="imposing distinct values on each row and each column">

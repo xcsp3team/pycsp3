@@ -6,57 +6,62 @@
     </array>
   </variables>
   <constraints>
-    <group note="precedence constraints">
-      <intension> le(add(%0,%1),%2) </intension>
-      <args> s[0] 0 s[1] </args>
-      <args> s[0] 0 s[2] </args>
-      <args> s[0] 0 s[3] </args>
-      <args> s[1] 8 s[5] </args>
-      <args> s[1] 8 s[10] </args>
-      <args> s[1] 8 s[14] </args>
-      <args> s[2] 4 s[6] </args>
-      <args> s[2] 4 s[7] </args>
-      <args> s[2] 4 s[12] </args>
-      <args> s[3] 6 s[4] </args>
-      <args> s[3] 6 s[8] </args>
-      <args> s[3] 6 s[9] </args>
-      <args> s[4] 3 s[19] </args>
-      <args> s[5] 8 s[29] </args>
-      <args> s[6] 5 s[26] </args>
-      <args> s[7] 9 s[11] </args>
-      <args> s[7] 9 s[18] </args>
-      <args> s[7] 9 s[26] </args>
-      <args> s[8] 2 s[13] </args>
-      <args> s[9] 7 s[15] </args>
-      <args> s[9] 7 s[24] </args>
-      <args> s[10] 9 s[19] </args>
-      <args> s[10] 9 s[25] </args>
-      <args> s[11] 2 s[13] </args>
-      <args> s[12] 6 s[16] </args>
-      <args> s[12] 6 s[17] </args>
-      <args> s[13] 3 s[16] </args>
-      <args> s[14] 9 s[24] </args>
-      <args> s[15] 10 s[20] </args>
-      <args> s[15] 10 s[21] </args>
-      <args> s[16] 6 s[21] </args>
-      <args> s[17] 5 s[19] </args>
-      <args> s[17] 5 s[21] </args>
-      <args> s[18] 3 s[23] </args>
-      <args> s[18] 3 s[28] </args>
-      <args> s[19] 7 s[22] </args>
-      <args> s[19] 7 s[24] </args>
-      <args> s[20] 2 s[27] </args>
-      <args> s[21] 7 s[22] </args>
-      <args> s[22] 2 s[23] </args>
-      <args> s[23] 3 s[29] </args>
-      <args> s[24] 3 s[29] </args>
-      <args> s[25] 7 s[30] </args>
-      <args> s[26] 8 s[27] </args>
-      <args> s[27] 3 s[30] </args>
-      <args> s[28] 7 s[31] </args>
-      <args> s[29] 2 s[31] </args>
-      <args> s[30] 2 s[31] </args>
-    </group>
+    <block note="precedence constraints">
+      <group>
+        <intension> le(s[0],%0) </intension>
+        <args> s[1] </args>
+        <args> s[2] </args>
+        <args> s[3] </args>
+      </group>
+      <group>
+        <intension> le(add(%0,%1),%2) </intension>
+        <args> s[1] 8 s[5] </args>
+        <args> s[1] 8 s[10] </args>
+        <args> s[1] 8 s[14] </args>
+        <args> s[2] 4 s[6] </args>
+        <args> s[2] 4 s[7] </args>
+        <args> s[2] 4 s[12] </args>
+        <args> s[3] 6 s[4] </args>
+        <args> s[3] 6 s[8] </args>
+        <args> s[3] 6 s[9] </args>
+        <args> s[4] 3 s[19] </args>
+        <args> s[5] 8 s[29] </args>
+        <args> s[6] 5 s[26] </args>
+        <args> s[7] 9 s[11] </args>
+        <args> s[7] 9 s[18] </args>
+        <args> s[7] 9 s[26] </args>
+        <args> s[8] 2 s[13] </args>
+        <args> s[9] 7 s[15] </args>
+        <args> s[9] 7 s[24] </args>
+        <args> s[10] 9 s[19] </args>
+        <args> s[10] 9 s[25] </args>
+        <args> s[11] 2 s[13] </args>
+        <args> s[12] 6 s[16] </args>
+        <args> s[12] 6 s[17] </args>
+        <args> s[13] 3 s[16] </args>
+        <args> s[14] 9 s[24] </args>
+        <args> s[15] 10 s[20] </args>
+        <args> s[15] 10 s[21] </args>
+        <args> s[16] 6 s[21] </args>
+        <args> s[17] 5 s[19] </args>
+        <args> s[17] 5 s[21] </args>
+        <args> s[18] 3 s[23] </args>
+        <args> s[18] 3 s[28] </args>
+        <args> s[19] 7 s[22] </args>
+        <args> s[19] 7 s[24] </args>
+        <args> s[20] 2 s[27] </args>
+        <args> s[21] 7 s[22] </args>
+        <args> s[22] 2 s[23] </args>
+        <args> s[23] 3 s[29] </args>
+        <args> s[24] 3 s[29] </args>
+        <args> s[25] 7 s[30] </args>
+        <args> s[26] 8 s[27] </args>
+        <args> s[27] 3 s[30] </args>
+        <args> s[28] 7 s[31] </args>
+        <args> s[29] 2 s[31] </args>
+        <args> s[30] 2 s[31] </args>
+      </group>
+    </block>
     <block note="resource constraints">
       <cumulative>
         <origins> s[1..2] s[4] s[6] s[8] s[12] s[14] s[21..22] s[24] </origins>
