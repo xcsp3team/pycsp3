@@ -67,11 +67,11 @@ class TypeCtr(AbstractType):
     AND, OR, NOT, XOR, IFF, IF_THEN, IF_THEN_ELSE = auto(7)
     SLIDE, SEQBIN = auto(2)
     MINIMIZE, MAXIMIZE = auto(2)  # used for posting objectives (not exactly constraints)
-
+    SUBSET_ALL_DIFFERENT = auto(0)  # experimental
 
 @unique
 class TypeCtrArg(AbstractType):
-    LIST, SET, MSET, MATRIX = auto(4)
+    LIST, SET, MSET, MATRIX, SUBSETS = auto(5)
     FUNCTION, SUPPORTS, CONFLICTS = auto(3)
     EXCEPT, VALUE, VALUES, TOTAL, COEFFS, CONDITION = auto(6)
     COST, OPERATOR, NUMBER = auto(3)

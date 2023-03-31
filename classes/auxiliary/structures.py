@@ -91,10 +91,10 @@ class Automaton(Diagram):
         :param values: a list of integers (or strings)
         :return: a list of names of states, one for each specified value
         """
-        values = flatten(values)
-        # if len(values) == 1:
-        #     if isinstance(values[0], types.GeneratorType):
-        #     values = [v for v in values[0]]
+        if len(values) == 1 and isinstance(values[0], (range, types.GeneratorType)):
+            values = list(values[0])
+        else:
+            values = flatten(values)
         assert len(values) > 0 and all(isinstance(v, (int, str)) for v in values), values
         return [Automaton.q(v) for v in values]
 

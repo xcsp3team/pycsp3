@@ -434,6 +434,12 @@ class ConstraintPrecedence(Constraint):
             self.arg(TypeCtrArg.VALUES, values, attributes=[(TypeCtrArg.COVERED, "true")] if covered else [], content_ordered=True)
 
 
+# class ConstraintSubsetAllDifferent(ConstraintUnmergeable):
+#     def __init__(self, subsets):
+#         super().__init__(TypeCtr.SUBSET_ALL_DIFFERENT)
+#         self.arg(TypeCtrArg.SUBSETS, subsets, lifted=True)
+
+
 ''' Counting and Summing Constraints '''
 
 

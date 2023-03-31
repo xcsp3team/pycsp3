@@ -14,9 +14,10 @@ from pycsp3.classes.main.annotations import (
 from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
-    ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum, ConstraintMinimum, ConstraintMaximumArg,
-    ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack,
-    ConstraintFlow, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
+    ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
+    ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
+    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary,
+    manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -502,7 +503,12 @@ def satisfy(*args, no_comment_tags_extraction=False):
                     if isinstance(arg[j], (ECtr, ESlide)):
                         arg[j].note(comments2[i][j]).tag(tags2[i][j])
                     elif comments2[i][j] or tags2[i][j]:
-                        arg[j] = _group(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
+                        if isinstance(arg[j], list) and len(arg[j]) > 0 and isinstance(arg[j][0], list):
+                            for k, kele in enumerate(arg[j]):
+                                arg[j][k] = _group(arg[j][k])
+                            arg[j] = _block(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
+                        else:
+                            arg[j] = _group(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
             to_post = _block(arg)
         else:  # Group
             to_post = _group(arg)
@@ -644,6 +650,8 @@ def imply(*args):
     res = manage_global_indirection(*args)
     if res is None:
         return IfThen(args)
+    if len(res) == 2 and isinstance(res[1], (tuple, list, set, frozenset)):
+        return [imply(res[0], v) for v in res[1]]
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     return Node.build(TypeNode.IMP, *res)
 

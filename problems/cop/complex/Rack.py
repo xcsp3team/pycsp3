@@ -47,6 +47,7 @@ satisfy(
     [Decreasing(m), imply(m[0] == m[1], nc[0][0] >= nc[1][0])]
 )
 
+
 minimize(
     # minimizing the total cost being paid for all racks
     Sum(c)

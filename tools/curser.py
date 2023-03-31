@@ -291,6 +291,7 @@ class OpOverrider:
         ECtr.__or__ = EMetaCtr.__or__ = Variable.__or__ = Node.__or__ = OpOverrider.__or__
         ECtr.__invert__ = Node.__invert__ = OpOverrider.__invert__  # we keep __invert__ for Variable
         ECtr.__xor__ = EMetaCtr.__xor__ = Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
+        Variable.__rshift__ = Node.__rshift__ = OpOverrider.__rshift__  # TODO ECtr and EMetaCtr too?
 
     @staticmethod
     def disable():
@@ -326,6 +327,7 @@ class OpOverrider:
         ECtr.__or__ = EMetaCtr.__or__ = Variable.__or__ = Node.__or__ = None
         ECtr.__invert__ = Node.__invert__ = None  # we keep __invert__ for Variable
         ECtr.__xor__ = EMetaCtr.__xor__ = Variable.__xor__ = Node.__xor__ = None
+        Variable.__rshift__ = Node.__rshift__ = None
 
         return OpOverrider
 
@@ -561,6 +563,9 @@ class OpOverrider:
         if isinstance(other, (tuple, list)):
             other = other[0] if len(other) == 1 else functions.conjunction(other)
         return Node.build(TypeNode.XOR, self, other)
+
+    def __rshift__(self, other):
+        return functions.imply(self, other)
 
     @staticmethod
     def __extract_vars_vals(self, other):
