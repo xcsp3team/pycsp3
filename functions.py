@@ -855,6 +855,10 @@ def _ordered(term, others, operator, lengths):
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
     checkType(terms, [Variable])
     checkType(operator, TypeOrderedOperator)
+    if isinstance(lengths, range):
+        lengths = list(lengths)
+    if isinstance(lengths, int):
+        lengths = [lengths] * (len(terms) - 1)
     checkType(lengths, ([int, Variable], type(None)))
     if lengths is not None:
         if len(terms) == len(lengths):
@@ -1022,7 +1026,7 @@ def Sum(term, *others, condition=None):
             #    terms = [term for i, term in enumerate(terms) if coeffs[i] != 0]
             #    coeffs = [coeff for coeff in coeffs if coeff != 0]
             # if all(c == 1 for c in coeffs): coeffs = None
-            checkType(coeffs, ([Variable, int], type(None)))
+            checkType(coeffs, ([Node, Variable, int], type(None)))
             OpOverrider.enable()
         return terms, coeffs
 

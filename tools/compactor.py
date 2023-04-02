@@ -267,7 +267,7 @@ def _compact_constraint_arguments(arguments):
     for arg in list(arguments.values()):
         if isinstance(arg.content, list) and len(arg.content) > 0 and arg.content_compressible:
             if not isinstance(arg.content[0], list):  # It is only one list
-                if isinstance(arg.content[0], int) and str(arg.name) in ["coeffs", "values", "sizes", "lengths", "heights", "weights", "balance"]:
+                if isinstance(arg.content[0], int) and str(arg.name) in ["coeffs", "values", "sizes", "lengths", "heights", "weights", "profits", "balance"]:
                     # TODO still other arguments to be added?
                     arg.content = _compact_values(arg.content, 3)
                 else:

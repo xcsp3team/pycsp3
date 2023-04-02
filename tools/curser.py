@@ -507,7 +507,8 @@ class OpOverrider:
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
-        if isinstance(other, bool):  # TODO should we keep it? or use an option -dontcombinebool
+        if isinstance(other, bool) and len(queue_in) == 0:
+            # TODO how to extend it (without second condition part) ? should we use an option -dontcombinebool (pb with JapanEncoding)
             return self if other is False else True
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
@@ -525,8 +526,11 @@ class OpOverrider:
         return Node.disjunction(self, other)
 
     def __and__(self, other):
-        if isinstance(other, bool):  # TODO should we keep it? or use an option -dontcombinebool
+        if isinstance(other, bool) and len(queue_in) == 0:
+            # TODO how to extend it (without second condition part) ? should we use an option -dontcombinebool (pb with JapanEncoding)
             return self if other is True else False
+        # if isinstance(other, bool):  # TODO should we keep it? or use an option -dontcombinebool
+        #     return self if other is True else False
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
             assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
