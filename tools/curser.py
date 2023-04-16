@@ -994,15 +994,18 @@ def cp_array(*l):
     """
     if len(l) == 1:
         l = l[0]
-    if isinstance(l, (tuple, set, frozenset, types.GeneratorType)):
+    if isinstance(l, (tuple, set, frozenset, zip, types.GeneratorType)):
         l = list(l)
     assert isinstance(l, list)
     if len(l) == 0:
         return l
-    if isinstance(l[0], (list, types.GeneratorType)):
-        assert all(isinstance(t, (list, types.GeneratorType)) for t in l)
+    if isinstance(l[0], (tuple, list, types.GeneratorType)):
+        assert all(isinstance(t, (tuple, list, types.GeneratorType)) for t in l)
         res = [cp_array(t) for t in l]
-        return ListInt(res) if isinstance(res[0], ListInt) else ListVar(res)
+        if all(len(t) == 0 or isinstance(t, ListInt) for t in res):
+            return ListInt(res)
+        assert all(len(t) == 0 or isinstance(t, ListVar) for t in res)
+        return ListVar(res)
     typ = unique_type_in(l)
     if typ is int:
         return ListInt(l)

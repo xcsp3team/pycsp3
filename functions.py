@@ -1319,6 +1319,19 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
 ''' Packing and Scheduling Constraints '''
 
 
+def _is_mixed_list(t, index=-1):
+    present_int, present_var = False, False
+    for v in t:
+        v = v if index == -1 else v[index]
+        if isinstance(v, int):
+            present_int = True
+        elif isinstance(v, Variable):
+            present_var = True
+        if present_int and present_var:
+            return True
+    return False
+
+
 def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
     """
     Builds and returns a constraint NoOverlap.
@@ -1352,12 +1365,16 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
         lengths = [tuple(length) for length in lengths]
     checkType(lengths, ([int, Variable]))
     if isinstance(origins, list) and len(origins) > 0 and isinstance(origins[0], tuple) and len(origins[0]) == 2:  # if 2D
-        n = auxiliary().n_introduced_variables()
-        # we replace constants (if any) by variables
-        xs = [auxiliary().replace_int(v) if isinstance(v, int) else v for (v, _) in origins]
-        ys = [auxiliary().replace_int(v) if isinstance(v, int) else v for (_, v) in origins]
-        if auxiliary().n_introduced_variables() != n:  # we rebuild origins so as to get only variables
-            origins = [(xs[i], ys[i]) for i in range(len(xs))]
+        # currently, only variables are authorized in origins
+        origins = [(auxiliary().replace_int(u) if isinstance(u, int) else u, auxiliary().replace_int(v) if isinstance(v, int) else v)
+                   for (u, v) in origins]
+    if isinstance(lengths, list) and len(lengths) > 0 and isinstance(lengths[0], tuple) and len(lengths[0]) == 2:  # if 2D
+        # currently, either only variables or only integers
+        b0 = _is_mixed_list(lengths, 0)
+        b1 = _is_mixed_list(lengths, 1)
+        if b0 or b1:
+            lengths = [(auxiliary().replace_int(u) if b0 and isinstance(u, int) else u, auxiliary().replace_int(v) if b1 and isinstance(v, int) else v)
+                       for (u, v) in lengths]
     if options.mini:
         assert zero_ignored is False  # for the moment
         t = []
@@ -1410,10 +1427,16 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
             origins, lengths, ends, heights = zip(*tasks)
     origins = flatten(origins)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(origins, nodes_too=True)
+    if _is_mixed_list(origins):
+        origins = auxiliary().replace_ints(origins)
     checkType(origins, [Variable])
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else flatten(lengths)
+    if _is_mixed_list(lengths):
+        lengths = auxiliary().replace_ints(lengths)
     checkType(lengths, ([Variable], [int]))
     heights = [heights for _ in range(len(origins))] if isinstance(heights, int) else flatten(heights)
+    if _is_mixed_list(heights):
+        heights = auxiliary().replace_ints(heights)
     for i, h in enumerate(heights):
         if isinstance(h, PartialConstraint):
             heights[i] = auxiliary().replace_partial_constraint(h)

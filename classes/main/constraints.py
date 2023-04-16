@@ -109,7 +109,7 @@ class Constraint:
         args1, args2 = list(self.arguments.values()), list(other.arguments.values())
         if len(args1) != len(args2):
             return False
-        if any(args1[i].attributes != args2[i].attributes or args1[i].lifted != args2[i].lifted for i in range(len(args1))):
+        if any(args1[i].name != args2[i].name or args1[i].attributes != args2[i].attributes or args1[i].lifted != args2[i].lifted for i in range(len(args1))):
             return False
         return any(type(args1[i].content) == type(args2[i].content) for i in range(len(args1)))
 
@@ -333,7 +333,7 @@ class ConstraintExtension(Constraint):
             return False
         if TypeCtrArg.SUPPORTS in self.arguments and self.arguments[TypeCtrArg.SUPPORTS].content != other.arguments[TypeCtrArg.SUPPORTS].content:
             return False
-        elif TypeCtrArg.CONFLICTS in self.arguments and self.arguments[TypeCtrArg.CONFLICTS].content != other.arguments[TypeCtrArg.CONFLICTS].content:
+        if TypeCtrArg.CONFLICTS in self.arguments and self.arguments[TypeCtrArg.CONFLICTS].content != other.arguments[TypeCtrArg.CONFLICTS].content:
             return False
         return Diffs([(TypeCtrArg.LIST, False)])
 
@@ -1107,10 +1107,10 @@ class _Auxiliary:
 
     def replace_int(self, v):
         assert isinstance(v, int)
-        # if v in _Auxiliary.cache_ints:  # for the moment, we do not use it
+        # if v in _Auxiliary.cache_ints:  # for the moment, we do not use it because it may cause some problems with some constraints (similar variables)
         #     return _Auxiliary.cache_ints[v]
         aux = self.__replace(None, Domain(v), systematically_append_obj=False)
-        _Auxiliary.cache_ints[v] = aux
+        # _Auxiliary.cache_ints[v] = aux
         return aux
 
     def replace_ints(self, lst):
