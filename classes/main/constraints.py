@@ -776,6 +776,34 @@ class ConstraintInstantiation(Constraint):
         self.arg(TypeCtrArg.VALUES, values, content_ordered=True)
 
 
+''' Slide Constraints (when posted directly) '''
+
+
+class ConstraintSlide(ConstraintUnmergeable):
+    def __init__(self, variables, slide_expression, circular=None, offset=None, collect=None):
+        super().__init__(TypeCtr.SLIDE)
+        assert slide_expression is not None  # the meta-constraint is defined directly by the user
+        variables = list(variables) if isinstance(variables, tuple) else variables
+        if circular is True:
+            self.attributes.append((TypeXML.CIRCULAR, "true"))
+        n_offsets = 0 if offset is None else 1 if isinstance(offset, int) else len(offset)
+        n_collects = 0 if collect is None else 1 if isinstance(collect, int) else len(collect)
+        assert n_offsets == 0 or n_collects == 0 or n_offsets == n_collects
+        k = max(1, n_offsets, n_collects)
+        if k == 1:  # only one list
+            atts = ([(TypeXML.OFFSET, offset)] if offset is not None and offset != 1 else []) + \
+                   ([(TypeXML.COLLECT, collect)] if collect is not None and collect != 1 else [])
+            self.arg(TypeCtrArg.LIST, flatten(variables), content_ordered=True, attributes=atts)
+        else:
+            assert isinstance(variables, list) and len(variables) == k and all(isinstance(l, (list, tuple)) for l in variables)
+            atts = [
+                ([(TypeXML.OFFSET, offset[i])] if offset and offset[i] != 1 else [])
+                + ([(TypeXML.COLLECT, collect[i])] if collect and collect[i] != 1 else [])
+                for i in range(k)]
+            self.arg(TypeCtrArg.LIST, variables, lifted=True, content_ordered=True, attributes=atts)
+        self.arg(TypeCtrArg.INTENTION, slide_expression)  # possibly transformed into extension later in xcsp
+
+
 ''' PartialConstraints and ScalarProduct '''
 
 

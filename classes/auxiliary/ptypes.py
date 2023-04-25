@@ -85,6 +85,7 @@ class TypeCtrArg(AbstractType):
     SIZE, ROOT, IMAGE, GRAPH, ROW, EXPRESSION, TYPE = auto(7)
     START_INDEX, START_ROW_INDEX, START_COL_INDEX = auto(3)
     COVERED = auto()
+    INTENTION = auto()  # for slides directly posted
 
 
 @unique

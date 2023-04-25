@@ -16,7 +16,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
     ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
-    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, PartialConstraint, ScalarProduct, auxiliary,
+    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary,
     manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
@@ -379,7 +379,7 @@ def Iff(*args):
     return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
-def Slide(*args):
+def Slide(*args, expression=None, circular=None, offset=None, collect=None):
     """
     Builds a meta-constraint Slide from the specified arguments.
     Slide((x[i], x[i + 1]) in table for i in range(n - 1))
@@ -390,6 +390,8 @@ def Slide(*args):
     :param args: a tuple of constraints
     :return: a meta-constraint Slide
     """
+    if expression is not None:  # the meta-constraint is defined directly by the user
+        return ECtr(ConstraintSlide(*args, expression, circular, offset, collect))
     # we cannot directly complete partial forms (because it is executed before the analysis of the parameters of satisfy
     entities = _wrap_intension_constraints(flatten(*args))
     checkType(entities, [ECtr, bool])
