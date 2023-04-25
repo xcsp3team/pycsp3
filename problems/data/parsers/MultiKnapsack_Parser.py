@@ -1,7 +1,7 @@
 from pycsp3.problems.data.parsing import *
 
 n = next_int()  # number of variables
-e = next_int()  # number rof constraints
+e = next_int()  # number of constraints
 next_line()
 
 objective_coefficients = [next_int() for _ in range(n)]  # objective coefficients

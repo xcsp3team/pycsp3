@@ -390,8 +390,8 @@ def Slide(*args):
     :param args: a tuple of constraints
     :return: a meta-constraint Slide
     """
-    entities = _wrap_intension_constraints(
-        flatten(*args))  # we cannot directly complete partial forms (because it is executed before the analysis of the parameters of satisfy
+    # we cannot directly complete partial forms (because it is executed before the analysis of the parameters of satisfy
+    entities = _wrap_intension_constraints(flatten(*args))
     checkType(entities, [ECtr, bool])
     return ESlide([EToGather(entities)])
 
@@ -1031,6 +1031,8 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    if any(v is None or (isinstance(v, int) and v == 0) for v in terms):
+        terms = [v for v in terms if v is not None and not (isinstance(v, int) and v == 0)]
     checkType(terms, ([Variable], [Node], [Variable, Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     if len(terms) == 0:
         return 0  # None

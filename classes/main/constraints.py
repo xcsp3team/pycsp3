@@ -860,7 +860,11 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             return Node.build(TypeNode.MUL, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.MUL, other)
         if not isinstance(self.constraint, ConstraintSum):
             return Node.build(TypeNode.MUL, self._simplify_operation(other))
+        # we have a ConstraintSum (self) and an integer (other)
+
         args = self.constraint.arguments
+        if TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
+            return auxiliary().replace_partial_constraint(self) * other
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
         value = args[TypeCtrArg.CONDITION]
         del args[TypeCtrArg.CONDITION]  # we delete and put back below this argument so as to have arguments in the right order

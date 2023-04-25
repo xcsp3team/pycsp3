@@ -38,7 +38,8 @@ class Diagram:
             state1, label, state2 = transition
             assert isinstance(state1, str) and isinstance(state2, str), Diagram.MSG_STATE
             label = inside(label) if isinstance(label, range) else set(label) if isinstance(label, (tuple, list)) else label
-            if (state1, label, state2) not in t:
+            check_if_already_present = False  # TODO making it as an option?
+            if not check_if_already_present or (state1, label, state2) not in t:
                 t.append((state1, label, state2))
         return t
 
