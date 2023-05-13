@@ -276,9 +276,14 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     else:  # It is a table constraint
         if not hasattr(left_operand, '__iter__'):
             left_operand = [left_operand]
+        assert isinstance(right_operand, list)
         if not bool_value and len(right_operand) == 0:
             return None
         # TODO what to do if the table is empty and bool_value is true? an error message ?
+        if len(left_operand) == 1:
+            if not is_1d_list(right_operand, int):
+                assert all(isinstance(v, (tuple, list)) and len(v) == 1 for v in right_operand)
+                right_operand = [v[0] for v in right_operand]
         ctr = _Extension(scope=flatten(left_operand), table=right_operand, positive=bool_value)  # TODO ok for using flatten? (before it was list())
     return ctr
 
@@ -1347,9 +1352,12 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
     :param zero_ignored: if True, the tasks with length 0 must be discarded
     :return: a constraint NoOverlap
     """
-    if tasks:
+    if tasks is not None:
         assert origins is None and lengths is None
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
+        if len(tasks) <= 1:
+            warning("A constraint NoOverlap discarded because defined with " + str(len(tasks)) + " task")
+            return None
         assert isinstance(tasks, list) and len(tasks) > 0
         assert any(isinstance(task, (tuple, list)) and len(task) == 2 for task in tasks)
         origins, lengths = zip(*tasks)
@@ -1421,6 +1429,14 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     if tasks is not None:
         assert origins is None and lengths is None and ends is None and heights is None
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
+        if len(tasks) == 0:
+            warning("A constraint Cumulative transformed because defined with 0 task")
+            return auxiliary().replace_int(0)
+        if len(tasks) == 1:
+            warning("A constraint Cumulative transformed because defined with 1 task only")
+            h = tasks[0][2 if len(tasks[0]) == 3 else 3]  # the height fo the task
+            return h if isinstance(h, Variable) else auxiliary().replace_int(h)
+
         assert len(tasks) > 0, "a cumulative constraint without no tasks"
         assert isinstance(tasks, list) and len(tasks) > 0
         v = len(tasks[0])

@@ -1,12 +1,11 @@
 """
 See "Teaching Constraints through Logic Puzzles" by Peter Szeredi
-
 """
 
 from pycsp3 import *
 
-n, m = 7, 4  # data.n, data.m
-# assert 0 < m <= n
+n, m = data or (7, 4)  # data.n, data.m
+assert n == 7 and 0 < m <= n  # for the moment, n = 7 (until we prove that nSegments is correct; see below)
 # clues = data.clues
 nSegments = ((n - 3) // 2) * 4  # it is correct for n = 7, but for other orders?
 

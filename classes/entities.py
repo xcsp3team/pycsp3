@@ -8,8 +8,8 @@ from pycsp3.classes import main
 from pycsp3.classes.auxiliary.ptypes import auto
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
-from pycsp3.tools.utilities import flatten, is_containing, warning
-from pycsp3.classes.auxiliary.ptypes import TypeCtr, TypeConditionOperator, TypeOrderedOperator
+from pycsp3.tools.utilities import flatten, is_containing, warning, ANY, combinations
+from pycsp3.classes.auxiliary.ptypes import TypeCtr, TypeCtrArg, TypeConditionOperator, TypeOrderedOperator
 from pycsp3 import tools
 
 
@@ -138,6 +138,16 @@ class ECtr(Entity):
             + "\n\t or you must post separately the two constraints"
             + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide\n")
         return True
+
+    def to_table(self):  # experimental
+        c = self.constraint
+        if c.name == TypeCtr.ALL_DIFFERENT and c.arguments[TypeCtrArg.LIST].lifted and TypeCtrArg.EXCEPT not in c.arguments:
+            lists = c.arguments[TypeCtrArg.LIST].content
+            if all(x.dom.is_binary() for x in flatten(lists)):
+                r = len(lists[0])
+                T = [tuple(v if j == i else ANY for j in range(r)) + tuple((v + 1) % 2 if j == i else ANY for j in range(r)) for i in range(r) for v in (0, 1)]
+                return [(l1, l2) in T for l1, l2 in combinations(lists, 2)]
+        return self
 
 
 class ECtrs(Entity):

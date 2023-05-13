@@ -69,5 +69,4 @@ elif variant("01"):
             # golfers are strictly ordered
             LexDecreasing([[x[w][g][p] for w in range(nWeeks) for g in range(nGroups)] for p in range(nPlayers)], strict=True)
         ]
-
     )
