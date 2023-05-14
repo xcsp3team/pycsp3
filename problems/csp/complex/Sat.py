@@ -9,6 +9,7 @@ Example of Execution:
 
 from pycsp3 import *
 
+print(data)
 n, e, clauses = data
 
 

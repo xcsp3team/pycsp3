@@ -281,7 +281,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             return None
         # TODO what to do if the table is empty and bool_value is true? an error message ?
         if len(left_operand) == 1:
-            if not is_1d_list(right_operand, int):
+            if not is_1d_list(right_operand, int) and not is_1d_list(right_operand, str):
                 assert all(isinstance(v, (tuple, list)) and len(v) == 1 for v in right_operand)
                 right_operand = [v[0] for v in right_operand]
         ctr = _Extension(scope=flatten(left_operand), table=right_operand, positive=bool_value)  # TODO ok for using flatten? (before it was list())

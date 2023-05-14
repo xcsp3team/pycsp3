@@ -424,7 +424,7 @@ def warning(message):
 
 def error(s):
     Error.errorOccurrence = True
-    print("\n\t" + RED + "ERROR: " + WHITE, s, "\n")
+    print("\n\t" + RED + "ERROR: " + WHITE, s)
     print("\t\t(add option -ev to your command if you want to see the trace of the error)\n")
     if options.ev:
         raise TypeError(s)

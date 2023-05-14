@@ -326,7 +326,7 @@ def _compile(disabling_opoverrider=False, verbose=1):
             json_prefix = str(options.dataexport)
         with open(Compilation.pathname + json_prefix + '.json', 'w') as f:
             json.dump(prepare_for_json(Compilation.original_data if Compilation.original_data else Compilation.data), f)
-        print("  Saving data in the file " + (Compilation.pathname + json_prefix) + '.json' + " completed.")
+        print("  * Saving data in the file " + (Compilation.pathname + json_prefix) + '.json' + " completed.")
 
     Compilation.done = True
     cop = root is not None and root.attrib and root.attrib["type"] == "COP"
