@@ -2,7 +2,7 @@ import re
 
 from pycsp3.classes.auxiliary.ptypes import TypeVar
 from pycsp3.classes.main.domains import Domain
-from pycsp3.tools.utilities import error_if
+from pycsp3.tools.utilities import error_if, flatten
 
 
 class Variable:
@@ -32,12 +32,13 @@ class Variable:
             if domain is None:
                 return None
         if isinstance(domain, (tuple, list)):
-            if all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain):  # possible, even if using a set is recommended
-                return Domain(set(domain))
-            # at this point, it means that a specific domain for each variable is given in a list
-            for i in indexes:
-                assert i < len(domain), "The number of domains is less than the specified index " + name + " - " + str(domain)
-                domain = domain[i]
+            domain = flatten(domain)
+            assert all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)  # possible, even if using a set is recommended
+            return Domain(set(domain))
+            # # at this point, it means that a specific domain for each variable is given in a list
+            # for i in indexes:
+            #     assert i < len(domain), "The number of domains is less than the specified index " + name + " - " + str(domain)
+            #     domain = domain[i]
         if isinstance(domain, Domain):
             return domain
         if isinstance(domain, list) and (all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)):

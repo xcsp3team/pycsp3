@@ -26,7 +26,18 @@ satisfy(
 
     # unary constraints
     [(x[i][j] in positions[i], y[i][j] in positions[j]) for i, j in pairs],
-
-    # adjacency constraints
-    [(abs(x[i][j] - y[i][j]) == nCols) | (abs(x[i][j] - y[i][j]) == 1) & (x[i][j] // nCols == y[i][j] // nCols) for i, j in pairs]
 )
+
+if not variant():
+    satisfy(
+        # adjacency constraints
+        (abs(x[i][j] - y[i][j]) == nCols) | (abs(x[i][j] - y[i][j]) == 1) & (x[i][j] // nCols == y[i][j] // nCols) for i, j in pairs
+    )
+
+elif variant("table"):
+    T = [(v1, v2) for v1 in range(nRows * nCols) for v2 in range(nRows * nCols) if abs(v1 - v2) == nCols or abs(v1 - v2) == 1 and v1 // nCols == v2 // nCols]
+
+    satisfy(
+        # adjacency constraints
+        (x[i][j], y[i][j]) in T for i, j in pairs
+    )

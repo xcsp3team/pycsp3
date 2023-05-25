@@ -199,7 +199,6 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
         domain = flatten(dom)
         assert all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)
         dom = Domain(set(domain))
-
     var_objects = Variable.build_variables_array(array_name, size, dom)
 
     if isinstance(array_name, list):
@@ -1099,7 +1098,7 @@ def Count(term, *others, value=None, values=None, condition=None):
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
-    checkType(terms, ([Variable], [Node]))
+    checkType(terms, ([Variable], [Node], [Variable, Node]))
     if value is None and values is None:
         value = 1
     assert value is None or values is None, str(value) + " " + str(values)

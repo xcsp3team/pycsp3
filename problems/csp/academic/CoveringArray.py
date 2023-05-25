@@ -33,3 +33,8 @@ satisfy(
     # computing values
     [v[:, j] in table for j in range(b)]
 )
+
+"""
+1) for being compatible with the competition mini-track, we use:
+   [v[i][p[i][j]] == j for i in range(n) for j in range(b)]
+"""
