@@ -6,6 +6,7 @@ from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeConditionOperator
 from pycsp3.classes.entities import (Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, EBlock, ESlide, EIfThenElse, EToGather,
                                      EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities)
 from pycsp3.classes.main.constraints import ConstraintIntension
+from pycsp3.classes.main.annotations import TypeAnnArg
 from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.slider import _identify_slide
@@ -98,6 +99,10 @@ def _variables():
 
 def _argument(elt, arg, key, value, change_element_value=False):
     assert value is not None
+    if key == TypeAnnArg.STATICS:
+        for k, v in value:
+            elt.append(_element(TypeAnnArg.STATIC, attributes=[(TypeAnnArg.ORDER, " ".join(str(ele) for ele in v))], text=compact(k)))
+        return
     if key == TypeCtrArg.LIMIT:  # we modify the name of the argument for constraint knapsack
         key = TypeCtrArg.CONDITION
     if key == TypeCtrArg.INTENTION and isinstance(value, (list, tuple, set, frozenset)):
@@ -229,7 +234,7 @@ def _objectives():
 def _annotations():
     elt = _element(TypeXML.ANNOTATIONS)
     for ce in AnnEntities.items:
-        elt.append(_constraint(ce, possible_simplified_form=True))
+        elt.append(_constraint(ce, possible_simplified_form=False))
     return elt
 
 

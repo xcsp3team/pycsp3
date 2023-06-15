@@ -42,7 +42,7 @@ class TypeRestart(AbstractType):
 @unique
 class TypeAnnArg(AbstractType):
     TYPE = auto()
-    STATIC, RANDOM, MIN, MAX = auto(4)
+    STATIC, STATICS, RANDOM, MIN, MAX = auto(5)
     LC = auto()
     ORDER = auto()
     CONSISTENCY, BRANCHING, CUTOFF, FACTOR = auto(4)
@@ -88,8 +88,8 @@ class AnnotationVarHeuristic(AnnotationHeuristic):
         super().__init__(TypeXML.VAR_HEURISTIC)
         checkType(h, VarHeuristic)
         self.attributes.append((TypeAnnArg.LC, h.lc))
-        if h.staticData:
-            self.arg(TypeAnnArg.STATIC, h.staticData)
+        if h.staticParts:
+            self.arg(TypeAnnArg.STATIC, h.staticParts[0])
         self.add_arguments(h.randomPart, h.minPart, h.maxPart)
 
 
@@ -97,9 +97,11 @@ class AnnotationValHeuristic(AnnotationHeuristic):
     def __init__(self, h):
         super().__init__(TypeXML.VAL_HEURISTIC)
         checkType(h, ValHeuristic)
-        if h.staticData:
-            self.arg(TypeAnnArg.STATIC, h.staticData[0], attributes=[(TypeAnnArg.ORDER, " ".join(str(ele) for ele in h.staticData[1]))])
-        self.add_arguments(h.randomData, h.minData, h.maxData)
+        if h.staticParts:
+            self.arg(TypeAnnArg.STATICS, h.staticParts)
+            # for k,v in h.staticParts:
+            #     self.arg(TypeAnnArg.STATIC, k, attributes=[(TypeAnnArg.ORDER, " ".join(str(ele) for ele in v))])
+        self.add_arguments(h.randomPart, h.minPart, h.maxPart)
 
 
 class AnnotationFiltering(Annotation):
@@ -151,7 +153,7 @@ class Restarts:
 
 class VHeuristic:
     def __init__(self):
-        self.staticPart = None
+        self.staticParts = []
         self.randomPart = None
         self.minPart = None
         self.maxPart = None
@@ -187,7 +189,7 @@ class VarHeuristic(VHeuristic):
     def static(self, variables):
         variables = flatten(variables)
         checkType(variables, [Variable])
-        self.staticPart = variables
+        self.staticParts.append(variables)
         return self
 
 
@@ -200,5 +202,5 @@ class ValHeuristic(VHeuristic):
         checkType(variables, [Variable])
         order = flatten(order)
         checkType(order, [int])
-        self.staticPart = (variables, order)
+        self.staticParts.append((variables, order))
         return self

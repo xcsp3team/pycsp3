@@ -6,6 +6,7 @@ from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, Co
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr, TypeNode, Node, possible_range
+from pycsp3.classes import main
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
@@ -42,7 +43,7 @@ class Diffs:
 
 class ConstraintArgument:
     def __init__(self, name, content, attributes=[], content_compressible=True, content_ordered=False, lifted=False):
-        assert isinstance(name, (TypeCtrArg, TypeXML)), str(name) + " " + str(type(name))
+        assert isinstance(name, (TypeCtrArg, TypeXML, main.annotations.TypeAnnArg)), str(name) + " " + str(type(name))
         self.name = name  # name of the argument
         self.attributes = attributes  # list of pairs (key, value) representing the attributes
         self.content = content  # content of the argument
