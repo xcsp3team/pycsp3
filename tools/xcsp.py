@@ -139,7 +139,8 @@ def _constraint(entity, *, possible_simplified_form=False):
         return _element(TypeCtr.INTENSION, entity, text=c.arguments[TypeCtrArg.FUNCTION].content)
     elt = _element(c.name, entity, attributes=c.attributes)
     arguments = [arg for arg in c.arguments.values() if arg.content is not None]  # we keep only valid (non null) arguments
-    if len(arguments) == 1 and not arguments[0].lifted and (possible_simplified_form or arguments[0].name == TypeCtrArg.LIST):
+    if len(arguments) == 1 and not arguments[0].lifted and (
+            possible_simplified_form or isinstance(entity, EAnnotation) or arguments[0].name == TypeCtrArg.LIST):
         _text(elt, arguments[0].content)
     else:
         b = c.name == TypeCtr.ELEMENT
