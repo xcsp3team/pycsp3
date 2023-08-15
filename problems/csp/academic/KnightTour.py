@@ -24,11 +24,11 @@ satisfy(
 )
 
 if not variant():
-    pairs = [(i, (i + 1) % (n * n)) for i in range(n * n)]
+    pairs = ((i, (i + 1) % (n * n)) for i in range(n * n))
 
     satisfy(
         # two successive knights are at a knight jump apart
-        (d1 == 1) & (d2 == 2) | (d1 == 2) & (d2 == 1) for d1, d2 in [(abs(x[i] // n - x[ii] // n), abs(x[i] % n - x[ii] % n)) for i, ii in pairs]
+        (d1 == 1) & (d2 == 2) | (d1 == 2) & (d2 == 1) for d1, d2 in ((abs(x[i] // n - x[ii] // n), abs(x[i] % n - x[ii] % n)) for i, ii in pairs)
     )
 
 elif variant("table"):
@@ -66,7 +66,7 @@ elif variant("table"):
 
     def table_recursive(i, tmp):
         if i == len(tmp):
-            table.add(tuple(tmp[:]))
+            T.append(tuple(tmp[:]))
         else:
             for v in jumps[tmp[i - 1]]:
                 if len([j for j in range(0, i - 1) if tmp[j] == v]) == 0:
@@ -74,15 +74,16 @@ elif variant("table"):
                     table_recursive(i + 1, tmp)
 
 
-    table = set()
+    T = list()
     for i in range(n * n):
         table_recursive(1, [i] + [0] * (r - 1))
 
     satisfy(
         # two successive knights are at a knight jump apart
-        [x[(i + j) % (n * n)] for j in range(r)] in table for i in range(0, n * n, r - 1)
+        (x[(i + j) % (n * n)] for j in range(r)) in T for i in range(0, n * n, r - 1)
     )
 
 """ Comments
 1) it is possible to use extension constraints instead of intension constraints (see, e.g., the problem QueensKnights)
+2) it is faster to use a list than a set for the table T
 """

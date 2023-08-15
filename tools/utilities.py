@@ -207,7 +207,7 @@ def integer_scaling(values):
 
 def decrement(t):
     if isinstance(t, int):
-        return t-1
+        return t - 1
     if isinstance(t, types.GeneratorType):
         t = list(t)
     assert isinstance(t, list)
@@ -231,7 +231,7 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
     def _tuple_to_string(t):
         return "(" + ",".join(
             str(v) if isinstance(v, int) else
-            ("{" + ",".join(str(w) for w in sorted(v)) + "}") if isinstance(v, (tuple,list,set,frozenset)) else
+            ("{" + ",".join(str(w) for w in sorted(v)) + "}") if isinstance(v, (tuple, list, set, frozenset)) else
             conditions.inside(v).str_tuple() if isinstance(v, range) else
             v if isinstance(v, str) else
             "*" if v == ANY else v.str_tuple()
@@ -325,7 +325,7 @@ def to_ordinary_table(table, domains, *, starred=False):
     :return: an ordinary or starred table
     """
     doms = [range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]
-    tbl = set()
+    T = list()  # we use a list because it is faster to process (than a set)
     contains_node_condition = False
     if starred:
         for t in table:
@@ -334,21 +334,21 @@ def to_ordinary_table(table, domains, *, starred=False):
                     contains_node_condition = True
                 l = ({v} if isinstance(v, int) or v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset)) else v.filtering(
                     doms[i]) for i, v in enumerate(t))
-                tbl.update(product(*l))
+                T.extend(product(*l))
             else:
-                tbl.add(t)
+                T.append(t)
     else:
         for t in table:
             if any(v == ANY or isinstance(v, conditions.Condition) for v in t):  # v may be a ConditionValue object (with method 'filtering')
                 if contains_node_condition is False and any(isinstance(v, conditions.ConditionNode) for v in t):
                     contains_node_condition = True
-                tbl.update(product(*(
+                T.extend(product(*(
                     {v} if isinstance(v, int) else doms[i] if v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset))
                     else v.filtering(doms[i]) for i, v in enumerate(t))))
             else:
-                tbl.add(t)
-    return tbl if not contains_node_condition else _remove_condition_nodes_of_table(list(tbl),
-                                                                                    doms)  # this must be performed after removing other kind of conditions
+                T.append(t)
+    return T if not contains_node_condition else _remove_condition_nodes_of_table(list(T),
+                                                                                  doms)  # this must be performed after removing other kind of conditions
 
 
 def _non_overlapping_tuples_for(t, dom1, dom2, offset, first, x_axis=None):

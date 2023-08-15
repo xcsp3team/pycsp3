@@ -626,6 +626,8 @@ class OpOverrider:
 
     @staticmethod
     def __getitem__shared_by_lv_and_li(array, indexes, *, lv):  # lv=True for ListVar, lv=False for ListInt
+        if isinstance(indexes, types.GeneratorType):
+            indexes = tuple(indexes)
         if isinstance(indexes, (list, range)):
             indexes = tuple(indexes)
         if isinstance(indexes, tuple) and len(indexes) == 1:
@@ -760,7 +762,7 @@ class ListVar(list):
             assert is_containing(t1, (Variable, Node))
             return ScalarProduct(list(t1), list(t2))
         assert is_containing(self, (Variable, Node))  # Node possible ?
-        return ScalarProduct(self, list(other) if isinstance(other, (tuple, range)) else other)
+        return ScalarProduct(self, list(other) if isinstance(other, (tuple, range, types.GeneratorType)) else other)
 
     def __contains__(self, other):
         if isinstance(other, (int, Variable)):  # member constraint
@@ -942,7 +944,7 @@ def diagonals_down(m, *, broken=False):
     if broken:
         return _list((diagonal_down(m, i, -1, False) for i in range(len(m))), mode)
     return _list((diagonal_down(m, i, 0, False) for i in reversed(range(len(m) - 1))), mode) + \
-           _list((diagonal_down(m, 0, j, False) for j in range(1, len(m) - 1)), mode)
+        _list((diagonal_down(m, 0, j, False) for j in range(1, len(m) - 1)), mode)
 
 
 def diagonal_up(m, i=-1, j=-1, check=True):
@@ -979,7 +981,7 @@ def diagonals_up(m, *, broken=False):
     if broken:
         return _list((diagonal_up(m, i, -1, False) for i in range(len(m))), mode)
     return _list((diagonal_up(m, i, 0, False) for i in range(1, len(m))), mode) + \
-           _list((diagonal_up(m, len(m) - 1, j, False) for j in range(1, len(m) - 1)), mode)
+        _list((diagonal_up(m, len(m) - 1, j, False) for j in range(1, len(m) - 1)), mode)
 
 
 def cp_array(*l):

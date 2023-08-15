@@ -14,7 +14,7 @@ n, m = len(orders), len(orders[0])  # n orders (customers), m possible products
 if variant("m1"):
     def table1(i):
         v = sum(orders[i])
-        return {(0, 0, 0)} | {(i, ANY, 1) for i in range(1, v)} | {(v, 0, 0), (v, 1, 1)}
+        return [(0, 0, 0)] + [(i, ANY, 1) for i in range(1, v)] + [(v, 0, 0), (v, 1, 1)]
 
 
     # p[j] is the period (time) of the jth product

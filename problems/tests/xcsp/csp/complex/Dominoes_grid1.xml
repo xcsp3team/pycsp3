@@ -1,7 +1,7 @@
 <instance format="XCSP3" type="CSP">
   <variables>
-    <array id="x" note="x[i][j] concerns the domino (having values) i-j; this is the position of the value i in the grid for this domino" size="[7][7]"> 0..55 </array>
-    <array id="y" note="y[i][j] concerns the domino (having values) i-j; this is the position of the value j in the grid for this domino" size="[7][7]"> 0..55 </array>
+    <array id="x" note="x[i][j] is the index (position) in the grid of the value i of the domino i-j" size="[7][7]"> 0..55 </array>
+    <array id="y" note="y[i][j] is the index (position) in the grid of the value j of the domino i-j" size="[7][7]"> 0..55 </array>
   </variables>
   <constraints>
     <allDifferent note="each part of each domino in a different cell"> x[0][] x[1][1..6] x[2][2..6] x[3][3..6] x[4][4..6] x[5][5..6] x[6][6] y[0][] y[1][1..6] y[2][2..6] y[3][3..6] y[4][4..6] y[5][5..6] y[6][6] </allDifferent>

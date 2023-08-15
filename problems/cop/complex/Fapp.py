@@ -82,7 +82,7 @@ elif variant("short"):
 
     satisfy(
         # computing intermediary distances
-        [d[i][j] == abs(f[i] - f[j]) for i, j in combinations(range(n), 2) if d[i][j]],
+        [d[i][j] == abs(f[i] - f[j]) for i, j in combinations(n, 2) if d[i][j]],
 
         # soft radio-electric compatibility constraints
         [(d[min(i, j)][max(i, j)], p[i], p[j], k, v1[l], v2[l]) in table_soft(i, j, tuple(er), tuple(nr)) for l, (i, j, er, nr) in enumerate(soft_constraints)]
