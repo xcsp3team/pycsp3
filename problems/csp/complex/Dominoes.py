@@ -3,7 +3,8 @@ See "Teaching Constraints through Logic Puzzles" by Peter Szeredi
 See "Dominoes as a Constraint Problem" by Helmut Simonis
 
 Example of Execution:
-  python3 Dominoes.py -data=Dominoes_grid1.json
+  python Dominoes.py -data=Dominoes_grid1.json
+  python Dominoes.py -variant=table -data=Dominoes_grid1.json
 """
 
 from pycsp3 import *
