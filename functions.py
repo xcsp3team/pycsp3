@@ -16,7 +16,8 @@ from pycsp3.classes.main.constraints import (
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
     ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
-    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary,
+    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintRefutation, ConstraintSlide, PartialConstraint,
+    ScalarProduct, auxiliary,
     manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
@@ -484,7 +485,10 @@ def satisfy(*args, no_comment_tags_extraction=False):
         comment_at_2 = any(comment != '' for comment in comments2[i])
         tag_at_2 = any(tag != '' for tag in tags2[i])
         if isinstance(arg, (ECtr, EMetaCtr, ESlide)):  # case: simple constraint or slide
-            to_post = _complete_partial_forms_of_constraints([arg])[0]
+            if isinstance(arg, ECtr) and isinstance(arg.constraint, ConstraintRefutation):  # refutations must be transformed
+                to_post = _group(arg.constraint.to_list())
+            else:
+                to_post = _complete_partial_forms_of_constraints([arg])[0]
         elif isinstance(arg, Node):  # a predicate to be wrapped by a constraint (intension)
             to_post = _Intension(arg)
         elif isinstance(arg, bool):  # a Boolean representing the case of a partial constraint or a node with operator in {IN, NOT IN}

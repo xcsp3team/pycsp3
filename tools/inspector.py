@@ -255,20 +255,27 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
     # collecting comments and tags for each parameter (i.e., at level 1)
     i1 = 0
     found = False  # the function name
+    stopped_comments = False
     for i, line in enumerate(code):
-        if function_name in line:
+        if not found and function_name in line:
             found = True
+            continue
         if not found:
             continue
-        if is_comment_line(line) and _prepare(line) and i + 1 < len(code):
+        if not stopped_comments and is_comment_line(line) and _prepare(line):  # and i + 1 < len(code):
             comments1[i1] += ("" if len(comments1[i1]) == 0 else " " if comments1[i1][-1] in {'.', ','} else " - ") + _prepare(line)
-            if are_empty_lines[i + 1]:
-                comments1[i1] = ""
+            # if are_empty_lines[i + 1]:
+            #     comments1[i1] = ""
         tags = _find_tags(line)
         if tags:
             tags1[i1] += ("" if len(tags1[i1]) == 0 else " ") + tags
-        elif not is_comment_line(line) and ',' in line:
-            i1 += line.count(',')
+        if not (is_comment_line(line) or are_empty_lines[i]):
+            if ',' in line:
+                i1 += line.count(',')
+            elif i1 + 1 == len(comments1):
+                stopped_comments = True
+        if i1 >= len(comments1):
+            stopped_comments = True
     return comments1, comments2, tags1, tags2
 
 

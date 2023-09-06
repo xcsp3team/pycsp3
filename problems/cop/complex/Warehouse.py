@@ -8,6 +8,9 @@ Examples of Execution:
 """
 
 from pycsp3 import *
+from pycsp3.dashboard import options
+
+options.keepsum = True  # to get a better formed XCSP instance
 
 cost, capacities, costs = data  # cost is the fixed cost when opening a warehouse
 nWarehouses, nStores = len(capacities), len(costs)

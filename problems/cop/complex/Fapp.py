@@ -7,6 +7,9 @@ Examples of Execution:
 """
 
 from pycsp3 import *
+from pycsp3.dashboard import options
+
+options.keepsum = True  # to get a better formed XCSP instance
 
 domains, routes, hard_constraints, soft_constraints = data
 domains = [domains[route.domain] for route in routes]  # we skip the indirection

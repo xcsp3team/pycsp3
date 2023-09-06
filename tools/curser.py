@@ -5,7 +5,7 @@ from pycsp3 import functions
 from pycsp3.classes.entities import Node, TypeNode, ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintAllDifferentList, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
-    auxiliary, global_indirection, manage_global_indirection)
+    ConstraintRefutation, auxiliary, global_indirection, manage_global_indirection)
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
@@ -592,7 +592,7 @@ class OpOverrider:
 
     def __eq__lv(self, other):  # lv for ListVar
         if isinstance(other, int):
-            return [x == other for x in flatten(self)]
+            return ECtr(ConstraintInstantiation(flatten(self), other))  # [x == other for x in flatten(self)]
         if isinstance(other, (tuple, range)):
             other = list(other)
         if isinstance(other, list):
@@ -609,7 +609,7 @@ class OpOverrider:
 
     def __ne__lv(self, other):  # lv for ListVar
         if isinstance(other, int):
-            return [x != other for x in flatten(self)]
+            return ECtr(ConstraintRefutation(flatten(self), other))  # ListCtr(x != other for x in flatten(self))
         if isinstance(other, (tuple, range)):
             other = list(other)
         if isinstance(other, list):

@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 from pycsp3 import functions
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, ConditionNode
-from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeRank
+from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeOrderedOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr, TypeNode, Node, possible_range
 from pycsp3.classes import main
@@ -46,7 +46,8 @@ class ConstraintArgument:
         assert isinstance(name, (TypeCtrArg, TypeXML, main.annotations.TypeAnnArg)), str(name) + " " + str(type(name))
         self.name = name  # name of the argument
         self.attributes = attributes  # list of pairs (key, value) representing the attributes
-        self.content = content  # content of the argument
+        self.content_original = content
+        self.content = content  # content of the argument (may be compressed later)
         self.content_compressible = content_compressible  # indicates if we can try to make the content more compact
         self.content_ordered = content_ordered  # indicates if the content must be kept as it is (order is important)
         self.lifted = lifted  # indicates if the constraint is lifted to several lists (or sets); see specifications
@@ -412,6 +413,25 @@ class ConstraintOrdered(Constraint):
         self.arg(TypeCtrArg.LENGTHS, lengths, content_ordered=True)
         self.arg(TypeCtrArg.OPERATOR, operator)
 
+    def to_list(self):
+        lst = self.arguments[TypeCtrArg.LIST].content_original
+        lengths = self.arguments[TypeCtrArg.LENGTHS].content_original if TypeCtrArg.LENGTHS in self.arguments else None
+        r = len(lst) - 1
+        assert lengths is None or len(lengths) == r
+        operator = self.arguments[TypeCtrArg.OPERATOR].content_original
+        lefts = [lst[i] if lengths is None else lst[i] + lengths[i] for i in range(r)]
+        if operator is TypeOrderedOperator.INCREASING:
+            return [lefts[i] <= lst[i + 1] for i in range(r)]
+        if operator is TypeOrderedOperator.DECREASING:
+            return [lefts[i] >= lst[i + 1] for i in range(r)]
+        if operator is TypeOrderedOperator.STRICTLY_INCREASING:
+            return [lefts[i] < lst[i + 1] for i in range(r)]
+        assert operator is TypeOrderedOperator.Strictly_DECREASING
+        return [lefts[i] > lst[i + 1] for i in range(r)]
+
+    def to_intension(self):
+        return functions.conjunction(self.to_list())
+
 
 class ConstraintLex(ConstraintUnmergeable):
     def __init__(self, lst, operator):
@@ -770,12 +790,36 @@ class ConstraintClause(Constraint):
         self.arg(TypeCtrArg.LIST, [str(v) if phases[i] else "not(" + str(v) + ")" for i, v in enumerate(variables)], content_ordered=True)
 
 
-class ConstraintInstantiation(Constraint):
-    def __init__(self, variables, values):
-        super().__init__(TypeCtr.INSTANTIATION)
+class ConstraintInstantiationRefutation(Constraint):
+    def __init__(self, variables, values, name):
+        super().__init__(name)
+        if isinstance(values, int):
+            values = [values] * len(variables)
         assert len(variables) == len(values)
         self.arg(TypeCtrArg.LIST, variables, content_ordered=True)
         self.arg(TypeCtrArg.VALUES, values, content_ordered=True)
+
+    def to_list(self):
+        lst = self.arguments[TypeCtrArg.LIST].content_original
+        values = self.arguments[TypeCtrArg.VALUES].content_original
+        assert len(lst) == len(values)
+        if self.name == TypeCtr.INSTANTIATION:
+            return [lst[i] == values[i] for i in range(len(lst))]
+        else:
+            return [lst[i] != values[i] for i in range(len(lst))]
+
+    def to_intension(self):
+        return functions.conjunction(self.to_list())
+
+
+class ConstraintInstantiation(ConstraintInstantiationRefutation):
+    def __init__(self, variables, values):
+        super().__init__(variables, values, TypeCtr.INSTANTIATION)
+
+
+class ConstraintRefutation(ConstraintInstantiationRefutation):
+    def __init__(self, variables, values):
+        super().__init__(variables, values, TypeCtr.REFUTATION)
 
 
 ''' Slide Constraints (when posted directly) '''
@@ -891,9 +935,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         if not isinstance(self.constraint, ConstraintSum):
             return Node.build(TypeNode.MUL, self._simplify_operation(other))
         # we have a ConstraintSum (self) and an integer (other)
-
         args = self.constraint.arguments
-        if TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
+        if not options.keepsum and TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
             return auxiliary().replace_partial_constraint(self) * other
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
         value = args[TypeCtrArg.CONDITION]
@@ -1182,11 +1225,17 @@ def global_indirection(c):
     pc = None
     if options.usemeta:
         return None  # to force using meta-constraints
-    if isinstance(c, ConstraintInstantiation):  # we transform instantiation into a conjunction (Node)
-        lst = c.arguments[TypeCtrArg.LIST].content
-        values = c.arguments[TypeCtrArg.VALUES].content
-        assert len(lst) == len(values)
-        return functions.conjunction(lst[i] == values[i] for i in range(len(lst)))
+    if isinstance(c, ConstraintInstantiation):  # we transform an instantiation into a conjunction (Node)
+        return c.to_intension()
+    if isinstance(c, ConstraintRefutation):  # we transform a refutation into a conjunction (Node)
+        return c.to_intension()
+    if isinstance(c, ConstraintOrdered):
+        return c.to_intension()
+
+        # lst = c.arguments[TypeCtrArg.LIST].content
+        # values = c.arguments[TypeCtrArg.VALUES].content
+        # assert len(lst) == len(values)
+        # return functions.conjunction(lst[i] == values[i] for i in range(len(lst)))
     if isinstance(c, ConstraintWithCondition):
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
@@ -1208,7 +1257,7 @@ def global_indirection(c):
         pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
         condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
     if pc is None:
-        warning("You use a global constraint in a complex expression.\n" +
+        warning("You use a global constraint/function in a complex expression.\n" +
                 "\tHowever, this constraint cannot be externalized by introducing an auxiliary variable.\n" +
                 "\tHence a meta-constraint function (Or, And, Not, IfThen, IfThenElse, Iff) is automatically called.\n" +
                 "\tCheck that it is relevant, or modify your model.\n")
