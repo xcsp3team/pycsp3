@@ -17,8 +17,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintRefutation, ConstraintSlide, PartialConstraint,
-    ScalarProduct, auxiliary,
-    manage_global_indirection)
+    ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -518,7 +517,8 @@ def satisfy(*args, no_comment_tags_extraction=False):
                                 arg[j][k] = _group(arg[j][k])
                             arg[j] = _block(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
                         else:
-                            arg[j] = _group(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
+                            g = _group(arg[j])
+                            arg[j] = g.note(comments2[i][j]).tag(tags2[i][j]) if g is not None else None
             to_post = _block(arg)
         else:  # Group
             to_post = _group(arg)
@@ -1201,6 +1201,9 @@ def Cardinality(term, *others, occurrences, closed=False):
     """
     Builds and returns a constraint Cardinality.
 
+    When occurrences is given under the form of a list t,
+    a dictionary is computed as dict(enumerate(t))
+
     :param term: the first term on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :param occurrences: a dictionary indicating the restriction (constant, range or variable) of occurrences per value
@@ -1214,6 +1217,8 @@ def Cardinality(term, *others, occurrences, closed=False):
         elif isinstance(t, Node):
             terms[i] = [auxiliary().replace_node(t)]
     checkType(terms, [Variable])
+    if isinstance(occurrences, list):
+        occurrences = dict(enumerate(occurrences))
     assert isinstance(occurrences, dict)
     values = list(occurrences.keys())
     assert all(isinstance(value, (int, Variable)) for value in values)

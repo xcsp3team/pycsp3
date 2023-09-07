@@ -1231,11 +1231,6 @@ def global_indirection(c):
         return c.to_intension()
     if isinstance(c, ConstraintOrdered):
         return c.to_intension()
-
-        # lst = c.arguments[TypeCtrArg.LIST].content
-        # values = c.arguments[TypeCtrArg.VALUES].content
-        # assert len(lst) == len(values)
-        # return functions.conjunction(lst[i] == values[i] for i in range(len(lst)))
     if isinstance(c, ConstraintWithCondition):
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
