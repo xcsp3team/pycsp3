@@ -640,7 +640,7 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             if aux:  # this is the case if we need another variable to have a correct indexing
                 self.arg(TypeCtrArg.INDEX, aux, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
                 # below, should we replace ANY by a specific value (for avoiding interchangeable values)?
-                auxiliary().extension_for_element(index, aux, {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom})
+                auxiliary().collect_table(index, aux, {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom})
                 # functions.satisfy((index, aux) in {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom}, no_comment_tags_extraction=True)
             else:
                 self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
@@ -1087,7 +1087,7 @@ class _Auxiliary:
         self._introduced_variables = []
         self._collected_constraints = []
         self._collected_raw_constraints = []
-        self._collected_extension_for_element_constraints = []
+        self._collected_extension_constraints = []  # notably, for element
         self.prefix = "aux_gb"
         self.cache = []
 
@@ -1182,6 +1182,9 @@ class _Auxiliary:
         values = possible_range({v for v in index.dom if 0 <= v < length})
         return self.__replace(None, Domain(values), systematically_append_obj=False)
 
+    def replace_table(self):
+        return self.__replace(None, Domain({0, 1}), systematically_append_obj=False)
+
     def replace_int(self, v):
         assert isinstance(v, int)
         # if v in _Auxiliary.cache_ints:  # for the moment, we do not use it because it may cause some problems with some constraints (similar variables)
@@ -1196,22 +1199,22 @@ class _Auxiliary:
     def normalize_list(self, lst):
         return curser.ListVar([v if isinstance(v, Variable) else self.replace_int(v) if isinstance(v, int) else self.replace_node(v) for v in lst])
 
-    def extension_for_element(self, index, aux, table):
-        self._collected_extension_for_element_constraints.append((index, aux, table))
+    def collect_table(self, index, aux, table):
+        self._collected_extension_constraints.append((index, aux, table))
 
-    def collected(self):
+    def get_collected_and_clear(self):
         t = self._collected_constraints
         self._collected_constraints = []
         return t
 
-    def raw_collected(self):
+    def get_collected_raw_and_clear(self):
         t = self._collected_raw_constraints
         self._collected_raw_constraints = []
         return t
 
-    def collected_extension_for_element(self):
-        t = self._collected_extension_for_element_constraints
-        self._collected_extension_for_element_constraints = []
+    def get_collected_extension_and_clear(self):
+        t = self._collected_extension_constraints
+        self._collected_extension_constraints = []
         return t
 
 
@@ -1242,7 +1245,7 @@ def global_indirection(c):
         if aux:  # this is the case if we need another variable to have a correct indexing
             c.arguments[TypeCtrArg.INDEX].content = aux
             # below, should we replace ANY by a specific value (for avoid interchangeable values)?
-            auxiliary().extension_for_element(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
+            auxiliary().collect_table(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
             # functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
     if isinstance(c, ConstraintAllDifferent):
         lst = c.arguments[TypeCtrArg.LIST].content
@@ -1272,9 +1275,15 @@ def manage_global_indirection(*args):
 
     t = []
     for arg in args:
-        if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression
+        if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression, or a table constraint to be reified
             error_if(len(curser.queue_in) == 0, msg)
             (values, x) = curser.queue_in.pop()
+            # if isinstance(x, (tuple, list)):
+            #     var = auxiliary().replace_table()
+            #     auxiliary().collect_table(x, var, [(0, 0, 1)])
+            #     arg = var
+            # else:
+            # print("hhhhh", values, x)
             arg = functions.belong(x, values)
         elif arg is False:  # means that we must have in a more general expression:
             # either a unary subexpression of the form 'x not in S'

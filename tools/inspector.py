@@ -257,6 +257,9 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
     found = False  # the function name
     stopped_comments = False
     for i, line in enumerate(code):
+        # if are_empty_lines[i]:
+        #     comments1[i1] = ""
+        #     continue
         if not found and function_name in line:
             found = True
             continue

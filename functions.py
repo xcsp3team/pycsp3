@@ -350,26 +350,41 @@ def Xor(*args):
     return EXor(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
-def IfThen(*args):
+def IfThen(Cond, Then, meta=False):
     """
     Builds a meta-constraint IfThen from the specified arguments.
     For example: IfThen(Sum(x) > 10, AllDifferent(x))
 
-    :param args: a tuple of two constraints
-    :return: a meta-constraint IfThen
+    When the parameter 'meta' is not true (the usual and default case),
+    reification is employed.
+
+    :param Cond: the condition part
+    :param Then the Then part
+    :param meta true if a meta-constraint form must be really posted
+    :return: a meta-constraint IfThen, ot its reified form
     """
-    return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    if meta:
+        return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    return imply(Cond, Then)
 
 
-def IfThenElse(*args):
+def IfThenElse(Cond, Then, Else, meta=False):
     """
     Builds a meta-constraint IfThenElse from the specified arguments.
     For example: IfThenElse(Sum(x) > 10, AllDifferent(x), AllEqual(x))
 
-    :param args: a tuple of three constraints
-    :return: a meta-constraint IfThenElse
+    When the parameter 'meta' is not true (the usual and default case),
+    reification is employed.
+
+    :param Cond the condition part
+    :param Then the Then part
+    :param Else the Else part
+    :param meta true if a meta-constraint form must be really posted
+    :return: a meta-constraint IfThenElse, or its reified form
     """
-    return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    if meta:
+        return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    return ift(Cond, Then, Else)
 
 
 def Iff(*args):
@@ -526,13 +541,13 @@ def satisfy(*args, no_comment_tags_extraction=False):
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
             #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
-    to_post = _group(pc == var for (pc, var) in auxiliary().collected())
+    to_post = _group(pc == var for (pc, var) in auxiliary().get_collected_and_clear())
     if to_post is not None:
         t.append(to_post)
-    to_post = _group(auxiliary().raw_collected())
+    to_post = _group(auxiliary().get_collected_raw_and_clear())
     if to_post is not None:
         t.append(to_post)
-    to_post = _group((index, aux) in table for (index, aux, table) in auxiliary().collected_extension_for_element())
+    to_post = _group((index, aux) in table for (index, aux, table) in auxiliary().get_collected_extension_and_clear())
     if to_post is not None:
         t.append(to_post)
     return EToSatisfy(t)
@@ -657,11 +672,16 @@ def imply(*args):
     :return: a node, root of a tree expression
     """
     assert len(args) == 2
+    cnd, tp = args  # condition and then part
+    if isinstance(tp, (tuple, list, set, frozenset)):
+        tp = list(tp)  # to transform sets into lists
+        assert len(tp) >= 1
+        return imply(cnd, tp[0]) if len(tp) == 1 else [imply(cnd, v) for v in tp]
     res = manage_global_indirection(*args)
     if res is None:
         return IfThen(args)
-    if len(res) == 2 and isinstance(res[1], (tuple, list, set, frozenset)):
-        return [imply(res[0], v) for v in res[1]]
+    # if len(res) == 2 and isinstance(res[1], (tuple, list, set, frozenset)):
+    #     return [imply(res[0], v) for v in res[1]]
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     return Node.build(TypeNode.IMP, *res)
 
@@ -675,9 +695,25 @@ def ift(*args):
     :return: a node, root of a tree expression
     """
     assert len(args) == 3
+    cnd, tp, ep = args  # condition, then part and else part
+    btp = isinstance(tp, (tuple, list, set, frozenset))
+    if btp:
+        tp = list(tp)
+        assert len(tp) >= 1
+        if len(tp) == 1:
+            return ift(cnd, tp[0], ep)
+    etp = isinstance(ep, (tuple, list, set, frozenset))
+    if etp:
+        ep = list(ep)
+        assert len(ep) >= 1
+        if len(ep) == 1:
+            return ift(cnd, tp, ep[0])
+    if btp or etp:
+        tp, ep = tp if isinstance(tp, list) else [tp], ep if isinstance(ep, list) else [ep]
+        return [imply(cnd, v) for v in tp] + [imply(~cnd, v) for v in ep]
     res = manage_global_indirection(*args)
     if res is None:
-        return IfThenElse(args)
+        return IfThenElse(args, meta=True)
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     assert len(res) == 3
     if isinstance(res[0], int):
@@ -1193,8 +1229,15 @@ def NValues(term, *others, excepting=None, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintNValues(terms, excepting, Condition.build_condition(condition)))
 
 
-# def NotAllEqual(term, *others):
-#    return NValues(term, others) > 1
+def NotAllEqual(term, *others):
+    """
+      Builds and returns a component NValues (capturing NotAllEqual)
+
+      :param term: the first term on which the constraint applies
+      :param others: the other terms (if any) on which the constraint applies
+      :return: a constraint NValues (equivalent to NotAllEqual)
+      """
+    return NValues(term, others) > 1
 
 
 def Cardinality(term, *others, occurrences, closed=False):
@@ -1631,7 +1674,7 @@ def _optimize(term, minimization):
     if isinstance(term, ScalarProduct):
         term = Sum(term)  # to have a PartialConstraint
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"
-    satisfy(pc == var for (pc, var) in auxiliary().collected())
+    satisfy(pc == var for (pc, var) in auxiliary().get_collected_and_clear())
 
     comment, _, tag, _ = comments_and_tags_of_parameters_of(function_name="minimize" if minimization else "maximize", args=[term])
     way = TypeCtr.MINIMIZE if minimization else TypeCtr.MAXIMIZE
