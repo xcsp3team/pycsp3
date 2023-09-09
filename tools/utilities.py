@@ -313,7 +313,7 @@ def _remove_condition_nodes_of_table(table, doms):  # convert hybrid binary and 
     return done
 
 
-def to_ordinary_table(table, domains, *, starred=False):
+def to_ordinary_table(table, domains, *, possibly_starred=False):
     """
     Converts the specified table that may contain hybrid restrictions and stars into an ordinary table (or a starred table).
     The table contains r-tuples and the domain to be considered are any index i of the tuples is given by domains[i].
@@ -321,34 +321,50 @@ def to_ordinary_table(table, domains, *, starred=False):
 
     :param table: a table (possibly hybrid or starred)
     :param domains: the domains of integers to be considered for each column of the table
-    :param starred: if True, the returned table may be starred (and not purely ordinary)
+    :param possibly_starred: if True, the returned table may be starred (and not purely ordinary)
     :return: an ordinary or starred table
     """
+
+    def _tuple_of_interest(t):
+        for v in t:
+            if isinstance(v, conditions.Condition):  # v may be a Condition object (with method 'filtering')
+                return True
+            if not possibly_starred and v == ANY:
+                return True
+        return False
+
+    def _develop_tuple(t):
+        development = ({v} if isinstance(v, int) else ({v} if possibly_starred else doms[i]) if v == ANY
+        else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset))
+        else v.filtering(doms[i]) for i, v in enumerate(t))
+        return product(*development)
+
     doms = [range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]
-    T = list()  # we use a list because it is faster to process (than a set)
+    T = list()  # we use a list because its processing is faster than a set
     contains_node_condition = False
-    if starred:
-        for t in table:
-            if any(isinstance(v, conditions.Condition) for v in t):  # v may be a Condition object (with method 'filtering')
-                if contains_node_condition is False and any(isinstance(v, conditions.ConditionNode) for v in t):
-                    contains_node_condition = True
-                l = ({v} if isinstance(v, int) or v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset)) else v.filtering(
-                    doms[i]) for i, v in enumerate(t))
-                T.extend(product(*l))
-            else:
-                T.append(t)
-    else:
-        for t in table:
-            if any(v == ANY or isinstance(v, conditions.Condition) for v in t):  # v may be a ConditionValue object (with method 'filtering')
-                if contains_node_condition is False and any(isinstance(v, conditions.ConditionNode) for v in t):
-                    contains_node_condition = True
-                T.extend(product(*(
-                    {v} if isinstance(v, int) else doms[i] if v == ANY else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset))
-                    else v.filtering(doms[i]) for i, v in enumerate(t))))
-            else:
-                T.append(t)
-    return T if not contains_node_condition else _remove_condition_nodes_of_table(list(T),
-                                                                                  doms)  # this must be performed after removing other kind of conditions
+    for t in table:
+        if _tuple_of_interest(t):
+            if contains_node_condition is False and any(isinstance(v, conditions.ConditionNode) for v in t):
+                contains_node_condition = True
+            T.extend(_develop_tuple(t))
+        else:
+            T.append(t)
+    # last removal actions below must be performed after removing other kind of conditions
+    return T if not contains_node_condition else _remove_condition_nodes_of_table(list(T), doms)
+
+
+def to_reified_ordinary_table(table, domains):
+    assert len(table) > 0 and len(domains) == len(table[0])
+    table = sorted(table)
+    assert all(isinstance(v, int) for t in table for v in t)  # currently, only possible on ordinary tables
+    i, T = 0, []
+    for valid in product(*[range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]):
+        if i < len(table) and table[i] == valid:
+            T.append((*valid, 1))
+            i += 1
+        else:
+            T.append((*valid, 0))
+    return T
 
 
 def _non_overlapping_tuples_for(t, dom1, dom2, offset, first, x_axis=None):

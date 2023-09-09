@@ -12,7 +12,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
 from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, error_if, \
-    to_ordinary_table, warning, is_windows
+    to_ordinary_table, to_reified_ordinary_table, warning, is_windows
 
 
 class Diffs:
@@ -226,7 +226,7 @@ class ConstraintExtension(Constraint):
                             tpl.append(v)
             if tpl:
                 table[i] = tuple(tpl)
-        return sorted(list(to_ordinary_table(table, [x.dom for x in scope], starred=True)))
+        return sorted(list(to_ordinary_table(table, [x.dom for x in scope], possibly_starred=True)))
 
     @staticmethod
     def remove_redundant_tuples(table):
@@ -637,11 +637,8 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         if index is not None:
             lst_flatten = flatten(lst)
             aux = auxiliary().replace_element_index(len(lst_flatten), index)
-            if aux:  # this is the case if we need another variable to have a correct indexing
+            if aux:  # this is the case when we need another variable to have a correct indexing
                 self.arg(TypeCtrArg.INDEX, aux, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
-                # below, should we replace ANY by a specific value (for avoiding interchangeable values)?
-                auxiliary().collect_table(index, aux, {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom})
-                # functions.satisfy((index, aux) in {(v, v if 0 <= v < len(lst_flatten) else ANY) for v in index.dom}, no_comment_tags_extraction=True)
             else:
                 self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
         if condition:
@@ -1091,24 +1088,29 @@ class _Auxiliary:
         self.prefix = "aux_gb"
         self.cache = []
 
+    def new_var(self, *args):
+        dom = args[0] if len(args) == 1 and isinstance(args[0], Domain) else Domain(args)
+        assert dom.get_type() == TypeVar.INTEGER
+        index = len(self._introduced_variables)
+        name = self.prefix + "[" + str(index) + "]"
+        aux = VariableInteger(name, dom)
+        Variable.name2obj[name] = aux
+        if index == 0:
+            self._introduced_variables = EVarArray([aux], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
+        else:
+            self._introduced_variables.extend_with(aux)
+        return aux
+
     def __clear(self):
         self._introduced_variables = []
         self._collected_constraints = []
         self.cache = []
 
-    def __replace(self, obj, dom, *, systematically_append_obj=True):
-        assert dom.get_type() == TypeVar.INTEGER
-        index = len(self._introduced_variables)
-        name = self.prefix + "[" + str(index) + "]"
-        var = VariableInteger(name, dom)
-        Variable.name2obj[name] = var
-        if index == 0:
-            self._introduced_variables = EVarArray([var], self.prefix, self.prefix + "[i] is the ith auxiliary variable having been automatically introduced")
-        else:
-            self._introduced_variables.extend_with(var)
-        if systematically_append_obj or obj:
-            self._collected_constraints.append((obj, var))
-        return var
+    def __replace(self, replaced_element, dom, *, systematically_append_obj=True):
+        aux = self.new_var(dom)
+        if systematically_append_obj or replaced_element:
+            self._collected_constraints.append((replaced_element, aux))
+        return aux
 
     def n_introduced_variables(self):
         return len(self._introduced_variables)
@@ -1135,7 +1137,7 @@ class _Auxiliary:
             values = possible_range(pc.constraint.all_possible_values())
         else:
             values = range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)
-        aux = self.__replace(pc, Domain(values))  # range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)))
+        aux = self.__replace(pc, Domain(values))
         self.cache.append((pc.constraint, aux))
         return aux
 
@@ -1143,15 +1145,10 @@ class _Auxiliary:
         assert isinstance(cc, ECtr) and isinstance(cc.constraint, ConstraintWithCondition)
         cond = cc.constraint.arguments[TypeCtrArg.CONDITION].content
         op, k = cond.operator, cond.right_operand()
-        aux = self.__replace(None, Domain(range(cc.constraint.min_possible_value(), cc.constraint.max_possible_value() + 1)),
-                             systematically_append_obj=False)
+        aux = self.new_var(range(cc.constraint.min_possible_value(), cc.constraint.max_possible_value() + 1))
         cc.constraint.set_condition(TypeConditionOperator.EQ, aux)
         self._collected_raw_constraints.append(cc)
         return functions.expr(op, aux, k)
-
-    def replace_constant(self, cst):
-        assert isinstance(cst, int)
-        return self.__replace(cst, Domain({cst}), systematically_append_obj=False)
 
     def replace_node(self, node, *, values=None):
         assert isinstance(node, Node)
@@ -1179,17 +1176,17 @@ class _Auxiliary:
     def replace_element_index(self, length, index):
         if all(0 <= v < length for v in index.dom):
             return None
-        values = possible_range({v for v in index.dom if 0 <= v < length})
-        return self.__replace(None, Domain(values), systematically_append_obj=False)
-
-    def replace_table(self):
-        return self.__replace(None, Domain({0, 1}), systematically_append_obj=False)
+        aux = self.new_var(possible_range({v for v in index.dom if 0 <= v < length}))
+        # below, should we replace ANY by a specific value (for avoiding interchangeable values)?
+        self.collect_table(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
+        # functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
+        return aux
 
     def replace_int(self, v):
         assert isinstance(v, int)
         # if v in _Auxiliary.cache_ints:  # for the moment, we do not use it because it may cause some problems with some constraints (similar variables)
         #     return _Auxiliary.cache_ints[v]
-        aux = self.__replace(None, Domain(v), systematically_append_obj=False)
+        aux = self.new_var(v)
         # _Auxiliary.cache_ints[v] = aux
         return aux
 
@@ -1242,11 +1239,8 @@ def global_indirection(c):
         index = c.arguments[TypeCtrArg.INDEX].content
         length = len(c.arguments[TypeCtrArg.LIST].content)
         aux = auxiliary().replace_element_index(length, index)
-        if aux:  # this is the case if we need another variable to have a correct indexing
+        if aux:  # this is the case when we need another variable to have a correct indexing
             c.arguments[TypeCtrArg.INDEX].content = aux
-            # below, should we replace ANY by a specific value (for avoid interchangeable values)?
-            auxiliary().collect_table(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
-            # functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
     if isinstance(c, ConstraintAllDifferent):
         lst = c.arguments[TypeCtrArg.LIST].content
         pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))
@@ -1277,24 +1271,26 @@ def manage_global_indirection(*args):
     for arg in args:
         if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression, or a table constraint to be reified
             error_if(len(curser.queue_in) == 0, msg)
-            (values, x) = curser.queue_in.pop()
-            # if isinstance(x, (tuple, list)):
-            #     var = auxiliary().replace_table()
-            #     auxiliary().collect_table(x, var, [(0, 0, 1)])
-            #     arg = var
-            # else:
-            # print("hhhhh", values, x)
-            arg = functions.belong(x, values)
+            (table, scp) = curser.queue_in.pop()
+            if isinstance(scp, (tuple, list)):
+                assert all(isinstance(x, VariableInteger) for x in scp)
+                var = auxiliary().new_var(0, 1)
+                auxiliary().collect_table(scp, var, to_reified_ordinary_table(table, [x.dom for x in scp]))
+                arg = var
+            else:
+                # unary table constraint transformed into an intensional expression/tree
+                arg = functions.belong(scp, table)
         elif arg is False:  # means that we must have in a more general expression:
             # either a unary subexpression of the form 'x not in S'
             # or a nogood of the form x != t where x a list of variables and t a list of values
+            # TODO to be extended with reified non unary tables
             error_if(len(curser.queue_in) == 0, msg)
-            (values, x) = curser.queue_in.pop()
-            if isinstance(x, list) and len(x) > 1 and isinstance(values, list) and len(values) == 1:
-                assert len(x) == len(values[0])
-                arg = functions.disjunction(x[i] != values[0][i] for i in range(len(x)))
+            (table, scp) = curser.queue_in.pop()
+            if isinstance(scp, list) and len(scp) > 1 and isinstance(table, list) and len(table) == 1:
+                assert len(scp) == len(table[0])
+                arg = functions.disjunction(scp[i] != table[0][i] for i in range(len(scp)))
             else:
-                arg = functions.not_belong(x, values)
+                arg = functions.not_belong(scp, table)
         elif isinstance(arg, ECtr):
             gi = global_indirection(arg.constraint)
             if gi is None:
