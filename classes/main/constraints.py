@@ -1075,6 +1075,12 @@ class ScalarProduct:
             other = auxiliary().replace_partial_constraint(other)
         return Node.build(TypeNode.MOD, auxiliary().replace_partial_constraint(pc), other)
 
+    def __mul__(self, other):
+        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+        return Node.build(TypeNode.MUL, auxiliary().replace_partial_constraint(pc), other)
+
 
 class _Auxiliary:
     cache_ints = dict()
