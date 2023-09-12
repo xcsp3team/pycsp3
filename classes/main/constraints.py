@@ -11,7 +11,7 @@ from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
-from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, integers_to_string, table_to_string, flatten, is_matrix, error, error_if, \
+from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, integers_to_string, table_to_string, flatten, is_matrix, is_2d_list, error, error_if, \
     to_ordinary_table, to_reified_ordinary_table, warning, is_windows
 
 
@@ -968,7 +968,15 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             self.constraint = ConstraintElement(lst[:, i], index=index)
         elif isinstance(i, Node):
             self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i, values=range(max(len(row) for row in lst))))
+
         return self
+
+    def __contains__(self, item):
+        assert isinstance(self.constraint, ConstraintElement) and isinstance(item, Variable)
+        lst = self.constraint.arguments[TypeCtrArg.LIST].content
+        index = self.constraint.arguments[TypeCtrArg.INDEX].content
+        assert is_2d_list(lst, int) and isinstance(index, Variable)
+        return (index, item) in sorted([(i, v) for i, t in enumerate(lst) for v in t])
 
     def __str__(self):
         c = self.constraint
