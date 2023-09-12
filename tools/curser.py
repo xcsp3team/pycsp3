@@ -62,6 +62,25 @@ def cursing():
         # other cases ???  PartialConstraint of type sum ??
         return self.__sub__(other)
 
+    def _int_mul(self, other):
+        if not OpOverrider.activated:
+            return self.__mul__(other)
+        # Warning: it is not possible to keep:
+        #   assert isinstance(self, int)
+        # because * can be used with characters/strings as in: '/' * 3
+        # then, for example, a problem is raised in the statement:
+        #   _extract_correct_frame(function_name) of inspector.py (which indirectly calls inspect.stack(context=1))
+        if isinstance(self, int) and self == 0:
+            return 0
+        if isinstance(other, ScalarProduct):
+            other = functions.Sum(other)  # to get a partial constraint
+        if isinstance(other, Node):
+            return Node.build(TypeNode.MUL, self, other)
+        if isinstance(other, PartialConstraint):
+            return Node.build(TypeNode.MUL, self, auxiliary().replace_partial_constraint(other))
+        # other cases ???  PartialConstraint of type sum ??
+        return self.__mul__(other)
+
     def _int_floordiv(self, other):
         if not OpOverrider.activated:
             return self.__floordiv__(other)
@@ -241,6 +260,7 @@ def cursing():
     curse(bool, "__and__", _bool_and)
     curse(int, "__add__", _int_add)
     curse(int, "__sub__", _int_sub)
+    curse(int, "__mul__", _int_mul)
     curse(int, "__floordiv__", _int_floordiv)
     curse(int, "__mod__", _int_mod)
     curse(dict, "__add__", _dict_add)

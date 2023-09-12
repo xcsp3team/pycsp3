@@ -91,7 +91,6 @@ def _extract_correct_frame(function_name):
 
 def _extract_code(function_name):
     index, frame_info = _extract_correct_frame(function_name)  # getting the good frame
-
     if frame_info.filename == "<stdin>":  # Console case
         if is_windows():
             assert False, "Console mode is not available on Windows"

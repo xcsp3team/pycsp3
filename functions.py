@@ -172,8 +172,8 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
     size = [size] if isinstance(size, int) else size
     error_if(any(dimension == 0 for dimension in size), "No dimension must not be equal to 0")
     checkType(size, [int])
-    # checkType(dom, (range, Domain, [int, range, str, Domain, type(None)], type(lambda: 0)))  # TODO a problem with large sets
 
+    # checkType(dom, (range, Domain, [int, range, str, Domain, type(None)], type(lambda: 0)))  # TODO a problem with large sets
     ext_name = extract_declaration_for("VarArray")
     if isinstance(ext_name, list):
         array_name = ext_name
@@ -184,7 +184,6 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
         array_name = id if id else ext_name  # the specified name, if present, has priority
         error_if(not _valid_identifier(array_name), "The variable identifier " + str(array_name) + " is not valid")
         error_if(array_name in Variable.name2obj, "The identifier " + str(array_name) + " is used twice. This is not possible")
-
     if comment is None and not isinstance(array_name, list):
         comment, tags = comment_and_tags_of(function_name="VarArray")
     else:
