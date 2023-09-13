@@ -1291,18 +1291,25 @@ def manage_global_indirection(*args):
                 var = auxiliary().new_var(0, 1)
                 auxiliary().collect_table(scp, var, to_reified_ordinary_table(table, [x.dom for x in scp]))
                 arg = var
+            elif isinstance(scp, int):
+                assert is_1d_list(table, Variable)
+                arg = functions.disjunction(x == scp for x in table if x)
             else:
                 # unary table constraint transformed into an intensional expression/tree
                 arg = functions.belong(scp, table)
         elif arg is False:  # means that we must have in a more general expression:
             # either a unary subexpression of the form 'x not in S'
             # or a nogood of the form x != t where x a list of variables and t a list of values
+            # or an expression of the form 'v not in X'
             # TODO to be extended with reified non unary tables
             error_if(len(curser.queue_in) == 0, msg)
             (table, scp) = curser.queue_in.pop()
             if isinstance(scp, list) and len(scp) > 1 and isinstance(table, list) and len(table) == 1:
                 assert len(scp) == len(table[0])
                 arg = functions.disjunction(scp[i] != table[0][i] for i in range(len(scp)))
+            elif isinstance(scp, int):
+                assert is_1d_list(table, Variable)
+                arg = functions.conjunction(x != scp for x in table if x)
             else:
                 arg = functions.not_belong(scp, table)
         elif isinstance(arg, ECtr):

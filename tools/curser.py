@@ -264,6 +264,7 @@ def cursing():
     curse(int, "__floordiv__", _int_floordiv)
     curse(int, "__mod__", _int_mod)
     curse(dict, "__add__", _dict_add)
+    # curse(tuple, "__eq__", _tuple_eq)  # Not possible with the current version of forbidden fruit
     curse(tuple, "__mul__", _tuple_mul)
     # curse(list, "__getitem__", _list_getitem) # TODO: not working. why? because of forbiddenfruit?
     curse(list, "__mul__", _list_mul)

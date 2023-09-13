@@ -305,26 +305,38 @@ def _wrap_intension_constraints(entities):
     return entities
 
 
-def And(*args):
+def And(*args, meta=False):
     """
     Builds a meta-constraint And from the specified arguments.
     For example: And(Sum(x) > 10, AllDifferent(x))
 
+    When the parameter 'meta' is not true (the usual and default case),
+    reification is employed.
+
     :param args: a tuple of constraints
-    :return: a meta-constraint And
+    :param meta true if a meta-constraint form must be really posted
+    :return: a meta-constraint And, or its reified form
     """
-    return EAnd(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    if meta:
+        return EAnd(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    return conjunction(*args)
 
 
-def Or(*args):
+def Or(*args, meta=False):
     """
     Builds a meta-constraint Or from the specified arguments.
     For example: Or(Sum(x) > 10, AllDifferent(x))
 
+    When the parameter 'meta' is not true (the usual and default case),
+    reification is employed.
+
     :param args: a tuple of constraints
-    :return: a meta-constraint Or
+    :param meta true if a meta-constraint form must be really posted
+    :return: a meta-constraint Or, or its reified form
     """
-    return EOr(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    if meta:
+        return EOr(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    return disjunction(*args)
 
 
 def Not(*args):
@@ -676,9 +688,11 @@ def imply(*args):
         tp = list(tp)  # to transform sets into lists
         assert len(tp) >= 1
         return imply(cnd, tp[0]) if len(tp) == 1 else [imply(cnd, v) for v in tp]
-    res = manage_global_indirection(*args)
+    if isinstance(tp, PartialConstraint):
+        tp = Node.build(TypeNode.EQ, auxiliary().replace_partial_constraint(tp), 1)
+    res = manage_global_indirection(cnd, tp)
     if res is None:
-        return IfThen(args)
+        return IfThen(cnd, tp)
     # if len(res) == 2 and isinstance(res[1], (tuple, list, set, frozenset)):
     #     return [imply(res[0], v) for v in res[1]]
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
@@ -724,6 +738,9 @@ def ift(*args):
 def belong(x, values):
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
+    if isinstance(x, int):
+        assert is_1d_list(values, Variable)
+        return disjunction(y == x for y in values if y)
     assert isinstance(x, Variable)
     if isinstance(values, range):
         if values.step != 1 or len(values) < 10:
@@ -739,6 +756,9 @@ def belong(x, values):
 def not_belong(x, values):
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
+    if isinstance(x, int):
+        assert is_1d_list(values, Variable)
+        return conjunction(y != x for y in values if y)
     assert isinstance(x, Variable)
     if isinstance(values, range):
         if values.step != 1 or len(values) < 10:
