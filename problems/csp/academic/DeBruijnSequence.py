@@ -30,7 +30,7 @@ satisfy(
     # de Bruijn condition
     [d[i - 1][j] == d[i % m][j - 1] for i in range(1, m + 1) for j in range(1, n)],
 
-    Cardinality(d[:, 0], occurrences={i: g[i] for i in range(b)}),
+    Cardinality(d[:, 0], occurrences=g),
 
     # tag(symmetry-breaking)
     Minimum(x) == x[0]

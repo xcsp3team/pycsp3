@@ -63,7 +63,8 @@ class Compilation:
 def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output", "suffix")
     options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
-                      "keepSmartTransitions", "keepsum", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues", "groupsumcoeffs",
+                      "keepSmartTransitions", "keepsum", "unchangescalar", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues",
+                      "groupsumcoeffs",
                       "usemeta", "dontuseauxcache", "debug", "mini", "uncurse")
     if options.checker is None:
         options.checker = "fast"

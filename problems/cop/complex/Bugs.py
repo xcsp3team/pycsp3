@@ -31,10 +31,10 @@ satisfy(
     [n1[group[j]] <= (len(group) - j) * lengths[i] for i, group in enumerate(groups) for j in range(len(group))],
 
     # computing values of n1
-    Cardinality(x, occurrences={i: n1[i] for i in range(nBugs)}),
+    Cardinality(x, occurrences=n1),
 
     # computing values of n2
-    Cardinality([x[bug.row][bug.col] for bug in bugs], occurrences={i: n2[i] for i in range(nBugs)}),
+    Cardinality([x[bug.row][bug.col] for bug in bugs], occurrences=n2),
 
     # linking variables of n1 and n2
     [n2[i] * lengths[bugs[i].type] == n1[i] for i in range(nBugs)],

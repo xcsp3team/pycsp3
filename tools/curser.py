@@ -694,7 +694,7 @@ class OpOverrider:
             result = OpOverrider.project_recursive(array, indexes, 0)
             try:
                 # TODO for lv, are sublists also guaranteed to be ListVar? and for li, should we return a ListInt instead of a ListVar?
-                return ListVar(result)
+                return ListInt(result) if is_1d_list(result, int) else ListVar(result)
             except TypeError:
                 return result
         result = list.__getitem__(array, indexes)

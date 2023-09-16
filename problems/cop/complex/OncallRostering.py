@@ -39,10 +39,10 @@ satisfy(
     [x[i] != j for j in range(nWorkers) for i in unavailable[j]],
 
     # counting working (regular) days by each worker
-    Cardinality([x[i] for i in range(nDays) if i not in weekends], occurrences={j: do[j] for j in range(nWorkers)}),
+    Cardinality([x[i] for i in range(nDays) if i not in weekends], occurrences=do),
 
     # counting working weekends by each worker
-    Cardinality([x[i] for i in weekends], occurrences={j: wo[j] for j in range(nWorkers)}),
+    Cardinality([x[i] for i in weekends], occurrences=wo),
 
     # computing the balance violation wrt working days
     [abs(workloads[j2] * do[j1] - workloads[j1] * do[j2]) <= 100 * db for j1, j2 in combinations(range(nWorkers), 2)],
