@@ -847,6 +847,61 @@ class ConstraintSlide(ConstraintUnmergeable):
         self.arg(TypeCtrArg.INTENTION, slide_expression)  # possibly transformed into extension later in xcsp
 
 
+class ConstraintDummyConstant(ConstraintUnmergeable):
+    def __init__(self, val):
+        super().__init__(TypeCtr.DUMMY)
+        assert isinstance(val, int)
+        self.val = val
+
+    def __eq__(self, other):
+        if isinstance(other, (Node, Variable)):
+            return other == self.val  # for building a new tree expression
+        if isinstance(other, ConstraintDummyConstant):
+            return ConstraintDummyConstant(1 if self.val == other.val else 0)
+        assert isinstance(other, int)
+        return ConstraintDummyConstant(1 if self.val == other else 0)
+
+    def __ne__(self, other):
+        if isinstance(other, (Node, Variable)):
+            return other != self.val  # for building a new tree expression
+        if isinstance(other, ConstraintDummyConstant):
+            return ConstraintDummyConstant(1 if self.val != other.val else 0)
+        assert isinstance(other, int)
+        return ConstraintDummyConstant(1 if self.val != other else 0)
+
+    def __lt__(self, other):
+        if isinstance(other, (Node, Variable)):
+            return other > self.val  # for building a new tree expression
+        if isinstance(other, ConstraintDummyConstant):
+            return ConstraintDummyConstant(1 if self.val < other.val else 0)
+        assert isinstance(other, int)
+        return ConstraintDummyConstant(1 if self.val < other else 0)
+
+    def __le__(self, other):
+        if isinstance(other, (Node, Variable)):
+            return other >= self.val  # for building a new tree expression
+        if isinstance(other, ConstraintDummyConstant):
+            return ConstraintDummyConstant(1 if self.val <= other.val else 0)
+        assert isinstance(other, int)
+        return ConstraintDummyConstant(1 if self.val <= other else 0)
+
+    def __ge__(self, other):
+        if isinstance(other, (Node, Variable)):
+            return other <= self.val  # for building a new tree expression
+        if isinstance(other, ConstraintDummyConstant):
+            return ConstraintDummyConstant(1 if self.val >= other.val else 0)
+        assert isinstance(other, int)
+        return ConstraintDummyConstant(1 if self.val >= other else 0)
+
+    def __gt__(self, other):
+        if isinstance(other, (Node, Variable)):
+            return other < self.val  # for building a new tree expression
+        if isinstance(other, ConstraintDummyConstant):
+            return ConstraintDummyConstant(1 if self.val > other.val else 0)
+        assert isinstance(other, int)
+        return ConstraintDummyConstant(1 if self.val > other else 0)
+
+
 ''' PartialConstraints and ScalarProduct '''
 
 

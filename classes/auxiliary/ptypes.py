@@ -67,7 +67,8 @@ class TypeCtr(AbstractType):
     AND, OR, NOT, XOR, IFF, IF_THEN, IF_THEN_ELSE = auto(7)
     SLIDE, SEQBIN = auto(2)
     MINIMIZE, MAXIMIZE = auto(2)  # used for posting objectives (not exactly constraints)
-    SUBSET_ALL_DIFFERENT = auto(0)  # experimental
+    SUBSET_ALL_DIFFERENT = auto(1)  # experimental
+    DUMMY = auto(1)
 
 
 @unique

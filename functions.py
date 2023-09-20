@@ -16,8 +16,8 @@ from pycsp3.classes.main.constraints import (
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
     ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
-    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintRefutation, ConstraintSlide, PartialConstraint,
-    ScalarProduct, auxiliary, manage_global_indirection)
+    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintRefutation, ConstraintDummyConstant,
+    ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -440,6 +440,10 @@ def satisfy(*args, no_comment_tags_extraction=False):
 
     def _group(*_args):
         t = flatten(*_args)
+        if any(isinstance(v, ConstraintDummyConstant) for v in t):
+            if any(isinstance(v, ConstraintDummyConstant) and v.val != 1 for v in t):
+                warning("It seems that there is a bad expression in the model")
+            t = [v for v in t if not isinstance(v, ConstraintDummyConstant)]
         if len(t) == 0:
             return None
         entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(t))
@@ -750,6 +754,8 @@ def belong(x, values):
             values = list(values)
         else:
             return Node.in_range(x, values)
+    elif isinstance(values, int):
+        values = [values]
     assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
     if len(values) == 1:
         return Node.build(EQ, x, values[0])
@@ -768,6 +774,8 @@ def not_belong(x, values):
             values = list(values)
         else:
             return Node.not_in_range(x, values)
+    elif isinstance(values, int):
+        values = [values]
     assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
     if len(values) == 1:
         return Node.build(NE, x, values[0])
@@ -1155,7 +1163,7 @@ def Count(term, *others, value=None, values=None, condition=None):
     """
     terms = flatten(term, others)
     if len(terms) == 0:
-        return 0
+        return ConstraintDummyConstant(0)
     # assert len(terms) > 0, "A count with an empty scope"
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):

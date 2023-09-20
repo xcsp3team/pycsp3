@@ -128,7 +128,7 @@ def is_1d_tuple(l, types):
 
 
 def is_1d_list(l, types=None):
-    if not isinstance(l, list) or types is not None and len(l) == 0:
+    if not isinstance(l, list):  # or types is not None and len(l) == 0:
         return False
     return all(isinstance(v, types) if types else not isinstance(v, list) for v in l)
 
