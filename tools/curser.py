@@ -747,6 +747,9 @@ class ListInt(list):
         if isinstance(other, PartialConstraint):
             queue_in.append((list(self), other))
             return True
+        if len(self) == 0 and isinstance(other, Variable):
+            queue_in.append((list(self), other))
+            return False
         if is_containing(other, Variable) and len(self) > 0:
             if isinstance(self[0], (tuple, int)):
                 queue_in.append((self, other))

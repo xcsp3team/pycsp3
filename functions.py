@@ -278,6 +278,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         if not bool_value and len(right_operand) == 0:
             return None
         # TODO what to do if the table is empty and bool_value is true? an error message ?
+        # if len(right_operand) == 0:  # it means an empty table, and Python will generate True (not in [] => True)
         if len(left_operand) == 1:
             if not is_1d_list(right_operand, int) and not is_1d_list(right_operand, str):
                 assert all(isinstance(v, (tuple, list)) and len(v) == 1 for v in right_operand)
@@ -446,6 +447,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
         return EToGather(entities)
 
     def _block(*_args):
+
         def _reorder(_entities):
             reordered_entities = []
             g = []
@@ -534,12 +536,13 @@ def satisfy(*args, no_comment_tags_extraction=False):
             if len(arg) == len(comments2[i]) == len(tags2[i]):  # if comments are not too wildly put
                 if isinstance(arg, tuple):
                     arg = list(arg)
-                for j, ele in enumerate(arg):
+                for j in range(len(arg)):
                     if isinstance(arg[j], (ECtr, ESlide)):
                         arg[j].note(comments2[i][j]).tag(tags2[i][j])
-                    elif comments2[i][j] or tags2[i][j]:
+                    else:  # if comments2[i][j] or tags2[i][j]:
+                        # BE CAREFUL: if bool present _group must be executed systematically (otherwise, confusion between false and True possible)
                         if isinstance(arg[j], list) and len(arg[j]) > 0 and isinstance(arg[j][0], list):
-                            for k, kele in enumerate(arg[j]):
+                            for k in range(len(arg[j])):
                                 arg[j][k] = _group(arg[j][k])
                             arg[j] = _block(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
                         else:
@@ -1241,6 +1244,13 @@ def NValues(term, *others, excepting=None, condition=None):
     :return: a component/constraint NValues
     """
     terms = flatten(term, others)
+    if len(terms) == 0:
+        return 0
+    for i, t in enumerate(terms):
+        if isinstance(t, PartialConstraint):
+            terms[i] = auxiliary().replace_partial_constraint(t)
+        elif isinstance(t, int):
+            terms[i] = auxiliary().replace_int(t)
     checkType(terms, ([Variable], [Node]))
     if excepting is not None:
         excepting = flatten(excepting)
