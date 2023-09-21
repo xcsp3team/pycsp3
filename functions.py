@@ -25,8 +25,8 @@ from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListCtr, cursing
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import (
-    flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2, warning, error_if
-)
+    flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2, warning,
+    warning_if, error_if)
 
 ''' Global Variables '''
 
@@ -245,7 +245,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             if len(right_operand) < 4:  # TODO hard coding (introducing an option to adjust that?)
                 return _Intension(Node.build(IN, left_operand, right_operand) if bool_value else Node.build(NOTIN, left_operand, right_operand))
             if bool_value:
-                condition = Condition.build_condition(TypeConditionOperator.EQ, left_operand)
+                condition = Condition.build_condition((TypeConditionOperator.EQ, left_operand))
                 return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=condition))  # member
             else:
                 return [_Intension(Node.build(NE, left_operand, y)) for y in right_operand]
@@ -351,15 +351,21 @@ def Not(*args):
     return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
 
 
-def Xor(*args):
+def Xor(*args, meta=False):
     """
     Builds a meta-constraint Xor from the specified arguments.
     For example: Xor(Sum(x) > 10, AllDifferent(x))
 
+    When the parameter 'meta' is not true (the usual and default case),
+    reification is employed.
+
     :param args: a tuple of constraints
-    :return: a meta-constraint Xor
+    :param meta true if a meta-constraint form must be really posted
+    :return: a meta-constraint Xor, or its reified form
     """
-    return EXor(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    if meta:
+        return EXor(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    return xor(*args)
 
 
 def IfThen(Cond, Then, meta=False):
@@ -376,7 +382,7 @@ def IfThen(Cond, Then, meta=False):
     :return: a meta-constraint IfThen, ot its reified form
     """
     if meta:
-        return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+        return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Cond, Then))))
     return imply(Cond, Then)
 
 
@@ -395,7 +401,7 @@ def IfThenElse(Cond, Then, Else, meta=False):
     :return: a meta-constraint IfThenElse, or its reified form
     """
     if meta:
-        return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+        return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Cond, Then, Else))))
     return ift(Cond, Then, Else)
 
 
@@ -438,21 +444,15 @@ def satisfy(*args, no_comment_tags_extraction=False):
     """
     global no_parameter_satisfy, nb_parameter_satisfy
 
-    def _group(*_args):
-        t = flatten(*_args)
-        if any(isinstance(v, ConstraintDummyConstant) for v in t):
-            if any(isinstance(v, ConstraintDummyConstant) and v.val != 1 for v in t):
-                warning("It seems that there is a bad expression in the model")
-            t = [v for v in t if not isinstance(v, ConstraintDummyConstant)]
-        if len(t) == 0:
-            return None
-        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(t))
-        checkType(entities, [ECtr, ECtrs, EMetaCtr])
-        return EToGather(entities)
+    def _remove_dummy_constraints(tab):
+        if any(isinstance(v, ConstraintDummyConstant) for v in tab):
+            warning_if(any(isinstance(v, ConstraintDummyConstant) and v.val != 1 for v in tab), "It seems that there is a bad expression in the model")
+            return [v for v in tab if not isinstance(v, ConstraintDummyConstant)]
+        return tab
 
-    def _block(*_args):
+    def _group(*_args, block=False):
 
-        def _reorder(_entities):
+        def _block_reorder(_entities):
             reordered_entities = []
             g = []
             for c in _entities:
@@ -467,9 +467,12 @@ def satisfy(*args, no_comment_tags_extraction=False):
                 reordered_entities.append(_group(g))
             return reordered_entities
 
-        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*_args)))
-        checkType(entities, [ECtr, ECtrs])
-        return EBlock(_reorder(entities))
+        tab = _remove_dummy_constraints(flatten(*_args))
+        if len(tab) == 0:
+            return None
+        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(tab))
+        checkType(entities, [ECtr, ECtrs, EMetaCtr])
+        return EBlock(_block_reorder(entities)) if block else EToGather(entities)
 
     def _reorder(l):  # if constraints are given in (sub-)lists inside tuples; we flatten and reorder them to hopefully improve compactness
         d = dict()
@@ -479,10 +482,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
                     d.setdefault(i, []).append(v)
             else:
                 d.setdefault(0, []).append(tp)
-        r = []
-        for i in range(len(d)):
-            r.extend(d[i])
-        return r
+        return [v for vs in d.values() for v in vs]
 
     no_parameter_satisfy = 0
     nb_parameter_satisfy = len(args)
@@ -490,6 +490,13 @@ def satisfy(*args, no_comment_tags_extraction=False):
 
     t = []
     for i, arg in enumerate(args):
+        if arg is None:
+            continue
+        if isinstance(arg, ConstraintDummyConstant):
+            warning_if(arg.val != 1, "It seems that there is a bad expression in the model " + str(arg))
+            continue
+        if isinstance(arg, (tuple, set, frozenset, types.GeneratorType)):
+            arg = list(arg)
         if isinstance(arg, list) and any(v is None for v in arg):
             # TODO: what if there is a trailing comma?
             if len(arg) == len(comments2[i]):
@@ -506,13 +513,8 @@ def satisfy(*args, no_comment_tags_extraction=False):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
         no_parameter_satisfy = i
-        if isinstance(arg, (set, frozenset)):
-            arg = list(arg)
-        assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list, tuple, type(None), types.GeneratorType)), \
-            "non authorized type " + str(arg) + " " + str(type(arg))
-        if arg is None:
-            continue
-        arg = list(arg) if isinstance(arg, types.GeneratorType) else arg
+
+        assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list)), "non authorized type " + str(arg) + " " + str(type(arg))
         comment_at_2 = any(comment != '' for comment in comments2[i])
         tag_at_2 = any(tag != '' for tag in tags2[i])
         if isinstance(arg, (ECtr, EMetaCtr, ESlide)):  # case: simple constraint or slide
@@ -524,35 +526,31 @@ def satisfy(*args, no_comment_tags_extraction=False):
             to_post = _Intension(arg)
         elif isinstance(arg, bool):  # a Boolean representing the case of a partial constraint or a node with operator in {IN, NOT IN}
             assert queue_in, "An argument of satisfy() before position " + str(i) + " is badly formed"
-            # assert queue_in, "A boolean that do not represents a constraint is in the list of constraints in satisfy(): " \
-            #                 + str(args) + " " + str(i) + ".\nA constraint is certainly badly formed"
             other, partial = queue_in.popleft()
             to_post = _bool_interpretation_for_in(partial, other, arg)
             if isinstance(to_post, list):
                 to_post = _group(to_post)
         elif any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide
-            to_post = _block(arg)
+            to_post = _group(arg, block=True)
         elif comment_at_2 or tag_at_2:  # Case: block
             if len(arg) == len(comments2[i]) - 1 == len(tags2[i]) - 1 and comments2[i][-1] == "" and tags2[i][-1] == "":
                 # this avoids the annoying case where there is a comma at the end of the last line in a block
                 comments2[i] = comments2[i][:-1]
                 tags2[i] = tags2[i][:-1]
             if len(arg) == len(comments2[i]) == len(tags2[i]):  # if comments are not too wildly put
-                if isinstance(arg, tuple):
-                    arg = list(arg)
                 for j in range(len(arg)):
                     if isinstance(arg[j], (ECtr, ESlide)):
                         arg[j].note(comments2[i][j]).tag(tags2[i][j])
-                    else:  # if comments2[i][j] or tags2[i][j]:
+                    else:  # if comments2[i][j] or tags2[i][j]: PB if we use this as indicated below
                         # BE CAREFUL: if bool present _group must be executed systematically (otherwise, confusion between false and True possible)
                         if isinstance(arg[j], list) and len(arg[j]) > 0 and isinstance(arg[j][0], list):
                             for k in range(len(arg[j])):
                                 arg[j][k] = _group(arg[j][k])
-                            arg[j] = _block(arg[j]).note(comments2[i][j]).tag(tags2[i][j])
+                            arg[j] = _group(arg[j], block=True).note(comments2[i][j]).tag(tags2[i][j])
                         else:
                             g = _group(arg[j])
                             arg[j] = g.note(comments2[i][j]).tag(tags2[i][j]) if g is not None else None
-            to_post = _block(arg)
+            to_post = _group(arg, block=True)
         else:  # Group
             to_post = _group(arg)
         if to_post is not None:
@@ -733,7 +731,7 @@ def ift(*args):
         return [imply(cnd, v) for v in tp] + [imply(~cnd, v) for v in ep]
     res = manage_global_indirection(*args)
     if res is None:
-        return IfThenElse(args, meta=True)
+        return IfThenElse(*args, meta=True)
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     assert len(res) == 3
     if isinstance(res[0], int):
@@ -1494,7 +1492,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
                     if xi.dom.greatest_value() + wi <= xj.dom.smallest_value or xj.dom.greatest_value() + wj <= xi.dom.smallest_value():
                         continue
                     if yi.dom.greatest_value + hi <= yj.dom.smallest_value or yj.dom.greatest_value() + hj <= yi.dom.smallest_value():
-                        continue;
+                        continue
                     t.append((xi, xj, yi, yj) in to_starred_table_for_no_overlap2(xi, xj, yi, yj, wi, wj, hi, hj))
         return t
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))

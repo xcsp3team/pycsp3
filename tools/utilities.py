@@ -438,19 +438,24 @@ def warning(message):
     print("\n  " + ORANGE + "Warning: " + WHITE + message)
 
 
-def error(s):
+def warning_if(test, message):
+    if test:
+        warning(message)
+
+
+def error(message):
     Error.errorOccurrence = True
     print("\n\t" + RED + "ERROR: " + WHITE, s)
     print("\t\t(add option -ev to your command if you want to see the trace of the error)\n")
     if options.ev:
-        raise TypeError(s)
+        raise TypeError(message)
     else:
         sys.exit(1)
 
 
-def error_if(test, s):
+def error_if(test, message):
     if test:
-        error(s)
+        error(message)
 
 
 polyominoes = [

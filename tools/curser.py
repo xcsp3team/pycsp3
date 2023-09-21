@@ -536,7 +536,7 @@ class OpOverrider:
             assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
         res = manage_global_indirection(self, other)
         if res is None:
-            return functions.Or(self, other)
+            return functions.Or(self, other, meta=True)
         self, other = res
         if self is None or other is None:
             return object.__or__(self, other)
@@ -557,7 +557,7 @@ class OpOverrider:
             assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
         res = manage_global_indirection(self, other)
         if res is None:
-            return functions.And(self, other)
+            return functions.And(self, other, meta=True)
         self, other = res
         if self is None or other is None:
             return object.__and__(self, other)
@@ -581,7 +581,7 @@ class OpOverrider:
             assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
         res = manage_global_indirection(self, other)
         if res is None:
-            return functions.Xor(self, other)
+            return functions.Xor(self, other, meta=True)
         self, other = res
         if self is None or other is None:
             return object.__xor__(self, other)
