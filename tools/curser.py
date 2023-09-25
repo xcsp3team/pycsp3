@@ -571,7 +571,7 @@ class OpOverrider:
         if isinstance(self, ECtr):
             gi = global_indirection(self.constraint)
             if gi is None:
-                return functions.Not(self)
+                return functions.Not(self, meta=True)
             self = gi
         return Variable.__invert__(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
 

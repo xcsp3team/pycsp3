@@ -370,6 +370,25 @@ class TypeNode(Enum):
         self.max_arity = max_arity
         self.lowercase_name = self.name.lower()
 
+    def __invert__(self):
+        if self == TypeNode.EQ:
+            return TypeNode.NE
+        if self == TypeNode.NE:
+            return TypeNode.EQ
+        if self == TypeNode.LT:
+            return TypeNode.GE
+        if self == TypeNode.LE:
+            return TypeNode.GT
+        if self == TypeNode.GT:
+            return TypeNode.LE
+        if self == TypeNode.GE:
+            return TypeNode.LT
+        if self == TypeNode.IN:
+            return TypeNode.NOTIN
+        if self == TypeNode.NOTIN:
+            return TypeNode.IN
+        return None
+
     def __str__(self):
         return self.lowercase_name
 

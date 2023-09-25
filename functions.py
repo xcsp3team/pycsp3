@@ -340,15 +340,24 @@ def Or(*args, meta=False):
     return disjunction(*args)
 
 
-def Not(*args):
+def Not(arg, meta=False):
     """
     Builds a meta-constraint Not from the specified argument.
     For example: Not(AllDifferent(x))
 
-    :param args: a constraint
-    :return: a meta-constraint Not
+    When the parameter 'meta' is not true (the usual and default case),
+    reification is employed.
+
+    :param arg: a constraint
+    :param meta true if a meta-constraint form must be really posted
+    :return: a meta-constraint Not, or its reified form
     """
-    return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    if meta:
+        return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(arg)))
+    res = manage_global_indirection(arg)
+    if res is None:
+        return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(arg)))
+    return ~res  # TODO to be checked
 
 
 def Xor(*args, meta=False):
@@ -368,7 +377,7 @@ def Xor(*args, meta=False):
     return xor(*args)
 
 
-def IfThen(Cond, Then, meta=False):
+def IfThen(Test, Then, meta=False):
     """
     Builds a meta-constraint IfThen from the specified arguments.
     For example: IfThen(Sum(x) > 10, AllDifferent(x))
@@ -376,17 +385,17 @@ def IfThen(Cond, Then, meta=False):
     When the parameter 'meta' is not true (the usual and default case),
     reification is employed.
 
-    :param Cond: the condition part
+    :param Test: the condition part
     :param Then the Then part
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint IfThen, ot its reified form
     """
     if meta:
-        return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Cond, Then))))
-    return imply(Cond, Then)
+        return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Test, Then))))
+    return imply(Test, Then)
 
 
-def IfThenElse(Cond, Then, Else, meta=False):
+def IfThenElse(Test, Then, Else, meta=False):
     """
     Builds a meta-constraint IfThenElse from the specified arguments.
     For example: IfThenElse(Sum(x) > 10, AllDifferent(x), AllEqual(x))
@@ -394,18 +403,48 @@ def IfThenElse(Cond, Then, Else, meta=False):
     When the parameter 'meta' is not true (the usual and default case),
     reification is employed.
 
-    :param Cond the condition part
+    :param Test the condition part
     :param Then the Then part
     :param Else the Else part
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint IfThenElse, or its reified form
     """
     if meta:
-        return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Cond, Then, Else))))
-    return ift(Cond, Then, Else)
+        return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Test, Then, Else))))
+    return ift(Test, Then, Else)
 
 
-def Iff(*args):
+def If(Test, *, Then, Else=None, meta=False):
+    """
+    Builds a complex form of constraints, that can possibly be decomposed, at compilation time.
+
+    For example: If(Sum(x) > 10, Then=AllDifferent(x))
+    or: If(Sum(x) > 10, Then=AllDifferent(x), Else=AllEqual(x))
+
+    When the parameter 'meta' is not true (the usual and default case),
+    reification is employed.
+
+    :param Test: the condition part
+    :param Then the Then part
+    :param Else the Else part
+    :param meta true if a meta-constraint form must be really posted
+    :return: a meta-constraint IfThen, ot its reified form
+    """
+    assert Test is not None and Then is not None
+    if meta:
+        if Else is None:
+            return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Test, Then))))
+        else:
+            return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Test, Then, Else))))
+    return imply(Test, Then) if Else is None else ift(Test, Then, Else)
+
+
+def Match(Expr, *, Cases):
+    assert isinstance(Expr, (Variable, Node)) and isinstance(Cases, dict)
+    return [expr(~k.operator, Expr, k.right_operand()) | v if isinstance(k, Condition) else (Expr != k) | v for k, v in Cases.items()]
+
+
+def Iff(term, *others, Conjunction=None):
     """
     Builds a meta-constraint Iff from the specified arguments.
     For example: Iff(Sum(x) > 10, AllDifferent(x))
@@ -471,13 +510,14 @@ def satisfy(*args, no_comment_tags_extraction=False):
         if len(tab) == 0:
             return None
         entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(tab))
+        # print(entities)
         checkType(entities, [ECtr, ECtrs, EMetaCtr])
         return EBlock(_block_reorder(entities)) if block else EToGather(entities)
 
     def _reorder(l):  # if constraints are given in (sub-)lists inside tuples; we flatten and reorder them to hopefully improve compactness
         d = dict()
         for tp in l:
-            if isinstance(tp, tuple):
+            if isinstance(tp, (tuple, list)):
                 for i, v in enumerate(tp):
                     d.setdefault(i, []).append(v)
             else:
@@ -509,6 +549,10 @@ def satisfy(*args, no_comment_tags_extraction=False):
             if isinstance(arg[0], tuple):
                 arg = _reorder(arg)
             elif isinstance(arg[0], list):  # do not work if the constraints involve the operator 'in'
+                # triple_list = all(isinstance(ar, list) and (len(ar) == 0 or isinstance(ar, (tuple, list))) for ar in arg)
+                # if triple_list:
+                #     arg = _reorder(flatten(arg))
+                # else:
                 for j, l in enumerate(arg):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
@@ -530,29 +574,33 @@ def satisfy(*args, no_comment_tags_extraction=False):
             to_post = _bool_interpretation_for_in(partial, other, arg)
             if isinstance(to_post, list):
                 to_post = _group(to_post)
-        elif any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide
-            to_post = _group(arg, block=True)
-        elif comment_at_2 or tag_at_2:  # Case: block
-            if len(arg) == len(comments2[i]) - 1 == len(tags2[i]) - 1 and comments2[i][-1] == "" and tags2[i][-1] == "":
-                # this avoids the annoying case where there is a comma at the end of the last line in a block
-                comments2[i] = comments2[i][:-1]
-                tags2[i] = tags2[i][:-1]
-            if len(arg) == len(comments2[i]) == len(tags2[i]):  # if comments are not too wildly put
-                for j in range(len(arg)):
-                    if isinstance(arg[j], (ECtr, ESlide)):
-                        arg[j].note(comments2[i][j]).tag(tags2[i][j])
-                    else:  # if comments2[i][j] or tags2[i][j]: PB if we use this as indicated below
-                        # BE CAREFUL: if bool present _group must be executed systematically (otherwise, confusion between false and True possible)
-                        if isinstance(arg[j], list) and len(arg[j]) > 0 and isinstance(arg[j][0], list):
-                            for k in range(len(arg[j])):
-                                arg[j][k] = _group(arg[j][k])
-                            arg[j] = _group(arg[j], block=True).note(comments2[i][j]).tag(tags2[i][j])
-                        else:
-                            g = _group(arg[j])
-                            arg[j] = g.note(comments2[i][j]).tag(tags2[i][j]) if g is not None else None
-            to_post = _group(arg, block=True)
-        else:  # Group
-            to_post = _group(arg)
+        else:
+            assert isinstance(arg, list)
+            if any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide
+                to_post = _group(arg, block=True)
+            elif comment_at_2 or tag_at_2:  # Case: block
+                if len(arg) == len(comments2[i]) - 1 == len(tags2[i]) - 1 and comments2[i][-1] == "" and tags2[i][-1] == "":
+                    # this avoids the annoying case where there is a comma at the end of the last line in a block
+                    comments2[i] = comments2[i][:-1]
+                    tags2[i] = tags2[i][:-1]
+                if len(arg) == len(comments2[i]) == len(tags2[i]):  # if comments are not too wildly put
+                    for j in range(len(arg)):
+                        if isinstance(arg[j], (ECtr, ESlide)):
+                            arg[j].note(comments2[i][j]).tag(tags2[i][j])
+                        else:  # if comments2[i][j] or tags2[i][j]: PB if we use this as indicated below
+                            # BE CAREFUL: if bool present _group must be executed systematically (otherwise, confusion between false and True possible)
+                            if isinstance(arg[j], list) and len(arg[j]) == 1:
+                                arg[j] = arg[j][0]
+                            if isinstance(arg[j], list) and len(arg[j]) > 0 and isinstance(arg[j][0], list):
+                                for k in range(len(arg[j])):
+                                    arg[j][k] = _group(arg[j][k])
+                                arg[j] = _group(arg[j], block=True).note(comments2[i][j]).tag(tags2[i][j])
+                            else:
+                                g = _group(arg[j])
+                                arg[j] = g.note(comments2[i][j]).tag(tags2[i][j]) if g is not None else None
+                to_post = _group(arg, block=True)
+            else:  # Group
+                to_post = _group(arg)
         if to_post is not None:
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
@@ -674,7 +722,7 @@ def iff(*args):
     assert len(args) >= 2
     res = manage_global_indirection(*args)
     if res is None:
-        return Iff(args)
+        return Iff(*args)
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     return res[0] == res[1] if len(res) == 2 else Node.build(TypeNode.IFF, *res)
 
@@ -697,7 +745,7 @@ def imply(*args):
         tp = Node.build(TypeNode.EQ, auxiliary().replace_partial_constraint(tp), 1)
     res = manage_global_indirection(cnd, tp)
     if res is None:
-        return IfThen(cnd, tp)
+        return If(cnd, tp)
     # if len(res) == 2 and isinstance(res[1], (tuple, list, set, frozenset)):
     #     return [imply(res[0], v) for v in res[1]]
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
@@ -728,10 +776,11 @@ def ift(*args):
             return ift(cnd, tp, ep[0])
     if btp or etp:
         tp, ep = tp if isinstance(tp, list) else [tp], ep if isinstance(ep, list) else [ep]
-        return [imply(cnd, v) for v in tp] + [imply(~cnd, v) for v in ep]
+        return ([imply(cnd, v) for v in tp] +
+                [imply(Node(~cnd.type, cnd.sons) if isinstance(cnd, Node) and ~cnd.type is not None else ~cnd, v) for v in ep])
     res = manage_global_indirection(*args)
     if res is None:
-        return IfThenElse(*args, meta=True)
+        return If(args[0], Then=args[1], Else=args[2], meta=True)
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     assert len(res) == 3
     if isinstance(res[0], int):
@@ -1188,12 +1237,10 @@ def Exist(term, *others):
     :param others: the other terms (if any) on which the count applies
     :return: a constraint Count
     """
-    # terms = flatten(term, others)
-    # if len(terms) == 0:
-    #     return 0
-    # if len(terms) == 1:
-    #     return terms[0]
-    res = Count(term, others)
+    terms = flatten(term, others)
+    if all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that intrresting?
+        return disjunction(terms)
+    res = Count(terms)
     if isinstance(res, int):
         assert res == 0
         return 0  # for false

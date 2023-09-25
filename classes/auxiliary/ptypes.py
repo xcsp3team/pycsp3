@@ -122,6 +122,25 @@ UTF_COMPLEMENT = "\u2201"
 class TypeConditionOperator(AbstractType):
     LT, LE, GE, GT, EQ, NE, IN, NOTIN = auto(8)
 
+    def __invert__(self):
+        if self == TypeConditionOperator.EQ:
+            return TypeConditionOperator.NE
+        if self == TypeConditionOperator.NE:
+            return TypeConditionOperator.EQ
+        if self == TypeConditionOperator.LT:
+            return TypeConditionOperator.GE
+        if self == TypeConditionOperator.LE:
+            return TypeConditionOperator.GT
+        if self == TypeConditionOperator.GT:
+            return TypeConditionOperator.LE
+        if self == TypeConditionOperator.GE:
+            return TypeConditionOperator.LT
+        if self == TypeConditionOperator.IN:
+            return TypeConditionOperator.NOTIN
+        if self == TypeConditionOperator.NOTIN:
+            return TypeConditionOperator.IN
+        return None
+
     @staticmethod
     def value_of(s):
         assert isinstance(s, str)

@@ -12,7 +12,7 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 6:
     raise Exception(os.linesep + " Python should be at least 3.6" + os.linesep + " Your version is Python " + __python_version__)
 
 from pycsp3.functions import variant, subvariant, Var, VarArray, var, satisfy, minimize, maximize, annotate
-from pycsp3.functions import And, Or, Not, Xor, IfThen, IfThenElse, Iff, Slide
+from pycsp3.functions import And, Or, Not, Xor, Match, If, Iff, Slide
 from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, belong, not_belong, conjunction, disjunction
 from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, AllEqualList, Increasing, Decreasing, LexIncreasing, LexDecreasing, Precedence,
                               Sum, Product, Count, Exist, ExactlyOne, Neither, Hamming, NValues, NotAllEqual, Cardinality, Maximum, Minimum,
