@@ -414,29 +414,49 @@ def IfThenElse(Test, Then, Else, meta=False):
     return ift(Test, Then, Else)
 
 
-def If(Test, *, Then, Else=None, meta=False):
+def If(test, *testOthers, Then, Else=None, meta=False):
     """
     Builds a complex form of constraints, that can possibly be decomposed, at compilation time.
 
-    For example: If(Sum(x) > 10, Then=AllDifferent(x))
-    or: If(Sum(x) > 10, Then=AllDifferent(x), Else=AllEqual(x))
+    For example:
+      If(Sum(x) > 10, Then=AllDifferent(x))
+      If(Sum(x) > 10, Then=AllDifferent(x), Else=AllEqual(x))
+      If(w > 0, y != z, Then=w = y + z)
 
     When the parameter 'meta' is not true (the usual and default case),
     reification is employed.
 
-    :param Test: the condition part
+    :param test: the condition part
+    :param testOthers: the other terms (if any) of the condition expression (assumed conjunction)
     :param Then the Then part
     :param Else the Else part
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint IfThen, ot its reified form
     """
-    assert Test is not None and Then is not None
+    tests = flatten(test, testOthers)
+    thens = flatten(Then)
+    assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list) and len(thens) > 0  # after flatten, we have a list
+
     if meta:
         if Else is None:
-            return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Test, Then))))
+            return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens))))
         else:
-            return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Test, Then, Else))))
-    return imply(Test, Then) if Else is None else ift(Test, Then, Else)
+            return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens, Else))))
+    tests = manage_global_indirection(tests)
+    thens = manage_global_indirection(thens)
+    assert tests is not None and thens is not None and len(tests) > 0 and len(thens) > 0
+    if Else is None:
+        if len(tests) > 1:
+            if all(isinstance(v, Node) for v in tests):
+                tmp = [Node(v.type, v.sons) for v in tests]
+                tests = [~v for v in tmp]
+                return [disjunction(*tests, v) for v in thens] if len(thens) > 1 else disjunction(*tests, thens)
+            tests = conjunction(t for t in tests)
+        # else:
+        #     if isinstance(tests[0], Node) and ~tests[0].type is not None:
+        #         cnd = ~tests[0]
+        #         return [disjunction(~cnd, v) for v in thens] if len(thens) > 1 else disjunction(~cnd, thens)
+    return imply(tests, thens) if Else is None else ift(tests, thens, Else)
 
 
 def Match(Expr, *, Cases):
@@ -849,7 +869,7 @@ def conjunction(*args):
 
     :return: a node, root of a tree expression
     """
-    return Node.conjunction(*args)
+    return Node.conjunction(manage_global_indirection(*args))
 
 
 def disjunction(*args):
@@ -859,7 +879,7 @@ def disjunction(*args):
 
     :return: a node, root of a tree expression
     """
-    return Node.disjunction(*args)
+    return Node.disjunction(manage_global_indirection(*args))
 
 
 ''' Language-based Constraints '''

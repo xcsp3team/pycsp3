@@ -1331,7 +1331,9 @@ def global_indirection(c):
 
 
 def manage_global_indirection(*args):
-    assert len(args) > 1
+    if len(args) == 1 and isinstance(args[0], list):
+        args = args[0]
+    assert len(args) >= 1
     if any(isinstance(arg, EMetaCtr) for arg in args):
         return None
 

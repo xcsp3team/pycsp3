@@ -573,7 +573,18 @@ class OpOverrider:
             if gi is None:
                 return functions.Not(self, meta=True)
             self = gi
-        return Variable.__invert__(self) if isinstance(self, VariableInteger) else Node.build(TypeNode.NOT, self)
+        if isinstance(self, VariableInteger):
+            return Variable.__invert__(self)
+        if isinstance(self, Node):  # we simplify when possible
+            if ~self.type is not None:
+                self.type = ~self.type
+                return self
+            if self.type in (TypeNode.AND, TypeNode.OR) and all(~son.type is not None for son in self.sons):
+                for son in self.sons:
+                    son.type = ~son.type
+                self.type = TypeNode.OR if self.type == TypeNode.AND else TypeNode.AND
+                return self
+        return Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
         if isinstance(other, PartialConstraint):

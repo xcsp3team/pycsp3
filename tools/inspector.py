@@ -241,6 +241,8 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
             code[i] = "" if level != 1 else new_line
 
         if found and level == 2 and is_comment_line(line):
+            if i > 0 and are_empty_lines[i - 1]:
+                comments2[i1][i2] = ""
             s = _prepare(line)
             comments2[i1][i2] += ("" if len(comments2[i1][i2]) == 0 else " - ") + ("" if s is None else s)
             tags = _find_tags(line)
@@ -256,12 +258,13 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
     found = False  # the function name
     stopped_comments = False
     for i, line in enumerate(code):
-        if not found and function_name in line:
-            found = True
-            continue
         if not found:
+            if function_name in line:
+                found = True
             continue
         if not stopped_comments and is_comment_line(line) and _prepare(line):  # and i + 1 < len(code):
+            if i > 0 and are_empty_lines[i - 1]:
+                comments1[i1] = ""
             j = i
             while j < len(code) and is_comment_line(code[j]):
                 j += 1
