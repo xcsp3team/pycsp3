@@ -377,94 +377,64 @@ def Xor(*args, meta=False):
     return xor(*args)
 
 
-def IfThen(Test, Then, meta=False):
-    """
-    Builds a meta-constraint IfThen from the specified arguments.
-    For example: IfThen(Sum(x) > 10, AllDifferent(x))
-
-    When the parameter 'meta' is not true (the usual and default case),
-    reification is employed.
-
-    :param Test: the condition part
-    :param Then the Then part
-    :param meta true if a meta-constraint form must be really posted
-    :return: a meta-constraint IfThen, ot its reified form
-    """
-    if meta:
-        return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Test, Then))))
-    return imply(Test, Then)
-
-
-def IfThenElse(Test, Then, Else, meta=False):
-    """
-    Builds a meta-constraint IfThenElse from the specified arguments.
-    For example: IfThenElse(Sum(x) > 10, AllDifferent(x), AllEqual(x))
-
-    When the parameter 'meta' is not true (the usual and default case),
-    reification is employed.
-
-    :param Test the condition part
-    :param Then the Then part
-    :param Else the Else part
-    :param meta true if a meta-constraint form must be really posted
-    :return: a meta-constraint IfThenElse, or its reified form
-    """
-    if meta:
-        return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((Test, Then, Else))))
-    return ift(Test, Then, Else)
-
-
 def If(test, *testOthers, Then, Else=None, meta=False):
     """
-    Builds a complex form of constraints, that can possibly be decomposed, at compilation time.
+    Builds a complex form of constraint(s), based on the general control structure 'if then else'
+    that can possibly be decomposed, at compilation time.
 
     For example:
-      If(Sum(x) > 10, Then=AllDifferent(x))
-      If(Sum(x) > 10, Then=AllDifferent(x), Else=AllEqual(x))
-      If(w > 0, y != z, Then=w = y + z)
+      - If(Sum(x) > 10, Then=AllDifferent(x))
+      - If(Sum(x) > 10, Then=AllDifferent(x), Else=AllEqual(x))
+      - If(w > 0, y != z, Then=w == y + z)
+      - If(w > 0, y != z, Then=[w == y + z, v != 1])
+      - If(Sum(x) > 10, Then=y == z, Else=[AllEqual(x), y < 3])
 
     When the parameter 'meta' is not true (the usual and default case),
-    reification is employed.
+    reification may be employed.
 
-    :param test: the condition part
-    :param testOthers: the other terms (if any) of the condition expression (assumed conjunction)
+    :param test: the condition expression
+    :param testOthers: the other terms (if any) of the condition expression (assuming a conjunction)
     :param Then the Then part
     :param Else the Else part
     :param meta true if a meta-constraint form must be really posted
-    :return: a meta-constraint IfThen, ot its reified form
+    :return: a complex form of constraint(s) based on the control structure 'if then else'
     """
-    tests = flatten(test, testOthers)
-    thens = flatten(Then)
+    tests, thens = flatten(test, testOthers), flatten(Then)
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list) and len(thens) > 0  # after flatten, we have a list
-
     if meta:
         if Else is None:
             return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens))))
         else:
             return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens, Else))))
-    tests = manage_global_indirection(tests)
-    thens = manage_global_indirection(thens)
+    tests, thens = manage_global_indirection(tests), manage_global_indirection(thens)  # we get None or a tuple
     assert tests is not None and thens is not None and len(tests) > 0 and len(thens) > 0
+    disjunctive_test = None
     if Else is None:
         if len(tests) > 1:
             if all(isinstance(v, Node) for v in tests):
-                tmp = [Node(v.type, v.sons) for v in tests]
-                tests = [~v for v in tmp]
-                return [disjunction(*tests, v) for v in thens] if len(thens) > 1 else disjunction(*tests, thens)
-            tests = conjunction(t for t in tests)
-        # else:
-        #     if isinstance(tests[0], Node) and ~tests[0].type is not None:
-        #         cnd = ~tests[0]
-        #         return [disjunction(~cnd, v) for v in thens] if len(thens) > 1 else disjunction(~cnd, thens)
-    return imply(tests, thens) if Else is None else ift(tests, thens, Else)
+                disjunctive_test = [~v for v in (Node(v.type, v.sons) for v in tests)]
+            else:
+                tests = conjunction(t for t in tests)
+        elif isinstance(tests[0], Variable) and tests[0].negation:
+            disjunctive_test = var(tests[0].id)  # we look for the original variable
+        elif isinstance(tests[0], Node):
+            if tests[0].type == TypeNode.NOT:
+                disjunctive_test = tests[0].sons[0]
+            elif ~tests[0].type is not None and len(thens) == 1 and isinstance(thens[0], Node) and thens[0].type == TypeNode.OR:
+                disjunctive_test = Node(~tests[0].type, tests[0].sons)
+    if disjunctive_test is not None:  # do not remove 'is not None'
+        return [disjunction(disjunctive_test, v) for v in thens] if len(thens) > 1 else disjunction(disjunctive_test, thens)
+    return ift(tests, thens, Else)  # note that if Else is None, imply will be called
 
 
 def Match(Expr, *, Cases):
     assert isinstance(Expr, (Variable, Node)) and isinstance(Cases, dict)
-    return [expr(~k.operator, Expr, k.right_operand()) | v if isinstance(k, Condition) else (Expr != k) | v for k, v in Cases.items()]
+    t = [(k, w) for k, v in Cases.items() for w in (v if isinstance(v, (tuple, list, set, frozenset)) else [v])]
+    return [expr(~k.operator, Expr, k.right_operand()) | v if isinstance(k, Condition)
+            else (Expr != k if not isinstance(k, (tuple, list, set, frozenset)) else not_belong(Expr, k)) | v for k, v in t]
 
 
-def Iff(term, *others, Conjunction=None):
+def Iff(term, *others):
     """
     Builds a meta-constraint Iff from the specified arguments.
     For example: Iff(Sum(x) > 10, AllDifferent(x))
@@ -472,7 +442,7 @@ def Iff(term, *others, Conjunction=None):
     :param args: a tuple of two constraints
     :return: a meta-constraint Iff
     """
-    return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(term, others))))
 
 
 def Slide(*args, expression=None, circular=None, offset=None, collect=None):
@@ -616,7 +586,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
                                     arg[j][k] = _group(arg[j][k])
                                 arg[j] = _group(arg[j], block=True).note(comments2[i][j]).tag(tags2[i][j])
                             else:
-                                g = _group(arg[j])
+                                g = _group(arg[j])  # , block=True)
                                 arg[j] = g.note(comments2[i][j]).tag(tags2[i][j]) if g is not None else None
                 to_post = _group(arg, block=True)
             else:  # Group
@@ -782,6 +752,11 @@ def ift(*args):
     """
     assert len(args) == 3
     cnd, tp, ep = args  # condition, then part and else part
+    if ep is None:
+        return imply(cnd, tp)
+    if isinstance(cnd, (tuple, list)):
+        assert len(cnd) == 1
+        cnd = cnd[0]
     btp = isinstance(tp, (tuple, list, set, frozenset))
     if btp:
         tp = list(tp)
@@ -796,8 +771,14 @@ def ift(*args):
             return ift(cnd, tp, ep[0])
     if btp or etp:
         tp, ep = tp if isinstance(tp, list) else [tp], ep if isinstance(ep, list) else [ep]
-        return ([imply(cnd, v) for v in tp] +
-                [imply(Node(~cnd.type, cnd.sons) if isinstance(cnd, Node) and ~cnd.type is not None else ~cnd, v) for v in ep])
+        # # we compute the negation of cnd
+        # if isinstance(cnd, Node) and ~cnd.type is not None:
+        #     rcnd = Node(~cnd.type, cnd.sons)
+        # elif isinstance(cnd, Variable):
+        #     rcnd = var(cnd.id) if cnd.negation else ~cnd
+        # else:
+        #     rcnd = ~cnd
+        return [imply(cnd, v) for v in tp] + [cnd | v for v in ep]
     res = manage_global_indirection(*args)
     if res is None:
         return If(args[0], Then=args[1], Else=args[2], meta=True)

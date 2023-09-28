@@ -33,7 +33,9 @@ satisfy(
 if not variant():
     satisfy(
         # adjacency constraints
-        (abs(x[i][j] - y[i][j]) == nCols) | (abs(x[i][j] - y[i][j]) == 1) & (x[i][j] // nCols == y[i][j] // nCols) for i, j in dominoes
+        (abs(x[i][j] - y[i][j]) == nCols)  # adjacent values in the same column
+        | (abs(x[i][j] - y[i][j]) == 1) & (x[i][j] // nCols == y[i][j] // nCols)  # or adjacent values in the same line
+        for i, j in dominoes
     )
 
 elif variant("table"):
@@ -43,3 +45,12 @@ elif variant("table"):
         # adjacency constraints
         (x[i][j], y[i][j]) in T for i, j in dominoes
     )
+
+""" Comments
+1) one could use the If structure as follows:
+   If(
+      abs(x[i][j] - y[i][j]) != nCols,  # if not adjacent values in the same column
+      Then=(abs(x[i][j] - y[i][j]) == 1) & (x[i][j] // nCols == y[i][j] // nCols)  # then adjacent values in the same line
+   ) for i, j in dominoes
+
+"""

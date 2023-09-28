@@ -490,7 +490,9 @@ class Node(Entity):
             "A node is evaluated as a Boolean (technically, __bool__ is called)"
             + "\n\tIt is likely a problem with the use of logical operators"
             + "\n\tFor example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])"
-            + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide\n")
+            + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide"
+            + "\n\tThis is: " + str(self) + "\n")
+        # exit(1)
         return True
 
     def eq__safe(self, other):
@@ -729,13 +731,13 @@ class Node(Entity):
     @staticmethod
     def _and_or(t, *args):
         assert t in {TypeNode.AND, TypeNode.OR}
-        if len(args) > 0:
-            args = [arg for arg in args if not (isinstance(arg, (tuple, list, set, frozenset)) and len(arg) == 0)]
         if len(args) == 1:
             if isinstance(args[0], (tuple, list, set, frozenset)):
                 args = tuple(args[0])
             if len(args) > 0 and isinstance(args[0], types.GeneratorType):
                 args = tuple(list(args[0]))
+        args = [arg for arg in args if not (isinstance(arg, (tuple, list, set, frozenset)) and len(arg) == 0)]
+        args = [arg[0] if isinstance(arg, (tuple, list, set, frozenset)) and len(arg) == 1 else arg for arg in args]
         if len(args) == 0:
             return t == TypeNode.AND
         args = [Node.conjunction(arg) if isinstance(arg, (tuple, list, set, frozenset)) else arg for arg in args]

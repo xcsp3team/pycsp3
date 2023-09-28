@@ -38,6 +38,13 @@ def is_empty_line(line):
     return isinstance(line, str) and len(line.strip()) == 0
 
 
+def is_discardable_line(line):
+    if not isinstance(line, str):
+        return False
+    l = line.strip()
+    return len(l) == 0 or (len(l) == 1 and l[0] in ('#', ')', ']')) or (len(l) == 2 and l in ('),', '],'))
+
+
 def is_continued_line(line):
     return isinstance(line, str) and line.strip().endswith('\\')
 
@@ -201,8 +208,24 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
         return comments1, comments2, tags1, tags2
 
     code = list(reversed(_extract_code(function_name)))
-    are_empty_lines = [is_empty_line(line) for line in code]
+    # we remove all comments that are succeeded by discardable lines
+    keep = [True] * len(code)
+    for i, line in enumerate(code):
+        if keep[i] and is_comment_line(line):  # and (i == 0 or is_empty_line(code[i - 1])):
+            j = i + 1
+            while j < len(code) and is_comment_line(code[j]):
+                j += 1
+            if j == len(code) or (j < len(code) and is_discardable_line(code[j])):
+                for k in range(i, j + (1 if j < len(code) else 0)):
+                    keep[k] = False
+    code = [code[i].strip() for i in range(len(code)) if keep[i]]
+    # we remove comments that are on the right of code
+    for i in range(len(code)):
+        pos = code[i].find('#')
+        if pos not in (-1, 0):
+            code[i] = code[i][:pos]
 
+    are_empty_lines = [is_empty_line(line) for line in code]
     code = _delete_bracket_part(code, len(args))
     level = 0
     i1 = 0  # index indicating the position of the current parameter
@@ -271,7 +294,7 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
             if j < len(code) and not are_empty_lines[j]:
                 comments1[i1] += ("" if len(comments1[i1]) == 0 else " " if comments1[i1][-1] in {'.', ','} else " - ") + _prepare(line)
         tags = _find_tags(line)
-        if tags:
+        if tags and i1 < len(tags1):
             tags1[i1] += ("" if len(tags1[i1]) == 0 else " ") + tags
         if not (is_comment_line(line) or are_empty_lines[i]):
             if ',' in line:
