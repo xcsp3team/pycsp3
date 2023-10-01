@@ -83,13 +83,13 @@ elif variant("hybrid"):  # hybrid as compilation will build and combine both int
 
 elif variant("table"):
     def neighbours(r1, c1):
-        return [(r1 + r2) * n + c1 + c2 for (r2, c2) in [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)] if
-                0 <= r1 + r2 < n and 0 <= c1 + c2 < n]
+        jumps = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2), (2, -1), (2, 1)]
+        return [(r1 + r2) * n + c1 + c2 for (r2, c2) in jumps if 0 <= r1 + r2 < n and 0 <= c1 + c2 < n]
 
 
-    table1 = {(i, j) for i in range(n * n) for j in neighbours(i // n, i % n)}
-    table2 = {(i, j, 1 if (i == j) | (i // n != j // n) & (i % n != j % n) & (abs(i // n - j // n) != abs(i % n - j % n)) else 0) for i in range(n * n) for j in
-              range(n * n)}
+    T1 = {(i, j) for i in range(n * n) for j in neighbours(i // n, i % n)}
+    T2 = {(i, j, 1 if i == j or i // n != j // n and i % n != j % n and abs(i // n - j // n) != abs(i % n - j % n) else 0)
+          for i in range(n * n) for j in range(n * n)}
 
     # p[j] is 1 iff the j+1th prime number is not attacked by a queen
     p = VarArray(size=m, dom={0, 1})
@@ -99,10 +99,10 @@ elif variant("table"):
         AllDifferent(x),
 
         # ensuring a knight move between two successive values
-        [(x[i], x[i + 1]) in table1 for i in range(n * n - 1)],
+        [(x[i], x[i + 1]) in T1 for i in range(n * n - 1)],
 
         # determining if prime numbers are attacked by the queen
-        [(q, x[k], p[j]) in table2 for j, k in enumerate(p - 1 for p in primes)]
+        [(q, x[k], p[j]) in T2 for j, k in enumerate(p - 1 for p in primes)]
     )
 
     minimize(

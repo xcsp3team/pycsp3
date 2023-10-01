@@ -1463,14 +1463,16 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
 
 
 def _is_mixed_list(t, index=-1):
-    present_int, present_var = False, False
+    present_int, present_var, present_node = False, False, False
     for v in t:
         v = v if index == -1 else v[index]
         if isinstance(v, int):
             present_int = True
         elif isinstance(v, Variable):
             present_var = True
-        if present_int and present_var:
+        elif isinstance(v, Node):
+            present_node = True
+        if (present_int and present_var) or (present_int and present_node) or (present_var and present_node):
             return True
     return False
 
@@ -1491,7 +1493,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
         if len(tasks) <= 1:
             warning("A constraint NoOverlap discarded because defined with " + str(len(tasks)) + " task")
-            return None
+            return ConstraintDummyConstant(1)  # return None
         assert isinstance(tasks, list) and len(tasks) > 0
         assert any(isinstance(task, (tuple, list)) and len(task) == 2 for task in tasks)
         origins, lengths = zip(*tasks)
@@ -1565,11 +1567,11 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
         if len(tasks) == 0:
             warning("A constraint Cumulative transformed because defined with 0 task")
-            return auxiliary().replace_int(0)
+            return ConstraintDummyConstant(0)  # auxiliary().replace_int(0)
         if len(tasks) == 1:
             warning("A constraint Cumulative transformed because defined with 1 task only")
-            h = tasks[0][2 if len(tasks[0]) == 3 else 3]  # the height fo the task
-            return h if isinstance(h, Variable) else auxiliary().replace_int(h)
+            h = tasks[0][2 if len(tasks[0]) == 3 else 3]  # the height for the task
+            return h if isinstance(h, Variable) else ConstraintDummyConstant(h)  # auxiliary().replace_int(h)
 
         assert len(tasks) > 0, "a cumulative constraint without no tasks"
         assert isinstance(tasks, list) and len(tasks) > 0

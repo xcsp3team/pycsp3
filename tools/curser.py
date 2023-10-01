@@ -10,7 +10,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import (
-    flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_matrix, is_square_matrix, is_cube, ANY, structured_list, warning, error_if)
+    flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, is_square_matrix, is_cube, ANY, structured_list, warning, error_if)
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -658,6 +658,14 @@ class OpOverrider:
 
     @staticmethod
     def __getitem__shared_by_lv_and_li(array, indexes, *, lv):  # lv=True for ListVar, lv=False for ListInt
+        if isinstance(indexes, int):
+            assert isinstance(array, list) and len(array) > 0
+            if indexes >= len(array):
+                new_index = indexes % len(array)
+                warning(
+                    "Auto-adjustment of array indexing: " + str(indexes) + " -> " + str(new_index) + " in " + str(list.__getitem__(array, new_index)))
+                indexes = new_index
+            return list.__getitem__(array, indexes)
         if isinstance(indexes, types.GeneratorType):
             indexes = tuple(indexes)
         if isinstance(indexes, (list, range)):
@@ -666,10 +674,16 @@ class OpOverrider:
             indexes = indexes[0]
         if lv:
             if is_1d_list(array, Variable) and is_1d_tuple(indexes, int):  # we can this way select arbitrary elements of the list
-                return ListVar(list.__getitem__(array, v) for v in indexes)
+                return ListVar([list.__getitem__(array, v) for v in indexes])
+            if is_2d_list(array) and isinstance(indexes, (tuple, list)) and all(
+                    isinstance(v, (tuple, list)) and len(v) == 2 and all(isinstance(w, int) for w in v) for v in indexes):
+                return ListVar([list.__getitem__(list.__getitem__(array, v), w) for v, w in indexes])
         else:
             if is_1d_list(array, int) and is_1d_tuple(indexes, int):  # we can this way select arbitrary elements of the list
                 return ListInt(list.__getitem__(array, v) for v in indexes)
+            if is_2d_list(array) and isinstance(indexes, (tuple, list)) and all(
+                    isinstance(v, (tuple, list)) and len(v) == 2 and all(isinstance(w, int) for w in v) for v in indexes):
+                return ListInt([list.__getitem__(list.__getitem__(array, v), w) for v, w in indexes])
         if isinstance(indexes, tuple) and isinstance(indexes[0], int):
             return array[indexes[0]][indexes[1:]]
         if isinstance(indexes, PartialConstraint):

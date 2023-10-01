@@ -435,7 +435,7 @@ class Error:
 
 
 def warning(message):
-    print("\n  " + ORANGE + "Warning: " + WHITE + message)
+    print("\n  " + ORANGE + "Warning: " + WHITE + message + "\n")
 
 
 def warning_if(test, message):
