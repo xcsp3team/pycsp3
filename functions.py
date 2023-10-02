@@ -628,8 +628,11 @@ def _Extension(*, scope, table, positive=True):
             # we now manage shortcut expressions as in col(i) instead of eq(col(i)), and discard trivial ranges
             if any(isinstance(v, (range, Node)) for v in t):
                 table[i] = tuple(eq(v) if isinstance(v, Node) else v.start if isinstance(v, range) and len(v) == 1 else v for v in t)
-            assert len(t) == len(scope), ("The length of each tuple must be the same as the arity."
-                                          + "Maybe a problem with slicing: you must for example write x#[i:i+3,0] instead of x[i:i+3][0]")
+            if len(t) != len(scope):
+                t = tuple(flatten(t))
+                assert len(t) == len(scope), ("The length of each tuple must be the same as the arity."
+                                              + "Maybe a problem with slicing: you must for example write x#[i:i+3,0] instead of x[i:i+3][0]")
+                table[i] = t
     return ECtr(ConstraintExtension(scope, table, positive, options.keephybrid, options.restricttableswrtdomains))
 
 
@@ -1327,7 +1330,7 @@ def Cardinality(term, *others, occurrences, closed=False):
     """
     Builds and returns a constraint Cardinality.
 
-    When occurrences is given under the form of a list t,
+    When occurrences is given under the form of a list or tuple t,
     a dictionary is computed as dict(enumerate(t))
 
     :param term: the first term on which the constraint applies
@@ -1343,7 +1346,7 @@ def Cardinality(term, *others, occurrences, closed=False):
         elif isinstance(t, Node):
             terms[i] = [auxiliary().replace_node(t)]
     checkType(terms, [Variable])
-    if isinstance(occurrences, list):
+    if isinstance(occurrences, (tuple, list)):
         occurrences = dict(enumerate(occurrences))
     assert isinstance(occurrences, dict)
     values = list(occurrences.keys())

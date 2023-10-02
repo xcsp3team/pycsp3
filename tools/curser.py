@@ -658,6 +658,19 @@ class OpOverrider:
 
     @staticmethod
     def __getitem__shared_by_lv_and_li(array, indexes, *, lv):  # lv=True for ListVar, lv=False for ListInt
+
+        def __int_tuples_of_same_size(m):
+            if not isinstance(m, (tuple, list)) or len(m) == 0:
+                return -1
+            if all(isinstance(t, int) for t in m):
+                return 1
+            if not isinstance(m[0], (tuple, list)) or len(m[0]) == 0 or not all(isinstance(w, int) for w in m[0]):
+                return -1
+            k = len(m[0])
+            if all(isinstance(t, (tuple, list)) and len(t) == k and all(isinstance(w, int) for w in t) for t in m):
+                return k
+            return -1
+
         if isinstance(indexes, int):
             assert isinstance(array, list) and len(array) > 0
             if indexes >= len(array):
@@ -672,18 +685,34 @@ class OpOverrider:
             indexes = tuple(indexes)
         if isinstance(indexes, tuple) and len(indexes) == 1:
             indexes = indexes[0]
-        if lv:
-            if is_1d_list(array, Variable) and is_1d_tuple(indexes, int):  # we can this way select arbitrary elements of the list
-                return ListVar([list.__getitem__(array, v) for v in indexes])
-            if is_2d_list(array) and isinstance(indexes, (tuple, list)) and all(
-                    isinstance(v, (tuple, list)) and len(v) == 2 and all(isinstance(w, int) for w in v) for v in indexes):
-                return ListVar([list.__getitem__(list.__getitem__(array, v), w) for v, w in indexes])
-        else:
-            if is_1d_list(array, int) and is_1d_tuple(indexes, int):  # we can this way select arbitrary elements of the list
-                return ListInt(list.__getitem__(array, v) for v in indexes)
-            if is_2d_list(array) and isinstance(indexes, (tuple, list)) and all(
-                    isinstance(v, (tuple, list)) and len(v) == 2 and all(isinstance(w, int) for w in v) for v in indexes):
-                return ListInt([list.__getitem__(list.__getitem__(array, v), w) for v, w in indexes])
+        # we check with the next statement if a selection of cells is expected
+        k = __int_tuples_of_same_size(indexes)
+        if k != -1:
+            assert 1 <= k <= 3  # for the moment
+            lst = None
+            if k == 1:
+                if is_1d_list(array):
+                    lst = [list.__getitem__(array, u) for u in indexes]
+            elif k == 2:
+                assert is_2d_list(array)
+                lst = [list.__getitem__(list.__getitem__(array, u), v) for u, v in indexes]
+            elif k == 3:
+                lst = [list.__getitem__(list.__getitem__(list.__getitem__(array, u), v), w) for u, v, w in indexes]
+            if lst is not None:
+                return ListVar(lst) if lv else ListInt(lst)
+            # if lv:
+            #     if is_1d_list(array, Variable) and is_1d_tuple(indexes, int):
+            #         return ListVar([list.__getitem__(array, v) for v in indexes])
+            #
+            #     if is_2d_list(array) and isinstance(indexes, (tuple, list)) and all(
+            #             isinstance(v, (tuple, list)) and len(v) == 2 and all(isinstance(w, int) for w in v) for v in indexes):
+            #         return ListVar([list.__getitem__(list.__getitem__(array, v), w) for v, w in indexes])
+            # else:
+            #     if is_1d_list(array, int) and is_1d_tuple(indexes, int):  # we can this way select arbitrary elements of the list
+            #         return ListInt(list.__getitem__(array, v) for v in indexes)
+            #     if is_2d_list(array) and isinstance(indexes, (tuple, list)) and all(
+            #             isinstance(v, (tuple, list)) and len(v) == 2 and all(isinstance(w, int) for w in v) for v in indexes):
+            #         return ListInt([list.__getitem__(list.__getitem__(array, v), w) for v, w in indexes])
         if isinstance(indexes, tuple) and isinstance(indexes[0], int):
             return array[indexes[0]][indexes[1:]]
         if isinstance(indexes, PartialConstraint):
