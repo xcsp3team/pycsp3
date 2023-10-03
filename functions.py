@@ -428,10 +428,14 @@ def If(test, *testOthers, Then, Else=None, meta=False):
 
 
 def Match(Expr, *, Cases):
-    assert isinstance(Expr, (Variable, Node)) and isinstance(Cases, dict)
+    assert isinstance(Cases, dict)
     t = [(k, w) for k, v in Cases.items() for w in (v if isinstance(v, (tuple, list, set, frozenset)) else [v])]
-    return [expr(~k.operator, Expr, k.right_operand()) | v if isinstance(k, Condition)
-            else (Expr != k if not isinstance(k, (tuple, list, set, frozenset)) else not_belong(Expr, k)) | v for k, v in t]
+    if isinstance(Expr, (Variable, Node)):
+        return [expr(~k.operator, Expr, k.right_operand()) | v if isinstance(k, Condition)
+                else (Expr != k if not isinstance(k, (tuple, list, set, frozenset)) else not_belong(Expr, k)) | v for k, v in t]
+    else:
+        return [v for k, v in t if
+                (not isinstance(k, (tuple, list, set, frozenset)) and Expr == k) or (isinstance(k, (tuple, list, set, frozenset)) and Expr in k)]
 
 
 def Iff(term, *others):

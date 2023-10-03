@@ -61,11 +61,12 @@ class Compilation:
 
 
 def _load_options():
+    # note that parser and export are automatically rewritten as dataparser and dataexport
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output", "suffix")
     options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
                       "keepSmartTransitions", "keepsum", "unchangescalar", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues",
-                      "groupsumcoeffs",
-                      "usemeta", "dontuseauxcache", "debug", "mini", "uncurse")
+                      "groupsumcoeffs", "usemeta", "dontuseauxcache", "dontadjustindexing", "debug", "mini", "uncurse")
+
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}

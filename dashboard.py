@@ -39,6 +39,7 @@ class _Options:
                 t = arg[1:].split('=', 1)
                 if len(t) == 1:
                     flag = t[0].lower()
+                    flag = 'dataexport' if flag == 'export' else flag
                     if flag in self.flags:
                         vars(self)[flag] = True
                         assert flag not in self.values or flag == 'dataexport', "You have to specify a value for the option -" + flag
@@ -47,6 +48,7 @@ class _Options:
                 else:
                     assert len(t) == 2
                     value = t[0].lower()
+                    value = 'dataparser' if value == 'parser' else value
                     if value in self.values:
                         assert len(t[1]) > 0, "The value specified for the option -" + value + " is the empty string"
                         vars(self)[value] = t[1]

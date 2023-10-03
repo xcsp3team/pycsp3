@@ -1,9 +1,27 @@
 """
-See, e.g., "Constraint programming lessons learned from crossword puzzles" by A. Beacham, X. Chen, J. Sillito, and P. van Beek. 2001
+Given a grid with imposed black cells (spots) and a dictionary, the problem is to fulfill the grid with the words contained in the dictionary.
 
-Examples of Execution:
-  python3 Crossword.py -data=Crossword_vg6-7-ogd.json
-  python3 Crossword.py -data=Crossword_vg6-7-ogd.json -variant=alt
+## Data (example)
+  vg0607-ogd.json
+
+## Model
+  Two variants are defined from different angles:
+  - a main variant where variables correspond to letters
+  - a variant 'alt' where variables correspond to words
+
+  constraints: Extension, AllDifferentList, Intension
+
+## Execution
+  - python Crossword.py -data=vg0607-ogd.json
+  - python Crossword.py -variant=alt -data=vg0607-ogd.json
+  - python Crossword.py -data=[vg0405,dict=ogd2008] -parser=Crossword_Parser.py
+
+## Links
+  - https://www.researchgate.net/publication/221442491_Constraint_Programming_Lessons_Learned_from_Crossword_Puzzles
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/cop/cop
+
+## Tags
+  recreational, xcsp22
 """
 
 from pycsp3 import *

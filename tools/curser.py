@@ -8,9 +8,9 @@ from pycsp3.classes.main.constraints import (
     ConstraintRefutation, auxiliary, global_indirection, manage_global_indirection)
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.libs.forbiddenfruit import curse
-from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import (
     flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, is_square_matrix, is_cube, ANY, structured_list, warning, error_if)
+from pycsp3.dashboard import options
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -278,6 +278,7 @@ def cursing():
 
 class OpOverrider:
     activated = False
+    array_indexing_warning = False
 
     @staticmethod
     def enable():
@@ -674,9 +675,12 @@ class OpOverrider:
         if isinstance(indexes, int):
             assert isinstance(array, list) and len(array) > 0
             if indexes >= len(array):
+                error_if(options.dontadjustindexing, "Indexing problem " + str(indexes))
                 new_index = indexes % len(array)
-                warning(
-                    "Auto-adjustment of array indexing: " + str(indexes) + " -> " + str(new_index) + " in " + str(list.__getitem__(array, new_index)))
+                if OpOverrider.array_indexing_warning is False:
+                    s = "Auto-adjustment of array indexing: " + str(indexes) + " -> " + str(new_index) + " in " + str(list.__getitem__(array, new_index))
+                    warning(s + "\n\t   Other possible similar cases are not displayed")
+                    OpOverrider.array_indexing_warning = True  # to avoid displaying a lot of messages
                 indexes = new_index
             return list.__getitem__(array, indexes)
         if isinstance(indexes, types.GeneratorType):
@@ -862,12 +866,11 @@ class ListVar(list):
         assert 0 <= i < n and 0 <= j < m
         return ListVar([self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
 
-    def cross(self, i, j, without_center=False):
+    def cross(self, i, j):
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
-        t = [self[i][j]] if without_center is False else []
-        return ListVar(t + [self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
+        return ListVar([self[i][j]] + [self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
 
     def __str__(self):
         return structured_list(self)

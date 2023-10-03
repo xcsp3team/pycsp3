@@ -24,7 +24,7 @@ def automaton(horizontal):
     return Automaton(start=q(0), final=q(0), transitions=t)
 
 
-horizontal_automaton, vertical_automaton = automaton(True), automaton(False)  # automata for ships online
+Ah, Av = automaton(True), automaton(False)  # automata for ships online
 
 # s[i][j] is 1 iff the cell at row i and col j is occupied by a ship segment
 s = VarArray(size=[n + 2, n + 2], dom={0, 1})
@@ -74,7 +74,7 @@ satisfy(
      for i in range(1, n + 1) for j in range(1, n + 1)],
 
     # tag(channeling)
-    [iff(s[i][j] == 1, t[i][j] != 0) for i in range(n + 2) for j in range(n + 2)],
+    [s[i][j] == (t[i][j] != 0) for i in range(n + 2) for j in range(n + 2)],
 
     # counting the number of occurrences of ship segments of each type
     Cardinality(t[1:n + 1, 1:n + 1], occurrences={pos[i]: cp[i] for i in range(nTypes)} + {neg[i]: cn[i] for i in range(nTypes)}),
@@ -83,10 +83,10 @@ satisfy(
     [cp[i] + cn[i] == surfaces[i] for i in range(nTypes)],
 
     # ensuring row connectedness of ship segments
-    [t[i + 1] in horizontal_automaton for i in range(n)],
+    [t[i + 1] in Ah for i in range(n)],
 
     # ensuring column connectedness of ship segments
-    [t[:, j + 1] in vertical_automaton for j in range(n)],
+    [t[:, j + 1] in Av for j in range(n)],
 
     # tag(clues)
     [hint_ctr(c, i, j) for (c, i, j) in hints] if hints else None
@@ -96,3 +96,24 @@ satisfy(
 1) another way of setting border values to 0 is with constraints 'Sum', as in:
  [Sum(s[0]) == 0, Sum(s[n + 1]) == 0, Sum(s[:, 0]) == 0, Sum(s[:, n + 1]) == 0],
 """
+#     [s[0] == 0, s[-1] == 0, s[:, 0] == 0, s[:, -1] == 0],
+
+# [
+#         Match(c,
+#               Cases={
+#                   'w': s[i][j] == 0,
+#                   ('c', 'l', 'r', 't', 'b'): [
+#                       s[i][j] == 1,
+#                       s[i - 1][j] == (1 if c == 'b' else 0),
+#                       s[i + 1][j] == (1 if c == 't' else 0),
+#                       s[i][j - 1] == (1 if c == 'r' else 0),
+#                       s[i][j + 1] == (1 if c == 'l' else 0)
+#                   ],
+#                   'm': [
+#                       s[i][j] == 1,
+#                       t[i][j] not in {-2, -1, 0, 1, 2},
+#                       (s[i - 1][j], s[i + 1][j], s[i][j - 1], s[i][j + 1]) in {(0, 0, 1, 1), (1, 1, 0, 0)}
+#                   ]
+#               }
+#               ) for (c, i, j) in hints
+#     ] if hints else None

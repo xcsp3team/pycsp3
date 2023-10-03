@@ -445,7 +445,7 @@ def warning_if(test, message):
 
 def error(message):
     Error.errorOccurrence = True
-    print("\n\t" + RED + "ERROR: " + WHITE, s)
+    print("\n\t" + RED + "ERROR: " + WHITE, message)
     print("\t\t(add option -ev to your command if you want to see the trace of the error)\n")
     if options.ev:
         raise TypeError(message)

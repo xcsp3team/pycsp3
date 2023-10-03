@@ -33,18 +33,20 @@ x = VarArray(size=n, dom=lambda i: range(len(preferences[i])))
 
 if not variant():
     satisfy(
-        (imply(x[i] > rank[i][k], x[k] < rank[k][i]), imply(x[i] == rank[i][k], x[k] == rank[k][i])) for i in range(n) for k in pref[i] if k != i
+        (If(x[i] > rank[i][k], Then=x[k] < rank[k][i]),
+         If(x[i] == rank[i][k], Then=x[k] == rank[k][i]))
+        for i in range(n) for k in pref[i] if k != i
     )
 
 elif variant('table'):
 
-    def table(i, k):
+    def T(i, k):
         return [(a, ANY) for a in x[i].dom if a < rank[i][k]] + [(rank[i][k], rank[k][i])] + \
-               [(a, b) for a in x[i].dom if a > rank[i][k] for b in x[k].dom if b < rank[k][i]]
+            [(a, b) for a in x[i].dom if a > rank[i][k] for b in x[k].dom if b < rank[k][i]]
 
 
     satisfy(
-        (x[i], x[k]) in table(i, k) for i in range(n) for k in pref[i] if k != i
+        (x[i], x[k]) in T(i, k) for i in range(n) for k in pref[i] if k != i
     )
 
 elif variant('hybrid'):

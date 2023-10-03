@@ -1,11 +1,25 @@
 """
-Problem 076 on CSPLib, and NumberJack example
+A costas array is a pattern of n marks on an n∗n grid, one mark per row and one per column,
+in which the n∗(n−1)/2 vectors between the marks are all-different.
 
-See https://en.wikipedia.org/wiki/Costas_array
+See problem 076 at CSPLib.
 
-Examples of Execution:
-  python3 CostasArray.py
-  python3 CostasArray.py -data=10
+## Data
+  a unique integer, the order of the grid
+
+## Model
+  constraints: AllDifferent
+
+## Execution
+  - python CostasArray.py -data=10
+
+## Links
+  - https://en.wikipedia.org/wiki/Costas_array
+  - https://www.csplib.org/Problems/prob076/
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/cop/cop
+
+## Tags
+  academic, csplib, xcsp22
 """
 
 from pycsp3 import *

@@ -1,8 +1,22 @@
 """
-See, e.g., "Fast Global Filtering for Eternity II" by Eric Bourreau and Thierry Benoist. Constraint Programming Letters, 2008, 3, pp.036-049
+On a board of size n×m, you have to put square tiles (pieces) that are described by four colors (one for each direction : top, right, bottom and left).
+All adjacent tiles on the board must have matching colors along their common edge. All edges must have color ’0’ on the border of the board.
 
-Example of Execution:
-  python3 Eternity.py -data=Eternity_07x05.json
+## Data (example)
+  07x05.json
+
+## Model
+  constraints: AllDifferent, Extension, Intension
+
+## Execution
+  - python Eternity.py -data=07x05.json
+
+## Links
+  - https://hal-lirmm.ccsd.cnrs.fr/lirmm-00364330/document
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/cop/cop
+
+## Tags
+  recreational, xcsp22
 """
 
 from pycsp3 import *
@@ -11,7 +25,7 @@ n, m, pieces = data
 assert n * m == len(pieces), "badly formed data"
 max_value = max(max(piece) for piece in pieces)  # max possible value on pieces
 
-T = {(i, piece[r % 4], piece[(r + 1) % 4], piece[(r + 2) % 4], piece[(r + 3) % 4]) for i, piece in enumerate(pieces) for r in range(4)}  # table
+T = {(i, piece[r % 4], piece[(r + 1) % 4], piece[(r + 2) % 4], piece[(r + 3) % 4]) for i, piece in enumerate(pieces) for r in range(4)}
 
 # x[i][j] is the index of the piece at row i and column j
 x = VarArray(size=[n, m], dom=range(n * m))
