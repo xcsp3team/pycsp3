@@ -18,7 +18,12 @@ if not variant():
 
     satisfy(
         # ensuring that two players don't meet more than one time
-        [(g[w1][p1] != g[w1][p2]) | (g[w2][p1] != g[w2][p2]) for w1, w2 in combinations(nWeeks, 2) for p1, p2 in combinations(nPlayers, 2)],
+        [
+            If(
+                g[w1][p1] == g[w1][p2],
+                Then=g[w2][p1] != g[w2][p2]
+            ) for w1, w2 in combinations(nWeeks, 2) for p1, p2 in combinations(nPlayers, 2)
+        ],
 
         # respecting the size of the groups
         [Cardinality(g[w], occurrences={i: size for i in range(nGroups)}) for w in range(nWeeks)],
@@ -44,7 +49,7 @@ elif variant("01"):
 
     satisfy(
         # each week, each player plays exactly once
-        [Sum(x[w][g][p] for g in range(nGroups)) == 1 for w in range(nWeeks) for p in range(nPlayers)],
+        [Sum(x[w, :, p]) == 1 for w in range(nWeeks) for p in range(nPlayers)],
 
         # each week, each group contains exactly the right number of players
         [Sum(x[w][g]) == size for w in range(nWeeks) for g in range(nGroups)],
@@ -64,9 +69,24 @@ elif variant("01"):
             [LexDecreasing(x[w], strict=True) for w in range(nWeeks)],
 
             # weeks are strictly ordered (it suffices to consider the first group)
-            LexDecreasing([x[w][0] for w in range(nWeeks)], strict=True),
+            LexDecreasing(x[:, 0], strict=True),
 
             # golfers are strictly ordered
-            LexDecreasing([[x[w][g][p] for w in range(nWeeks) for g in range(nGroups)] for p in range(nPlayers)], strict=True)
+            LexDecreasing([x[:, :, p] for p in range(nPlayers)], strict=True)
         ]
     )
+
+""" Comments
+1) note that:
+   Sum(x[w, :, p])
+ is a shortcut for:
+   Sum(x[w][g][p] for g in range(nGroups))
+2) Note that:
+   LexDecreasing(x[:, 0]
+ is a shortcut for: 
+   LexDecreasing([x[w][0] for w in range(nWeeks)]
+2) Note that:
+   LexDecreasing([x[:, :, p] for p in range(nPlayers)]
+ is a shortcut for:
+   LexDecreasing([[x[w][g][p] for w in range(nWeeks) for g in range(nGroups)] for p in range(nPlayers)]
+"""

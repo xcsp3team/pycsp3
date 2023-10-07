@@ -42,13 +42,13 @@ satisfy(
     [taller[p1][p2] != taller[p2][p1] for p1 in persons for p2 in persons if p1 != p2],
 
     # Bob likes no one that Alice likes
-    [imply(liking[alice][p], ~liking[bob][p]) for p in persons],
+    [If(liking[alice][p], Then=~liking[bob][p]) for p in persons],
 
     # Alice likes everybody except Bob
     [liking[alice][p] == 1 for p in persons if p != bob],
 
     # Sascha likes everyone that Alice likes
-    [imply(liking[alice][p], liking[sascha][p]) for p in persons],
+    [If(liking[alice][p], Then=liking[sascha][p]) for p in persons],
 
     # nobody likes everyone
     [Count(liking[p], value=0) >= 1 for p in persons]

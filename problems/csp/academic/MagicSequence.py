@@ -18,11 +18,16 @@ satisfy(
     Cardinality(x, occurrences={i: x[i] for i in range(n)}),
 
     # tag(redundant-constraints)
-    [Sum(x) == n, Sum((i - 1) * x[i] for i in range(n)) == 0]
+    [
+        Sum(x) == n,
+        Sum((i - 1) * x[i] for i in range(n)) == 0
+    ]
 )
 
 """ Comments
 1) Sum((i - 1) * x[i] for i in range(n)) == 0
    could be equivalently written x * range(-1, n - 1) == 0
    but range(-1, n - 1) * x == 0 is currently not possible (requires 'cursing' * for range objects)
+2) one can write:
+   Cardinality(x, occurrences=x)
 """

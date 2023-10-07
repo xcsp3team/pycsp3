@@ -25,7 +25,7 @@ y = VarArray(size=[n, n], dom=range(n))
 # z is the matrix used to control orthogonality
 z = VarArray(size=[n * n], dom=range(n * n))
 
-table = {(i, j, i * n + j) for i in range(n) for j in range(n)}
+T = {(i, j, i * n + j) for i in range(n) for j in range(n)}
 
 satisfy(
     # ensuring that x is a Latin square
@@ -41,7 +41,7 @@ satisfy(
     AllDifferent(z),
 
     # computing z from x and y
-    [(x[i][j], y[i][j], z[i * n + j]) in table for i in range(n) for j in range(n)],
+    [(x[i][j], y[i][j], z[i * n + j]) in T for i in range(n) for j in range(n)],
 
     # tag(symmetry-breaking)
     [(x[0][j] == j, y[0][j] == j) for j in range(n)]

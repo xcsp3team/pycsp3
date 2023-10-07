@@ -17,7 +17,7 @@ def match_number(t1, t2):
     return nMatches - ((nTeams - t1) * (nTeams - t1 - 1)) // 2 + (t2 - t1 - 1)
 
 
-table = {(t1, t2, match_number(t1, t2)) for t1, t2 in combinations(range(nTeams), 2)}
+T = {(t1, t2, match_number(t1, t2)) for t1, t2 in combinations(range(nTeams), 2)}
 
 # m[w][p] is the number of the match at week w and period p
 m = VarArray(size=[nWeeks, nPeriods], dom=range(nMatches))
@@ -33,7 +33,7 @@ satisfy(
     AllDifferent(m),
 
     # linking variables through ternary table constraints
-    [(x[w][p], y[w][p], m[w][p]) in table for w in range(nWeeks) for p in range(nPeriods)],
+    [(x[w][p], y[w][p], m[w][p]) in T for w in range(nWeeks) for p in range(nPeriods)],
 
     # each week, all teams are different (each team plays each week)
     [AllDifferent(x[w] + y[w]) for w in range(nWeeks)],

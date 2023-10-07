@@ -1028,8 +1028,8 @@ def Decreasing(term, *others, strict=False, lengths=None):
 
 def _lex(term, others, operator, matrix):
     if len(others) == 0:
-        assert is_matrix(term, Variable)
         lists = [flatten(l) for l in term]
+        assert is_matrix(lists, Variable)
     elif not is_1d_list(term, Variable):
         l1, l2 = flatten(term), flatten(others)
         assert len(l1) == len(l2)

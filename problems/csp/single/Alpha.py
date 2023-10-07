@@ -21,26 +21,28 @@ if not variant():
         AllDifferent(x),
 
         # respecting clues
-        [Sum(of("ballet")) == 45,
-         Sum(of("cello")) == 43,
-         Sum(of("concert")) == 74,
-         Sum(of("flute")) == 30,
-         Sum(of("fugue")) == 50,
-         Sum(of("glee")) == 66,
-         Sum(of("jazz")) == 58,
-         Sum(of("lyre")) == 47,
-         Sum(of("oboe")) == 53,
-         Sum(of("opera")) == 65,
-         Sum(of("polka")) == 59,
-         Sum(of("quartet")) == 50,
-         Sum(of("saxophone")) == 134,
-         Sum(of("scale")) == 51,
-         Sum(of("solo")) == 37,
-         Sum(of("song")) == 61,
-         Sum(of("soprano")) == 82,
-         Sum(of("theme")) == 72,
-         Sum(of("violin")) == 100,
-         Sum(of("waltz")) == 34]
+        [
+            Sum(of("ballet")) == 45,
+            Sum(of("cello")) == 43,
+            Sum(of("concert")) == 74,
+            Sum(of("flute")) == 30,
+            Sum(of("fugue")) == 50,
+            Sum(of("glee")) == 66,
+            Sum(of("jazz")) == 58,
+            Sum(of("lyre")) == 47,
+            Sum(of("oboe")) == 53,
+            Sum(of("opera")) == 65,
+            Sum(of("polka")) == 59,
+            Sum(of("quartet")) == 50,
+            Sum(of("saxophone")) == 134,
+            Sum(of("scale")) == 51,
+            Sum(of("solo")) == 37,
+            Sum(of("song")) == 61,
+            Sum(of("soprano")) == 82,
+            Sum(of("theme")) == 72,
+            Sum(of("violin")) == 100,
+            Sum(of("waltz")) == 34
+        ]
     )
 
 elif variant("var"):
@@ -52,26 +54,28 @@ elif variant("var"):
         AllDifferent(letters),
 
         # respecting clues
-        [Sum(b, a, l, l, e, t) == 45,
-         Sum(c, e, l, l, o) == 43,
-         Sum(c, o, n, c, e, r, t) == 74,
-         Sum(f, l, u, t, e) == 30,
-         Sum(f, u, g, u, e) == 50,
-         Sum(g, l, e, e) == 66,
-         Sum(j, a, z, z) == 58,
-         Sum(l, y, r, e) == 47,
-         Sum(o, b, o, e) == 53,
-         Sum(o, p, e, r, a) == 65,
-         Sum(p, o, l, k, a) == 59,
-         Sum(q, u, a, r, t, e, t) == 50,
-         Sum(s, a, x, o, p, h, o, n, e) == 134,
-         Sum(s, c, a, l, e) == 51,
-         Sum(s, o, l, o) == 37,
-         Sum(s, o, n, g) == 61,
-         Sum(s, o, p, r, a, n, o) == 82,
-         Sum(t, h, e, m, e) == 72,
-         Sum(v, i, o, l, i, n) == 100,
-         Sum(w, a, l, t, z) == 34]
+        [
+            Sum(b, a, l, l, e, t) == 45,
+            Sum(c, e, l, l, o) == 43,
+            Sum(c, o, n, c, e, r, t) == 74,
+            Sum(f, l, u, t, e) == 30,
+            Sum(f, u, g, u, e) == 50,
+            Sum(g, l, e, e) == 66,
+            Sum(j, a, z, z) == 58,
+            Sum(l, y, r, e) == 47,
+            Sum(o, b, o, e) == 53,
+            Sum(o, p, e, r, a) == 65,
+            Sum(p, o, l, k, a) == 59,
+            Sum(q, u, a, r, t, e, t) == 50,
+            Sum(s, a, x, o, p, h, o, n, e) == 134,
+            Sum(s, c, a, l, e) == 51,
+            Sum(s, o, l, o) == 37,
+            Sum(s, o, n, g) == 61,
+            Sum(s, o, p, r, a, n, o) == 82,
+            Sum(t, h, e, m, e) == 72,
+            Sum(v, i, o, l, i, n) == 100,
+            Sum(w, a, l, t, z) == 34
+        ]
     )
 
 """ Comments
