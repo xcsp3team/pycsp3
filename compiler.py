@@ -56,6 +56,7 @@ class Compilation:
 
     @staticmethod
     def compile(filename="", disabling_opoverrider=False, verbose=1):
+        # functions.satisfy_from_auxiliary()
         Compilation.set_path_file_name(filename)
         return _compile(disabling_opoverrider, verbose=verbose)
 

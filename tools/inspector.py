@@ -204,7 +204,7 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
     comments2 = [[""] for _ in args]  # comments at second level (i.e, for elements of intern lists)
     tags1 = [""] * len(args)  # tags at first level
     tags2 = [[""] for _ in args]  # tags at second level
-    if no_extraction:
+    if no_extraction or options.sober:
         return comments1, comments2, tags1, tags2
 
     code = list(reversed(_extract_code(function_name)))
@@ -219,6 +219,7 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
                 for k in range(i, j + (1 if j < len(code) else 0)):
                     keep[k] = False
     code = [code[i].strip() for i in range(len(code)) if keep[i]]
+
     # we remove comments that are on the right of code
     for i in range(len(code)):
         pos = code[i].find('#')

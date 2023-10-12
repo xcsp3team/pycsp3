@@ -47,7 +47,7 @@ if not variant():
 
 elif variant("var"):
     # letters[i] is the value for the ith letter of the alphabet
-    a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z = letters = VarArray(size=26, dom=range(1, 27))
+    letters = a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z = VarArray(size=26, dom=range(1, 27))
 
     satisfy(
         # all letters must be different

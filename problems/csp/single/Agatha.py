@@ -12,8 +12,20 @@ Agatha, the butler, and Charles live in Dreadsbury Mansion, and are the only peo
  - The butler hates everyone Agatha hates.
  - No one hates everyone.
 
-Execution:
-  python3 Agatha.py
+## Data
+  all integrated (single instance)
+
+## Model
+  constraints: Element, Count, Intension
+
+## Execution
+  python Agatha.py
+
+## Links
+  - https://www.researchgate.net/publication/220531947_Seventy-Five_Problems_for_Testing_Automatic_Theorem_Provers
+
+## Tags
+  single
 """
 
 from pycsp3 import *
@@ -37,16 +49,16 @@ satisfy(
     richer[killer][agatha] == 0,
 
     # Charles hates no one that Agatha hates
-    [imply(hating[agatha][p], ~hating[charles][p]) for p in persons],
+    [If(hating[agatha][p], Then=~hating[charles][p]) for p in persons],
 
     # Agatha hates everybody except the butler
     [hating[agatha][p] == 1 for p in persons if p != butler],
 
     # the butler hates everyone not richer than Aunt Agatha
-    [imply(~richer[p, agatha], hating[butler, p]) for p in persons],
+    [If(~richer[p][agatha], Then=hating[butler][p]) for p in persons],
 
     # the butler hates everyone Agatha hates
-    [imply(hating[agatha, p], hating[butler, p]) for p in persons],
+    [If(hating[agatha][p], Then=hating[butler][p]) for p in persons],
 
     # no one hates everyone
     [Count(hating[p], value=0) > 0 for p in persons]

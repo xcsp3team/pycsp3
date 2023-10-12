@@ -29,7 +29,7 @@ satisfy(
 if not variant():
     satisfy(
         # the first i numbers must be divisible by i
-        [x[:i] * [10 ** (i - j - 1) for j in range(i)] % i == 0 for i in range(2, 10)],
+        x[:i] * [10 ** (i - j - 1) for j in range(i)] % i == 0 for i in range(2, 10)
     )
 
 elif variant("rules"):

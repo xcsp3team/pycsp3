@@ -42,10 +42,6 @@ def table_other():
     return t
 
 
-def cross(t, i, j):
-    return t[i][j], t[i][j - 1], t[i][j + 1], t[i - 1][j], t[i + 1][j]
-
-
 # x[i][j] is the region (number) where the square at row i and column j belongs (borders are inserted for simplicity)
 x = VarArray(size=[n + 2, m + 2], dom=lambda i, j: {-1} if i in {0, n + 1} or j in {0, m + 1} else range(nRegions))
 
@@ -66,14 +62,16 @@ satisfy(
     ],
 
     # each starting square of a (non-unit) region must have at least one neighbor at distance 1
-    [(cross(x, i, j), cross(d, i, j)) in table_start(k) for k, (i, j, s) in enumerate(regions) if s > 1],
+    [(x.cross(i, j), d.cross(i, j)) in table_start(k) for k, (i, j, s) in enumerate(regions) if s > 1],
 
     # each square must be connected to a neighbour at distance 1
-    [(cross(x, i, j), cross(d, i, j)) in table_other() for i in range(1, n + 1) for j in range(1, m + 1) if puzzle[i - 1][j - 1] == 0]
+    [(x.cross(i, j), d.cross(i, j)) in table_other() for i in range(1, n + 1) for j in range(1, m + 1) if puzzle[i - 1][j - 1] == 0]
 )
 
 """ Comments 
 1) (cross(x, i, j), cross(d, i, j)) is a tuple containing two sub-tuples of variables.
    This is automatically flattened (i.e., transformed into a single tuple). Of course, it is also possible to write:
    (*cross(x, i, j), *cross(d, i, j))
+2) cross is a method that can be called on 2-dimensional arrays/lists of variables (ListVar).
+   For an array t, and indexes i,j, it returns [t[i][j], t[i][j - 1], t[i][j + 1], t[i - 1][j], t[i + 1][j]]
 """

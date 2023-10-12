@@ -399,6 +399,10 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     :param meta true if a meta-constraint form must be really posted
     :return: a complex form of constraint(s) based on the control structure 'if then else'
     """
+    if len(testOthers) == 0 and isinstance(test, bool):
+        assert not meta
+        return Then if test else Else
+
     tests, thens = flatten(test, testOthers), flatten(Then)
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list) and len(thens) > 0  # after flatten, we have a list
     if meta:
@@ -468,6 +472,49 @@ def Slide(*args, expression=None, circular=None, offset=None, collect=None):
     return ESlide([EToGather(entities)])
 
 
+def _group(*_args, block=False):
+    def _remove_dummy_constraints(tab):
+        if any(isinstance(v, ConstraintDummyConstant) for v in tab):
+            warning_if(any(isinstance(v, ConstraintDummyConstant) and v.val != 1 for v in tab), "It seems that there is a bad expression in the model")
+            return [v for v in tab if not isinstance(v, ConstraintDummyConstant)]
+        return tab
+
+    def _block_reorder(_entities):
+        reordered_entities = []
+        g = []
+        for c in _entities:
+            if isinstance(c, ECtr) and c.blank_basic_attributes():
+                g.append(c)
+            else:
+                if len(g) != 0:
+                    reordered_entities.append(_group(g))
+                g.clear()
+                reordered_entities.append(c)
+        if len(g) != 0:
+            reordered_entities.append(_group(g))
+        return reordered_entities
+
+    tab = _remove_dummy_constraints(flatten(*_args))
+    if len(tab) == 0:
+        return None
+    entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(tab))
+    checkType(entities, [ECtr, ECtrs, EMetaCtr])
+    return EBlock(_block_reorder(entities)) if block else EToGather(entities)
+
+
+def satisfy_from_auxiliary(t=[]):
+    to_post = _group(pc == var for (pc, var) in auxiliary().get_collected_and_clear())
+    if to_post is not None:
+        t.append(to_post)
+    to_post = _group(auxiliary().get_collected_raw_and_clear())
+    if to_post is not None:
+        t.append(to_post)
+    to_post = _group((index, aux) in table for (index, aux, table) in auxiliary().get_collected_extension_and_clear())
+    if to_post is not None:
+        t.append(to_post)
+    return EToSatisfy(t)
+
+
 def satisfy(*args, no_comment_tags_extraction=False):
     """
     Posts all constraints that are specified as arguments
@@ -476,37 +523,6 @@ def satisfy(*args, no_comment_tags_extraction=False):
     :return: an object wrapping the posted constraints
     """
     global no_parameter_satisfy, nb_parameter_satisfy
-
-    def _remove_dummy_constraints(tab):
-        if any(isinstance(v, ConstraintDummyConstant) for v in tab):
-            warning_if(any(isinstance(v, ConstraintDummyConstant) and v.val != 1 for v in tab), "It seems that there is a bad expression in the model")
-            return [v for v in tab if not isinstance(v, ConstraintDummyConstant)]
-        return tab
-
-    def _group(*_args, block=False):
-
-        def _block_reorder(_entities):
-            reordered_entities = []
-            g = []
-            for c in _entities:
-                if isinstance(c, ECtr) and c.blank_basic_attributes():
-                    g.append(c)
-                else:
-                    if len(g) != 0:
-                        reordered_entities.append(_group(g))
-                    g.clear()
-                    reordered_entities.append(c)
-            if len(g) != 0:
-                reordered_entities.append(_group(g))
-            return reordered_entities
-
-        tab = _remove_dummy_constraints(flatten(*_args))
-        if len(tab) == 0:
-            return None
-        entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(tab))
-        # print(entities)
-        checkType(entities, [ECtr, ECtrs, EMetaCtr])
-        return EBlock(_block_reorder(entities)) if block else EToGather(entities)
 
     def _reorder(l):  # if constraints are given in (sub-)lists inside tuples; we flatten and reorder them to hopefully improve compactness
         d = dict()
@@ -599,16 +615,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
             #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
-    to_post = _group(pc == var for (pc, var) in auxiliary().get_collected_and_clear())
-    if to_post is not None:
-        t.append(to_post)
-    to_post = _group(auxiliary().get_collected_raw_and_clear())
-    if to_post is not None:
-        t.append(to_post)
-    to_post = _group((index, aux) in table for (index, aux, table) in auxiliary().get_collected_extension_and_clear())
-    if to_post is not None:
-        t.append(to_post)
-    return EToSatisfy(t)
+    return satisfy_from_auxiliary(t)
 
 
 ''' Generic Constraints (intension, extension) '''
@@ -1131,7 +1138,10 @@ def Sum(term, *others, condition=None):
                 t2.append(-1 if tree.inverse else 1)
             else:
                 assert isinstance(tree, Node)
-                pair = tree.tree_val_if_binary_type(TypeNode.MUL)
+                if tree.type == TypeNode.NEG and tree.sons[0].type == TypeNode.VAR:
+                    pair = (tree.sons[0].sons, -1)
+                else:
+                    pair = tree.tree_val_if_binary_type(TypeNode.MUL)
                 if pair is None:
                     break
                 t1.append(pair[0])
