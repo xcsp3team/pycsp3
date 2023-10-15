@@ -419,13 +419,18 @@ def If(test, *testOthers, Then, Else=None, meta=False):
                 disjunctive_test = [~v for v in (Node(v.type, v.sons) for v in tests)]
             else:
                 tests = conjunction(t for t in tests)
-        elif isinstance(tests[0], Variable) and tests[0].negation:
-            disjunctive_test = var(tests[0].id)  # we look for the original variable
-        elif isinstance(tests[0], Node):
-            if tests[0].type == TypeNode.NOT:
-                disjunctive_test = tests[0].sons[0]
-            elif ~tests[0].type is not None and len(thens) == 1 and isinstance(thens[0], Node) and thens[0].type == TypeNode.OR:
-                disjunctive_test = Node(~tests[0].type, tests[0].sons)
+        else:
+            test = tests[0]
+            if isinstance(test, Variable) and test.negation:
+                disjunctive_test = var(test.id)  # we look for the original variable
+            elif isinstance(test, Node):
+                if test.type == TypeNode.NOT:
+                    disjunctive_test = test.sons[0]
+                elif test.type == TypeNode.EQ and len(test.sons) == 2 and test.sons[1].type == TypeNode.INT and test.sons[1].sons == 0 \
+                        and test.sons[0].type == TypeNode.VAR and test.sons[0].sons.dom.is_binary():  # if(x=0,Then=?) => or(x,?)
+                    disjunctive_test = test.sons[0].sons
+                elif ~test.type is not None and len(thens) == 1 and isinstance(thens[0], Node) and thens[0].type == TypeNode.OR:
+                    disjunctive_test = Node(~test.type, test.sons)
     if disjunctive_test is not None:  # do not remove 'is not None'
         return [disjunction(disjunctive_test, v) for v in thens] if len(thens) > 1 else disjunction(disjunctive_test, thens)
     return ift(tests, thens, Else)  # note that if Else is None, imply will be called

@@ -142,6 +142,8 @@ def cursing():
     def _tuple_contains(self, other):
         if not OpOverrider.activated:
             return self.__contains__(other)
+        # if len(self) == 0:
+        #     return False
         if isinstance(other, Node):
             other = auxiliary().replace_node(other)
         if isinstance(other, PartialConstraint):
@@ -150,7 +152,7 @@ def cursing():
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
             queue_in.append((list(self), other))
             return True
-        if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member/element constraint
+        if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
             queue_in.append((self, other))
             return True
         return self.__contains__(other)
@@ -165,6 +167,8 @@ def cursing():
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        # if len(self) == 0:
+        #     return False
         if isinstance(other, Node):
             other = auxiliary().replace_node(other)
         if isinstance(other, PartialConstraint):
@@ -181,7 +185,7 @@ def cursing():
             return other in set(self)
         error_if(is_containing(other, Variable),
                  "It seems that you should use a set and not a list, as in x in {...}." + " Your arguments are " + str(other) + " " + str(self))
-        if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)):  # member/element constraint
+        if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
             queue_in.append((self, other))
             return True
         if isinstance(other, (tuple, list)) and is_containing(other, (Variable, Node, types.GeneratorType)):  # non-unary table constraint
@@ -196,6 +200,8 @@ def cursing():
     def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        # if len(self) == 0:
+        #     return False
         if isinstance(other, Node):
             other = auxiliary().replace_node(other)
         if isinstance(other, types.GeneratorType):
