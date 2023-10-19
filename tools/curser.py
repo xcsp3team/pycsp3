@@ -147,7 +147,7 @@ def cursing():
         if isinstance(other, Node):
             other = auxiliary().replace_node(other)
         if isinstance(other, PartialConstraint):
-            queue_in.append((list(self), other))
+            queue_in.append((list(self), auxiliary().replace_partial_constraint(other)))
             return True
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
             queue_in.append((list(self), other))
@@ -172,7 +172,7 @@ def cursing():
         if isinstance(other, Node):
             other = auxiliary().replace_node(other)
         if isinstance(other, PartialConstraint):
-            queue_in.append((list(self), other))
+            queue_in.append((list(self), auxiliary().replace_partial_constraint(other)))
             return True
         if isinstance(other, types.GeneratorType):
             other = list(other)
@@ -183,6 +183,14 @@ def cursing():
             return True
         if is_containing(other, Variable) and len(self) == 0:
             return other in set(self)
+        if isinstance(other, Variable) and isinstance(self, list):
+            for i, v in enumerate(self):
+                # TODO: certainly other cases (not just PartialConstraint) to be handled
+                if isinstance(self[i], PartialConstraint):
+                    self[i] = auxiliary().replace_partial_constraint(self[i])
+            if is_1d_list(self, Variable):
+                queue_in.append((self, other))
+                return True
         error_if(is_containing(other, Variable),
                  "It seems that you should use a set and not a list, as in x in {...}." + " Your arguments are " + str(other) + " " + str(self))
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint

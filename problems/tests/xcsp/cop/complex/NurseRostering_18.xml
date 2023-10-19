@@ -1923,39 +1923,39 @@
     <block note="minimum and maximum number of total worked minutes">
       <group>
         <sum>
-          <list> %... </list>
-          <coeffs> 480 480 480 0 </coeffs>
+          <list> %0 %1 %2 </list>
+          <coeffs> 480 480 480 </coeffs>
           <condition> (in,24960..25920) </condition>
         </sum>
-        <args> nd[0][] </args>
-        <args> nd[1][] </args>
-        <args> nd[2][] </args>
-        <args> nd[3][] </args>
-        <args> nd[4][] </args>
-        <args> nd[5][] </args>
-        <args> nd[6][] </args>
-        <args> nd[7][] </args>
-        <args> nd[8][] </args>
-        <args> nd[9][] </args>
-        <args> nd[10][] </args>
-        <args> nd[11][] </args>
-        <args> nd[12][] </args>
-        <args> nd[13][] </args>
-        <args> nd[14][] </args>
-        <args> nd[15][] </args>
-        <args> nd[16][] </args>
-        <args> nd[17][] </args>
+        <args> nd[0][0..2] </args>
+        <args> nd[1][0..2] </args>
+        <args> nd[2][0..2] </args>
+        <args> nd[3][0..2] </args>
+        <args> nd[4][0..2] </args>
+        <args> nd[5][0..2] </args>
+        <args> nd[6][0..2] </args>
+        <args> nd[7][0..2] </args>
+        <args> nd[8][0..2] </args>
+        <args> nd[9][0..2] </args>
+        <args> nd[10][0..2] </args>
+        <args> nd[11][0..2] </args>
+        <args> nd[12][0..2] </args>
+        <args> nd[13][0..2] </args>
+        <args> nd[14][0..2] </args>
+        <args> nd[15][0..2] </args>
+        <args> nd[16][0..2] </args>
+        <args> nd[17][0..2] </args>
       </group>
       <group>
         <sum>
-          <list> %... </list>
-          <coeffs> 480 480 480 0 </coeffs>
+          <list> %0 %1 %2 </list>
+          <coeffs> 480 480 480 </coeffs>
           <condition> (in,23340..24300) </condition>
         </sum>
-        <args> nd[18][] </args>
-        <args> nd[19][] </args>
-        <args> nd[20][] </args>
-        <args> nd[21][] </args>
+        <args> nd[18][0..2] </args>
+        <args> nd[19][0..2] </args>
+        <args> nd[20][0..2] </args>
+        <args> nd[21][0..2] </args>
       </group>
     </block>
     <group note="maximum consecutive worked shifts">

@@ -216,10 +216,9 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
             while j < len(code) and is_comment_line(code[j]):
                 j += 1
             if j == len(code) or (j < len(code) and is_discardable_line(code[j])):
-                for k in range(i, j + (1 if j < len(code) else 0)):
+                for k in range(i, j):  # + (1 if j < len(code) else 0)):
                     keep[k] = False
     code = [code[i].strip() for i in range(len(code)) if keep[i]]
-
     # we remove comments that are on the right of code
     for i in range(len(code)):
         pos = code[i].find('#')

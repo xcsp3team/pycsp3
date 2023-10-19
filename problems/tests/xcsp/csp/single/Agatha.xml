@@ -26,7 +26,7 @@
       <values> 1 1 </values>
     </instantiation>
     <group note="the butler hates everyone not richer than Aunt Agatha">
-      <intension> imp(not(%0),%1) </intension>
+      <intension> or(%0,%1) </intension>
       <args> richer[0][0] hating[1][0] </args>
       <args> richer[1][0] hating[1][1] </args>
       <args> richer[2][0] hating[1][2] </args>

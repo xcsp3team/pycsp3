@@ -234,15 +234,15 @@
     </group>
     <group note="minimum and maximum number of total worked minutes">
       <sum>
-        <list> %0 %1 </list>
-        <coeffs> 480 0 </coeffs>
+        <list> %0 </list>
+        <coeffs> 480 </coeffs>
         <condition> (in,3360..4320) </condition>
       </sum>
-      <args> nd[0][0] nd[0][1] </args>
-      <args> nd[1][0] nd[1][1] </args>
-      <args> nd[2][0] nd[2][1] </args>
-      <args> nd[3][0] nd[3][1] </args>
-      <args> nd[4][0] nd[4][1] </args>
+      <args> nd[0][0] </args>
+      <args> nd[1][0] </args>
+      <args> nd[2][0] </args>
+      <args> nd[3][0] </args>
+      <args> nd[4][0] </args>
     </group>
     <group note="maximum consecutive worked shifts">
       <count>

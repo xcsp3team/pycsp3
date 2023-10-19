@@ -14,8 +14,8 @@
         <condition> (eq,10) </condition>
       </sum>
       <sum>
-        <list> x[] </list>
-        <coeffs> -1 0 1 2 3 4 5 6 7 8 </coeffs>
+        <list> x[0] x[2..9] </list>
+        <coeffs> -1 1 2 3 4 5 6 7 8 </coeffs>
         <condition> (eq,0) </condition>
       </sum>
     </block>

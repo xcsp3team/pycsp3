@@ -243,7 +243,8 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             return None
         if isinstance(right_operand, (tuple, list, set, frozenset)) and is_containing(right_operand, Variable):
             if len(right_operand) < 4:  # TODO hard coding (introducing an option to adjust that?)
-                return _Intension(Node.build(IN, left_operand, right_operand) if bool_value else Node.build(NOTIN, left_operand, right_operand))
+                st = Node.build(SET, right_operand)
+                return _Intension(Node.build(IN, left_operand, st) if bool_value else Node.build(NOTIN, left_operand, st))
             if bool_value:
                 condition = Condition.build_condition((TypeConditionOperator.EQ, left_operand))
                 return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=condition))  # member
@@ -1101,12 +1102,14 @@ def Precedence(scope, *, values=None, covered=False):
         return ECtr(ConstraintPrecedence(flatten(scope)))
         # assert all(scope[i].dom == scope[0].dom for i in range(1, len(scope)))
         # values = scope[0].dom.all_values()
-    assert isinstance(values, (range, tuple, list))
+    if isinstance(values, types.GeneratorType):
+        values = list(values)
+    assert isinstance(values, (range, tuple, list)) and all(isinstance(v, int) for v in values)
     values = list(values)
     if len(values) > 1:
         return ECtr(ConstraintPrecedence(flatten(scope), values=values, covered=covered))
     else:
-        # TODO : warning ?
+        warning("A constraint Precedence discarded because defined with " + str(len(values)) + " values")
         return None
 
 
@@ -1252,7 +1255,7 @@ def Count(term, *others, value=None, values=None, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
 
-def Exist(term, *others):
+def Exist(term, *others, value=None):
     """
     Builds and returns a constraint Count that checks if at least one of the term evaluates to true
 
@@ -1261,9 +1264,9 @@ def Exist(term, *others):
     :return: a constraint Count
     """
     terms = flatten(term, others)
-    if all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that intrresting?
+    if value is None and all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that intrresting?
         return disjunction(terms)
-    res = Count(terms)
+    res = Count(terms, value=value)
     if isinstance(res, int):
         assert res == 0
         return 0  # for false

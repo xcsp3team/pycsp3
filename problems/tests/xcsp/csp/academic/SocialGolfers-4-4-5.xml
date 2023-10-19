@@ -4,7 +4,7 @@
   </variables>
   <constraints>
     <group note="ensuring that two players don't meet more than one time">
-      <intension> or(ne(%0,%1),ne(%2,%3)) </intension>
+      <intension> imp(eq(%0,%1),ne(%2,%3)) </intension>
       <args> g[0..1][0..1] </args>
       <args> g[0][0] g[0][2] g[1][0] g[1][2] </args>
       <args> g[0][0] g[0][3] g[1][0] g[1][3] </args>

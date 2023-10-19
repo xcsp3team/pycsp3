@@ -152,7 +152,7 @@
       <args> s[10][10] s[9][9] s[9][11] s[11][9] s[11][11] </args>
     </group>
     <group class="channeling">
-      <intension> iff(eq(%0,1),ne(%1,0)) </intension>
+      <intension> eq(%0,ne(%1,0)) </intension>
       <args> s[0][0] t[0][0] </args>
       <args> s[0][1] t[0][1] </args>
       <args> s[0][2] t[0][2] </args>
