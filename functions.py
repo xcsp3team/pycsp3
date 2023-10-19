@@ -448,15 +448,20 @@ def Match(Expr, *, Cases):
                 (not isinstance(k, (tuple, list, set, frozenset)) and Expr == k) or (isinstance(k, (tuple, list, set, frozenset)) and Expr in k)]
 
 
-def Iff(term, *others):
+def Iff(*args, meta=False):
     """
     Builds a meta-constraint Iff from the specified arguments.
     For example: Iff(Sum(x) > 10, AllDifferent(x))
 
-    :param args: a tuple of two constraints
-    :return: a meta-constraint Iff
+    When the parameter 'meta' is not true (the usual and default case),
+    reification is employed.
+
+    :param args: a tuple of constraints
+    :return: a meta-constraint Iff, or its reified form
     """
-    return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(term, others))))
+    if meta:
+        return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
+    return iff(*args)
 
 
 def Slide(*args, expression=None, circular=None, offset=None, collect=None):
@@ -732,7 +737,7 @@ def iff(*args):
     assert len(args) >= 2
     res = manage_global_indirection(*args)
     if res is None:
-        return Iff(*args)
+        return Iff(*args, meta=True)
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     return res[0] == res[1] if len(res) == 2 else Node.build(TypeNode.IFF, *res)
 
@@ -1261,10 +1266,11 @@ def Exist(term, *others, value=None):
 
     :param term: the first term on which the count applies
     :param others: the other terms (if any) on which the count applies
+    :param value the value to be found if not None (None, by default)
     :return: a constraint Count
     """
     terms = flatten(term, others)
-    if value is None and all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that intrresting?
+    if value is None and all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that interesting?
         return disjunction(terms)
     res = Count(terms, value=value)
     if isinstance(res, int):
@@ -1273,15 +1279,21 @@ def Exist(term, *others, value=None):
     return res >= 1
 
 
-def Neither(term, *others):
+def NotExist(term, *others, value=None):
     """
     Builds and returns a constraint Sum that checks if all terms evaluate to false
 
     :param term: the first term on which the sum applies
     :param others: the other terms (if any) on which the sum applies
-    :return: a constraint Sum
+    :param value the value to be tested if not None (None, by default)
+    :return: a constraint Count
     """
-    return Sum(term, others) == 0
+    terms = flatten(term, others)
+    res = Count(terms, value=value)
+    if isinstance(res, int):
+        assert res == 0
+        return 1  # for true
+    return res == 0
 
 
 def ExactlyOne(term, *others):

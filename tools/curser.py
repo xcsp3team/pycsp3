@@ -517,7 +517,7 @@ class OpOverrider:
     def __eq__(self, other):
         res = manage_global_indirection(self, other)
         if res is None:
-            return functions.Iff(self, other)
+            return functions.Iff(self, other, meta=True)
         self, other = res
         if self is None or other is None:  # we must not write None in (self,other) because recursive behaviour
             return object.__eq__(self, other)

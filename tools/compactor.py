@@ -263,15 +263,18 @@ def _compact_values(values, limit):
     return l
 
 
+def __compact_argument_value(arg):
+    if is_1d_list(arg.content, int) and str(arg.name) in ["coeffs", "values", "sizes", "lengths", "heights", "weights", "profits", "balance"]:
+        # TODO still other arguments to be added?
+        return _compact_values(arg.content, 3)
+    return compact(arg.content, preserve_order=arg.content_ordered)
+
+
 def _compact_constraint_arguments(arguments):
     for arg in list(arguments.values()):
         if isinstance(arg.content, list) and len(arg.content) > 0 and arg.content_compressible:
             if not isinstance(arg.content[0], list):  # It is only one list
-                if isinstance(arg.content[0], int) and str(arg.name) in ["coeffs", "values", "sizes", "lengths", "heights", "weights", "profits", "balance"]:
-                    # TODO still other arguments to be added?
-                    arg.content = _compact_values(arg.content, 3)
-                else:
-                    arg.content = compact(arg.content, preserve_order=arg.content_ordered)
+                arg.content = __compact_argument_value(arg)
             elif arg.lifted is True:
                 arg.content = [compact(l, preserve_order=arg.content_ordered) for l in arg.content]
         elif arg.name == TypeCtrArg.MATRIX:  # Special case for matrix
@@ -294,7 +297,7 @@ def _compact_constraint_group(group):
                         sc = None if is_containing(argument.content_compressible, int) else _simple_compact(flatten(argument.content_compressible))
                         group.abstraction[key] = sc if sc is not None else group.abstraction[key]
                     else:
-                        group.abstraction[key] = compact(value, preserve_order=argument.content_ordered)
+                        group.abstraction[key] = __compact_argument_value(argument)
                 elif argument.content_ordered is True:
                     preserve_order = True
     else:
