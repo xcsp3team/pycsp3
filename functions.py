@@ -1189,7 +1189,7 @@ def Sum(term, *others, condition=None):
         terms = [v for v in terms if v is not None and not (isinstance(v, int) and v == 0)]
     checkType(terms, ([Variable], [Node], [Variable, Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     if len(terms) == 0:
-        return 0  # None
+        return 0  # TODO ConstraintDummyConstant(0)   # None
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
 
     terms, coeffs = _get_terms_coeffs(terms)
@@ -1296,15 +1296,22 @@ def NotExist(term, *others, value=None):
     return res == 0
 
 
-def ExactlyOne(term, *others):
+def ExactlyOne(term, *others, value=None):
     """
     Builds and returns a constraint Sum that checks if exactly one term evaluates to true
 
     :param term: the first term on which the sum applies
     :param others: the other terms (if any) on which the sum applies
-    :return: a constraint Sum
+    :param value the value to be found if not None (None, by default)
+    :return: a constraint Count
     """
-    return Sum(term, others) == 1
+    terms = flatten(term, others)
+    res = Count(terms, value=value)
+    if isinstance(res, int):
+        assert res == 0
+        return 0  # for false
+    return res == 1
+    # return Sum(term, others) == 1
 
 
 def Hamming(term, *others):
