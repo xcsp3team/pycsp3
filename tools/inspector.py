@@ -79,6 +79,8 @@ def browse_code_top_to_bottom(lines, function_name):
             code.append(line)
         if function_name_found and not is_comment_line(line):
             for letter in line:
+                if letter == '#':
+                    break
                 if letter in {'(', '['}:
                     level = level + 1
                 if letter in {')', ']'}:

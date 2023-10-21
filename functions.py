@@ -1281,10 +1281,10 @@ def Exist(term, *others, value=None):
 
 def NotExist(term, *others, value=None):
     """
-    Builds and returns a constraint Sum that checks if all terms evaluate to false
+    Builds and returns a constraint Count that checks if all terms evaluate to false
 
-    :param term: the first term on which the sum applies
-    :param others: the other terms (if any) on which the sum applies
+    :param term: the first term on which the count applies
+    :param others: the other terms (if any) on which the count applies
     :param value the value to be tested if not None (None, by default)
     :return: a constraint Count
     """
@@ -1298,10 +1298,10 @@ def NotExist(term, *others, value=None):
 
 def ExactlyOne(term, *others, value=None):
     """
-    Builds and returns a constraint Sum that checks if exactly one term evaluates to true
+    Builds and returns a constraint Count that checks if exactly one term evaluates to true
 
-    :param term: the first term on which the sum applies
-    :param others: the other terms (if any) on which the sum applies
+    :param term: the first term on which the count applies
+    :param others: the other terms (if any) on which the count applies
     :param value the value to be found if not None (None, by default)
     :return: a constraint Count
     """
@@ -1312,6 +1312,24 @@ def ExactlyOne(term, *others, value=None):
         return 0  # for false
     return res == 1
     # return Sum(term, others) == 1
+
+
+def AtLeastOne(term, *others, value=None):
+    """
+    Builds and returns a constraint Count that checks if at least one term evaluates to true
+
+    :param term: the first term on which the count applies
+    :param others: the other terms (if any) on which the count applies
+    :param value the value to be found if not None (None, by default)
+    :return: a constraint Count
+    """
+    terms = flatten(term, others)
+    res = Count(terms, value=value)
+    if isinstance(res, int):
+        assert res == 0
+        return 0  # for false
+    return res >= 1
+    # return Sum(term, others) >= 1
 
 
 def Hamming(term, *others):
