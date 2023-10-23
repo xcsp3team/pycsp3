@@ -639,7 +639,7 @@ class OpOverrider:
 
     def __eq__lv(self, other):  # lv for ListVar
         if isinstance(other, int):
-            return ECtr(ConstraintInstantiation(flatten(self), other))  # [x == other for x in flatten(self)]
+            return [] if len(self) == 0 else ECtr(ConstraintInstantiation(flatten(self), other))  # [x == other for x in flatten(self)]
         if isinstance(other, (tuple, range)):
             other = list(other)
         if isinstance(other, list):
@@ -656,7 +656,7 @@ class OpOverrider:
 
     def __ne__lv(self, other):  # lv for ListVar
         if isinstance(other, int):
-            return ECtr(ConstraintRefutation(flatten(self), other))  # ListCtr(x != other for x in flatten(self))
+            return [] if len(self) == 0 else ECtr(ConstraintRefutation(flatten(self), other))  # ListCtr(x != other for x in flatten(self))
         if isinstance(other, (tuple, range)):
             other = list(other)
         if isinstance(other, list):

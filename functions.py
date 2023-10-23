@@ -17,7 +17,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintRefutation, ConstraintDummyConstant,
-    ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
+    ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection, global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -319,7 +319,7 @@ def And(*args, meta=False):
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint And, or its reified form
     """
-    if meta:
+    if options.usemeta or meta:
         return EAnd(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
     return conjunction(*args)
 
@@ -402,6 +402,7 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     """
     if len(testOthers) == 0 and isinstance(test, bool):
         assert not meta
+        # TODO : it is currently not possible to write If(x[i] in (ADD, SUB), ...)
         return Then if test else Else
 
     tests, thens = flatten(test, testOthers), flatten(Then)
@@ -417,7 +418,7 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     if Else is None:
         if len(tests) > 1:
             if all(isinstance(v, Node) for v in tests):
-                disjunctive_test = [~v for v in (Node(v.type, v.sons) for v in tests)]
+                disjunctive_test = disjunction(~v for v in (Node(v.type, v.sons) for v in tests))
             else:
                 tests = conjunction(t for t in tests)
         else:
@@ -623,9 +624,13 @@ def satisfy(*args, no_comment_tags_extraction=False):
             else:  # Group
                 to_post = _group(arg)
         if to_post is not None:
+            # to_post_aux = satisfy_from_auxiliary()
+            # if len(to_post_aux) > 0:
+            #     to_post = EBlock(flatten(to_post, to_post_aux))
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
             #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
+    # return EToSatisfy(t)
     return satisfy_from_auxiliary(t)
 
 
@@ -875,6 +880,10 @@ def conjunction(*args):
 
     :return: a node, root of a tree expression
     """
+    # return Count(manage_global_indirection(*args)) == len(args)
+    # t = flatten(args)
+    # if len(t) > 3:
+    #     return Count(t) == len(t)
     return Node.conjunction(manage_global_indirection(*args))
 
 
@@ -1185,7 +1194,7 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
-    if any(v is None or (isinstance(v, int) and v == 0) for v in terms):
+    if any(v is None or (isinstance(v, int) and v == 0) for v in terms):  # note that False is of type int and equal to 0
         terms = [v for v in terms if v is not None and not (isinstance(v, int) and v == 0)]
     checkType(terms, ([Variable], [Node], [Variable, Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     if len(terms) == 0:
@@ -1243,9 +1252,14 @@ def Count(term, *others, value=None, values=None, condition=None):
     if len(terms) == 0:
         return ConstraintDummyConstant(0)
     # assert len(terms) > 0, "A count with an empty scope"
+    # terms = manage_global_indirection(terms)
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
+        elif isinstance(t, ECtr):
+            gi = global_indirection(t.constraint)
+            assert gi is not None
+            terms[i] = gi
     checkType(terms, ([Variable], [Node], [Variable, Node]))
     if value is None and values is None:
         value = 1
@@ -1262,7 +1276,9 @@ def Count(term, *others, value=None, values=None, condition=None):
 
 def Exist(term, *others, value=None):
     """
-    Builds and returns a constraint Count that checks if at least one of the term evaluates to true
+    Builds and returns a constraint Count that checks if at least one of the term evaluates to 1 0 (seen as True) when value is not specified,
+    or to the value (when the parameter is specified, and not None).
+
 
     :param term: the first term on which the count applies
     :param others: the other terms (if any) on which the count applies
@@ -1281,7 +1297,8 @@ def Exist(term, *others, value=None):
 
 def NotExist(term, *others, value=None):
     """
-    Builds and returns a constraint Count that checks if all terms evaluate to false
+    Builds and returns a constraint Count that checks that no term evaluates to 0 (seen as False) when value is not specified,
+    or to the value (when the parameter is specified, and not None).
 
     :param term: the first term on which the count applies
     :param others: the other terms (if any) on which the count applies
@@ -1298,7 +1315,8 @@ def NotExist(term, *others, value=None):
 
 def ExactlyOne(term, *others, value=None):
     """
-    Builds and returns a constraint Count that checks if exactly one term evaluates to true
+    Builds and returns a constraint Count that checks that exactly one term evaluates to 1 (seen as True) when value is not specified,
+    or to the value (when the parameter is specified, and not None)
 
     :param term: the first term on which the count applies
     :param others: the other terms (if any) on which the count applies
@@ -1316,7 +1334,8 @@ def ExactlyOne(term, *others, value=None):
 
 def AtLeastOne(term, *others, value=None):
     """
-    Builds and returns a constraint Count that checks if at least one term evaluates to true
+    Builds and returns a constraint Count that checks that at least one term evaluates to 1 (seen as True) when value is not specified,
+    or to the value (when the parameter is specified, and not None).
 
     :param term: the first term on which the count applies
     :param others: the other terms (if any) on which the count applies
@@ -1330,6 +1349,24 @@ def AtLeastOne(term, *others, value=None):
         return 0  # for false
     return res >= 1
     # return Sum(term, others) >= 1
+
+
+def EveryOne(term, *others, value=None):
+    """
+    Builds and returns a constraint Count that checks that every term evaluates to 1 (seen as True) when value is not specified,
+    or to the value (when the parameter is specified, and not None).
+
+    :param term: the first term on which the count applies
+    :param others: the other terms (if any) on which the count applies
+    :param value the value to be found if not None (None, by default)
+    :return: a constraint Count
+    """
+    terms = flatten(term, others)
+    res = Count(terms, value=value)
+    if isinstance(res, int):
+        assert res == 0
+        return 1  # for true
+    return res == len(terms)
 
 
 def Hamming(term, *others):

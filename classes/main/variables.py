@@ -3,6 +3,7 @@ import re
 from pycsp3.classes.auxiliary.ptypes import TypeVar
 from pycsp3.classes.main.domains import Domain
 from pycsp3.tools.utilities import error_if, flatten
+from pycsp3 import functions
 
 
 class Variable:
@@ -115,6 +116,16 @@ class Variable:
 class VariableInteger(Variable):
     def __init__(self, name, dom):
         super().__init__(name, dom)
+
+    def among(self, *values):
+        values = flatten(values)
+        assert len(values) > 0 and all(isinstance(v, int) for v in values)
+        return functions.belong(self, values)
+
+    def not_among(self, *values):
+        values = flatten(values)
+        assert len(values) > 0 and all(isinstance(v, int) for v in values)
+        return functions.not_belong(self, values)
 
 
 class VariableSymbolic(Variable):
