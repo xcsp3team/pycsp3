@@ -1286,8 +1286,13 @@ def Exist(term, *others, value=None):
     :return: a constraint Count
     """
     terms = flatten(term, others)
-    if value is None and all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that interesting?
-        return disjunction(terms)
+    if value is None:
+        if len(terms) == 1:
+            return terms[0]
+        if len(terms) == 2:
+            return disjunction(terms)
+        if all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that interesting?
+            return disjunction(terms)
     res = Count(terms, value=value)
     if isinstance(res, int):
         assert res == 0
@@ -1342,13 +1347,14 @@ def AtLeastOne(term, *others, value=None):
     :param value the value to be found if not None (None, by default)
     :return: a constraint Count
     """
-    terms = flatten(term, others)
-    res = Count(terms, value=value)
-    if isinstance(res, int):
-        assert res == 0
-        return 0  # for false
-    return res >= 1
-    # return Sum(term, others) >= 1
+    return Exist(term, others, value)
+    # terms = flatten(term, others)
+    # res = Count(terms, value=value)
+    # if isinstance(res, int):
+    #     assert res == 0
+    #     return 0  # for false
+    # return res >= 1
+    # # return Sum(term, others) >= 1
 
 
 def EveryOne(term, *others, value=None):
