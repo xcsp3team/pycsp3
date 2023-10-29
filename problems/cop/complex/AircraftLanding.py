@@ -41,16 +41,16 @@ satisfy(
 
 if not variant():
     satisfy(
-        # computing earlinesses of planes
+        # computing earliness of planes
         [e[i] == max(0, target[i] - x[i]) for i in range(nPlanes)],
 
-        # computing tardinesses of planes
+        # computing tardiness of planes
         [t[i] == max(0, x[i] - target[i]) for i in range(nPlanes)],
     )
 
 elif variant("table"):
     satisfy(
-        # computing earlinesses and tardinesses of planes
+        # computing earliness and tardiness of planes
         (x[i], e[i], t[i]) in {(v, max(0, target[i] - v), max(0, v - target[i])) for v in range(earliest[i], latest[i] + 1)} for i in range(nPlanes)
     )
 

@@ -249,7 +249,7 @@ def cursing():
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))  # functions.Sum(other)
         if isinstance(other, Variable):  # unary table constraint (based on a range)
-            queue_in.append((list(self), other))
+            queue_in.append((self, other))
             return True
         if isinstance(other, PartialConstraint):
             queue_in.append((self, other))
@@ -675,6 +675,7 @@ class OpOverrider:
     def __getitem__shared_by_lv_and_li(array, indexes, *, lv):  # lv=True for ListVar, lv=False for ListInt
 
         def __int_tuples_of_same_size(m):
+
             if not isinstance(m, (tuple, list)) or len(m) == 0:
                 return -1
             if all(isinstance(t, int) for t in m):
@@ -703,6 +704,9 @@ class OpOverrider:
             indexes = tuple(indexes)
         if isinstance(indexes, tuple) and len(indexes) == 1:
             indexes = indexes[0]
+        if isinstance(indexes, (set, frozenset)):
+            assert all(isinstance(v, int) for v in indexes)
+            indexes = sorted(list(indexes))  # this will be a selection
         # we check with the next statement if a selection of cells is expected
         k = __int_tuples_of_same_size(indexes)
         if k != -1:

@@ -253,6 +253,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
                 # condition = Condition.build_condition(TypeConditionOperator.NE, left_operand)
                 # return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=condition))  # member
         if isinstance(right_operand, range):
+            # return (right_operand.start <= left_operand) & (left_operand < right_operand.stop)
             return _Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
     if isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
@@ -400,10 +401,8 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     :param meta true if a meta-constraint form must be really posted
     :return: a complex form of constraint(s) based on the control structure 'if then else'
     """
-    if len(testOthers) == 0 and isinstance(test, bool):
-        assert not meta
-        # TODO : it is currently not possible to write If(x[i] in (ADD, SUB), ...)
-        return Then if test else Else
+    # if len(testOthers) == 0 and isinstance(test, bool):  # We don't allow that because otherwise 'in' no more usable as in If(x[0] in (2,3), Then=...
+    #     return Then if test else Else
 
     tests, thens = flatten(test, testOthers), flatten(Then)
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list) and len(thens) > 0  # after flatten, we have a list
@@ -1291,8 +1290,8 @@ def Exist(term, *others, value=None):
             return terms[0]
         if len(terms) == 2:
             return disjunction(terms)
-        if all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that interesting?
-            return disjunction(terms)
+        # if all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that interesting?
+        #     return disjunction(terms)
     res = Count(terms, value=value)
     if isinstance(res, int):
         assert res == 0
@@ -1348,18 +1347,29 @@ def AtLeastOne(term, *others, value=None):
     :return: a constraint Count
     """
     return Exist(term, others, value)
-    # terms = flatten(term, others)
-    # res = Count(terms, value=value)
-    # if isinstance(res, int):
-    #     assert res == 0
-    #     return 0  # for false
-    # return res >= 1
-    # # return Sum(term, others) >= 1
 
 
-def EveryOne(term, *others, value=None):
+def AtMostOne(term, *others, value=None):
     """
-    Builds and returns a constraint Count that checks that every term evaluates to 1 (seen as True) when value is not specified,
+    Builds and returns a constraint Count that checks that at most one term evaluates to 1 (seen as True) when value is not specified,
+    or to the value (when the parameter is specified, and not None).
+
+    :param term: the first term on which the count applies
+    :param others: the other terms (if any) on which the count applies
+    :param value the value to be found if not None (None, by default)
+    :return: a constraint Count
+    """
+    terms = flatten(term, others)
+    res = Count(terms, value=value)
+    if isinstance(res, int):
+        assert res == 0
+        return 1  # for true
+    return res <= 1
+
+
+def All(term, *others, value=None):
+    """
+    Builds and returns a constraint Count that checks that all terms evaluate to 1 (seen as True) when value is not specified,
     or to the value (when the parameter is specified, and not None).
 
     :param term: the first term on which the count applies

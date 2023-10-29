@@ -131,12 +131,11 @@ class ECtr(Entity):
             # CtrEntities.allEntities.append(self)
 
     def __bool__(self):
-        warning(
-            "A constraint is evaluated as a Boolean (technically, __bool__ is called)"
-            + "\n\tIt is likely a problem with the use of logical operators"
-            + "\n\tFor example, you must write Or(AllDifferent(x), (x[0] == x[2])) instead of AllDifferent(x) or (x[0] == x[2])"
-            + "\n\t or you must post separately the two constraints"
-            + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide\n")
+        warning("A constraint is evaluated as a Boolean (technically, __bool__ is called)"
+                + "\n\tIt is likely a problem with the use of logical operators."
+                + "\n\tFor example, you must write Or(AllDifferent(x), (x[0] == x[2])) instead of AllDifferent(x) or (x[0] == x[2])"
+                + "\n\t  or you must post separately the two constraints."
+                + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide.\n")
         return True
 
     def to_table(self):  # experimental
@@ -486,12 +485,13 @@ class Node(Entity):
         self.abstractValues = None
 
     def __bool__(self):
-        warning(
-            "A node is evaluated as a Boolean (technically, __bool__ is called)"
-            + "\n\tIt is likely a problem with the use of logical operators"
-            + "\n\tFor example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])"
-            + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide"
-            + "\n\tThis is: " + str(self) + "\n")
+        warning("A node is evaluated as a Boolean (technically, __bool__ is called)."
+                + "\n\tIt is likely a problem with the use of logical operators."
+                + "\n\tFor example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])"
+                + "\n\tIt is also possible that you write: If(cond, Then=...) while cond being not constraint-based"
+                + "\n\t  that is, not involving a variable of the model; and this is not possible."
+                + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide."
+                + "\n\tThis is: " + str(self) + "\n")
         # exit(1)
         return True
 

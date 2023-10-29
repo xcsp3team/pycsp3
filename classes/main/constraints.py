@@ -1337,10 +1337,12 @@ def manage_global_indirection(*args):
     if any(isinstance(arg, EMetaCtr) for arg in args):
         return None
 
-    msg = "A subexpression node is evaluated as a Boolean (False or True)" + \
-          "\n\tIt is likely a problem with the use of logical operators" + \
-          "\n\tFor example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])" + \
-          "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide\n"
+    msg = ("A subexpression node is evaluated as a Boolean (False or True)" +
+           "\n\tIt is likely a problem with the use of logical operators" +
+           "\n\tFor example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])" +
+           "\n\tIt is also possible that you write: If(cond, Then=...) while cond being not constraint-based" +
+           "\n\t  that is, not involving a variable of the model; and this is not possible." +
+           "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide\n")
 
     t = []
     for arg in args:
