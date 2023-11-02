@@ -170,6 +170,10 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
         return VarArray(size=len(doms), dom=lambda i: doms[i])
 
     size = [size] if isinstance(size, int) else size
+    if len(size) > 1 and isinstance(size[-1], (tuple, list)):  # it means that the last dimension is of variable length
+        assert not isinstance(dom, type(lambda: 0))
+        return VarArray(size=size[:-1] + [max(size[-1])], dom=lambda *ids: dom if ids[-1] < size[-1][ids[-2]] else None)
+
     error_if(any(dimension == 0 for dimension in size), "No dimension must not be equal to 0")
     checkType(size, [int])
 
@@ -190,8 +194,9 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
         tags = []
 
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
-    assert not isinstance(dom, type(lambda: 0)) or len(size) == len(inspect.signature(dom).parameters), \
-        "The number of arguments of the lambda must be equal to the number of dimensions of the multidimensional array"
+    if isinstance(dom, type(lambda: 0)):
+        r = len(inspect.signature(dom).parameters)  # r=1 means that it must be a lambda *args:
+        assert len(size) == r or r == 1, "The number of arguments of the lambda must be equal to the number of dimensions of the multidimensional array "
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
 
     if isinstance(dom, (tuple, list, set)):
@@ -405,7 +410,9 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     #     return Then if test else Else
 
     tests, thens = flatten(test, testOthers), flatten(Then)
-    assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list) and len(thens) > 0  # after flatten, we have a list
+    assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list)  # after flatten, we have a list
+    if len(thens) == 0:
+        return None if Else is None else Or(tests, Else)
     if meta:
         if Else is None:
             return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens))))
@@ -886,6 +893,16 @@ def conjunction(*args):
     return Node.conjunction(manage_global_indirection(*args))
 
 
+def both(this, And):
+    """
+    Builds and returns a node 'and', root of a tree expression where the two specified arguments are children.
+    Without any parent, it becomes a constraint.
+
+    :return: a node, root of a tree expression
+    """
+    return conjunction(this, And)
+
+
 def disjunction(*args):
     """
     Builds and returns a node 'or', root of a tree expression where specified arguments are children.
@@ -894,6 +911,16 @@ def disjunction(*args):
     :return: a node, root of a tree expression
     """
     return Node.disjunction(manage_global_indirection(*args))
+
+
+def either(this, Or):
+    """
+    Builds and returns a node 'or', root of a tree expression where the two specified arguments are children.
+    Without any parent, it becomes a constraint.
+
+    :return: a node, root of a tree expression
+    """
+    return disjunction(this, Or)
 
 
 ''' Language-based Constraints '''
@@ -1195,11 +1222,10 @@ def Sum(term, *others, condition=None):
     terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
     if any(v is None or (isinstance(v, int) and v == 0) for v in terms):  # note that False is of type int and equal to 0
         terms = [v for v in terms if v is not None and not (isinstance(v, int) and v == 0)]
-    checkType(terms, ([Variable], [Node], [Variable, Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     if len(terms) == 0:
         return 0  # TODO ConstraintDummyConstant(0)   # None
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
-
+    checkType(terms, ([Variable], [Node], [Variable, Node], [PartialConstraint], [ScalarProduct], [ECtr]))
     terms, coeffs = _get_terms_coeffs(terms)
     if options.groupsumcoeffs and all(isinstance(v, Variable) for v in terms) and coeffs is None:
         # maybe some variables occurs several times

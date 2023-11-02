@@ -675,7 +675,6 @@ class OpOverrider:
     def __getitem__shared_by_lv_and_li(array, indexes, *, lv):  # lv=True for ListVar, lv=False for ListInt
 
         def __int_tuples_of_same_size(m):
-
             if not isinstance(m, (tuple, list)) or len(m) == 0:
                 return -1
             if all(isinstance(t, int) for t in m):
@@ -707,6 +706,14 @@ class OpOverrider:
         if isinstance(indexes, (set, frozenset)):
             assert all(isinstance(v, int) for v in indexes)
             indexes = sorted(list(indexes))  # this will be a selection
+        if isinstance(indexes, slice):
+            r = range(indexes.start or 0, indexes.stop or len(array), indexes.step or 1)
+            if r.stop > len(array):
+                if OpOverrider.array_indexing_warning is False:
+                    s = "Auto-adjustment of array indexing from a slice " + str(indexes)
+                    warning(s + "\n\t   Other possible similar cases are not displayed")
+                    OpOverrider.array_indexing_warning = True  # to avoid displaying a lot of messages
+                indexes = list(v % len(array) for v in r)
         # we check with the next statement if a selection of cells is expected
         k = __int_tuples_of_same_size(indexes)
         if k != -1:

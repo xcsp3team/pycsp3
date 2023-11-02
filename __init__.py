@@ -13,7 +13,7 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 6:
 
 from pycsp3.functions import variant, subvariant, Var, VarArray, var, satisfy, minimize, maximize, annotate
 from pycsp3.functions import And, Or, Not, Xor, Match, If, Iff, Slide
-from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, belong, not_belong, conjunction, disjunction
+from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, belong, not_belong, conjunction, both, disjunction, either
 from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, AllEqualList, Increasing, Decreasing, LexIncreasing, LexDecreasing, Precedence,
                               Sum, Product, Count, Exist, NotExist, ExactlyOne, AtLeastOne, AtMostOne, All, Hamming, NValues, NotAllEqual, Cardinality,
                               Maximum, Minimum, MaximumArg, MinimumArg, Channel, NoOverlap, Cumulative, BinPacking, Knapsack, Flow, Circuit, Clause)
