@@ -14,7 +14,7 @@ class Domain:
             self.type = None
             self.original_values = []
             self._add_value(*args)
-            assert self.type
+            assert self.type, "You have defined a variable with an empty domain; fix this"
             self.original_values.sort()
             self.values = []
 
@@ -95,3 +95,6 @@ class Domain:
                 else:
                     return False
         return zero and one
+
+    def is_empty(self):
+        return len(self.original_values) == 0

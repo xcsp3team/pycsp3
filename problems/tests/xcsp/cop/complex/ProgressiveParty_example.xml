@@ -201,7 +201,7 @@
       <group>
         <sum>
           <list> %... </list>
-          <coeffs> 2 2 2 2 4 4 </coeffs>
+          <coeffs> 2x4 4 4 </coeffs>
           <condition> (le,6) </condition>
         </sum>
         <args> g[][0][0] </args>
@@ -213,7 +213,7 @@
       <group>
         <sum>
           <list> %... </list>
-          <coeffs> 2 2 2 2 4 4 </coeffs>
+          <coeffs> 2x4 4 4 </coeffs>
           <condition> (le,8) </condition>
         </sum>
         <args> g[][0][1] </args>
@@ -225,7 +225,7 @@
       <group>
         <sum>
           <list> %... </list>
-          <coeffs> 2 2 2 2 4 4 </coeffs>
+          <coeffs> 2x4 4 4 </coeffs>
           <condition> (le,12) </condition>
         </sum>
         <args> g[][0][2] </args>

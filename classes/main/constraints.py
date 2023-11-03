@@ -1065,9 +1065,12 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             error("The type of the operand of the partial constraint is wrong as it is " + str(type(obj2)))
         obj1, obj2 = (obj1, obj2) if not inverted else (obj2, obj1)  # we invert back
         assert isinstance(obj1, PartialConstraint) and isinstance(obj2, PartialConstraint)
-        assert isinstance(obj1.constraint, ConstraintSum) and isinstance(obj2.constraint, ConstraintSum), str(type(obj1.constraint)) + " " + str(
-            type(obj2.constraint))
-        args1, args2 = obj1.constraint.arguments, obj2.constraint.arguments
+        c1, c2 = obj1.constraint, obj2.constraint
+        if not isinstance(c2, ConstraintSum):
+            aux1, aux2 = auxiliary().replace_partial_constraint(obj1), auxiliary().replace_partial_constraint(obj2)
+            return aux1 + aux2 if operator is TypeNode.ADD else aux1 - aux2
+        assert isinstance(c1, ConstraintSum) and isinstance(c2, ConstraintSum), str(type(c1)) + " " + str(type(c2))
+        args1, args2 = c1.arguments, c2.arguments
         vs1, vs2 = args1[TypeCtrArg.LIST].content, args2[TypeCtrArg.LIST].content
         cs1 = args1[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args1 else [1] * len(vs1)
         cs2 = args2[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args2 else [1] * len(vs2)
@@ -1330,8 +1333,8 @@ def global_indirection(c):
     return Node.build(condition.operator, auxiliary().replace_partial_constraint(pc), condition.right_operand())
 
 
-def manage_global_indirection(*args):
-    if len(args) == 1 and isinstance(args[0], list):
+def manage_global_indirection(*args, also_pc=False):
+    if len(args) == 1 and isinstance(args[0], (tuple, list)):
         args = args[0]
     assert len(args) >= 1
     if any(isinstance(arg, EMetaCtr) for arg in args):
@@ -1380,5 +1383,7 @@ def manage_global_indirection(*args):
             if gi is None:
                 return None
             arg = gi
+        elif also_pc and isinstance(arg, PartialConstraint):
+            arg = auxiliary().replace_partial_constraint(arg)
         t.append(arg)
     return tuple(t)

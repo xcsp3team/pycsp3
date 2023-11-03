@@ -42,7 +42,7 @@ def is_discardable_line(line):
     if not isinstance(line, str):
         return False
     l = line.strip()
-    return len(l) == 0 or (len(l) == 1 and l[0] in ('#', ')', ']')) or (len(l) == 2 and l in ('),', '],'))
+    return len(l) == 0 or l[0] in ('#', ')', ']')  # (len(l) == 1 and l[0] in ('#', ')', ']')) or (len(l) == 2 and l in ('),', '],'))
 
 
 def is_continued_line(line):

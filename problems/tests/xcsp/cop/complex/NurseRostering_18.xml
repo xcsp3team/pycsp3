@@ -1924,7 +1924,7 @@
       <group>
         <sum>
           <list> %0 %1 %2 </list>
-          <coeffs> 480 480 480 </coeffs>
+          <coeffs> 480x3 </coeffs>
           <condition> (in,24960..25920) </condition>
         </sum>
         <args> nd[0][0..2] </args>
@@ -1949,7 +1949,7 @@
       <group>
         <sum>
           <list> %0 %1 %2 </list>
-          <coeffs> 480 480 480 </coeffs>
+          <coeffs> 480x3 </coeffs>
           <condition> (in,23340..24300) </condition>
         </sum>
         <args> nd[18][0..2] </args>

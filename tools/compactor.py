@@ -260,7 +260,8 @@ def _compact_values(values, limit):
         if i == len(values):
             break
         last = values[i]
-    return l
+    p = len(values) / len(l)
+    return l if p > 1.4 or (p > 1.2 and len(values) > 10) else values  # 40% ?
 
 
 def __compact_argument_value(arg):

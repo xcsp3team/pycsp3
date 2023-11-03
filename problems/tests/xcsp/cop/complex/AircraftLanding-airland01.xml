@@ -218,7 +218,7 @@
         <lengths> 8 8 </lengths>
       </noOverlap>
     </block>
-    <group note="computing earlinesses of planes">
+    <group note="computing earliness of planes">
       <intension> eq(%0,max(0,sub(%1,%2))) </intension>
       <args> e[0] 155 x[0] </args>
       <args> e[1] 258 x[1] </args>
@@ -231,7 +231,7 @@
       <args> e[8] 150 x[8] </args>
       <args> e[9] 180 x[9] </args>
     </group>
-    <group note="computing tardinesses of planes">
+    <group note="computing tardiness of planes">
       <intension> eq(%0,max(0,sub(%1,%2))) </intension>
       <args> t[0] x[0] 155 </args>
       <args> t[1] x[1] 258 </args>

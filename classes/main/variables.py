@@ -45,6 +45,7 @@ class Variable:
         if isinstance(domain, list) and (all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)):
             return Domain(set(domain))
         assert isinstance(domain, (range, set)), str(type(domain)) + " " + str(domain)
+        # assert len(domain) > 0, "a domain is defined with an empty domain"
         return Domain(domain)
 
     @staticmethod
@@ -52,6 +53,7 @@ class Variable:
         dom = Variable.build_domain(name, domain, indexes)
         if dom is None:
             return None
+        assert not dom.is_empty()
         var = VariableInteger(name, dom) if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(name, dom)
         Variable.name2obj[name] = var
         return var

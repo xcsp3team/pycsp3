@@ -152,7 +152,7 @@
       <group>
         <sum>
           <list> %0 %1 %2 </list>
-          <coeffs> -1 -1 -1 </coeffs>
+          <coeffs> -1x3 </coeffs>
           <condition> (ge,-1) </condition>
         </sum>
         <args> x[4] x[8] x[12] </args>
@@ -183,7 +183,7 @@
       <group>
         <sum>
           <list> %... </list>
-          <coeffs> -1 -1 -1 -1 </coeffs>
+          <coeffs> -1x4 </coeffs>
           <condition> (ge,-3) </condition>
         </sum>
         <args> x[48] x[32] x[16] x[0] </args>
@@ -202,7 +202,7 @@
       <group>
         <sum>
           <list> %... </list>
-          <coeffs> -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 </coeffs>
+          <coeffs> -1x12 </coeffs>
           <condition> (ge,-3) </condition>
         </sum>
         <args> x[49..51] x[33..35] x[17..19] x[1..3] </args>
@@ -580,7 +580,7 @@
       <group>
         <sum>
           <list> %... </list>
-          <coeffs> -4 -4 -1 -1 -1 -1 </coeffs>
+          <coeffs> -4 -4 -1x4 </coeffs>
           <condition> (ge,-8) </condition>
         </sum>
         <args> x[1] x[100] x[34] x[50] x[66] x[82] </args>
@@ -635,7 +635,7 @@
       <group>
         <sum>
           <list> %... </list>
-          <coeffs> -3 -3 -1 -1 -1 </coeffs>
+          <coeffs> -3 -3 -1x3 </coeffs>
           <condition> (ge,-6) </condition>
         </sum>
         <args> x[17] x[100] x[50] x[66] x[82] </args>
@@ -745,7 +745,7 @@
       <group>
         <sum>
           <list> %0 %1 %2 </list>
-          <coeffs> -1 -1 -1 </coeffs>
+          <coeffs> -1x3 </coeffs>
           <condition> (ge,-2) </condition>
         </sum>
         <args> x[49] x[100] x[82] </args>

@@ -418,7 +418,8 @@ def If(test, *testOthers, Then, Else=None, meta=False):
             return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens))))
         else:
             return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens, Else))))
-    tests, thens = manage_global_indirection(tests), manage_global_indirection(thens)  # we get None or a tuple
+
+    tests, thens = manage_global_indirection(tests, also_pc=True), manage_global_indirection(thens, also_pc=True)  # we get None or a tuple
     assert tests is not None and thens is not None and len(tests) > 0 and len(thens) > 0
     disjunctive_test = None
     if Else is None:
@@ -441,6 +442,11 @@ def If(test, *testOthers, Then, Else=None, meta=False):
                     disjunctive_test = Node(~test.type, test.sons)
     if disjunctive_test is not None:  # do not remove 'is not None'
         return [disjunction(disjunctive_test, v) for v in thens] if len(thens) > 1 else disjunction(disjunctive_test, thens)
+    if Else is not None and len(tests) == 1:  # TODO is that interesting, and should we identify some other cases (variable case) ?
+        test = tests[0]
+        if isinstance(test, Node):
+            if ~test.type is not None:
+                return [imply(test, thens), imply(Node(~test.type, test.sons), Else)]
     return ift(tests, thens, Else)  # note that if Else is None, imply will be called
 
 
@@ -778,35 +784,38 @@ def imply(*args):
     return Node.build(TypeNode.IMP, *res)
 
 
-def ift(*args):
+def ift(test, Then, Else):
     """
     Builds and returns a node 'ifthenelse', root of a tree expression where specified arguments are children.
     Without any parent, it becomes a constraint.
 
-    :param args: a tuple of three arguments
+    :param test: the condition expression
+    :param Then the Then part
+    :param Else the Else part
+
     :return: a node, root of a tree expression
     """
-    assert len(args) == 3
-    cnd, tp, ep = args  # condition, then part and else part
-    if ep is None:
-        return imply(cnd, tp)
-    if isinstance(cnd, (tuple, list)):
-        assert len(cnd) == 1
-        cnd = cnd[0]
-    btp = isinstance(tp, (tuple, list, set, frozenset))
+    # assert len(args) == 3
+    # test, Then, Else = args  # condition, then part and else part
+    if Else is None:
+        return imply(test, Then)
+    if isinstance(test, (tuple, list)):
+        assert len(test) == 1, str(test)
+        test = test[0]
+    btp = isinstance(Then, (tuple, list, set, frozenset))
     if btp:
-        tp = list(tp)
-        assert len(tp) >= 1
-        if len(tp) == 1:
-            return ift(cnd, tp[0], ep)
-    etp = isinstance(ep, (tuple, list, set, frozenset))
+        Then = list(Then)
+        assert len(Then) >= 1
+        if len(Then) == 1:
+            return ift(test, Then[0], Else)
+    etp = isinstance(Else, (tuple, list, set, frozenset))
     if etp:
-        ep = list(ep)
-        assert len(ep) >= 1
-        if len(ep) == 1:
-            return ift(cnd, tp, ep[0])
+        Else = list(Else)
+        assert len(Else) >= 1
+        if len(Else) == 1:
+            return ift(test, Then, Else[0])
     if btp or etp:
-        tp, ep = tp if isinstance(tp, list) else [tp], ep if isinstance(ep, list) else [ep]
+        Then, Else = Then if isinstance(Then, list) else [Then], Else if isinstance(Else, list) else [Else]
         # # we compute the negation of cnd
         # if isinstance(cnd, Node) and ~cnd.type is not None:
         #     rcnd = Node(~cnd.type, cnd.sons)
@@ -814,10 +823,10 @@ def ift(*args):
         #     rcnd = var(cnd.id) if cnd.negation else ~cnd
         # else:
         #     rcnd = ~cnd
-        return [imply(cnd, v) for v in tp] + [cnd | v for v in ep]
-    res = manage_global_indirection(*args)
+        return [imply(test, v) for v in Then] + [test | v for v in Else]
+    res = manage_global_indirection(test, Then, Else, also_pc=True)
     if res is None:
-        return If(args[0], Then=args[1], Else=args[2], meta=True)
+        return If(test, Then, Else, meta=True)
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     assert len(res) == 3
     if isinstance(res[0], int):
@@ -1277,7 +1286,14 @@ def Count(term, *others, value=None, values=None, condition=None):
     if len(terms) == 0:
         return ConstraintDummyConstant(0)
     # assert len(terms) > 0, "A count with an empty scope"
+    # if any(isinstance(v, bool) for v in terms):
     # terms = manage_global_indirection(terms)
+    # for i, arg in enumerate(terms):
+    #     if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression, or a table constraint to be reified
+    #         # error_if(len(curser.queue_in) == 0, msg)
+    #         (table, scp) = queue_in.pop()
+    #         terms[i] = belong(scp, table)
+
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
@@ -1285,6 +1301,8 @@ def Count(term, *others, value=None, values=None, condition=None):
             gi = global_indirection(t.constraint)
             assert gi is not None
             terms[i] = gi
+
+    # terms = manage_global_indirection(terms, also_pc=True)
     checkType(terms, ([Variable], [Node], [Variable, Node]))
     if value is None and values is None:
         value = 1
@@ -1301,9 +1319,8 @@ def Count(term, *others, value=None, values=None, condition=None):
 
 def Exist(term, *others, value=None):
     """
-    Builds and returns a constraint Count that checks if at least one of the term evaluates to 1 0 (seen as True) when value is not specified,
-    or to the value (when the parameter is specified, and not None).
-
+    Builds and returns a constraint Count that checks if at least one of the term evaluates to the specified value,
+    or to 1 (seen as True) when value is None.
 
     :param term: the first term on which the count applies
     :param others: the other terms (if any) on which the count applies
@@ -1325,10 +1342,21 @@ def Exist(term, *others, value=None):
     return res >= 1
 
 
+def AnyHold(term, *others):
+    """
+    Builds and returns a constraint Count that checks if at least one term evaluates to 1 (seen as True).
+
+    :param term: the first term on which the count applies
+    :param others: the other terms (if any) on which the count applies
+    :return: a constraint Count
+    """
+    return Exist(term, others, value=None)
+
+
 def NotExist(term, *others, value=None):
     """
-    Builds and returns a constraint Count that checks that no term evaluates to 0 (seen as False) when value is not specified,
-    or to the value (when the parameter is specified, and not None).
+    Builds and returns a constraint Count that checks that no term evaluates to the specified value,
+    or to 1 (seen as True) when value is None.
 
     :param term: the first term on which the count applies
     :param others: the other terms (if any) on which the count applies
@@ -1341,6 +1369,17 @@ def NotExist(term, *others, value=None):
         assert res == 0
         return 1  # for true
     return res == 0
+
+
+def NoneHold(term, *others):
+    """
+    Builds and returns a constraint Count that checks that no term evaluates to 1 (seen as True).
+
+    :param term: the first term on which the count applies
+    :param others: the other terms (if any) on which the count applies
+    :return: a constraint Count
+    """
+    return NotExist(term, others, value=None)
 
 
 def ExactlyOne(term, *others, value=None):
@@ -1393,18 +1432,16 @@ def AtMostOne(term, *others, value=None):
     return res <= 1
 
 
-def All(term, *others, value=None):
+def AllHold(term, *others):
     """
-    Builds and returns a constraint Count that checks that all terms evaluate to 1 (seen as True) when value is not specified,
-    or to the value (when the parameter is specified, and not None).
+    Builds and returns a constraint Count that checks that all terms evaluate to 1 (seen as True).
 
     :param term: the first term on which the count applies
     :param others: the other terms (if any) on which the count applies
-    :param value the value to be found if not None (None, by default)
     :return: a constraint Count
     """
     terms = flatten(term, others)
-    res = Count(terms, value=value)
+    res = Count(terms)  # , value=value)
     if isinstance(res, int):
         assert res == 0
         return 1  # for true

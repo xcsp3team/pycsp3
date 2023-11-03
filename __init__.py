@@ -15,8 +15,9 @@ from pycsp3.functions import variant, subvariant, Var, VarArray, var, satisfy, m
 from pycsp3.functions import And, Or, Not, Xor, Match, If, Iff, Slide
 from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, expr, belong, not_belong, conjunction, both, disjunction, either
 from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, AllEqualList, Increasing, Decreasing, LexIncreasing, LexDecreasing, Precedence,
-                              Sum, Product, Count, Exist, NotExist, ExactlyOne, AtLeastOne, AtMostOne, All, Hamming, NValues, NotAllEqual, Cardinality,
-                              Maximum, Minimum, MaximumArg, MinimumArg, Channel, NoOverlap, Cumulative, BinPacking, Knapsack, Flow, Circuit, Clause)
+                              Sum, Product, Count, Exist, NotExist, ExactlyOne, AtLeastOne, AtMostOne, AnyHold, NoneHold, AllHold, Hamming, NValues,
+                              NotAllEqual, Cardinality, Maximum, Minimum, MaximumArg, MinimumArg, Channel, NoOverlap, Cumulative, BinPacking, Knapsack,
+                              Flow, Circuit, Clause)
 from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
@@ -54,6 +55,8 @@ ACE = TypeSolver.ACE
 
 CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
+
+Task = namedtuple("Task", "origin length height")
 
 if sys.argv:
     if len(sys.argv) == 1 and sys.argv[0] == "-m":  # copy of models
