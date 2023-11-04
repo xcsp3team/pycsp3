@@ -406,6 +406,7 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     :param meta true if a meta-constraint form must be really posted
     :return: a complex form of constraint(s) based on the control structure 'if then else'
     """
+
     # if len(testOthers) == 0 and isinstance(test, bool):  # We don't allow that because otherwise 'in' no more usable as in If(x[0] in (2,3), Then=...
     #     return Then if test else Else
 
@@ -419,35 +420,82 @@ def If(test, *testOthers, Then, Else=None, meta=False):
         else:
             return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens, Else))))
 
-    tests, thens = manage_global_indirection(tests, also_pc=True), manage_global_indirection(thens, also_pc=True)  # we get None or a tuple
+    tests, thens = manage_global_indirection(tests, also_pc=True), manage_global_indirection(thens, also_pc=True)  # we get None or a list
     assert tests is not None and thens is not None and len(tests) > 0 and len(thens) > 0
-    disjunctive_test = None
-    if Else is None:
-        if len(tests) > 1:
-            if all(isinstance(v, Node) for v in tests):
-                disjunctive_test = disjunction(~v for v in (Node(v.type, v.sons) for v in tests))
-            else:
-                tests = conjunction(t for t in tests)
-        else:
-            test = tests[0]
-            if isinstance(test, Variable) and test.negation:
-                disjunctive_test = var(test.id)  # we look for the original variable
-            elif isinstance(test, Node):
-                if test.type == TypeNode.NOT:
-                    disjunctive_test = test.sons[0]
-                elif test.type == TypeNode.EQ and len(test.sons) == 2 and test.sons[1].type == TypeNode.INT and test.sons[1].sons == 0 \
-                        and test.sons[0].type == TypeNode.VAR and test.sons[0].sons.dom.is_binary():  # if(x=0,Then=?) => or(x,?)
-                    disjunctive_test = test.sons[0].sons
-                elif ~test.type is not None and len(thens) == 1 and isinstance(thens[0], Node) and thens[0].type == TypeNode.OR:
-                    disjunctive_test = Node(~test.type, test.sons)
-    if disjunctive_test is not None:  # do not remove 'is not None'
-        return [disjunction(disjunctive_test, v) for v in thens] if len(thens) > 1 else disjunction(disjunctive_test, thens)
-    if Else is not None and len(tests) == 1:  # TODO is that interesting, and should we identify some other cases (variable case) ?
-        test = tests[0]
-        if isinstance(test, Node):
-            if ~test.type is not None:
-                return [imply(test, thens), imply(Node(~test.type, test.sons), Else)]
-    return ift(tests, thens, Else)  # note that if Else is None, imply will be called
+
+    def __neg(term):
+        if isinstance(term, Variable):
+            assert term.dom.is_binary()
+            return var(term.id) if term.negation else Node.build(EQ, term, 0)
+        assert isinstance(term, Node) and term.type.is_predicate_operator()
+        sons = term.sons
+        if term.type == TypeNode.NOT:
+            assert sons[0].type.is_predicate_operator()
+            return sons[0]
+        if term.type == TypeNode.AND:
+            return Node.build(TypeNode.OR, *[__neg(son) for son in sons])
+        if term.type == TypeNode.OR:
+            return Node.build(TypeNode.AND, *[__neg(son) for son in sons])
+        if term.type == TypeNode.IFF:
+            return Node.build(TypeNode.NOT, term)
+        if term.type == TypeNode.IMP:
+            assert len(sons) == 2 and sons[0].type.is_predicate_operator() and sons[1].type.is_predicate_operator()
+            return Node.build(TypeNode.AND, sons[0], Node.build(TypeNode.NOT, sons[1]))
+        if term.type == TypeNode.EQ and len(sons) == 2 and sons[1].type == TypeNode.INT and sons[1].sons == 0 \
+                and sons[0].type == TypeNode.VAR and sons[0].sons.dom.is_binary():  # x=0  => x
+            return sons[0].sons
+        assert ~term.type is not None
+        return Node(~term.type, sons)
+
+    # if options.ev:
+    if Else is None and len(tests) == 1:
+        if isinstance(tests[0], Variable) and not tests[0].negation:
+            return [imply(tests, term) for term in flatten(thens)]
+        if len(thens) == 1:
+            if (not (isinstance(thens[0], Node) and thens[0].type == TypeNode.OR)
+                    and not (isinstance(tests[0], Node) and tests[0].type == TypeNode.NOT)
+                    and not (isinstance(tests[0], Variable) and tests[0].negation)):
+                return imply(tests, thens)
+
+    neg_test = __neg(tests[0]) if len(tests) == 1 else disjunction(__neg(term) for term in tests)
+    t = []
+    t.extend(disjunction(neg_test, term) for term in flatten(thens))
+    if Else is not None:
+        elses = manage_global_indirection(Else, also_pc=True)
+        if len(elses) > 0:
+            test = conjunction(term for term in tests) if len(tests) > 1 else tests
+            t.extend(disjunction(test, v) for v in flatten(elses))
+    return t  # [0] if len(t) == 1 else t
+
+    # else:
+    #     disjunctive_test = None
+    #     if Else is None:
+    #         if len(tests) > 1:
+    #             if all(isinstance(v, Node) for v in tests):
+    #                 disjunctive_test = disjunction(~v for v in (Node(v.type, v.sons) for v in tests))
+    #             else:
+    #                 tests = conjunction(t for t in tests)
+    #         else:
+    #             test = tests[0]
+    #             if isinstance(test, Variable) and test.negation:
+    #                 disjunctive_test = var(test.id)  # we look for the original variable
+    #             elif isinstance(test, Node):
+    #                 if test.type == TypeNode.NOT:
+    #                     disjunctive_test = test.sons[0]
+    #                 elif test.type == TypeNode.EQ and len(test.sons) == 2 and test.sons[1].type == TypeNode.INT and test.sons[1].sons == 0 \
+    #                         and test.sons[0].type == TypeNode.VAR and test.sons[0].sons.dom.is_binary():  # if(x=0,Then=?) => or(x,?)
+    #                     disjunctive_test = test.sons[0].sons
+    #                 elif ~test.type is not None and len(thens) == 1 and isinstance(thens[0], Node) and thens[0].type == TypeNode.OR:
+    #                     disjunctive_test = Node(~test.type, test.sons)
+    #     if disjunctive_test is not None:  # do not remove 'is not None'
+    #         return [disjunction(disjunctive_test, v) for v in thens] if len(thens) > 1 else disjunction(disjunctive_test, thens)
+    #     if Else is not None and len(tests) == 1:  # TODO is that interesting, and should we identify some other cases (variable case) ?
+    #         test = tests[0]
+    #         if isinstance(test, Node):
+    #             if ~test.type is not None:
+    #                 return [imply(test, thens), imply(Node(~test.type, test.sons), Else)]
+    #
+    #     return ift(tests, thens, Else)  # note that if Else is None, imply will be called
 
 
 def Match(Expr, *, Cases):
@@ -797,6 +845,9 @@ def ift(test, Then, Else):
     """
     # assert len(args) == 3
     # test, Then, Else = args  # condition, then part and else part
+    if isinstance(test, ConstraintDummyConstant):
+        assert test.val in (0, 1)
+        return Then if test.val == 1 else Else
     if Else is None:
         return imply(test, Then)
     if isinstance(test, (tuple, list)):
@@ -1286,24 +1337,11 @@ def Count(term, *others, value=None, values=None, condition=None):
     if len(terms) == 0:
         return ConstraintDummyConstant(0)
     # assert len(terms) > 0, "A count with an empty scope"
-    # if any(isinstance(v, bool) for v in terms):
-    # terms = manage_global_indirection(terms)
-    # for i, arg in enumerate(terms):
-    #     if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression, or a table constraint to be reified
-    #         # error_if(len(curser.queue_in) == 0, msg)
-    #         (table, scp) = queue_in.pop()
-    #         terms[i] = belong(scp, table)
 
-    for i, t in enumerate(terms):
-        if isinstance(t, PartialConstraint):
-            terms[i] = auxiliary().replace_partial_constraint(t)
-        elif isinstance(t, ECtr):
-            gi = global_indirection(t.constraint)
-            assert gi is not None
-            terms[i] = gi
-
-    # terms = manage_global_indirection(terms, also_pc=True)
+    terms = manage_global_indirection(terms, also_pc=True)
+    assert terms is not None
     checkType(terms, ([Variable], [Node], [Variable, Node]))
+
     if value is None and values is None:
         value = 1
     assert value is None or values is None, str(value) + " " + str(values)
@@ -1314,6 +1352,7 @@ def Count(term, *others, value=None, values=None, condition=None):
         values = [auxiliary().replace_node(value)]
     values = sorted(set(values))  # ordered set of values
     checkType(values, ([int], [Variable]))
+    # terms = list(terms)
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
 
