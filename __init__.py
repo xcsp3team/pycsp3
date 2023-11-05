@@ -56,7 +56,7 @@ ACE = TypeSolver.ACE
 CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
 
-Task = namedtuple("Task", "origin length height")
+Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
 
 if sys.argv:
     if len(sys.argv) == 1 and sys.argv[0] == "-m":  # copy of models

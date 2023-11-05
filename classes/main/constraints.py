@@ -1349,6 +1349,8 @@ def manage_global_indirection(*args, also_pc=False):
 
     t = []
     for arg in args:
+        if arg is None:
+            continue
         if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression, or a table constraint to be reified
             error_if(len(curser.queue_in) == 0, msg)
             (table, scp) = curser.queue_in.pop()

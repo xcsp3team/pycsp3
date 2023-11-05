@@ -1712,7 +1712,11 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
             warning("A constraint NoOverlap discarded because defined with " + str(len(tasks)) + " task")
             return ConstraintDummyConstant(1)  # return None
         assert isinstance(tasks, list) and len(tasks) > 0
-        assert any(isinstance(task, (tuple, list)) and len(task) == 2 for task in tasks)
+        for i, task in enumerate(tasks):
+            assert isinstance(task, (tuple, list)) and len(task) in (2, 3)
+            if len(task) == 3:
+                assert task[2] is None
+                tasks[i] = task[:2]
         origins, lengths = zip(*tasks)
     if isinstance(origins, zip):
         origins = list(origins)
