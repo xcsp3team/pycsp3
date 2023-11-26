@@ -62,12 +62,12 @@ run(Tester("cop" + os.sep + "complex")
          prs_jv="QuadraticAssignment_Parser")  # optimum 4776
     .add("Rack", data="Rack_r2.json")  # optimum 1100
     .add("Rack2", data="Rack_r2b.json")  # optimum 1100
-    .add("Rcpsp", data="Rcpsp_j30-01-01.json")  # optimum 43
+    .add("RCPSP", data="RCPSP_j30-01-01.json")  # optimum 43
     .add("Rehearsal", data="RehearsalSmith.json")  # optimum 17
     .add("Rehearsal", data="RehearsalSmith.json", variant="bis")  # optimum 17
-    .add("Rlfap", data="Rlfap_card-scen-04.json", variant="card")  # optimum 46
-    .add("Rlfap", data="Rlfap_span-scen-05.json", variant="span")  # optimum 792
-    .add("Rlfap", data="Rlfap_max-graph-05.json", variant="max")  # optimum 221  (use -ub=222 with Ace to prove it, or -os=increasing)
+    .add("RLFAP", data="RLFAP_card-scen-04.json", variant="card")  # optimum 46
+    .add("RLFAP", data="RLFAP_span-scen-05.json", variant="span")  # optimum 792
+    .add("RLFAP", data="RLFAP_max-graph-05.json", variant="max")  # optimum 221  (use -ub=222 with Ace to prove it, or -os=increasing)
     .add("RoadConstruction", data="Road_9.json")  # optimum 3206
     .add("SchedulingFS", data="SchedulingFS-Taillard-os-04-04-0.json")  # optimum 302
     .add("SchedulingFS", data="Taillard-fs-020-05-1.json")

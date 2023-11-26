@@ -13,12 +13,12 @@ The goal is to cut correct slices out of the pizza maximizing the total number o
   10-10-2-6.json
 
 ## Model
-  constraints: Sum, Extension
+  constraints: Sum, Table
 
 ## Execution
-  - python HCPizza.py -data=10-10-2-6.json
-  - python HCPizza.py -dataParser=HCPizza_Random.py 20 20 2 8 2 (-dataExport)
-  - python HCPizza.py -data=HCPizza_tiny.txt -dataParser=HCPizza_Parser.py
+  - python HCPizza.py -data=<datafile.json>
+  - python HCPizza.py -parser=HCPizza_Random.py 20 20 2 8 2 (-dataExport)
+  - python HCPizza.py -data=<datafile.txt> -parser=HCPizza_Parser.py
 
 ## Links
   - https://www.academia.edu/31537057/Pizza_Practice_Problem_for_Hash_Code_2017
@@ -68,14 +68,14 @@ x = VarArray(size=[n, m, nPatterns], dom=lambda i, j, k: {0, 1} if slices[i][j][
 s = VarArray(size=[n, m, nPatterns], dom=lambda i, j, k: {0, pattern_size(i, j, k)} if slices[i][j][k] else None)
 
 # z is the number of selected pizza cells
-z = Var(range(n * m + 1))
+z = Var(dom=range(n * m + 1))
 
 satisfy(
     # computing sizes of selected slices
     [(x[i][j][k], s[i][j][k]) in {(0, 0), (1, pattern_size(i, j, k))} for i, j, k in product(range(n), range(m), range(nPatterns)) if slices[i][j][k]],
 
     # ensuring that no two slices overlap
-    [Sum(x[overlaps[i][j]]) <= 1 for i in range(n) for j in range(m) if len(overlaps[i][j]) > 1],
+    [Sum(x[t]) <= 1 for i in range(n) for j in range(m) if len(t := overlaps[i][j]) > 1],
 
     Sum(s) == z
 )
@@ -85,7 +85,7 @@ maximize(
     z
 )
 
-"""
+""" Comments
 1) note that:
   Sum(x[overlaps[i][j]])
  is a shortcut for:

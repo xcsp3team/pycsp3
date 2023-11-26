@@ -1,10 +1,28 @@
 """
-See https://en.wikipedia.org/wiki/Stable_roommates_problem
-   "Stable Roommates and Constraint Programming" by Patrick Prosser. CPAIOR 2014: 15-28
-    http://www.dcs.gla.ac.uk/~pat/roommates/distribution/
+In mathematics, economics and computer science, the stable-roommate problem is the problem of finding a stable matching for an even-sized set.
+A matching is a separation of the set into disjoint pairs (‘roommates’).
+The matching is stable if there are no two elements which are not roommates and which both prefer each other to their roommate under the matching.
+This is distinct from the stable-marriage problem in that the stable-roommates problem allows matches between any two elements, not just between classes of
+”men” and ”women”.
+See wikipedia.org
 
-Example of Execution:
-  python3 RoomMate.py -data=RoomMate_sr0006.json
+## Data Example
+  RoomMate_sr0006.json
+
+## Model
+  constraints: Element, Table
+
+## Execution
+  - python RoomMate.py -data=<datafile.json>
+  - python RoomMate.py -variant=table -data=<datafile.json>
+
+## Links
+  - https://en.wikipedia.org/wiki/Stable_roommates_problem
+  - https://link.springer.com/chapter/10.1007/978-3-319-07046-9_2
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/csp/csp
+
+## Tags
+  recreational, xcsp22
 """
 
 from pycsp3 import *
@@ -33,9 +51,10 @@ x = VarArray(size=n, dom=lambda i: range(len(preferences[i])))
 
 if not variant():
     satisfy(
-        (If(x[i] > rank[i][k], Then=x[k] < rank[k][i]),
-         If(x[i] == rank[i][k], Then=x[k] == rank[k][i]))
-        for i in range(n) for k in pref[i] if k != i
+        (
+            If(x[i] > rank[i][k], Then=x[k] < rank[k][i]),
+            If(x[i] == rank[i][k], Then=x[k] == rank[k][i])
+        ) for i in range(n) for k in pref[i] if k != i
     )
 
 elif variant('table'):
@@ -58,5 +77,4 @@ elif variant('hybrid'):
 
 """ Comments
 1) It is very expensive to build starred tables for large instances.
-   One solution would be to use hybrid tables
 """

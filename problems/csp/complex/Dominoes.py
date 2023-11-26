@@ -1,10 +1,25 @@
 """
-See "Teaching Constraints through Logic Puzzles" by Peter Szeredi
-See "Dominoes as a Constraint Problem" by Helmut Simonis
+You are given a grid of size n × m containing numbers being parts of dominoes.
+For example, for n = 7 and m = 8, the grid contains all dominoes from 0-0 to 6-6.
+One has to find the position (and rotation) of each domino.
 
-Example of Execution:
-  python Dominoes.py -data=Dominoes_grid1.json
-  python Dominoes.py -variant=table -data=Dominoes_grid1.json
+# Data  Example
+  grid1.json
+
+## Model
+  constraints: AllDifferent, Table
+
+## Execution
+  - python Dominoes.py -data=<datafile.json>
+  - python Dominoes.py -data=<datafile.json> -variant=table
+
+## Links
+  - https://link.springer.com/chapter/10.1007/978-3-540-24662-6_11
+  - https://www.researchgate.net/publication/266585191_Dominoes_as_a_Constraint_Problem
+  - https://www.cril.univ-artois.fr/XCSP23/competitions/csp/csp
+
+## Tags
+  recreational, xcsp23
 """
 
 from pycsp3 import *
@@ -33,9 +48,10 @@ satisfy(
 if not variant():
     satisfy(
         # adjacency constraints
-        (abs(x[i][j] - y[i][j]) == nCols)  # adjacent values in the same column
-        | (abs(x[i][j] - y[i][j]) == 1) & (x[i][j] // nCols == y[i][j] // nCols)  # or adjacent values in the same line
-        for i, j in dominoes
+        If(
+            dist != nCols,  # if not adjacent in the same column
+            Then=both(dist == 1, x[i][j] // nCols == y[i][j] // nCols)  # then adjacent in the same line
+        ) for i, j in dominoes if (dist := abs(x[i][j] - y[i][j]),)
     )
 
 elif variant("table"):

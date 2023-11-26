@@ -67,10 +67,10 @@ elif variant("m2"):
         AllDifferent(p),
 
         # computing starting times of stacks
-        [Minimum(p[j] for j in range(m) if orders[i][j] == 1) == s[i] for i in range(n)],
+        [Minimum(p[j] for j in range(m) if orders[i][j]) == s[i] for i in range(n)],
 
         # computing ending times of stacks
-        [Maximum(p[j] for j in range(m) if orders[i][j] == 1) == e[i] for i in range(n)],
+        [Maximum(p[j] for j in range(m) if orders[i][j]) == e[i] for i in range(n)],
 
         # inferring when stacks are open
         [(s[i], e[i], o[i][t]) in table2(t) for i in range(n) for t in range(m)],

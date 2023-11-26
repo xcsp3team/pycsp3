@@ -9,8 +9,8 @@
       <list> wf[] </list>
       <list> hb[] </list>
     </channel>
-    <group note="whenever m prefers an other woman o to w, o prefers her husband to m">
-      <intension> or(le(%0,%1),lt(%2,%3)) </intension>
+    <group note="whenever m prefers another woman o to w, o prefers her husband to m">
+      <intension> imp(gt(%0,%1),lt(%2,%3)) </intension>
       <args> aux_gb[0] 5 aux_gb[1] 1 </args>
       <args> aux_gb[0] 1 aux_gb[2] 3 </args>
       <args> aux_gb[0] 2 aux_gb[3] 5 </args>
@@ -37,8 +37,8 @@
       <args> aux_gb[9] 1 aux_gb[4] 2 </args>
       <args> aux_gb[9] 5 aux_gb[5] 1 </args>
     </group>
-    <group note="whenever w prefers an other man o to m, o prefers his wife to w">
-      <intension> or(le(%0,%1),lt(%2,%3)) </intension>
+    <group note="whenever w prefers another man o to m, o prefers his wife to w">
+      <intension> imp(gt(%0,%1),lt(%2,%3)) </intension>
       <args> aux_gb[1] 1 aux_gb[0] 5 </args>
       <args> aux_gb[1] 2 aux_gb[6] 4 </args>
       <args> aux_gb[1] 4 aux_gb[7] 5 </args>

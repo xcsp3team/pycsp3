@@ -9,14 +9,14 @@ See Problem 050 on CSPLib
   a unique integer, the order of the problem instance
 
 ## Model
-  constraints: Sum, Intension, Decreasing, LexIncreasing
+  constraints: Lex, Sum
 
 ## Execution
-  - python DiamondFree.py -data=10
+  - python DiamondFree.py -data=[number]
 
 ## Links
   - https://www.csplib.org/Problems/prob050/
-  - https://www.cril.univ-artois.fr/XCSP22/competitions/cop/cop
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/csp/csp
 
 ## Tags
   academic, csplib, xcsp22
@@ -49,5 +49,8 @@ satisfy(
     Sum(y) == s,
 
     # tag(symmetry-breaking)
-    [Decreasing(y), LexIncreasing(x)]
+    [
+        Decreasing(y),
+        LexIncreasing(x)
+    ]
 )

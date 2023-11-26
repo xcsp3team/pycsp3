@@ -23,10 +23,18 @@ def apply(gate):
 
 satisfy(
     # ensuring that y is coherent with the observed output
-    [y[i] == gates[i].out for i in range(2, nGates) if gates[i].out != -1],
+    [y[i] == j for i in range(2, nGates) if (j := gates[i].out) != -1],
 
     # ensuring that each gate either meets expected outputs based on its function or is broken (either stuck on or off)
-    [(y[i] == x[i]) | (y[i] == apply(gates[i])) & (x[i] == -1) for i in range(2, nGates)]
+    [
+        If(
+            y[i] != x[i],
+            Then=[
+                y[i] == apply(gates[i]),
+                x[i] == -1
+            ]
+        ) for i in range(2, nGates)
+    ]
 )
 
 minimize(

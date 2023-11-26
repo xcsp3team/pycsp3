@@ -18,5 +18,10 @@ v = VarArray(size=4, dom={R, RY, G, Y})
 p = VarArray(size=4, dom={R, G})
 
 satisfy(
-    (v[i], p[i], v[(i + 1) % 4], p[(i + 1) % 4]) in T for i in range(4)
+    # ensuring the coherence of traffic lights
+    (v[i], p[i], v[i + 1], p[i + 1]) in T for i in range(4)
 )
+
+"""
+v[i], p[i], v[(i + 1) % 4], p[(i + 1) % 4]) in T for i in range(4)
+"""

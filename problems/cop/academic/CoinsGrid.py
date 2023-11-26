@@ -1,12 +1,21 @@
 """
-See 'Constraint Solving and Planning with Picat' (page 43)
-From Tony Hurlimann, A coin puzzle, SVOR-contest 2007
+From Tony Hurlimann, A coin puzzle, SVOR-contest 2007.
 
-Some data: (8,4) (8,5) (9,4) (10,4) (31,14)
+## Data
+  two integers n and c
 
-Examples of Execution:
-  python3 CoinsGrid.py
-  python3 CoinsGrid.py -data=[10,4]
+## Model
+  constraints: Sum
+
+## Execution
+  - python CoinsGrid.py -data=[number,number]
+
+## Links
+  - https://link.springer.com/book/10.1007/978-3-319-25883-6
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/cop/cop
+
+## Tags
+  academic, recreational, xcsp22
 """
 
 from pycsp3 import *
@@ -28,5 +37,5 @@ minimize(
 
 """ Comments
 1) there are other variants in Hurlimann's paper (TODO)
+2) some data: (8,4) (8,5) (9,4) (10,4) (31,14)
 """
-

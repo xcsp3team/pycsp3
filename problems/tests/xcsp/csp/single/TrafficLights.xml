@@ -4,7 +4,7 @@
     <array id="p" note="p[i] is the color for the ith pedestrian traffic light" size="[4]" type="symbolic"> green red </array>
   </variables>
   <constraints>
-    <group>
+    <group note="ensuring the coherence of traffic lights">
       <extension>
         <list> %... </list>
         <supports> (green,green,red,red)(red,red,green,green)(red-yellow,red,yellow,red)(yellow,red,red-yellow,red) </supports>

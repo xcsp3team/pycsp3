@@ -1,10 +1,22 @@
 """
 Problem 026 on CSPLib
 
-Examples of Execution:
-  python3 SportsScheduling.py
-  python3 SportsScheduling.py -data=10
-  python3 SportsScheduling.py -data=10 -variant=dummy
+## Data
+  an integer n
+
+## Model
+  constraints: AllDifferent, Cardinality, Count, Table
+
+## Execution
+  - python SportScheduling.py -data=[number]
+  - python SportsScheduling.py -variant=table -data=[number]
+
+## Links
+  - https://www.csplib.org/Problems/prob026/
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/csp/csp
+
+## Tags
+  academic, csplib, xcsp22
 """
 
 from pycsp3 import *

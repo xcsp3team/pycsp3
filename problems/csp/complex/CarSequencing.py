@@ -9,26 +9,26 @@ be built so that at most 1 car in any 2 requires that option.
 
 See problem 001 at CSPLib.
 
-## Data (example)
+## Data Example
   dingbas.json
 
 ## Model
   Two variants manage differently the way assembled car options are computed:
   - a main variant involving logical constraints
-  - a variant 'table' involving  table constraints
+  - a variant 'table' involving table constraints
 
-  constraints: Cardinality, Intension, Extension, Sum
+  constraints: Cardinality, Sum, Table
 
 ## Execution
-  - python CarSequencing.py -data=dingbas.json
-  - python CarSequencing.py -variant=table -data=dingbas.json
+  - python CarSequencing.py -data=<datafile.json>
+  - python CarSequencing.py -data=<datafile.json> -variant=table
 
 ## Links
   - https://www.csplib.org/Problems/prob001/
-  - https://www.cril.univ-artois.fr/XCSP22/competitions/cop/cop
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/csp/csp
 
 ## Tags
-  industrial, xcsp22
+  real, csplib, xcsp22
 """
 
 from pycsp3 import *
@@ -61,7 +61,10 @@ satisfy(
 if not variant():
     satisfy(
         # computing assembled car options
-        If(c[i] == j, Then=o[i] == options[j]) for i in range(nCars) for j in range(nClasses)
+        If(
+            c[i] == j,
+            Then=o[i] == options[j]
+        ) for i in range(nCars) for j in range(nClasses)
     )
 
 elif variant("table"):
@@ -81,7 +84,7 @@ satisfy(
 """ Comments
 1) the table variant seems far more efficient
 2) (c[i], o[i]) is a possible shortcut for (c[i], *o[i])
-3) the redundant constraints seem very important
+3) the redundant constraints seem important
 4) Note that:
  Cardinality(c, occurrences=demands)
    is a shortcut for:

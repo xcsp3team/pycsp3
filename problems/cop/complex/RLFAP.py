@@ -1,10 +1,23 @@
 """
-See "Radio Link Frequency Assignment", by B. Cabon, S. de Givry, L. Lobjois, T. Schiex, J. Warners, Constraints An Int. J. 4(1): 79-89 (1999)
+Radio Link Frequency Assignment.
 
-Examples of Execution:
-  python3 Rlfap.py -data=Rlfap-card-scen-04.json -variant=card
-  python3 Rlfap.py -data=Rlfap-span-scen-05.json -variant=span
-  python3 Rlfap.py -data=Rlfap-max-graph-05.json -variant=max
+## Data Example
+  scen01.json
+
+## Model
+  constraints: Maximum, NValues, Sum
+
+## Execution
+  - python RLFAP.py -data=<datafile.json> -variant=card
+  - python RLFAP.py -data=<datafile.json> -variant=span
+  - python RLFAP.py -data=<datafile.txt> -variant=max
+
+## Links
+  - https://link.springer.com/article/10.1023/A:1009812409930
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/cop/cop
+
+## Tags
+  real, xcsp22
 """
 
 from pycsp3 import *

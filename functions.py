@@ -313,12 +313,12 @@ def _wrap_intension_constraints(entities):
     return entities
 
 
-def And(*args, meta=False):
+def And(*args, meta=True):
     """
     Builds a meta-constraint And from the specified arguments.
     For example: And(Sum(x) > 10, AllDifferent(x))
 
-    When the parameter 'meta' is not true (the usual and default case),
+    When the parameter 'meta' is not true,
     reification is employed.
 
     :param args: a tuple of constraints
@@ -330,12 +330,12 @@ def And(*args, meta=False):
     return conjunction(*args)
 
 
-def Or(*args, meta=False):
+def Or(*args, meta=True):
     """
     Builds a meta-constraint Or from the specified arguments.
     For example: Or(Sum(x) > 10, AllDifferent(x))
 
-    When the parameter 'meta' is not true (the usual and default case),
+    When the parameter 'meta' is not true,
     reification is employed.
 
     :param args: a tuple of constraints
@@ -347,12 +347,12 @@ def Or(*args, meta=False):
     return disjunction(*args)
 
 
-def Not(arg, meta=False):
+def Not(arg, meta=True):
     """
     Builds a meta-constraint Not from the specified argument.
     For example: Not(AllDifferent(x))
 
-    When the parameter 'meta' is not true (the usual and default case),
+    When the parameter 'meta' is not true,
     reification is employed.
 
     :param arg: a constraint
@@ -367,12 +367,12 @@ def Not(arg, meta=False):
     return ~res  # TODO to be checked
 
 
-def Xor(*args, meta=False):
+def Xor(*args, meta=True):
     """
     Builds a meta-constraint Xor from the specified arguments.
     For example: Xor(Sum(x) > 10, AllDifferent(x))
 
-    When the parameter 'meta' is not true (the usual and default case),
+    When the parameter 'meta' is not true,
     reification is employed.
 
     :param args: a tuple of constraints
@@ -467,36 +467,6 @@ def If(test, *testOthers, Then, Else=None, meta=False):
             t.extend(disjunction(test, v) for v in flatten(elses))
     return t  # [0] if len(t) == 1 else t
 
-    # else:
-    #     disjunctive_test = None
-    #     if Else is None:
-    #         if len(tests) > 1:
-    #             if all(isinstance(v, Node) for v in tests):
-    #                 disjunctive_test = disjunction(~v for v in (Node(v.type, v.sons) for v in tests))
-    #             else:
-    #                 tests = conjunction(t for t in tests)
-    #         else:
-    #             test = tests[0]
-    #             if isinstance(test, Variable) and test.negation:
-    #                 disjunctive_test = var(test.id)  # we look for the original variable
-    #             elif isinstance(test, Node):
-    #                 if test.type == TypeNode.NOT:
-    #                     disjunctive_test = test.sons[0]
-    #                 elif test.type == TypeNode.EQ and len(test.sons) == 2 and test.sons[1].type == TypeNode.INT and test.sons[1].sons == 0 \
-    #                         and test.sons[0].type == TypeNode.VAR and test.sons[0].sons.dom.is_binary():  # if(x=0,Then=?) => or(x,?)
-    #                     disjunctive_test = test.sons[0].sons
-    #                 elif ~test.type is not None and len(thens) == 1 and isinstance(thens[0], Node) and thens[0].type == TypeNode.OR:
-    #                     disjunctive_test = Node(~test.type, test.sons)
-    #     if disjunctive_test is not None:  # do not remove 'is not None'
-    #         return [disjunction(disjunctive_test, v) for v in thens] if len(thens) > 1 else disjunction(disjunctive_test, thens)
-    #     if Else is not None and len(tests) == 1:  # TODO is that interesting, and should we identify some other cases (variable case) ?
-    #         test = tests[0]
-    #         if isinstance(test, Node):
-    #             if ~test.type is not None:
-    #                 return [imply(test, thens), imply(Node(~test.type, test.sons), Else)]
-    #
-    #     return ift(tests, thens, Else)  # note that if Else is None, imply will be called
-
 
 def Match(Expr, *, Cases):
     assert isinstance(Cases, dict)
@@ -505,19 +475,21 @@ def Match(Expr, *, Cases):
         return [expr(~k.operator, Expr, k.right_operand()) | v if isinstance(k, Condition)
                 else (Expr != k if not isinstance(k, (tuple, list, set, frozenset)) else not_belong(Expr, k)) | v for k, v in t]
     else:
-        return [v for k, v in t if
-                (not isinstance(k, (tuple, list, set, frozenset)) and Expr == k) or (isinstance(k, (tuple, list, set, frozenset)) and Expr in k)]
+        assert False, "Bad construction with Match: the expression must be a variable or an expression involving a variable"
+        # return [v for k, v in t if
+        #         (not isinstance(k, (tuple, list, set, frozenset)) and Expr == k) or (isinstance(k, (tuple, list, set, frozenset)) and Expr in k)]
 
 
-def Iff(*args, meta=False):
+def Iff(*args, meta=True):
     """
     Builds a meta-constraint Iff from the specified arguments.
     For example: Iff(Sum(x) > 10, AllDifferent(x))
 
-    When the parameter 'meta' is not true (the usual and default case),
+    When the parameter 'meta' is not true,
     reification is employed.
 
     :param args: a tuple of constraints
+    :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint Iff, or its reified form
     """
     if meta:

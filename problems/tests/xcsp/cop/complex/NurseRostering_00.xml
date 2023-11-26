@@ -3,7 +3,7 @@
     <array id="x" note="x[d][p] is the shift at day d for person p (value 1 denotes off)" size="[14][5]"> 0 1 </array>
     <array id="nd" note="nd[p][s] is the number of days such that person p works with shift s" size="[5][2]"> 0..14 </array>
     <array id="np" note="np[d][s] is the number of persons working on day d with shift s" size="[14][2]"> 0..5 </array>
-    <array id="wk" note="wk[p][w] is 1 iff the week-end w is worked by person p" size="[5][2]"> 0 1 </array>
+    <array id="wk" note="wk[p][w] is 1 iff the weekend w is worked by person p" size="[5][2]"> 0 1 </array>
     <array id="cn" note="cn[p][d] is the cost of not satisfying the on-request (if it exists) of person p on day d" size="[5][14]">
       <domain for="cn[0][2..3] cn[3][8..9]"> 0 2 </domain>
       <domain for="cn[1][0..4]"> 0 3 </domain>
@@ -198,7 +198,7 @@
         <args> 1 np[13][1] </args>
       </group>
     </block>
-    <group note="computing worked week-ends">
+    <group note="computing worked weekends">
       <intension> imp(ne(%0,1),%1) </intension>
       <args> x[5][0] wk[0][0] </args>
       <args> x[12][0] wk[0][1] </args>
@@ -221,7 +221,7 @@
       <args> x[6][4] wk[4][0] </args>
       <args> x[13][4] wk[4][1] </args>
     </group>
-    <group note="maximum number of worked week-ends">
+    <group note="maximum number of worked weekends">
       <sum>
         <list> %0 %1 </list>
         <condition> (le,1) </condition>

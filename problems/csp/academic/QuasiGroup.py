@@ -1,18 +1,41 @@
 """
-Problem 003 on CSPLib
+Problem 003 on CSPLib.
 
-Examples of Execution:
-  python3 QuasiGroup.py
-  python3 QuasiGroup.py -data=8 -variant=base-v3
-  python3 QuasiGroup.py -data=5 -variant=base-v4
-  python3 QuasiGroup.py -data=8 -variant=base-v5
-  python3 QuasiGroup.py -data=8 -variant=base-v6
-  python3 QuasiGroup.py -data=9 -variant=base-v7
-  python3 QuasiGroup.py -data=8 -variant=aux-v3
-  python3 QuasiGroup.py -data=5 -variant=aux-v4
-  python3 QuasiGroup.py -data=8 -variant=aux-v5
-  python3 QuasiGroup.py -data=9 -variant=aux-v7
- """
+An order n quasigroup is a Latin square of size n.
+That is, a n×n multiplication table in which each element occurs once in every row and column.
+A quasigroup can be specified by a set and a binary multiplication operator, ∗ defined over this set.
+Quasigroup existence problems determine the existence or non-existence of quasigroups of
+a given size with additional properties. For example:
+  - QG3: quasigroups for which (a ∗ b) ∗ (b ∗ a) = a
+  - QG5: quasigroups for which ((b ∗ a) ∗ b) ∗ b = a
+  - QG6: quasigroups for which (a ∗ b) ∗ b = a ∗ (a ∗ b)
+For each of these problems, we may additionally demand that the quasigroup is idempotent.
+That is, a ∗ a = a for every element a.
+
+## Data
+  a unique integer, the order of the problem instance
+
+## Model
+  constraints: Element
+
+## Execution
+  - python QuasiGroup.py -variant=base-v3 -data=[number]
+  - python QuasiGroup.py -variant=base-v4 -data=[number]
+  - python QuasiGroup.py -variant=base-v5 -data=[number]
+  - python QuasiGroup.py -variant=base-v6 -data=[number]
+  - python QuasiGroup.py -variant=base-v7 -data=[number]
+  - python QuasiGroup.py -variant=aux-v3 -data=[number]
+  - python QuasiGroup.py -variant=aux-v4 -data=[number]
+  - python QuasiGroup.py -variant=aux-v5 -data=[number]
+  - python QuasiGroup.py -variant=aux-v7 -data=[number]
+
+## Links
+  - https://www.csplib.org/Problems/prob003/
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/csp/csp
+
+## Tags
+  academic, csplib, xcsp22
+"""
 
 from pycsp3 import *
 
@@ -78,7 +101,10 @@ elif variant("aux"):
         y = VarArray(size=[n, n], dom=range(n))
 
         satisfy(
-            (x[:, j][x[j][i]] == y[i][j], x[i][x[j][i]] == y[i][j]) for i, j in pairs if i != j
+            (
+                x[:, j][x[j][i]] == y[i][j],
+                x[i][x[j][i]] == y[i][j]
+            ) for i, j in pairs if i != j
         )
 
 """ Comments

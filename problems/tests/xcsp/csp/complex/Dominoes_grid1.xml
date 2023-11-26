@@ -106,7 +106,7 @@
       </group>
     </block>
     <group note="adjacency constraints">
-      <intension> or(eq(dist(%0,%1),8),and(eq(dist(%0,%1),1),eq(div(%0,8),div(%1,8)))) </intension>
+      <intension> imp(ne(dist(%0,%1),8),and(eq(dist(%0,%1),1),eq(div(%0,8),div(%1,8)))) </intension>
       <args> x[0][0] y[0][0] </args>
       <args> x[0][1] y[0][1] </args>
       <args> x[0][2] y[0][2] </args>

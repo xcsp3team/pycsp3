@@ -1,8 +1,22 @@
 """"
 See Problem 014 on CSPLib
 
-Examples of Execution:
-  python3 SolitaireBattleship.py -data=SolitaireBattleship_sb-12-12-5-0.json
+## Data Example
+  113.json
+
+## Model
+  constraints: Cardinality, Regular, Sum, Table
+
+## Execution
+  - python SolitaireBattleship.py -data=<datafile.json>
+
+## Links
+  - https://www.csplib.org/Problems/prob014/
+  - https://redirect.cs.umbc.edu/courses/671/fall09/resources/smith06.pdf
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/csp/csp
+
+## Tags
+  recreational, csplib, xcsp22
 """
 
 from pycsp3 import *
@@ -10,6 +24,7 @@ from pycsp3 import *
 fleet, hints, rowSums, colSums = data
 surfaces = [ship.size * ship.cnt for ship in fleet]
 pos, neg = [ship.size for ship in fleet], [-ship.size for ship in fleet]
+hints = [] if hints is None else hints
 n, nTypes = len(colSums), len(pos)
 
 
@@ -77,7 +92,7 @@ satisfy(
     [s[i][j] == (t[i][j] != 0) for i in range(n + 2) for j in range(n + 2)],
 
     # counting the number of occurrences of ship segments of each type
-    Cardinality(t[1:n + 1, 1:n + 1], occurrences={pos[i]: cp[i] for i in range(nTypes)} + {neg[i]: cn[i] for i in range(nTypes)}),
+    Cardinality(t[1:n + 1, 1:n + 1], occurrences={pos[i]: cp[i] for i in range(nTypes)} | {neg[i]: cn[i] for i in range(nTypes)}),
 
     # ensuring the right number of occurrences of ship segments of each type
     [cp[i] + cn[i] == surfaces[i] for i in range(nTypes)],
@@ -89,31 +104,10 @@ satisfy(
     [t[:, j + 1] in Av for j in range(n)],
 
     # tag(clues)
-    [hint_ctr(c, i, j) for (c, i, j) in hints] if hints else None
+    [hint_ctr(c, i, j) for (c, i, j) in hints]
 )
 
 """ Comments
-1) another way of setting border values to 0 is with constraints 'Sum', as in:
- [Sum(s[0]) == 0, Sum(s[n + 1]) == 0, Sum(s[:, 0]) == 0, Sum(s[:, n + 1]) == 0],
+1) another way of setting border values to 0 is :
+  [s[0] == 0, s[-1] == 0, s[:, 0] == 0, s[:, -1] == 0]
 """
-#     [s[0] == 0, s[-1] == 0, s[:, 0] == 0, s[:, -1] == 0],
-
-# [
-#         Match(c,
-#               Cases={
-#                   'w': s[i][j] == 0,
-#                   ('c', 'l', 'r', 't', 'b'): [
-#                       s[i][j] == 1,
-#                       s[i - 1][j] == (1 if c == 'b' else 0),
-#                       s[i + 1][j] == (1 if c == 't' else 0),
-#                       s[i][j - 1] == (1 if c == 'r' else 0),
-#                       s[i][j + 1] == (1 if c == 'l' else 0)
-#                   ],
-#                   'm': [
-#                       s[i][j] == 1,
-#                       t[i][j] not in {-2, -1, 0, 1, 2},
-#                       (s[i - 1][j], s[i + 1][j], s[i][j - 1], s[i][j + 1]) in {(0, 0, 1, 1), (1, 1, 0, 0)}
-#                   ]
-#               }
-#               ) for (c, i, j) in hints
-#     ] if hints else None

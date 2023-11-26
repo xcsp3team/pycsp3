@@ -1,8 +1,34 @@
 """
-Problem 013 on CSPLib
+See Problem 013 on CSPLib.
 
-Example of Execution:
-  python3 ProgressiveParty.py -data=ProgressiveParty_example.json
+The problem is to timetable a party at a yacht club.
+Certain boats are to be designated hosts, and the crews of the remaining boats in turn visit the
+host boats for several successive half-hour periods. The crew of a host boat remains on board
+to act as hosts while the crew of a guest boat together visits several hosts. Every boat can only
+hold a limited number of people at a time (its capacity) and crew sizes are different. The total
+number of people aboard a boat, including the host crew and guest crews, must not exceed the
+capacity. A table with boat capacities and crew sizes can be found below; there were six time
+periods. A guest boat cannot not revisit a host and guest crews cannot meet more than once.
+The problem facing the rally organizer is that of minimizing the number of host boats.
+
+## Data (example)
+  example.json
+
+## Model
+  constraints: AllDifferent, Channel, Element, Sum
+
+## Execution
+  - python ProgressiveParty.py -data=<datafile.json>
+  - python ProgressiveParty.py -data=<datafile.txt> -parser=ProgressiveParty_Parser.py
+  - python ProgressiveParty.py -parser=ProgressiveParty_rally-red.py <number> <number>
+
+## Links
+  - https://www.csplib.org/Problems/prob013/
+  - https://link.springer.com/article/10.1007/BF00143880
+  - https://www.cril.univ-artois.fr/XCSP23/competitions/cop/cop
+
+## Tags
+  recreational, csplib, xcsp23
 """
 
 from pycsp3 import *
@@ -33,7 +59,7 @@ g = VarArray(size=[nBoats, nPeriods, nBoats], dom={0, 1})
 
 satisfy(
     # identifying host boats
-    [iff(s[b][p] == b, h[b]) for b in range(nBoats) for p in range(nPeriods)],
+    [h[b] == (s[b][p] == b) for b in range(nBoats) for p in range(nPeriods)],
 
     # identifying host boats (from visitors)
     [h[s[b][p]] == 1 for b in range(nBoats) for p in range(nPeriods)],
@@ -48,7 +74,7 @@ satisfy(
     [AllDifferent(s[b], excepting=b) for b in range(nBoats)],
 
     # guest crews cannot meet more than once
-    [Sum(s[b1][p] == s[b2][p] for p in range(nPeriods)) <= 1 for b1, b2 in combinations(range(nBoats), 2)],
+    [Sum(s[b1][p] == s[b2][p] for p in range(nPeriods)) <= 1 for b1, b2 in combinations(nBoats, 2)],
 
     # ensuring a minimum number of hosts  tag(redundant-constraint)
     Sum(h) >= minimal_number_of_hosts()
@@ -61,11 +87,11 @@ minimize(
 
 """ Comments
 1) here is an alternative way of posting the 2nd group:
- [imply(s[b1][p] == b2, h[b2]) for b1 in range(nBoats) for b2 in range(nBoats) if b1 != b2 for p in range(nPeriods)],
+ [If(s[b1][p] == b2, Then=h[b2]) for b1 in range(nBoats) for b2 in range(nBoats) if b1 != b2 for p in range(nPeriods)],
 
 2) here is a less compact way of posting the 4th group:
  [[g[i][p][b] for i in range(nBoats)] * crews <= capacities[b] for b in range(nBoats) for p in range(nPeriods)],
 
-3) in the paper "The Progressive Party Problem: Integer Linear Programming and Constraint Programming Compared" by B. Smith et al.
-   Constraints Journal 1996, additional constraints (not taken into account here) on host boats allow to prove easily optimality for the instance red42.
+3) in the Constraints paper cited above, additional constraints (not taken into account here) on host boats allow us 
+   to prove easily optimality for the instance red42.
 """

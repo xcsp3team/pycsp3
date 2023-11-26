@@ -1,6 +1,4 @@
 """
-See https://en.wikipedia.org/wiki/Superpermutation
-
 In combinatorial mathematics, a superpermutation on n symbols is a string that contains each permutation of n symbols
 as a substring. While trivial superpermutations can simply be made up of every permutation listed together,
 superpermutations can also be shorter (except for the trivial case of n = 1) because overlap is allowed.
@@ -12,9 +10,22 @@ The first four smallest superpermutations have respective lengths 1, 3, 9, and 3
 123121321, and 123412314231243121342132413214321.
 However, for n = 5, there are several smallest superpermutations having the length 153.
 
-Examples of Execution:
-  python3 Superpermutation -data=4
-  python3 Superpermutation -data=4 -variant=table
+## Data
+  an integer n
+
+## Model
+  constraints: AllDifferent, Cardinality, Table
+
+## Execution
+  - python Superpermutation.py -data=[number]
+  - python Superpermutation.py -variant=table -data=[number]
+
+## Links
+  - https://en.wikipedia.org/wiki/Superpermutation
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/csp/csp
+
+## Tags
+  academic, xcsp22
 """
 
 from math import factorial
@@ -60,7 +71,7 @@ elif variant("table"):
         [(y[i], x[i:i + n]) in T for i in range(nPatterns)],
 
         # ensuring that each permutation occurs in the sequence
-        Cardinality(y, occurrences={-1: range(gap + 1)} + {i: range(1, gap + 1) for i in range(nPermutations)})
+        Cardinality(y, occurrences={-1: range(gap + 1)} | {i: range(1, gap + 1) for i in range(nPermutations)})
     )
 
 satisfy(

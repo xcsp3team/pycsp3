@@ -1,12 +1,21 @@
 """
-Problem 045 on CSPLib
+See Problem 045 on CSPLib.
 
-It is possible to get the covering array from v (the array of variables in the model below).
-For example, v[0][0] gives the t most significant bits of the first column (because the first t-combination is for the first t lines).
+## Data
+  four integers: t, k, g and b
 
-Examples of Execution:
-  python3 CoveringArray.py
-  python3 CoveringArray.py -data=[3,5,2,10]
+## Model
+  constraints: AllDifferent, Channel, Table
+
+## Execution
+  - python CoveringArray.py -data=[number,number,number,number]
+
+## Links
+  - https://www.csplib.org/Problems/prob045/
+  - https://www.cril.univ-artois.fr/XCSP23/competitions/csp/csp
+
+## Tags
+  academic, recreational, csplib, xcsp23
 """
 
 from pycsp3 import *
@@ -34,7 +43,9 @@ satisfy(
     [v[:, j] in T for j in range(b)]
 )
 
-"""
+""" Comments
 1) for being compatible with the competition mini-track, we use:
    [v[i][p[i][j]] == j for i in range(n) for j in range(b)]
+2) It is possible to get the covering array from v (the array of variables in the model below).
+ For example, v[0][0] gives the t most significant bits of the first column (because the first t-combination is for the first t lines).
 """

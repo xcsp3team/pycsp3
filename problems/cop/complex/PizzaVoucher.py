@@ -32,7 +32,7 @@ satisfy(
     [(f[i] == 0) == (p[i] != pay[i]) for i in range(nVouchers)],
 
     # a free pizza obtained with a voucher must be cheaper than any pizza paid wrt this voucher
-    [imply(v[i] < 0, v[i] != -v[j]) for i in range(nPizzas) for j in range(nPizzas) if prices[i] < prices[j]]
+    [If(v[i] < 0, Then=v[i] != -v[j]) for i in range(nPizzas) for j in range(nPizzas) if prices[i] < prices[j]]
 )
 
 minimize(

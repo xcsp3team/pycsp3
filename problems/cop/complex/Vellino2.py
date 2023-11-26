@@ -44,17 +44,44 @@ satisfy(
     # the capacity of each bin is not exceeded
     [Sum(p[i]) <= capacities[c[i]] for i in range(nBins)],
 
-    # handling compatibility of materials
+    # red bins cannot contain plastic or steel
     [
-        Match(
-            c[i],
-            Cases={
-                Red: [p[i][Plastic] == 0, p[i][Steel] == 0, p[i][Wood] <= 1],
-                Blue: [p[i][Wood] == 0, p[i][Plastic] == 0],
-                Green: [p[i][Steel] == 0, p[i][Glass] == 0, p[i][Wood] <= 2]
-            }
+        If(
+            c[i] == Red,
+            Then=[
+                p[i][Plastic] == 0,
+                p[i][Steel] == 0
+            ]
         ) for i in range(nBins)
     ],
+
+    # blue bins cannot contain wood or plastic
+    [
+        If(
+            c[i] == Blue,
+            Then=[
+                p[i][Wood] == 0,
+                p[i][Plastic] == 0
+            ]
+        ) for i in range(nBins)
+    ],
+
+    # green bins cannot contain steel or glass
+    [
+        If(
+            c[i] == Green,
+            Then=[
+                p[i][Steel] == 0,
+                p[i][Glass] == 0
+            ]
+        ) for i in range(nBins)
+    ],
+
+    # red bins contain at most one wooden component
+    [If(c[i] == Red, Then=p[i][Wood] <= 1) for i in range(nBins)],
+
+    # green bins contain at most two wooden components
+    [If(c[i] == Green, Then=p[i][Wood] <= 2) for i in range(nBins)],
 
     # wood requires plastic
     [If(p[i][Wood] > 0, Then=p[i][Plastic] > 0) for i in range(nBins)],

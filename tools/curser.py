@@ -51,8 +51,8 @@ def cursing():
         if not OpOverrider.activated:
             return self.__sub__(other)
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
-        if self == 0:
-            return -other
+        # if self == 0:  # problem is other is a PartialConstraint
+        #     return -other
         if isinstance(other, ScalarProduct):
             other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, Node):
@@ -531,7 +531,7 @@ class OpOverrider:
     def __ne__(self, other):
         res = manage_global_indirection(self, other)
         if res is None:
-            return functions.Xor(self, other)  # TODO: is it always appropriate?
+            return functions.Xor(self, other, meta=True)  # TODO: is it always appropriate?
         self, other = res
         if self is None or other is None:
             return object.__ne__(self, other)

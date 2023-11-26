@@ -18,7 +18,7 @@ def structures():
     return [i for (i, j) in p_edges if i == j], [i for (i, j) in t_edges if i == j], both_way_table, degree_conflicts
 
 
-p_loops, t_loops, table, degree_conflicts = structures()
+p_loops, t_loops, T, conflicts = structures()
 
 # x[i] is the target node to which the ith pattern node is mapped
 x = VarArray(size=n, dom=range(m))
@@ -28,11 +28,11 @@ satisfy(
     AllDifferent(x),
 
     # preserving edges
-    [(x[i], x[j]) in table for (i, j) in p_edges],
+    [(x[i], x[j]) in T for (i, j) in p_edges],
 
     # being careful of self-loops
     [x[i] in t_loops for i in p_loops],
 
     # tag(redundant-constraints)
-    [x[i] not in conflicts for i, conflicts in enumerate(degree_conflicts)]
+    [x[i] not in C for i, C in enumerate(conflicts)]
 )

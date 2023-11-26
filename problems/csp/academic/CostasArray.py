@@ -11,12 +11,12 @@ See problem 076 at CSPLib.
   constraints: AllDifferent
 
 ## Execution
-  - python CostasArray.py -data=10
+  - python CostasArray.py -data=[number]
 
 ## Links
   - https://en.wikipedia.org/wiki/Costas_array
   - https://www.csplib.org/Problems/prob076/
-  - https://www.cril.univ-artois.fr/XCSP22/competitions/cop/cop
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/csp/csp
 
 ## Tags
   academic, csplib, xcsp22

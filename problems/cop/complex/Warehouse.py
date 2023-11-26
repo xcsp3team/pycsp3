@@ -1,10 +1,23 @@
 """
 See Problem 034 on CSPLib
 
-Examples of Execution:
-  python3 Warehouse.py -data=Warehouse_example.json
-  python3 Warehouse.py -data=Warehouse_example.txt -dataparser=Warehouse_Parser.py
-  python3 Warehouse.py -data=Warehouse_example.txt -dataparser=Warehouse_Parser.py -variant=compact
+## Data Example
+  cap044.json
+
+## Model
+  constraints: Element, Sum
+
+## Execution
+  - python Warehouse.py -data=<datafile.json>
+  - python Warehouse.py -data=<datafile.json> -variant=compact
+  - python Warehouse.py -data=<datafile.txt> -parser=Warehouse_Parser.py
+
+## Links
+  - https://www.csplib.org/Problems/prob034/
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/cop/cop
+
+## Tags
+  real, csplib, xcsp22
 """
 
 from pycsp3 import *

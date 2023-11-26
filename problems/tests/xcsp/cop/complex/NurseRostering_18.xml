@@ -8,7 +8,7 @@
       <domain for="nd[20][2] nd[21][2]"> 0..40 </domain>
     </array>
     <array id="np" note="np[d][s] is the number of persons working on day d with shift s" size="[84][4]"> 0..22 </array>
-    <array id="wk" note="wk[p][w] is 1 iff the week-end w is worked by person p" size="[22][12]"> 0 1 </array>
+    <array id="wk" note="wk[p][w] is 1 iff the weekend w is worked by person p" size="[22][12]"> 0 1 </array>
     <array id="cn" note="cn[p][d] is the cost of not satisfying the on-request (if it exists) of person p on day d" size="[22][84]">
       <domain for="cn[0][17..21] cn[0][49..52] cn[1][8..12] cn[1][16..18] cn[1][42] cn[2][40] cn[2][72] cn[3][1] cn[3][9..13] cn[3][58..62] cn[4][34..36] cn[4][58..60] cn[4][80..82] cn[5][29] cn[6][45..49] cn[6][63] cn[9][12..13] cn[9][31..34] cn[9][54] cn[10][9..12] cn[10][43..44] cn[10][83] cn[12][56..60] cn[13][74..77] cn[14][68..69] cn[14][76..80] cn[15][11..12] cn[15][17..19] cn[16][11..12] cn[16][38..41] cn[17][58..61] cn[18][15..16] cn[18][45] cn[19][75..77] cn[20][44..47] cn[20][63] cn[21][7..8] cn[21][57..59]"> 0 2 </domain>
       <domain for="cn[0][58..62] cn[2][34..35] cn[2][80..82] cn[3][70..71] cn[4][11..13] cn[4][41] cn[5][74..76] cn[6][19..22] cn[6][38..39] cn[7][44..46] cn[8][58..62] cn[8][76..77] cn[9][0] cn[10][20..23] cn[10][55..58] cn[10][69..70] cn[11][12..13] cn[11][47] cn[12][32..34] cn[12][74..78] cn[13][17..19] cn[13][25..27] cn[13][62..64] cn[14][15..19] cn[14][40..43] cn[15][45..47] cn[15][54..55] cn[16][19..22] cn[16][30..32] cn[17][3..7] cn[17][12] cn[17][46..49] cn[17][74..78] cn[18][40] cn[19][11] cn[19][27] cn[20][58] cn[21][27..31] cn[21][38] cn[21][79..80]"> 0 1 </domain>
@@ -1205,7 +1205,7 @@
         <args> 3 np[83][3] </args>
       </group>
     </block>
-    <group note="computing worked week-ends">
+    <group note="computing worked weekends">
       <intension> imp(ne(%0,3),%1) </intension>
       <args> x[5][0] wk[0][0] </args>
       <args> x[12][0] wk[0][1] </args>
@@ -1892,7 +1892,7 @@
         </extension>
       </slide>
     </block>
-    <group note="maximum number of worked week-ends">
+    <group note="maximum number of worked weekends">
       <sum>
         <list> %... </list>
         <condition> (le,6) </condition>

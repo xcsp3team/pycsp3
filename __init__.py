@@ -21,9 +21,8 @@ from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, AllEqual
 from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
-from pycsp3.tools.utilities import (
-    ANY, ALL, combinations, different_values, decrement, flatten, alphabet_positions, all_primes,
-    integer_scaling, to_ordinary_table, warning)
+from pycsp3.tools.utilities import (ANY, ALL, combinations, different_values, decrement, flatten, alphabet_positions, all_primes,
+                                    integer_scaling, to_ordinary_table, warning)
 
 if sys.version_info[1] < 9:
     warning("It is recommended that Python should be at least 3.9 (for example, the walrus operator is used at some places)")

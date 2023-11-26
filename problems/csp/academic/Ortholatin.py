@@ -1,15 +1,25 @@
 """
-See https://en.wikipedia.org/wiki/Graeco-Latin_square
-
 A Latin square of order n is an n by n array filled with n different symbols (for example, values between 1 and n),
 each occurring exactly once in each row and exactly once in each column.
 Two latin squares of the same order n are orthogonal if each pair of elements in the same position occurs exactly once.
 The most easy way to see this is by concatenating elements in the same position and verify that no pair appears twice.
 There are orthogonal latin squares of any size except 1, 2, and 6.
 
-Examples of Execution:
-  python3 OrthoLatin.py
-  python3 OrthoLatin.py -data=7
+## Data
+  a unique integer, the order of the problem instance
+
+## Model
+  constraints: AllDifferent, Table
+
+## Execution
+  - python Ortholatin.py -data=[number]
+
+## Links
+  - https://en.wikipedia.org/wiki/Mutually_orthogonal_Latin_squares
+  - https://www.cril.univ-artois.fr/XCSP22/competitions/csp/csp
+
+## Tags
+  academic, xcsp22
 """
 
 from pycsp3 import *
@@ -44,7 +54,12 @@ satisfy(
     [(x[i][j], y[i][j], z[i * n + j]) in T for i in range(n) for j in range(n)],
 
     # tag(symmetry-breaking)
-    [(x[0][j] == j, y[0][j] == j) for j in range(n)]
+    [
+        (
+            x[0][j] == j,
+            y[0][j] == j
+        ) for j in range(n)
+    ]
 )
 
 """ Comments
