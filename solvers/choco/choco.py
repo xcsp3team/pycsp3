@@ -3,7 +3,7 @@ import os
 from pycsp3.solvers.solver import SolverProcess  #, SolverPy4J
 
 CHOCO_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
-CHOCO_CP = CHOCO_DIR + "choco-parsers-4.10.9-beta.jar"
+CHOCO_CP = CHOCO_DIR + "choco-parsers-4.10.15-beta.jar"
 
 
 class Choco(SolverProcess):
