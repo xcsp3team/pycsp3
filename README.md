@@ -1,47 +1,52 @@
-<h1 align="center"> PyCSP3 v2.1 (November 10, 2022) </h1>
+<h1 align="center"> PyCSP3 v2.2 (December 10, 2023) </h1>
 
-This is Version 2.1 of PyCSP3, a library in Python 3 (version 3.6 or later) for modeling combinatorial constrained problems; see [www.pycsp.org](https://pycsp.org).
-PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). 
+This is Version 2.2 of PyCSP3, a library in Python 3 (version 3.8 or later) for modeling combinatorial constrained problems;
+see [www.pycsp.org](https://pycsp.org).
+PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API)
+and [Numberjack](https://github.com/eomahony/Numberjack).
 With PyCSP3, it is possible to generate instances of:
+
 1. CSPs (Constraint Satisfaction Problems)
 1. COPs (Constraint Optimization Problems)
 
 in format XCSP3; see [www.xcsp.org](https://xcsp.org).
-Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514),  which allows us to use integer variables (with finite domains) and popular constraints.
+Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514), which allows us to use integer variables (with finite domains) and popular
+constraints.
 
 Note that:
+
 * a dedicated [website](https://pycsp.org/) with more than 60 Jupyter notebooks is available
 * a well-documented [guide](https://arxiv.org/abs/2009.00326) is available
 * PyCSP3 is available as a [PyPi package](https://pypi.org/project/pycsp3/)
 
-
 At this stage, one can run two embedded solvers:
+
 * the constraint solver [ACE](https://github.com/xcsp3team/ace) (AbsCon Essence), with the option -solve or the option -solver=ace
 * the constraint solver [Choco](https://choco-solver.org/), with the option -solver=choco
 
 Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-For example, see the solvers involved in the [2022 Competition](https://www.xcsp.org/competitions/).
-It is also immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are 
+For example, see the solvers involved in the [2022 and 2023 Competitions](https://www.xcsp.org/competitions/).
+It is also immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are
 present in directories `pycsp3/solvers/ace` and  `pycsp3/solvers/choco`.
 For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
+
 ```console
 java -jar ACE-YY-MM.jar zebra.xml 
 
 ```
+
 while replacing YY and MM with the current values that are present in the name of the jar file.
 
 Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](https://pycsp.org/documentation/solving-process/).
-
 
 # 1) Installation from PyPi
 
 This is the easiest way of installing PyCSP3.
 
-Note that you need first Python 3 (version 3.6, or later) to be installed.
+Note that you need first Python 3 (version 3.8, or later) to be installed.
 You can do it, for example, from [python.org](https://www.python.org/downloads/)
-
 
 ## Installing PyCSP3 (Linux)
 
@@ -65,7 +70,6 @@ For using the -solve or -solver options, you need to have Java (at least, versio
 sudo apt-get install openjdk-11-jdk
 ```
 
-
 ## Installing PyCSP3 (Mac OS)
 
 If Python 3 is installed on your system, the command 'pip3' should already be present.
@@ -77,7 +81,6 @@ sudo pip3 install pycsp3
 ```
 
 For using the -solve or -solver options, you need to have Java (at least, version 11) installed.
-
 
 ## Installing PyCSP3 (Windows)
 
@@ -148,12 +151,14 @@ An alternative to PyPi is to clone the code from GitHub.
 Here is an illustration for MAC OS.
 We assume that Python 3 is installed (otherwise, type `port install python38` for example), and consequently 'pip3' is also installed.
 In a console, type:
+
 ```console
 git clone https://github.com/xcsp3team/pycsp3.git
 pip3 install lxml
 ```
 
 You may need to update the environment variable 'PYTHONPATH', by typing for example:
+
 ```console
 export PYTHONPATH=$PYTHONPATH:.
 ```
@@ -161,7 +166,8 @@ export PYTHONPATH=$PYTHONPATH:.
 # 3) Compilation and Examples
 
 We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
-However, note that many illustrations are available on [www.pycsp.org](https://pycsp.org/), notably many [models](https://pycsp.org/documentation/models/) with Jupyter notebooks. 
+However, note that many illustrations are available on [www.pycsp.org](https://pycsp.org/), notably many [models](https://pycsp.org/documentation/models/) with
+Jupyter notebooks.
 
 First, we give some general information about compilation.
 
@@ -175,8 +181,8 @@ python3 <file> [options]
 
 with:
 
-*  &lt;file&gt;: a Python file to be executed, describing a model in PyCSP3
-*  [options]: possible options to be used when compiling
+* &lt;file&gt;: a Python file to be executed, describing a model in PyCSP3
+* [options]: possible options to be used when compiling
 
 Among the options, we find:
 
@@ -185,28 +191,29 @@ Among the options, we find:
     + a simple list: -data=[9,0,0,3,9]
     + a JSON file: -data=Bibd-3-4-6.json
 
-    Data can then be directly used in the PyCSP3 model by means of a predefined variable `data`.
+  Data can then be directly used in the PyCSP3 model by means of a predefined variable `data`.
 
 * ```-dataparser=<file>```: a Python file for reading/parsing data given under any arbitrary form (e.g., by a text file).
-     See Example Nonogram below, for an illustration.
+  See Example Nonogram below, for an illustration.
 
 * ```-dataexport```: exports (saves) the data in JSON format.
-     See Example Nonogram below, for an illustration.
+  See Example Nonogram below, for an illustration.
 
 * ```-variant=<variant_name>```: the name of a variant, to be used with function `variant()`.
-      See Example AllInterval below, for an illustration.
+  See Example AllInterval below, for an illustration.
 
 * ```-solve```: attempts to solve the instance with the embedded solver 'Ace'. It requires that Java version 8 (at least) is installed.
 
 * ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace' or 'choco'.
-Important: it requires that Java version 8 (at least) is installed.
-Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
+  Important: it requires that Java version 8 (at least) is installed.
+  Information about how piloting these embedded solvers can be found
+  in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
 
 * ```-output=<file_name>```: sets the filename of the generated XCSP3 instance (think about the extension .xml)
 
 By default, a file containing the XCSP3 instance is generated, unless you use the option:
 
-* ```-display```: displays the XCSP3 instance in the system standard output, instead of generating an XCSP3 file 
+* ```-display```: displays the XCSP3 instance in the system standard output, instead of generating an XCSP3 file
 
 ## Example 1: in console mode
 
@@ -225,8 +232,8 @@ Python 3.5.2
     )
 >>> compile()
 ```
-Note that to get an XCSP3 file, we call `compile()`.
 
+Note that to get an XCSP3 file, we call `compile()`.
 
 ## Example 2: Send+More=Money
 
@@ -273,7 +280,6 @@ To generate and solve with Choco the XCSP3 instance, the command is:
 python3 SendMore.py -solver=choco
 ```
 
-
 ## Example 3: All-Interval Series
 
 This example shows how you can simply specify an integer (as unique data) for a model.
@@ -311,7 +317,6 @@ python3 AllInterval.py -data=5
 
 Suppose that you would prefer to declare a second array of variables for representing successive distances.
 This would give:
-
 
 #### File **`AllInterval.py`** (version 2)
 
@@ -405,12 +410,12 @@ To generate and solve (with ACE) the instance of order 10 and variant 'aux', the
 python3 AllInterval.py -data=10 -variant=aux -solve
 ```
 
-
 ## Example 4: BIBD
 
 This example shows how you can specify a list of integers to be used as data for a model.
 For our illustration, we consider the problem [BIBD](https://www.csplib.org/Problems/prob028/).
-We need five integers `v, b, r, k, l` for specifying a unique instance (possibly, `b` and `r` can be set to 0, so that these values are automatically computed according to a template for this problem).
+We need five integers `v, b, r, k, l` for specifying a unique instance (possibly, `b` and `r` can be set to 0, so that these values are automatically computed
+according to a template for this problem).
 The model is:
 
 #### File **`Bibd.py`**
@@ -449,7 +454,6 @@ With some command interpreters (shells), you may have to escape the characters '
 python3 Bibd.py -data=\[9,0,0,3,9\]
 ```
 
-
 ## Example 5: Rack Configuration
 
 This example shows how you can specify a JSON file to be used as data for a model.
@@ -460,13 +464,42 @@ The data (for a specific instance) are then initially given in a JSON file, as f
 
 ```json
 {
-    "nRacks": 10,
-    "models": [[150,8,150],[200,16,200]],
-    "cardTypes": [[20,20],[40,8],[50,4],[75,2]]
+  "nRacks": 10,
+  "models": [
+    [
+      150,
+      8,
+      150
+    ],
+    [
+      200,
+      16,
+      200
+    ]
+  ],
+  "cardTypes": [
+    [
+      20,
+      20
+    ],
+    [
+      40,
+      8
+    ],
+    [
+      50,
+      4
+    ],
+    [
+      75,
+      2
+    ]
+  ]
 }
 ```
 
-In the following model, we directly unpack the components of the variable `data` (because it is automatically given under the form of a named tuple) whose fields are exactly those of the main object in the JSON file.
+In the following model, we directly unpack the components of the variable `data` (because it is automatically given under the form of a named tuple) whose
+fields are exactly those of the main object in the JSON file.
 
 #### File **`Rack.py`**
 
@@ -527,27 +560,45 @@ python3 Rack.py -data=Rack_r2.json
 
 One might want to have the data in the JSON file with another structure, as for example:
 
-
 #### File **`Rack_r2b.json`**
 
 ```json
 {
-    "nRacks": 10,
-    "rackModels": [
-	{"power":150,"nConnectors":8,"price":150},
-	{"power":200,"nConnectors":16,"price":200}
-    ],
-    "cardTypes": [
-	{"power":20,"demand":20},
-	{"power":40,"demand":8},
-	{"power":50,"demand":4},
-	{"power":75,"demand":2}
-    ]
+  "nRacks": 10,
+  "rackModels": [
+    {
+      "power": 150,
+      "nConnectors": 8,
+      "price": 150
+    },
+    {
+      "power": 200,
+      "nConnectors": 16,
+      "price": 200
+    }
+  ],
+  "cardTypes": [
+    {
+      "power": 20,
+      "demand": 20
+    },
+    {
+      "power": 40,
+      "demand": 8
+    },
+    {
+      "power": 50,
+      "demand": 4
+    },
+    {
+      "power": 75,
+      "demand": 2
+    }
+  ]
 }
   ```
 
 We only need to modify one line from the previous model:
-
 
 #### File **`Rack2.py`**
 
@@ -561,12 +612,12 @@ To generate an XCSP3 instance (file), we execute the command:
 python3 Rack2.py -data=Rack_r2b.json
 ```
 
-
 ## Example 6: Nonogram
 
 This example shows how you can use an auxiliary Python file for parsing data that are not initially given under JSON format.
 For our illustration, we consider the problem [Nonogram](https://www.csplib.org/Problems/prob012/).
 The data (for a specific Nonogram puzzle) are initially given in a text file as follows:
+
 1. a line stating the numbers of rows and columns,
 1. then, for each row a line stating the number of blocks followed by the sizes of all these blocks (on the same line),
 1. then, for each column a line stating the number of blocks followed by the sizes of all these blocks (on the same line).
@@ -574,6 +625,7 @@ The data (for a specific Nonogram puzzle) are initially given in a text file as 
 Below, here is an example of such a text file.
 
 #### File **`Nonogram_example.txt`**
+
 ```
 24 24
 0
@@ -627,7 +679,8 @@ Below, here is an example of such a text file.
 0
 ```
 
-First, we need to write a piece of code in Python for building a dictionary `data` that will be then used in our model (after having been automatically converted to a named tuple).
+First, we need to write a piece of code in Python for building a dictionary `data` that will be then used in our model (after having been automatically
+converted to a named tuple).
 We have first to import everything (*) from `pycsp3.problems.data.parsing`.
 We can then add any new arbitrary item to the dictionary `data` (which is initially empty).
 This is what we do below with two items whose keys are called `rowPatterns` and `colPatterns`.
@@ -635,6 +688,7 @@ The values associated with these two keys are defined as two-dimensional arrays 
 The function `next_int()` can be called for reading the next integer in a text file, which will be specified on the command line (see later).
 
 #### File **`Nonogram_Parser.py`**
+
 ```python
 from pycsp3.problems.data.parsing import *
 
@@ -646,15 +700,17 @@ data["colPatterns"] = [[next_int() for _ in range(next_int())] for _ in range(nR
 Then, we just write the model by getting data from the variable `data`.
 The model is totally independent of the way data were initially given (from a text file or a JSON file, for example).
 In the code below, note how an object `Automaton` is defined from a specified pattern (list of blocks).
- Also, for a `regular` constraint, we just write something like `scope in automaton`.
- Finally, `x[:, j]` denotes the jth column of `x`.
+Also, for a `regular` constraint, we just write something like `scope in automaton`.
+Finally, `x[:, j]` denotes the jth column of `x`.
 
 #### File **`Nonogram.py`**
+
 ```python
 from pycsp3 import *
 
 rows, cols = data  # patterns for row and columns 
 nRows, nCols = len(rows), len(cols)
+
 
 def automaton(pattern):
     q = Automaton.q  # for building state names
@@ -672,6 +728,7 @@ def automaton(pattern):
             num += size + 1
     return Automaton(start=q(0), final=q(n_states - 1), transitions=transitions)
 
+
 # x[i][j] is 1 iff the cell at row i and col j is colored in black
 x = VarArray(size=[nRows, nCols], dom={0, 1})
 
@@ -682,7 +739,8 @@ satisfy(
 )
 ```
 
-To generate the XCSP3 instance (file), we just need to specify the name of the text file (option `-data`) and the name of the Python parser (option `-dataparser`).
+To generate the XCSP3 instance (file), we just need to specify the name of the text file (option `-data`) and the name of the Python parser (
+option `-dataparser`).
 
 ```console
 python3 Nonogram.py -data=Nonogram_example.txt -dataparser=Nonogram_Parser.py
@@ -700,12 +758,214 @@ A file `Nonogram_example.json` is generated, whose content is:
 
 ```json
 {
- "colPatterns":[[],[],[],[1],[2],[2],[6,1],[3,1,3],[1,1,4],[2,1,1,7],[1,1,1,1,1],[1,12,1],[1,1,1,1,1],[2,1,1,7],[1,1,4,1],[2,1,2,2],[8,3],[1,1],[1,2],[4],[3],[2],[1],[]],
- "rowPatterns":[[],[5],[3,3],[1,2],[2,1],[1,1],[3,3],[1,5,1],[1,1,1],[2,1,1],[1,1,2],[3,1,3],[1,3,1],[1,1,1],[2,1,2],[1,1,1],[5],[1,1,1],[1,1,1],[1,1,1],[5,1,1],[1,2],[2,2,4],[4,9]]
+  "colPatterns": [
+    [],
+    [],
+    [],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      6,
+      1
+    ],
+    [
+      3,
+      1,
+      3
+    ],
+    [
+      1,
+      1,
+      4
+    ],
+    [
+      2,
+      1,
+      1,
+      7
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      12,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      2,
+      1,
+      1,
+      7
+    ],
+    [
+      1,
+      1,
+      4,
+      1
+    ],
+    [
+      2,
+      1,
+      2,
+      2
+    ],
+    [
+      8,
+      3
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      4
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    []
+  ],
+  "rowPatterns": [
+    [],
+    [
+      5
+    ],
+    [
+      3,
+      3
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      1
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      3,
+      3
+    ],
+    [
+      1,
+      5,
+      1
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      2,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      2
+    ],
+    [
+      3,
+      1,
+      3
+    ],
+    [
+      1,
+      3,
+      1
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      2,
+      1,
+      2
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      5
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1
+    ],
+    [
+      5,
+      1,
+      1
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      2,
+      4
+    ],
+    [
+      4,
+      9
+    ]
+  ]
 }
 ```
 
 With this new file, you can directly generate the XCSP3 file with:
+
  ```console
 python3 Nonogram.py -data=Nonogram_example.json
 ```
