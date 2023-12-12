@@ -18,6 +18,7 @@ Note that:
 * a dedicated [website](https://pycsp.org/) with more than 60 Jupyter notebooks is available
 * a well-documented [guide](https://arxiv.org/abs/2009.00326) is available
 * PyCSP3 is available as a [PyPi package](https://pypi.org/project/pycsp3/)
+* a GitHub repository with more than 300 models is available at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models)
 
 At this stage, one can run two embedded solvers:
 
