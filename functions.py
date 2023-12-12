@@ -416,9 +416,9 @@ def If(test, *testOthers, Then, Else=None, meta=False):
         return None if Else is None else Or(tests, Else)
     if meta:
         if Else is None:
-            return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens))))
+            return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(tests, thens))))
         else:
-            return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints((tests, thens, Else))))
+            return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(tests, thens, Else))))
 
     tests, thens = manage_global_indirection(tests, also_pc=True), manage_global_indirection(thens, also_pc=True)  # we get None or a list
     assert tests is not None and thens is not None and len(tests) > 0 and len(thens) > 0

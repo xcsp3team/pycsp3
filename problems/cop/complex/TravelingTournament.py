@@ -52,7 +52,12 @@ satisfy(
     [h[o[i][k]][k] != h[i][k] for i in range(nTeams) for k in range(nRounds)],
 
     # playing against the same team must be done once at home and once away
-    [imply(o[i][k1] == o[i][k2], h[i][k1] != h[i][k2]) for i in range(nTeams) for k1, k2 in combinations(range(nRounds), 2)],
+    [
+        If(
+            o[i][k1] == o[i][k2],
+            Then=h[i][k1] != h[i][k2]
+        ) for i in range(nTeams) for k1, k2 in combinations(nRounds, 2)
+    ],
 
     # at each round, opponents are all different  tag(redundant-constraints)
     [AllDifferent(o[:, k]) for k in range(nRounds)],

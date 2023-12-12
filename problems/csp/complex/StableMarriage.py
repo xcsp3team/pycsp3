@@ -32,7 +32,7 @@ satisfy(
     # spouses must match
     Channel(wf, hb),
 
-    # whenever m prefers another woman o to w, o prefers her husband to m
+    # whenever m prefers another woman o to his wife, o prefers her husband to m
     [
         If(
             m_rankings[m][o] < m_rankings[m][wf[m]],
@@ -40,7 +40,7 @@ satisfy(
         ) for m in Men for o in Women
     ],
 
-    # whenever w prefers another man o to m, o prefers his wife to w
+    # whenever w prefers another man o to her husband, o prefers his wife to w
     [
         If(
             w_rankings[w][o] < w_rankings[w, hb[w]],
