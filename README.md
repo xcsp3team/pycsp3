@@ -6,8 +6,8 @@ PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-To
 and [Numberjack](https://github.com/eomahony/Numberjack).
 With PyCSP3, it is possible to generate instances of:
 
-1. CSPs (Constraint Satisfaction Problems)
-1. COPs (Constraint Optimization Problems)
+1. CSP (Constraint Satisfaction Problem)
+1. COP (Constraint Optimization Problem)
 
 in format XCSP3; see [www.xcsp.org](https://xcsp.org).
 Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514), which allows us to use integer variables (with finite domains) and popular
