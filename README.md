@@ -130,6 +130,7 @@ python -m pip install --upgrade pycsp3
 ```
 
 ## Copying a Pool of Models
+The procedure below will be removed at the next vesrion becasue a GitHub repository is now available with more than 300 models at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models).
 
 PyCSP3 is accompanied by more than 100 models.
 To get them in a subdirectory `problems` of your current directory, execute:
@@ -173,8 +174,6 @@ Jupyter notebooks.
 First, we give some general information about compilation.
 
 ## Compiling PyCSP3 Models
-
-The procedure below will be removed at the next vesrion becasue a GitHub repository is now available with more than 300 models at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models).
 
 For generating an XCSP3 instance from a PyCSP3 model, you have to execute:
 
