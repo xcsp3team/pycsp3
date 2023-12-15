@@ -16,8 +16,8 @@ from pycsp3.classes.main.constraints import (
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
     ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
-    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintRefutation, ConstraintDummyConstant,
-    ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection, global_indirection)
+    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
+    ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection, global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -1902,7 +1902,7 @@ def Circuit(term, *others, start_index=0, size=None):
     return ECtr(ConstraintCircuit(terms, start_index, size))
 
 
-''' Elementary Constraints '''
+''' Other Constraints '''
 
 
 def Clause(term, *others, phases=None):
@@ -1915,6 +1915,17 @@ def Clause(term, *others, phases=None):
         if literal.negation:
             phases[i] = True
     return ECtr(ConstraintClause(literals, phases))
+
+
+def Adhoc(index, **dict):
+    """
+    Builds a constraint adhoc from the specified arguments.
+
+    :param index: the index, which is an integer associated with an adhoc form
+    :dict: a dictionary with all arguments of the adhoc constraint
+    :return: a constraint Hadhoc
+    """
+    return ECtr(ConstraintAdhoc(index, dict))
 
 
 ''' Objectives '''

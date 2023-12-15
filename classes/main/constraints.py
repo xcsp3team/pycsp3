@@ -42,8 +42,8 @@ class Diffs:
 
 
 class ConstraintArgument:
-    def __init__(self, name, content, attributes=[], content_compressible=True, content_ordered=False, lifted=False):
-        assert isinstance(name, (TypeCtrArg, TypeXML, main.annotations.TypeAnnArg)), str(name) + " " + str(type(name))
+    def __init__(self, name, content, attributes=[], content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
+        assert adhoc or isinstance(name, (TypeCtrArg, TypeXML, main.annotations.TypeAnnArg)), str(name) + " " + str(type(name))
         self.name = name  # name of the argument
         self.attributes = attributes  # list of pairs (key, value) representing the attributes
         self.content_original = content
@@ -95,8 +95,8 @@ class Constraint:
             return False
         return [v for v in self.arguments.items() if str(v[0]) != "condition"] == [v for v in other.arguments.items() if str(v[0]) != "condition"]
 
-    def arg(self, name, content, *, attributes=[], content_compressible=True, content_ordered=False, lifted=False):
-        self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted)
+    def arg(self, name, content, *, attributes=[], content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
+        self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc)
         return self
 
     def set_condition(self, operator, right_operand):
@@ -778,13 +778,21 @@ class ConstraintCircuit(Constraint):
         self.arg(TypeCtrArg.SIZE, size)
 
 
-''' Elementary Constraints '''
+''' Other Constraints '''
 
 
 class ConstraintClause(Constraint):
     def __init__(self, variables, phases):
         super().__init__(TypeCtr.CLAUSE)
         self.arg(TypeCtrArg.LIST, [str(v) if phases[i] else "not(" + str(v) + ")" for i, v in enumerate(variables)], content_ordered=True)
+
+
+class ConstraintAdhoc(ConstraintUnmergeable):
+    def __init__(self, index, dict):
+        super().__init__(TypeCtr.ADHOC)
+        self.arg(TypeCtrArg.INDEX, index)
+        for k, v in dict.items():
+            self.arg(k, v, adhoc=True)
 
 
 class ConstraintInstantiationRefutation(Constraint):
