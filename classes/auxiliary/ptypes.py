@@ -88,6 +88,7 @@ class TypeCtrArg(AbstractType):
     START_INDEX, START_ROW_INDEX, START_COL_INDEX = auto(3)
     COVERED = auto()
     INTENTION = auto()  # for slides directly posted
+    FORM, NOTE = auto(2)  # for adhoc forms
 
 
 @unique

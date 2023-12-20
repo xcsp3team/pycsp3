@@ -788,9 +788,12 @@ class ConstraintClause(Constraint):
 
 
 class ConstraintAdhoc(ConstraintUnmergeable):
-    def __init__(self, index, dict):
+    def __init__(self, form, note, dict):
         super().__init__(TypeCtr.ADHOC)
-        self.arg(TypeCtrArg.INDEX, index)
+        assert isinstance(form, str) and (note is None or isinstance(note, str))
+        self.arg(TypeCtrArg.FORM, form)
+        if note:
+            self.arg(TypeCtrArg.NOTE, note)
         for k, v in dict.items():
             self.arg(k, v, adhoc=True)
 

@@ -1917,15 +1917,16 @@ def Clause(term, *others, phases=None):
     return ECtr(ConstraintClause(literals, phases))
 
 
-def Adhoc(index, **dict):
+def Adhoc(form, note=None, **dict):
     """
     Builds a constraint adhoc from the specified arguments.
 
-    :param index: the index, which is an integer associated with an adhoc form
+    :param form: a label (string) indicating the form of the adhoc constraint
+    :note: a comment
     :dict: a dictionary with all arguments of the adhoc constraint
     :return: a constraint Hadhoc
     """
-    return ECtr(ConstraintAdhoc(index, dict))
+    return ECtr(ConstraintAdhoc(form, note, dict))
 
 
 ''' Objectives '''
