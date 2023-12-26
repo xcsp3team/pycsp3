@@ -1,12 +1,12 @@
 <instance format="XCSP3" type="CSP">
   <variables>
     <array id="x" note="x[i] is the ith number (in base 10) of the sequence" size="[32]"> 0..31 </array>
-    <array id="d" note="d[i][j] is the jth digit in the base for the ith number of the sequence; d[i] is then the representation in the base of the ith number" size="[32][5]"> 0 1 </array>
+    <array id="d" note="d[i][j] is the jth digit in base b for the ith number of the sequence" size="[32][5]"> 0 1 </array>
     <array id="g" note="g[i] is the number of occurrences of digit i in the first column of array d" size="[2]"> 0..32 </array>
   </variables>
   <constraints>
-    <allDifferent> x[] </allDifferent>
-    <group note="linking x and d: d[i] is the representation of x[i] in base 2">
+    <allDifferent note="ensuring all numbers are different"> x[] </allDifferent>
+    <group note="ensuring d[i] is the representation of x[i] in base b">
       <sum>
         <list> %... </list>
         <coeffs> 16 8 4 2 1 </coeffs>
@@ -45,7 +45,7 @@
       <args> x[30] d[30][] </args>
       <args> x[31] d[31][] </args>
     </group>
-    <group note="de Bruijn condition">
+    <group note="imposing de Bruijn condition">
       <intension> eq(%0,%1) </intension>
       <args> d[0][1] d[1][0] </args>
       <args> d[0][2] d[1][1] </args>
@@ -176,12 +176,12 @@
       <args> d[31][3] d[0][2] </args>
       <args> d[31][4] d[0][3] </args>
     </group>
-    <cardinality>
+    <cardinality note="computing occurrences">
       <list> d[][0] </list>
       <values> 0 1 </values>
       <occurs> g[0] g[1] </occurs>
     </cardinality>
-    <minimum class="symmetry-breaking">
+    <minimum class="symmetry-breaking" note="imposing the first element as the smallest element">
       <list> x[] </list>
       <condition> (eq,x[0]) </condition>
     </minimum>

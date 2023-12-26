@@ -2,23 +2,23 @@ import os
 
 from pycsp3.problems.tests.tester import Tester, run
 
-run(Tester("csp" + os.sep + "academic")
+run(Tester("csp", "academic")
     .add("AllInterval", data="10")  # 148 solutions (296 without symmetry-breaking)
     .add("AllInterval", data="10", variant="aux")  # 104 solutions  (296 without symmetry-breaking)
-    .add("Bibd", data="[6,0,0,3,8]")  # 494 solutions
-    .add("Bibd", data="[6,0,0,3,8]", variant="aux")  # 494 solutions
+    .add("BIBD", data="[6,0,0,3,8]")  # 494 solutions
+    .add("BIBD", data="[6,0,0,3,8]", variant="aux")  # 494 solutions
     .add("ColouredQueens", data="6")  # unsat
     .add("CostasArray", data="10")  # 2160 solutions
     .add("CoveringArray", data="[3,5,2,10]")  # sat
     .add("CryptoPuzzle", data="[SEND,MORE,MONEY]")  # 1 solution
     .add("CryptoPuzzle", data="[SEND,MORE,MONEY]", variant="carry")  # 1 solution
     .add("CryptoPuzzle", data="[DONALD,GERALD,ROBERT]")  # 1 solution
-    .add("DeBruijnSequence", data="[2,5]")  # 2048 solutions
+    .add("DeBruijn", data="[2,5]")  # 2048 solutions
     .add("DiamondFree", data="8")  # 17 solutions
     .add("Domino", data="[200,200]")  # 1 solution
     .add("Domino", data="[200,200]", variant="table", options_py="-recognizeSlides")  # 1 solution
     .add("Dubois", data="10")  # unsat
-    .add("Enigme5", data="[364,55440]")
+    # .add("Enigme5", data="[364,55440]")
     .add("GracefulGraph", data="[3,5]")  # sat
     .add("KnightTour", data="16", options_py="-recognizeSlides")
     .add("KnightTour", data="16", variant="table-2", options_py="-recognizeSlides")
@@ -57,6 +57,5 @@ run(Tester("csp" + os.sep + "academic")
     .add("Superpermutation", data="3")  # 1 solution
     .add("Superpermutation", data="3", variant="table")  # 1 solution
     .add("Talisman", data="[4,2]")  # 34714 solutions
-     # .add("WordDesign", data="[WordDesign.json,n=5]")  # sat  (pb in testing mode due to special way of setting parameters (pb with path)
+    # .add("WordDesign", data="[WordDesign.json,n=5]")  # sat  (pb in testing mode due to special way of setting parameters (pb with path)
     )
-

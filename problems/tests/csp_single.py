@@ -2,7 +2,12 @@ import os
 
 from pycsp3.problems.tests.tester import Tester, run
 
-run(Tester("csp" + os.sep + "single")
+
+def name(s):
+    return s + os.sep + s
+
+
+run(Tester("csp", "single")
     .add("Riddle", variant="v1")  # 1 solution
     .add("Riddle", variant="v2")  # 1 solution
     .add("Riddle", variant="v3a")  # 1 solution

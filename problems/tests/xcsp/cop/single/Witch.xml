@@ -1,7 +1,7 @@
 <instance format="XCSP3" type="COP">
   <variables>
-    <var id="x" note="x is the number of magic potions for love"> 0..399 </var>
-    <var id="y" note="y is the number of magic potions for youth"> 0..399 </var>
+    <var id="x" note="x is the number of magic potions for inspiring love"> 0..399 </var>
+    <var id="y" note="y is the number of magic potions for restoring youth"> 0..399 </var>
   </variables>
   <constraints>
     <sum>

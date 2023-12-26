@@ -2,7 +2,7 @@ import os
 
 from pycsp3.problems.tests.tester import Tester, run
 
-run(Tester("cop" + os.sep + "academic")
+run(Tester("cop", "academic")
     .add("BoardColoration", data="[8,10]")  # optimum 2
     .add("ChangeMaking", data="10")  # optimum 1
     .add("ChangeMaking", data="10", variant="compact")  # optimum 1
@@ -11,8 +11,8 @@ run(Tester("cop" + os.sep + "academic")
     .add("GolombRuler", data="8", variant="dec")  # optimum 34
     .add("GolombRuler", data="8", variant="aux")  # optimum 34
     .add("LowAutocorrelation", data="16")  # optimum 24
-    .add("Opd", data="[4,4,4]")  # optimum 4
-    .add("Opd", data="[4,6,4]", variant="aux")  # optimum 3
+    .add("OPD", data="[4,4,4]")  # optimum 4
+    .add("OPD", data="[4,6,4]", variant="aux")  # optimum 3
     .add("PeacableArmies", data="6", variant="m1")  # optimum 5
     .add("PeacableArmies", data="6", variant="m2")  # optimum 5
     .add("QueenAttacking", data="6", options_py="-recognizeSlides")  # optimum 0
