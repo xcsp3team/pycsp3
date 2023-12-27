@@ -248,60 +248,60 @@
     <group>
       <intension> imp(eq(%0,0),eq(%1,%2)) </intension>
       <args> l[2][1] x[2][1] 7 </args>
-      <args> l[2][0] l[2][1] 0 </args>
       <args> l[2][2] x[2][2] 7 </args>
-      <args> l[2][1] l[2][2] 0 </args>
       <args> l[2][3] x[2][3] 7 </args>
-      <args> l[2][2] l[2][3] 0 </args>
       <args> l[2][4] x[2][4] 7 </args>
-      <args> l[2][3] l[2][4] 0 </args>
       <args> l[2][5] x[2][5] 7 </args>
-      <args> l[2][4] l[2][5] 0 </args>
       <args> l[2][6] x[2][6] 7 </args>
-      <args> l[2][5] l[2][6] 0 </args>
       <args> l[2][7] x[2][7] 7 </args>
-      <args> l[2][6] l[2][7] 0 </args>
       <args> l[4][1] x[4][1] 6 </args>
-      <args> l[4][0] l[4][1] 0 </args>
       <args> l[4][2] x[4][2] 6 </args>
-      <args> l[4][1] l[4][2] 0 </args>
       <args> l[4][3] x[4][3] 6 </args>
-      <args> l[4][2] l[4][3] 0 </args>
       <args> l[4][4] x[4][4] 6 </args>
-      <args> l[4][3] l[4][4] 0 </args>
       <args> l[4][5] x[4][5] 6 </args>
-      <args> l[4][4] l[4][5] 0 </args>
       <args> l[4][6] x[4][6] 6 </args>
-      <args> l[4][5] l[4][6] 0 </args>
       <args> l[6][1] x[6][1] 5 </args>
-      <args> l[6][0] l[6][1] 0 </args>
       <args> l[6][2] x[6][2] 5 </args>
-      <args> l[6][1] l[6][2] 0 </args>
       <args> l[6][3] x[6][3] 5 </args>
-      <args> l[6][2] l[6][3] 0 </args>
       <args> l[6][4] x[6][4] 5 </args>
-      <args> l[6][3] l[6][4] 0 </args>
       <args> l[6][5] x[6][5] 5 </args>
-      <args> l[6][4] l[6][5] 0 </args>
       <args> l[8][1] x[8][1] 4 </args>
-      <args> l[8][0] l[8][1] 0 </args>
       <args> l[8][2] x[8][2] 4 </args>
-      <args> l[8][1] l[8][2] 0 </args>
       <args> l[8][3] x[8][3] 4 </args>
-      <args> l[8][2] l[8][3] 0 </args>
       <args> l[8][4] x[8][4] 4 </args>
-      <args> l[8][3] l[8][4] 0 </args>
       <args> l[10][1] x[10][1] 3 </args>
-      <args> l[10][0] l[10][1] 0 </args>
       <args> l[10][2] x[10][2] 3 </args>
-      <args> l[10][1] l[10][2] 0 </args>
       <args> l[10][3] x[10][3] 3 </args>
-      <args> l[10][2] l[10][3] 0 </args>
       <args> l[12][1] x[12][1] 2 </args>
-      <args> l[12][0] l[12][1] 0 </args>
       <args> l[12][2] x[12][2] 2 </args>
-      <args> l[12][1] l[12][2] 0 </args>
       <args> l[14][1] x[14][1] 1 </args>
+      <args> l[2][0] l[2][1] 0 </args>
+      <args> l[2][1] l[2][2] 0 </args>
+      <args> l[2][2] l[2][3] 0 </args>
+      <args> l[2][3] l[2][4] 0 </args>
+      <args> l[2][4] l[2][5] 0 </args>
+      <args> l[2][5] l[2][6] 0 </args>
+      <args> l[2][6] l[2][7] 0 </args>
+      <args> l[4][0] l[4][1] 0 </args>
+      <args> l[4][1] l[4][2] 0 </args>
+      <args> l[4][2] l[4][3] 0 </args>
+      <args> l[4][3] l[4][4] 0 </args>
+      <args> l[4][4] l[4][5] 0 </args>
+      <args> l[4][5] l[4][6] 0 </args>
+      <args> l[6][0] l[6][1] 0 </args>
+      <args> l[6][1] l[6][2] 0 </args>
+      <args> l[6][2] l[6][3] 0 </args>
+      <args> l[6][3] l[6][4] 0 </args>
+      <args> l[6][4] l[6][5] 0 </args>
+      <args> l[8][0] l[8][1] 0 </args>
+      <args> l[8][1] l[8][2] 0 </args>
+      <args> l[8][2] l[8][3] 0 </args>
+      <args> l[8][3] l[8][4] 0 </args>
+      <args> l[10][0] l[10][1] 0 </args>
+      <args> l[10][1] l[10][2] 0 </args>
+      <args> l[10][2] l[10][3] 0 </args>
+      <args> l[12][0] l[12][1] 0 </args>
+      <args> l[12][1] l[12][2] 0 </args>
       <args> l[14][0] l[14][1] 0 </args>
     </group>
     <group>
