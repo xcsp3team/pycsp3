@@ -112,6 +112,7 @@ class Automaton(Diagram):
         self.final = [final] if isinstance(final, str) else sorted(q for q in set(final) if q in self.states)
         assert isinstance(self.start, str) and all(isinstance(f, str) for f in self.final), Diagram.MSG_STATE
 
+    # TODO: it seems that there is a problem with this function: to be fixed!
     def deterministic_copy(self, scp):
         nfa = {}
         symbols = set()

@@ -63,7 +63,7 @@ class Compilation:
 
 def _load_options():
     # note that parser and export are automatically rewritten as dataparser and dataexport
-    options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output", "suffix")
+    options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output", "suffix", "callback")
     options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
                       "keepSmartTransitions", "keepsum", "unchangescalar", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues",
                       "groupsumcoeffs", "usemeta", "dontuseauxcache", "dontadjustindexing", "debug", "mini", "uncurse")
@@ -295,41 +295,52 @@ def _compile(disabling_opoverrider=False, verbose=1):
         build_compact_forms()
         options.verbose and print("\tWCK for compacting forms:", stopwatch.elapsed_time(reset=True), "seconds")
 
-    root = build_document()
-    if root is not None:
-        pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False, encoding='UTF-8').decode("UTF-8")
-        if options.display:
-            print("\n", pretty_text)
-        else:
-            with open(fullname, "w") as f:  # TODO: should we add encoding='utf-16'
-                f.write(pretty_text)
-                if verbose > 0:
-                    print("  * Generating the file " + fullname + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.")
-        if options.lzma:
-            with lzma.open(fullname + ".lzma", "w") as f:
-                f.write(bytes(pretty_text, 'utf-8'))
-                print("\tGeneration of the file " + fullname + ".lzma completed.\n")
-        options.verbose and print("\tWCK for generating files:", stopwatch.elapsed_time(reset=True), "seconds")
+    if options.callback is not None:
+        from importlib import import_module
 
-    if options.dataexport:
-        if isinstance(options.dataexport, bool):
-            if options.data is None:
-                json_prefix = "data" + Compilation.string_data
-            elif options.dataparser is None:
-                json_prefix = filename_prefix
+        cb = options.callback.replace("/", ".")
+        md = import_module(cb)
+        obj = eval(f"md.{cb.split('.')[-1]}()")
+        obj.loadInstance()
+
+        root = None
+
+    else:
+        root = build_document()
+        if root is not None:
+            pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False, encoding='UTF-8').decode("UTF-8")
+            if options.display:
+                print("\n", pretty_text)
             else:
-                if options.data[0] == '[':
-                    assert options.data[-1] == ']'
-                    json_prefix = "-".join(_basic_token(tok) for tok in options.data[1:-1].split(","))
+                with open(fullname, "w") as f:  # TODO: should we add encoding='utf-16'
+                    f.write(pretty_text)
+                    if verbose > 0:
+                        print("  * Generating the file " + fullname + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.")
+            if options.lzma:
+                with lzma.open(fullname + ".lzma", "w") as f:
+                    f.write(bytes(pretty_text, 'utf-8'))
+                    print("\tGeneration of the file " + fullname + ".lzma completed.\n")
+            options.verbose and print("\tWCK for generating files:", stopwatch.elapsed_time(reset=True), "seconds")
+
+        if options.dataexport:
+            if isinstance(options.dataexport, bool):
+                if options.data is None:
+                    json_prefix = "data" + Compilation.string_data
+                elif options.dataparser is None:
+                    json_prefix = filename_prefix
                 else:
-                    json_prefix = _basic_token(options.data) if options.data else None
-                # json_prefix = options.data.split(os.sep)[-1].split(".")[:1][0] if options.dataparser else filename_prefix
-            # TODO if data are given with name as e.g., in [k=3,l=9,b=0,r=0,v=9] for Bibd, maybe we should sort them
-        else:
-            json_prefix = str(options.dataexport)
-        with open(Compilation.pathname + json_prefix + '.json', 'w') as f:
-            json.dump(prepare_for_json(Compilation.original_data if Compilation.original_data else Compilation.data), f)
-        print("  * Saving data in the file " + (Compilation.pathname + json_prefix) + '.json' + " completed.")
+                    if options.data[0] == '[':
+                        assert options.data[-1] == ']'
+                        json_prefix = "-".join(_basic_token(tok) for tok in options.data[1:-1].split(","))
+                    else:
+                        json_prefix = _basic_token(options.data) if options.data else None
+                    # json_prefix = options.data.split(os.sep)[-1].split(".")[:1][0] if options.dataparser else filename_prefix
+                # TODO if data are given with name as e.g., in [k=3,l=9,b=0,r=0,v=9] for Bibd, maybe we should sort them
+            else:
+                json_prefix = str(options.dataexport)
+            with open(Compilation.pathname + json_prefix + '.json', 'w') as f:
+                json.dump(prepare_for_json(Compilation.original_data if Compilation.original_data else Compilation.data), f)
+            print("  * Saving data in the file " + (Compilation.pathname + json_prefix) + '.json' + " completed.")
 
     Compilation.done = True
     cop = root is not None and root.attrib and root.attrib["type"] == "COP"
