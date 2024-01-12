@@ -265,8 +265,7 @@ def _compact_values(values, limit):
 
 
 def __compact_argument_value(arg):
-    if is_1d_list(arg.content, int) and str(arg.name) in ["coeffs", "values", "sizes", "lengths", "heights", "weights", "profits", "balance"]:
-        # TODO still other arguments to be added?
+    if is_1d_list(arg.content, int) and arg.name.with_compactable_values():  # TODO still other arguments to be added?
         return _compact_values(arg.content, 3)
     return compact(arg.content, preserve_order=arg.content_ordered)
 

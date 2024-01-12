@@ -47,19 +47,17 @@ import inspect
 from functools import wraps
 from collections import defaultdict
 
-try:
-    import __builtin__
-except ImportError:
-    # Python 3 support
-    import builtins as __builtin__
+# try:
+#     import __builtin__
+# except ImportError:
+#     # Python 3 support
+import builtins as __builtin__
 
 __version__ = '0.1.3'
 
 __all__ = 'curse', 'curses', 'reverse'
 
-
 Py_ssize_t = ctypes.c_int64 if ctypes.sizeof(ctypes.c_void_p) == 8 else ctypes.c_int32
-
 
 # dictionary holding references to the allocated function resolution
 # arrays to type objects
@@ -75,8 +73,10 @@ class PyObject(ctypes.Structure):
     def decref(self):
         self.ob_refcnt -= 1
 
+
 class PyFile(ctypes.Structure):
     pass
+
 
 PyObject_p = ctypes.py_object
 Inquiry_p = ctypes.CFUNCTYPE(ctypes.c_int, PyObject_p)
@@ -110,49 +110,51 @@ def get_not_implemented():
 # address of the _Py_NotImplementedStruct singleton
 NotImplementedRet = get_not_implemented()
 
+
 class PyNumberMethods(ctypes.Structure):
     _fields_ = [
-    ('nb_add', BinaryFunc_p),
-    ('nb_subtract', BinaryFunc_p),
-    ('nb_multiply', BinaryFunc_p),
-    ('nb_remainder', BinaryFunc_p),
-    ('nb_divmod', BinaryFunc_p),
-    ('nb_power', BinaryFunc_p),
-    ('nb_negative', UnaryFunc_p),
-    ('nb_positive', UnaryFunc_p),
-    ('nb_absolute', UnaryFunc_p),
-    ('nb_bool', Inquiry_p),
-    ('nb_invert', UnaryFunc_p),
-    ('nb_lshift', BinaryFunc_p),
-    ('nb_rshift', BinaryFunc_p),
-    ('nb_and', BinaryFunc_p),
-    ('nb_xor', BinaryFunc_p),
-    ('nb_or', BinaryFunc_p),
-    ('nb_int', UnaryFunc_p),
-    ('nb_reserved', ctypes.c_void_p),
-    ('nb_float', UnaryFunc_p),
+        ('nb_add', BinaryFunc_p),
+        ('nb_subtract', BinaryFunc_p),
+        ('nb_multiply', BinaryFunc_p),
+        ('nb_remainder', BinaryFunc_p),
+        ('nb_divmod', BinaryFunc_p),
+        ('nb_power', BinaryFunc_p),
+        ('nb_negative', UnaryFunc_p),
+        ('nb_positive', UnaryFunc_p),
+        ('nb_absolute', UnaryFunc_p),
+        ('nb_bool', Inquiry_p),
+        ('nb_invert', UnaryFunc_p),
+        ('nb_lshift', BinaryFunc_p),
+        ('nb_rshift', BinaryFunc_p),
+        ('nb_and', BinaryFunc_p),
+        ('nb_xor', BinaryFunc_p),
+        ('nb_or', BinaryFunc_p),
+        ('nb_int', UnaryFunc_p),
+        ('nb_reserved', ctypes.c_void_p),
+        ('nb_float', UnaryFunc_p),
 
-    ('nb_inplace_add', BinaryFunc_p),
-    ('nb_inplace_subtract', BinaryFunc_p),
-    ('nb_inplace_multiply', BinaryFunc_p),
-    ('nb_inplace_remainder', BinaryFunc_p),
-    ('nb_inplace_power', TernaryFunc_p),
-    ('nb_inplace_lshift', BinaryFunc_p),
-    ('nb_inplace_rshift', BinaryFunc_p),
-    ('nb_inplace_and', BinaryFunc_p),
-    ('nb_inplace_xor', BinaryFunc_p),
-    ('nb_inplace_or', BinaryFunc_p),
+        ('nb_inplace_add', BinaryFunc_p),
+        ('nb_inplace_subtract', BinaryFunc_p),
+        ('nb_inplace_multiply', BinaryFunc_p),
+        ('nb_inplace_remainder', BinaryFunc_p),
+        ('nb_inplace_power', TernaryFunc_p),
+        ('nb_inplace_lshift', BinaryFunc_p),
+        ('nb_inplace_rshift', BinaryFunc_p),
+        ('nb_inplace_and', BinaryFunc_p),
+        ('nb_inplace_xor', BinaryFunc_p),
+        ('nb_inplace_or', BinaryFunc_p),
 
-    ('nb_floor_divide', BinaryFunc_p),
-    ('nb_true_divide', BinaryFunc_p),
-    ('nb_inplace_floor_divide', BinaryFunc_p),
-    ('nb_inplace_true_divide', BinaryFunc_p),
+        ('nb_floor_divide', BinaryFunc_p),
+        ('nb_true_divide', BinaryFunc_p),
+        ('nb_inplace_floor_divide', BinaryFunc_p),
+        ('nb_inplace_true_divide', BinaryFunc_p),
 
-    ('nb_index', BinaryFunc_p),
+        ('nb_index', BinaryFunc_p),
 
-    ('nb_matrix_multiply', BinaryFunc_p),
-    ('nb_inplace_matrix_multiply', BinaryFunc_p),
+        ('nb_matrix_multiply', BinaryFunc_p),
+        ('nb_inplace_matrix_multiply', BinaryFunc_p),
     ]
+
 
 class PySequenceMethods(ctypes.Structure):
     _fields_ = [
@@ -168,11 +170,14 @@ class PySequenceMethods(ctypes.Structure):
         ('sq_inplace_repeat', SSizeArgFunc_p),
     ]
 
+
 class PyMappingMethods(ctypes.Structure):
     pass
 
+
 class PyTypeObject(ctypes.Structure):
     pass
+
 
 class PyAsyncMethods(ctypes.Structure):
     pass
@@ -202,7 +207,6 @@ PyTypeObject._fields_ = [
     ('tp_as_mapping', ctypes.POINTER(PyMappingMethods)),
     # ...
 ]
-
 
 # redundant dict of pointee types, because ctypes doesn't allow us
 # to extract the pointee type from the pointer
@@ -244,6 +248,7 @@ def __filtered_dir__(obj=None):
         calling_frame = inspect.currentframe().f_back
         return sorted(calling_frame.f_locals.keys())
     return sorted(set(__dir__(obj)).difference(__hidden_elements__[name]))
+
 
 # Switching to the custom dir impl declared above
 __hidden_elements__ = defaultdict(list)
@@ -314,6 +319,7 @@ for override in [as_number, as_sequence, as_async]:
 # divmod isn't a dunder, still make it overridable
 override_dict['divmod()'] = ('tp_as_number', "nb_divmod")
 
+
 def _is_dunder(func_name):
     return func_name.startswith("__") and func_name.endswith("__")
 
@@ -332,16 +338,14 @@ def _curse_special(klass, attr, func):
     tp_as_ptr = getattr(tyobj, tp_as_name)
     struct_ty = PyTypeObject_as_types_dict[tp_as_name]
 
-
     if not tp_as_ptr:
         # allocate new array
         tp_as_obj = struct_ty()
         tp_as_dict[(klass, attr)] = tp_as_obj
         tp_as_new_ptr = ctypes.cast(ctypes.addressof(tp_as_obj),
-            ctypes.POINTER(struct_ty))
+                                    ctypes.POINTER(struct_ty))
 
         setattr(tyobj, tp_as_name, tp_as_new_ptr)
-
 
     tp_as = tp_as_ptr[0]
 
@@ -379,7 +383,7 @@ def _revert_special(klass, attr):
             if fname == impl_method:
                 cfunc_t = ftype
         setattr(tp_as, impl_method,
-            ctypes.cast(ctypes.c_void_p(None), cfunc_t))
+                ctypes.cast(ctypes.c_void_p(None), cfunc_t))
 
 
 def curse(klass, attr, value, hide_from_dir=False):
@@ -415,13 +419,13 @@ def curse(klass, attr, value, hide_from_dir=False):
     dikt = patchable_builtin(klass)
 
     old_value = dikt.get(attr, None)
-    old_name = '_c_%s' % attr   # do not use .format here, it breaks py2.{5,6}
+    old_name = '_c_%s' % attr  # do not use .format here, it breaks py2.{5,6}
 
     # Patch the thing
     dikt[attr] = value
 
     if old_value:
-        hide_from_dir = False   # It was already in dir
+        hide_from_dir = False  # It was already in dir
         dikt[old_name] = old_value
 
         try:
@@ -483,7 +487,9 @@ def curses(klass, name):
         >>> {'a': 1, 'b': 2}.banner()
         'This dict has 2 elements'
     """
+
     def wrapper(func):
         curse(klass, name, func)
         return func
+
     return wrapper

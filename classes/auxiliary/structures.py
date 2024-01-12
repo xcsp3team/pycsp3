@@ -1,9 +1,9 @@
 import types
 
+from pycsp3.classes.auxiliary.conditions import Condition, inside
+from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in
 from pycsp3.tools.utilities import flatten
-from pycsp3.dashboard import options
-from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, inside, IN
 
 
 class Diagram:
@@ -155,7 +155,7 @@ class MDD(Diagram):
         """
         if isinstance(transitions, types.GeneratorType):
             transitions = [t for t in transitions]
-        assert isinstance(transitions, list)  # currently, a list is wanted for a MDD (and not a set); to be changed?
+        assert isinstance(transitions, list)  # currently, a list is wanted for an MDD (and not a set); to be changed?
         super().__init__(transitions)
 
     def __str__(self):

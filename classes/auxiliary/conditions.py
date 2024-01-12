@@ -1,13 +1,17 @@
 from functools import total_ordering
 from types import GeneratorType
 
+from pycsp3.classes import main
 from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator
 from pycsp3.classes.entities import Node, TypeNode
 from pycsp3.classes.main.variables import Variable
-from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
 
 LT, LE, GE, GT, EQ, NE, IN, NOTIN = [t for t in TypeConditionOperator]
+
+
+# if isinstance("zz", main.constraints.Parameter):  # TODO it is not working. why? main.variables.Variable is working.
+#     print("toto")
 
 
 @total_ordering
@@ -23,7 +27,7 @@ class Condition:
         return hash(self._key())
 
     def __eq__(self, other):
-        return type(self) == type(other) and self._key() == other._key()
+        return type(self) is type(other) and self._key() == other._key()
 
     def __lt__(self, other):
         return True if isinstance(other, (int, str)) or other == ANY else self._key() < other._key()
@@ -36,7 +40,7 @@ class Condition:
         assert isinstance(condition, tuple) and len(condition) == 2, "a condition must a pair, given as a tuple (or a list)"
         operator = TypeConditionOperator.value_of(condition[0]) if isinstance(condition[0], str) else condition[0]
         right_operand = list(condition[1]) if isinstance(condition[1], (set, frozenset, GeneratorType)) else condition[1]
-        checkType(right_operand, (int, Variable, range, [int, Variable]))
+        # checkType(right_operand, (int, Variable, range, [int, Variable]))
         if isinstance(right_operand, range) and right_operand.step != 1:
             right_operand = list(right_operand)
         if isinstance(right_operand, int):
@@ -45,8 +49,10 @@ class Condition:
             return ConditionVariable(operator, right_operand)
         if isinstance(right_operand, range):
             return ConditionInterval(operator, right_operand.start, right_operand.stop - 1)
-        if isinstance(right_operand, list):
-            return ConditionSet(operator, right_operand)
+        if isinstance(right_operand, main.constraints.Parameter):
+            return ConditionParameter(operator, right_operand)
+        if isinstance(right_operand, (list, tuple, set, frozenset)):
+            return ConditionSet(operator, set(right_operand))
 
     def filtering(self, values):
         pass
@@ -67,6 +73,7 @@ class Condition:
 class ConditionValue(Condition):
     def __init__(self, operator, value):
         super().__init__(operator)
+        assert operator.is_rel()
         self.value = value
 
     def _key(self):
@@ -103,6 +110,105 @@ class ConditionValue(Condition):
 
     def right_operand(self):
         return self.value
+
+
+class ConditionVariable(Condition):
+    def __init__(self, operator, variable):
+        super().__init__(operator)
+        assert operator.is_rel()
+        self.variable = variable
+
+    def _key(self):
+        return super()._key() + (self.variable,)
+
+    def filtering(self, values):
+        assert False, "Currently not implemented"
+
+    def str_tuple(self):
+        assert False, "Currently not implemented"
+
+    def right_operand(self):
+        return self.variable
+
+
+class ConditionInterval(Condition):
+    def __init__(self, operator, int_min, int_max):
+        super().__init__(operator)
+        assert operator.is_set()
+        self.min = int_min
+        self.max = int_max
+
+    def _key(self):
+        return super()._key() + (self.min, self.max)
+
+    def filtering(self, values):
+        if self.operator == IN:
+            return (v for v in values if self.min <= v <= self.max)
+        if self.operator == NOTIN:
+            return (v for v in values if v < self.min or self.max < v)
+        assert False
+
+    def str_tuple(self):
+        if self.operator == IN:
+            return self.right_operand()
+        if self.operator == NOTIN:
+            return TypeConditionOperator.to_utf(NOTIN) + self.right_operand()
+        assert False
+
+    def right_operand(self):
+        return str(self.min) + ".." + str(self.max)
+
+
+class ConditionSet(Condition):
+    def __init__(self, operator, t):
+        super().__init__(operator)
+        assert operator.is_set()
+        self.t = t
+
+    def _key(self):
+        return super()._key() + tuple(self.t)
+
+    def filtering(self, values):
+        if self.operator == IN:
+            return (v for v in values if v in self.t)
+        if self.operator == NOTIN:
+            return (v for v in values if v not in self.t)
+        assert False
+
+    def str_tuple(self):
+        if self.operator == IN:
+            return self.right_operand()
+        if self.operator == NOTIN:
+            return TypeConditionOperator.to_utf(NOTIN) + self.right_operand()
+        assert False
+
+    def right_operand(self):
+        return "{" + ",".join(str(v) for v in self.t) + "}"
+
+    def __repr__(self):
+        return self.str_tuple()
+
+
+class ConditionParameter(Condition):
+    def __init__(self, operator, parameter):
+        super().__init__(operator)
+        assert isinstance(parameter, main.constraints.Parameter)
+        self.parameter = parameter
+
+    def concretize_with(self, limit):
+        return Condition.build_condition((self.operator, limit))
+
+    def _key(self):
+        return super()._key() + (self.parameter,)
+
+    def filtering(self, values):
+        assert False, "Not meaningful; should not be called"
+
+    def str_tuple(self):
+        assert False, "Not meaningful; should not be called"
+
+    def right_operand(self):
+        return self.parameter
 
 
 class ConditionNode(Condition):
@@ -150,89 +256,15 @@ class ConditionNode(Condition):
         assert False
 
 
-class ConditionVariable(Condition):
-    def __init__(self, operator, variable):
-        super().__init__(operator)
-        self.variable = variable
-
-    def _key(self):
-        return super()._key() + (self.variable,)
-
-    def filtering(self, values):
-        assert False, "Currently not implemented"
-
-    def str_tuple(self):
-        assert False, "Currently not implemented"
-
-    def right_operand(self):
-        return self.variable
-
-
-class ConditionInterval(Condition):
-    def __init__(self, operator, min, max):
-        super().__init__(operator)
-        self.min = min
-        self.max = max
-
-    def _key(self):
-        return super()._key() + (self.min, self.max)
-
-    def filtering(self, values):
-        if self.operator == IN:
-            return (v for v in values if self.min <= v <= self.max)
-        if self.operator == NOTIN:
-            return (v for v in values if v < self.min or self.max < v)
-        assert False
-
-    def str_tuple(self):
-        if self.operator == IN:
-            return self.right_operand()
-        if self.operator == NOTIN:
-            return TypeConditionOperator.to_utf(NOTIN) + self.right_operand()
-        assert False
-
-    def right_operand(self):
-        return str(self.min) + ".." + str(self.max)
-
-
-class ConditionSet(Condition):
-    def __init__(self, operator, t):
-        super().__init__(operator)
-        self.t = t
-
-    def _key(self):
-        return super()._key() + tuple(self.t)
-
-    def filtering(self, values):
-        if self.operator == IN:
-            return (v for v in values if v in self.t)
-        if self.operator == NOTIN:
-            return (v for v in values if v not in self.t)
-        assert False
-
-    def str_tuple(self):
-        if self.operator == IN:
-            return self.right_operand()
-        if self.operator == NOTIN:
-            return TypeConditionOperator.to_utf(NOTIN) + self.right_operand()
-        assert False
-
-    def right_operand(self):
-        return "{" + ",".join(str(v) for v in self.t) + "}"
-
-    def __repr__(self):
-        return self.str_tuple()
-
-
 def _build_condition(operator, v):
     if isinstance(v, int):
         return ConditionValue(operator, v)
     if isinstance(v, Variable):
         return ConditionVariable(operator, v)
     if isinstance(v, Node):
-        # {eq|lt|le|ge|gt|ne}{var|interger}{+|-}{var|interger}
+        # {eq|lt|le|ge|gt|ne}{var|integer}{+|-}{var|integer}
         return ConditionNode(operator, v)
-    assert False, "The right argument following " + operator + " must be an integer or a node."
+    assert False, "The right argument following " + operator + " must be an integer, a variable or a node."
 
 
 def lt(v):
@@ -292,7 +324,7 @@ def eq(v):
 
 def ne(v):
     """
-    Builds an object Condition whose operator is ne (not equal to)
+    Builds an object Condition whose operator is 'ne' (not equal to)
     and the (right operand) is the specified argument
 
     :param v: either an integer or the root node of an expression
@@ -301,7 +333,7 @@ def ne(v):
     return _build_condition(NE, v)
 
 
-def _inside_outside(v, op):
+def _inside_outside(op, v):
     v = v if len(v) > 1 else v[0]
     if isinstance(v, range):
         return ConditionInterval(op, v.start, v.stop - 1)
@@ -319,7 +351,7 @@ def inside(*v):
     :param v: a range, a set, a tuple or a list of integers
     :return: an object Condition
     """
-    return _inside_outside(v, IN)
+    return _inside_outside(IN, v)
 
 
 def complement(*v):
@@ -330,4 +362,4 @@ def complement(*v):
     :param v: a range, a set, a tuple or a list of integers
     :return: an object Condition
     """
-    return _inside_outside(v, NOTIN)
+    return _inside_outside(NOTIN, v)

@@ -159,7 +159,7 @@ class ECtrs(Entity):
         if all(isinstance(c, ECtr) for c in self.entities):
             t = []
             for c in self.entities:
-                # if any(c.constraint == cc.constraint for cc in tr):
+                # if any(c.constraint == cc.constraint for cc in t):
                 if any(tools.curser.OpOverrider.disable().execute(c.constraint == cc.constraint) for cc in t):
                     continue
                 t.append(c)
@@ -392,7 +392,7 @@ class TypeNode(Enum):
         return self.lowercase_name
 
     ''' 0-ary '''
-    VAR, INT, RATIONAL, DECIMAL, SYMBOL, PARTIAL, COL = ((id, 0, 0) for id in auto(7))
+    VAR, INT, RATIONAL, DECIMAL, SYMBOL, PARTIAL, COL, PAR = ((id, 0, 0) for id in auto(8))  # PAR is used by the parser
 
     ''' Unary'''
     NEG, ABS, SQR, NOT, CARD, HULL, CONVEX, SQRT, EXP, LN, SIN, COS, TAN, ASIN, ACOS, ATAN, SINH, COSH, TANH = ((id, 1, 1) for id in auto(19))
@@ -430,7 +430,7 @@ class TypeNode(Enum):
         if isinstance(v, TypeNode):
             return v
         if isinstance(v, TypeOrderedOperator):
-            v = str(v)  # so as to be intercepted just below
+            v = str(v)  # to be intercepted just below
         if isinstance(v, str):
             if v in ("<", "lt"):
                 return TypeNode.LT
@@ -670,6 +670,36 @@ class Node(Entity):
             return self.sons[1].sons if self.sons[1].type == TypeNode.VAR else self.sons[1], self.sons[0].sons
         else:
             return None
+
+    def first_node_such_that(self, predicate):
+        if predicate(self):
+            return self
+        if self.leaf:
+            return None
+        return next((son for son in self.sons if son.first_node_such_that(predicate) is not None), None)
+
+    def max_parameter_number(self):
+        if self.leaf:
+            return self.sons if self.type == TypeNode.PAR else -1  # recall that % ... is not possible in predicates
+        return max(son.max_parameter_number() for son in self.sons)
+
+    def concretization(self, args):
+        if self.leaf:
+            value = self.sons
+            if self.type != TypeNode.PAR:
+                return Node(self.type, value)  # we return a similar object
+            assert isinstance(value, int)  # we know that the value is an int
+            arg = args[value]
+            if isinstance(arg, int):
+                return Node(TypeNode.INT, arg)
+            # and decimal values in the future ?
+            if isinstance(arg, str):
+                return Node(TypeNode.SYMBOL, arg)
+            if isinstance(arg, Node):
+                return arg
+            return Node(TypeNode.VAR, arg)  # kept at last position for avoiding importing specific parser class
+        sons = [son.concretization(args) for son in self.sons]
+        return Node(self.type, sons)
 
     """
       Static methods

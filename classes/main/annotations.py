@@ -144,9 +144,9 @@ class Search:
 
 
 class Restarts:
-    def __init__(self, *, type, cutoff, factor=1):
+    def __init__(self, *, r_type, cutoff, factor=1):
         assert isinstance(type, TypeRestart) and isinstance(cutoff, int) and isinstance(factor, float)
-        self.type = type
+        self.type = r_type
         self.cutoff = cutoff
         self.factor = factor
 
@@ -164,20 +164,20 @@ class VHeuristic:
         self.randomPart = (variables,)
         return self
 
-    def _opt(self, variables, type):
+    def _opt(self, variables, h_type):
         if variables:
             variables = flatten(variables)
             checkType(variables, [Variable])
         types = TypeVarHeuristic if isinstance(self, VarHeuristic) else TypeValHeuristic
-        assert isinstance(type, str) and all(p in [t.name for t in types] for p in re.split(r'/|\+', type)), "Bad value for " + type
-        return variables, type
+        assert isinstance(h_type, str) and all(p in [t.name for t in types] for p in re.split(r'/|\+', h_type)), "Bad value for " + str(h_type)
+        return variables, h_type
 
-    def min(self, variables=None, *, type):
-        self.minPart = self._opt(variables, type)
+    def min(self, variables=None, *, h_type):
+        self.minPart = self._opt(variables, h_type)
         return self
 
-    def max(self, variables=None, *, type):
-        self.maxPart = self._opt(variables, type)
+    def max(self, variables=None, *, h_type):
+        self.maxPart = self._opt(variables, h_type)
         return self
 
 

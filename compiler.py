@@ -211,7 +211,7 @@ def _load(*, console=False):
 
 def load_json_data(filename, *, storing=False):
     """
-    Loads and returns the data from the specified JSON file (possibly given by an URL)
+    Loads and returns the data from the specified JSON file (possibly given by a URL)
 
     :param filename: name (possibly ULR) of a JSON file
     :return: the loaded data
@@ -243,7 +243,7 @@ def load_json_data(filename, *, storing=False):
 
 def default_data(filename):
     """
-    Loads data from the specified JSON file (possibly given by an URL)
+    Loads data from the specified JSON file (possibly given by a URL)
 
     :param filename: mane (possibly ULR) of a JSON file
     :return: the loaded data

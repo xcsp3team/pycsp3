@@ -17,7 +17,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
-    ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection, global_indirection)
+    ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection, Parameter)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -39,7 +39,7 @@ started_modeling = False  # It becomes true when the first variable or array of 
 
 def protect():
     """
-    Disables the redefined operators (==, >, >=, etc.) , and returns the object OpOverrider.
+    Disables the redefined operators (==, >, >=, etc.), and returns the object OpOverrider.
     On can then execute some code in protected mode by calling execute().
     Once the code is executed, the redefined operators are reactivated.
 
@@ -272,7 +272,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
         ctr = _Regular(scope=left_operand, automaton=right_operand)
-    elif isinstance(right_operand, MDD):  # it is a MDD constraint
+    elif isinstance(right_operand, MDD):  # it is an MDD constraint
         ctr = _Mdd(scope=left_operand, mdd=right_operand)
     elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
         ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1))  # atLeast1 TODO to be replaced by a member/element constraint ?

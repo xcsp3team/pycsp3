@@ -18,10 +18,10 @@ class Domain:
             self.original_values.sort()
             self.values = []
 
-    def set_type(self, type):
+    def set_type(self, d_type):
         if self.type is None:
-            self.type = type
-        assert self.type == type, "In a domain, values must be either all integer or all symbolic values"
+            self.type = d_type
+        assert self.type == d_type, "In a domain, values must be either all integer or all symbolic values"
 
     def get_type(self):
         return self.type

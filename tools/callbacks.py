@@ -1,13 +1,5 @@
-from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeConditionOperator, TypeXML, TypeVar, TypeCtr, TypeCtrArg
-from pycsp3.classes.entities import (Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, EBlock, ESlide, EIfThenElse, EToGather,
-                                     EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities)
-from pycsp3.classes.main.constraints import ConstraintIntension, ConstraintRefutation
-from pycsp3.classes.main.annotations import TypeAnnArg
-from pycsp3.dashboard import options
-from pycsp3.tools.compactor import compact
-from pycsp3.tools.slider import _identify_slide
-from pycsp3.classes.auxiliary.conditions import Condition
-from pycsp3.tools.utilities import warning, table_to_string
+from pycsp3.classes.auxiliary.ptypes import TypeFramework
+from pycsp3.classes.entities import (ObjEntities)
 
 SIZE_LIMIT_FOR_USING_AS = 12  # when building domains of variables of arrays of variables (and using the attribute 'as')
 
@@ -31,7 +23,7 @@ class Callbacks:
         # beginAnnotations(parser.aEntries);
         # loadAnnotations(parser);
         # endAnnotations();
-        
+
         self.endInstance()
 
     def loadVariables(self, vEntries):

@@ -1,12 +1,11 @@
-import os
 from collections import OrderedDict
 
 from pycsp3 import functions
+from pycsp3.classes import main
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, ConditionNode
 from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeConditionOperator, TypeOrderedOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr, TypeNode, Node, possible_range
-from pycsp3.classes import main
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.dashboard import options
@@ -15,8 +14,22 @@ from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, integers_t
     to_ordinary_table, to_reified_ordinary_table, warning, is_windows
 
 
+class Parameter:
+    """
+    The class used for representing parameters (tokens of the form %i or %...) when handling constraint templates.
+    It is used when parsing XCSP3 instances.
+    """
+
+    def __init__(self, number):
+        assert isinstance(number, int) and number >= -1  # We have -1 for %..., 0 for %0, 1 for %1, and so on
+        self.number = number
+
+    def __str__(self):
+        return "%" + ("..." if self.number == -1 else str(self.number))
+
+
 class Diffs:
-    """"
+    """
       Objects of this class are used to record the differences between two (or more) close constraints.
       This allows us to build groups in an automatic way.
     """
@@ -36,7 +49,7 @@ class Diffs:
             Diffs.fusion = self  # this is the first time such an object is built (since the last reset); we simply record it
         else:  # the recorded object (fusion) and the last built one are compatible (we know that at time of calling); so, we simply update flags
             for i, name in enumerate(self.argument_names):
-                index = Diffs.fusion.argument_names.index(name)  # note that self.argument_names must be be included in Diffs.fusion.argument_names
+                index = Diffs.fusion.argument_names.index(name)  # note that self.argument_names must be included in Diffs.fusion.argument_names
                 Diffs.fusion.argument_flags[index] |= self.argument_flags[i]
                 # for i in range(len(Diffs.fusion.argument_flags)): Diffs.fusion.argument_flags[i] |= self.argument_flags[i]
 
@@ -47,7 +60,7 @@ class ConstraintArgument:
         self.name = name  # name of the argument
         self.attributes = attributes  # list of pairs (key, value) representing the attributes
         self.content_original = content
-        self.content = content  # content of the argument (may be compressed later)
+        self.content = content  # content of the argument (might be compressed later)
         self.content_compressible = content_compressible  # indicates if we can try to make the content more compact
         self.content_ordered = content_ordered  # indicates if the content must be kept as it is (order is important)
         self.lifted = lifted  # indicates if the constraint is lifted to several lists (or sets); see specifications
@@ -106,14 +119,14 @@ class Constraint:
         return self.arg(TypeCtrArg.VALUE, new_value)
 
     def similar_structure(self, other):
-        if type(self) != type(other) or self.attributes != other.attributes:
+        if type(self) is not type(other) or self.attributes != other.attributes:
             return False
         args1, args2 = list(self.arguments.values()), list(other.arguments.values())
         if len(args1) != len(args2):
             return False
         if any(args1[i].name != args2[i].name or args1[i].attributes != args2[i].attributes or args1[i].lifted != args2[i].lifted for i in range(len(args1))):
             return False
-        return any(type(args1[i].content) == type(args2[i].content) for i in range(len(args1)))
+        return any(type(args1[i].content) is type(args2[i].content) for i in range(len(args1)))
 
     def close_to(self, other):
         if not self.similar_structure(other):
@@ -155,7 +168,7 @@ class Constraint:
             s = str(self.name) + "(" + str(self.attributes[0][1]) + body + ")"
         else:
             s = str(self.name) + body
-        return s if condition is None else s + " " + condition
+        return s if condition is None else s + " " + str(condition)
 
 
 class ConstraintUnmergeable(Constraint):
@@ -280,7 +293,7 @@ class ConstraintExtension(Constraint):
                 if hybrid == 2:
                     if not check_hybrid2:
                         break
-            # hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelisation attempt showed no gain.
+            # hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelization attempt showed no gain.
             ConstraintExtension.cache_for_knowing_if_hybrid[h] = hybrid
 
         if hybrid == 0:  # if not hybrid
@@ -475,20 +488,20 @@ class ConstraintSum(ConstraintWithCondition):
 
     def _min_or_max_term_value(self, x, c, is_min):
         if isinstance(x, Variable):
-            xmin, xmax = x.dom.smallest_value(), x.dom.greatest_value()
+            x_min, x_max = x.dom.smallest_value(), x.dom.greatest_value()
         else:
             assert isinstance(x, Node)
             values = x.possible_values()
-            xmin, xmax = values[0], values[-1]
+            x_min, x_max = values[0], values[-1]
         if isinstance(c, int):
-            return min(xmin * c, xmax * c) if is_min else max(xmin * c, xmax * c)
+            return min(x_min * c, x_max * c) if is_min else max(x_min * c, x_max * c)
         if isinstance(c, Variable):
-            cmin, cmax = c.dom.smallest_value(), c.dom.greatest_value()
+            c_min, c_max = c.dom.smallest_value(), c.dom.greatest_value()
         else:
             assert isinstance(c, Node)
             values = c.possible_values()
-            cmin, cmax = values[0], values[-1]
-        return min(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax) if is_min else max(xmin * cmin, xmin * cmax, xmax * cmin, xmax * cmax)
+            c_min, c_max = values[0], values[-1]
+        return min(x_min * c_min, x_min * c_max, x_max * c_min, x_max * c_max) if is_min else max(x_min * c_min, x_min * c_max, x_max * c_min, x_max * c_max)
 
     def min_possible_value(self):
         vs = self.arguments[TypeCtrArg.LIST].content
@@ -556,7 +569,8 @@ class ConstraintCardinality(Constraint):
 
 
 def _index_att(v):
-    return []  # [(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
+    assert v is None or v == 0  # for the moment
+    return [(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
 
 
 class ConstraintMaximum(ConstraintWithCondition):
@@ -746,10 +760,10 @@ class ConstraintKnapsack(ConstraintWithCondition):
         self.arg(TypeCtrArg.CONDITION, pcondition)
 
     def min_possible_value(self):
-        return sum(self.vars[i].dom.smallest_value() * self.profits[i] for i in len(self.vars))
+        return sum(self.vars[i].dom.smallest_value() * self.profits[i] for i in range(len(self.vars)))
 
     def max_possible_value(self):
-        return sum(self.vars[i].dom.greatest_value() * self.profits[i] for i in len(self.vars))
+        return sum(self.vars[i].dom.greatest_value() * self.profits[i] for i in range(len(self.vars)))
 
     def close_to(self, other):
         return False
@@ -788,13 +802,13 @@ class ConstraintClause(Constraint):
 
 
 class ConstraintAdhoc(ConstraintUnmergeable):
-    def __init__(self, form, note, dict):
+    def __init__(self, form, note, d):
         super().__init__(TypeCtr.ADHOC)
         assert isinstance(form, str) and (note is None or isinstance(note, str))
         self.arg(TypeCtrArg.FORM, form)
         if note:
             self.arg(TypeCtrArg.NOTE, note)
-        for k, v in dict.items():
+        for k, v in d.items():
             self.arg(k, v, adhoc=True)
 
 
@@ -849,7 +863,7 @@ class ConstraintSlide(ConstraintUnmergeable):
                    ([(TypeXML.COLLECT, collect)] if collect is not None and collect != 1 else [])
             self.arg(TypeCtrArg.LIST, flatten(variables), content_ordered=True, attributes=atts)
         else:
-            assert isinstance(variables, list) and len(variables) == k and all(isinstance(l, (list, tuple)) for l in variables)
+            assert isinstance(variables, list) and len(variables) == k and all(isinstance(t, (list, tuple)) for t in variables)
             atts = [
                 ([(TypeXML.OFFSET, offset[i])] if offset and offset[i] != 1 else [])
                 + ([(TypeXML.COLLECT, collect[i])] if collect and collect[i] != 1 else [])
@@ -1003,7 +1017,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             return auxiliary().replace_partial_constraint(self) * other
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
         value = args[TypeCtrArg.CONDITION]
-        del args[TypeCtrArg.CONDITION]  # we delete and put back below this argument so as to have arguments in the right order
+        del args[TypeCtrArg.CONDITION]  # we delete and put back below this argument to have arguments in the right order
         self.constraint.arg(TypeCtrArg.COEFFS, [c * other for c in cs])
         args[TypeCtrArg.CONDITION] = value
         return self
@@ -1022,8 +1036,9 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return Node.build(TypeNode.MOD, auxiliary().replace_partial_constraint(self), other)
 
     def __getitem__(self, i):
-        assert isinstance(self.constraint, ConstraintElement), "\nBad form. Did you forget to use parentheses? " + \
-                                                               "For example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])"
+        assert isinstance(self.constraint, ConstraintElement), ("\nBad form. Did you forget to use parentheses? " +
+                                                                "For example, you must write (x[0] == x[1])  | (x[0] == x[2]) " +
+                                                                "instead of (x[0] == x[1])  or (x[0] == x[2])")
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
         assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
@@ -1229,10 +1244,11 @@ class _Auxiliary:
         return aux
 
     def replace_constraint_with_condition(self, cc):
-        assert isinstance(cc, ECtr) and isinstance(cc.constraint, ConstraintWithCondition)
-        cond = cc.constraint.arguments[TypeCtrArg.CONDITION].content
+        c = cc.constraint
+        assert isinstance(cc, ECtr) and isinstance(c, ConstraintWithCondition)
+        cond = c.arguments[TypeCtrArg.CONDITION].content
         op, k = cond.operator, cond.right_operand()
-        aux = self.new_var(range(cc.constraint.min_possible_value(), cc.constraint.max_possible_value() + 1))
+        aux = self.new_var(range(c.min_possible_value(), c.max_possible_value() + 1))
         cc.constraint.set_condition(TypeConditionOperator.EQ, aux)
         self._collected_raw_constraints.append(cc)
         return functions.expr(op, aux, k)
@@ -1322,19 +1338,20 @@ def global_indirection(c):
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
         pc = PartialConstraint(c)
-    if isinstance(c, ConstraintElement):
-        index = c.arguments[TypeCtrArg.INDEX].content
-        length = len(c.arguments[TypeCtrArg.LIST].content)
-        aux = auxiliary().replace_element_index(length, index)
-        if aux:  # this is the case when we need another variable to have a correct indexing
-            c.arguments[TypeCtrArg.INDEX].content = aux
-    if isinstance(c, ConstraintAllDifferent):
-        lst = c.arguments[TypeCtrArg.LIST].content
-        pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))
-        condition = Condition.build_condition((TypeConditionOperator.EQ, len(lst)))
-    if isinstance(c, ConstraintAllEqual):
-        pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
-        condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
+        if isinstance(c, ConstraintElement):
+            index = c.arguments[TypeCtrArg.INDEX].content
+            length = len(c.arguments[TypeCtrArg.LIST].content)
+            aux = auxiliary().replace_element_index(length, index)
+            if aux:  # this is the case when we need another variable to have a correct indexing
+                c.arguments[TypeCtrArg.INDEX].content = aux
+    else:
+        if isinstance(c, ConstraintAllDifferent):
+            lst = c.arguments[TypeCtrArg.LIST].content
+            pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))
+            condition = Condition.build_condition((TypeConditionOperator.EQ, len(lst)))
+        elif isinstance(c, ConstraintAllEqual):
+            pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
+            condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
     if pc is None:
         warning("You use a global constraint/function in a complex expression.\n" +
                 "\tHowever, this constraint cannot be externalized by introducing an auxiliary variable.\n" +

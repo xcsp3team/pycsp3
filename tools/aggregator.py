@@ -93,7 +93,7 @@ def _compute_group_abstraction_intension(group):
         return v1 == v2
 
     def _is_same_value_at_column(i, all_args):
-        """ comparison from both ends so as to find opportunistically that the parameter is not the same everywhere"""
+        """ comparison from both ends to find opportunistically that the parameter is not the same everywhere"""
         left, right = 1, len(all_args) - 1
         value = all_args[0][i]
         while True:
@@ -263,7 +263,7 @@ def canonizing_groups_and_blocks(entities, previous=None):
                     first.tag(e.tags)
                 entities[i] = first
         if isinstance(e, EToGather):
-            # Creating a new block when there are several sub-groups (or stand-alone constraints); it was impossible to do a single group
+            # Creating a new block when there are several subgroups (or stand-alone constraints); it was impossible to do a single group
             if any(not c.blank_basic_attributes() for c in e.entities):
                 if not isinstance(previous, EBlock):
                     entities[i] = _building_block(e)

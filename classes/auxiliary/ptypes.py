@@ -88,7 +88,11 @@ class TypeCtrArg(AbstractType):
     START_INDEX, START_ROW_INDEX, START_COL_INDEX = auto(3)
     COVERED = auto()
     INTENTION = auto()  # for slides directly posted
-    FORM, NOTE = auto(2)  # for adhoc forms
+    FORM, NOTE, MAP = auto(3)  # for adhoc forms
+
+    def with_compactable_values(self):
+        return self in (TypeCtrArg.COEFFS, TypeCtrArg.VALUES, TypeCtrArg.LENGTHS, TypeCtrArg.HEIGHTS, TypeCtrArg.SIZES,
+                        TypeCtrArg.WEIGHTS, TypeCtrArg.PROFITS, TypeCtrArg.BALANCE)  # TODO still other arguments to be added?
 
 
 @unique
@@ -141,6 +145,13 @@ class TypeConditionOperator(AbstractType):
         if self == TypeConditionOperator.NOTIN:
             return TypeConditionOperator.IN
         return None
+
+    def is_set(self):
+        return self in (TypeConditionOperator.IN, TypeConditionOperator.NOTIN)
+
+    def is_rel(self):
+        return self in (TypeConditionOperator.LT, TypeConditionOperator.LE, TypeConditionOperator.GE, TypeConditionOperator.GT, TypeConditionOperator.EQ,
+                        TypeConditionOperator.NE)
 
     @staticmethod
     def value_of(s):
@@ -226,6 +237,23 @@ class TypeConditionOperator(AbstractType):
 class TypeOrderedOperator(Enum):
     STRICTLY_INCREASING, INCREASING, DECREASING, STRICTLY_DECREASING = auto(4)
 
+    @staticmethod
+    def value_of(s):
+        assert isinstance(s, str)
+        try:
+            return TypeOrderedOperator[s.upper()]
+        except KeyError:
+            s = s.lower()
+            if s in ("lt", "<"):
+                return TypeOrderedOperator.STRICTLY_INCREASING
+            if s in ("le", "<="):
+                return TypeOrderedOperator.INCREASING
+            if s in ("ge", ">="):
+                return TypeOrderedOperator.DECREASING
+            if s in ("gt", ">"):
+                return TypeOrderedOperator.STRICTLY_DECREASING
+        raise ValueError
+
     def __str__(self):
         if self == TypeOrderedOperator.STRICTLY_INCREASING:
             return "lt"
@@ -264,11 +292,11 @@ class TypeStatus(Enum):
 
 @unique
 class TypeSquareSymmetry(Enum):
-    R90, R180, R270, FX, FY, FD1, FD2 = auto(7)  # R0 not indicated
+    R090, R180, R270, FX, FY, FD1, FD2 = auto(7)  # R0 not indicated
 
     @staticmethod
     def rotations():
-        return TypeSquareSymmetry.R9O, TypeSquareSymmetry.R18O, TypeSquareSymmetry.R270
+        return TypeSquareSymmetry.R090, TypeSquareSymmetry.R180, TypeSquareSymmetry.R270
 
     @staticmethod
     def reflections():  # 4 lines of symmetry (reflection)
@@ -294,7 +322,7 @@ class TypeSquareSymmetry(Enum):
             return tuple((i - minx, j - miny) for i, j in p) if minx != 0 or miny != 0 else tuple(p)
 
         pattern = _normalize(pattern)
-        # computing the size of the square (so as to be able to produce symmetric patterns)
+        # computing the size of the square (to be able to produce symmetric patterns)
         n = max(max(i, j) for i, j in pattern) + 1  # +1 because starting at 0
         symmetries = [sym.apply_on(n) for sym in TypeSquareSymmetry]
         s1 = [tuple(sorted(pattern))] + [tuple(sorted(sym[i][j] for i, j in pattern)) for sym in symmetries]
@@ -314,7 +342,7 @@ class TypeSquareSymmetry(Enum):
             def rot(i, j):
                 # if self is TypeSquareSymmetry.R0:
                 #     return i, j
-                if self is TypeSquareSymmetry.R90:
+                if self is TypeSquareSymmetry.R090:
                     return j, n - 1 - i
                 if self is TypeSquareSymmetry.R180:
                     return n - 1 - i, n - 1 - j
@@ -340,7 +368,7 @@ class TypeRectangleSymmetry(Enum):
 
     @staticmethod
     def rotations():
-        return (TypeRectangleSymmetry.R18O,)
+        return (TypeRectangleSymmetry.R180,)
 
     @staticmethod
     def reflections():  # 2 lines of symmetry (reflection)
@@ -374,13 +402,13 @@ class TypeRectangleSymmetry(Enum):
 
 @unique
 class TypeHexagonSymmetry(Enum):
-    R60, R120, R180, R240, R300, L1, L2, L3, L4, L5, L6 = auto(11)  # R0 not included
+    R060, R120, R180, R240, R300, L1, L2, L3, L4, L5, L6 = auto(11)  # R0 not included
 
     # _cache = {}  # not possible with enum (so, it is built dynamically in Method apply_on)
 
     @staticmethod
     def rotations():
-        return (TypeHexagonSymmetry.R60, TypeHexagonSymmetry.R120,
+        return (TypeHexagonSymmetry.R060, TypeHexagonSymmetry.R120,
                 TypeHexagonSymmetry.R180, TypeHexagonSymmetry.R240, TypeHexagonSymmetry.R300)
 
     @staticmethod
@@ -422,8 +450,8 @@ class TypeHexagonSymmetry(Enum):
                     gap = n - ring
                     t = rings[ring]
                     idx = t.index((i - gap, j - gap))
-                    k, l = t[(idx + skip) % len(t)]
-                    return k + gap, l + gap
+                    k, p = t[(idx + skip) % len(t)]
+                    return k + gap, p + gap
 
                 coeff = 1 + TypeHexagonSymmetry.rotations().index(self)
                 TypeHexagonSymmetry._cache[key] = [[rot(i, j) for j in range(widths[i])] for i in range(w)]
@@ -453,8 +481,8 @@ class TypeHexagonSymmetry(Enum):
                         ind = ind_pivot - diff + offset
                     else:
                         ind = ind_pivot + diff + offset
-                    k, l = t[(ind + len(t)) % len(t)]
-                    return k + gap, l + gap
+                    k, p = t[(ind + len(t)) % len(t)]
+                    return k + gap, p + gap
 
                 TypeHexagonSymmetry._cache[key] = [[rot(i, j) for j in range(widths[i])] for i in range(w)]
 

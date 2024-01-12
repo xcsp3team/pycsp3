@@ -2,15 +2,15 @@ from collections import OrderedDict
 
 from lxml import etree
 
+from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeConditionOperator, TypeXML, TypeVar, TypeCtr, TypeCtrArg
-from pycsp3.classes.entities import (Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, EBlock, ESlide, EIfThenElse, EToGather,
+from pycsp3.classes.entities import (Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, EBlock, ESlide, EToGather,
                                      EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities)
-from pycsp3.classes.main.constraints import ConstraintIntension, ConstraintRefutation
 from pycsp3.classes.main.annotations import TypeAnnArg
+from pycsp3.classes.main.constraints import ConstraintIntension
 from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.slider import _identify_slide
-from pycsp3.classes.auxiliary.conditions import Condition
 from pycsp3.tools.utilities import warning, table_to_string
 
 SIZE_LIMIT_FOR_USING_AS = 12  # when building domains of variables of arrays of variables (and using the attribute 'as')
@@ -64,7 +64,7 @@ def _complex_var(va, dom_or_dom2vars):
     else:
         for dom, vars in dom_or_dom2vars.items():
             s = compact(vars)
-            elt.append(_element(TypeXML.DOMAIN, attributes=(TypeXML.FOR, " ".join(str(x) for x in s) if isinstance(s, list) else s), text=dom))
+            elt.append(_element(TypeXML.DOMAIN, attributes=[(TypeXML.FOR, " ".join(str(x) for x in s) if isinstance(s, list) else s)], text=dom))
     if va.get_type() == TypeVar.SYMBOLIC:
         elt.set(str(TypeXML.TYPE), str(TypeVar.SYMBOLIC))
     return elt
@@ -240,7 +240,7 @@ def _annotations():
 
 
 def build_document():
-    root = _element(TypeXML.INSTANCE, attributes=(TypeXML.FORMAT, "XCSP3"))
+    root = _element(TypeXML.INSTANCE, attributes=[(TypeXML.FORMAT, "XCSP3")])
 
     variables = _variables()
     if len(variables) > 0:
