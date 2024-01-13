@@ -4,7 +4,7 @@ from pycsp3.classes.main.variables import Variable
 
 def handle_slides():
     detect_slides_recursively(CtrEntities.items)
-    # canonize_blocks_of_slides(CtrEntities.items)  # TODO desactivated because very limited interest and problem with holes (see at bottom)
+    # canonize_blocks_of_slides(CtrEntities.items)  # TODO deactivated because very limited interest and problem with holes (see at bottom)
 
 
 def detect_slides_recursively(ctr_entities):
@@ -24,9 +24,9 @@ def detect_slides_recursively(ctr_entities):
 
 
 def _identify_slide(group):
-    def _possible_offset(all_args):  # attempt to find a simple offset
-        for arg1 in all_args[1]:
-            for i, arg0 in enumerate(all_args[0]):
+    def _possible_offset(m):  # attempt to find a simple offset
+        for arg1 in m[1]:
+            for i, arg0 in enumerate(m[0]):
                 if arg0 == arg1:
                     return i
         return None

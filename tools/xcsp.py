@@ -33,7 +33,7 @@ def _text(elt, s):
     elt.text = " " + (" ".join(str(v) for v in s) if isinstance(s, (list, tuple)) else str(s)) + " "
 
 
-def _element(name, entity=None, *, id=None, attributes=[], text=None):
+def _element(name, entity=None, *, id=None, attributes=None, text=None):
     elt = etree.Element(str(name))
     if id is not None:
         assert isinstance(id, str)
@@ -44,7 +44,7 @@ def _element(name, entity=None, *, id=None, attributes=[], text=None):
             elt.set(str(TypeXML.CLASS), ' '.join(tag for tag in entity.tags))
         if entity.comment and options.sober is False:
             elt.set(str(TypeXML.NOTE), entity.comment)
-    attributes = attributes if isinstance(attributes, list) else [attributes]
+    attributes = [] if attributes is None else attributes if isinstance(attributes, list) else [attributes]
     for (k, v) in attributes:
         elt.set(str(k), str(v))
     if text is not None:

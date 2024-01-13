@@ -55,10 +55,10 @@ class Diffs:
 
 
 class ConstraintArgument:
-    def __init__(self, name, content, attributes=[], content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
+    def __init__(self, name, content, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
         assert adhoc or isinstance(name, (TypeCtrArg, TypeXML, main.annotations.TypeAnnArg)), str(name) + " " + str(type(name))
         self.name = name  # name of the argument
-        self.attributes = attributes  # list of pairs (key, value) representing the attributes
+        self.attributes = [] if attributes is None else attributes  # list of pairs (key, value) representing the attributes
         self.content_original = content
         self.content = content  # content of the argument (might be compressed later)
         self.content_compressible = content_compressible  # indicates if we can try to make the content more compact
@@ -108,7 +108,7 @@ class Constraint:
             return False
         return [v for v in self.arguments.items() if str(v[0]) != "condition"] == [v for v in other.arguments.items() if str(v[0]) != "condition"]
 
-    def arg(self, name, content, *, attributes=[], content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
+    def arg(self, name, content, *, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
         self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc)
         return self
 
@@ -486,7 +486,8 @@ class ConstraintSum(ConstraintWithCondition):
             self.arg(TypeCtrArg.COEFFS, coefficients, content_ordered=True)
         self.arg(TypeCtrArg.CONDITION, condition)
 
-    def _min_or_max_term_value(self, x, c, is_min):
+    @staticmethod
+    def _min_or_max_term_value(x, c, is_min):
         if isinstance(x, Variable):
             x_min, x_max = x.dom.smallest_value(), x.dom.greatest_value()
         else:
@@ -509,7 +510,7 @@ class ConstraintSum(ConstraintWithCondition):
         if cs is None:
             return sum(x.dom.smallest_value() if isinstance(x, Variable) else x.possible_values()[0] for x in vs)
         assert len(vs) == len(cs)
-        return sum(self._min_or_max_term_value(x, cs[i], True) for i, x in enumerate(vs))
+        return sum(ConstraintSum._min_or_max_term_value(x, cs[i], True) for i, x in enumerate(vs))
 
     def max_possible_value(self):
         vs = self.arguments[TypeCtrArg.LIST].content
@@ -517,7 +518,7 @@ class ConstraintSum(ConstraintWithCondition):
         if cs is None:
             return sum(x.dom.greatest_value() if isinstance(x, Variable) else x.possible_values()[-1] for x in vs)
         assert len(vs) == len(cs)
-        return sum(self._min_or_max_term_value(x, cs[i], False) for i, x in enumerate(vs))
+        return sum(ConstraintSum._min_or_max_term_value(x, cs[i], False) for i, x in enumerate(vs))
 
     def revert_coeffs(self):
         if TypeCtrArg.COEFFS in self.arguments:
@@ -1244,12 +1245,12 @@ class _Auxiliary:
         return aux
 
     def replace_constraint_with_condition(self, cc):
+        assert isinstance(cc, ECtr) and isinstance(cc.constraint, ConstraintWithCondition)
         c = cc.constraint
-        assert isinstance(cc, ECtr) and isinstance(c, ConstraintWithCondition)
         cond = c.arguments[TypeCtrArg.CONDITION].content
         op, k = cond.operator, cond.right_operand()
         aux = self.new_var(range(c.min_possible_value(), c.max_possible_value() + 1))
-        cc.constraint.set_condition(TypeConditionOperator.EQ, aux)
+        c.set_condition(TypeConditionOperator.EQ, aux)
         self._collected_raw_constraints.append(cc)
         return functions.expr(op, aux, k)
 

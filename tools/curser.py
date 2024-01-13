@@ -371,7 +371,7 @@ class OpOverrider:
     def eq_protected(v1, v2):
         if isinstance(v1, list) and isinstance(v2, list):
             return len(v1) == len(v2) and all(OpOverrider.eq_protected(v1[i], v2[i]) for i in range(len(v1)))
-        if type(v1) != type(v2):
+        if type(v1) is not type(v2):
             return False
         if isinstance(v1, Variable):
             return Variable.eq__safe(v1, v2)
@@ -574,8 +574,7 @@ class OpOverrider:
         if res is None:
             return functions.And(self, other, meta=True)
         self, other = res
-        if self is None or other is None:
-            return object.__and__(self, other)
+        assert self is not None and other is not None  # object.__and__(self, other) is not valid
         return Node.conjunction(self, other)
 
     def __invert__(self):
@@ -609,8 +608,7 @@ class OpOverrider:
         if res is None:
             return functions.Xor(self, other, meta=True)
         self, other = res
-        if self is None or other is None:
-            return object.__xor__(self, other)
+        assert self is not None and other is not None  # object.__xor__(self, other) is not valid
         if isinstance(other, (tuple, list)):
             other = other[0] if len(other) == 1 else functions.conjunction(other)
         return Node.build(TypeNode.XOR, self, other)
@@ -851,8 +849,8 @@ class ListVar(list):
     # def __new__(self, variables):  # if we subclass tuple instead of list (while removing __init__)
     #     return super().__new__(ListVar, variables)
 
-    def __init__(self, variables=[]):
-        super().__init__(variables)
+    def __init__(self, variables=None):
+        super().__init__([] if variables is None else variables)
         self.values = None
 
     def __getslice__(self, i, j):  # TODO using getitem instead? as for ListCtr?
@@ -883,7 +881,7 @@ class ListVar(list):
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
-        return ListVar([self[i + k][j + l] for k in [-1, 0, 1] for l in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + l < m and (k, l) != (0, 0)])
+        return ListVar([self[i + k][j + p] for k in [-1, 0, 1] for p in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + p < m and (k, p) != (0, 0)])
 
     def beside(self, i, j):
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
@@ -980,7 +978,7 @@ def is_namedtuple(obj):  # imperfect way of checking, but must be enough for our
     if len(t.__bases__) != 1 or t.__bases__[0] != tuple:
         return False
     fields = getattr(t, '_fields', None)
-    return isinstance(fields, tuple) and all(type(field) == str for field in fields)
+    return isinstance(fields, tuple) and all(type(field) is str for field in fields)
 
 
 def _list(t, mode):
@@ -1090,40 +1088,40 @@ def diagonals_up(m, *, broken=False):
         _list((diagonal_up(m, len(m) - 1, j, False) for j in range(1, len(m) - 1)), mode)
 
 
-def cp_array(*l):
+def cp_array(*t):
     """
     Converts and returns a list containing integers into a list from the more specific type ListInt.
     Converts and returns a list containing variables into a list from the more specific type ListVar.
     Returns the same list in all other cases.
     This method may be required for posting constraints Element.
 
-    :param l: a list (of any dimension)
+    :param t: a list (of any dimension)
     :return: the same list, possibly converted into one of the two more specific types ListInt and ListVar
     """
-    if len(l) == 1:
-        l = l[0]
-    if isinstance(l, (tuple, set, frozenset, zip, types.GeneratorType)):
-        l = list(l)
-    assert isinstance(l, list)
-    if len(l) == 0:
-        return l
-    if isinstance(l[0], (tuple, list, types.GeneratorType)):
-        assert all(isinstance(t, (tuple, list, types.GeneratorType)) for t in l)
-        res = [cp_array(t) for t in l]
+    if len(t) == 1:
+        t = t[0]
+    if isinstance(t, (tuple, set, frozenset, zip, types.GeneratorType)):
+        t = list(t)
+    assert isinstance(t, list)
+    if len(t) == 0:
+        return t
+    if isinstance(t[0], (tuple, list, types.GeneratorType)):
+        assert all(isinstance(t, (tuple, list, types.GeneratorType)) for t in t)
+        res = [cp_array(t) for t in t]
         if all(len(t) == 0 or isinstance(t, ListInt) for t in res):
             return ListInt(res)
         assert all(len(t) == 0 or isinstance(t, ListVar) for t in res)
         return ListVar(res)
-    typ = unique_type_in(l)
+    typ = unique_type_in(t)
     if typ is int:
-        return ListInt(l)
+        return ListInt(t)
     if typ in (Variable, VariableInteger):
-        return ListVar(l)
+        return ListVar(t)
     if typ is ECtr:  # TODO: is it the right type?
-        return ListCtr(l)
-    if all(isinstance(v, (int, Variable, Node)) for v in l):
-        return ListMix(l)
-    return l
+        return ListCtr(t)
+    if all(isinstance(v, (int, Variable, Node)) for v in t):
+        return ListMix(t)
+    return t
     # else:
     #     return l  # raise NotImplemented
 

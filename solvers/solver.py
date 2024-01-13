@@ -1,18 +1,19 @@
 import os
+import re
 import signal
 import subprocess
 import sys
 import uuid
-import re
 
 from lxml import etree
 
 from pycsp3.classes.auxiliary.ptypes import TypeStatus
-from pycsp3.classes.entities import VarEntities, EVar, EVarArray
+from pycsp3.classes.entities import VarEntities, EVar
 from pycsp3.classes.main.variables import Variable, VariableInteger
+from pycsp3.compiler import Compilation
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows, ANY
-from pycsp3.compiler import Compilation
+
 
 # from py4j.java_gateway import JavaGateway, Py4JNetworkError
 
@@ -184,8 +185,12 @@ class SolverProcess:
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
         raise NotImplementedError("Must be overridden")
 
-    def _solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False,
+    def _solve(self, instance, string_options="", dict_options=None, dict_simplified_options=None, compiler=False, *, verbose=0, automatic=False,
                extraction=False):
+        if dict_options is None:
+            dict_options = dict()
+        if dict_simplified_options is None:
+            dict_simplified_options = dict()
         model, cop = instance
         if extraction:
             self.switch_to_extraction()
@@ -287,11 +292,11 @@ class SolverProcess:
                 self.n_solutions = _int_from(stdout, j)
             return TypeStatus.OPTIMUM if optimal else TypeStatus.SAT
 
-        def execute(command):
+        def execute(cmd):
             if not is_windows():
-                p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
+                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
             else:
-                p = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             stopped = False
             handler = signal.getsignal(signal.SIGINT)
 
@@ -360,7 +365,7 @@ class SolverProcess:
         self.n_executions += 1
         return extract_result_and_solution(out_err) if out_err else TypeStatus.UNKNOWN
 
-    def solve(self, instance, string_options="", dict_options=dict(), dict_simplified_options=dict(), compiler=False, *, verbose=0, automatic=False,
+    def solve(self, instance, string_options="", dict_options=None, dict_simplified_options=None, compiler=False, *, verbose=0, automatic=False,
               extraction=False):
         self.status = self._solve(instance, string_options, dict_options, dict_simplified_options, compiler, verbose=verbose, automatic=automatic,
                                   extraction=extraction)

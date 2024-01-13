@@ -12,7 +12,9 @@ class Variable:
     arrays = []  # the arrays of variables, as introduced by the user in the model
 
     @staticmethod
-    def build_names_array(name, sizes, mins, indexes=[]):
+    def build_names_array(name, sizes, mins, indexes=None):
+        if indexes is None:
+            indexes = []
         if sizes:
             t = []
             for i in range(sizes[0]):
@@ -59,7 +61,9 @@ class Variable:
         return var
 
     @staticmethod
-    def build_variables_array(name, sizes, domain, indexes=[]):
+    def build_variables_array(name, sizes, domain, indexes=None):
+        if indexes is None:
+            indexes = []
         if isinstance(name, list):
             # it means that several variables are declared with a single line
             assert len(sizes) == 1, "When using several declarations, only one-dimensional arrays are allowed."
@@ -108,8 +112,8 @@ class Variable:
     def __neg__(self):
         return Variable(self.id, self.dom, inverse=not self.inverse)
 
-    def __hash__(self, *args, **kwargs):
-        return object.__hash__(self, *args, **kwargs)
+    def __hash__(self):
+        return object.__hash__(self)  # , *args, **kwargs)
 
     def __repr__(self):
         return self.id

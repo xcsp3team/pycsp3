@@ -41,8 +41,8 @@ def is_empty_line(line):
 def is_discardable_line(line):
     if not isinstance(line, str):
         return False
-    l = line.strip()
-    return len(l) == 0 or l[0] in ('#', ')', ']')  # (len(l) == 1 and l[0] in ('#', ')', ']')) or (len(l) == 2 and l in ('),', '],'))
+    ln = line.strip()
+    return len(ln) == 0 or ln[0] in ('#', ')', ']')  # (len(l) == 1 and l[0] in ('#', ')', ']')) or (len(l) == 2 and l in ('),', '],'))
 
 
 def is_continued_line(line):
@@ -189,7 +189,7 @@ def _remove_matching_brackets(line):
 
 # Delete ( ) parts and [ ] parts of each line excepts for comment lines
 def _delete_bracket_part(code, nb_parameters):
-    # if nb_parameters == 1 and len(code) == 1:  # TODO  code for case like variant aux-v7 in Quasigroup (remonving ,)
+    # if nb_parameters == 1 and len(code) == 1:  # TODO  code for case like variant aux-v7 in Quasigroup (removing ,)
     #     code = [line.strip() if is_comment_line(line) else line.replace(",", "").strip() for line in code]
     # else:
     code = [line.strip() if is_comment_line(line) else _remove_matching_brackets(line).strip() for line in code]

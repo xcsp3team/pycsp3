@@ -14,7 +14,7 @@ from pycsp3 import tools
 
 
 class Entity:
-    def __init__(self, name, comment=None, tags=[]):
+    def __init__(self, name, comment=None, tags=None):
         self.id = name
         self.comment = None
         self.note(comment)  # we use comment instead of note because we need method note()
@@ -29,14 +29,14 @@ class Entity:
     def tag(self, tags):
         if tags is not None:
             toks = (tok.strip() for tok in tags.strip().split(" ")) if isinstance(tags, str) else (tok.strip() for tok in tags)
-            self.tags.extend([tok for tok in toks if tok != "" and tok not in self.tags])
+            self.tags.extend(tok for tok in toks if tok != "" and tok not in self.tags)
         return self
 
     def same_type_and_basic_attributes(self, other):
-        return type(self) == type(other) and self.comment == other.comment and self.tags == other.tags
+        return type(self) is type(other) and self.comment == other.comment and self.tags == other.tags
 
     def mergeable_with(self, other):
-        return (type(self) == type(other) and (self.comment == other.comment or None in {self.comment, other.comment})
+        return (type(self) is type(other) and (self.comment == other.comment or None in {self.comment, other.comment})
                 and (self.tags == other.tags or 0 in {len(self.tags), len(other.tags)}))
 
     def blank_basic_attributes(self):
@@ -54,7 +54,7 @@ class Entity:
 
 
 class EVar(Entity):
-    def __init__(self, x, comment=None, tags=[]):
+    def __init__(self, x, comment=None, tags=None):
         super().__init__(x.id, comment, tags)
         self.variable = x
         VarEntities.items.append(self)
@@ -68,7 +68,7 @@ class EVar(Entity):
 
 
 class EVarArray(Entity):
-    def __init__(self, X, name, comment=None, tags=[]):
+    def __init__(self, X, name, comment=None, tags=None):
         super().__init__(name, comment, tags)
         self.name = name
         self.variables = X
@@ -186,14 +186,14 @@ class ECtrs(Entity):
 
 
 class EToGather(ECtrs):
-    ''' Constraints possibly stored in a group (the user asked to gather these constraints)'''
+    #  Constraints possibly stored in a group (the user asked to gather these constraints)
 
     def __init__(self, constraints):
         super().__init__(constraints)
 
 
 class EToSatisfy(ECtrs):
-    ''' Constraints possibly stored in several groups or several blocks (block built when a group is not possible) or stand-alone constraints'''
+    # Constraints possibly stored in several groups or several blocks (block built when a group is not possible) or stand-alone constraints
 
     def __init__(self, constraints):
         assert constraints is not None
@@ -212,7 +212,7 @@ class EToSatisfy(ECtrs):
 
 
 class EGroup(ECtrs):
-    ''' Constraints in a group '''
+    # Constraints in a group
 
     def __init__(self):
         super().__init__([])
@@ -226,7 +226,7 @@ class EBlock(ECtrs):
 
 
 class ESlide(ECtrs):
-    ''' Constraints possibly stored as a slide meta-constraint (the user asked to slide the constraints)'''
+    # Constraints possibly stored as a slide meta-constraint (the user asked to slide the constraints)
 
     def __init__(self, constraints):
         super().__init__(constraints)
@@ -363,8 +363,8 @@ def clear():
 
 @unique
 class TypeNode(Enum):
-    def __init__(self, id, min_arity, max_arity):
-        self.id = id
+    def __init__(self, node_id, min_arity, max_arity):
+        self.id = node_id
         self.min_arity = min_arity
         self.max_arity = max_arity
         self.lowercase_name = self.name.lower()
@@ -467,19 +467,19 @@ def add_range(r1, r2):
 
 def possible_range(s, control_int=False):
     assert isinstance(s, set) and (not control_int or all(isinstance(v, int) for v in s))
-    l = sorted(s)
-    return range(l[0], l[-1] + 1) if 1 < l[-1] - l[0] + 1 == len(l) else l
+    t = sorted(s)
+    return range(t[0], t[-1] + 1) if 1 < t[-1] - t[0] + 1 == len(t) else t
 
 
 class Node(Entity):
     all_nodes = []
 
-    def __init__(self, type, args):
+    def __init__(self, node_type, args):
         super().__init__(None)
         Node.all_nodes.append(self)
         self.used = False
-        self.type = type
-        self.leaf = type.is_leaf()
+        self.type = node_type
+        self.leaf = node_type.is_leaf()
         self.sons = args  # TODO sons is used whatever this is a parent or a leaf node; not a good choice. change the name of this field ??? to content ??
         self.abstractTree = None
         self.abstractValues = None
@@ -566,9 +566,9 @@ class Node(Entity):
             if self.type == TypeNode.ADD:
                 return reduce(add_range, pvs) if all_ranges else possible_range({sum(p) for p in product(*(pv for pv in pvs))})
             if self.type == TypeNode.MUL:
-                def multiply(l):
+                def multiply(t):
                     res = 1
-                    for v in l:
+                    for v in t:
                         res *= v
                     return res
 
@@ -731,22 +731,22 @@ class Node(Entity):
         return t
 
     @staticmethod
-    def build(type, *args):
-        type = TypeNode.value_of(type)  # for handling the cases where type is of type str or TypeConditionOperator
-        if type is TypeNode.SET:
+    def build(node_type, *args):
+        tn = TypeNode.value_of(node_type)  # for handling the cases where type is of type str or TypeConditionOperator
+        if tn is TypeNode.SET:
             assert len(args) == 1
             elements = list(args[0])
             sorted_sons = sorted(elements, key=lambda v: str(v)) if len(elements) > 0 and not isinstance(elements[0], int) else sorted(elements)
-            return Node(type, Node._create_sons(*sorted_sons))  # *sorted(args[0])))
+            return Node(tn, Node._create_sons(*sorted_sons))  # *sorted(args[0])))
         args = flatten(Node.build(TypeNode.SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args)
-        assert type.is_valid_arity(len(args)), "Problem: Bad arity for node " + type.name + ". It is " + str(
-            len(args)) + " but it should be between " + str(type.min_arity) + " and " + str(type.max_arity)
+        assert tn.is_valid_arity(len(args)), "Problem: Bad arity for node " + tn.name + ". It is " + str(
+            len(args)) + " but it should be between " + str(tn.min_arity) + " and " + str(tn.max_arity)
         # Do we activate these simple modifications below?
         # if len(args) == 2 and isinstance(args[0], Variable) and isinstance(args[1], int):
         #     if (args[1] == 1 and type in (TypeNode.MUL, TypeNode.DIV)) or (args[1] == 0 and type in (TypeNode.ADD, TypeNode.SUB)):
         #         return Node(TypeNode.VAR,args[0])
-        node = Node(type, Node._create_sons(*args))
-        if type == TypeNode.EQ and all(son.type.is_predicate_operator() for son in node.sons):
+        node = Node(tn, Node._create_sons(*args))
+        if tn == TypeNode.EQ and all(son.type.is_predicate_operator() for son in node.sons):
             node = Node(TypeNode.IFF, node.sons)
         # Reducing the node
         for t in {TypeNode.ADD, TypeNode.MUL, TypeNode.OR, TypeNode.AND}:

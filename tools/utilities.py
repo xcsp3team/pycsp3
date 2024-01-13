@@ -7,11 +7,10 @@ from itertools import product, combinations
 from multiprocessing import cpu_count, Pool
 from time import time
 
+from pycsp3 import tools
 from pycsp3.classes.auxiliary import conditions
-from pycsp3.classes.auxiliary.ptypes import TypeSquareSymmetry, TypeRectangleSymmetry
 from pycsp3.classes.main.domains import Domain
 from pycsp3.dashboard import options
-from pycsp3 import tools
 
 
 class Stopwatch:
@@ -28,6 +27,7 @@ class Stopwatch:
 class _Star(float):
     def __init__(self, val):
         super().__init__()
+        self.val = val
 
     def __repr__(self):
         return "*"
@@ -90,12 +90,12 @@ def flatten(*args, keep_none=False):
     return tools.curser.cp_array(t)  # previously: return t
 
 
-def is_containing(l, types, *, check_first_only=False):
-    if isinstance(l, (list, tuple, set, frozenset)):
-        if len(l) == 0:
+def is_containing(t, types, *, check_first_only=False):
+    if isinstance(t, (list, tuple, set, frozenset)):
+        if len(t) == 0:
             return None
         found = False
-        for v in l:
+        for v in t:
             if not is_containing(v, types, check_first_only=check_first_only):
                 return False
             if check_first_only:
@@ -103,42 +103,42 @@ def is_containing(l, types, *, check_first_only=False):
             found = True
         return True if found else None
     else:
-        return isinstance(l, types)
+        return isinstance(t, types)
 
 
-def unique_type_in(l, tpe=None):
-    if isinstance(l, (list, tuple, set, frozenset)):
-        if len(l) == 0:
+def unique_type_in(t, tpe=None):
+    if isinstance(t, (list, tuple, set, frozenset)):
+        if len(t) == 0:
             return None
-        for v in l:
-            t = unique_type_in(v, tpe)
-            if t is False:
+        for v in t:
+            tp = unique_type_in(v, tpe)
+            if tp is False:
                 return False
             if tpe is None:
-                tpe = t
+                tpe = tp
         return tpe
     else:
-        return None if l is None else type(l) if tpe is None else tpe if isinstance(l, tpe) else False
+        return None if t is None else type(t) if tpe is None else tpe if isinstance(t, tpe) else False
 
 
-def is_1d_tuple(l, types):
-    if not isinstance(l, tuple) or types is not None and len(l) == 0:
+def is_1d_tuple(t, types):
+    if not isinstance(t, tuple) or types is not None and len(t) == 0:
         return False
-    return all(isinstance(v, types) for v in l)
+    return all(isinstance(v, types) for v in t)
 
 
-def is_1d_list(l, types=None):
-    if not isinstance(l, list):  # or types is not None and len(l) == 0:
+def is_1d_list(t, types=None):
+    if not isinstance(t, list):  # or types is not None and len(l) == 0:
         return False
-    return all(isinstance(v, types) if types else not isinstance(v, list) for v in l)
+    return all(isinstance(v, types) if types else not isinstance(v, list) for v in t)
 
 
 def is_2d_list(m, types=None):
-    return isinstance(m, list) and all(is_1d_list(l, types) for l in m)
+    return isinstance(m, list) and all(is_1d_list(t, types) for t in m)
 
 
 def is_matrix(m, types=None):
-    return is_2d_list(m, types) and all(len(l) == len(m[0]) for l in m)
+    return is_2d_list(m, types) and all(len(t) == len(m[0]) for t in m)
 
 
 def is_square_matrix(m, types=None):
@@ -150,15 +150,16 @@ def is_3d_list(c, types=None):
 
 
 def is_cube(c, types=None):
-    return is_3d_list(c, types) and all(len(m) == len(c[0]) for m in c) and all(all(len(l) == len(m[0]) for l in m) for m in c)
+    return is_3d_list(c, types) and all(len(m) == len(c[0]) for m in c) and all(all(len(t) == len(m[0]) for t in m) for m in c)
 
 
 def alphabet_positions(s):
-    '''
+    """
     Returns a tuple with the indexes of the letters (with respect to the 26 letters of the Latin alphabet) of the specified string.
 
     @param s: a string
-    '''
+    """
+
     if isinstance(s, (list, tuple, set, frozenset, types.GeneratorType)):
         s = "".join(t for t in s)
     return tuple(ord(c) - ord('a') for c in s.lower())
@@ -178,7 +179,7 @@ def all_primes(limit):
 
 
 def value_in_base(decimal_value, length, base):
-    assert type(decimal_value) == type(length) == type(base) is int
+    assert type(decimal_value) is type(length) is type(base) is int
     value = [0] * length
     for i in range(len(value) - 1, -1, -1):
         value[i] = decimal_value % base

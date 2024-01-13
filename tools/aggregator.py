@@ -92,28 +92,28 @@ def _compute_group_abstraction_intension(group):
             return v2.eq__safe(v1)
         return v1 == v2
 
-    def _is_same_value_at_column(i, all_args):
+    def _is_same_value_at_column(i, m):
         """ comparison from both ends to find opportunistically that the parameter is not the same everywhere"""
-        left, right = 1, len(all_args) - 1
-        value = all_args[0][i]
+        left, right = 1, len(m) - 1
+        value = m[0][i]
         while True:
-            if not _same(value, all_args[left][i]):
+            if not _same(value, m[left][i]):
                 return False
             left += 1
-            if not _same(value, all_args[right][i]):
+            if not _same(value, m[right][i]):
                 return False
             right -= 1
             if left > right:
                 break
         return True
 
-    def _is_same_value_in_columns(i, j, all_args):
-        left, right = 0, len(all_args) - 1
+    def _is_same_value_in_columns(i, j, t):
+        left, right = 0, len(t) - 1
         while True:
-            if not _same(all_args[left][i], all_args[left][j]):
+            if not _same(t[left][i], t[left][j]):
                 return False
             left += 1
-            if not _same(all_args[right][i], all_args[right][j]):
+            if not _same(t[right][i], t[right][j]):
                 return False
             right -= 1
             if left > right:
@@ -220,11 +220,11 @@ def _compute_group_abstraction_other(group, *, from_slide=False):
 
 
 def building_groups_recursively(entities, previous=None, from_slide=False):
-    def _build_group(group, from_slide):
+    def _build_group(group, b):
         if isinstance(group.entities[0].constraint, ConstraintIntension):
             group.abstraction, group.all_args = _compute_group_abstraction_intension(group)
         else:
-            group.abstraction, group.all_args = _compute_group_abstraction_other(group, from_slide=from_slide)
+            group.abstraction, group.all_args = _compute_group_abstraction_other(group, from_slide=b)
 
     for e in entities:
         if isinstance(e, EGroup):

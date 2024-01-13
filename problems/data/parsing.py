@@ -32,11 +32,11 @@ class DataParser:
             if value.startswith("http"):
                 from urllib.request import urlopen
                 # example: python Nonogram.py -data=https://www.cril.univ-artois.fr/~lecoutre/heart.txt -dataparser=Nonogram_Parser.py
-                for l in urlopen(value):
-                    self.lines += [l.decode("utf-8").strip()]
+                for ln in urlopen(value):
+                    self.lines += [ln.decode("utf-8").strip()]
             elif os.path.isfile(value):
                 with open(value) as f:
-                    self.lines += [line[:-1].strip() if line[-1] == '\n' else line.strip() for line in f.readlines() if len(line.strip()) > 0]
+                    self.lines += [ln[:-1].strip() if ln[-1] == '\n' else ln.strip() for ln in f.readlines() if len(ln.strip()) > 0]
             else:
                 self.lines += [str(value)]
         self.curr_line_index = 0
@@ -73,8 +73,8 @@ def line():
 
 def next_line(repeat=0):
     for _ in range(repeat + 1):
-        l = _dataParser.next_line()
-    return l
+        ln = _dataParser.next_line()
+    return ln
 
 
 def skip_empty_lines(or_prefixed_by=None):
@@ -107,14 +107,14 @@ def next_lines(skip_curr=False, *, prefix_stop):
     return _dataParser.lines[left:right]
 
 
-def number_in(line, offset=0):
-    assert line is not None
-    return int(re.search(r'[-]?\d+', line).group(0)) + offset
+def number_in(ln, offset=0):
+    assert ln is not None
+    return int(re.search(r'[-]?\d+', ln).group(0)) + offset
 
 
-def numbers_in(line, offset=0):
-    assert line is not None
-    return [int(v) + offset for v in re.findall(r'[-]?\d+', line)]  # [int(v) for v in line().split() if v.isdigit()]
+def numbers_in(ln, offset=0):
+    assert ln is not None
+    return [int(v) + offset for v in re.findall(r'[-]?\d+', ln)]  # [int(v) for v in ln().split() if v.isdigit()]
 
 
 def numbers_in_lines_until(stop):
@@ -154,4 +154,4 @@ def ask_string(message):
 
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
-    _ = (decrement)
+    _ = (decrement,)

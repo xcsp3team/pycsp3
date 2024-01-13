@@ -244,7 +244,7 @@ def _compact_values(values, limit):
     if options.dontcompactvalues:
         return values
     assert isinstance(values, list) and len(values) > 0, type(values)
-    l = []
+    t = []
     i = 0
     last = values[0]
     while True:
@@ -253,15 +253,15 @@ def _compact_values(values, limit):
             i += 1
         nb = i - before
         if nb >= limit:
-            l.append(str(last) + "x" + str(nb))
+            t.append(str(last) + "x" + str(nb))
         else:
             for _ in range(nb):
-                l.append(last)
+                t.append(last)
         if i == len(values):
             break
         last = values[i]
-    p = len(values) / len(l)
-    return l if p > 1.4 or (p > 1.2 and len(values) > 10) else values  # 40% ?
+    p = len(values) / len(t)
+    return t if p > 1.4 or (p > 1.2 and len(values) > 10) else values  # 40% ?
 
 
 def __compact_argument_value(arg):
@@ -276,7 +276,7 @@ def _compact_constraint_arguments(arguments):
             if not isinstance(arg.content[0], list):  # It is only one list
                 arg.content = __compact_argument_value(arg)
             elif arg.lifted is True:
-                arg.content = [compact(l, preserve_order=arg.content_ordered) for l in arg.content]
+                arg.content = [compact(p, preserve_order=arg.content_ordered) for p in arg.content]
         elif arg.name == TypeCtrArg.MATRIX:  # Special case for matrix
             # sc = None if is_containing(arg.content, int) else _simple_compact(flatten(arg.content))
             sc = None if is_containing(arg.content_compressible, int) else _simple_compact(flatten(arg.content_compressible))
