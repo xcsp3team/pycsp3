@@ -1,9 +1,9 @@
+import itertools
 import os
 import sys
 import types
 from collections.abc import Iterable
 from decimal import Decimal
-from itertools import product, combinations
 from multiprocessing import cpu_count, Pool
 from time import time
 
@@ -11,6 +11,11 @@ from pycsp3 import tools
 from pycsp3.classes.auxiliary import conditions
 from pycsp3.classes.main.domains import Domain
 from pycsp3.dashboard import options
+
+
+def check_int(s):
+    s = str(s).strip()
+    return s[1:].isdigit() if s[0] in ('-', '+') else s.isdigit()
 
 
 class Stopwatch:
@@ -42,11 +47,9 @@ ANY = _Star("Inf")  #: used to represent * in short tables
 ALL = "all"
 """ Constant used to indicate, for example, that all solutions must be sought """
 
-combinationsItertools = combinations
-
 
 def combinations(n, size):
-    return combinationsItertools(n, size) if not isinstance(n, int) else combinationsItertools(range(n), size)
+    return itertools.combinations(n if not isinstance(n, int) else range(n), size)
 
 
 def different_values(*args):
@@ -338,7 +341,7 @@ def to_ordinary_table(table, domains, *, possibly_starred=False):
         development = ({v} if isinstance(v, int) else ({v} if possibly_starred else doms[i]) if v == ANY
         else [w for w in v if w in doms[i]] if isinstance(v, (list, tuple, set, frozenset))
         else v.filtering(doms[i]) for i, v in enumerate(t))
-        return product(*development)
+        return itertools.product(*development)
 
     doms = [range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]
     T = list()  # we use a list because its processing is faster than a set
@@ -359,7 +362,7 @@ def to_reified_ordinary_table(table, domains):
     table = sorted(table)
     assert all(isinstance(v, int) for t in table for v in t)  # currently, only possible on ordinary tables
     i, T = 0, []
-    for valid in product(*[range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]):
+    for valid in itertools.product(*[range(d) if isinstance(d, int) else d.all_values() if isinstance(d, Domain) else d for d in domains]):
         if i < len(table) and table[i] == valid:
             T.append((*valid, 1))
             i += 1

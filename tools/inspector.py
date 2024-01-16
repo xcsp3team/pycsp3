@@ -368,7 +368,7 @@ def checkType(obj, allowed_types, message=""):
     #     modeling_file = stack[[i for i, s in enumerate(stack) if s.function == "<module>"][0]]
     # function_name = "satisfy"
     # problem_lines = []
-    # if function_name in name_function_stack: #  satisfy case
+    # if function_name in name_function_stack: # satisfy case
     #     code = list(reversed(_extract_code(function_name)))
     #     if len(code) > 0:
     #         without_bracket_code = _delete_bracket_part(code, functions.nb_parameter_satisfy)

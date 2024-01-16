@@ -17,7 +17,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
-    ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection, Parameter)
+    ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
@@ -65,7 +65,7 @@ def variant(name=None):
     :return: the name of the variant specified by the user, or a Boolean
     """
     assert options.variant is None or isinstance(options.variant, str)
-    pos = -1 if options.variant is None else options.variant.find("-")  # position of dash ('-') in options.variant
+    pos = -1 if options.variant is None else options.variant.find("-")  # position of dash in options.variant
     option_variant = options.variant[0:pos] if pos != -1 else options.variant
     return option_variant if name is None else option_variant == name
 
@@ -81,7 +81,7 @@ def subvariant(name=None):
     :return: the name of the sub-variant specified by the user, or a Boolean
     """
     assert options.variant is None or isinstance(options.variant, str)
-    pos = -1 if options.variant is None else options.variant.find("-")  # position of dash ('-') in options.variant
+    pos = -1 if options.variant is None else options.variant.find("-")  # position of dash in options.variant
     option_subvariant = options.variant[pos + 1:] if pos != -1 else None
     return option_subvariant if name is None else option_subvariant == name
 
@@ -546,7 +546,9 @@ def _group(*_args, block=False):
     return EBlock(_block_reorder(entities)) if block else EToGather(entities)
 
 
-def satisfy_from_auxiliary(t=[]):
+def satisfy_from_auxiliary(t):
+    if t is None:
+        t = []
     to_post = _group(pc == var for (pc, var) in auxiliary().get_collected_and_clear())
     if to_post is not None:
         t.append(to_post)
@@ -566,7 +568,6 @@ def satisfy(*args, no_comment_tags_extraction=False):
     :param args: the different constraints to be posted
     :return: an object wrapping the posted constraints
     """
-    global no_parameter_satisfy, nb_parameter_satisfy
 
     def _reorder(l):  # if constraints are given in (sub-)lists inside tuples; we flatten and reorder them to hopefully improve compactness
         d = dict()
@@ -578,8 +579,6 @@ def satisfy(*args, no_comment_tags_extraction=False):
                 d.setdefault(0, []).append(tp)
         return [v for vs in d.values() for v in vs]
 
-    no_parameter_satisfy = 0
-    nb_parameter_satisfy = len(args)
     comments1, comments2, tags1, tags2 = comments_and_tags_of_parameters_of(function_name="satisfy", args=args, no_extraction=no_comment_tags_extraction)
 
     t = []
@@ -610,7 +609,6 @@ def satisfy(*args, no_comment_tags_extraction=False):
                 for j, l in enumerate(arg):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
-        no_parameter_satisfy = i
 
         assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list)), "non authorized type " + str(arg) + " " + str(type(arg))
         comment_at_2 = any(comment != '' for comment in comments2[i])
@@ -797,7 +795,7 @@ def imply(*args):
         tp = Node.build(TypeNode.EQ, auxiliary().replace_partial_constraint(tp), 1)
     res = manage_global_indirection(cnd, tp)
     if res is None:
-        return If(cnd, tp)
+        return If(cnd, Then=tp)
     # if len(res) == 2 and isinstance(res[1], (tuple, list, set, frozenset)):
     #     return [imply(res[0], v) for v in res[1]]
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
@@ -849,7 +847,7 @@ def ift(test, Then, Else):
         return [imply(test, v) for v in Then] + [test | v for v in Else]
     res = manage_global_indirection(test, Then, Else, also_pc=True)
     if res is None:
-        return If(test, Then, Else, meta=True)
+        return If(test, Then=Then, Else=Else, meta=True)
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
     assert len(res) == 3
     if isinstance(res[0], int):
@@ -991,7 +989,7 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         assert len(others) == 0
         matrix = [flatten(row) for row in term]
         assert all(len(row) == len(matrix[0]) for row in matrix), "The matrix id badly formed"
-        assert all(checkType(l, [Variable]) for l in matrix)
+        assert all(checkType(t, [Variable]) for t in matrix)
         if not options.mini:
             return ECtr(ConstraintAllDifferentMatrix(matrix, excepting))
         else:
@@ -1014,14 +1012,14 @@ def AllDifferentList(term, *others, excepting=None):
     :return: a constraint AllDifferentList
     """
     if isinstance(term, types.GeneratorType):
-        term = [l for l in term]
+        term = [v for v in term]
     elif len(others) > 0:
         term = list((term,) + others)
-    lists = [flatten(l) for l in term]
-    assert all(checkType(l, [Variable]) for l in lists)
+    lists = [flatten(v) for v in term]
+    assert all(checkType(t, [Variable]) for t in lists)
     excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
-    assert all(len(l) == len(lists[0]) for l in lists) and (excepting is None or len(excepting) == len(lists[0]))
+    assert all(len(t) == len(lists[0]) for t in lists) and (excepting is None or len(excepting) == len(lists[0]))
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 
@@ -1053,14 +1051,14 @@ def AllEqualList(term, *others, excepting=None):
     :return: a constraint AllEqualList
     """
     if isinstance(term, types.GeneratorType):
-        term = [l for l in term]
+        term = [v for v in term]
     elif len(others) > 0:
         term = list((term,) + others)
-    lists = [flatten(l) for l in term]
-    assert all(checkType(l, [Variable]) for l in lists)
+    lists = [flatten(v) for v in term]
+    assert all(checkType(t, [Variable]) for t in lists)
     excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
-    assert all(len(l) == len(lists[0]) for l in lists) and (excepting is None or len(excepting) == len(lists[0]))
+    assert all(len(t) == len(lists[0]) for t in lists) and (excepting is None or len(excepting) == len(lists[0]))
     if len(lists) == 2 and excepting is None:
         return [lists[0][i] == lists[1][i] for i in range(len(lists[0]))]
     return ECtr(ConstraintAllEqualList(lists, excepting))
@@ -1113,7 +1111,7 @@ def Decreasing(term, *others, strict=False, lengths=None):
 
 def _lex(term, others, operator, matrix):
     if len(others) == 0:
-        lists = [flatten(l) for l in term]
+        lists = [flatten(v) for v in term]
         assert is_matrix(lists, Variable)
     elif not is_1d_list(term, Variable):
         l1, l2 = flatten(term), flatten(others)
@@ -1124,10 +1122,10 @@ def _lex(term, others, operator, matrix):
             assert matrix is False
             lists = [flatten(term)] + [flatten(others[0])]
         else:
-            assert all(is_1d_list(l, Variable) for l in others)
-            lists = [flatten(term)] + [flatten(l) for l in others]
+            assert all(is_1d_list(v, Variable) for v in others)
+            lists = [flatten(term)] + [flatten(v) for v in others]
     assert is_matrix(lists)  # new check because some null cells (variables) may have been discarded
-    assert all(len(l) == len(lists[0]) for l in lists)
+    assert all(len(t) == len(lists[0]) for t in lists)
     assert all(checkType(l, [int, Variable] if i == 1 else [Variable]) for i, l in enumerate(lists))
     checkType(operator, TypeOrderedOperator)
     return ECtr(ConstraintLexMatrix(lists, operator)) if matrix else ECtr(ConstraintLex(lists, operator))
@@ -1468,11 +1466,11 @@ def Hamming(term, *others):
     :return: a constraint Sum
     """
     if isinstance(term, types.GeneratorType):
-        term = [l for l in term]
+        term = [v for v in term]
     elif len(others) > 0:
         term = list((term,) + others)
-    lists = [flatten(l) for l in term]
-    assert all(checkType(l, [Variable]) for l in lists) and len(lists) == 2 and len(lists[0]) == len(lists[1])
+    lists = [flatten(v) for v in term]
+    assert all(checkType(t, [Variable]) for t in lists) and len(lists) == 2 and len(lists[0]) == len(lists[1])
     return Sum(lists[0][j] != lists[1][j] for j in range(len(lists[0])))
 
 
@@ -1917,16 +1915,16 @@ def Clause(term, *others, phases=None):
     return ECtr(ConstraintClause(literals, phases))
 
 
-def Adhoc(form, note=None, **dict):
+def Adhoc(form, note=None, **d):
     """
     Builds a constraint adhoc from the specified arguments.
 
     :param form: a label (string) indicating the form of the adhoc constraint
     :note: a comment
-    :dict: a dictionary with all arguments of the adhoc constraint
+    :d: a dictionary with all arguments of the adhoc constraint
     :return: a constraint Hadhoc
     """
-    return ECtr(ConstraintAdhoc(form, note, dict))
+    return ECtr(ConstraintAdhoc(form, note, d))
 
 
 ''' Objectives '''
@@ -1958,9 +1956,9 @@ def _optimize(term, minimization):
 
     ObjEntities.items = []  # TODO currently, we overwrite the objective if one was posted
     if isinstance(term, PartialConstraint) and isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):
-        l = term.constraint.arguments[TypeCtrArg.LIST]
-        if len(l.content) == 1 and TypeCtrArg.COEFFS not in term.constraint.arguments:
-            term = l.content[0]  # this was a sum/maximum/minimum with only one term, so we just consider this term as an expression to be optimized
+        t = term.constraint.arguments[TypeCtrArg.LIST]
+        if len(t.content) == 1 and TypeCtrArg.COEFFS not in term.constraint.arguments:
+            term = t.content[0]  # this was a sum/maximum/minimum with only one term, so we just consider this term as an expression to be optimized
     if isinstance(term, ScalarProduct):
         term = Sum(term)  # to have a PartialConstraint
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"

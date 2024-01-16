@@ -112,6 +112,11 @@ class TypeXML(AbstractType):
     ANNOTATIONS, DECISION, OUTPUT, VAR_HEURISTIC, VAL_HEURISTIC, PREPRO, SEARCH, RESTARTS, FILTERING = auto(9)
 
 
+@unique
+class TypeObj(AbstractType):
+    EXPRESSION, SUM, PRODUCT, MINIMUM, MAXIMUM, NVALUES, LEX = auto(7)
+
+
 UTF_EQ = "\u003D"
 UTF_NE = "\u2260"
 UTF_LT = "\uFE64"  # ""\u227A"

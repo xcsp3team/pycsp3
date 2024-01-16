@@ -58,19 +58,6 @@ CHOCO = TypeSolver.CHOCO
 Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
 
 if sys.argv:
-    if len(sys.argv) == 1 and sys.argv[0] == "-m":  # copy of models
-        import shutil
-        import pycsp3
-
-        print("Python version: ", __python_version__)
-        print("PyCSP3 version: ", __pycsp3_version__)
-        problems = os.sep.join(pycsp3.__file__.split(os.sep)[:-1]) + os.sep + "problems" + os.sep
-        target = os.getcwd() + os.sep + "problems" + os.sep
-        print("Source of files found: ", problems)
-        shutil.copytree(problems, target, ignore=shutil.ignore_patterns('g6_testing', 'g7_todo', 'tests', '__init__.py', '__pycache__*'))
-        print("Successfully created the directory " + target + " containing the problems !")
-        exit(0)
-
     from pycsp3.compiler import Compilation
 
     if sys.argv[-1] == '-debug':  # debug mode
@@ -233,10 +220,9 @@ def solve(*, solver=ACE, options="", filename=None, verbose=-1, sols=None, extra
         #         options += " -a "
         # _solver.setting(options)
         # limit = "limit=no" if sols == ALL else "limit=" + str(sols) + "sols" if isinstance(sols, int) else ""
-        # return _solver.solve(instance, string_options=limit, dict_options=args, dict_simplified_options=args_recursive, verbose=verbose, extraction=extraction)
+        # return _solver.solve(instance, string_options=limit, dict_options=args, dict_simplified_options=args_recursive,
+        # verbose=verbose, extraction=extraction)
 
-
-# def solve(*, solver=ACE, options=None, filename=None, disabling_opoverrider=False, verbose=0, sols=None):
 
 def _pycharm_security():  # for avoiding that imports are removed when reformatting code
     _ = (namedtuple, product, permutations)

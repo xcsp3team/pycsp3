@@ -10,7 +10,7 @@ from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
 LT, LE, GE, GT, EQ, NE, IN, NOTIN = [t for t in TypeConditionOperator]
 
 
-# if isinstance("zz", main.constraints.Parameter):  # TODO it is not working. why? main.variables.Variable is working.
+# if isinstance("zz", main.constraints.Parameter):  # TODO it is not working. why? In contrary,  main.variables.Variable is working.
 #     print("toto")
 
 

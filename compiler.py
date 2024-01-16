@@ -110,10 +110,10 @@ def _load_data():
         s = ""
         for arg in args:
             if "=" in arg:
-                t = arg.split('=')
-                value = _arg_value(t[1])
-                compilation_data[t[0]] = value
-                s += "-" + str(value)
+                tmp = arg.split('=')
+                val = _arg_value(tmp[1])
+                compilation_data[tmp[0]] = val
+                s += "-" + str(val)
             else:
                 assert arg.endswith("json")
                 assert os.path.exists(arg), "The file " + arg + " does not exist (in the specified directory)." + str(os.path)
@@ -335,7 +335,7 @@ def _compile(disabling_opoverrider=False, verbose=1):
                     else:
                         json_prefix = _basic_token(options.data) if options.data else None
                     # json_prefix = options.data.split(os.sep)[-1].split(".")[:1][0] if options.dataparser else filename_prefix
-                # TODO if data are given with name as e.g., in [k=3,l=9,b=0,r=0,v=9] for Bibd, maybe we should sort them
+                # TODO if data are given with name as e.g., in [k=3,l=9,b=0,r=0,v=9] for BIBD, maybe we should sort them
             else:
                 json_prefix = str(options.dataexport)
             with open(Compilation.pathname + json_prefix + '.json', 'w') as f:
