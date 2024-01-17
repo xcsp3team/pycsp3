@@ -617,14 +617,14 @@ class Node(Entity):
                 son._variables_recursive(harvest)
         if self.leaf and self.type == TypeNode.VAR:
             if self.sons not in harvest:
-                harvest.add(self.sons)
+                harvest.append(self.sons)
         return harvest
 
-    def variables(self):
+    def list_of_variables(self):
         return self._variables_recursive([])
 
     def variable(self, i):
-        return self.variables()[i]
+        return self.list_of_variables()[i]
 
     def flatten_by_associativity(self, node_type):
         while True:

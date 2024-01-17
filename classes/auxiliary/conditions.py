@@ -53,6 +53,7 @@ class Condition:
             return ConditionParameter(operator, right_operand)
         if isinstance(right_operand, (list, tuple, set, frozenset)):
             return ConditionSet(operator, set(right_operand))
+        assert False
 
     def filtering(self, values):
         pass
