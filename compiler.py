@@ -18,6 +18,7 @@ from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtup
 from pycsp3.tools.slider import handle_slides
 from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE, Error, error
 from pycsp3.tools.xcsp import build_document
+from pycsp3.tools.inspector import build_dynamic_object
 
 None_Values = ['None', '', 'null']  # adding 'none'?
 
@@ -296,11 +297,7 @@ def _compile(disabling_opoverrider=False, verbose=1):
         options.verbose and print("\tWCK for compacting forms:", stopwatch.elapsed_time(reset=True), "seconds")
 
     if options.callback is not None:
-        from importlib import import_module
-
-        cb = options.callback.replace("/", ".")
-        md = import_module(cb)
-        obj = eval(f"md.{cb.split('.')[-1]}()")
+        obj = build_dynamic_object(options.callback, options.callback)
         obj.loadInstance()
 
         root = None

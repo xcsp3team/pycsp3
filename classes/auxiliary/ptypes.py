@@ -70,6 +70,29 @@ class TypeCtr(AbstractType):
     SUBSET_ALL_DIFFERENT = auto(1)  # experimental
     DUMMY = auto(1)
 
+    @staticmethod
+    def value_of(s):
+        s = s.upper()
+        assert isinstance(s, str)
+        try:
+            return TypeCtr[s]
+        except KeyError:
+            if s == "ALLDIFFERENT":
+                return TypeCtr.ALL_DIFFERENT
+            if s == "ALLEQUAL":
+                return TypeCtr.ALL_EQUAL
+            if s == "NVALUES":
+                return TypeCtr.N_VALUES
+            if s == "NOOVERLAP":
+                return TypeCtr.NO_OVERLAP
+            if s == "BINPACKING":
+                return TypeCtr.BIN_PACKING
+            if s == "MINIMUMARG":
+                return TypeCtr.MINIMUM_ARG
+            if s == "MAXIMUMARG":
+                return TypeCtr.MAXIMUM_ARG
+        raise ValueError
+
 
 @unique
 class TypeCtrArg(AbstractType):
@@ -109,12 +132,33 @@ class TypeXML(AbstractType):
     CONSTRAINTS, BLOCK, GROUP, ARGS = auto(4)
     OBJECTIVES, OBJECTIVE, MINIMIZE, MAXIMIZE = auto(4)
     SOFT = auto()
-    ANNOTATIONS, DECISION, OUTPUT, VAR_HEURISTIC, VAL_HEURISTIC, PREPRO, SEARCH, RESTARTS, FILTERING = auto(9)
+    ANNOTATIONS, CONSISTENCY, BRANCHING, CUTOFF, FACTOR = auto(5)
 
 
 @unique
 class TypeObj(AbstractType):
     EXPRESSION, SUM, PRODUCT, MINIMUM, MAXIMUM, NVALUES, LEX = auto(7)
+
+
+@unique
+class TypeAnn(AbstractType):
+    DECISION, OUTPUT = auto(2)
+    VAR_HEURISTIC, VAL_HEURISTIC = auto(2)
+    PREPRO, SEARCH = auto(2)
+    FILTERING, RESTARTS = auto(2)
+
+    @staticmethod
+    def value_of(s):
+        s = s.upper()
+        assert isinstance(s, str)
+        try:
+            return TypeAnn[s]
+        except KeyError:
+            if s == "VARHEURISTIC":
+                return TypeAnn.VAR_HEURISTIC
+            if s == "VALHEURISTIC":
+                return TypeAnn.VAL_HEURISTIC
+        raise ValueError
 
 
 UTF_EQ = "\u003D"

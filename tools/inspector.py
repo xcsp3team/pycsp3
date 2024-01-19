@@ -335,6 +335,14 @@ def extract_declaration_for(function_name):
         return declaration if "," not in declaration else [v.strip() for v in declaration.split(",")]
 
 
+def build_dynamic_object(mod, cls):
+    from importlib import import_module
+
+    cb = mod.replace("/", ".")
+    md = import_module(cb)
+    return eval(f"md.{cls}()")
+
+
 # def docstringOf(name):
 #    att = getattr(functions, name, None)
 #    return None if att is None else att.__doc__
