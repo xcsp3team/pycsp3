@@ -1,8 +1,8 @@
 <h1 align="center"> PyCSP3 v2.2 (December 10, 2023) </h1>
 
 
-**WARNING.** *Currently, the site pycsp.org is not available. This is due to a payment problem, and as we follow soviet-like procedures here in France (most of the time, we must use purchase orders), this may take some time. 
-For the same kind of reasons, I have decided to limit my missions, as with CNRS, each mission requires a couple of hours for just filling forms. This is not acceptable (especialy for the administrative agents who endire this Kafkaian world; some of them becoming depressed). I agree that our working environment is not professional*.
+**WARNING.** *Currently, the site pycsp.org is not available. This is due to a payment problem, and as we follow **soviet-like procedures** here in France (most of the time, we must use purchase orders), this may take some time. 
+For the same kind of reasons, I have decided to limit/cancel my missions, as with CNRS, each mission requires a couple of hours for just filling forms. **This is not acceptable** (especialy for the administrative agents who endure this Kafkaian world; some of them becoming depressed). I agree that our working environment is **not professional**.*
 
 This is Version 2.2 of PyCSP3, a library in Python 3 (version 3.8 or later) for modeling combinatorial constrained problems;
 see [www.pycsp.org](https://pycsp.org).
