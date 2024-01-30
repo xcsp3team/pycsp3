@@ -1,5 +1,6 @@
 <h1 align="center"> PyCSP3 v2.2 (December 10, 2023) </h1>
 
+
 This is Version 2.2 of PyCSP3, a library in Python 3 (version 3.8 or later) for modeling combinatorial constrained problems;
 see [www.pycsp.org](https://pycsp.org).
 PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API)
