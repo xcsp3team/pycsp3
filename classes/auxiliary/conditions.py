@@ -70,6 +70,9 @@ class Condition:
     def __str__(self):
         return "(" + str(self.operator) + "," + str(self.right_operand()) + ")"
 
+    def __repr__(self):
+        return self.__str__()
+
 
 class ConditionValue(Condition):
     def __init__(self, operator, value):

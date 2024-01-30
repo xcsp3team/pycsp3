@@ -520,6 +520,16 @@ class Node(Entity):
             return "%" + str(self.sons)
         return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
 
+    def __repr__(self):
+        return self.__str__()
+
+    def is_literal(self):
+        if self.type == TypeNode.VAR:
+            return self.sons.dom.is_binary()
+        if self.type == TypeNode.NOT:
+            return self.sons[0].type == TypeNode.VAR and self.sons[0].sons.dom.is_binary()
+        return False
+
     def possible_values(self):
         if self.type.is_predicate_operator():
             return range(0, 2)  # we use a range instead of [0,1] because it simplifies computation (see code below)

@@ -570,7 +570,6 @@ class ConstraintCardinality(Constraint):
 
 
 def _index_att(v):
-    assert v is None or v == 0  # for the moment
     return [(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
 
 
