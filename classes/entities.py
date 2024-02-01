@@ -1,7 +1,7 @@
 import re
 import types
 from enum import Enum, unique
-from functools import reduce
+from functools import reduce, cmp_to_key
 from itertools import product
 
 from pycsp3.classes import main
@@ -425,6 +425,31 @@ class TypeNode(Enum):
     def is_predicate_operator(self):
         return self.is_logical_operator() or self.is_relational_operator() or self in {TypeNode.IN, TypeNode.NOTIN}
 
+    def is_symmetric_operator(self):
+        return self in {TypeNode.ADD, TypeNode.MUL, TypeNode.MIN, TypeNode.MAX, TypeNode.DIST, TypeNode.NE, TypeNode.EQ, TypeNode.SET, TypeNode.AND,
+                        TypeNode.OR, TypeNode.XOR, TypeNode.IFF, TypeNode.UNION, TypeNode.INTER, TypeNode.DJOINT}
+
+    def is_unsymmetric_relational_operator(self):
+        return self in {TypeNode.LT, TypeNode.LE, TypeNode.GE, TypeNode.GT}
+
+    def is_identity_when_one_operand(self):
+        return self in {TypeNode.ADD, TypeNode.MUL, TypeNode.MIN, TypeNode.MAX, TypeNode.EQ, TypeNode.AND, TypeNode.OR, TypeNode.XOR, TypeNode.IFF}
+
+    def arithmetic_inversion(self):  # when multiplied by -1
+        if self == TypeNode.LT:
+            return TypeNode.GT
+        if self == TypeNode.LE:
+            return TypeNode.GE
+        if self == TypeNode.GE:
+            return TypeNode.LE
+        if self == TypeNode.GT:
+            return TypeNode.LT
+        if self == TypeNode.NE:
+            return TypeNode.NE
+        if self == TypeNode.EQ:
+            return TypeNode.EQ
+        return None
+
     @staticmethod
     def value_of(v):
         if isinstance(v, TypeNode):
@@ -711,6 +736,26 @@ class Node(Entity):
         sons = [son.concretization(args) for son in self.sons]
         return Node(self.type, sons)
 
+    def canonization(self):
+        if self.leaf:
+            return Node(self.type, self.sons)  # we return a similar object
+        # we will build the canonized form of the node, with the two following local variables
+        t = self.type  # possibly, this initial value of type will be modified during canonization
+        s = [son.canonization() for son in self.sons]
+        if t.is_symmetric_operator():
+            s = sorted(s, key=cmp_to_key(Node.compare_to))  # sons are sorted if the type of the node is symmetric
+        # Now, sons are potentially sorted if the type corresponds to a non-symmetric binary relational operator (in
+        # that case, we swap sons and arithmetically inverse the operator provided that the ordinal value of the reverse operator is smaller)
+        if len(s) == 2 and t.is_unsymmetric_relational_operator():  # if LT,LE,GE,GT
+            tt = t.arithmetic_inversion()
+            if tt.value[0] < t.value[0] or (tt.value[0] == t.value[0] and Node.compare_to(s[0], s[1]) > 0):
+                t = tt
+                s = [s[1], s[0]]  # swap
+        if len(s) == 1 and t.is_identity_when_one_perand():  # // add(x) becomes x, min(x) becomes x, ...
+            return s[0]  # certainly can happen during the canonization process
+        node = Node(t, s)
+        return node  # TODO to be finsihed
+
     """
       Static methods
     """
@@ -800,3 +845,28 @@ class Node(Entity):
     def not_in_range(x, r):
         assert isinstance(r, range) and r.step == 1
         return Node.build(TypeNode.OR, Node.build(TypeNode.LT, x, r.start), Node.build(TypeNode.GE, x, r.stop))
+
+    @staticmethod
+    def compare_to(node1, node2):
+        if node1.type != node2.type:
+            return node1.type.value[0] - node2.type.value[0]
+        if node1.type.is_leaf():
+            v1, v2 = node1.sons, node2.sons
+            if node1.type == TypeNode.VAR:
+                return -1 if v1.id < v2.id else 1 if v1.id > v2.id else 0
+            if node1.type in (TypeNode.PAR, TypeNode.INT):
+                return v1 - v2
+            if node1.type == TypeNode.SYMBOL:
+                return -1 if v1 < v2 else 1 if v1 > v2 else 0
+            if node1.type == TypeNode.SET:
+                return 0  # because two empty sets
+            assert False
+        if len(node1.sons) < len(node2.sons):
+            return -1
+        if len(node1.sons) > len(node2.sons):
+            return 1
+        for i in range(len(node1.sons)):
+            res = Node.compare_to(node1.sons[i], node2.sons[i])
+            if res != 0:
+                return res
+        return 0
