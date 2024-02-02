@@ -1,7 +1,7 @@
 import re
 from enum import unique
 
-from pycsp3.classes.auxiliary.ptypes import auto, AbstractType, TypeXML
+from pycsp3.classes.auxiliary.ptypes import auto, AbstractType, TypeAnn
 from pycsp3.classes.main.constraints import ConstraintUnmergeable
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
@@ -55,18 +55,18 @@ class Annotation(ConstraintUnmergeable):
 
 class AnnotationDecision(Annotation):
     def __init__(self, variables):
-        super().__init__(TypeXML.DECISION)
+        super().__init__(TypeAnn.DECISION)
         variables = flatten(variables)
         checkType(variables, [Variable])
-        self.arg(TypeXML.DECISION, variables)
+        self.arg(TypeAnn.DECISION, variables)
 
 
 class AnnotationOutput(Annotation):
     def __init__(self, variables):
-        super().__init__(TypeXML.OUTPUT)
+        super().__init__(TypeAnn.OUTPUT)
         variables = flatten(variables)
         checkType(variables, [Variable])
-        self.arg(TypeXML.OUTPUT, variables)
+        self.arg(TypeAnn.OUTPUT, variables)
 
 
 class AnnotationHeuristic(Annotation):
@@ -85,7 +85,7 @@ class AnnotationHeuristic(Annotation):
 
 class AnnotationVarHeuristic(AnnotationHeuristic):
     def __init__(self, h):
-        super().__init__(TypeXML.VAR_HEURISTIC)
+        super().__init__(TypeAnn.VAR_HEURISTIC)
         checkType(h, VarHeuristic)
         self.attributes.append((TypeAnnArg.LC, h.lc))
         if h.staticParts:
@@ -95,7 +95,7 @@ class AnnotationVarHeuristic(AnnotationHeuristic):
 
 class AnnotationValHeuristic(AnnotationHeuristic):
     def __init__(self, h):
-        super().__init__(TypeXML.VAL_HEURISTIC)
+        super().__init__(TypeAnn.VAL_HEURISTIC)
         checkType(h, ValHeuristic)
         if h.staticParts:
             self.arg(TypeAnnArg.STATICS, h.staticParts)
@@ -106,28 +106,28 @@ class AnnotationValHeuristic(AnnotationHeuristic):
 
 class AnnotationFiltering(Annotation):
     def __init__(self, consistency):
-        super().__init__(TypeXML.FILTERING)
+        super().__init__(TypeAnn.FILTERING)
         checkType(consistency, TypeConsistency)
         self.attributes.append((TypeAnnArg.TYPE, consistency))
 
 
 class AnnotationPrepro(Annotation):
     def __init__(self, consistency):
-        super().__init__(TypeXML.PREPRO)
+        super().__init__(TypeAnn.PREPRO)
         checkType(consistency, TypeConsistency)
         self.attributes.append((TypeAnnArg.CONSISTENCY, consistency))
 
 
 class AnnotationSearch(Annotation):
     def __init__(self, search):
-        super().__init__(TypeXML.SEARCH)
+        super().__init__(TypeAnn.SEARCH)
         checkType(search, Search)
         self.attributes = [(TypeAnnArg.CONSISTENCY, search.consistency), (TypeAnnArg.BRANCHING, search.branching)]
 
 
 class AnnotationRestarts(Annotation):
     def __init__(self, restarts):
-        super().__init__(TypeXML.RESTARTS)
+        super().__init__(TypeAnn.RESTARTS)
         checkType(restarts, Restarts)
         self.attributes = [(TypeAnnArg.TYPE, restarts.type), (TypeAnnArg.CUTOFF, restarts.cutoff), (TypeAnnArg.FACTOR, restarts.factor)]
 

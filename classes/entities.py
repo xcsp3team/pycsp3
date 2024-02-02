@@ -504,8 +504,8 @@ class Node(Entity):
         Node.all_nodes.append(self)
         self.used = False
         self.type = node_type
+        self.sons = [] if args is None else args  # TODO sons is used whatever this is a parent or a leaf node; not a good choice. change the name of this field ??? to content ??
         self.leaf = node_type.is_leaf()
-        self.sons = args  # TODO sons is used whatever this is a parent or a leaf node; not a good choice. change the name of this field ??? to content ??
         self.abstractTree = None
         self.abstractValues = None
 
@@ -751,7 +751,7 @@ class Node(Entity):
             if tt.value[0] < t.value[0] or (tt.value[0] == t.value[0] and Node.compare_to(s[0], s[1]) > 0):
                 t = tt
                 s = [s[1], s[0]]  # swap
-        if len(s) == 1 and t.is_identity_when_one_perand():  # // add(x) becomes x, min(x) becomes x, ...
+        if len(s) == 1 and t.is_identity_when_one_operand():  # // add(x) becomes x, min(x) becomes x, ...
             return s[0]  # certainly can happen during the canonization process
         node = Node(t, s)
         return node  # TODO to be finsihed
