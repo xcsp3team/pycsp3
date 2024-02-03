@@ -1,6 +1,6 @@
 import re
 
-from pycsp3.classes.auxiliary.ptypes import TypeVar
+from pycsp3.classes.auxiliary.enums import TypeVar
 from pycsp3.classes.main.domains import Domain
 from pycsp3.tools.utilities import error_if, flatten
 from pycsp3 import functions

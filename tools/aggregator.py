@@ -2,7 +2,7 @@ import re
 from collections import OrderedDict
 
 from pycsp3.classes.auxiliary.conditions import Condition
-from pycsp3.classes.auxiliary.ptypes import TypeCtrArg
+from pycsp3.classes.auxiliary.enums import TypeCtrArg
 from pycsp3.classes.entities import CtrEntities, ECtr, ECtrs, EMetaCtr, EGroup, EBlock, EToGather, ESlide, EToSatisfy
 from pycsp3.classes.main.constraints import ConstraintIntension, Diffs, ConstraintInstantiation
 from pycsp3.classes.main.variables import Variable

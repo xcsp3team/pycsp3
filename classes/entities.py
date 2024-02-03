@@ -2,7 +2,7 @@ import re
 
 from pycsp3 import tools
 from pycsp3.classes import main
-from pycsp3.classes.auxiliary.ptypes import TypeCtr, TypeCtrArg
+from pycsp3.classes.auxiliary.enums import TypeCtr, TypeCtrArg
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing, warning, ANY, combinations

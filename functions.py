@@ -3,7 +3,7 @@ import math
 import types
 
 from pycsp3.classes.auxiliary.conditions import Condition, eq, le
-from pycsp3.classes.auxiliary.ptypes import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
+from pycsp3.classes.auxiliary.enums import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.structures import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,

@@ -1,7 +1,7 @@
 import re
 from enum import unique
 
-from pycsp3.classes.auxiliary.ptypes import auto, AbstractType, TypeAnn
+from pycsp3.classes.auxiliary.enums import auto, AbstractType, TypeAnn
 from pycsp3.classes.main.constraints import ConstraintUnmergeable
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType

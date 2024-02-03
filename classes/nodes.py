@@ -4,8 +4,8 @@ from functools import reduce, cmp_to_key
 from itertools import product
 
 from pycsp3.classes import main
-from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator, TypeOrderedOperator
-from pycsp3.classes.auxiliary.ptypes import auto
+from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeOrderedOperator
+from pycsp3.classes.auxiliary.enums import auto
 from pycsp3.classes.entities import Entity, EVar
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import flatten, warning

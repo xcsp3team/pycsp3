@@ -2,7 +2,7 @@ from functools import total_ordering
 from types import GeneratorType
 
 from pycsp3.classes import main
-from pycsp3.classes.auxiliary.ptypes import TypeConditionOperator
+from pycsp3.classes.auxiliary.enums import TypeConditionOperator
 from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY

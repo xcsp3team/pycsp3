@@ -7,7 +7,7 @@ import uuid
 
 from lxml import etree
 
-from pycsp3.classes.auxiliary.ptypes import TypeStatus
+from pycsp3.classes.auxiliary.enums import TypeStatus
 from pycsp3.classes.entities import VarEntities, EVar
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.compiler import Compilation

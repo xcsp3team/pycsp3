@@ -1,4 +1,4 @@
-from pycsp3.classes.auxiliary.ptypes import TypeVar
+from pycsp3.classes.auxiliary.enums import TypeVar
 from pycsp3.classes.auxiliary.values import IntegerValue, IntegerInterval, SymbolicValue
 
 import math

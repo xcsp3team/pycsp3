@@ -3,7 +3,7 @@ from collections import OrderedDict
 from pycsp3 import functions
 from pycsp3.classes import main
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, ConditionNode
-from pycsp3.classes.auxiliary.ptypes import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeAnn, TypeConditionOperator, TypeOrderedOperator, TypeRank
+from pycsp3.classes.auxiliary.enums import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeAnn, TypeConditionOperator, TypeOrderedOperator, TypeRank
 from pycsp3.classes.auxiliary.values import IntegerEntity
 from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr
 from pycsp3.classes.main.domains import Domain

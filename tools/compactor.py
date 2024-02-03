@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 
-from pycsp3.classes.auxiliary.ptypes import TypeCtrArg
+from pycsp3.classes.auxiliary.enums import TypeCtrArg
 from pycsp3.classes.entities import CtrEntities, ObjEntities, AnnEntities, ESlide, EGroup, VarEntities
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import flatten, is_containing, is_1d_list

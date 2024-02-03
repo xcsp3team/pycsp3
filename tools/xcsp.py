@@ -3,7 +3,7 @@ from collections import OrderedDict
 from lxml import etree
 
 from pycsp3.classes.auxiliary.conditions import Condition
-from pycsp3.classes.auxiliary.ptypes import TypeFramework, TypeConditionOperator, TypeXML, TypeVar, TypeCtr, TypeCtrArg
+from pycsp3.classes.auxiliary.enums import TypeFramework, TypeConditionOperator, TypeXML, TypeVar, TypeCtr, TypeCtrArg
 from pycsp3.classes.entities import (Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, EBlock, ESlide, EToGather,
                                      EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities)
 from pycsp3.classes.main.annotations import TypeAnnArg
