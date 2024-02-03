@@ -18,6 +18,27 @@ def check_int(s):
     return s[1:].isdigit() if s[0] in ('-', '+') else s.isdigit()
 
 
+def neg_range(r: range):
+    assert isinstance(r, range) and r.step == 1
+    return range(-r.stop + 1, -r.start + 1)
+
+
+def abs_range(r: range):
+    assert isinstance(r, range) and r.step == 1
+    return range(0 if 0 in r else min(abs(r.start), abs(r.stop - 1)), max(abs(r.start), abs(r.stop - 1)) + 1)
+
+
+def add_range(r1: range, r2: range):
+    assert isinstance(r1, range) and r1.step == 1 and isinstance(r2, range) and r2.step == 1
+    return range(r1.start + r2.start, r1.stop + r2.stop - 1)
+
+
+def possible_range(s: set[int], control_int=False):
+    assert isinstance(s, set) and (not control_int or all(isinstance(v, int) for v in s))
+    t = sorted(s)
+    return range(t[0], t[-1] + 1) if 1 < t[-1] - t[0] + 1 == len(t) else t
+
+
 class Stopwatch:
     def __init__(self):
         self.initial_time = time()

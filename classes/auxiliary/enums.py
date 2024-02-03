@@ -536,3 +536,7 @@ class TypeHexagonSymmetry(Enum):
                 TypeHexagonSymmetry._cache[key] = [[rot(i, j) for j in range(widths[i])] for i in range(w)]
 
         return TypeHexagonSymmetry._cache[key]
+
+
+class TypeAbstractOperation(Enum):
+    ariop, relop, setop, unalop, symop = auto(5)
