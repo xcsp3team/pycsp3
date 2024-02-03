@@ -15,10 +15,10 @@ from pycsp3.problems.data import parsing
 from pycsp3.tools.aggregator import build_similar_constraints
 from pycsp3.tools.compactor import build_compact_forms
 from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtuple
+from pycsp3.tools.inspector import build_dynamic_object
 from pycsp3.tools.slider import handle_slides
 from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE, Error, error
 from pycsp3.tools.xcsp import build_document
-from pycsp3.tools.inspector import build_dynamic_object
 
 None_Values = ['None', '', 'null']  # adding 'none'?
 

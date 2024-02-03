@@ -2,15 +2,16 @@ import types
 from collections import deque, namedtuple
 
 from pycsp3 import functions
-from pycsp3.classes.entities import Node, TypeNode, ECtr, EMetaCtr
+from pycsp3.classes.entities import ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintAllDifferentList, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
     ConstraintRefutation, auxiliary, global_indirection, manage_global_indirection)
 from pycsp3.classes.main.variables import Variable, VariableInteger
-from pycsp3.libs.forbiddenfruit import curse
-from pycsp3.tools.utilities import (
-    flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, is_square_matrix, is_cube, ANY, structured_list, warning, error_if)
+from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
+from pycsp3.libs.forbiddenfruit import curse
+from pycsp3.tools.utilities import (flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, is_square_matrix,
+                                    is_cube, ANY, structured_list, warning, error_if)
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
