@@ -4,7 +4,7 @@ import types
 
 from pycsp3.classes.auxiliary.conditions import Condition, eq, le
 from pycsp3.classes.auxiliary.enums import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
-from pycsp3.classes.auxiliary.structures import Automaton, MDD
+from pycsp3.classes.auxiliary.diagrams import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
     AnnEntities, CtrEntities, ObjEntities)
@@ -18,16 +18,15 @@ from pycsp3.classes.main.constraints import (
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
     ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
-from pycsp3.classes.main.domains import Domain
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
-from pycsp3.classes.main.variables import Variable, VariableInteger, VariableSymbolic
+from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic
 from pycsp3.classes.nodes import TypeNode, Node
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListCtr, cursing
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import (
-    flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2, warning,
-    warning_if, error_if)
+from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, warning, warning_if, error_if)
+
+from pycsp3.classes.auxiliary.tables import to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2
 
 ''' Global Variables '''
 
@@ -126,7 +125,7 @@ def Var(term=None, *others, dom=None, id=None):
             if dom[-1] - dom[0] + 1 == len(dom):
                 dom = range(dom[0], dom[-1] + 1)
         dom = Domain(dom)
-    error_if(dom.get_type() not in {TypeVar.INTEGER, TypeVar.SYMBOLIC},
+    error_if(dom.type not in {TypeVar.INTEGER, TypeVar.SYMBOLIC},
              "Currently, only integer and symbolic variables are supported. Problem with " + str(dom))
 
     var_name = id if id else extract_declaration_for("Var")  # the specified name, if present, has priority
@@ -141,7 +140,7 @@ def Var(term=None, *others, dom=None, id=None):
     comment, tags = comment_and_tags_of(function_name="Var")
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
 
-    var_object = VariableInteger(var_name, dom) if dom.get_type() == TypeVar.INTEGER else VariableSymbolic(var_name, dom)
+    var_object = VariableInteger(var_name, dom) if dom.type == TypeVar.INTEGER else VariableSymbolic(var_name, dom)
     Variable.name2obj[var_name] = var_object
     EVar(var_object, comment, tags)  # object wrapping the variable x
     return var_object
@@ -201,9 +200,7 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
 
     if isinstance(dom, (tuple, list, set)):
-        domain = flatten(dom)
-        assert all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)
-        dom = Domain(set(domain))
+        dom = Domain(set(flatten(dom)))
     var_objects = Variable.build_variables_array(array_name, size, dom)
 
     if isinstance(array_name, list):

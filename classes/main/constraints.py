@@ -4,15 +4,14 @@ from pycsp3 import functions
 from pycsp3.classes import main
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, ConditionNode
 from pycsp3.classes.auxiliary.enums import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeAnn, TypeConditionOperator, TypeOrderedOperator, TypeRank
-from pycsp3.classes.auxiliary.values import IntegerEntity
+from pycsp3.classes.auxiliary.tables import to_ordinary_table, to_reified_ordinary_table
 from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr
-from pycsp3.classes.main.domains import Domain
-from pycsp3.classes.main.variables import Variable, VariableInteger
+from pycsp3.classes.main.variables import Domain, Variable, VariableInteger
 from pycsp3.classes.nodes import TypeNode, Node
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
 from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, integers_to_string, table_to_string, flatten, is_matrix, is_2d_list, error, error_if, \
-    to_ordinary_table, to_reified_ordinary_table, warning, is_windows, possible_range
+    warning, is_windows, possible_range
 
 
 class Parameter:
@@ -647,7 +646,7 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         super().__init__(TypeCtr.ELEMENT)
         if len(lst) == 0:
             error("A constraint Element on an empty list of variables is encountered. Did you write something like x[:j] instead of x[:,j]?")
-        smallest = [] if index is None else index.dom[0].smallest() if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
+        smallest = [] if index is None else index.dom.smallest_value()  # if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
         if index is not None:
             lst_flatten = flatten(lst)
@@ -1193,7 +1192,7 @@ class _Auxiliary:
 
     def new_var(self, *args):
         dom = args[0] if len(args) == 1 and isinstance(args[0], Domain) else Domain(args)
-        assert dom.get_type() == TypeVar.INTEGER
+        assert dom.type == TypeVar.INTEGER
         index = len(self._introduced_variables)
         name = self.prefix + "[" + str(index) + "]"
         aux = VariableInteger(name, dom)

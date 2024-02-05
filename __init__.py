@@ -21,16 +21,16 @@ from pycsp3.functions import (AllDifferent, AllDifferentList, AllEqual, AllEqual
 from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
-from pycsp3.tools.utilities import (ANY, ALL, combinations, different_values, decrement, flatten, alphabet_positions, all_primes,
-                                    integer_scaling, to_ordinary_table, warning)
+from pycsp3.tools.utilities import (ANY, ALL, combinations, different_values, decrement, flatten, alphabet_positions, all_primes, integer_scaling, warning)
 
 if sys.version_info[1] < 9:
     warning("It is recommended that Python should be at least 3.9 (for example, the walrus operator is used at some places)")
 
 from pycsp3.classes.auxiliary.conditions import lt, le, ge, gt, eq, ne, complement
 from pycsp3.classes.auxiliary.enums import TypeStatus, TypeSolver, TypeRank
+from pycsp3.classes.auxiliary.tables import to_ordinary_table
 from pycsp3.classes.entities import clear
-from pycsp3.classes.auxiliary.structures import Automaton, MDD  # KEEP it here after other imports
+from pycsp3.classes.auxiliary.diagrams import Automaton, MDD  # KEEP it here after other imports
 
 from pycsp3.compiler import default_data, load_json_data
 

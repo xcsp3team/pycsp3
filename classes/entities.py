@@ -56,7 +56,7 @@ class EVar(Entity):
         VarEntities.varToEVar[x] = self
 
     def get_type(self):
-        return self.variable.dom.get_type()
+        return self.variable.dom.type
 
     def __call__(self):
         return self.variable
@@ -94,7 +94,7 @@ class EVarArray(Entity):
         VarEntities.varToEVarArray[var] = self
 
     def get_type(self):
-        return self.flatVars[0].dom.get_type()
+        return self.flatVars[0].dom.type
 
     def __getitem__(self, i):
         return self.variables[i]

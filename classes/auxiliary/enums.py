@@ -539,4 +539,4 @@ class TypeHexagonSymmetry(Enum):
 
 
 class TypeAbstractOperation(Enum):
-    ariop, relop, setop, unalop, symop = auto(5)
+    ARIOP, RELOP, SETOP, UNALOP, SYMOP = auto(5)

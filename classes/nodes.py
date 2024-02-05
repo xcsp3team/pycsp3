@@ -56,12 +56,9 @@ class TypeNode(Enum):
     ''' N-ary (2 to infinity)'''
     ADD, MUL, MIN, MAX, NE, EQ, AND, OR, XOR, IFF, UNION, INTER, SDIFF = ((id, 2, float("inf")) for id in auto(13))
 
-    SET = (auto(), 0, float("inf"))
+    SET = (auto(), 0, float("inf"))  # SET is always considered as a parent with a (possibly empty) list of sons
 
     SPECIAL = (auto(), 0, float("inf"))
-
-    def is_leaf(self):
-        return self == TypeNode.SPECIAL or (self.min_arity == self.max_arity == 0)
 
     def is_valid_arity(self, k):
         return self.min_arity <= k <= self.max_arity
@@ -136,7 +133,7 @@ class TypeNode(Enum):
     def is_flattenable(self):
         return self in {TypeNode.ADD, TypeNode.MUL, TypeNode.MIN, TypeNode.MAX, TypeNode.AND, TypeNode.OR}
 
-    def is_mergeablew(self):
+    def is_mergeable(self):
         return self.is_flattenable()
 
     @staticmethod
@@ -172,9 +169,8 @@ class Node(Entity):
         Node.all_nodes.append(self)
         self.used = False
         self.type = node_type
-        self.leaf = node_type.is_leaf()
-        self.sons = [] if args is None else [args] if not self.leaf and not isinstance(args, list) else args  # for empty SET (we have None)
-        assert (not self.leaf) == (isinstance(self.sons, list)) or isinstance(self, NodeSpecial)
+        self.sons = [args] if isinstance(args, Node) else args  # for empty SET (we have []])
+        # assert (not self.leaf) == (isinstance(self.sons, list)) or isinstance(self, NodeSpecial)
         # if not self.leaf:
         #     print("kkkkkk", self.type)
         #     for son in self.sons:
@@ -195,15 +191,18 @@ class Node(Entity):
         # exit(1)
         return True
 
+    def is_leaf(self):
+        return not isinstance(self.sons, list)  # when unary node, we have also a list  (set is always with a list too)
+
     def eq__safe(self, other):
-        if not isinstance(other, Node) or self.type != other.type or self.leaf != other.leaf:
+        if not isinstance(other, Node) or self.type != other.type or self.is_leaf() != other.is_leaf():
             return False
-        if not self.leaf:
+        if not self.is_leaf():
             return len(self.sons) == len(other.sons) and all(self.sons[i].eq__safe(other.sons[i]) for i in range(len(self.sons)))
         return self.sons.eq__safe(other.sons) if isinstance(self.sons, Variable) else self.sons == other.sons
 
     def __str_hybrid__(self):
-        if self.type.is_leaf():
+        if self.is_leaf():
             if self.type == TypeNode.COL:
                 return "c" + str(self.sons)  # return "%" + str(self.sons)
             return str(self.sons)
@@ -218,7 +217,7 @@ class Node(Entity):
     def __str__(self):
         if self.type == TypeNode.COL:
             return "%" + str(self.sons)
-        return str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
+        return str(self.sons) if self.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.sons) + ")"
 
     def __repr__(self):
         return self.__str__()
@@ -229,6 +228,10 @@ class Node(Entity):
         if self.type == TypeNode.NOT:
             return self.sons[0].type == TypeNode.VAR and self.sons[0].sons.dom.is_binary()
         return False
+
+    def logical_inversion(self):
+        assert self.type.is_logically_invertible()
+        return Node(self.type.logical_inversion(), self.sons)
 
     def possible_values(self):
         if self.type.is_predicate_operator():
@@ -325,7 +328,7 @@ class Node(Entity):
         if isinstance(self.sons, list):
             for son in self.sons:
                 son._variables_recursive(harvest)
-        if self.leaf and self.type == TypeNode.VAR:
+        if self.type == TypeNode.VAR:
             if self.sons not in harvest:
                 harvest.append(self.sons)
         return harvest
@@ -384,14 +387,14 @@ class Node(Entity):
     def first_node_such_that(self, predicate):
         if predicate(self):
             return self
-        if self.leaf:
+        if self.is_leaf():
             return None
         return next((son for son in self.sons if son.first_node_such_that(predicate) is not None), None)
 
     def all_nodes_such_that(self, predicate, harvest):
         if predicate(self):
             harvest.append(self)
-        if not self.leaf:
+        if not self.is_leaf():
             for son in self.sons:
                 son.all_nodes_such_that(predicate, harvest)
         return harvest
@@ -400,12 +403,12 @@ class Node(Entity):
         return [n.sons for n in self.all_nodes_such_that(lambda r: r.type == TypeNode.INT, [])]
 
     def max_parameter_number(self):
-        if self.leaf:
+        if self.is_leaf():
             return self.sons if self.type == TypeNode.PAR else -1  # recall that % ... is not possible in predicates
         return max(son.max_parameter_number() for son in self.sons)
 
     def concretization(self, args):
-        if self.leaf:
+        if self.is_leaf():
             value = self.sons
             if self.type != TypeNode.PAR:
                 return Node(self.type, value)  # we return a similar object
@@ -434,7 +437,7 @@ class Node(Entity):
         return None if i >= len(t) else t[i]
 
     def canonization(self):
-        if self.leaf:
+        if self.is_leaf():
             return Node(self.type, self.sons)  # we return a similar object
         # we will build the canonized form of the node, with the two following local variables
         t = self.type  # possibly, this initial value of type will be modified during canonization
@@ -453,21 +456,58 @@ class Node(Entity):
         node = Node(t, s)
 
         rules = {
-            abs_sub: lambda r: Node(TypeNode.DIST, r.sons[0].sons),  # abs(sub(a,b)) => dist(a,b)
-            not_not: lambda r: r.sons[0].sons[0],  # not(not(a)) => a
-            neg_neg: lambda r: r.sons[0].sons[0],  # neg(neg(a)) => a
-            any_lt_k: lambda r: Node(TypeNode.LE, [r.sons[0], r.sons[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
-            k_lt_any: lambda r: Node(TypeNode.LE, [r.sons[0]._augment(1), r.sons[1]]),  # e.g., lt(5,x) => le(6,x)
-            not_logop: lambda r: Node(r.sons[0].type.logical_inversion(), r.sons[0].sons),  # e.g., not(lt(x)) = > ge(x)
-            not_symrel_any: lambda r: Node(r.type.logical_inversion(), [r.sons[0].sons[0], r.sons[1]]),  # e.g., ne(not(x),y) => eq(x,y)
-            any_symrel_not: lambda r: Node(r.type.logical_inversion(), [r.sons[0], r.sons[1].sons[0]]),  # e.g., ne(x,not(y)) => eq(x,y)
-            x_mul_k__eq_l: lambda r: Node(TypeNode.EQ, [r.sons[0].sons[0], Node(TypeNode.INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(
-                TypeNode.INT, 0),  # e.g., eq(mul(x,4),8) => eq(x,2) and eq(mul(x,4),6) => 0 (false)
-            l__eq_x_mul_k: lambda r: Node(TypeNode.EQ, [Node(TypeNode.INT, r.val(0) // r.val(1)), r.sons[1].sons[0]]) if r.val(0) % r.val(1) == 0 else Node(
-                TypeNode.INT, 0),  # e.g., eq(8,mul(x,4)) => eq(2,x) and eq(6,mul(x,4)) => 0 (false)
+            abs_sub:
+                lambda r: Node(TypeNode.DIST, r.sons[0].sons),  # abs(sub(a,b)) => dist(a,b)
+            not_not:
+                lambda r: r.sons[0].sons[0],  # not(not(a)) => a
+            neg_neg:
+                lambda r: r.sons[0].sons[0],  # neg(neg(a)) => a
+            any_lt_k:
+                lambda r: Node(TypeNode.LE, [r.sons[0], r.sons[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
+            k_lt_any:
+                lambda r: Node(TypeNode.LE, [r.sons[0]._augment(1), r.sons[1]]),  # e.g., lt(5,x) => le(6,x)
+            not_logop:
+                lambda r: Node(r.sons[0].type.logical_inversion(), r.sons[0].sons),  # e.g., not(lt(x)) = > ge(x)
+            not_symop_any:
+                lambda r: Node(r.type.logical_inversion(), [r.sons[0].sons[0], r.sons[1]]),  # e.g., ne(not(x),y) => eq(x,y)
+            any_symop_not:
+                lambda r: Node(r.type.logical_inversion(), [r.sons[0], r.sons[1].sons[0]]),  # e.g., ne(x,not(y)) => eq(x,y)
+            x_mul_k__eq_l:
+                lambda r: Node(TypeNode.EQ, [r.sons[0].sons[0], Node(TypeNode.INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(
+                    TypeNode.INT, 0),  # e.g., eq(mul(x,4),8) => eq(x,2) and eq(mul(x,4),6) => 0 (false)
+            l__eq_x_mul_k:
+                lambda r: Node(TypeNode.EQ, [Node(TypeNode.INT, r.val(0) // r.val(1)), r.sons[1].sons[0]]) if r.val(0) % r.val(1) == 0 else Node(
+                    TypeNode.INT, 0),  # e.g., eq(8,mul(x,4)) => eq(2,x) and eq(6,mul(x,4)) => 0 (false)
             #  we flatten operators when possible; for example add(add(x,y),z) becomes add(x,y,z)
-            flattenable: lambda r: Node(r.type, flatten([son.sons if son.type == r.type else son for son in r.sons]))
-            # TODO to be continued
+            flattenable:
+                lambda r: Node(r.type, flatten([son.sons if son.type == r.type else son for son in r.sons])),
+            mergeable:
+                lambda r: Node(r.type, r.sons[:-2] +
+                               [Node(TypeNode.INT, r.sons[-2].sons + r.sons[-1].sons if r.type == TypeNode.ADD
+                               else r.sons[-2].sons * r.sons[-1].sons if r.type == TypeNode.MUL
+                               else min(r.sons[-2].sons, r.sons[-1].sons) if r.type in (TypeNode.MIN, TypeNode.AND)
+                               else max(r.sons[-2].sons, r.sons[-1].sons))]),
+            # we replace sub by add when possible
+            sub_relop_sub:
+                lambda r: Node(r.type, [Node(TypeNode.ADD, [r.sons[0].sons[0], r.sons[1].sons[1]]),
+                                        Node(TypeNode.ADD, [r.sons[1].sons[0], r.sons[0].sons[1]])]),
+            any_relop_sub:
+                lambda r: Node(r.type, [Node(TypeNode.ADD, [r.sons[0], r.sons[1].sons[1]]), r.sons[1].sons[0]]),
+            sub_relop_any:
+                lambda r: Node(r.type, [r.sons[0].sons[0], Node(TypeNode.ADD, [r.sons[1], r.sons[0].sons[1]])]),
+            # we remove add when possible
+            any_add_val__relop__any_add_val:
+                lambda r: Node(r.type, [Node(TypeNode.ADD, [r.sons[0].sons[0], Node(TypeNode.INT, r.sons[0].sons[1].val(0) - r.sons[1].sons[1].val(0))]),
+                                        r.sons[1].sons[0]]),
+            var_add_val__relop__val:
+                lambda r: Node(r.type, [r.sons[0].sons[0], Node(TypeNode.INT, r.sons[1].val(0) - r.sons[0].sons[1].val(0))]),
+            val__relop__var_add_val:
+                lambda r: Node(r.type, [Node(TypeNode.INT, r.sons[0].val(0) - r.sons[1].sons[1].val(0)), r.sons[1].sons[0]]),
+
+            imp_logop:
+                lambda r: Node(TypeNode.OR, [r.sons[0].logical_inversion(), r.sons[1]]),  # seems better to do that
+            imp_not:
+                lambda r: Node(TypeNode.OR, [r.sons[0].sons[0], r.sons[1]])
         }
 
         for k, v in rules.items():
@@ -569,7 +609,9 @@ class Node(Entity):
     def compare_to(node1, node2):
         if node1.type != node2.type:
             return node1.type.value[0] - node2.type.value[0]
-        if node1.type.is_leaf():
+        if node1.is_leaf() != node2.is_leaf():
+            return False
+        if node1.is_leaf():
             v1, v2 = node1.sons, node2.sons
             if node1.type == TypeNode.VAR:
                 return -1 if v1.id < v2.id else 1 if v1.id > v2.id else 0
@@ -598,19 +640,20 @@ class NodeSpecial(Node):
         self.abstract_operation = abstract_operation
 
     def __str__(self):
-        return str(self.abstract_operation) + " :" + str(self.sons) if self.type.is_leaf() else str(self.type) + "(" + ",".join(
+        return str(self.abstract_operation) + " :" + str(self.sons) if self.is_leaf() else str(self.type) + "(" + ",".join(
             str(son) for son in self.sons) + ")"
 
 
-ANY = Node(TypeNode.SPECIAL, "any")
-ANYc = Node(TypeNode.SPECIAL, "anyc")  # any under condition
+# special nodes (with 0 argument/son)
+any_node = Node(TypeNode.SPECIAL, "any")
+any_cond = Node(TypeNode.SPECIAL, "anyc")  # any under condition
 var = Node(TypeNode.SPECIAL, "var")
 val = Node(TypeNode.SPECIAL, "val")
-varOrVal = Node(TypeNode.SPECIAL, "var-or-val")
+var_or_val = Node(TypeNode.SPECIAL, "var-or-val")
 any_add_val = Node(TypeNode.SPECIAL, "any-add-val")
 var_add_val = Node(TypeNode.SPECIAL, "var-add-val")
 sub = Node(TypeNode.SPECIAL, "sub")
-nnot = Node(TypeNode.SPECIAL, "not")
+non = Node(TypeNode.SPECIAL, "not")
 set_vals = Node(TypeNode.SPECIAL, "set-vals")
 min_vars = Node(TypeNode.SPECIAL, "min-vars")
 max_vars = Node(TypeNode.SPECIAL, "max-vars")
@@ -632,15 +675,15 @@ class Matcher:
 
     def _matching(self, source: Node, target: Node, level: int):
         # print("matching ", str(source), str(target), level)
-        if target is ANY:  # any node (i.e., full abstract node) => everything matches
+        if target is any_node:  # any node (i.e., full abstract node) => everything matches
             return True
-        if target is ANYc:  # any node under condition (the difference with SPECIAL only, is that sons are not considered recursively)
+        if target is any_cond:  # any node under condition (the difference with SPECIAL only, is that sons are not considered recursively)
             return self.valid_for_special_target_node(source, level)
         if target is var:
             return source.type == TypeNode.VAR
         if target is val:
             return source.type == TypeNode.INT
-        if target is varOrVal:
+        if target is var_or_val:
             return source.type in (TypeNode.VAR, TypeNode.INT)
         if target is any_add_val:
             return source.type == TypeNode.ADD and len(source.sons) == 2 and source.sons[1].type == TypeNode.INT
@@ -648,7 +691,7 @@ class Matcher:
             return source.type == TypeNode.ADD and len(source.sons) == 2 and source.sons[0].type == TypeNode.VAR and source.sons[1].type == TypeNode.INT
         if target is sub:
             return source.type == TypeNode.SUB
-        if target is nnot:
+        if target is non:
             return source.type == TypeNode.NOT
         if target is set_vals:  # abstract set => we control that source is either an empty set or a set built on only longs
             return source.type == TypeNode.SET and all(son.type == TypeNode.INT for son in source.sons)
@@ -667,29 +710,29 @@ class Matcher:
         if target is add_mul_vars:
             return source.type == TypeNode.ADD and len(source.sons) >= 2 and all(x_mul_y.matches(son) for son in source.sons)
         if target.type != TypeNode.SPECIAL:
-            if target.type.is_leaf() != source.type.is_leaf() or target.type != source.type:
+            if target.is_leaf() != source.is_leaf() or target.type != source.type:
                 return False
         else:
             if isinstance(target, NodeSpecial):
                 ao = target.abstract_operation
-                if ao == TypeAbstractOperation.ariop:
+                if ao == TypeAbstractOperation.ARIOP:
                     if not source.type.is_arithmetic_operator():
                         return False
-                if ao == TypeAbstractOperation.relop:
+                if ao == TypeAbstractOperation.RELOP:
                     if not source.type.is_relational_operator():
                         return False
-                if ao == TypeAbstractOperation.setop:
+                if ao == TypeAbstractOperation.SETOP:
                     if source.type not in (TypeNode.IN, TypeNode.NOTIN):
                         return False
-                if ao == TypeAbstractOperation.unalop:
+                if ao == TypeAbstractOperation.UNALOP:
                     if source.type not in (TypeNode.ABS, TypeNode.NEG, TypeNode.SQR, TypeNode.NOT):
                         return False
-                if ao == TypeAbstractOperation.symop:
+                if ao == TypeAbstractOperation.SYMOP:
                     if source.type not in (TypeNode.EQ, TypeNode.NE):
                         return False
             elif not self.valid_for_special_target_node(source, level):
                 return False
-        if not isinstance(target, NodeSpecial) and target.leaf:
+        if not isinstance(target, NodeSpecial) and target.is_leaf():
             return True  # it seems that we have no more control to do
         return len(target.sons) == len(source.sons) and all(self._matching(source.sons[i], target.sons[i], level + 1) for i in range(len(target.sons)))
 
@@ -708,51 +751,51 @@ class Matcher:
 x_mul_k = Matcher(Node(TypeNode.MUL, [var, val]))
 x_mul_y = Matcher(Node(TypeNode.MUL, [var, var]))
 k_mul_x = Matcher(Node(TypeNode.MUL, [val, var]))  # used in some other contexts (when non canonized forms)
-abs_sub = Matcher(Node(TypeNode.ABS, Node(TypeNode.SUB, [ANY, ANY])))
-not_not = Matcher(Node(TypeNode.NOT, Node(TypeNode.NOT, ANY)))
-neg_neg = Matcher(Node(TypeNode.NEG, Node(TypeNode.NEG, ANY)))
-any_lt_k = Matcher(Node(TypeNode.LT, [ANY, val]))
-k_lt_any = Matcher(Node(TypeNode.LT, [val, ANY]))
-not_logop = Matcher(Node(TypeNode.NOT, ANYc), lambda node, level: level == 1 and node.type.is_logically_invertible())
-not_symrel_any = Matcher(NodeSpecial(TypeAbstractOperation.symop, [nnot, ANY]))
-any_symrel_not = Matcher(NodeSpecial(TypeAbstractOperation.symop, [ANY, nnot]))
+abs_sub = Matcher(Node(TypeNode.ABS, Node(TypeNode.SUB, [any_node, any_node])))
+not_not = Matcher(Node(TypeNode.NOT, Node(TypeNode.NOT, any_node)))
+neg_neg = Matcher(Node(TypeNode.NEG, Node(TypeNode.NEG, any_node)))
+any_lt_k = Matcher(Node(TypeNode.LT, [any_node, val]))
+k_lt_any = Matcher(Node(TypeNode.LT, [val, any_node]))
+not_logop = Matcher(Node(TypeNode.NOT, any_cond), lambda node, level: level == 1 and node.type.is_logically_invertible())
+not_symop_any = Matcher(NodeSpecial(TypeAbstractOperation.SYMOP, [non, any_node]))
+any_symop_not = Matcher(NodeSpecial(TypeAbstractOperation.SYMOP, [any_node, non]))
 x_mul_k__eq_l = Matcher(Node(TypeNode.EQ, [Node(TypeNode.MUL, [var, val]), val]))
 l__eq_x_mul_k = Matcher(Node(TypeNode.EQ, [val, Node(TypeNode.MUL, [var, val])]))
-flattenable = Matcher(ANYc, lambda node, level: level == 0 and node.type.is_flattenable() and any(son.type == node.type for son in node.sons))
-mergeable = Matcher(ANYc, lambda node, level: level == 0 and node.type.is_mergeable() and len(node.sons) >= 2 and node.sons[-1].type == node.sons[
+flattenable = Matcher(any_cond, lambda node, level: level == 0 and node.type.is_flattenable() and any(son.type == node.type for son in node.sons))
+mergeable = Matcher(any_cond, lambda node, level: level == 0 and node.type.is_mergeable() and len(node.sons) >= 2 and node.sons[-1].type == node.sons[
     - 2].type == TypeNode.INT)
-sub_relop_sub = Matcher(NodeSpecial(TypeAbstractOperation.relop, [sub, sub]))
-any_relop_sub = Matcher(NodeSpecial(TypeAbstractOperation.relop, [ANY, sub]))
-sub_relop_any = Matcher(NodeSpecial(TypeAbstractOperation.relop, [sub, ANY]))
-any_add_val__relop__any_add_val = Matcher(NodeSpecial(TypeAbstractOperation.relop, [any_add_val, any_add_val]))
-var_add_val__relop__val = Matcher(NodeSpecial(TypeAbstractOperation.relop, [var_add_val, val]))
-val__relop__var_add_val = Matcher(NodeSpecial(TypeAbstractOperation.relop, [val, var_add_val]))
-imp_logop = Matcher(Node(TypeNode.IMP, [ANYc, ANY]), lambda node, level: level == 1 and node.type.is_logically_invertible())
-imp_not = Matcher(Node(TypeNode.IMP, [Node(TypeNode.NOT, ANY), ANY]))
+sub_relop_sub = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [sub, sub]))
+any_relop_sub = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [any_node, sub]))
+sub_relop_any = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [sub, any_node]))
+any_add_val__relop__any_add_val = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [any_add_val, any_add_val]))
+var_add_val__relop__val = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var_add_val, val]))
+val__relop__var_add_val = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [val, var_add_val]))
+imp_logop = Matcher(Node(TypeNode.IMP, [any_cond, any_node]), lambda node, level: level == 1 and node.type.is_logically_invertible())
+imp_not = Matcher(Node(TypeNode.IMP, [Node(TypeNode.NOT, any_node), any_node]))
 
 # unary
-x_relop_k = Matcher(NodeSpecial(TypeAbstractOperation.relop, [var, val]))
-k_relop_x = Matcher(NodeSpecial(TypeAbstractOperation.relop, [val, var]))
-x_ariop_k__relop_l = Matcher(NodeSpecial(TypeAbstractOperation.relop, [NodeSpecial(TypeAbstractOperation.ariop, [var, val]), val]))
-l_relop__x_ariop_k = Matcher(NodeSpecial(TypeAbstractOperation.relop, [val, NodeSpecial(TypeAbstractOperation.ariop, [var, val])]))
-x_setop_S = Matcher(NodeSpecial(TypeAbstractOperation.setop, [var, set_vals]))
+x_relop_k = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var, val]))
+k_relop_x = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [val, var]))
+x_ariop_k__relop_l = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [NodeSpecial(TypeAbstractOperation.ARIOP, [var, val]), val]))
+l_relop__x_ariop_k = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [val, NodeSpecial(TypeAbstractOperation.ARIOP, [var, val])]))
+x_setop_S = Matcher(NodeSpecial(TypeAbstractOperation.SETOP, [var, set_vals]))
 x_in_intvl = Matcher(Node(TypeNode.AND, [Node(TypeNode.LE, [var, val]), Node(TypeNode.LE, [val, var])]))
 x_notin_intvl = Matcher(Node(TypeNode.OR, [Node(TypeNode.LE, [var, val]), Node(TypeNode.LE, [val, var])]))
 
 # binary
-x_relop_y = Matcher(NodeSpecial(TypeAbstractOperation.relop, [var, var]))
-x_ariop_y__relop_k = Matcher(NodeSpecial(TypeAbstractOperation.relop, [NodeSpecial(TypeAbstractOperation.ariop, [var, var]), val]))
-k_relop__x_ariop_y = Matcher(NodeSpecial(TypeAbstractOperation.relop, [val, NodeSpecial(TypeAbstractOperation.ariop, [var, var])]))
-x_relop__y_ariop_k = Matcher(NodeSpecial(TypeAbstractOperation.relop, [var, NodeSpecial(TypeAbstractOperation.ariop, [var, val])]))
-y_ariop_k__relop_x = Matcher(NodeSpecial(TypeAbstractOperation.relop, [NodeSpecial(TypeAbstractOperation.ariop, [var, val]), var]))
-logic_y_relop_k__eq_x = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.relop, [var, val]), var]))
-logic_k_relop_y__eq_x = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.relop, [val, var]), var]))
-unalop_x__eq_y = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.unalop, var), var]))
+x_relop_y = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var, var]))
+x_ariop_y__relop_k = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [NodeSpecial(TypeAbstractOperation.ARIOP, [var, var]), val]))
+k_relop__x_ariop_y = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [val, NodeSpecial(TypeAbstractOperation.ARIOP, [var, var])]))
+x_relop__y_ariop_k = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var, NodeSpecial(TypeAbstractOperation.ARIOP, [var, val])]))
+y_ariop_k__relop_x = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [NodeSpecial(TypeAbstractOperation.ARIOP, [var, val]), var]))
+logic_y_relop_k__eq_x = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.RELOP, [var, val]), var]))
+logic_k_relop_y__eq_x = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.RELOP, [val, var]), var]))
+unalop_x__eq_y = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.UNALOP, var), var]))
 
 # ternary
-x_ariop_y__relop_z = Matcher(NodeSpecial(TypeAbstractOperation.relop, [NodeSpecial(TypeAbstractOperation.ariop, [var, var]), var]))
-z_relop__x_ariop_y = Matcher(NodeSpecial(TypeAbstractOperation.relop, [var, NodeSpecial(TypeAbstractOperation.ariop, [var, var])]))
-logic_y_relop_z__eq_x = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.relop, [var, var]), var]))
+x_ariop_y__relop_z = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [NodeSpecial(TypeAbstractOperation.ARIOP, [var, var]), var]))
+z_relop__x_ariop_y = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var, NodeSpecial(TypeAbstractOperation.ARIOP, [var, var])]))
+logic_y_relop_z__eq_x = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.RELOP, [var, var]), var]))
 
 # logic
 logic_X = Matcher(logic_vars);
@@ -760,10 +803,10 @@ logic_X__eq_x = Matcher(Node(TypeNode.EQ, [logic_vars, var]))
 logic_X__ne_x = Matcher(Node(TypeNode.NE, [logic_vars, var]))
 
 # extremum
-min_relop = Matcher(NodeSpecial(TypeAbstractOperation.relop, [min_vars, varOrVal]))
-max_relop = Matcher(NodeSpecial(TypeAbstractOperation.relop, [max_vars, varOrVal]))
+min_relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [min_vars, var_or_val]))
+max_relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [max_vars, var_or_val]))
 
 # sum
-add_vars__relop = Matcher(NodeSpecial(TypeAbstractOperation.relop, [add_vars, varOrVal]))
-add_mul_vals__relop = Matcher(NodeSpecial(TypeAbstractOperation.relop, [add_mul_vals, varOrVal]))
-add_mul_vars__relop = Matcher(NodeSpecial(TypeAbstractOperation.relop, [add_mul_vars, varOrVal]))
+add_vars__relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [add_vars, var_or_val]))
+add_mul_vals__relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [add_mul_vals, var_or_val]))
+add_mul_vars__relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [add_mul_vars, var_or_val]))
