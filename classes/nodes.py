@@ -10,6 +10,8 @@ from pycsp3.classes.entities import Entity, EVar
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import flatten, warning, neg_range, abs_range, add_range, possible_range
 
+ARIOP, RELOP, SETOP, UNALOP, SYMOP = TypeAbstractOperation.ARIOP, TypeAbstractOperation.RELOP, TypeAbstractOperation.SETOP, TypeAbstractOperation.UNALOP, TypeAbstractOperation.SYMOP
+
 
 @unique
 class TypeNode(Enum):
@@ -20,22 +22,22 @@ class TypeNode(Enum):
         self.lowercase_name = self.name.lower()
 
     def __invert__(self):
-        if self == TypeNode.EQ:
-            return TypeNode.NE
-        if self == TypeNode.NE:
-            return TypeNode.EQ
-        if self == TypeNode.LT:
-            return TypeNode.GE
-        if self == TypeNode.LE:
-            return TypeNode.GT
-        if self == TypeNode.GT:
-            return TypeNode.LE
-        if self == TypeNode.GE:
-            return TypeNode.LT
-        if self == TypeNode.IN:
-            return TypeNode.NOTIN
-        if self == TypeNode.NOTIN:
-            return TypeNode.IN
+        if self == EQ:
+            return NE
+        if self == NE:
+            return EQ
+        if self == LT:
+            return GE
+        if self == LE:
+            return GT
+        if self == GT:
+            return LE
+        if self == GE:
+            return LT
+        if self == IN:
+            return NOTIN
+        if self == NOTIN:
+            return IN
         return None
 
     def __str__(self):
@@ -64,59 +66,58 @@ class TypeNode(Enum):
         return self.min_arity <= k <= self.max_arity
 
     def is_symmetric_operator(self):
-        return self in {TypeNode.ADD, TypeNode.MUL, TypeNode.MIN, TypeNode.MAX, TypeNode.DIST, TypeNode.NE, TypeNode.EQ, TypeNode.SET, TypeNode.AND,
-                        TypeNode.OR, TypeNode.XOR, TypeNode.IFF, TypeNode.UNION, TypeNode.INTER, TypeNode.DJOINT}
+        return self in {ADD, MUL, MIN, MAX, DIST, NE, EQ, SET, AND, OR, XOR, IFF, TypeNode.UNION, TypeNode.INTER, TypeNode.DJOINT}
 
-    def is_unsymmetric_relational_operator(self):
-        return self in {TypeNode.LT, TypeNode.LE, TypeNode.GE, TypeNode.GT}
+    def is_not_symmetric_relational_operator(self):
+        return self in {LT, LE, GE, GT}
 
     def is_relational_operator(self):
-        return self in {TypeNode.LT, TypeNode.LE, TypeNode.GE, TypeNode.GT, TypeNode.EQ, TypeNode.NE}
+        return self in {LT, LE, GE, GT, EQ, NE}
 
     def is_arithmetic_operator(self):
-        return self in {TypeNode.ADD, TypeNode.SUB, TypeNode.MUL, TypeNode.DIV, TypeNode.MOD, TypeNode.POW, TypeNode.DIST}
+        return self in {ADD, SUB, MUL, DIV, MOD, TypeNode.POW, DIST}
 
     def is_logical_operator(self):
-        return self in {TypeNode.NOT, TypeNode.AND, TypeNode.OR, TypeNode.XOR, TypeNode.IFF, TypeNode.IMP}
+        return self in {NOT, AND, OR, XOR, IFF, IMP}
 
     def is_predicate_operator(self):
-        return self.is_logical_operator() or self.is_relational_operator() or self in {TypeNode.IN, TypeNode.NOTIN}
+        return self.is_logical_operator() or self.is_relational_operator() or self in {IN, NOTIN}
 
     def is_identity_when_one_operand(self):
-        return self in {TypeNode.ADD, TypeNode.MUL, TypeNode.MIN, TypeNode.MAX, TypeNode.EQ, TypeNode.AND, TypeNode.OR, TypeNode.XOR, TypeNode.IFF}
+        return self in {ADD, MUL, MIN, MAX, EQ, AND, OR, XOR, IFF}
 
     def arithmetic_inversion(self):  # when multiplied by -1
-        if self == TypeNode.LT:
-            return TypeNode.GT
-        if self == TypeNode.LE:
-            return TypeNode.GE
-        if self == TypeNode.GE:
-            return TypeNode.LE
-        if self == TypeNode.GT:
-            return TypeNode.LT
-        if self == TypeNode.NE:
-            return TypeNode.NE
-        if self == TypeNode.EQ:
-            return TypeNode.EQ
+        if self == LT:
+            return GT
+        if self == LE:
+            return GE
+        if self == GE:
+            return LE
+        if self == GT:
+            return LT
+        if self == NE:
+            return NE
+        if self == EQ:
+            return EQ
         return None
 
     def logical_inversion(self):
-        if self == TypeNode.LT:
-            return TypeNode.GE
-        if self == TypeNode.LE:
-            return TypeNode.GT
-        if self == TypeNode.GE:
-            return TypeNode.LT
-        if self == TypeNode.GT:
-            return TypeNode.LE
-        if self == TypeNode.NE:
-            return TypeNode.EQ
-        if self == TypeNode.EQ:
-            return TypeNode.NE
-        if self == TypeNode.IN:
-            return TypeNode.NOTIN
-        if self == TypeNode.NOTIN:
-            return TypeNode.IN
+        if self == LT:
+            return GE
+        if self == LE:
+            return GT
+        if self == GE:
+            return LT
+        if self == GT:
+            return LE
+        if self == NE:
+            return EQ
+        if self == EQ:
+            return NE
+        if self == IN:
+            return NOTIN
+        if self == NOTIN:
+            return IN
         if self == TypeNode.SUBSET:
             return TypeNode.SUPSEQ
         if self == TypeNode.SUBSEQ:
@@ -131,7 +132,7 @@ class TypeNode(Enum):
         return self.logical_inversion() is not None
 
     def is_flattenable(self):
-        return self in {TypeNode.ADD, TypeNode.MUL, TypeNode.MIN, TypeNode.MAX, TypeNode.AND, TypeNode.OR}
+        return self in {ADD, MUL, MIN, MAX, AND, OR}
 
     def is_mergeable(self):
         return self.is_flattenable()
@@ -144,21 +145,32 @@ class TypeNode(Enum):
             v = str(v)  # to be intercepted just below
         if isinstance(v, str):
             if v in ("<", "lt"):
-                return TypeNode.LT
+                return LT
             if v in ("<=", "le"):
-                return TypeNode.LE
+                return LE
             if v in (">=", "ge"):
-                return TypeNode.GE
+                return GE
             if v in (">", "gt"):
-                return TypeNode.GT
+                return GT
             if v in ("=", "==", "eq"):
-                return TypeNode.EQ
+                return EQ
             if v in ("!=", "<>", "ne"):
-                return TypeNode.NE
+                return NE
             return TypeNode[v.upper()]
         if isinstance(v, TypeConditionOperator):
             return TypeNode[str(v).upper()]
         return None  # other cases to handle?
+
+
+# for member in TypeNode:
+#     globals()[member.name] = member
+
+VAR, INT, SYMBOL, COL, PAR = TypeNode.VAR, TypeNode.INT, TypeNode.SYMBOL, TypeNode.COL, TypeNode.PAR
+NEG, ABS, NOT, SUB, DIV, MOD, DIST, IMP = TypeNode.NEG, TypeNode.ABS, TypeNode.NOT, TypeNode.SUB, TypeNode.DIV, TypeNode.MOD, TypeNode.DIST, TypeNode.IMP
+LT, LE, GE, GT, IN, NOTIN = TypeNode.LT, TypeNode.LE, TypeNode.GE, TypeNode.GT, TypeNode.IN, TypeNode.NOTIN
+ADD, MUL, MIN, MAX, NE, EQ = TypeNode.ADD, TypeNode.MUL, TypeNode.MIN, TypeNode.MAX, TypeNode.NE, TypeNode.EQ
+AND, OR, XOR, IFF = TypeNode.AND, TypeNode.OR, TypeNode.XOR, TypeNode.IFF
+SET, SPECIAL = TypeNode.SET, TypeNode.SPECIAL
 
 
 class Node(Entity):
@@ -170,13 +182,7 @@ class Node(Entity):
         self.used = False
         self.type = node_type
         self.sons = [args] if isinstance(args, Node) else args  # for empty SET (we have []])
-        # assert (not self.leaf) == (isinstance(self.sons, list)) or isinstance(self, NodeSpecial)
-        # if not self.leaf:
-        #     print("kkkkkk", self.type)
-        #     for son in self.sons:
-        #         print("hhhhh2", str(son))
         # TODO sons is used whatever this is a parent or a leaf node; not a good choice. change the name of this field ??? to content ??
-
         self.abstractTree = None
         self.abstractValues = None
 
@@ -192,7 +198,7 @@ class Node(Entity):
         return True
 
     def is_leaf(self):
-        return not isinstance(self.sons, list)  # when unary node, we have also a list  (set is always with a list too)
+        return not isinstance(self.sons, list)  # when unary node, we have also a list  (SET is always with a list too)
 
     def eq__safe(self, other):
         if not isinstance(other, Node) or self.type != other.type or self.is_leaf() != other.is_leaf():
@@ -446,7 +452,7 @@ class Node(Entity):
             s = sorted(s, key=cmp_to_key(Node.compare_to))  # sons are sorted if the type of the node is symmetric
         # Now, sons are potentially sorted if the type corresponds to a non-symmetric binary relational operator (in
         # that case, we swap sons and arithmetically inverse the operator provided that the ordinal value of the reverse operator is smaller)
-        if len(s) == 2 and t.is_unsymmetric_relational_operator():  # if LT,LE,GE,GT
+        if len(s) == 2 and t.is_not_symmetric_relational_operator():  # if LT,LE,GE,GT
             tt = t.arithmetic_inversion()
             if tt.value[0] < t.value[0] or (tt.value[0] == t.value[0] and Node.compare_to(s[0], s[1]) > 0):
                 t = tt
@@ -457,57 +463,56 @@ class Node(Entity):
 
         rules = {
             abs_sub:
-                lambda r: Node(TypeNode.DIST, r.sons[0].sons),  # abs(sub(a,b)) => dist(a,b)
+                lambda r: Node(DIST, r.sons[0].sons),  # abs(sub(a,b)) => dist(a,b)
             not_not:
                 lambda r: r.sons[0].sons[0],  # not(not(a)) => a
             neg_neg:
                 lambda r: r.sons[0].sons[0],  # neg(neg(a)) => a
             any_lt_k:
-                lambda r: Node(TypeNode.LE, [r.sons[0], r.sons[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
+                lambda r: Node(LE, [r.sons[0], r.sons[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
             k_lt_any:
-                lambda r: Node(TypeNode.LE, [r.sons[0]._augment(1), r.sons[1]]),  # e.g., lt(5,x) => le(6,x)
+                lambda r: Node(LE, [r.sons[0]._augment(1), r.sons[1]]),  # e.g., lt(5,x) => le(6,x)
             not_logop:
                 lambda r: Node(r.sons[0].type.logical_inversion(), r.sons[0].sons),  # e.g., not(lt(x)) = > ge(x)
             not_symop_any:
                 lambda r: Node(r.type.logical_inversion(), [r.sons[0].sons[0], r.sons[1]]),  # e.g., ne(not(x),y) => eq(x,y)
             any_symop_not:
                 lambda r: Node(r.type.logical_inversion(), [r.sons[0], r.sons[1].sons[0]]),  # e.g., ne(x,not(y)) => eq(x,y)
-            x_mul_k__eq_l:
-                lambda r: Node(TypeNode.EQ, [r.sons[0].sons[0], Node(TypeNode.INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(
-                    TypeNode.INT, 0),  # e.g., eq(mul(x,4),8) => eq(x,2) and eq(mul(x,4),6) => 0 (false)
-            l__eq_x_mul_k:
-                lambda r: Node(TypeNode.EQ, [Node(TypeNode.INT, r.val(0) // r.val(1)), r.sons[1].sons[0]]) if r.val(0) % r.val(1) == 0 else Node(
-                    TypeNode.INT, 0),  # e.g., eq(8,mul(x,4)) => eq(2,x) and eq(6,mul(x,4)) => 0 (false)
+            x_mul_k__eq_l:  # e.g., eq(mul(x,4),8) => eq(x,2) and eq(mul(x,4),6) => 0 (false)
+                lambda r: Node(EQ, [r.sons[0].sons[0], Node(INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(INT, 0),
+            l__eq_x_mul_k:  # e.g., eq(8,mul(x,4)) => eq(2,x) and eq(6,mul(x,4)) => 0 (false)
+                lambda r: Node(EQ, [Node(INT, r.val(0) // r.val(1)), r.sons[1].sons[0]]) if r.val(0) % r.val(1) == 0 else Node(INT, 0),
+
             #  we flatten operators when possible; for example add(add(x,y),z) becomes add(x,y,z)
             flattenable:
                 lambda r: Node(r.type, flatten([son.sons if son.type == r.type else son for son in r.sons])),
             mergeable:
                 lambda r: Node(r.type, r.sons[:-2] +
-                               [Node(TypeNode.INT, r.sons[-2].sons + r.sons[-1].sons if r.type == TypeNode.ADD
-                               else r.sons[-2].sons * r.sons[-1].sons if r.type == TypeNode.MUL
-                               else min(r.sons[-2].sons, r.sons[-1].sons) if r.type in (TypeNode.MIN, TypeNode.AND)
+                               [Node(INT, r.sons[-2].sons + r.sons[-1].sons if r.type == ADD
+                               else r.sons[-2].sons * r.sons[-1].sons if r.type == MUL
+                               else min(r.sons[-2].sons, r.sons[-1].sons) if r.type in (MIN, AND)
                                else max(r.sons[-2].sons, r.sons[-1].sons))]),
+
             # we replace sub by add when possible
             sub_relop_sub:
-                lambda r: Node(r.type, [Node(TypeNode.ADD, [r.sons[0].sons[0], r.sons[1].sons[1]]),
-                                        Node(TypeNode.ADD, [r.sons[1].sons[0], r.sons[0].sons[1]])]),
+                lambda r: Node(r.type, [Node(ADD, [r.sons[0].sons[0], r.sons[1].sons[1]]), Node(ADD, [r.sons[1].sons[0], r.sons[0].sons[1]])]),
             any_relop_sub:
-                lambda r: Node(r.type, [Node(TypeNode.ADD, [r.sons[0], r.sons[1].sons[1]]), r.sons[1].sons[0]]),
+                lambda r: Node(r.type, [Node(ADD, [r.sons[0], r.sons[1].sons[1]]), r.sons[1].sons[0]]),
             sub_relop_any:
-                lambda r: Node(r.type, [r.sons[0].sons[0], Node(TypeNode.ADD, [r.sons[1], r.sons[0].sons[1]])]),
+                lambda r: Node(r.type, [r.sons[0].sons[0], Node(ADD, [r.sons[1], r.sons[0].sons[1]])]),
+
             # we remove add when possible
             any_add_val__relop__any_add_val:
-                lambda r: Node(r.type, [Node(TypeNode.ADD, [r.sons[0].sons[0], Node(TypeNode.INT, r.sons[0].sons[1].val(0) - r.sons[1].sons[1].val(0))]),
-                                        r.sons[1].sons[0]]),
+                lambda r: Node(r.type, [Node(ADD, [r.sons[0].sons[0], Node(INT, r.sons[0].sons[1].val(0) - r.sons[1].sons[1].val(0))]), r.sons[1].sons[0]]),
             var_add_val__relop__val:
-                lambda r: Node(r.type, [r.sons[0].sons[0], Node(TypeNode.INT, r.sons[1].val(0) - r.sons[0].sons[1].val(0))]),
+                lambda r: Node(r.type, [r.sons[0].sons[0], Node(INT, r.sons[1].val(0) - r.sons[0].sons[1].val(0))]),
             val__relop__var_add_val:
-                lambda r: Node(r.type, [Node(TypeNode.INT, r.sons[0].val(0) - r.sons[1].sons[1].val(0)), r.sons[1].sons[0]]),
+                lambda r: Node(r.type, [Node(INT, r.sons[0].val(0) - r.sons[1].sons[1].val(0)), r.sons[1].sons[0]]),
 
             imp_logop:
-                lambda r: Node(TypeNode.OR, [r.sons[0].logical_inversion(), r.sons[1]]),  # seems better to do that
+                lambda r: Node(OR, [r.sons[0].logical_inversion(), r.sons[1]]),  # seems better to do that
             imp_not:
-                lambda r: Node(TypeNode.OR, [r.sons[0].sons[0], r.sons[1]])
+                lambda r: Node(OR, [r.sons[0].sons[0], r.sons[1]])
         }
 
         for k, v in rules.items():
@@ -633,7 +638,7 @@ class Node(Entity):
         return 0
 
 
-class NodeSpecial(Node):
+class NodeAbstract(Node):
 
     def __init__(self, abstract_operation: TypeAbstractOperation, args):
         super().__init__(TypeNode.SPECIAL, args)
@@ -645,23 +650,23 @@ class NodeSpecial(Node):
 
 
 # special nodes (with 0 argument/son)
-any_node = Node(TypeNode.SPECIAL, "any")
-any_cond = Node(TypeNode.SPECIAL, "anyc")  # any under condition
-var = Node(TypeNode.SPECIAL, "var")
-val = Node(TypeNode.SPECIAL, "val")
-var_or_val = Node(TypeNode.SPECIAL, "var-or-val")
-any_add_val = Node(TypeNode.SPECIAL, "any-add-val")
-var_add_val = Node(TypeNode.SPECIAL, "var-add-val")
-sub = Node(TypeNode.SPECIAL, "sub")
-non = Node(TypeNode.SPECIAL, "not")
-set_vals = Node(TypeNode.SPECIAL, "set-vals")
-min_vars = Node(TypeNode.SPECIAL, "min-vars")
-max_vars = Node(TypeNode.SPECIAL, "max-vars")
-logic_vars = Node(TypeNode.SPECIAL, "logic-vars")
-add_vars = Node(TypeNode.SPECIAL, "add-vars")
-mul_vars = Node(TypeNode.SPECIAL, "mul-vars")
-add_mul_vals = Node(TypeNode.SPECIAL, "add-mul-vals")
-add_mul_vars = Node(TypeNode.SPECIAL, "add-mul-vars")
+any_node = Node(SPECIAL, "any")
+any_cond = Node(SPECIAL, "anyc")  # any under condition
+var = Node(SPECIAL, "var")
+val = Node(SPECIAL, "val")
+var_or_val = Node(SPECIAL, "var-or-val")
+any_add_val = Node(SPECIAL, "any-add-val")
+var_add_val = Node(SPECIAL, "var-add-val")
+sub = Node(SPECIAL, "sub")
+non = Node(SPECIAL, "not")
+set_vals = Node(SPECIAL, "set-vals")
+min_vars = Node(SPECIAL, "min-vars")
+max_vars = Node(SPECIAL, "max-vars")
+logic_vars = Node(SPECIAL, "logic-vars")
+add_vars = Node(SPECIAL, "add-vars")
+mul_vars = Node(SPECIAL, "mul-vars")
+add_mul_vals = Node(SPECIAL, "add-mul-vals")
+add_mul_vars = Node(SPECIAL, "add-mul-vars")
 
 
 class Matcher:
@@ -713,7 +718,7 @@ class Matcher:
             if target.is_leaf() != source.is_leaf() or target.type != source.type:
                 return False
         else:
-            if isinstance(target, NodeSpecial):
+            if isinstance(target, NodeAbstract):
                 ao = target.abstract_operation
                 if ao == TypeAbstractOperation.ARIOP:
                     if not source.type.is_arithmetic_operator():
@@ -732,7 +737,7 @@ class Matcher:
                         return False
             elif not self.valid_for_special_target_node(source, level):
                 return False
-        if not isinstance(target, NodeSpecial) and target.is_leaf():
+        if not isinstance(target, NodeAbstract) and target.is_leaf():
             return True  # it seems that we have no more control to do
         return len(target.sons) == len(source.sons) and all(self._matching(source.sons[i], target.sons[i], level + 1) for i in range(len(target.sons)))
 
@@ -746,67 +751,68 @@ class Matcher:
         return self.__str__()
 
 
-## Canonization
+# # # Canonization
 
-x_mul_k = Matcher(Node(TypeNode.MUL, [var, val]))
-x_mul_y = Matcher(Node(TypeNode.MUL, [var, var]))
-k_mul_x = Matcher(Node(TypeNode.MUL, [val, var]))  # used in some other contexts (when non canonized forms)
-abs_sub = Matcher(Node(TypeNode.ABS, Node(TypeNode.SUB, [any_node, any_node])))
-not_not = Matcher(Node(TypeNode.NOT, Node(TypeNode.NOT, any_node)))
-neg_neg = Matcher(Node(TypeNode.NEG, Node(TypeNode.NEG, any_node)))
-any_lt_k = Matcher(Node(TypeNode.LT, [any_node, val]))
-k_lt_any = Matcher(Node(TypeNode.LT, [val, any_node]))
-not_logop = Matcher(Node(TypeNode.NOT, any_cond), lambda node, level: level == 1 and node.type.is_logically_invertible())
-not_symop_any = Matcher(NodeSpecial(TypeAbstractOperation.SYMOP, [non, any_node]))
-any_symop_not = Matcher(NodeSpecial(TypeAbstractOperation.SYMOP, [any_node, non]))
-x_mul_k__eq_l = Matcher(Node(TypeNode.EQ, [Node(TypeNode.MUL, [var, val]), val]))
-l__eq_x_mul_k = Matcher(Node(TypeNode.EQ, [val, Node(TypeNode.MUL, [var, val])]))
-flattenable = Matcher(any_cond, lambda node, level: level == 0 and node.type.is_flattenable() and any(son.type == node.type for son in node.sons))
-mergeable = Matcher(any_cond, lambda node, level: level == 0 and node.type.is_mergeable() and len(node.sons) >= 2 and node.sons[-1].type == node.sons[
-    - 2].type == TypeNode.INT)
-sub_relop_sub = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [sub, sub]))
-any_relop_sub = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [any_node, sub]))
-sub_relop_any = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [sub, any_node]))
-any_add_val__relop__any_add_val = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [any_add_val, any_add_val]))
-var_add_val__relop__val = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var_add_val, val]))
-val__relop__var_add_val = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [val, var_add_val]))
-imp_logop = Matcher(Node(TypeNode.IMP, [any_cond, any_node]), lambda node, level: level == 1 and node.type.is_logically_invertible())
-imp_not = Matcher(Node(TypeNode.IMP, [Node(TypeNode.NOT, any_node), any_node]))
+x_mul_k = Matcher(Node(MUL, [var, val]))
+x_mul_y = Matcher(Node(MUL, [var, var]))
+k_mul_x = Matcher(Node(MUL, [val, var]))  # used in some other contexts (when non canonized forms)
+abs_sub = Matcher(Node(ABS, Node(SUB, [any_node, any_node])))
+not_not = Matcher(Node(NOT, Node(NOT, any_node)))
+neg_neg = Matcher(Node(NEG, Node(NEG, any_node)))
+any_lt_k = Matcher(Node(LT, [any_node, val]))
+k_lt_any = Matcher(Node(LT, [val, any_node]))
+not_logop = Matcher(Node(NOT, any_cond), lambda r, p: p == 1 and r.type.is_logically_invertible())
+not_symop_any = Matcher(NodeAbstract(SYMOP, [non, any_node]))
+any_symop_not = Matcher(NodeAbstract(SYMOP, [any_node, non]))
+x_mul_k__eq_l = Matcher(Node(EQ, [Node(MUL, [var, val]), val]))
+l__eq_x_mul_k = Matcher(Node(EQ, [val, Node(MUL, [var, val])]))
+flattenable = Matcher(any_cond, lambda r, p: p == 0 and r.type.is_flattenable() and any(son.type == r.type for son in r.sons))
+mergeable = Matcher(any_cond, lambda r, p: p == 0 and r.type.is_mergeable() and len(r.sons) >= 2 and r.sons[-1].type == r.sons[- 2].type == INT)
+sub_relop_sub = Matcher(NodeAbstract(RELOP, [sub, sub]))
+any_relop_sub = Matcher(NodeAbstract(RELOP, [any_node, sub]))
+sub_relop_any = Matcher(NodeAbstract(RELOP, [sub, any_node]))
+any_add_val__relop__any_add_val = Matcher(NodeAbstract(RELOP, [any_add_val, any_add_val]))
+var_add_val__relop__val = Matcher(NodeAbstract(RELOP, [var_add_val, val]))
+val__relop__var_add_val = Matcher(NodeAbstract(RELOP, [val, var_add_val]))
+imp_logop = Matcher(Node(IMP, [any_cond, any_node]), lambda r, p: p == 1 and r.type.is_logically_invertible())
+imp_not = Matcher(Node(IMP, [Node(NOT, any_node), any_node]))
+
+# # # recognizing constraints (primitives)
 
 # unary
-x_relop_k = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var, val]))
-k_relop_x = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [val, var]))
-x_ariop_k__relop_l = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [NodeSpecial(TypeAbstractOperation.ARIOP, [var, val]), val]))
-l_relop__x_ariop_k = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [val, NodeSpecial(TypeAbstractOperation.ARIOP, [var, val])]))
-x_setop_S = Matcher(NodeSpecial(TypeAbstractOperation.SETOP, [var, set_vals]))
-x_in_intvl = Matcher(Node(TypeNode.AND, [Node(TypeNode.LE, [var, val]), Node(TypeNode.LE, [val, var])]))
-x_notin_intvl = Matcher(Node(TypeNode.OR, [Node(TypeNode.LE, [var, val]), Node(TypeNode.LE, [val, var])]))
+x_relop_k = Matcher(NodeAbstract(RELOP, [var, val]))
+k_relop_x = Matcher(NodeAbstract(RELOP, [val, var]))
+x_ariop_k__relop_l = Matcher(NodeAbstract(RELOP, [NodeAbstract(ARIOP, [var, val]), val]))
+l_relop__x_ariop_k = Matcher(NodeAbstract(RELOP, [val, NodeAbstract(ARIOP, [var, val])]))
+x_setop_S = Matcher(NodeAbstract(SETOP, [var, set_vals]))
+x_in_intvl = Matcher(Node(AND, [Node(LE, [var, val]), Node(LE, [val, var])]))
+x_notin_intvl = Matcher(Node(OR, [Node(LE, [var, val]), Node(LE, [val, var])]))
 
 # binary
-x_relop_y = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var, var]))
-x_ariop_y__relop_k = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [NodeSpecial(TypeAbstractOperation.ARIOP, [var, var]), val]))
-k_relop__x_ariop_y = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [val, NodeSpecial(TypeAbstractOperation.ARIOP, [var, var])]))
-x_relop__y_ariop_k = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var, NodeSpecial(TypeAbstractOperation.ARIOP, [var, val])]))
-y_ariop_k__relop_x = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [NodeSpecial(TypeAbstractOperation.ARIOP, [var, val]), var]))
-logic_y_relop_k__eq_x = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.RELOP, [var, val]), var]))
-logic_k_relop_y__eq_x = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.RELOP, [val, var]), var]))
-unalop_x__eq_y = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.UNALOP, var), var]))
+x_relop_y = Matcher(NodeAbstract(RELOP, [var, var]))
+x_ariop_y__relop_k = Matcher(NodeAbstract(RELOP, [NodeAbstract(ARIOP, [var, var]), val]))
+k_relop__x_ariop_y = Matcher(NodeAbstract(RELOP, [val, NodeAbstract(ARIOP, [var, var])]))
+x_relop__y_ariop_k = Matcher(NodeAbstract(RELOP, [var, NodeAbstract(ARIOP, [var, val])]))
+y_ariop_k__relop_x = Matcher(NodeAbstract(RELOP, [NodeAbstract(ARIOP, [var, val]), var]))
+logic_y_relop_k__eq_x = Matcher(Node(EQ, [NodeAbstract(RELOP, [var, val]), var]))
+logic_k_relop_y__eq_x = Matcher(Node(EQ, [NodeAbstract(RELOP, [val, var]), var]))
+unalop_x__eq_y = Matcher(Node(EQ, [NodeAbstract(UNALOP, var), var]))
 
 # ternary
-x_ariop_y__relop_z = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [NodeSpecial(TypeAbstractOperation.ARIOP, [var, var]), var]))
-z_relop__x_ariop_y = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [var, NodeSpecial(TypeAbstractOperation.ARIOP, [var, var])]))
-logic_y_relop_z__eq_x = Matcher(Node(TypeNode.EQ, [NodeSpecial(TypeAbstractOperation.RELOP, [var, var]), var]))
+x_ariop_y__relop_z = Matcher(NodeAbstract(RELOP, [NodeAbstract(ARIOP, [var, var]), var]))
+z_relop__x_ariop_y = Matcher(NodeAbstract(RELOP, [var, NodeAbstract(ARIOP, [var, var])]))
+logic_y_relop_z__eq_x = Matcher(Node(EQ, [NodeAbstract(RELOP, [var, var]), var]))
 
 # logic
-logic_X = Matcher(logic_vars);
-logic_X__eq_x = Matcher(Node(TypeNode.EQ, [logic_vars, var]))
-logic_X__ne_x = Matcher(Node(TypeNode.NE, [logic_vars, var]))
+logic_X = Matcher(logic_vars)
+logic_X__eq_x = Matcher(Node(EQ, [logic_vars, var]))
+logic_X__ne_x = Matcher(Node(NE, [logic_vars, var]))
 
 # extremum
-min_relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [min_vars, var_or_val]))
-max_relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [max_vars, var_or_val]))
+min_relop = Matcher(NodeAbstract(RELOP, [min_vars, var_or_val]))
+max_relop = Matcher(NodeAbstract(RELOP, [max_vars, var_or_val]))
 
 # sum
-add_vars__relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [add_vars, var_or_val]))
-add_mul_vals__relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [add_mul_vals, var_or_val]))
-add_mul_vars__relop = Matcher(NodeSpecial(TypeAbstractOperation.RELOP, [add_mul_vars, var_or_val]))
+add_vars__relop = Matcher(NodeAbstract(RELOP, [add_vars, var_or_val]))
+add_mul_vals__relop = Matcher(NodeAbstract(RELOP, [add_mul_vals, var_or_val]))
+add_mul_vars__relop = Matcher(NodeAbstract(RELOP, [add_mul_vars, var_or_val]))
