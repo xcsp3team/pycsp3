@@ -406,7 +406,7 @@ class OpOverrider:
         return t
 
     def __neg__(self):
-        return self.sons[0] if isinstance(self, Node) and self.type == TypeNode.NEG else Node.build(TypeNode.NEG, self)
+        return self.cnt[0] if isinstance(self, Node) and self.type == TypeNode.NEG else Node.build(TypeNode.NEG, self)
 
     def __add__(self, other):
         if isinstance(other, int) and other == 0:
@@ -414,13 +414,13 @@ class OpOverrider:
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))
         if isinstance(other, PartialConstraint):
-            if isinstance(other.constraint, ConstraintSum) and isinstance(self, Node) and all(s.type == TypeNode.VAR for s in self.sons):
+            if isinstance(other.constraint, ConstraintSum) and isinstance(self, Node) and all(s.type == TypeNode.VAR for s in self.cnt):
                 if self.type == TypeNode.ADD:
-                    for s in self.sons:
-                        other = other + s.sons
+                    for s in self.cnt:
+                        other = other + s.cnt
                     return other
                 if self.type == TypeNode.SUB:
-                    return other + self.sons[0].sons - self.sons[1].sons
+                    return other + self.cnt[0].cnt - self.cnt[1].cnt
             return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other) if isinstance(other.constraint, ConstraintSum) else other + self
         assert other is not None, "One argument is None (coming from an undefined variable from an array?)"
         return Node.build(TypeNode.ADD, self, other)
@@ -434,14 +434,14 @@ class OpOverrider:
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))
         if isinstance(other, PartialConstraint):
-            if isinstance(other.constraint, ConstraintSum) and isinstance(self, Node) and all(s.type == TypeNode.VAR for s in self.sons):
+            if isinstance(other.constraint, ConstraintSum) and isinstance(self, Node) and all(s.type == TypeNode.VAR for s in self.cnt):
                 if self.type == TypeNode.ADD:
-                    for s in self.sons:
-                        other = other - s.sons
+                    for s in self.cnt:
+                        other = other - s.cnt
                     other.constraint.revert_coeffs()
                     return other
                 if self.type == TypeNode.SUB:
-                    other = other - self.sons[0].sons + self.sons[1].sons
+                    other = other - self.cnt[0].cnt + self.cnt[1].cnt
                     other.constraint.revert_coeffs()
                     return other
             return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other) if isinstance(other.constraint, ConstraintSum) else -(other - self)
@@ -454,10 +454,10 @@ class OpOverrider:
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
         # if isinstance(other, int) and other == 0: return Node(TypeNode.INT, 0)
-        if isinstance(self, Node) and self.type == TypeNode.NEG and isinstance(self.sons[0], Node) and self.sons[0].type == TypeNode.MUL:
-            return Node.build(TypeNode.NEG, Node.build(TypeNode.MUL, *self.sons[0].sons, other))
-        if isinstance(other, Node) and other.type == TypeNode.NEG and isinstance(other.sons[0], Node) and other.sons[0].type == TypeNode.MUL:
-            return Node.build(TypeNode.NEG, Node.build(TypeNode.MUL, self, *other.sons[0].sons))
+        if isinstance(self, Node) and self.type == TypeNode.NEG and isinstance(self.cnt[0], Node) and self.cnt[0].type == TypeNode.MUL:
+            return Node.build(TypeNode.NEG, Node.build(TypeNode.MUL, *self.cnt[0].cnt, other))
+        if isinstance(other, Node) and other.type == TypeNode.NEG and isinstance(other.cnt[0], Node) and other.cnt[0].type == TypeNode.MUL:
+            return Node.build(TypeNode.NEG, Node.build(TypeNode.MUL, self, *other.cnt[0].cnt))
         return Node.build(TypeNode.MUL, self, other)
 
     def __rmul__(self, other):
@@ -487,7 +487,7 @@ class OpOverrider:
         if self is None or other is None:
             return object.__lt__(self, other)
         if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
-            return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
+            return Node.build(TypeNode.EQ, self.cnt[0], self.cnt[1])
         self, other = OpOverrider._replace(self, other)
         return other.__gt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LT, self, other)
 
@@ -495,7 +495,7 @@ class OpOverrider:
         if self is None or other is None:
             return object.__le__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
-            return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
+            return Node.build(TypeNode.EQ, self.cnt[0], self.cnt[1])
         self, other = OpOverrider._replace(self, other)
         return other.__ge__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.LE, self, other)
 
@@ -503,7 +503,7 @@ class OpOverrider:
         if self is None or other is None:
             return object.__ge__(self, other)
         if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
-            return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
+            return Node.build(TypeNode.NE, self.cnt[0], self.cnt[1])
         self, other = OpOverrider._replace(self, other)
         return other.__le__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GE, self, other)
 
@@ -511,7 +511,7 @@ class OpOverrider:
         if self is None or other is None:
             return object.__gt__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
-            return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
+            return Node.build(TypeNode.NE, self.cnt[0], self.cnt[1])
         self, other = OpOverrider._replace(self, other)
         return other.__lt__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.GT, self, other)
 
@@ -525,7 +525,7 @@ class OpOverrider:
         if isinstance(other, (tuple, list)):
             other = other[0] if len(other) == 1 else functions.conjunction(other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
-            return Node.build(TypeNode.EQ, self.sons[0], self.sons[1])
+            return Node.build(TypeNode.EQ, self.cnt[0], self.cnt[1])
         self, other = OpOverrider._replace(self, other)
         return other.__eq__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.EQ, self, other)
 
@@ -539,7 +539,7 @@ class OpOverrider:
         if isinstance(other, (tuple, list)):
             other = other[0] if len(other) == 1 else functions.conjunction(other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
-            return Node.build(TypeNode.NE, self.sons[0], self.sons[1])
+            return Node.build(TypeNode.NE, self.cnt[0], self.cnt[1])
         self, other = OpOverrider._replace(self, other)
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
@@ -594,8 +594,8 @@ class OpOverrider:
             if ~self.type is not None:
                 self.type = ~self.type
                 return self
-            if self.type in (TypeNode.AND, TypeNode.OR) and all(~son.type is not None for son in self.sons):
-                for son in self.sons:
+            if self.type in (TypeNode.AND, TypeNode.OR) and all(~son.type is not None for son in self.cnt):
+                for son in self.cnt:
                     son.type = ~son.type
                 self.type = TypeNode.OR if self.type == TypeNode.AND else TypeNode.AND
                 return self

@@ -426,7 +426,7 @@ def If(test, *testOthers, Then, Else=None, meta=False):
             assert term.dom.is_binary()
             return var(term.id) if term.negation else Node.build(EQ, term, 0)
         assert isinstance(term, Node) and term.type.is_predicate_operator()
-        sons = term.sons
+        sons = term.cnt
         if term.type == TypeNode.NOT:
             assert sons[0].type.is_predicate_operator()
             return sons[0]
@@ -439,9 +439,9 @@ def If(test, *testOthers, Then, Else=None, meta=False):
         if term.type == TypeNode.IMP:
             assert len(sons) == 2 and sons[0].type.is_predicate_operator() and sons[1].type.is_predicate_operator()
             return Node.build(TypeNode.AND, sons[0], Node.build(TypeNode.NOT, sons[1]))
-        if term.type == TypeNode.EQ and len(sons) == 2 and sons[1].type == TypeNode.INT and sons[1].sons == 0 \
-                and sons[0].type == TypeNode.VAR and sons[0].sons.dom.is_binary():  # x=0  => x
-            return sons[0].sons
+        if term.type == TypeNode.EQ and len(sons) == 2 and sons[1].type == TypeNode.INT and sons[1].cnt == 0 \
+                and sons[0].type == TypeNode.VAR and sons[0].cnt.dom.is_binary():  # x=0  => x
+            return sons[0].cnt
         assert ~term.type is not None
         return Node(~term.type, sons)
 
@@ -716,7 +716,7 @@ def abs(arg):
     if isinstance(arg, PartialConstraint):
         arg = auxiliary().replace_partial_constraint(arg)
     if isinstance(arg, Node) and arg.type == TypeNode.SUB:
-        return Node.build(TypeNode.DIST, arg.sons)
+        return Node.build(TypeNode.DIST, arg.cnt)
     return Node.build(TypeNode.ABS, arg) if isinstance(arg, (Node, Variable)) else absPython(arg)
 
 
@@ -837,7 +837,7 @@ def ift(test, Then, Else):
         Then, Else = Then if isinstance(Then, list) else [Then], Else if isinstance(Else, list) else [Else]
         # # we compute the negation of cnd
         # if isinstance(cnd, Node) and ~cnd.type is not None:
-        #     rcnd = Node(~cnd.type, cnd.sons)
+        #     rcnd = Node(~cnd.type, cnd.cnt)
         # elif isinstance(cnd, Variable):
         #     rcnd = var(cnd.id) if cnd.negation else ~cnd
         # else:
@@ -1214,8 +1214,8 @@ def Sum(term, *others, condition=None):
                 t2.append(-1 if tree.inverse else 1)
             else:
                 assert isinstance(tree, Node)
-                if tree.type == TypeNode.NEG and tree.sons[0].type == TypeNode.VAR:
-                    pair = (tree.sons[0].sons, -1)
+                if tree.type == TypeNode.NEG and tree.cnt[0].type == TypeNode.VAR:
+                    pair = (tree.cnt[0].cnt, -1)
                 else:
                     pair = tree.tree_val_if_binary_type(TypeNode.MUL)
                 if pair is None:
