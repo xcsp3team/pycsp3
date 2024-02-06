@@ -394,7 +394,7 @@ class Node(Entity):
         if predicate(self):
             return self
         if self.is_leaf():
-            return None
+            return None  # since node already tested just above
         return next((son for son in self.cnt if son.first_node_such_that(predicate) is not None), None)
 
     def all_nodes_such_that(self, predicate, harvest):
@@ -405,8 +405,21 @@ class Node(Entity):
                 son.all_nodes_such_that(predicate, harvest)
         return harvest
 
-    def list_of_vals(self):
-        return [n.cnt for n in self.all_nodes_such_that(lambda r: r.type == INT, [])]
+    def list_of_(self, predicate):
+        return [n.cnt for n in self.all_nodes_such_that(predicate, [])]
+
+    def ith_of(self, i, predicate):  # returns the content of the ith node of the specified type
+        if i == 0:
+            f = self.first_node_such_that(predicate)
+            return f.cnt if f is not None else None
+        t = self.list_of_(predicate)
+        return None if i >= len(t) else t[i]
+
+    def var(self, i):
+        return self.ith_of(i, lambda r: r.type == VAR)
+
+    def val(self, i):
+        return self.ith_of(i, lambda r: r.type == INT)
 
     def max_parameter_number(self):
         if self.is_leaf():
@@ -435,13 +448,6 @@ class Node(Entity):
         assert self.type == INT
         return Node(self.type, self.cnt + offset)
 
-    def val(self, i):
-        if i == 0:
-            f = self.first_node_such_that(lambda n: n.type == INT)
-            return f.cnt if f is not None else None
-        t = self.list_of_vals()
-        return None if i >= len(t) else t[i]
-
     def canonization(self):
         if self.is_leaf():
             return Node(self.type, self.cnt)  # we return a similar object
@@ -459,63 +465,9 @@ class Node(Entity):
                 s = [s[1], s[0]]  # swap
         if len(s) == 1 and t.is_identity_when_one_operand():  # // add(x) becomes x, min(x) becomes x, ...
             return s[0]  # certainly can happen during the canonization process
+
         node = Node(t, s)
-
-        rules = {
-            abs_sub:
-                lambda r: Node(DIST, r.cnt[0].cnt),  # abs(sub(a,b)) => dist(a,b)
-            not_not:
-                lambda r: r.cnt[0].cnt[0],  # not(not(a)) => a
-            neg_neg:
-                lambda r: r.cnt[0].cnt[0],  # neg(neg(a)) => a
-            any_lt_k:
-                lambda r: Node(LE, [r.cnt[0], r.cnt[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
-            k_lt_any:
-                lambda r: Node(LE, [r.cnt[0]._augment(1), r.cnt[1]]),  # e.g., lt(5,x) => le(6,x)
-            not_logop:
-                lambda r: Node(r.cnt[0].type.logical_inversion(), r.cnt[0].cnt),  # e.g., not(lt(x)) = > ge(x)
-            not_symop_any:
-                lambda r: Node(r.type.logical_inversion(), [r.cnt[0].cnt[0], r.cnt[1]]),  # e.g., ne(not(x),y) => eq(x,y)
-            any_symop_not:
-                lambda r: Node(r.type.logical_inversion(), [r.cnt[0], r.cnt[1].cnt[0]]),  # e.g., ne(x,not(y)) => eq(x,y)
-            x_mul_k__eq_l:  # e.g., eq(mul(x,4),8) => eq(x,2) and eq(mul(x,4),6) => 0 (false)
-                lambda r: Node(EQ, [r.cnt[0].cnt[0], Node(INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(INT, 0),
-            l__eq_x_mul_k:  # e.g., eq(8,mul(x,4)) => eq(2,x) and eq(6,mul(x,4)) => 0 (false)
-                lambda r: Node(EQ, [Node(INT, r.val(0) // r.val(1)), r.cnt[1].cnt[0]]) if r.val(0) % r.val(1) == 0 else Node(INT, 0),
-
-            #  we flatten operators when possible; for example add(add(x,y),z) becomes add(x,y,z)
-            flattenable:
-                lambda r: Node(r.type, flatten([son.cnt if son.type == r.type else son for son in r.cnt])),
-            mergeable:
-                lambda r: Node(r.type, r.cnt[:-2] +
-                               [Node(INT, r.cnt[-2].cnt + r.cnt[-1].cnt if r.type == ADD
-                               else r.cnt[-2].cnt * r.cnt[-1].cnt if r.type == MUL
-                               else min(r.cnt[-2].cnt, r.cnt[-1].cnt) if r.type in (MIN, AND)
-                               else max(r.cnt[-2].cnt, r.cnt[-1].cnt))]),
-
-            # we replace sub by add when possible
-            sub_relop_sub:
-                lambda r: Node(r.type, [Node(ADD, [r.cnt[0].cnt[0], r.cnt[1].cnt[1]]), Node(ADD, [r.cnt[1].cnt[0], r.cnt[0].cnt[1]])]),
-            any_relop_sub:
-                lambda r: Node(r.type, [Node(ADD, [r.cnt[0], r.cnt[1].cnt[1]]), r.cnt[1].cnt[0]]),
-            sub_relop_any:
-                lambda r: Node(r.type, [r.cnt[0].cnt[0], Node(ADD, [r.cnt[1], r.cnt[0].cnt[1]])]),
-
-            # we remove add when possible
-            any_add_val__relop__any_add_val:
-                lambda r: Node(r.type, [Node(ADD, [r.cnt[0].cnt[0], Node(INT, r.cnt[0].cnt[1].val(0) - r.cnt[1].cnt[1].val(0))]), r.cnt[1].cnt[0]]),
-            var_add_val__relop__val:
-                lambda r: Node(r.type, [r.cnt[0].cnt[0], Node(INT, r.cnt[1].val(0) - r.cnt[0].cnt[1].val(0))]),
-            val__relop__var_add_val:
-                lambda r: Node(r.type, [Node(INT, r.cnt[0].val(0) - r.cnt[1].cnt[1].val(0)), r.cnt[1].cnt[0]]),
-
-            imp_logop:
-                lambda r: Node(OR, [r.cnt[0].logical_inversion(), r.cnt[1]]),  # seems better to do that
-            imp_not:
-                lambda r: Node(OR, [r.cnt[0].cnt[0], r.cnt[1]])
-        }
-
-        for k, v in rules.items():
+        for k, v in canonization_rules.items():
             if k.matches(node):
                 node = v(node).canonization()
         return node
@@ -777,6 +729,60 @@ val__relop__var_add_val = Matcher(NodeAbstract(RELOP, [val, var_add_val]))
 imp_logop = Matcher(Node(IMP, [any_cond, any_node]), lambda r, p: p == 1 and r.type.is_logically_invertible())
 imp_not = Matcher(Node(IMP, [Node(NOT, any_node), any_node]))
 
+canonization_rules = {
+    abs_sub:
+        lambda r: Node(DIST, r.cnt[0].cnt),  # abs(sub(a,b)) => dist(a,b)
+    not_not:
+        lambda r: r.cnt[0].cnt[0],  # not(not(a)) => a
+    neg_neg:
+        lambda r: r.cnt[0].cnt[0],  # neg(neg(a)) => a
+    any_lt_k:
+        lambda r: Node(LE, [r.cnt[0], r.cnt[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
+    k_lt_any:
+        lambda r: Node(LE, [r.cnt[0]._augment(1), r.cnt[1]]),  # e.g., lt(5,x) => le(6,x)
+    not_logop:
+        lambda r: Node(r.cnt[0].type.logical_inversion(), r.cnt[0].cnt),  # e.g., not(lt(x)) = > ge(x)
+    not_symop_any:
+        lambda r: Node(r.type.logical_inversion(), [r.cnt[0].cnt[0], r.cnt[1]]),  # e.g., ne(not(x),y) => eq(x,y)
+    any_symop_not:
+        lambda r: Node(r.type.logical_inversion(), [r.cnt[0], r.cnt[1].cnt[0]]),  # e.g., ne(x,not(y)) => eq(x,y)
+    x_mul_k__eq_l:  # e.g., eq(mul(x,4),8) => eq(x,2) and eq(mul(x,4),6) => 0 (false)
+        lambda r: Node(EQ, [r.cnt[0].cnt[0], Node(INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(INT, 0),
+    l__eq_x_mul_k:  # e.g., eq(8,mul(x,4)) => eq(2,x) and eq(6,mul(x,4)) => 0 (false)
+        lambda r: Node(EQ, [Node(INT, r.val(0) // r.val(1)), r.cnt[1].cnt[0]]) if r.val(0) % r.val(1) == 0 else Node(INT, 0),
+
+    #  we flatten operators when possible; for example add(add(x,y),z) becomes add(x,y,z)
+    flattenable:
+        lambda r: Node(r.type, flatten([son.cnt if son.type == r.type else son for son in r.cnt])),
+    mergeable:
+        lambda r: Node(r.type, r.cnt[:-2] +
+                       [Node(INT, r.cnt[-2].cnt + r.cnt[-1].cnt if r.type == ADD
+                       else r.cnt[-2].cnt * r.cnt[-1].cnt if r.type == MUL
+                       else min(r.cnt[-2].cnt, r.cnt[-1].cnt) if r.type in (MIN, AND)
+                       else max(r.cnt[-2].cnt, r.cnt[-1].cnt))]),
+
+    # we replace sub by add when possible
+    sub_relop_sub:
+        lambda r: Node(r.type, [Node(ADD, [r.cnt[0].cnt[0], r.cnt[1].cnt[1]]), Node(ADD, [r.cnt[1].cnt[0], r.cnt[0].cnt[1]])]),
+    any_relop_sub:
+        lambda r: Node(r.type, [Node(ADD, [r.cnt[0], r.cnt[1].cnt[1]]), r.cnt[1].cnt[0]]),
+    sub_relop_any:
+        lambda r: Node(r.type, [r.cnt[0].cnt[0], Node(ADD, [r.cnt[1], r.cnt[0].cnt[1]])]),
+
+    # we remove add when possible
+    any_add_val__relop__any_add_val:
+        lambda r: Node(r.type, [Node(ADD, [r.cnt[0].cnt[0], Node(INT, r.cnt[0].cnt[1].val(0) - r.cnt[1].cnt[1].val(0))]), r.cnt[1].cnt[0]]),
+    var_add_val__relop__val:
+        lambda r: Node(r.type, [r.cnt[0].cnt[0], Node(INT, r.cnt[1].val(0) - r.cnt[0].cnt[1].val(0))]),
+    val__relop__var_add_val:
+        lambda r: Node(r.type, [Node(INT, r.cnt[0].val(0) - r.cnt[1].cnt[1].val(0)), r.cnt[1].cnt[0]]),
+
+    imp_logop:
+        lambda r: Node(OR, [r.cnt[0].logical_inversion(), r.cnt[1]]),  # seems better to do that
+    imp_not:
+        lambda r: Node(OR, [r.cnt[0].cnt[0], r.cnt[1]])
+}
+
 # # # recognizing constraints (primitives)
 
 # unary
@@ -787,6 +793,17 @@ l_relop__x_ariop_k = Matcher(NodeAbstract(RELOP, [val, NodeAbstract(ARIOP, [var,
 x_setop_S = Matcher(NodeAbstract(SETOP, [var, set_vals]))
 x_in_intvl = Matcher(Node(AND, [Node(LE, [var, val]), Node(LE, [val, var])]))
 x_notin_intvl = Matcher(Node(OR, [Node(LE, [var, val]), Node(LE, [val, var])]))
+
+# unary_rules = {
+# x_relop_k:  lambda r: xc.buildCtrPrimitive(id, r.var(0), r.relop(0), r.val(0)));
+# k_relop_x, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), r.relop(0).arithmeticInversion(), r.val(0)));
+# x_ariop_k__relop_l, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), r.ariop(0), r.val(0), r.relop(0), r.val(1)));
+# l_relop__x_ariop_k, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), r.ariop(0), r.val(1), r.relop(0).arithmeticInversion(), r.val(0)));
+# x_setop_S, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), r.type.toSetop(), r.arrayOfVals()));
+# x_in_intvl, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), TypeConditionOperatorSet.IN, r.val(1), r.val(0)));
+# x_notin_intvl, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), TypeConditionOperatorSet.NOTIN, r.val(0) + 1, r.val(1) - 1));
+# }
+
 
 # binary
 x_relop_y = Matcher(NodeAbstract(RELOP, [var, var]))

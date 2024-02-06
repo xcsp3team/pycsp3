@@ -283,6 +283,21 @@ class TypeConditionOperator(AbstractType):
 
 
 @unique
+class TypeArithmeticOperator(Enum):
+    ADD, SUB, MUL, DIV, MOD, DIST, POW = auto(7)
+
+
+@unique
+class TypeUnaryArithmeticOperator(Enum):  # The enum type specifying the different types of basic unary arithmetic (and logic) operators.
+    ABS, NEG, SQR, NOT = auto(4)
+
+
+@unique
+class TypeLogicalOperator(Enum):  # The enum type specifying the different types of (non unary) logic operators.
+    AND, OR, XOR, IFF, IMP = auto(5)
+
+
+@unique
 class TypeOrderedOperator(Enum):
     STRICTLY_INCREASING, INCREASING, DECREASING, STRICTLY_DECREASING = auto(4)
 

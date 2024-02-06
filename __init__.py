@@ -83,7 +83,7 @@ if sys.argv:
         #  analysing if we have to compile (e..g, when running the tester, we should not try to do that);
         #  Trying to replace this with the inspector?
         Compilation.done = True
-    else:
+    elif sys.argv[-1] != '-nocompile':
         Compilation.load()
         data = Compilation.data
 
@@ -230,6 +230,8 @@ def _pycharm_security():  # for avoiding that imports are removed when reformatt
 
 @atexit.register
 def end():
+    if sys.argv[-1] == '-nocompile':
+        return
     from pycsp3.dashboard import options
     from pycsp3.tools.utilities import Error
     global _solver
