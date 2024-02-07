@@ -4,7 +4,7 @@ from functools import reduce, cmp_to_key
 from itertools import product
 
 from pycsp3.classes import main
-from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeArithmeticOperator, TypeOrderedOperator, TypeAbstractOperation
+from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeArithmeticOperator, TypeLogicalOperator, TypeOrderedOperator, TypeAbstractOperation
 from pycsp3.classes.auxiliary.enums import auto
 from pycsp3.classes.entities import Entity, EVar
 from pycsp3.classes.main.variables import Variable
@@ -183,7 +183,7 @@ class Node(Entity):
         self.type = node_type
         self.cnt = [args] if isinstance(args, Node) else args  # for empty SET (we have []])
         # cnt is for content (either a leaf value or a list of sons)
-        self.arity = 0 if self.is_leaf() else len(self.cnt)
+        self.arity = len(self.cnt) if isinstance(self.cnt, list) else 0
 
         self.abstractTree = None
         self.abstractValues = None
@@ -232,7 +232,7 @@ class Node(Entity):
             assert False, "An hybrid tuple must be of the form col(x)[+or-][integer]"
 
     def is_leaf(self):
-        return not isinstance(self.cnt, list)  # when unary node, we have also a list  (SET is always with a list too)
+        return not isinstance(self.cnt, list)  # when unary node, we have also a list (and SET, even empty, is always with a list too)
 
     def is_literal(self):
         if self.type == VAR:
@@ -336,21 +336,6 @@ class Node(Entity):
         self._abstraction()
         return self.abstractValues
 
-    def _variables_recursive(self, harvest):
-        if isinstance(self.cnt, list):
-            for son in self.cnt:
-                son._variables_recursive(harvest)
-        if self.type == VAR:
-            if self.cnt not in harvest:
-                harvest.append(self.cnt)
-        return harvest
-
-    def list_of_variables(self):  # the list of variables in the order they occur (depth-first) and without multi-occurrences
-        return self._variables_recursive([])
-
-    def variable(self, i):  # returns the ith variable (multi-occurrences ignored)
-        return self.list_of_variables()[i]
-
     def flatten_by_associativity(self, node_type):
         while True:
             for i, son in enumerate(self.cnt):
@@ -396,42 +381,55 @@ class Node(Entity):
         else:
             return None
 
-    def first_node_such_that(self, predicate):
+    def first_node_satisfying(self, predicate):
         if predicate(self):
             return self
-        if self.is_leaf():
+        if self.arity == 0:
             return None  # since node already tested just above
-        return next((v for son in self.cnt if (v := son.first_node_such_that(predicate)) is not None), None)
+        return next((v for son in self.cnt if (v := son.first_node_satisfying(predicate)) is not None), None)
 
-    def all_nodes_such_that(self, predicate, harvest):
+    def _all_nodes_satisfying(self, predicate, harvest: list):  # possibly, several occurrences of the same element
+        assert isinstance(harvest, list)
         if predicate(self):
             harvest.append(self)
         if not self.is_leaf():
             for son in self.cnt:
-                son.all_nodes_such_that(predicate, harvest)
+                son._all_nodes_satisfying(predicate, harvest)
         return harvest
 
-    def list_of_(self, predicate):
-        return [n.cnt for n in self.all_nodes_such_that(predicate, [])]
+    def all_nodes_satisfying(self, predicate):  # returns the contents of all nodes satisfying the predicate
+        return self._all_nodes_satisfying(predicate, [])
 
-    def ith_of(self, i, predicate):  # returns the content of the ith node of the specified type
+    def list_of_ints(self):
+        return [n.cnt for n in self.all_nodes_satisfying(lambda r: r.type == INT)]
+
+    def list_of_vars(self):
+        return [n.cnt for n in self.all_nodes_satisfying(lambda r: r.type == VAR)]
+
+    def scope(self):
+        return set(self.list_of_vars())
+
+    def ith_node_satisfying(self, i, predicate):  # returns the content of the ith node satisfying the predicate
         if i == 0:
-            f = self.first_node_such_that(predicate)
+            f = self.first_node_satisfying(predicate)
             return f if f is not None else None
-        t = self.list_of_(predicate)
+        t = self.all_nodes_satisfying(predicate)
         return None if i >= len(t) else t[i]
 
     def var(self, i):
-        return None if (v := self.ith_of(i, lambda r: r.type == VAR)) is None else v.cnt
+        return None if (v := self.ith_node_satisfying(i, lambda r: r.type == VAR)) is None else v.cnt
 
     def val(self, i):
-        return None if (v := self.ith_of(i, lambda r: r.type == INT)) is None else v.cnt
+        return None if (v := self.ith_node_satisfying(i, lambda r: r.type == INT)) is None else v.cnt
 
     def relop(self, i):
-        return None if (v := self.ith_of(i, lambda r: r.type.is_relational_operator())) is None else TypeConditionOperator[str(v.type).upper()]
+        return None if (v := self.ith_node_satisfying(i, lambda r: r.type.is_relational_operator())) is None else TypeConditionOperator[str(v.type).upper()]
 
     def ariop(self, i):
-        return None if (v := self.ith_of(i, lambda r: r.type.is_arithmetic_operator())) is None else TypeArithmeticOperator[str(v.type).upper()]
+        return None if (v := self.ith_node_satisfying(i, lambda r: r.type.is_arithmetic_operator())) is None else TypeArithmeticOperator[str(v.type).upper()]
+
+    def logop(self, i):
+        return None if (v := self.ith_node_satisfying(i, lambda r: r.type.is_logical_operator())) is None else TypeLogicalOperator[str(v.type).upper()]
 
     def max_parameter_number(self):
         if self.is_leaf():
@@ -591,12 +589,12 @@ class Node(Entity):
             if node1.type == SET:
                 return 0  # because two empty sets
             assert False
-        if len(node1.cnt) < len(node2.cnt):
+        if node1.arity < node2.arity:
             return -1
-        if len(node1.cnt) > len(node2.cnt):
+        if node1.arity > node2.arity:
             return 1
-        for i in range(len(node1.cnt)):
-            res = Node.compare_to(node1.cnt[i], node2.cnt[i])
+        for i in range(node1.arity):
+            res = Node.compare_to(node1[i], node2[i])
             if res != 0:
                 return res
         return 0
@@ -669,7 +667,7 @@ class Matcher:
         if target is max_vars:  # abstract max => we control that source is a max built on only variables
             return source.type == MAX and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
         if target is logic_vars:
-            return source.type.is_logical_operator() and len(source.cnt) >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type.is_logical_operator() and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
         if target is add_vars:
             return source.type == ADD and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
         if target is mul_vars:
@@ -703,7 +701,7 @@ class Matcher:
                 return False
         if not isinstance(target, NodeAbstract) and target.is_leaf():
             return True  # it seems that we have no more control to do
-        return len(target.cnt) == len(source.cnt) and all(self._matching(source.cnt[i], target.cnt[i], level + 1) for i in range(len(target.cnt)))
+        return target.arity == source.arity and all(self._matching(source[i], target[i], level + 1) for i in range(target.arity))
 
     def matches(self, tree: Node):
         return self._matching(tree, self.target, 0)
@@ -731,7 +729,7 @@ any_symop_not = Matcher(NodeAbstract(SYMOP, [any_node, non]))
 x_mul_k__eq_l = Matcher(Node(EQ, [Node(MUL, [var, val]), val]))
 l__eq_x_mul_k = Matcher(Node(EQ, [val, Node(MUL, [var, val])]))
 flattenable = Matcher(any_cond, lambda r, p: p == 0 and r.type.is_flattenable() and any(son.type == r.type for son in r.cnt))
-mergeable = Matcher(any_cond, lambda r, p: p == 0 and r.type.is_mergeable() and len(r.cnt) >= 2 and r.cnt[-1].type == r.cnt[- 2].type == INT)
+mergeable = Matcher(any_cond, lambda r, p: p == 0 and r.type.is_mergeable() and r.arity >= 2 and r[-1].type == r[- 2].type == INT)
 sub_relop_sub = Matcher(NodeAbstract(RELOP, [sub, sub]))
 any_relop_sub = Matcher(NodeAbstract(RELOP, [any_node, sub]))
 sub_relop_any = Matcher(NodeAbstract(RELOP, [sub, any_node]))
@@ -788,17 +786,6 @@ l_relop__x_ariop_k = Matcher(NodeAbstract(RELOP, [val, NodeAbstract(ARIOP, [var,
 x_setop_S = Matcher(NodeAbstract(SETOP, [var, set_vals]))
 x_in_intvl = Matcher(Node(AND, [Node(LE, [var, val]), Node(LE, [val, var])]))
 x_notin_intvl = Matcher(Node(OR, [Node(LE, [var, val]), Node(LE, [val, var])]))
-
-# unary_rules = {
-# x_relop_k:  lambda r: xc.buildCtrPrimitive(id, r.var(0), r.relop(0), r.val(0)));
-# k_relop_x, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), r.relop(0).arithmeticInversion(), r.val(0)));
-# x_ariop_k__relop_l, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), r.ariop(0), r.val(0), r.relop(0), r.val(1)));
-# l_relop__x_ariop_k, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), r.ariop(0), r.val(1), r.relop(0).arithmeticInversion(), r.val(0)));
-# x_setop_S, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), r.type.toSetop(), r.arrayOfVals()));
-# x_in_intvl, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), TypeConditionOperatorSet.IN, r.val(1), r.val(0)));
-# x_notin_intvl, (id, r) -> xc.buildCtrPrimitive(id, r.var(0), TypeConditionOperatorSet.NOTIN, r.val(0) + 1, r.val(1) - 1));
-# }
-
 
 # binary
 x_relop_y = Matcher(NodeAbstract(RELOP, [var, var]))
