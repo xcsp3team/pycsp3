@@ -195,6 +195,21 @@ class TypeConditionOperator(AbstractType):
             return TypeConditionOperator.IN
         return None
 
+    def arithmetic_inversion(self):  # when multiplied by -1
+        if self == TypeConditionOperator.LT:
+            return TypeConditionOperator.GT
+        if self == TypeConditionOperator.LE:
+            return TypeConditionOperator.GE
+        if self == TypeConditionOperator.GE:
+            return TypeConditionOperator.LE
+        if self == TypeConditionOperator.GT:
+            return TypeConditionOperator.LT
+        if self == TypeConditionOperator.NE:
+            return TypeConditionOperator.NE
+        if self == TypeConditionOperator.EQ:
+            return TypeConditionOperator.EQ
+        return None
+
     def is_set(self):
         return self in (TypeConditionOperator.IN, TypeConditionOperator.NOTIN)
 

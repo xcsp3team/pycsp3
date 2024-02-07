@@ -4,7 +4,7 @@ from functools import reduce, cmp_to_key
 from itertools import product
 
 from pycsp3.classes import main
-from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeOrderedOperator, TypeAbstractOperation
+from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeArithmeticOperator, TypeOrderedOperator, TypeAbstractOperation
 from pycsp3.classes.auxiliary.enums import auto
 from pycsp3.classes.entities import Entity, EVar
 from pycsp3.classes.main.variables import Variable
@@ -183,6 +183,8 @@ class Node(Entity):
         self.type = node_type
         self.cnt = [args] if isinstance(args, Node) else args  # for empty SET (we have []])
         # cnt is for content (either a leaf value or a list of sons)
+        self.arity = 0 if self.is_leaf() else len(self.cnt)
+
         self.abstractTree = None
         self.abstractValues = None
 
@@ -197,28 +199,9 @@ class Node(Entity):
         # exit(1)
         return True
 
-    def is_leaf(self):
-        return not isinstance(self.cnt, list)  # when unary node, we have also a list  (SET is always with a list too)
-
-    def eq__safe(self, other):
-        if not isinstance(other, Node) or self.type != other.type or self.is_leaf() != other.is_leaf():
-            return False
-        if not self.is_leaf():
-            return len(self.cnt) == len(other.cnt) and all(self.cnt[i].eq__safe(other.cnt[i]) for i in range(len(self.cnt)))
-        return self.cnt.eq__safe(other.cnt) if isinstance(self.cnt, Variable) else self.cnt == other.cnt
-
-    def __str_hybrid__(self):
-        if self.is_leaf():
-            if self.type == COL:
-                return "c" + str(self.cnt)  # return "%" + str(self.sons)
-            return str(self.cnt)
-        if self.type == ADD or self.type == SUB:
-            msg = "An hybrid tuple must be of the form {eq|lt|le|ge|gt|ne}{var|integer}{+|-}{var|integer}"
-            assert len(self.cnt) == 2, msg
-            assert self.cnt[0].type in (INT, COL) and self.cnt[1].type in (INT, COL), msg
-            return self.cnt[0].__str_hybrid__() + ("+" if self.type == TypeNode.ADD else "-") + self.cnt[1].__str_hybrid__()
-        else:
-            assert False, "An hybrid tuple must be of the form col(x)[+or-][integer]"
+    def __getitem__(self, i):
+        assert not self.is_leaf()
+        return self.cnt[i]
 
     def __str__(self):
         if self.type == COL:
@@ -228,11 +211,34 @@ class Node(Entity):
     def __repr__(self):
         return self.__str__()
 
+    def eq__safe(self, other):
+        if not isinstance(other, Node) or self.type != other.type or self.is_leaf() != other.is_leaf():
+            return False
+        if not self.is_leaf():
+            return self.arity == other.arity and all(self[i].eq__safe(other[i]) for i in range(self.arity))
+        return self.cnt.eq__safe(other.cnt) if isinstance(self.cnt, Variable) else self.cnt == other.cnt
+
+    def __str_hybrid__(self):
+        if self.is_leaf():
+            if self.type == COL:
+                return "c" + str(self.cnt)  # return "%" + str(self.sons)
+            return str(self.cnt)
+        if self.type == ADD or self.type == SUB:
+            msg = "An hybrid tuple must be of the form {eq|lt|le|ge|gt|ne}{var|integer}{+|-}{var|integer}"
+            assert self.arity == 2, msg
+            assert self[0].type in (INT, COL) and self[1].type in (INT, COL), msg
+            return self[0].__str_hybrid__() + ("+" if self.type == TypeNode.ADD else "-") + self[1].__str_hybrid__()
+        else:
+            assert False, "An hybrid tuple must be of the form col(x)[+or-][integer]"
+
+    def is_leaf(self):
+        return not isinstance(self.cnt, list)  # when unary node, we have also a list  (SET is always with a list too)
+
     def is_literal(self):
         if self.type == VAR:
             return self.cnt.dom.is_binary()
         if self.type == NOT:
-            return self.cnt[0].type == VAR and self.cnt[0].cnt.dom.is_binary()
+            return self[0].type == VAR and self[0].cnt.dom.is_binary()
         return False
 
     def logical_inversion(self):
@@ -252,7 +258,7 @@ class Node(Entity):
                 return range(self.cnt, self.cnt + 1)  # we use a range instead of a singleton list because it simplifies computation (see code below)
             assert False, "no such 0-ary type " + str(self.type) + " is expected"
         if self.type.min_arity == self.type.max_arity == 1:
-            pv = self.cnt[0].possible_values()
+            pv = self[0].possible_values()
             if self.type == NEG:
                 return neg_range(pv) if isinstance(pv, range) else [-v for v in reversed(pv)]
             if self.type == ABS:
@@ -261,7 +267,7 @@ class Node(Entity):
                 return possible_range({v * v for v in pv})
             assert False, "no such 1-ary type " + str(self.type) + " is expected"
         if self.type.min_arity == self.type.max_arity == 2:
-            pv1, pv2 = self.cnt[0].possible_values(), self.cnt[1].possible_values()
+            pv1, pv2 = self[0].possible_values(), self[1].possible_values()
             all_ranges = isinstance(pv1, range) and isinstance(pv2, range)
             if self.type == SUB:
                 return add_range(pv1, neg_range(pv2)) if all_ranges else possible_range({v1 - v2 for v1 in pv1 for v2 in pv2})
@@ -275,7 +281,7 @@ class Node(Entity):
                 return abs_range(add_range(pv1, neg_range(pv2))) if all_ranges else possible_range({abs(v1 - v2) for v1 in pv1 for v2 in pv2})
             assert False, "no such 2-ary type " + str(self.type) + " is expected"
         if self.type == TypeNode.IF:
-            pv1, pv2 = self.cnt[1].possible_values(), self.cnt[2].possible_values()  # sons[0] is for the condition
+            pv1, pv2 = self[1].possible_values(), self[2].possible_values()  # sons[0] is for the condition
             if isinstance(pv1, range) and isinstance(pv2, range) and len(range(max(pv1.start, pv2.start), min(pv1.stop, pv2.stop))) > 0:
                 return range(min(pv1.start, pv2.start), max(pv1.stop, pv2.stop))
             return possible_range({v1 for v1 in pv1} | {v2 for v2 in pv2})
@@ -339,10 +345,10 @@ class Node(Entity):
                 harvest.append(self.cnt)
         return harvest
 
-    def list_of_variables(self):
+    def list_of_variables(self):  # the list of variables in the order they occur (depth-first) and without multi-occurrences
         return self._variables_recursive([])
 
-    def variable(self, i):
+    def variable(self, i):  # returns the ith variable (multi-occurrences ignored)
         return self.list_of_variables()[i]
 
     def flatten_by_associativity(self, node_type):
@@ -371,22 +377,22 @@ class Node(Entity):
             self.cnt = sons
 
     def var_val_if_binary_type(self, t):
-        if self.type != t or len(self.cnt) != 2 or self.cnt[0].type == self.cnt[1].type:
+        if self.type != t or self.arity != 2 or self[0].type == self[1].type:
             return None
-        if self.cnt[0].type == VAR and self.cnt[1].type == INT:
-            return self.cnt[0].cnt, self.cnt[1].cnt
-        elif self.cnt[0].type == INT and self.cnt[1].type == VAR:
-            return self.cnt[1].cnt, self.cnt[0].cnt
+        if self[0].type == VAR and self[1].type == INT:
+            return self[0].cnt, self[1].cnt
+        elif self[0].type == INT and self[1].type == VAR:
+            return self[1].cnt, self[0].cnt
         else:
             return None
 
     def tree_val_if_binary_type(self, t):
-        if self.type != t or len(self.cnt) != 2 or self.cnt[0].type == self.cnt[1].type:
+        if self.type != t or self.arity != 2 or self[0].type == self[1].type:
             return None
-        if self.cnt[0].type != INT and self.cnt[1].type == INT:
-            return self.cnt[0].cnt if self.cnt[0].type == VAR else self.cnt[0], self.cnt[1].cnt
-        elif self.cnt[0].type == INT and self.cnt[1].type != INT:
-            return self.cnt[1].cnt if self.cnt[1].type == VAR else self.cnt[1], self.cnt[0].cnt
+        if self[0].type != INT and self[1].type == INT:
+            return self[0].cnt if self[0].type == VAR else self[0], self[1].cnt
+        elif self[0].type == INT and self[1].type != INT:
+            return self[1].cnt if self[1].type == VAR else self[1], self[0].cnt
         else:
             return None
 
@@ -395,7 +401,7 @@ class Node(Entity):
             return self
         if self.is_leaf():
             return None  # since node already tested just above
-        return next((son for son in self.cnt if son.first_node_such_that(predicate) is not None), None)
+        return next((v for son in self.cnt if (v := son.first_node_such_that(predicate)) is not None), None)
 
     def all_nodes_such_that(self, predicate, harvest):
         if predicate(self):
@@ -411,15 +417,21 @@ class Node(Entity):
     def ith_of(self, i, predicate):  # returns the content of the ith node of the specified type
         if i == 0:
             f = self.first_node_such_that(predicate)
-            return f.cnt if f is not None else None
+            return f if f is not None else None
         t = self.list_of_(predicate)
         return None if i >= len(t) else t[i]
 
     def var(self, i):
-        return self.ith_of(i, lambda r: r.type == VAR)
+        return None if (v := self.ith_of(i, lambda r: r.type == VAR)) is None else v.cnt
 
     def val(self, i):
-        return self.ith_of(i, lambda r: r.type == INT)
+        return None if (v := self.ith_of(i, lambda r: r.type == INT)) is None else v.cnt
+
+    def relop(self, i):
+        return None if (v := self.ith_of(i, lambda r: r.type.is_relational_operator())) is None else TypeConditionOperator[str(v.type).upper()]
+
+    def ariop(self, i):
+        return None if (v := self.ith_of(i, lambda r: r.type.is_arithmetic_operator())) is None else TypeArithmeticOperator[str(v.type).upper()]
 
     def max_parameter_number(self):
         if self.is_leaf():
@@ -643,9 +655,9 @@ class Matcher:
         if target is var_or_val:
             return source.type in (VAR, INT)
         if target is any_add_val:
-            return source.type == ADD and len(source.cnt) == 2 and source.cnt[1].type == INT
+            return source.type == ADD and source.arity == 2 and source[1].type == INT
         if target is var_add_val:
-            return source.type == ADD and len(source.cnt) == 2 and source.cnt[0].type == VAR and source.cnt[1].type == INT
+            return source.type == ADD and source.arity == 2 and source[0].type == VAR and source[1].type == INT
         if target is sub:
             return source.type == SUB
         if target is non:
@@ -653,19 +665,19 @@ class Matcher:
         if target is set_vals:  # abstract set => we control that source is either an empty set or a set built on only longs
             return source.type == SET and all(son.type == INT for son in source.cnt)
         if target is min_vars:  # abstract min => we control that source is a min built on only variables
-            return source.type == MIN and len(source.cnt) >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type == MIN and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
         if target is max_vars:  # abstract max => we control that source is a max built on only variables
-            return source.type == MAX and len(source.cnt) >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type == MAX and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
         if target is logic_vars:
             return source.type.is_logical_operator() and len(source.cnt) >= 2 and all(son.type == VAR for son in source.cnt)
         if target is add_vars:
-            return source.type == ADD and len(source.cnt) >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type == ADD and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
         if target is mul_vars:
-            return source.type == MUL and len(source.cnt) >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type == MUL and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
         if target is add_mul_vals:
-            return source.type == ADD and len(source.cnt) >= 2 and all(son.type == VAR or x_mul_k.matches(son) for son in source.cnt)
+            return source.type == ADD and source.arity >= 2 and all(son.type == VAR or x_mul_k.matches(son) for son in source.cnt)
         if target is add_mul_vars:
-            return source.type == ADD and len(source.cnt) >= 2 and all(x_mul_y.matches(son) for son in source.cnt)
+            return source.type == ADD and source.arity >= 2 and all(x_mul_y.matches(son) for son in source.cnt)
         if target.type != SPECIAL:
             if target.is_leaf() != source.is_leaf() or target.type != source.type:
                 return False
@@ -730,57 +742,40 @@ imp_logop = Matcher(Node(IMP, [any_cond, any_node]), lambda r, p: p == 1 and r.t
 imp_not = Matcher(Node(IMP, [Node(NOT, any_node), any_node]))
 
 canonization_rules = {
-    abs_sub:
-        lambda r: Node(DIST, r.cnt[0].cnt),  # abs(sub(a,b)) => dist(a,b)
-    not_not:
-        lambda r: r.cnt[0].cnt[0],  # not(not(a)) => a
-    neg_neg:
-        lambda r: r.cnt[0].cnt[0],  # neg(neg(a)) => a
-    any_lt_k:
-        lambda r: Node(LE, [r.cnt[0], r.cnt[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
-    k_lt_any:
-        lambda r: Node(LE, [r.cnt[0]._augment(1), r.cnt[1]]),  # e.g., lt(5,x) => le(6,x)
-    not_logop:
-        lambda r: Node(r.cnt[0].type.logical_inversion(), r.cnt[0].cnt),  # e.g., not(lt(x)) = > ge(x)
-    not_symop_any:
-        lambda r: Node(r.type.logical_inversion(), [r.cnt[0].cnt[0], r.cnt[1]]),  # e.g., ne(not(x),y) => eq(x,y)
-    any_symop_not:
-        lambda r: Node(r.type.logical_inversion(), [r.cnt[0], r.cnt[1].cnt[0]]),  # e.g., ne(x,not(y)) => eq(x,y)
+    abs_sub: lambda r: Node(DIST, r[0].cnt),  # abs(sub(a,b)) => dist(a,b)
+    not_not: lambda r: r[0][0],  # not(not(a)) => a
+    neg_neg: lambda r: r[0][0],  # neg(neg(a)) => a
+    any_lt_k: lambda r: Node(LE, [r[0], r[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
+    k_lt_any: lambda r: Node(LE, [r[0]._augment(1), r[1]]),  # e.g., lt(5,x) => le(6,x)
+    not_logop: lambda r: Node(r[0].type.logical_inversion(), r[0].cnt),  # e.g., not(lt(x)) = > ge(x)
+    not_symop_any: lambda r: Node(r.type.logical_inversion(), [r[0][0], r[1]]),  # e.g., ne(not(x),y) => eq(x,y)
+    any_symop_not: lambda r: Node(r.type.logical_inversion(), [r[0], r[1][0]]),  # e.g., ne(x,not(y)) => eq(x,y)
     x_mul_k__eq_l:  # e.g., eq(mul(x,4),8) => eq(x,2) and eq(mul(x,4),6) => 0 (false)
-        lambda r: Node(EQ, [r.cnt[0].cnt[0], Node(INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(INT, 0),
+        lambda r: Node(EQ, [r[0][0], Node(INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(INT, 0),
     l__eq_x_mul_k:  # e.g., eq(8,mul(x,4)) => eq(2,x) and eq(6,mul(x,4)) => 0 (false)
-        lambda r: Node(EQ, [Node(INT, r.val(0) // r.val(1)), r.cnt[1].cnt[0]]) if r.val(0) % r.val(1) == 0 else Node(INT, 0),
+        lambda r: Node(EQ, [Node(INT, r.val(0) // r.val(1)), r[1][0]]) if r.val(0) % r.val(1) == 0 else Node(INT, 0),
 
     #  we flatten operators when possible; for example add(add(x,y),z) becomes add(x,y,z)
-    flattenable:
-        lambda r: Node(r.type, flatten([son.cnt if son.type == r.type else son for son in r.cnt])),
+    flattenable: lambda r: Node(r.type, flatten([son.cnt if son.type == r.type else son for son in r.cnt])),
     mergeable:
         lambda r: Node(r.type, r.cnt[:-2] +
-                       [Node(INT, r.cnt[-2].cnt + r.cnt[-1].cnt if r.type == ADD
-                       else r.cnt[-2].cnt * r.cnt[-1].cnt if r.type == MUL
-                       else min(r.cnt[-2].cnt, r.cnt[-1].cnt) if r.type in (MIN, AND)
-                       else max(r.cnt[-2].cnt, r.cnt[-1].cnt))]),
+                       [Node(INT, r[-2].cnt + r[-1].cnt if r.type == ADD
+                       else r[-2].cnt * r[-1].cnt if r.type == MUL
+                       else min(r[-2].cnt, r[-1].cnt) if r.type in (MIN, AND)
+                       else max(r[-2].cnt, r[-1].cnt))]),
 
     # we replace sub by add when possible
-    sub_relop_sub:
-        lambda r: Node(r.type, [Node(ADD, [r.cnt[0].cnt[0], r.cnt[1].cnt[1]]), Node(ADD, [r.cnt[1].cnt[0], r.cnt[0].cnt[1]])]),
-    any_relop_sub:
-        lambda r: Node(r.type, [Node(ADD, [r.cnt[0], r.cnt[1].cnt[1]]), r.cnt[1].cnt[0]]),
-    sub_relop_any:
-        lambda r: Node(r.type, [r.cnt[0].cnt[0], Node(ADD, [r.cnt[1], r.cnt[0].cnt[1]])]),
+    sub_relop_sub: lambda r: Node(r.type, [Node(ADD, [r[0][0], r[1][1]]), Node(ADD, [r[1][0], r[0][1]])]),
+    any_relop_sub: lambda r: Node(r.type, [Node(ADD, [r[0], r[1][1]]), r[1][0]]),
+    sub_relop_any: lambda r: Node(r.type, [r[0][0], Node(ADD, [r[1], r[0][1]])]),
 
     # we remove add when possible
-    any_add_val__relop__any_add_val:
-        lambda r: Node(r.type, [Node(ADD, [r.cnt[0].cnt[0], Node(INT, r.cnt[0].cnt[1].val(0) - r.cnt[1].cnt[1].val(0))]), r.cnt[1].cnt[0]]),
-    var_add_val__relop__val:
-        lambda r: Node(r.type, [r.cnt[0].cnt[0], Node(INT, r.cnt[1].val(0) - r.cnt[0].cnt[1].val(0))]),
-    val__relop__var_add_val:
-        lambda r: Node(r.type, [Node(INT, r.cnt[0].val(0) - r.cnt[1].cnt[1].val(0)), r.cnt[1].cnt[0]]),
+    any_add_val__relop__any_add_val: lambda r: Node(r.type, [Node(ADD, [r[0][0], Node(INT, r[0][1].val(0) - r[1][1].val(0))]), r[1][0]]),
+    var_add_val__relop__val: lambda r: Node(r.type, [r[0][0], Node(INT, r[1].val(0) - r[0][1].val(0))]),
+    val__relop__var_add_val: lambda r: Node(r.type, [Node(INT, r[0].val(0) - r[1][1].val(0)), r[1][0]]),
 
-    imp_logop:
-        lambda r: Node(OR, [r.cnt[0].logical_inversion(), r.cnt[1]]),  # seems better to do that
-    imp_not:
-        lambda r: Node(OR, [r.cnt[0].cnt[0], r.cnt[1]])
+    imp_logop: lambda r: Node(OR, [r[0].logical_inversion(), r[1]]),  # seems better to do that
+    imp_not: lambda r: Node(OR, [r[0][0], r[1]])
 }
 
 # # # recognizing constraints (primitives)

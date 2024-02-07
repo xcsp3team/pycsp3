@@ -1214,8 +1214,8 @@ def Sum(term, *others, condition=None):
                 t2.append(-1 if tree.inverse else 1)
             else:
                 assert isinstance(tree, Node)
-                if tree.type == TypeNode.NEG and tree.cnt[0].type == TypeNode.VAR:
-                    pair = (tree.cnt[0].cnt, -1)
+                if tree.type == TypeNode.NEG and tree[0].type == TypeNode.VAR:
+                    pair = (tree[0].cnt, -1)
                 else:
                     pair = tree.tree_val_if_binary_type(TypeNode.MUL)
                 if pair is None:
