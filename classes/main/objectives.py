@@ -14,7 +14,7 @@ class ObjectiveExpression(Objective):
         self.arg(TypeCtrArg.EXPRESSION, expression)
 
 
-class ObjectivePartial(Objective):
+class ObjectivePartial(Objective):  # based on a partial constraint
     def __init__(self, way, partial):
         super().__init__(way)
         self.attributes.append((TypeCtrArg.TYPE, partial.constraint.name))
