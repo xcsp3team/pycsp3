@@ -3,7 +3,7 @@ from collections import OrderedDict
 from lxml import etree
 
 from pycsp3.classes.auxiliary.conditions import Condition
-from pycsp3.classes.auxiliary.enums import TypeFramework, TypeConditionOperator, TypeXML, TypeVar, TypeCtr, TypeCtrArg
+from pycsp3.classes.auxiliary.enums import TypeFramework, TypeConditionOperator, TypeXML, TypeVar, TypeCtr, TypeCtrArg, TypeAnn
 from pycsp3.classes.entities import (Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, EBlock, ESlide, EToGather,
                                      EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities)
 from pycsp3.classes.main.annotations import TypeAnnArg
@@ -131,7 +131,7 @@ def _argument(elt, arg, key, value, change_element_value=False):
 
 
 def _constraint(entity, *, possible_simplified_form=False):
-    assert isinstance(entity, (ECtr, EObjective, EAnnotation))
+    assert isinstance(entity, (ECtr, EObjective))
     c = entity.constraint
     if c is None:
         return None
@@ -232,38 +232,46 @@ def _objectives():
     return elt
 
 
+def _annotation(entity, *, possible_simplified_form=False):
+    assert isinstance(entity, EAnnotation)
+    c = entity.constraint
+    if c is None:
+        return None
+    elt = _element(c.name, entity, attributes=c.attributes)
+    arguments = [arg for arg in c.arguments.values() if arg.content is not None]  # we keep only valid (non null) arguments
+    if c.name == TypeAnn.VAL_HEURISTIC:
+        assert len(arguments) == 1 and arguments[0].name == TypeAnnArg.STATICS, "for the moment"
+        _argument(elt, arguments[0], arguments[0].name, arguments[0].content)
+    else:
+        assert len(arguments) == 1, "for the moment"
+        _text(elt, arguments[0].content)
+    return elt
+
+
 def _annotations():
     elt = _element(TypeXML.ANNOTATIONS)
     for ce in AnnEntities.items:
-        elt.append(_constraint(ce, possible_simplified_form=False))
+        elt.append(_annotation(ce, possible_simplified_form=False))
     return elt
 
 
 def build_document():
     root = _element(TypeXML.INSTANCE, attributes=[(TypeXML.FORMAT, "XCSP3")])
 
-    variables = _variables()
-    if len(variables) > 0:
+    if len(variables := _variables()) > 0:
         root.append(variables)
     else:
         print("Warning: no variables in this model (and so, no generated file)!")
         return None
-
-    constraints = _constraints()
-    if len(constraints) > 0:
+    if len(constraints := _constraints()) > 0:
         root.append(constraints)
     else:
         print("Warning: no constraints for this model!")
-
-    objectives = _objectives()
-    if len(objectives) > 0:
+    if len(objectives := _objectives()) > 0:
         root.append(objectives)
         root.set(str(TypeXML.TYPE), str(TypeFramework.COP))
     else:
         root.set(str(TypeXML.TYPE), str(TypeFramework.CSP))
-
-    annotations = _annotations()
-    if len(annotations) > 0:
+    if len(annotations := _annotations()) > 0:
         root.append(annotations)
-
     return root

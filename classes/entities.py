@@ -288,13 +288,13 @@ class EObjective(Entity):
 
 
 class EAnnotation(Entity):
-    def __init__(self, c):
-        if c is None:
+    def __init__(self, a):
+        if a is None:
             return
         super().__init__(None)  # no need to have an id here
-        self.constraint = c
+        self.constraint = a
         AnnEntities.items.append(self)
-        AnnEntities.items_types.append(type(c))
+        AnnEntities.items_types.append(type(a))
 
 
 class VarEntities:
