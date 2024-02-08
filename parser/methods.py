@@ -1,12 +1,12 @@
 import re
 from xml.etree.ElementTree import Element
 
-from ppycsp3.parser.constants import DELIMITER_WHITESPACE, DELIMITER_COMMA, DELIMITER_TWO_DOTS, DELIMITER_LISTS
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionVariable
 from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeVar
 from pycsp3.classes.main.constraints import Parameter
 from pycsp3.classes.main.variables import Variable
 from pycsp3.classes.nodes import TypeNode, Node
+from pycsp3.parser.constants import DELIMITER_WHITESPACE, DELIMITER_COMMA, DELIMITER_TWO_DOTS, DELIMITER_LISTS
 from pycsp3.tools.utilities import ANY
 
 

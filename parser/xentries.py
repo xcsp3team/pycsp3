@@ -1,13 +1,13 @@
 import re
 from functools import reduce
 
-from ppycsp3.parser import methods
-from ppycsp3.parser.constants import DELIMITER_WHITESPACE, VALID_IDENTIFIER, ID, CLASS, RANK, OTHERS
 from pycsp3.classes.auxiliary.conditions import ConditionVariable, ConditionParameter
 from pycsp3.classes.auxiliary.enums import TypeVar, TypeCtr, TypeCtrArg, TypeObj, TypeAnn, TypeRank
 from pycsp3.classes.main.constraints import Parameter
 from pycsp3.classes.main.variables import Domain, Variable
 from pycsp3.classes.nodes import TypeNode, Node
+from pycsp3.parser import methods
+from pycsp3.parser.constants import DELIMITER_WHITESPACE, VALID_IDENTIFIER, ID, CLASS, RANK, OTHERS
 from pycsp3.tools.utilities import check_int
 
 

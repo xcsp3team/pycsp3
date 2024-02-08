@@ -3,13 +3,6 @@ import re
 import sys
 from xml.etree import ElementTree
 
-from ppycsp3.parser.callbacks import Callbacks
-from ppycsp3.parser.constants import (COVERED, CLOSED, RANK, START_INDEX, START_ROW_INDEX, START_COL_INDEX, ZERO_IGNORED, STATIC,
-                                      DELIMITER_LISTS, DELIMITER_COMMA, DELIMITER_WHITESPACE, ID, CLASS, VAR, ARRAY, DOMAIN, SIZE, AS, FOR, TYPE, GROUP, BLOCK,
-                                      INTENSION, MATRIX, INDEX, OFFSET, COLLECT, CIRCULAR, STARRED, UNCLEANED, MINIMIZE, ORDER)
-from ppycsp3.parser.methods import (parse_domain, parse_expression, parse_sequence, parse_double_sequence, parse_double_sequence_of_vars, parse_condition,
-                                    parse_conditions, parse_data, parse_tuples, replace_intern_commas)
-from ppycsp3.parser.xentries import XCtr, XBlock, XGroup, XSlide, XObjExpr, XVar, XVarArray, domains_for, XCtrArg, XObjSpecial, XAnn
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionValue, ConditionVariable
 from pycsp3.classes.auxiliary.enums import (TypeFramework, TypeVar, TypeCtr, TypeCtrArg, TypeAnn, TypeConditionOperator, TypeArithmeticOperator,
                                             TypeUnaryArithmeticOperator, TypeOrderedOperator, TypeRank, TypeObj)
@@ -18,6 +11,13 @@ from pycsp3.classes.nodes import (TypeNode, Node, x_relop_k, k_relop_x, x_ariop_
                                   max_relop, x_ariop_y__relop_z, z_relop__x_ariop_y, logic_X, logic_X__eq_x, logic_X__ne_x, logic_y_relop_z__eq_x, x_relop_y,
                                   x_ariop_y__relop_k, add_mul_vars__relop, add_vars__relop, k_relop__x_ariop_y, x_relop__y_ariop_k, y_ariop_k__relop_x,
                                   logic_y_relop_k__eq_x, logic_k_relop_y__eq_x, unalop_x__eq_y, add_mul_vals__relop)
+from pycsp3.parser.callbacks import Callbacks
+from pycsp3.parser.constants import (COVERED, CLOSED, RANK, START_INDEX, START_ROW_INDEX, START_COL_INDEX, ZERO_IGNORED, STATIC,
+                                     DELIMITER_LISTS, DELIMITER_COMMA, DELIMITER_WHITESPACE, ID, CLASS, VAR, ARRAY, DOMAIN, SIZE, AS, FOR, TYPE, GROUP, BLOCK,
+                                     INTENSION, MATRIX, INDEX, OFFSET, COLLECT, CIRCULAR, STARRED, UNCLEANED, MINIMIZE, ORDER)
+from pycsp3.parser.methods import (parse_domain, parse_expression, parse_sequence, parse_double_sequence, parse_double_sequence_of_vars, parse_condition,
+                                   parse_conditions, parse_data, parse_tuples, replace_intern_commas)
+from pycsp3.parser.xentries import XCtr, XBlock, XGroup, XSlide, XObjExpr, XVar, XVarArray, domains_for, XCtrArg, XObjSpecial, XAnn
 from pycsp3.tools.curser import OpOverrider
 from pycsp3.tools.utilities import flatten
 
