@@ -3,8 +3,8 @@
 
 This is Version 2.2 of PyCSP3, a library in Python 3 (version 3.8 or later) for modeling combinatorial constrained problems;
 see [www.pycsp.org](https://pycsp.org).
-PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API)
-and [Numberjack](https://github.com/eomahony/Numberjack).
+<!-- PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API)
+and [Numberjack](https://github.com/eomahony/Numberjack). -->
 With PyCSP3, it is possible to generate instances of:
 
 1. CSP (Constraint Satisfaction Problem)
@@ -26,7 +26,7 @@ At this stage, one can run two embedded solvers:
 * the constraint solver [ACE](https://github.com/xcsp3team/ace) (AbsCon Essence), with the option -solve or the option -solver=ace
 * the constraint solver [Choco](https://choco-solver.org/), with the option -solver=choco
 
-Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
+<!-- Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf). -->
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
 For example, see the solvers involved in the [2022 and 2023 Competitions](https://www.xcsp.org/competitions/).
