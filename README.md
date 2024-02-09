@@ -72,7 +72,7 @@ That's it. However, note that for intensive use, it is better to install PyCSP3 
 
 This is the second easiest way of installing PyCSP3.
 
-Note that you need first Python 3 (version 3.8, or later) to be installed.
+Note that you need first Python (version 3.8, or later) to be installed.
 You can do it, for example, from [python.org](https://www.python.org/downloads/)
 
 ## Installing PyCSP3 (Linux)
@@ -254,6 +254,8 @@ Python 3.5.2
        x + y > 15
     )
 >>> compile()
+>>> if solve() is SAT:
+       print(value(x),value(y)) 
 ```
 
 Note that to get an XCSP3 file, we call `compile()`.
