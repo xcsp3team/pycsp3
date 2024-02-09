@@ -365,7 +365,10 @@ satisfy(
     [y[i] == abs(x[i] - x[i + 1]) for i in range(n - 1)],
 
     # tag(symmetry-breaking)
-    [x[0] < x[n - 1], y[0] < y[1]]
+    [
+        x[0] < x[n - 1],
+        y[0] < y[1]
+    ]
 )
 ```
 
@@ -411,7 +414,10 @@ elif variant("aux"):
         [y[i] == abs(x[i] - x[i + 1]) for i in range(n - 1)],
 
         # tag(symmetry-breaking)
-        [x[0] < x[n - 1], y[0] < y[1]]
+        [
+            x[0] < x[n - 1],
+            y[0] < y[1]
+        ]
     )
 ```
 
