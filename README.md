@@ -40,7 +40,7 @@ while replacing YY and MM with the current values that are present in the name o
 
 Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](https://pycsp.org/documentation/solving-process/).
 
-# 0) No Installation from Google Colab
+# 0) Zero Installation from Google Colab
 
 This is an immediate solution for using PyCSP3, with no installation required (*you are ready to work in exactly 2 minutes*).
 What you have to do is:
