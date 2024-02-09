@@ -11,9 +11,7 @@ see [www.pycsp.org](https://pycsp.org). With PyCSP3, it is possible to generate 
 
 in format XCSP3; see [www.xcsp.org](https://xcsp.org).
 Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514), which allows us to use integer variables (with finite domains) and popular
-constraints.
-
-Note that:
+constraints. Note that:
 
 * a dedicated [website](https://pycsp.org/) with more than 60 Jupyter notebooks is available
 * a well-documented [guide](https://arxiv.org/abs/2009.00326) is available
