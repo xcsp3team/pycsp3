@@ -44,7 +44,7 @@ Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving 
 
 # 0) No Installation from Google Colab
 
-This is an immediate solution for using PyCSP3, with no installation required (you are ready to work in exactly 2 minutes).
+This is an immediate solution for using PyCSP3, with no installation required (*you are ready to work in exactly 2 minutes*).
 What you have to do is:
 1. build a new notebook on [Google colab](https://colab.research.google.com/)
 2. insert a first code cell for being able to use PyCSP3 in your notebook:
