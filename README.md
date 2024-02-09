@@ -22,7 +22,7 @@ Note that:
 
 At this stage, one can run two embedded solvers:
 
-* the constraint solver [ACE](https://github.com/xcsp3team/ace) (AbsCon Essence), with the option -solve or the option -solver=ace
+* the constraint solver [ACE](https://github.com/xcsp3team/ace), with the option -solve or the option -solver=ace
 * the constraint solver [Choco](https://choco-solver.org/), with the option -solver=choco
 
 <!-- Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf). -->
@@ -42,9 +42,35 @@ while replacing YY and MM with the current values that are present in the name o
 
 Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](https://pycsp.org/documentation/solving-process/).
 
+# 0) No Installation from Google Colab
+
+This is an immediate solution for using PyCSP3, with no installation required (you are ready to work in exactly 2 minutes).
+What you have to do is:
+1. build a new notebook on [Google colba](https://colab.research.google.com/)
+2. insert a first code cell for being able to use PyCSP3 in your notebook:
+   ```
+   pip install pycsp3
+   ```
+3. test a very basic model by inserting in a second cell something like:
+   ```
+   from pycsp3 import *
+
+    x = VarArray(size=5, dom=range(5))
+
+    satisfy(
+       AllDifferent(x)
+    )  
+
+   if solve() is SAT:
+      print(values(x))
+   ```
+Here, we have an array with 5 variables, we enforce them to be all different, and we diaply the first solution found by the underlying solver.
+That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section. 
+
+
 # 1) Installation from PyPi
 
-This is the easiest way of installing PyCSP3.
+This is the second easiest way of installing PyCSP3.
 
 Note that you need first Python 3 (version 3.8, or later) to be installed.
 You can do it, for example, from [python.org](https://www.python.org/downloads/)
@@ -129,24 +155,17 @@ For Windows:
 python -m pip install --upgrade pycsp3
 ```
 
-## Copying a Pool of Models
+## Working with a Pool of Models
 
-The procedure, just below, will be removed at the next version because a GitHub repository is now available with more than 300 models
+A GitHub repository is now available with more than 300 models
 at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models).
 
-PyCSP3 is accompanied by more than 100 models.
-To get them in a subdirectory `problems` of your current directory, execute:
+And you can test the compilation of one of these models.
+For example, at the root of the directory pycsp3-models:
 
 ```console
-python3 -m pycsp3 (For linux/Mac)
-python -m pycsp3 (For Windows)
-```
-
-And you can test the compilation of one of the models, for example:
-
-```console
-python3 problems/csp/single/Zebra.py (For Linux/Mac)
-python problems\csp\single\Zebra.py (For Windows)
+python single/Zebra/Zebra.py (For Linux/Mac)
+python single\Zebra\Zebra.py (For Windows)
 ```
 
 # 2) Installation (alternative) by Cloning from GitHub
