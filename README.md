@@ -46,12 +46,12 @@ Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving 
 
 This is an immediate solution for using PyCSP3, with no installation required (you are ready to work in exactly 2 minutes).
 What you have to do is:
-1. build a new notebook on [Google colba](https://colab.research.google.com/)
+1. build a new notebook on [Google colab](https://colab.research.google.com/)
 2. insert a first code cell for being able to use PyCSP3 in your notebook:
    ```
    pip install pycsp3
    ```
-3. test a very basic model by inserting in a second cell something like:
+3. test a very basic model by inserting in a second code cell something like:
    ```
    from pycsp3 import *
 
@@ -64,7 +64,7 @@ What you have to do is:
    if solve() is SAT:
       print(values(x))
    ```
-Here, we have an array with 5 variables, we enforce them to be all different, and we diaply the first solution found by the underlying solver.
+Here, we have an array with 5 variables, we enforce them to be all different, and we display the first solution found by the underlying solver.
 That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section. 
 
 
