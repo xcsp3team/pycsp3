@@ -107,7 +107,7 @@ class Callbacks:
         print("Warning: ctr true", str(scope))
 
     def ctr_false(self, scope: list[Variable]):
-        assert False, "Problem as a constraint with only conflicts: " + str(scope)
+        assert False, "Problem as a constraint with 0 supports: " + str(scope)
 
     def ctr_intension(self, scope: list[Variable], tree: Node):
         self._unimplemented(scope, tree)

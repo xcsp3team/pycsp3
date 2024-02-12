@@ -1105,7 +1105,7 @@ def cp_array(*t):
         t = list(t)
     assert isinstance(t, list)
     if len(t) == 0:
-        return t
+        return ListInt([])
     if isinstance(t[0], (tuple, list, types.GeneratorType)):
         assert all(isinstance(t, (tuple, list, types.GeneratorType)) for t in t)
         res = [cp_array(t) for t in t]
