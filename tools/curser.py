@@ -409,8 +409,12 @@ class OpOverrider:
         return self.cnt[0] if isinstance(self, Node) and self.type == TypeNode.NEG else Node.build(TypeNode.NEG, self)
 
     def __add__(self, other):
-        if isinstance(other, int) and other == 0:
-            return self
+        if isinstance(other, int):
+            if other == 0:
+                return self
+            if isinstance(self, Node) and self.type in (TypeNode.ADD, TypeNode.SUB) and self[-1].type == TypeNode.INT:
+                self[-1].cnt += (other if self.type == TypeNode.ADD else -other)
+                return self[0] if self.arity == 2 and self[-1].cnt == 0 else self
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))
         if isinstance(other, PartialConstraint):
@@ -429,8 +433,12 @@ class OpOverrider:
         return Node.build(TypeNode.ADD, other, self)
 
     def __sub__(self, other):
-        if isinstance(other, int) and other == 0:
-            return self
+        if isinstance(other, int):
+            if other == 0:
+                return self
+            if isinstance(self, Node) and self.type in (TypeNode.ADD, TypeNode.SUB) and self[-1].type == TypeNode.INT:
+                self[-1].cnt += (-other if self.type == TypeNode.ADD else other)
+                return self[0] if self.arity == 2 and self[-1].cnt == 0 else self
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))
         if isinstance(other, PartialConstraint):
