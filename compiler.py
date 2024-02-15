@@ -219,7 +219,14 @@ def load_json_data(filename, *, storing=False):
     """
     assert filename.endswith(".json")
     if filename.startswith("http"):
+        # import requests
+        #
+        # response = requests.get(filename)
+        # if response.status_code != 204:
+        #     data = json.loads(response.content, object_pairs_hook=OrderedDict)
+
         from urllib.request import urlopen
+
         data = json.loads(urlopen(filename).read(), object_pairs_hook=OrderedDict)
     else:
         if os.path.exists(filename):

@@ -395,8 +395,10 @@ class OpOverrider:
                 return t
         elif isinstance(index, slice):
             t = list.__getitem__(t, index)
+        elif isinstance(index, list):
+            return cp_array([t[v] for v in index])
         else:
-            raise TypeError()
+            raise TypeError(str(index) + " " + str(type(index)))
         if isinstance(t, list) and dimension + 1 < len(indexes):
             if not isinstance(index, int):
                 for i, element in enumerate(t):
@@ -706,7 +708,9 @@ class OpOverrider:
             return list.__getitem__(array, indexes)
         if isinstance(indexes, types.GeneratorType):
             indexes = tuple(indexes)
-        if isinstance(indexes, (list, range)):
+        if isinstance(indexes, list):
+            return cp_array(array[v] for v in indexes)
+        if isinstance(indexes, range):  # (list, range)):
             indexes = tuple(indexes)
         if isinstance(indexes, tuple) and len(indexes) == 1:
             indexes = indexes[0]

@@ -72,6 +72,10 @@ def combinations(n, size):
     return itertools.combinations(n if not isinstance(n, int) else range(n), size)
 
 
+# def product(n, r):
+#     return itertools.product(n if not isinstance(n, int) else range(n), r)
+
+
 def different_values(*args):
     """
     Returns True if
