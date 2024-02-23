@@ -156,7 +156,7 @@ python -m pip install --upgrade pycsp3
 
 ## Working with a Pool of Models
 
-A GitHub repository is now available with more than 300 models
+A GitHub repository is now available with more than 340 models
 at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models).
 
 And you can test the compilation of one of these models.
