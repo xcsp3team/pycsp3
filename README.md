@@ -1,4 +1,4 @@
-<h1 align="center"> PyCSP3 v2.2 (December 10, 2023) </h1>
+<h1 align="center"> PyCSP3 v2.2 <small>(December 10, 2023)</small> </h1>
 
 <!-- PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API)
 and [Numberjack](https://github.com/eomahony/Numberjack). -->
@@ -16,7 +16,7 @@ constraints. Note that:
 * a dedicated [website](https://pycsp.org/) with more than 60 Jupyter notebooks is available
 * a well-documented [guide](https://arxiv.org/abs/2009.00326) is available
 * PyCSP3 is available as a [PyPi package](https://pypi.org/project/pycsp3/)
-* a GitHub repository with more than 300 models is available at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models)
+* a GitHub repository with more than 340 models is available at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models)
 
 At this stage, one can run two embedded solvers:
 
@@ -63,6 +63,7 @@ What you have to do is:
       print(values(x))
    ```
 Here, we have an array with 5 variables, we enforce them to be all different, and we display the first solution found by the underlying solver.
+Just execute these cell codes on Colab.
 That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section. 
 
 
