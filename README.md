@@ -1,4 +1,4 @@
-<h1 align="center"> PyCSP3 v2.2 `(December 10, 2023)` </h1> 
+<h1 align="center"> PyCSP3 v2.2 <sub><sup>(December 10, 2023)</sup></sub> </h1> 
 
 <!-- PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API)
 and [Numberjack](https://github.com/eomahony/Numberjack). -->
