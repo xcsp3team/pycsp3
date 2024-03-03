@@ -1,3 +1,4 @@
+import types
 from collections import OrderedDict
 
 from pycsp3 import functions

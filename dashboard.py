@@ -49,6 +49,7 @@ class _Options:
                     assert len(t) == 2
                     value = t[0].lower()
                     value = 'dataparser' if value == 'parser' else value
+                    value = 'dataformat' if value == 'format' else value
                     if value in self.values:
                         assert len(t[1]) > 0, "The value specified for the option -" + value + " is the empty string"
                         vars(self)[value] = t[1]

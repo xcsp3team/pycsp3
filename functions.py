@@ -408,7 +408,7 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     # if len(testOthers) == 0 and isinstance(test, bool):  # We don't allow that because otherwise 'in' no more usable as in If(x[0] in (2,3), Then=...
     #     return Then if test else Else
 
-    tests, thens = flatten(test, testOthers), flatten(Then)
+    tests, thens = flatten(test, testOthers), [v for v in flatten(Then) if not (isinstance(v, ConstraintDummyConstant) and v.val == 1)]
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list)  # after flatten, we have a list
     if len(thens) == 0:
         return None if Else is None else Or(tests, Else)
@@ -459,10 +459,11 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     t = []
     t.extend(disjunction(neg_test, term) for term in flatten(thens))
     if Else is not None:
-        elses = manage_global_indirection(Else, also_pc=True)
+        elses = [v for v in flatten(Else) if not (isinstance(v, ConstraintDummyConstant) and v.val == 1)]
+        elses = manage_global_indirection(elses, also_pc=True)
         if len(elses) > 0:
             test = conjunction(term for term in tests) if len(tests) > 1 else tests
-            t.extend(disjunction(test, v) for v in flatten(elses))
+            t.extend(disjunction(test, v) for v in elses)
     return t  # [0] if len(t) == 1 else t
 
 
@@ -915,10 +916,15 @@ def conjunction(*args):
 
     :return: a node, root of a tree expression
     """
+
     # return Count(manage_global_indirection(*args)) == len(args)
     # t = flatten(args)
     # if len(t) > 3:
     #     return Count(t) == len(t)
+    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
+        args = tuple(args[0])
+    if len(args) == 0:
+        return ConstraintDummyConstant(1)
     return Node.conjunction(manage_global_indirection(*args))
 
 
@@ -939,6 +945,10 @@ def disjunction(*args):
 
     :return: a node, root of a tree expression
     """
+    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
+        args = tuple(args[0])
+    if len(args) == 0:
+        return ConstraintDummyConstant(0)
     return Node.disjunction(manage_global_indirection(*args))
 
 

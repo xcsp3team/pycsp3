@@ -754,7 +754,8 @@ class OpOverrider:
             #             isinstance(v, (tuple, list)) and len(v) == 2 and all(isinstance(w, int) for w in v) for v in indexes):
             #         return ListInt([list.__getitem__(list.__getitem__(array, v), w) for v, w in indexes])
         if isinstance(indexes, tuple) and isinstance(indexes[0], int):
-            return array[indexes[0]][indexes[1:]]
+            rest = indexes[1:]
+            return array[indexes[0]][rest[0] if len(rest) == 1 else rest]
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         elif isinstance(indexes, Node):
@@ -1010,7 +1011,7 @@ def columns(m):
     return _list((_list((row[j] for row in m), mode) for j in range(len(m[0]))), mode)
 
 
-def ring(matrix, k):
+def ring(matrix, k=0):
     """
     Returns the kth ring of the specified matrix
 
@@ -1024,7 +1025,8 @@ def ring(matrix, k):
     left = matrix[k + 1:-k - 1, m - k - 1]
     bot = [matrix[n - k - 1][j] for j in range(m - k - 1, k - 1, -1)]
     right = [matrix[j][k] for j in range(n - k - 2, k, -1)]
-    return top + left + bot + right
+    mode = 0 if is_matrix(matrix, Variable) else 1 if is_matrix(matrix, int) else 2
+    return _list(top + left + bot + right, mode)
 
 
 def diagonal_down(m, i=-1, j=-1, check=True):
