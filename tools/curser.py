@@ -891,6 +891,12 @@ class ListVar(list):
 
     # def __rmul__(self, other): return ListVar.__mul__(other, self)
 
+    def at_border(self, i, j):
+        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
+        n, m = len(self), len(self[i])
+        assert 0 <= i < n and 0 <= j < m
+        return i in {0, n - 1} or j in {0, m - 1}
+
     def around(self, i, j):
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])

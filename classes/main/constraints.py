@@ -721,7 +721,7 @@ class ConstraintNoOverlap(ConstraintUnmergeable):
         self.arg(TypeCtrArg.LENGTHS, "".join(["(" + ",".join(str(v) for v in t) + ")" for t in lengths]) if isinstance(lengths[0], tuple) else lengths,
                  content_ordered=True)
         if zero_ignored:
-            self.attributes.append((TypeCtrArg.ZERO_IGNORED, zero_ignored))
+            self.attributes.append((TypeXML.ZERO_IGNORED, str(zero_ignored).lower()))
 
 
 class ConstraintCumulative(Constraint):  # TODO inheriting from ConstraintWithCondition instead? is this a pb?
