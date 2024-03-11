@@ -720,7 +720,7 @@ class ConstraintNoOverlap(ConstraintUnmergeable):
                  content_ordered=True)
         self.arg(TypeCtrArg.LENGTHS, "".join(["(" + ",".join(str(v) for v in t) + ")" for t in lengths]) if isinstance(lengths[0], tuple) else lengths,
                  content_ordered=True)
-        if zero_ignored:
+        if not zero_ignored:
             self.attributes.append((TypeXML.ZERO_IGNORED, str(zero_ignored).lower()))
 
 

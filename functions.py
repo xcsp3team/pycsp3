@@ -1673,7 +1673,7 @@ def _is_mixed_list(t, index=-1):
     return False
 
 
-def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
+def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
     """
     Builds and returns a constraint NoOverlap.
     Either the tasks are specified as pairs, or the tasks are given by the name parameters origins and lengths.
@@ -1724,7 +1724,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=False):
             lengths = [(auxiliary().replace_int(u) if b0 and isinstance(u, int) else u, auxiliary().replace_int(v) if b1 and isinstance(v, int) else v)
                        for (u, v) in lengths]
     if options.mini:
-        assert zero_ignored is False  # for the moment
+        assert zero_ignored is True  # for the moment
         t = []
         if isinstance(origins[0], Variable):  # 1D
             for i in range(len(origins)):
