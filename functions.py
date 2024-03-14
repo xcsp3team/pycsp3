@@ -469,6 +469,12 @@ def If(test, *testOthers, Then, Else=None, meta=False):
 
 def Match(Expr, *, Cases):
     assert isinstance(Cases, dict)
+    if isinstance(Expr, (tuple, list)):
+        r = len(Expr)
+        assert r > 1 and all(isinstance(v, (Variable, Node)) for v in Expr)
+        assert all(isinstance(k, (tuple, list)) and len(k) == r and all(isinstance(v, int) for v in k) for k in Cases.keys())
+        return [disjunction([Expr[i] != k[i] for i in range(r)] + [v]) for k, v in Cases.items()]
+
     t = [(k, w) for k, v in Cases.items() for w in (v if isinstance(v, (tuple, list, set, frozenset)) else [v])]
     if isinstance(Expr, (Variable, Node)):
         return [expr(~k.operator, Expr, k.right_operand()) | v if isinstance(k, Condition)
