@@ -1420,5 +1420,5 @@ def manage_global_indirection(*args, also_pc=False):
             arg = gi
         elif also_pc and isinstance(arg, PartialConstraint):
             arg = auxiliary().replace_partial_constraint(arg)
-        t.append(arg)
+        t.append(arg.val if isinstance(arg, ConstraintDummyConstant) else arg)
     return t  # tuple(t)  # with tuple, there is a problem in some cases (seems to be the fact that lists are expected when building some constraints

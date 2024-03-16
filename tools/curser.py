@@ -5,7 +5,7 @@ from pycsp3 import functions
 from pycsp3.classes.entities import ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintAllDifferentList, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
-    ConstraintRefutation, auxiliary, global_indirection, manage_global_indirection)
+    ConstraintRefutation, ConstraintDummyConstant, auxiliary, global_indirection, manage_global_indirection)
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
@@ -537,6 +537,8 @@ class OpOverrider:
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
             return Node.build(TypeNode.EQ, self[0], self[1])
         self, other = OpOverrider._replace(self, other)
+        # if isinstance(other, ConstraintDummyConstant):
+        #     other = other.val
         return other.__eq__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.EQ, self, other)
 
     def __ne__(self, other):
@@ -724,7 +726,8 @@ class OpOverrider:
                     s = "Auto-adjustment of array indexing from a slice " + str(indexes)
                     warning(s + "\n\t   Other possible similar cases are not displayed")
                     OpOverrider.array_indexing_warning = True  # to avoid displaying a lot of messages
-                indexes = list(v % len(array) for v in r)
+                lst = [list.__getitem__(array, u) for u in [v % len(array) for v in r]]
+                return ListVar(lst) if lv else ListInt(lst)
         # we check with the next statement if a selection of cells is expected
         k = __int_tuples_of_same_size(indexes)
         if k != -1:
