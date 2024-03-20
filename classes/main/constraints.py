@@ -528,6 +528,17 @@ class ConstraintSum(ConstraintWithCondition):
             self.arg(TypeCtrArg.COEFFS, [-1 for _ in range(len(self.arguments[TypeCtrArg.LIST]))])
         return self
 
+    def add(self, term):
+        if isinstance(term, int):
+            term = auxiliary().replace_int(term)
+        elif isinstance(term, (PartialConstraint, ECtr)):
+            term = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(term)
+        assert isinstance(term, (Variable, Node))
+        self.arguments[TypeCtrArg.LIST].content.append(term)
+        if TypeCtrArg.COEFFS in self.arguments:
+            self.arguments[TypeCtrArg.COEFFS].content.append(term)
+        return self
+
 
 class ConstraintCount(ConstraintWithCondition):
     def __init__(self, lst, values, condition):
@@ -1003,6 +1014,10 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return self.add_condition(TypeConditionOperator.GT, self._simplify_with_auxiliary_variables(other))
 
     def __add__(self, other):
+        if isinstance(self.constraint, ConstraintSum) and (
+                isinstance(other, (int, ECtr)) or isinstance(other, PartialConstraint) and not isinstance(other.constraint, ConstraintSum)):
+            self.constraint.add(other)
+            return self
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 

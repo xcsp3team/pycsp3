@@ -382,7 +382,7 @@ def Xor(*args, meta=True):
     return xor(*args)
 
 
-def If(test, *testOthers, Then, Else=None, meta=False):
+def If(test, *test_complement, Then, Else=None, meta=False):
     """
     Builds a complex form of constraint(s), based on the general control structure 'if then else'
     that can possibly be decomposed, at compilation time.
@@ -398,7 +398,7 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     reification may be employed.
 
     :param test: the condition expression
-    :param testOthers: the other terms (if any) of the condition expression (assuming a conjunction)
+    :param test_complement: the other terms (if any) of the condition expression (assuming a conjunction)
     :param Then the Then part
     :param Else the Else part
     :param meta true if a meta-constraint form must be really posted
@@ -408,7 +408,7 @@ def If(test, *testOthers, Then, Else=None, meta=False):
     # if len(testOthers) == 0 and isinstance(test, bool):  # We don't allow that because otherwise 'in' no more usable as in If(x[0] in (2,3), Then=...
     #     return Then if test else Else
 
-    tests, thens = flatten(test, testOthers), [v for v in flatten(Then) if not (isinstance(v, ConstraintDummyConstant) and v.val == 1)]
+    tests, thens = flatten(test, test_complement), [v for v in flatten(Then) if not (isinstance(v, ConstraintDummyConstant) and v.val == 1)]
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list)  # after flatten, we have a list
     if len(thens) == 0:
         return None if Else is None else Or(tests, Else)
@@ -992,7 +992,7 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     """
     Builds and returns a constraint AllDifferent.
 
-    :param term: the first term on which the constraint applies
+    :param term: the (first) term, typically a list of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :param excepting: the value(s) that must be ignored (None, most of the time)
     :param matrix: if True, the matrix version must be considered
@@ -1021,7 +1021,7 @@ def AllDifferentList(term, *others, excepting=None):
     """
     Builds and returns a constraint AllDifferentList.
 
-    :param term: the first term on which the constraint applies
+    :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :param excepting: the tuple(s) that must be ignored (None, most of the time)
     :return: a constraint AllDifferentList
@@ -1042,7 +1042,7 @@ def AllEqual(term, *others, excepting=None):
     """
     Builds and returns a constraint AllEqual.
 
-    :param term: the first term on which the constraint applies
+    :param term: the (first) term, typically a list of variables or expressions, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :param excepting: the value(s) that must be ignored (None, most of the time)
     :return: a constraint AllEqual
@@ -1060,7 +1060,7 @@ def AllEqualList(term, *others, excepting=None):
     Builds and returns a constraint AllEqualList. In case only two lists are given, and excepting is None,
     a group of intensional constraints of the form x[i] == y[i] is posted
 
-    :param term: the first term on which the constraint applies
+    :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :param excepting: the tuple(s) that must be ignored (None, most of the time)
     :return: a constraint AllEqualList
@@ -1102,7 +1102,7 @@ def Increasing(term, *others, strict=False, lengths=None):
     """
     Builds and returns a constraint Increasing.
 
-    :param term: the first term on which the constraint applies
+    :param term: the (first) term, typically a list of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :param strict: if True, strict ordering must be considered
     :param lengths: the lengths (durations) that must separate the values
@@ -1115,7 +1115,7 @@ def Decreasing(term, *others, strict=False, lengths=None):
     """
     Builds and returns a constraint Decreasing.
 
-    :param term: the first term on which the constraint applies
+    :param term: the (first) term, typically a list of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :param strict: if True, strict ordering must be considered
     :param lengths: the lengths (durations) that must separate the values
@@ -1150,7 +1150,7 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
     """
     Builds and returns a constraint (increasing) Lexicographic.
 
-    :param term: the first term on which the constraint applies
+    :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :param strict: if True, strict ordering must be considered
     :param matrix: if True, the matrix version must be considered
@@ -1163,7 +1163,7 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
     """
     Builds and returns a constraint (decreasing) Lexicographic.
 
-    :param term: the first term on which the constraint applies
+    :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :param strict: if True, strict ordering must be considered
     :param matrix: if True, the matrix version must be considered
@@ -1172,19 +1172,19 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
     return _lex(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix)
 
 
-def Precedence(scope, *, values=None, covered=False):
+def Precedence(within, *, values=None, covered=False):
     """
     Builds and returns a constraint Precedence.
 
-    :param scope: the scope of the constraint
+    :param within: the scope of the constraint
     :param values: the values such that the ith value must precede the i+1th value in the scope.
     when None, all values in the scope of the first variable are considered
     :param covered: if True, all specified values must be assigned to the variables of the scope
     :return: a constraint Precedence
     """
-    assert len(scope) > 2
+    assert len(within) > 2
     if values is None:
-        return ECtr(ConstraintPrecedence(flatten(scope)))
+        return ECtr(ConstraintPrecedence(flatten(within)))
         # assert all(scope[i].dom == scope[0].dom for i in range(1, len(scope)))
         # values = scope[0].dom.all_values()
     if isinstance(values, types.GeneratorType):
@@ -1192,7 +1192,7 @@ def Precedence(scope, *, values=None, covered=False):
     assert isinstance(values, (range, tuple, list)) and all(isinstance(v, int) for v in values)
     values = list(values)
     if len(values) > 1:
-        return ECtr(ConstraintPrecedence(flatten(scope), values=values, covered=covered))
+        return ECtr(ConstraintPrecedence(flatten(within), values=values, covered=covered))
     else:
         warning("A constraint Precedence discarded because defined with " + str(len(values)) + " values")
         return None
@@ -1270,7 +1270,7 @@ def Sum(term, *others, condition=None):
     if len(terms) == 0:
         return 0  # TODO ConstraintDummyConstant(0)   # None
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
-    checkType(terms, ([Variable], [Node], [Variable, Node], [PartialConstraint], [ScalarProduct], [ECtr]))
+    checkType(terms, ([Variable], [Node], [Variable, Node], [ScalarProduct]))  # , [PartialConstraint], [ECtr]))
     terms, coeffs = _get_terms_coeffs(terms)
     if options.groupsumcoeffs and all(isinstance(v, Variable) for v in terms) and coeffs is None:
         # maybe some variables occurs several times
@@ -1306,19 +1306,19 @@ def Product(term, *others):
     return Node.build(TypeNode.MUL, *terms)
 
 
-def Count(term, *others, value=None, values=None, condition=None):
+def Count(within, *within_complement, value=None, values=None, condition=None):
     """
     Builds and returns a component Count (that becomes a constraint when subject to a condition).
-    Either the named parameter value or the name parameter values must be used.
+    Either the named parameter value or the named parameter values must be used.
 
-    :param term: the first term on which the count applies
-    :param others: the other terms (if any) on which the count applies
+    :param within: the (first) term, typically a list of variables or expressions, on which the count applies
+    :param within_complement: the other terms (if any) on which the count applies
     :param value: the value to be counted
     :param values: the values to be counted
     :param condition: a condition directly specified for the count (typically, None)
     :return: a component/constraint Count
     """
-    terms = flatten(term, others)
+    terms = flatten(within, within_complement)
     if len(terms) == 0:
         return ConstraintDummyConstant(0)
     # assert len(terms) > 0, "A count with an empty scope"
@@ -1346,7 +1346,7 @@ def Exist(term, *others, value=None):
     Builds and returns a constraint Count that checks if at least one of the term evaluates to the specified value,
     or to 1 (seen as True) when value is None.
 
-    :param term: the first term on which the count applies
+    :param term: the (first) term, typically  a list of variables or expressions, on which the count applies
     :param others: the other terms (if any) on which the count applies
     :param value the value to be found if not None (None, by default)
     :return: a constraint Count
@@ -1366,15 +1366,15 @@ def Exist(term, *others, value=None):
     return res >= 1
 
 
-def AnyHold(term, *others):
+def AnyHold(within, *within_complement):
     """
     Builds and returns a constraint Count that checks if at least one term evaluates to 1 (seen as True).
 
-    :param term: the first term on which the count applies
-    :param others: the other terms (if any) on which the count applies
+    :param within: the first term on which the count applies
+    :param within_complement: the other terms (if any) on which the count applies
     :return: a constraint Count
     """
-    return Exist(term, others, value=None)
+    return Exist(within, within_complement, value=None)
 
 
 def NotExist(term, *others, value=None):
@@ -1382,7 +1382,7 @@ def NotExist(term, *others, value=None):
     Builds and returns a constraint Count that checks that no term evaluates to the specified value,
     or to 1 (seen as True) when value is None.
 
-    :param term: the first term on which the count applies
+    :param term: the (first) term, typically a list of variables or expressions, on which the count applies
     :param others: the other terms (if any) on which the count applies
     :param value the value to be tested if not None (None, by default)
     :return: a constraint Count
@@ -1395,15 +1395,15 @@ def NotExist(term, *others, value=None):
     return res == 0
 
 
-def NoneHold(term, *others):
+def NoneHold(within, *within_complement):
     """
     Builds and returns a constraint Count that checks that no term evaluates to 1 (seen as True).
 
-    :param term: the first term on which the count applies
-    :param others: the other terms (if any) on which the count applies
+    :param within: the first term on which the count applies
+    :param within_complement: the other terms (if any) on which the count applies
     :return: a constraint Count
     """
-    return NotExist(term, others, value=None)
+    return NotExist(within, within_complement, value=None)
 
 
 def ExactlyOne(term, *others, value=None):
@@ -1456,15 +1456,15 @@ def AtMostOne(term, *others, value=None):
     return res <= 1
 
 
-def AllHold(term, *others):
+def AllHold(within, *within_complement):
     """
     Builds and returns a constraint Count that checks that all terms evaluate to 1 (seen as True).
 
-    :param term: the first term on which the count applies
-    :param others: the other terms (if any) on which the count applies
+    :param within: the first term on which the count applies
+    :param within_complement: the other terms (if any) on which the count applies
     :return: a constraint Count
     """
-    terms = flatten(term, others)
+    terms = flatten(within, within_complement)
     res = Count(terms)  # , value=value)
     if isinstance(res, int):
         assert res == 0
@@ -1489,17 +1489,17 @@ def Hamming(term, *others):
     return Sum(lists[0][j] != lists[1][j] for j in range(len(lists[0])))
 
 
-def NValues(term, *others, excepting=None, condition=None):
+def NValues(within, *within_complement, excepting=None, condition=None):
     """
     Builds and returns a component NValues (that becomes a constraint when subject to a condition).
 
-    :param term: the first term on which the NValues applies
-    :param others: the other terms (if any) on which the NValues applies
+    :param within: the (first) term, typically a list of variables, on which the NValues applies
+    :param within_complement: the other terms (if any) on which the NValues applies
     :param excepting: the value(s) that must be ignored (None, most of the time)
     :param condition: a condition directly specified for the count (typically, None)
     :return: a component/constraint NValues
     """
-    terms = flatten(term, others)
+    terms = flatten(within, within_complement)
     if len(terms) == 0:
         return 0
     for i, t in enumerate(terms):
@@ -1514,6 +1514,20 @@ def NValues(term, *others, excepting=None, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintNValues(terms, excepting, Condition.build_condition(condition)))
 
 
+def NumberDistinctValues(within, *within_complement, excepting=None, condition=None):
+    """
+        Builds and returns a component NValues (that becomes a constraint when subject to a condition).
+        This function is an alias for the function 'NValues()'
+
+        :param within: the (first) term, typically a list of variables, on which the NValues applies
+        :param within_complement: the other terms (if any) on which the NValues applies
+        :param excepting: the value(s) that must be ignored (None, most of the time)
+        :param condition: a condition directly specified for the count (typically, None)
+        :return: a component/constraint NValues
+        """
+    return NValues(within, *within_complement, excepting=excepting, condition=condition)
+
+
 def NotAllEqual(term, *others):
     """
       Builds and returns a component NValues (capturing NotAllEqual)
@@ -1525,20 +1539,20 @@ def NotAllEqual(term, *others):
     return NValues(term, others) > 1
 
 
-def Cardinality(term, *others, occurrences, closed=False):
+def Cardinality(within, *within_complement, occurrences, closed=False):
     """
     Builds and returns a constraint Cardinality.
 
     When occurrences is given under the form of a list or tuple t,
     a dictionary is computed as dict(enumerate(t))
 
-    :param term: the first term on which the constraint applies
-    :param others: the other terms (if any) on which the constraint applies
+    :param within: the (first) term, typically a list of variables, on which the constraint applies
+    :param within_complement: the other terms (if any) on which the constraint applies
     :param occurrences: a dictionary indicating the restriction (constant, range or variable) of occurrences per value
     :param closed: if True, variables must be assigned to values (keys of the dictionary)
     :return: a Cardinality constraint
     """
-    terms = flatten(term, others)
+    terms = flatten(within, within_complement)
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
@@ -1810,7 +1824,7 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
 
 
-def BinPacking(term, *others, sizes, limits=None, loads=None, condition=None):
+def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None, condition=None):
     """
     Builds and returns a component BinPacking that:
       - either is directly a constraint when capacities (limits or loads) are given
@@ -1819,15 +1833,15 @@ def BinPacking(term, *others, sizes, limits=None, loads=None, condition=None):
     When capacities are absent (both limits and loads being None), BinPacking is a component
     that must be subject to a condition, typically '<= k' where k is a value used as the same limit for all bins.
 
-    :param term: the first term on which the component applies
-    :param others: the other terms (if any) on which the component applies
+    :param partition: the (first) term, typically a list of variables, on which the component applies (indicating how the items are partitioned into bins)
+    :param partition_complement: the other terms (if any) on which the component applies
     :param sizes: the sizes of the available items
     :param limits: the limits of bins (if loads is None)
     :param loads: the loads of bins (if limits is None)
     :param condition: a condition directly specified for the BinPacking (typically, None)
     :return: a component/constraint BinPacking
     """
-    terms = flatten(term, others)
+    terms = flatten(partition, partition_complement)
     assert len(terms) > 0, "A binPacking with an empty scope"
     checkType(terms, [Variable])
     if isinstance(sizes, int):
@@ -1847,7 +1861,7 @@ def BinPacking(term, *others, sizes, limits=None, loads=None, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintBinPacking(terms, sizes, condition=Condition.build_condition(condition)))
 
 
-def Knapsack(term, *others, weights, wlimit=None, wcondition=None, profits, pcondition=None):
+def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=None, profits, pcondition=None):
     """
     Builds and returns a component Knapsack that must guarantee that a condition holds wrt the capacity of the knapsack
     (when considering accumulated weights of selected items) and another condition holds wrt the profits.
@@ -1855,8 +1869,8 @@ def Knapsack(term, *others, weights, wlimit=None, wcondition=None, profits, pcon
     the accumulated profits of selected items.
     One has to specify either wlimit or wcondition.
 
-    :param term: the first term on which the component applies
-    :param others: the other terms (if any) on which the component applies
+    :param selection: the (first) term, typically a list of variables on which the component applies (indicating how many copies of each item is selected)
+    :param selection_complement: the other terms (if any) on which the component applies
     :param weights: the weights associated with the items
     :param wlimit: the limit of the knapsack (if wcondition is None)
     :param wcondition: the condition on the knapsack (if wlimit is None)
@@ -1865,7 +1879,7 @@ def Knapsack(term, *others, weights, wlimit=None, wcondition=None, profits, pcon
     :return: a component/constraint Knapsack
     """
 
-    terms = flatten(term, others)
+    terms = flatten(selection, selection_complement)
     assert len(terms) > 0, "A Knapsack with an empty scope"
     assert len(terms) == len(weights) == len(profits)
     assert (wlimit is None) != (wcondition is None)
@@ -1898,36 +1912,44 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
 ''' Constraints on Graphs'''
 
 
-def Circuit(term, *others, start_index=0, size=None):
+def Circuit(successors, *successors_complement, start_index=0, size=None):
     """
     Builds and returns a constraint Circuit.
 
-    :param term: the first term on which the constraint applies
-    :param others: the other terms (if any) on which the constraint applies
+    :param successors: the (first) term on which the constraint applies (indicating the successors of variables)
+    :param successors_complement: the other terms (if any) on which the constraint applies
     :param start_index: the number used for indexing the first variable/node in the list of terms
     :param size: the size of the circuit (a constant, a variable or None)
     :return: a constraint Circuit
     """
-    terms = flatten(term, others)
-    checkType(terms, [Variable])
+    successors = flatten(successors, successors_complement)
+    checkType(successors, [Variable])
     checkType(start_index, int)
     checkType(size, (int, Variable, type(None)))
-    return ECtr(ConstraintCircuit(terms, start_index, size))
+    return ECtr(ConstraintCircuit(successors, start_index, size))
 
 
 ''' Other Constraints '''
 
 
-def Clause(term, *others, phases=None):
-    literals = flatten(term, others)
-    phases = [False] * len(literals) if phases is None else flatten(phases)
-    assert len(literals) == len(phases)
-    checkType(literals, [Variable])
+def Clause(variables, *variables_complement, phases=None):
+    """
+        Builds and returns a constraint Clause.
+
+        :param variables: the first term on which the constraint applies
+        :param variables_complement: the other terms (if any) on which the constraint applies
+        :param phases: the phase of the variables involved in the clause
+        :return: a constraint Clause
+        """
+    variables = flatten(variables, variables_complement)
+    phases = [False] * len(variables) if phases is None else flatten(phases)
+    assert len(variables) == len(phases)
+    checkType(variables, [Variable])
     checkType(phases, [bool])
-    for i, literal in enumerate(literals):
+    for i, literal in enumerate(variables):
         if literal.negation:
             phases[i] = True
-    return ECtr(ConstraintClause(literals, phases))
+    return ECtr(ConstraintClause(variables, phases))
 
 
 def Adhoc(form, note=None, **d):

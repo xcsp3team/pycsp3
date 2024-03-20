@@ -892,7 +892,22 @@ class ListVar(list):
             return True
         return list.__contains__(self, other)
 
-    # def __rmul__(self, other): return ListVar.__mul__(other, self)
+    def _post_lex(self, other, f, strict):
+        assert (is_1d_list(self, Variable) and is_1d_list(other, Variable)) or (is_2d_list(self, Variable) and is_2d_list(other, Variable))
+        assert len(self) == len(other)
+        return f(self, other, strict=strict)
+
+    def __lt__(self, other):
+        return self._post_lex(other, functions.LexIncreasing, True)
+
+    def __le__(self, other):
+        return self._post_lex(other, functions.LexIncreasing, False)
+
+    def __ge__(self, other):
+        return self._post_lex(other, functions.LexDecreasing, False)
+
+    def __gt__(self, other):
+        return self._post_lex(other, functions.LexDecreasing, True)
 
     def at_border(self, i, j):
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
