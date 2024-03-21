@@ -1,5 +1,5 @@
 import types
-from collections import deque, namedtuple
+from collections import deque, namedtuple, abc
 
 from pycsp3 import functions
 from pycsp3.classes.entities import ECtr, EMetaCtr
@@ -708,7 +708,7 @@ class OpOverrider:
                     OpOverrider.array_indexing_warning = True  # to avoid displaying a lot of messages
                 indexes = new_index
             return list.__getitem__(array, indexes)
-        if isinstance(indexes, types.GeneratorType):
+        if isinstance(indexes, types.GeneratorType) or (isinstance(indexes, abc.Iterable) and not isinstance(indexes, list)):
             indexes = tuple(indexes)
         if isinstance(indexes, list):
             return cp_array(array[v] for v in indexes)

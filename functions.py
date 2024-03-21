@@ -1130,7 +1130,7 @@ def _lex(term, others, operator, matrix):
         assert is_matrix(lists, Variable)
     elif not is_1d_list(term, Variable):
         l1, l2 = flatten(term), flatten(others)
-        assert len(l1) == len(l2)
+        assert len(l1) == len(l2), str(len(l1)) + " vs " + str(len(l2))
         lists = [l1, l2]
     else:
         if len(others) == 1 and is_1d_list(others[0], int):
