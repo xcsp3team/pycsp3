@@ -1034,7 +1034,7 @@ def AllDifferentList(term, *others, excepting=None):
     assert all(checkType(t, [Variable]) for t in lists)
     excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
-    assert all(len(t) == len(lists[0]) for t in lists) and (excepting is None or len(excepting) == len(lists[0]))
+    assert all(len(t) == len(lists[0]) for t in lists)  # and (excepting is None or len(excepting) == len(lists[0]))
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 

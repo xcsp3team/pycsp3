@@ -396,7 +396,11 @@ class ConstraintAllDifferentList(ConstraintUnmergeable):
         super().__init__(TypeCtr.ALL_DIFFERENT)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True, lifted=True)
         if excepting is not None:
-            self.arg(TypeCtrArg.EXCEPT, "(" + ",".join(str(v) for v in excepting) + ")")  # if excepting else excepting)
+            if isinstance(excepting[0], (tuple, list)):
+                s = "".join("(" + ",".join(str(v) for v in t) + ")" for t in excepting)
+            else:
+                s = "(" + ",".join(str(v) for v in excepting) + ")"
+            self.arg(TypeCtrArg.EXCEPT, s)  # if excepting else excepting)
 
 
 class ConstraintAllDifferentMatrix(ConstraintUnmergeable):
