@@ -1,5 +1,5 @@
 <div id="logo" align="center">
-<img width="35%" src="pycsp3.png" alt="logo"/>
+<img width="35%" src="logo.gif" alt="logo"/>
 </div>
 
 <h1 align="center"> PyCSP3 v2.3 <sub><sup>(March 27, 2024)</sup></sub> </h1> 
