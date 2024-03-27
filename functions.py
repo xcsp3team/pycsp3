@@ -1341,17 +1341,17 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
 
-def Exist(term, *others, value=None):
+def Exist(within, *within_complement, value=None):
     """
     Builds and returns a constraint Count that checks if at least one of the term evaluates to the specified value,
     or to 1 (seen as True) when value is None.
 
-    :param term: the (first) term, typically  a list of variables or expressions, on which the count applies
-    :param others: the other terms (if any) on which the count applies
+    :param within: the (first) term, typically  a list of variables or expressions, on which the count applies
+    :param within_complement: the other terms (if any) on which the count applies
     :param value the value to be found if not None (None, by default)
     :return: a constraint Count
     """
-    terms = flatten(term, others)
+    terms = flatten(within, within_complement)
     if value is None:
         if len(terms) == 1:
             return terms[0]
@@ -1377,17 +1377,17 @@ def AnyHold(within, *within_complement):
     return Exist(within, within_complement, value=None)
 
 
-def NotExist(term, *others, value=None):
+def NotExist(within, *within_complement, value=None):
     """
     Builds and returns a constraint Count that checks that no term evaluates to the specified value,
     or to 1 (seen as True) when value is None.
 
-    :param term: the (first) term, typically a list of variables or expressions, on which the count applies
-    :param others: the other terms (if any) on which the count applies
+    :param within: the (first) term, typically a list of variables or expressions, on which the count applies
+    :param within_complement: the other terms (if any) on which the count applies
     :param value the value to be tested if not None (None, by default)
     :return: a constraint Count
     """
-    terms = flatten(term, others)
+    terms = flatten(within, within_complement)
     res = Count(terms, value=value)
     if isinstance(res, int):
         assert res == 0
@@ -1406,17 +1406,17 @@ def NoneHold(within, *within_complement):
     return NotExist(within, within_complement, value=None)
 
 
-def ExactlyOne(term, *others, value=None):
+def ExactlyOne(within, *within_complement, value=None):
     """
     Builds and returns a constraint Count that checks that exactly one term evaluates to 1 (seen as True) when value is not specified,
     or to the value (when the parameter is specified, and not None)
 
-    :param term: the first term on which the count applies
-    :param others: the other terms (if any) on which the count applies
+    :param within: the first term on which the count applies
+    :param within_complement: the other terms (if any) on which the count applies
     :param value the value to be found if not None (None, by default)
     :return: a constraint Count
     """
-    terms = flatten(term, others)
+    terms = flatten(within, within_complement)
     res = Count(terms, value=value)
     if isinstance(res, int):
         assert res == 0
@@ -1425,30 +1425,30 @@ def ExactlyOne(term, *others, value=None):
     # return Sum(term, others) == 1
 
 
-def AtLeastOne(term, *others, value=None):
+def AtLeastOne(within, *within_complement, value=None):
     """
     Builds and returns a constraint Count that checks that at least one term evaluates to 1 (seen as True) when value is not specified,
     or to the value (when the parameter is specified, and not None).
 
-    :param term: the first term on which the count applies
-    :param others: the other terms (if any) on which the count applies
+    :param within: the first term on which the count applies
+    :param within_complement: the other terms (if any) on which the count applies
     :param value the value to be found if not None (None, by default)
     :return: a constraint Count
     """
-    return Exist(term, others, value)
+    return Exist(within, within_complement, value)
 
 
-def AtMostOne(term, *others, value=None):
+def AtMostOne(within, *within_complement, value=None):
     """
     Builds and returns a constraint Count that checks that at most one term evaluates to 1 (seen as True) when value is not specified,
     or to the value (when the parameter is specified, and not None).
 
-    :param term: the first term on which the count applies
-    :param others: the other terms (if any) on which the count applies
+    :param within: the first term on which the count applies
+    :param within_complement: the other terms (if any) on which the count applies
     :param value the value to be found if not None (None, by default)
     :return: a constraint Count
     """
-    terms = flatten(term, others)
+    terms = flatten(within, within_complement)
     res = Count(terms, value=value)
     if isinstance(res, int):
         assert res == 0
