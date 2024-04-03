@@ -1,8 +1,9 @@
 <div id="logo" align="center">
-<img width="35%" src="pycsp3.png" alt="logo"/>
+<img width="25%" src="logo.gif" alt="logo"/>
 </div>
 
-<h1 align="center"> PyCSP3 v2.3 <sub><sup>(March 27, 2024)</sup></sub> </h1> 
+<br />
+<h2> PyCSP3 v2.3 <sub><sup>(March 27, 2024)</sup></sub> </h1> 
 
 <!-- PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API)
 and [Numberjack](https://github.com/eomahony/Numberjack). -->
