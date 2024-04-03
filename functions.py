@@ -614,7 +614,11 @@ def satisfy(*args, no_comment_tags_extraction=False):
                 for j, l in enumerate(arg):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
-
+        if isinstance(arg, Variable):
+            assert arg.dom.is_binary()
+            b = arg.negation
+            arg.negation = False
+            arg = (arg == (0 if b else 1))  # transformed into a basic logical equation
         assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list)), "non authorized type " + str(arg) + " " + str(type(arg))
         comment_at_2 = any(comment != '' for comment in comments2[i])
         tag_at_2 = any(tag != '' for tag in tags2[i])
@@ -1604,6 +1608,8 @@ def Maximum(term, *others, condition=None):
     :return: a component/constraint Maximum
     """
     terms = _extremum_terms(term, others)
+    if len(terms) == 1 and condition is None:
+        return terms[0]  # Node(condition.operator, [terms[0], condition.right_operand()])
     c = ConstraintMaximum(terms, condition)
     return _wrapping_by_complete_or_partial_constraint(c) if isinstance(c, ConstraintMaximum) else c
 
@@ -1618,6 +1624,8 @@ def Minimum(term, *others, condition=None):
     :return: a component/constraint Minimum
     """
     terms = _extremum_terms(term, others)
+    if len(terms) == 1 and condition is None:
+        return terms[0]  # Node(condition.operator, [terms[0], condition.right_operand()])
     c = ConstraintMinimum(terms, condition)
     return _wrapping_by_complete_or_partial_constraint(c) if isinstance(c, ConstraintMinimum) else c
 
