@@ -438,7 +438,7 @@ class CallbackerXCSP3:
 
     def load_var(self, x):
         self.cb.load_var(x)
-        if x.degree is not None:
+        if not self.cb.discard_variables_of_degree_0 or x.degree is not None:
             assert len(x.domain) > 0
             if x.type == TypeVar.SYMBOLIC:
                 assert all(isinstance(v, str) for v in x.domain)
@@ -728,7 +728,32 @@ class CallbackerXCSP3:
 
         else:
             assert all(x.type == TypeVar.SYMBOLIC for x in c.involved_vars())
-            print("ctr symbolic", c)
+            match c.type:
+                case TypeCtr.INTENSION:
+                    assert check_args(args, [TypeCtrArg.FUNCTION])
+                    tree = args[0].value.canonization()
+                    return self.cb.ctr_intension_symbolic(list(c.involved_vars()), tree)
+
+                case TypeCtr.EXTENSION:
+                    assert check_args(args, [TypeCtrArg.LIST, (TypeCtrArg.SUPPORTS, TypeCtrArg.CONFLICTS)])
+                    scope, table = args[0].value, args[1].value
+                    positive, flags = args[1].type == TypeCtrArg.SUPPORTS, args[1].flags
+                    if table is None or len(table) == 0:  # special case because empty table (0 tuple)
+                        return self.cb.ctr_false(scope) if positive else self.cb.ctr_true(scope)
+                    return self.cb.ctr_extension_unary_symbolic(scope[0], table, positive, flags) if len(scope) == 1 \
+                        else self.cb.ctr_extension_symbolic(scope, table, positive, flags)
+
+                case TypeCtr.ALL_DIFFERENT:
+                    assert n_args > 0 and (check_args(args, [(TypeCtrArg.LIST, '*'), (None, TypeCtrArg.EXCEPT)]) or check_args(args, [TypeCtrArg.MATRIX]))
+                    excepting = args[-1].value if args[-1].type == TypeCtrArg.EXCEPT else None
+                    return self.cb.ctr_all_different_symbolic(homogeneous_list(args[0].value), excepting)
+
+                case TypeCtr.INSTANTIATION:
+                    assert check_args(args, [TypeCtrArg.LIST, TypeCtrArg.VALUES])
+                    return self.cb.ctr_instantiation_symbolic(args[0].value, args[1].value)
+
+                case _:
+                    assert False, "not implemented"
 
     def load_templated_constraints(self, template, all_args):
         self.cb.load_templated_constraints(template, all_args)

@@ -1,7 +1,7 @@
 import re
 from functools import reduce
 
-from pycsp3.classes.auxiliary.conditions import ConditionVariable, ConditionParameter
+from pycsp3.classes.auxiliary.conditions import ConditionValue, ConditionVariable, ConditionParameter
 from pycsp3.classes.auxiliary.enums import TypeVar, TypeCtr, TypeCtrArg, TypeObj, TypeAnn, TypeRank
 from pycsp3.classes.main.constraints import Parameter
 from pycsp3.classes.main.variables import Domain, Variable
@@ -414,8 +414,11 @@ class XAbstraction:
         if child.type == TypeCtrArg.CONDITION:
             assert isinstance(abstract_child_value, ConditionParameter)
             x = args[mapping].cnt if isinstance(args[mapping], Node) and args[mapping].type == TypeNode.VAR else args[mapping]
-            assert isinstance(x, XVar), "pb with " + str(args[mapping]) + " " + str(type(args[mapping]))
-            return ConditionVariable(abstract_child_value.operator, x)
+            assert isinstance(x, (int, XVar)), "pb with " + str(args[mapping]) + " " + str(type(args[mapping]))
+            if isinstance(x, int):
+                return ConditionValue(abstract_child_value.operator, x)
+            else:
+                return ConditionVariable(abstract_child_value.operator, x)
 
         if isinstance(child.value, list):
             t = []

@@ -21,6 +21,8 @@ class Callbacks:
         self.recognize_specific_count_cases = True
         self.recognize_specific_nvalues_cases = True
 
+        self.discard_variables_of_degree_0 = False
+
     def _unimplemented(self, *args, general_method=False):
         if (general_method and self.print_general_methods) or (not general_method and self.print_specific_methods):
             import inspect
@@ -98,8 +100,7 @@ class Callbacks:
     def var_symbolic(self, x: Variable, values: list[str]):
         self._unimplemented(x.id, values)
 
-        # # # # # # # # # #
-
+    # # # # # # # # # #
     # All methods about constraints to be implemented
     # # # # # # # # # #
 
@@ -284,6 +285,25 @@ class Callbacks:
 
     def ctr_circuit(self, lst: list[Variable], size: None | int | Variable):  # size is None in XCSP3 competitions
         self._unimplemented(lst, size)
+
+    # # # # # # # # # #
+    # All methods about symbolic constraints to be implemented
+    # # # # # # # # # #
+
+    def ctr_intension_symbolic(self, scope: list[Variable], tree: Node):
+        self._unimplemented(scope, tree)
+
+    def ctr_extension_unary_symbolic(self, x: Variable, values: list[str], positive: bool, flags: set[str]):
+        self._unimplemented(x, values, positive, flags)
+
+    def ctr_extension_symbolic(self, scope: list[Variable], tuples: list, positive: bool, flags: set[str]):
+        self._unimplemented(scope, tuples, positive, flags)
+
+    def ctr_all_different_symbolic(self, scope: list[Variable] | list[Node], excepting: None | list[str]):
+        self._unimplemented(scope, excepting)
+
+    def ctr_instantiation_symbolic(self, lst: list[Variable], values: list[str]):
+        self._unimplemented(lst, values)
 
     # # # # # # # # # #
     # All methods about objectives to be implemented
