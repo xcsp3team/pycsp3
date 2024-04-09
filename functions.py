@@ -1572,7 +1572,7 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     checkType(closed, (bool, type(None)))
     for i, occ in enumerate(occurs):
         if isinstance(occ, range):
-            occurs[i] = min(occ) if len(occ) == 1 else str(min(occ)) + ".." + str(max(occ))
+            occurs[i] = 0 if len(occ) == 0 else min(occ) if len(occ) == 1 else str(min(occ)) + ".." + str(max(occ))
         if isinstance(occ, list):
             flat = flatten(occ)
             if len(flat) == 1:
