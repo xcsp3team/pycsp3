@@ -3,6 +3,7 @@ import re
 
 from pycsp3 import functions
 from pycsp3.classes.auxiliary.enums import TypeVar
+from pycsp3.classes import main
 from pycsp3.tools.utilities import error_if, flatten
 
 
@@ -234,11 +235,15 @@ class VariableInteger(Variable):
 
     def among(self, *values):
         values = flatten(values)
+        if len(values) == 0:
+            return main.constraints.ConstraintDummyConstant(0)
         assert len(values) > 0 and all(isinstance(v, int) for v in values)
         return functions.belong(self, values)
 
     def not_among(self, *values):
         values = flatten(values)
+        if len(values) == 0:
+            return main.constraints.ConstraintDummyConstant(1)
         assert len(values) > 0 and all(isinstance(v, int) for v in values)
         return functions.not_belong(self, values)
 

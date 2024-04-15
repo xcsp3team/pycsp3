@@ -100,6 +100,9 @@ class Callbacks:
     def var_symbolic(self, x: Variable, values: list[str]):
         self._unimplemented(x.id, values)
 
+    def var_undefined(self):
+        pass
+
     # # # # # # # # # #
     # All methods about constraints to be implemented
     # # # # # # # # # #

@@ -453,6 +453,8 @@ class CallbackerXCSP3:
         for x in va.variables:
             if x is not None:
                 self.load_var(x)
+            else:
+                self.cb.var_undefined()
 
     def load_constraints(self, entries):
         self.cb.load_constraints(entries)

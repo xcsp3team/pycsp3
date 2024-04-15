@@ -204,7 +204,9 @@ class Node(Entity):
         return self.cnt[i]
 
     def __str__(self):
-        if self.type in (COL, PAR):
+        if self.type == COL:
+            return "c" + str(self.cnt)
+        if self.type == PAR:
             return "%" + str(self.cnt)
         return str(self.cnt) if self.is_leaf() else str(self.type) + "(" + ",".join(str(son) for son in self.cnt) + ")"
 
