@@ -257,7 +257,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
                 # return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=condition))  # member
         if isinstance(right_operand, range):
             # return (right_operand.start <= left_operand) & (left_operand < right_operand.stop)
-            return _Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
+            return Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
     if isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
         return _Intension(Node.build(IN, left_operand, right_operand) if bool_value else Node.build(NOTIN, left_operand, right_operand))
@@ -288,7 +288,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             if not is_1d_list(right_operand, int) and not is_1d_list(right_operand, str):
                 assert all(isinstance(v, (tuple, list)) and len(v) == 1 for v in right_operand)
                 right_operand = [v[0] for v in right_operand]
-        ctr = _Extension(scope=flatten(left_operand), table=right_operand, positive=bool_value)  # TODO ok for using flatten? (before it was list())
+        ctr = Extension(scope=flatten(left_operand), table=right_operand, positive=bool_value)  # TODO ok for using flatten? (before it was list())
     return ctr
 
 
@@ -676,7 +676,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
 ''' Generic Constraints (intension, extension) '''
 
 
-def _Extension(*, scope, table, positive=True):
+def Extension(*, scope, table, positive=True):
     scope = flatten(scope)
     checkType(scope, [Variable])
     assert isinstance(table, list)

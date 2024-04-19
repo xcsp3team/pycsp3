@@ -67,7 +67,7 @@ def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output", "suffix", "callback")
     options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
                       "keepSmartTransitions", "keepsum", "unchangescalar", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues",
-                      "groupsumcoeffs", "usemeta", "dontuseauxcache", "dontadjustindexing", "debug", "mini", "uncurse")
+                      "groupsumcoeffs", "usemeta", "dontuseauxcache", "dontadjustindexing", "dontbuildsimilarconstraints", "debug", "mini", "uncurse")
 
     if options.checker is None:
         options.checker = "fast"
@@ -295,7 +295,8 @@ def _compile(disabling_opoverrider=False, verbose=1):
         fullname = fullname + options.suffix if not fullname.endswith(".xml") else fullname[:-4] + options.suffix + ".xml"
     stopwatch = Stopwatch()
     options.verbose and print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
-    build_similar_constraints()
+    if not options.dontbuildsimilarconstraints:
+        build_similar_constraints()
     options.verbose and print("\tWCK for generating groups:", stopwatch.elapsed_time(reset=True), "seconds")
     handle_slides()
     options.verbose and print("\tWCK for handling slides:", stopwatch.elapsed_time(reset=True), "seconds")
