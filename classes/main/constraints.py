@@ -1136,7 +1136,8 @@ class ScalarProduct:
         self.variables = flatten(variables)  # for example, in order to remove None occurrences
         self.coeffs = flatten([coefficients] * len(variables) if isinstance(coefficients, int) else coefficients)
         assert len(self.variables) == len(self.coeffs), str(self.variables) + " " + str(self.coeffs)
-        if not options.unchangescalar and any(isinstance(v, int) and v == 0 for v in coefficients):
+        n0s = len(list(v for v in coefficients if isinstance(v, int) and v == 0))  # TODO hard coding (10% below)
+        if n0s > 0 and not options.unchangescalar and ((n0s * 100) // len(coefficients) > 10) and any(isinstance(v, int) and v == 0 for v in coefficients):
             indexes = [i for i in range(len(self.variables)) if not isinstance(self.coeffs[i], int) or self.coeffs[i] != 0]
             self.variables = [self.variables[i] for i in indexes]
             self.coeffs = [self.coeffs[i] for i in indexes]
@@ -1200,6 +1201,9 @@ class ScalarProduct:
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
         return Node.build(TypeNode.MUL, auxiliary().replace_partial_constraint(pc), other)
+
+    def to_terms(self):
+        return [self.variables[i] * self.coeffs[i] for i in range(len(self.variables))]
 
 
 class _Auxiliary:

@@ -1269,6 +1269,8 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    if any(isinstance(t, ScalarProduct) for t in terms):
+        terms = flatten([t.to_terms() if isinstance(t, ScalarProduct) else t for t in terms])
     if any(v is None or (isinstance(v, int) and v == 0) for v in terms):  # note that False is of type int and equal to 0
         terms = [v for v in terms if v is not None and not (isinstance(v, int) and v == 0)]
     if len(terms) == 0:
