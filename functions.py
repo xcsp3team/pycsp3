@@ -1085,6 +1085,8 @@ def AllEqualList(term, *others, excepting=None):
 
 def _ordered(term, others, operator, lengths):
     terms = flatten(term, others)
+    if len(terms) == 0:
+        return None
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
     checkType(terms, [Variable])
     checkType(operator, TypeOrderedOperator)
@@ -1731,7 +1733,8 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         origins = list(origins)
     if isinstance(lengths, zip):
         lengths = list(lengths)
-    if len(origins) == 2 and len(lengths) == 2 and all(isinstance(t, (list, tuple)) for t in [origins[0], origins[1], lengths[0], lengths[1]]):
+    if len(origins) == 2 and len(lengths) == 2 and all(isinstance(t, (list, tuple)) for t in [origins[0], origins[1], lengths[0], lengths[1]]) and len(
+            origins[0]) != 2:
         assert len(origins[0]) == len(origins[1]) == len(lengths[0]) == len(lengths[1])
         origins = [(origins[0][i], origins[1][i]) for i in range(len(origins[0]))]
         lengths = [(lengths[0][i], lengths[1][i]) for i in range(len(lengths[0]))]
