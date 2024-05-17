@@ -69,6 +69,7 @@ What you have to do is:
    ```
 Here, we have an array with 5 variables, we enforce them to be all different, and we display the first solution found by the underlying solver.
 Just execute these cell codes on Colab. It should return `[0, 1, 2, 3, 4]`.
+
 That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section. 
 
 
