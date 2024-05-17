@@ -57,18 +57,18 @@ What you have to do is:
 3. test a very basic model by inserting in a second code cell something like:
    ```
    from pycsp3 import *
-
-    x = VarArray(size=5, dom=range(5))
-
-    satisfy(
+   
+   x = VarArray(size=5, dom=range(5))
+   
+   satisfy(
        AllDifferent(x)
-    )  
-
+   )  
+   
    if solve() is SAT:
-      print(values(x))
+       print(values(x))
    ```
 Here, we have an array with 5 variables, we enforce them to be all different, and we display the first solution found by the underlying solver.
-Just execute these cell codes on Colab.
+Just execute these cell codes on Colab. It should return `[0, 1, 2, 3, 4]`.
 That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section. 
 
 
