@@ -1,4 +1,6 @@
 import re
+from io import StringIO
+from numpy import loadtxt
 from xml.etree.ElementTree import Element
 
 from pycsp3.classes.auxiliary.conditions import Condition, ConditionVariable
@@ -9,6 +11,8 @@ from pycsp3.classes.nodes import TypeNode, Node
 from pycsp3.parser.constants import DELIMITER_WHITESPACE, DELIMITER_COMMA, DELIMITER_TWO_DOTS, DELIMITER_LISTS
 from pycsp3.tools.utilities import ANY
 
+# to speed up re.split(DELIM_LISTS,_) (use re_lists.split(_))
+re_lists = re.compile(DELIMITER_LISTS)
 
 # A class to represent several occurrences of the same value.
 class Occurrences:
@@ -207,7 +211,7 @@ def parse_double_sequence_of_vars(parser, elt):
 
 
 def parse_ordinary_tuple(s, domains=None):  # actually ordinary/starred tuples
-    t = re.split(DELIMITER_COMMA, s)
+    t = s.split(',') # re.split(DELIMITER_COMMA, s)
     starred = False
     for i in range(len(t)):
         if t[i] == "*":
@@ -222,8 +226,9 @@ def parse_ordinary_tuple(s, domains=None):  # actually ordinary/starred tuples
     return t, starred
 
 
+
 def parse_symbolic_tuple(s, domains=None):
-    t = re.split(DELIMITER_COMMA, s)
+    t = s.split(',') # re.split(DELIMITER_COMMA, s)
     starred = False
     for i in range(len(t)):
         if t[i] == "*":
@@ -247,12 +252,20 @@ def parse_tuples(elt, symbolic, domains=None):
             if ".." in s:  # in case we have at least one interval, no validity test on values is performed.
                 return [parse_integer_or_interval(tok) for tok in tokens], False, False
             return [value for tok in tokens if (value := int(tok),) and (domains is None or value in domains[0])], False, domains is not None
-    m, starred = [], False
-    tokens = re.split(DELIMITER_LISTS, s)[1:-1]  # TODO is it really [1:-1] ???
-    for tok in tokens:
-        t, s = parse_symbolic_tuple(tok, domains) if symbolic else parse_ordinary_tuple(tok, domains)
-        if t is not None:  # if not filtered-out parsed tuple
-            m.append(t)
-            if s is True:
-                starred = True
+    starred = ("*" in s)
+    if symbolic or (domains is not None) or starred:
+        # original code, some tweaks
+        func = parse_symbolic_tuple if symbolic else parse_ordinary_tuple  # reference to function
+        tokens = re_lists.split(s[1:-1])  # cut first and last '(', ')'
+        m = []
+        for tok in tokens:
+            t, tok_is_star = func(tok, domains)
+            if t is not None:  # if not filtered-out parsed tuple
+                m.append(t)
+    else:
+        # optimized code for non-symbolic, non-star, non-domains case with NumPy
+        csv_string = s[1:-1].replace(')(','\n')  # convert to CSV
+        array = loadtxt(StringIO(csv_string), delimiter=',', dtype=int)
+        m = array.tolist()  # this part is the most time consuming
+
     return m, starred, domains is not None
