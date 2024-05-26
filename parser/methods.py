@@ -253,7 +253,7 @@ def parse_tuples(elt, symbolic, domains=None):
                 return [parse_integer_or_interval(tok) for tok in tokens], False, False
             return [value for tok in tokens if (value := int(tok),) and (domains is None or value in domains[0])], False, domains is not None
     starred = ("*" in s)
-    if symbolic or (domains is not None) or starred:
+    if True: #symbolic or (domains is not None) or starred:
         # original code, some tweaks
         func = parse_symbolic_tuple if symbolic else parse_ordinary_tuple  # reference to function
         tokens = re_lists.split(s[1:-1])  # cut first and last '(', ')'
@@ -262,10 +262,10 @@ def parse_tuples(elt, symbolic, domains=None):
             t, tok_is_star = func(tok, domains)
             if t is not None:  # if not filtered-out parsed tuple
                 m.append(t)
-    else:
-        # optimized code for non-symbolic, non-star, non-domains case with NumPy
-        csv_string = s[1:-1].replace(')(','\n')  # convert to CSV
-        array = loadtxt(StringIO(csv_string), delimiter=',', dtype=int)
-        m = array.tolist()  # this part is the most time consuming
+    #else: DISABLED till tested more thoroughly (e.g. instancesXCSP22/MiniCOP/Fapp-ext-01-0200_c18.xml)
+    #    # optimized code for non-symbolic, non-star, non-domains case with NumPy
+    #    csv_string = s[1:-1].replace(')(','\n')  # convert to CSV
+    #    array = loadtxt(StringIO(csv_string), delimiter=',', dtype=int)
+    #    m = array.tolist()  # this part is the most time consuming
 
     return m, starred, domains is not None
