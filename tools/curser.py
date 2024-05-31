@@ -650,13 +650,19 @@ class OpOverrider:
 
     def __eq__lv(self, other):  # lv for ListVar
         if isinstance(other, int):
-            return [] if len(self) == 0 else ECtr(ConstraintInstantiation(flatten(self), other))  # [x == other for x in flatten(self)]
+            if len(self) == 0:
+                return []
+            if options.mini:
+                return [x == other for x in flatten(self)]
+            return ECtr(ConstraintInstantiation(flatten(self), other))
         if isinstance(other, (tuple, range)):
             other = list(other)
         if isinstance(other, list):
             if unique_type_in(other, int):
                 res = OpOverrider.__extract_vars_vals(self, other)
                 if res is not None:
+                    if options.mini:
+                        return [res[0][i] == res[1][i] for i in range(len(res[0]))]
                     return ECtr(ConstraintInstantiation(res[0], res[1]))
             if unique_type_in(other, Variable):
                 res = OpOverrider.__extract_vars_vals(self, other)

@@ -1681,6 +1681,9 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
     if list2:
         list2 = flatten(list2)
         checkType(list2, [Variable])
+        if options.mini:
+            assert len(list1) == len(list2)
+            return [list1[list2[i]] == i for i in range(len(list1))]
     checkType(start_index1, int)
     checkType(start_index2, int)
     assert start_index2 == 0 or list2 is not None, "start_index2 is defined while list2 is not specified"

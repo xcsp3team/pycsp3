@@ -86,7 +86,7 @@ def different_values(*args):
     return all(a != b for (a, b) in combinations(args, 2))
 
 
-def flatten(*args, keep_none=False):
+def flatten(*args, keep_none=False, keep_tuples=False):
     """
     Returns a list with all elements that can be encountered when looking into the specified arguments.
     Typically, this is a list (of possibly any dimension).
@@ -102,14 +102,14 @@ def flatten(*args, keep_none=False):
         if arg is None:
             if keep_none:
                 t.append(arg)
-        elif isinstance(arg, (str, range)):  # , Domain)):  # Iterable but must be appended, not extended
+        elif isinstance(arg, (str, range)) or (isinstance(arg, tuple) and keep_tuples):  # , Domain)):  # Iterable but must be appended, not extended
             t.append(arg)
         elif isinstance(arg, types.GeneratorType):
             res = list(arg)
             if len(res) > 0:
-                t.extend(flatten(*res, keep_none=keep_none))
+                t.extend(flatten(*res, keep_none=keep_none, keep_tuples=keep_tuples))
         elif isinstance(arg, Iterable):
-            t.extend(flatten(*arg, keep_none=keep_none))
+            t.extend(flatten(*arg, keep_none=keep_none, keep_tuples=keep_tuples))
         else:
             t.append(arg)
     # if len(args) == 1:
