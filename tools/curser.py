@@ -899,9 +899,9 @@ class ListVar(list):
         return list.__contains__(self, other)
 
     def _post_lex(self, other, f, strict):
-        assert (is_1d_list(self, Variable) and is_1d_list(other, Variable)) or (is_2d_list(self, Variable) and is_2d_list(other, Variable))
-        assert len(self) == len(other)
-        return f(self, other, strict=strict)
+        l1, l2 = flatten(self), flatten(other)
+        assert len(l1) == len(l2) and (is_1d_list(l1, Variable) and is_1d_list(l2, Variable))  # or (is_2d_list(self, Variable) and is_2d_list(other, Variable))
+        return f(l1, l2, strict=strict)
 
     def __lt__(self, other):
         return self._post_lex(other, functions.LexIncreasing, True)

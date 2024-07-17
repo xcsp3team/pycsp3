@@ -171,7 +171,8 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
 
     size = [size] if isinstance(size, int) else size
     if len(size) > 1 and isinstance(size[-1], (tuple, list)):  # it means that the last dimension is of variable length
-        assert not isinstance(dom, type(lambda: 0))
+        if isinstance(dom, type(lambda: 0)):
+            return VarArray(size=size[:-1] + [max(size[-1])], dom=dom)
         return VarArray(size=size[:-1] + [max(size[-1])], dom=lambda *ids: dom if ids[-1] < size[-1][ids[-2]] else None)
 
     error_if(any(dimension == 0 for dimension in size), "No dimension must not be equal to 0")
