@@ -146,7 +146,7 @@ def Var(term=None, *others, dom=None, id=None):
     return var_object
 
 
-def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
+def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, comment=None):
     """
     Builds an array of variables.
     The number of dimensions of the array is given by the number of values in size.
@@ -156,6 +156,7 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
 
     :param size: the size of each dimension of the array
     :param dom: the domain of the variables
+    :param dom_border: the domain of the cells at the border of the (two-dimensional) array
     :param id: the id (name) of the array, or None (usually, None)
     :param comment: a string
     :return: an array of variables
@@ -164,11 +165,17 @@ def VarArray(doms=None, *, size=None, dom=None, id=None, comment=None):
     if not started_modeling and not options.uncurse:
         cursing()
         started_modeling = True
+
     if doms is not None:
-        assert isinstance(doms, list) and size is None and dom is None and comment is None
+        assert isinstance(doms, list) and size is None and dom is None and dom_border is None and comment is None
         assert all(isinstance(dom, Domain) or dom is None for dom in doms)
         return VarArray(size=len(doms), dom=lambda i: doms[i])
 
+    if dom_border is not None:
+        assert len(size) == 2 and dom is not None
+        if isinstance(dom, type(lambda: 0)):
+            return VarArray(size=size, dom=lambda i, j: dom_border if i in (0, size[0] - 1) or j in (0, size[1] - 1) else dom(i, j))
+        return VarArray(size=size, dom=lambda i, j: dom_border if i in (0, size[0] - 1) or j in (0, size[1] - 1) else dom)
     size = [size] if isinstance(size, int) else size
     if len(size) > 1 and isinstance(size[-1], (tuple, list)):  # it means that the last dimension is of variable length
         if isinstance(dom, type(lambda: 0)):
@@ -258,7 +265,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
                 # return ECtr(ConstraintElement(flatten(right_operand), index=None, condition=condition))  # member
         if isinstance(right_operand, range):
             # return (right_operand.start <= left_operand) & (left_operand < right_operand.stop)
-            return Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
+            return _Extension(scope=[left_operand], table=list(right_operand), positive=bool_value)
     if isinstance(left_operand, (Variable, int, str)) and isinstance(right_operand, (set, frozenset, range)):
         # it is a unary constraint of the form x in/not in set/range
         return _Intension(Node.build(IN, left_operand, right_operand) if bool_value else Node.build(NOTIN, left_operand, right_operand))
@@ -289,7 +296,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             if not is_1d_list(right_operand, int) and not is_1d_list(right_operand, str):
                 assert all(isinstance(v, (tuple, list)) and len(v) == 1 for v in right_operand)
                 right_operand = [v[0] for v in right_operand]
-        ctr = Extension(scope=flatten(left_operand), table=right_operand, positive=bool_value)  # TODO ok for using flatten? (before it was list())
+        ctr = _Extension(scope=flatten(left_operand), table=right_operand, positive=bool_value)  # TODO ok for using flatten? (before it was list())
     return ctr
 
 
@@ -677,8 +684,9 @@ def satisfy(*args, no_comment_tags_extraction=False):
 ''' Generic Constraints (intension, extension) '''
 
 
-def Extension(*, scope, table, positive=True):
+def _Extension(*, scope, table, positive=True):
     scope = flatten(scope)
+    assert len(scope) == len(set(scope))
     checkType(scope, [Variable])
     assert isinstance(table, list)
     assert len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
@@ -702,6 +710,22 @@ def Extension(*, scope, table, positive=True):
                         + "Maybe a problem with slicing: you must for example write x#[i:i+3,0] instead of x[i:i+3][0]")
                 table[i] = t
     return ECtr(ConstraintExtension(scope, table, positive, options.keephybrid, options.restricttableswrtdomains))
+
+
+def Table(*, scope, supports=None, conflicts=None):
+    """
+      Builds and returns a constraint Table.
+
+      :param scope: the sequence of (distinct) involved variables
+      :param supports: the set/list of tuples, seen as supports (positive table)
+      :param conflicts: the set/list of tuples, seen as conflicts (negative table)
+
+      :return: a constraint Table (Extension)
+      """
+    assert scope is not None and (supports is None) != (conflicts is None)
+    table = supports if supports is not None else conflicts
+    table = list(table) if isinstance(table, (set, frozenset)) else table
+    return _Extension(scope=scope, table=table, positive=supports is not None)
 
 
 def _Intension(node):

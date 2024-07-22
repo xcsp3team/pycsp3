@@ -3,10 +3,9 @@
 </div>
 
 <br />
-<h2> PyCSP3 v2.3 <sub><sup>(March 27, 2024)</sup></sub> </h1> 
+<h2> PyCSP3 v2.3 <sub><sup>(March 27, 2024)</sup></sub> </h2> 
 
-<!-- PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API)
-and [Numberjack](https://github.com/eomahony/Numberjack). -->
+<!-- PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). -->
 
 This is Version 2.3 of PyCSP3, a library in Python (version 3.10 or later) for modeling combinatorial constrained problems;
 see [www.pycsp.org](https://pycsp.org). With PyCSP3, it is possible to generate instances of:
@@ -32,8 +31,8 @@ At this stage, one can run two embedded solvers:
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
 For example, see the solvers involved in the [2022 and 2023 Competitions](https://www.xcsp.org/competitions/).
-It is also immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are
-present in directories `pycsp3/solvers/ace` and  `pycsp3/solvers/choco`.
+It is also immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are present in directories `pycsp3/solvers/ace`
+and  `pycsp3/solvers/choco`.
 For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
 
 ```console
@@ -49,6 +48,7 @@ Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving 
 
 This is an immediate solution for using PyCSP3, with no installation required (*you are ready to work in exactly 2 minutes*).
 What you have to do is:
+
 1. build a new notebook on [Google colab](https://colab.research.google.com/)
 2. insert a first code cell for being able to use PyCSP3 in your notebook:
    ```
@@ -67,11 +67,11 @@ What you have to do is:
    if solve() is SAT:
        print(values(x))
    ```
+
 Here, we have an array with 5 variables, we enforce them to be all different, and we display the first solution found by the underlying solver.
 Just execute these cell codes on Colab. It should return `[0, 1, 2, 3, 4]`.
 
-That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section. 
-
+That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section.
 
 # 1) Installation from PyPi
 
