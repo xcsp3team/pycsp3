@@ -210,7 +210,6 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     if isinstance(dom, (tuple, list, set)):
         dom = Domain(set(flatten(dom)))
     var_objects = Variable.build_variables_array(array_name, size, dom)
-
     if isinstance(array_name, list):
         assert (len(array_name) == len(var_objects))
         for i in range(len(array_name)):

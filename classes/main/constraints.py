@@ -1026,6 +1026,9 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
     def __sub__(self, other):
+        if isinstance(self.constraint, ConstraintSum) and isinstance(other, int):
+            self.constraint.add(-other)
+            return self
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
