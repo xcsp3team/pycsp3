@@ -1467,7 +1467,7 @@ def AtLeastOne(within, *within_complement, value=None):
     :param value the value to be found if not None (None, by default)
     :return: a constraint Count
     """
-    return Exist(within, within_complement, value)
+    return Exist(within, within_complement, value=value)
 
 
 def AtMostOne(within, *within_complement, value=None):
