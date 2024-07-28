@@ -276,9 +276,9 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
         ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
-        ctr = _Regular(scope=left_operand, automaton=right_operand)
+        ctr = Regular(scope=left_operand, automaton=right_operand)
     elif isinstance(right_operand, MDD):  # it is an MDD constraint
-        ctr = _Mdd(scope=left_operand, mdd=right_operand)
+        ctr = Mdd(scope=left_operand, mdd=right_operand)
     elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
         ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1))  # atLeast1 TODO to be replaced by a member/element constraint ?
     # elif isinstance(left_operand, Node):
@@ -713,14 +713,14 @@ def _Extension(*, scope, table, positive=True):
 
 def Table(*, scope, supports=None, conflicts=None):
     """
-      Builds and returns a constraint Table.
+    Builds and returns a constraint Table.
 
-      :param scope: the sequence of (distinct) involved variables
-      :param supports: the set/list of tuples, seen as supports (positive table)
-      :param conflicts: the set/list of tuples, seen as conflicts (negative table)
+    :param scope: the sequence of (distinct) involved variables
+    :param supports: the set/list of tuples, seen as supports (positive table)
+    :param conflicts: the set/list of tuples, seen as conflicts (negative table)
 
-      :return: a constraint Table (Extension)
-      """
+    :return: a constraint Table (Extension)
+    """
     assert scope is not None and (supports is None) != (conflicts is None)
     table = supports if supports is not None else conflicts
     table = list(table) if isinstance(table, (set, frozenset)) else table
@@ -999,14 +999,30 @@ def either(this, Or):
 ''' Language-based Constraints '''
 
 
-def _Regular(*, scope, automaton):
+def Regular(*, scope, automaton):
+    """
+    Builds and returns a constraint Regular.
+
+    :param scope: the sequence of (distinct) involved variables
+    :param automaton: the automaton defining the semantics of the constraint
+
+    :return: a constraint Regular
+    """
     scope = flatten(scope)
     checkType(scope, [Variable])
     checkType(automaton, Automaton)
     return ECtr(ConstraintRegular(scope, automaton))
 
 
-def _Mdd(*, scope, mdd):
+def Mdd(*, scope, mdd):
+    """
+    Builds and returns a constraint MDD.
+
+    :param scope: the sequence of (distinct) involved variables
+    :param mdd: the multi-decision diagram defining the semantics of the constraint
+
+    :return: a constraint MDD
+    """
     scope = flatten(scope)
     checkType(scope, [Variable])
     checkType(mdd, MDD)
