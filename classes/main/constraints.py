@@ -197,7 +197,7 @@ class ConstraintWithCondition(Constraint):
 class ConstraintIntension(Constraint):
     def __init__(self, tree):
         super().__init__(TypeCtr.INTENSION)
-        self.arg(TypeCtrArg.FUNCTION, tree)
+        self.arg(TypeCtrArg.FUNCTION, tree.canonization(strong=False))
 
     def abstract_tree(self):
         return self.arguments[TypeCtrArg.FUNCTION].content.abstract_tree()

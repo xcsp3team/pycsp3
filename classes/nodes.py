@@ -460,28 +460,33 @@ class Node(Entity):
         assert self.type == INT
         return Node(self.type, self.cnt + offset)
 
-    def canonization(self):
+    def canonization(self, strong=True):
         if self.is_leaf():
             return Node(self.type, self.cnt)  # we return a similar object
         # we will build the canonized form of the node, with the two following local variables
         t = self.type  # possibly, this initial value of type will be modified during canonization
-        s = [son.canonization() for son in self.cnt]
-        if t.is_symmetric_operator():
-            s = sorted(s, key=cmp_to_key(Node.compare_to))  # sons are sorted if the type of the node is symmetric
-        # Now, sons are potentially sorted if the type corresponds to a non-symmetric binary relational operator (in
-        # that case, we swap sons and arithmetically inverse the operator provided that the ordinal value of the reverse operator is smaller)
-        if len(s) == 2 and t.is_not_symmetric_relational_operator():  # if LT,LE,GE,GT
-            tt = t.arithmetic_inversion()
-            if tt.value[0] < t.value[0] or (tt.value[0] == t.value[0] and Node.compare_to(s[0], s[1]) > 0):
-                t = tt
-                s = [s[1], s[0]]  # swap
+        s = [son.canonization(strong=strong) for son in self.cnt]
+        if strong:
+            if t.is_symmetric_operator():
+                s = sorted(s, key=cmp_to_key(Node.compare_to))  # sons are sorted if the type of the node is symmetric
+            # Now, sons are potentially sorted if the type corresponds to a non-symmetric binary relational operator (in
+            # that case, we swap sons and arithmetically inverse the operator provided that the ordinal value of the reverse operator is smaller)
+            if len(s) == 2 and t.is_not_symmetric_relational_operator():  # if LT,LE,GE,GT
+                tt = t.arithmetic_inversion()
+                if tt.value[0] < t.value[0] or (tt.value[0] == t.value[0] and Node.compare_to(s[0], s[1]) > 0):
+                    t = tt
+                    s = [s[1], s[0]]  # swap
         if len(s) == 1 and t.is_identity_when_one_operand():  # // add(x) becomes x, min(x) becomes x, ...
             return s[0]  # certainly can happen during the canonization process
 
         node = Node(t, s)
-        for k, v in canonization_rules.items():
+        for k, v in canonization_rules_1.items():
             if k.matches(node):
-                node = v(node).canonization()
+                node = v(node).canonization(strong=strong)
+        if strong:
+            for k, v in canonization_rules_2.items():
+                if k.matches(node):
+                    node = v(node).canonization(strong=strong)
         return node
 
     """
@@ -721,6 +726,7 @@ x_mul_k = Matcher(Node(MUL, [var, val]))
 x_mul_y = Matcher(Node(MUL, [var, var]))
 k_mul_x = Matcher(Node(MUL, [val, var]))  # used in some other contexts (when non canonized forms)
 abs_sub = Matcher(Node(ABS, Node(SUB, [any_node, any_node])))
+abs_neg = Matcher(Node(ABS, Node(NEG, any_node)))
 not_not = Matcher(Node(NOT, Node(NOT, any_node)))
 neg_neg = Matcher(Node(NEG, Node(NEG, any_node)))
 any_lt_k = Matcher(Node(LT, [any_node, val]))
@@ -741,19 +747,14 @@ val__relop__var_add_val = Matcher(NodeAbstract(RELOP, [val, var_add_val]))
 imp_logop = Matcher(Node(IMP, [any_cond, any_node]), lambda r, p: p == 1 and r.type.is_logically_invertible())
 imp_not = Matcher(Node(IMP, [Node(NOT, any_node), any_node]))
 
-canonization_rules = {
+canonization_rules_1 = {
     abs_sub: lambda r: Node(DIST, r[0].cnt),  # abs(sub(a,b)) => dist(a,b)
+    abs_neg: lambda r: Node(ABS, r[0].cnt),  # abs(neg(a)) => abs(a)
     not_not: lambda r: r[0][0],  # not(not(a)) => a
     neg_neg: lambda r: r[0][0],  # neg(neg(a)) => a
-    any_lt_k: lambda r: Node(LE, [r[0], r[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
-    k_lt_any: lambda r: Node(LE, [r[0]._augment(1), r[1]]),  # e.g., lt(5,x) => le(6,x)
     not_logop: lambda r: Node(r[0].type.logical_inversion(), r[0].cnt),  # e.g., not(lt(x)) = > ge(x)
     not_symop_any: lambda r: Node(r.type.logical_inversion(), [r[0][0], r[1]]),  # e.g., ne(not(x),y) => eq(x,y)
     any_symop_not: lambda r: Node(r.type.logical_inversion(), [r[0], r[1][0]]),  # e.g., ne(x,not(y)) => eq(x,y)
-    x_mul_k__eq_l:  # e.g., eq(mul(x,4),8) => eq(x,2) and eq(mul(x,4),6) => 0 (false)
-        lambda r: Node(EQ, [r[0][0], Node(INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(INT, 0),
-    l__eq_x_mul_k:  # e.g., eq(8,mul(x,4)) => eq(2,x) and eq(6,mul(x,4)) => 0 (false)
-        lambda r: Node(EQ, [Node(INT, r.val(0) // r.val(1)), r[1][0]]) if r.val(0) % r.val(1) == 0 else Node(INT, 0),
 
     #  we flatten operators when possible; for example add(add(x,y),z) becomes add(x,y,z)
     flattenable: lambda r: Node(r.type, flatten([son.cnt if son.type == r.type else son for son in r.cnt])),
@@ -763,6 +764,16 @@ canonization_rules = {
                        else r[-2].cnt * r[-1].cnt if r.type == MUL
                        else min(r[-2].cnt, r[-1].cnt) if r.type in (MIN, AND)
                        else max(r[-2].cnt, r[-1].cnt))]),
+}
+
+canonization_rules_2 = {
+    any_lt_k: lambda r: Node(LE, [r[0], r[1]._augment(-1)]),  # e.g., lt(x,5) => le(x,4)
+    k_lt_any: lambda r: Node(LE, [r[0]._augment(1), r[1]]),  # e.g., lt(5,x) => le(6,x)
+
+    x_mul_k__eq_l:  # e.g., eq(mul(x,4),8) => eq(x,2) and eq(mul(x,4),6) => 0 (false)
+        lambda r: Node(EQ, [r[0][0], Node(INT, r.val(1) // r.val(0))]) if r.val(1) % r.val(0) == 0 else Node(INT, 0),
+    l__eq_x_mul_k:  # e.g., eq(8,mul(x,4)) => eq(2,x) and eq(6,mul(x,4)) => 0 (false)
+        lambda r: Node(EQ, [Node(INT, r.val(0) // r.val(1)), r[1][0]]) if r.val(0) % r.val(1) == 0 else Node(INT, 0),
 
     # we replace sub by add when possible
     sub_relop_sub: lambda r: Node(r.type, [Node(ADD, [r[0][0], r[1][1]]), Node(ADD, [r[1][0], r[0][1]])]),
