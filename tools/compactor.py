@@ -14,7 +14,7 @@ class SequenceOfSuccessiveVariables:
         if '[' in x.id:
             pos = x.id.index("[")
             self.prefix, self.suffix = x.id[:pos], x.id[pos:]
-            self.starts = [int(v) for v in re.split("\]\[", self.suffix[1:-1])]  # the indexes of the first variable (in case of an array)
+            self.starts = [int(v) for v in re.split("]\\[", self.suffix[1:-1])]  # the indexes of the first variable (in case of an array)
 
     def differ_just_at(self, t):
         pos = -1
@@ -184,7 +184,7 @@ def _expand(compact_form):
         return compact_form
     pos = compact_form.index("[")
     prefix, suffix = compact_form[:pos], compact_form[pos:]
-    tokens = [int(v) if v.isdigit() else v for v in re.split("\]\[", suffix[1:-1])]
+    tokens = [int(v) if v.isdigit() else v for v in re.split("]\\[", suffix[1:-1])]
     var_array = VarEntities.prefixToEVarArray[prefix]
     assert var_array, "Pb with " + compact_form
     assert len(var_array.size) == len(tokens)
@@ -219,7 +219,7 @@ def compact(variables, *, preserve_order=False, group_args=False):
                 t.extend(part)
             else:
                 if not preserve_order:
-                    part = sorted(part, key=lambda x: [int(v) for v in re.split("\]\[", x.id[x.id.index("[") + 1:-1])])
+                    part = sorted(part, key=lambda x: [int(v) for v in re.split("]\\[", x.id[x.id.index("[") + 1:-1])])
                 if len(part) > 2:
                     compact = _simple_compact(part)
                     if compact is None:

@@ -153,8 +153,8 @@ def _compute_group_abstraction_intension(group):
     # reordering %i in the abstract tree
     for i in range(n_parameters):
         par = "%" + str(i)
-        if par not in re.findall('(%\d+)', abstract_tree):
-            t = {int(m[1:]) for m in re.findall('(%\d+)', abstract_tree) if int(m[1:]) > i}
+        if par not in re.findall('(%\\d+)', abstract_tree):
+            t = {int(m[1:]) for m in re.findall('(%\\d+)', abstract_tree) if int(m[1:]) > i}
             if len(t) > 0:
                 old = "%" + str(min(t))
                 # while old in abstract_tree:

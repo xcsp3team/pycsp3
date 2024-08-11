@@ -196,7 +196,7 @@ class Variable:
             self.indexes = None
         else:
             self.prefix, self.suffix = self.id[:pos], self.id[pos:]
-            self.indexes = [int(v) for v in re.split("\]\[", self.suffix[1:-1])]
+            self.indexes = [int(v) for v in re.split("]\\[", self.suffix[1:-1])]
         self.inverse = inverse  # arithmetic inverse
         self.negation = negation  # logical negation
         self.value = None  # value of the last found solution

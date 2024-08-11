@@ -310,7 +310,7 @@ class VarEntities:
             prefix, suffix = s[:pos], s[pos:]
             assert prefix in VarEntities.prefixToEVarArray
             va = VarEntities.prefixToEVarArray[prefix]
-            indexes = [int(v) if len(v) > 0 else None for v in re.split("\]\[", suffix[1:-1])]
+            indexes = [int(v) if len(v) > 0 else None for v in re.split("]\\[", suffix[1:-1])]
             if is_containing(indexes, int):
                 res = va.variables
                 for v in indexes:
