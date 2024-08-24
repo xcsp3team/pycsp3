@@ -318,7 +318,7 @@ def _wrap_intension_constraints(entities):
     return entities
 
 
-def And(*args, meta=True):
+def And(*args, meta=False):
     """
     Builds a meta-constraint And from the specified arguments.
     For example: And(Sum(x) > 10, AllDifferent(x))
@@ -335,7 +335,7 @@ def And(*args, meta=True):
     return conjunction(*args)
 
 
-def Or(*args, meta=True):
+def Or(*args, meta=False):
     """
     Builds a meta-constraint Or from the specified arguments.
     For example: Or(Sum(x) > 10, AllDifferent(x))
@@ -347,12 +347,12 @@ def Or(*args, meta=True):
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint Or, or its reified form
     """
-    if meta:
+    if options.usemeta or meta:
         return EOr(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
     return disjunction(*args)
 
 
-def Not(arg, meta=True):
+def Not(arg, meta=False):
     """
     Builds a meta-constraint Not from the specified argument.
     For example: Not(AllDifferent(x))
@@ -364,7 +364,7 @@ def Not(arg, meta=True):
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint Not, or its reified form
     """
-    if meta:
+    if options.usemeta or meta:
         return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(arg)))
     res = manage_global_indirection(arg)
     if res is None:
@@ -372,7 +372,7 @@ def Not(arg, meta=True):
     return ~res  # TODO to be checked
 
 
-def Xor(*args, meta=True):
+def Xor(*args, meta=False):
     """
     Builds a meta-constraint Xor from the specified arguments.
     For example: Xor(Sum(x) > 10, AllDifferent(x))
@@ -384,7 +384,7 @@ def Xor(*args, meta=True):
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint Xor, or its reified form
     """
-    if meta:
+    if options.usemeta or meta:
         return EXor(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
     return xor(*args)
 
@@ -419,7 +419,7 @@ def If(test, *test_complement, Then, Else=None, meta=False):
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list)  # after flatten, we have a list
     if len(thens) == 0:
         return None if Else is None else Or(tests, Else)
-    if meta:
+    if options.usemeta or meta:
         if Else is None:
             return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(tests, thens))))
         else:
