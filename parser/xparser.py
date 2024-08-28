@@ -670,9 +670,13 @@ class CallbackerXCSP3:
                         assert all(isinstance(x, Variable) for x in origins) and (all(isinstance(y, Variable) for y in lengths) or all(
                             isinstance(y, int) for y in lengths))
                         return self.cb.ctr_nooverlap(origins, lengths, b)
-                    if len(lengths[0]) == 2 and isinstance(lengths[0][1], int):  # special mixed case
-                        return self.cb.ctr_nooverlap_mixed([t[0] for t in origins], [t[1] for t in origins], [t[0] for t in lengths],
-                                                           [t[1] for t in lengths], b)
+                    if len(lengths[0]) == 2:
+                        if isinstance(lengths[0][0], Variable) and isinstance(lengths[0][1], int):  # special mixed case
+                            return self.cb.ctr_nooverlap_mixed([t[0] for t in origins], [t[1] for t in origins], [t[0] for t in lengths],
+                                                               [t[1] for t in lengths], b)
+                        if isinstance(lengths[0][0], int) and isinstance(lengths[0][1], Variable):  # special mixed case
+                            return self.cb.ctr_nooverlap_mixed([t[1] for t in origins], [t[0] for t in origins], [t[1] for t in lengths],
+                                                               [t[0] for t in lengths], b)
                     return self.cb.ctr_nooverlap_multi(origins, lengths, b)
 
                 case TypeCtr.CUMULATIVE:
