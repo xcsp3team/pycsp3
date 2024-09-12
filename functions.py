@@ -1328,6 +1328,7 @@ def Sum(term, *others, condition=None):
         if any(v > 1 for v in d.values()):
             terms, coeffs = [list(v) for v in zip(*d.items())]
     terms, coeffs = _manage_coeffs(terms, coeffs)
+
     if len(terms) == 1 and (coeffs is None or coeffs[0] == 1):
         if condition is None:
             return terms[0]

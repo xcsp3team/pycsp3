@@ -485,6 +485,7 @@ class ConstraintPrecedence(Constraint):
 
 class ConstraintSum(ConstraintWithCondition):
     def __init__(self, lst, coefficients, condition):
+        error_if(len(lst) == 0, "A constraint Sum is posted with a list containing no variable")
         super().__init__(TypeCtr.SUM)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
         if coefficients is not None and any(not isinstance(v, int) or v != 1 for v in coefficients):
@@ -1146,7 +1147,10 @@ class ScalarProduct:
             self.coeffs = [self.coeffs[i] for i in indexes]
 
     def _combine_with(self, operator, right_operand):
-        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+        if len(self.variables) == 0:
+            pc = ConstraintDummyConstant(0)
+        else:
+            pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
         if isinstance(right_operand, Node) and right_operand.var_val_if_binary_type(TypeNode.MUL):
             return pc.add_condition(operator, right_operand)
         if operator == TypeConditionOperator.LT:
