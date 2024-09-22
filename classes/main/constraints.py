@@ -659,7 +659,7 @@ class ConstraintMinimumArg(ConstraintWithCondition):
 
 
 class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with a general condition
-    def __init__(self, lst, *, index, type_rank=None, condition=None):
+    def __init__(self, lst, *, index, type_rank=None, value=None, condition=None, reified_by=None):
         super().__init__(TypeCtr.ELEMENT)
         if len(lst) == 0:
             error("A constraint Element on an empty list of variables is encountered. Did you write something like x[:j] instead of x[:,j]?")
@@ -674,6 +674,11 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
                 self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
         if condition:
             self.arg(TypeCtrArg.CONDITION, condition)  # Condition.build_condition((TypeConditionOperator.EQ, value)))
+        if reified_by is not None:
+            assert index is None and type_rank is None and value is not None and condition is None
+            assert isinstance(reified_by, Variable) and reified_by.dom.is_binary()
+            self.attributes.append((TypeXML.REIFIED_BY, str(reified_by)))
+            self.arg(TypeCtrArg.VALUE, value)
         # self.arg(TypeCtrArg.VALUE, value)
 
     def min_possible_value(self):
@@ -1370,6 +1375,9 @@ def global_indirection(c):
     if isinstance(c, ConstraintOrdered):
         return c.to_intension()
     if isinstance(c, ConstraintWithCondition):
+        reif = next((attribute for attribute in c.attributes if attribute[0] == TypeXML.REIFIED_BY), None)
+        if reif is not None:
+            return reif[1]  # the 0/1 variable involved in the reification
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
         pc = PartialConstraint(c)

@@ -111,7 +111,7 @@ def _extract_code(function_name):
     # In 3.7 and lower versions, it is the line at the end of the function
     # So the algorithms are completely different
     frame_info = list(reversed(inspect.stack(context=2000)))[index]  # TODO how to avoid this constant?
-    if sys.version_info[1] >= 8 and function_name != "Var" and function_name != "VarArray":  # why special cases for Var and VarArray?
+    if sys.version_info[1] >= 8 and function_name not in ("Var", "VarArray", "VarMultipleArray"):  # why special cases for Var and VarArray?
         lines = list(frame_info.code_context[frame_info.index:])
         return browse_code_top_to_bottom(lines, function_name)
     else:
@@ -330,7 +330,7 @@ def extract_declaration_for(function_name):
         assert "," not in declaration and ")" not in declaration, \
             "Every simple declaration must be on its own line. For example, 'x, y = Var(dom={0,1}), Var(dom={0,1})' is not allowed."
         return declaration
-    elif function_name == "VarArray":
+    elif function_name in ("VarArray", "VarMultipleArray"):
         assert ")" not in declaration
         return declaration if "," not in declaration else [v.strip() for v in declaration.split(",")]
 

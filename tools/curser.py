@@ -10,7 +10,7 @@ from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
 from pycsp3.libs.forbiddenfruit import curse
-from pycsp3.tools.utilities import (flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_2d_list, is_matrix, is_square_matrix,
+from pycsp3.tools.utilities import (flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_1d_tuple, is_2d_list, is_matrix, is_square_matrix,
                                     is_cube, ANY, structured_list, warning, error_if)
 
 queue_in = deque()  # To store partial constraints when using the IN operator
@@ -304,6 +304,7 @@ class OpOverrider:
         ListVar.__getitem__ = OpOverrider.__getitem__lv
         ListInt.__getitem__ = OpOverrider.__getitem__li
         # ListInt.__contains__ = OpOverrider.__contains__li
+        ListMultipleVar.__getitem__ = OpOverrider.__getitem__lmv
 
         ECtr.__eq__ = EMetaCtr.__eq__ = Variable.__eq__ = Node.__eq__ = OpOverrider.__eq__
         ECtr.__ne__ = EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = OpOverrider.__ne__
@@ -633,7 +634,7 @@ class OpOverrider:
     def __extract_vars_vals(self, other):
         if is_1d_list(other):
             n = len(other)
-            assert is_1d_list(self) and n == len(self)
+            assert (is_1d_list(self) or is_1d_tuple(self)) and n == len(self)
             indexes = [i for i in range(n) if self[i] is not None and other[i] is not None]
             return [self[i] for i in indexes], [other[i] for i in indexes]
         if is_matrix(other):
@@ -649,6 +650,8 @@ class OpOverrider:
         return None
 
     def __eq__lv(self, other):  # lv for ListVar
+        if isinstance(self, tuple) and all(isinstance(v, Variable) for v in self):
+            self = ListVar(self)
         if isinstance(other, int):
             if len(self) == 0:
                 return []
@@ -672,6 +675,8 @@ class OpOverrider:
         return list.__eq__(self, other)
 
     def __ne__lv(self, other):  # lv for ListVar
+        if isinstance(self, tuple) and all(isinstance(v, Variable) for v in self):
+            self = ListVar(self)
         if isinstance(other, int):
             return [] if len(self) == 0 else ECtr(ConstraintRefutation(flatten(self), other))  # ListCtr(x != other for x in flatten(self))
         if isinstance(other, (tuple, range)):
@@ -810,6 +815,14 @@ class OpOverrider:
     def __getitem__lv(self, indexes):  # lv for ListVar
         return OpOverrider.__getitem__shared_by_lv_and_li(self, indexes, lv=True)
 
+    def __getitem__lmv(self, indexes):  # lmv for ListMultipleVar
+        # print("hhhh", indexes, type(indexes))
+        # if isinstance(indexes, Variable) and isinstance(list.__getitem__(self, 0), tuple):  # todo check namedtuple
+        #     tt = [ListVar[tuple.__getitem__(v, 0) for v in (list.__getitem__(self, 0),)])
+        #     print("ggg")  # , tt)
+        #     return None  # [ListVar([v[i] for v in self]) for i in range(len(self[0]))]
+        return OpOverrider.__getitem__shared_by_lv_and_li(self, indexes, lv=True)
+
     def __getitem__li(self, indexes):  # li for ListInt
         return OpOverrider.__getitem__shared_by_lv_and_li(self, indexes, lv=False)
 
@@ -941,6 +954,11 @@ class ListVar(list):
 
     def __str__(self):
         return structured_list(self)
+
+
+class ListMultipleVar(list):
+    def __init__(self, variables=None):
+        super().__init__(variables)
 
 
 class ListCtr(list):  # currently, mainly introduced for __str__ when calling posted()

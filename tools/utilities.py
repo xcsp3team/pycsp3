@@ -148,10 +148,10 @@ def unique_type_in(t, tpe=None):
         return None if t is None else type(t) if tpe is None else tpe if isinstance(t, tpe) else False
 
 
-def is_1d_tuple(t, types):
-    if not isinstance(t, tuple) or types is not None and len(t) == 0:
+def is_1d_tuple(t, types=None):
+    if not isinstance(t, tuple):  # or types is not None and len(t) == 0:
         return False
-    return all(isinstance(v, types) for v in t)
+    return all(isinstance(v, types) if types else not isinstance(v, tuple) for v in t)
 
 
 def is_1d_list(t, types=None):

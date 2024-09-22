@@ -67,7 +67,8 @@ def _load_options():
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output", "suffix", "callback")
     options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
                       "keepSmartTransitions", "keepsum", "unchangescalar", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues",
-                      "groupsumcoeffs", "usemeta", "dontuseauxcache", "dontadjustindexing", "dontbuildsimilarconstraints", "debug", "mini", "uncurse")
+                      "groupsumcoeffs", "usemeta", "dontuseauxcache", "dontadjustindexing", "dontbuildsimilarconstraints", "debug", "mini", "uncurse",
+                      "existbyelement")
 
     if options.checker is None:
         options.checker = "fast"

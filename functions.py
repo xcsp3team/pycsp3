@@ -1,6 +1,7 @@
 import inspect
 import math
 import types
+from collections import namedtuple
 
 from pycsp3.classes.auxiliary.conditions import Condition, eq, le
 from pycsp3.classes.auxiliary.enums import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
@@ -22,7 +23,7 @@ from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic
 from pycsp3.classes.nodes import TypeNode, Node
 from pycsp3.dashboard import options
-from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListCtr, cursing
+from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, warning, warning_if, error_if)
 
@@ -230,6 +231,29 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         EVarArray(lv, array_name, comment, tags)  # object wrapping the array of variables
         Variable.arrays.append(lv)
         return lv
+
+
+def VarMultipleArray(*, size, fields):
+    assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
+    size = [size] if isinstance(size, int) else size
+    checkType(size, [int])
+
+    cname = extract_declaration_for("VarMultipleArray")
+    arrays = [VarArray(size=size, dom=fields[k], id=cname + "_" + k) for k in fields]
+    if not hasattr(VarMultipleArray, "cnt"):
+        VarMultipleArray.cnt = 0
+    NT = namedtuple("ant" + str(VarMultipleArray.cnt), fields.keys())
+    VarMultipleArray.cnt += 1
+    NT.__eq__ = ListVar.__eq__  # OpOverrider.__eq__lv
+    NT.__ne__ = ListVar.__ne__  # OpOverrider.__ne__lv
+    NT.__getitem__ = ListVar.__getitem__  # OpOverrider.__getitem__lv
+
+    def __rec(dims, subarrays):
+        if len(dims) == 0:
+            return NT(*[sub for sub in subarrays])
+        return ListMultipleVar([__rec(dims[1:], [sub[i] for sub in subarrays]) for i in range(dims[0])])
+
+    return __rec(size, arrays)
 
 
 def var(name):
@@ -1390,7 +1414,7 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
 
-def Exist(within, *within_complement, value=None):
+def Exist(within, *within_complement, value=None, reified_by=None):
     """
     Builds and returns a constraint Count that checks if at least one of the term evaluates to the specified value,
     or to 1 (seen as True) when value is None.
@@ -1398,9 +1422,21 @@ def Exist(within, *within_complement, value=None):
     :param within: the (first) term, typically  a list of variables or expressions, on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
     :param value the value to be found if not None (None, by default)
+    :reified_by if present (not None) a 01 variable corresponding to the reification of the constraint
     :return: a constraint Count
     """
     terms = flatten(within, within_complement)
+    assert len(terms) >= 1
+    if reified_by is not None:
+        assert isinstance(reified_by, Variable) and reified_by.dom.is_binary()
+        if reified_by.negation:
+            reified_by.negation = False
+            aux = auxiliary().new_var(0, 1)
+            satisfy(aux != reified_by)
+            reified_by = aux
+        if len(terms) == 1:
+            return (terms[0] == reified_by) if value is None or isinstance(value, int) and value == 1 else ((terms[0] == value) == reified_by)
+        return ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=reified_by))
     if value is None:
         if len(terms) == 1:
             return terms[0]
@@ -1408,6 +1444,10 @@ def Exist(within, *within_complement, value=None):
             return disjunction(terms)
         # if all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that interesting?
         #     return disjunction(terms)
+    if options.existbyelement:
+        aux = auxiliary().new_var(0, 1)
+        satisfy(ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=aux)))
+        return aux
     res = Count(terms, value=value)
     if isinstance(res, int):
         assert res == 0
