@@ -253,7 +253,9 @@ def VarMultipleArray(*, size, fields):
             return NT(*[sub for sub in subarrays])
         return ListMultipleVar([__rec(dims[1:], [sub[i] for sub in subarrays]) for i in range(dims[0])])
 
-    return __rec(size, arrays)
+    res = __rec(size, arrays)
+    res.add_fields(list(fields.keys()))
+    return res
 
 
 def var(name):

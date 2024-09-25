@@ -304,7 +304,6 @@ class OpOverrider:
         ListVar.__getitem__ = OpOverrider.__getitem__lv
         ListInt.__getitem__ = OpOverrider.__getitem__li
         # ListInt.__contains__ = OpOverrider.__contains__li
-        ListMultipleVar.__getitem__ = OpOverrider.__getitem__lmv
 
         ECtr.__eq__ = EMetaCtr.__eq__ = Variable.__eq__ = Node.__eq__ = OpOverrider.__eq__
         ECtr.__ne__ = EMetaCtr.__ne__ = Variable.__ne__ = Node.__ne__ = OpOverrider.__ne__
@@ -689,6 +688,8 @@ class OpOverrider:
             if unique_type_in(other, Variable):
                 res = OpOverrider.__extract_vars_vals(self, other)
                 if res is not None:
+                    if len(res) == 2 and isinstance(res[0], list) and isinstance(res[1], list) and len(res[0]) == 2 and len(res[1]) == 2:
+                        return (res[0][0] != res[1][0]) | (res[0][1] != res[1][1])
                     return ECtr(ConstraintAllDifferentList(res, None))
             # TODO other cases ?
         return list.__ne__(self, other)
@@ -813,14 +814,6 @@ class OpOverrider:
             return result
 
     def __getitem__lv(self, indexes):  # lv for ListVar
-        return OpOverrider.__getitem__shared_by_lv_and_li(self, indexes, lv=True)
-
-    def __getitem__lmv(self, indexes):  # lmv for ListMultipleVar
-        # print("hhhh", indexes, type(indexes))
-        # if isinstance(indexes, Variable) and isinstance(list.__getitem__(self, 0), tuple):  # todo check namedtuple
-        #     tt = [ListVar[tuple.__getitem__(v, 0) for v in (list.__getitem__(self, 0),)])
-        #     print("ggg")  # , tt)
-        #     return None  # [ListVar([v[i] for v in self]) for i in range(len(self[0]))]
         return OpOverrider.__getitem__shared_by_lv_and_li(self, indexes, lv=True)
 
     def __getitem__li(self, indexes):  # li for ListInt
@@ -957,8 +950,27 @@ class ListVar(list):
 
 
 class ListMultipleVar(list):
-    def __init__(self, variables=None):
-        super().__init__(variables)
+
+    @staticmethod
+    def __rec(t, field):
+        if isinstance(t, ListMultipleVar):
+            return cp_array(ListMultipleVar.__rec(v, field) for v in t)
+        return getattr(t, field)
+
+    def __init__(self, multiple_variables=None):
+        super().__init__(multiple_variables)
+        self.field_names = None
+
+    def add_fields(self, field_names):
+        self.field_names = field_names
+        for name in field_names:
+            setattr(self, name, ListMultipleVar.__rec(self, name))
+        return self
+
+    def __getitem__(self, indexes):
+        if isinstance(indexes, Variable):
+            return cp_array([getattr(self, name)[indexes] for name in self.field_names])  # keep cp_array (and not ListVar)
+        return list.__getitem__(self, indexes)
 
 
 class ListCtr(list):  # currently, mainly introduced for __str__ when calling posted()
@@ -1175,6 +1187,9 @@ def cp_array(*t):
             return ListInt(res)
         assert all(len(t) == 0 or isinstance(t, ListVar) for t in res)
         return ListVar(res)
+    for i, e in enumerate(t):
+        if isinstance(e, PartialConstraint):
+            t[i] = auxiliary().replace_partial_constraint(e)
     typ = unique_type_in(t)
     if typ is int:
         return ListInt(t)
