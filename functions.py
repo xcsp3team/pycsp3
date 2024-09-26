@@ -147,7 +147,7 @@ def Var(term=None, *others, dom=None, id=None):
     return var_object
 
 
-def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, comment=None):
+def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, comment=None, tags=None):
     """
     Builds an array of variables.
     The number of dimensions of the array is given by the number of values in size.
@@ -160,6 +160,7 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     :param dom_border: the domain of the cells at the border of the (two-dimensional) array
     :param id: the id (name) of the array, or None (usually, None)
     :param comment: a string
+    :param tags a (possibly empty) list of tags
     :return: an array of variables
     """
     global started_modeling
@@ -197,10 +198,8 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         array_name = id if id else ext_name  # the specified name, if present, has priority
         error_if(not _valid_identifier(array_name), "The variable identifier " + str(array_name) + " is not valid")
         error_if(array_name in Variable.name2obj, "The identifier " + str(array_name) + " is used twice. This is not possible")
-    if comment is None and not isinstance(array_name, list):
+    if comment is None and tags is None and not isinstance(array_name, list):
         comment, tags = comment_and_tags_of(function_name="VarArray")
-    else:
-        tags = []
 
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
     if isinstance(dom, type(lambda: 0)):
@@ -233,17 +232,19 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         return lv
 
 
-def VarMultipleArray(*, size, fields):
+def VarArrayMultiple(*, size, fields):
     assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
     size = [size] if isinstance(size, int) else size
     checkType(size, [int])
 
-    cname = extract_declaration_for("VarMultipleArray")
-    arrays = [VarArray(size=size, dom=fields[k], id=cname + "_" + k) for k in fields]
-    if not hasattr(VarMultipleArray, "cnt"):
-        VarMultipleArray.cnt = 0
-    NT = namedtuple("ant" + str(VarMultipleArray.cnt), fields.keys())
-    VarMultipleArray.cnt += 1
+    comment, tags = comment_and_tags_of(function_name="VarArrayMultiple")
+    cname = extract_declaration_for("VarArrayMultiple")
+    arrays = [VarArray(size=size, dom=fields[k], id=cname + "_" + k,
+                       comment="field " + str(k) + " of " + str(cname) + ("; " + comment if comment is not None else ""), tags=tags) for k in fields]
+    if not hasattr(VarArrayMultiple, "cnt"):
+        VarArrayMultiple.cnt = 0
+    NT = namedtuple("ant" + str(VarArrayMultiple.cnt), fields.keys())
+    VarArrayMultiple.cnt += 1
     NT.__eq__ = ListVar.__eq__  # OpOverrider.__eq__lv
     NT.__ne__ = ListVar.__ne__  # OpOverrider.__ne__lv
     NT.__getitem__ = ListVar.__getitem__  # OpOverrider.__getitem__lv
@@ -253,9 +254,7 @@ def VarMultipleArray(*, size, fields):
             return NT(*[sub for sub in subarrays])
         return ListMultipleVar([__rec(dims[1:], [sub[i] for sub in subarrays]) for i in range(dims[0])])
 
-    res = __rec(size, arrays)
-    res.add_fields(list(fields.keys()))
-    return res
+    return __rec(size, arrays).add_fields(list(fields.keys()))
 
 
 def var(name):
