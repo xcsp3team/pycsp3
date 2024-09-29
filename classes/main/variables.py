@@ -17,6 +17,10 @@ class Domain:
         def _add_value(arg):
             assert isinstance(arg, (tuple, list, set, frozenset, range, int, str)), "Bad type for the domain " + str(arg) + " of type " + str(type(arg))
             if isinstance(arg, (tuple, list, set, frozenset)):
+                arg = list(arg)
+                if len(arg) > 2 and all(arg[i] + 1 == arg[i + 1] for i in range(len(arg) - 1)):
+                    arg = range(arg[0], arg[-1] + 1)
+            if isinstance(arg, list):
                 for a in arg:
                     _add_value(a)
             elif isinstance(arg, range):

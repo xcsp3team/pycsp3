@@ -730,8 +730,8 @@ def _Extension(*, scope, table, positive=True):
             if len(t) != len(scope):
                 t = tuple(flatten(t))
                 assert len(t) == len(scope), (
-                        "The length of each tuple must be the same as the arity (here, we have " + str(len(t)) + " vs " + str(len(scope)) + ")."
-                        + "Maybe a problem with slicing: you must for example write x#[i:i+3,0] instead of x[i:i+3][0]")
+                        "The length of each tuple must be the same as the arity (here, we have " + str(len(t)) + " vs " + str(len(scope)) + "). "
+                        + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
                 table[i] = t
     return ECtr(ConstraintExtension(scope, table, positive, options.keephybrid, options.restricttableswrtdomains))
 

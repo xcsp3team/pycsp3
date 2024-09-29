@@ -633,6 +633,8 @@ class OpOverrider:
     def __extract_vars_vals(self, other):
         if is_1d_list(other):
             n = len(other)
+            if is_matrix(self) and len(self) * len(self[0]) == n:
+                self = [v for row in self for v in row]
             assert (is_1d_list(self) or is_1d_tuple(self)) and n == len(self)
             indexes = [i for i in range(n) if self[i] is not None and other[i] is not None]
             return [self[i] for i in indexes], [other[i] for i in indexes]
