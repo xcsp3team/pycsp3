@@ -2090,10 +2090,13 @@ def _optimize(term, minimization):
         return satisfy(term != k)
 
     ObjEntities.items = []  # TODO currently, we overwrite the objective if one was posted
-    if isinstance(term, PartialConstraint) and isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):
-        t = term.constraint.arguments[TypeCtrArg.LIST]
-        if len(t.content) == 1 and TypeCtrArg.COEFFS not in term.constraint.arguments:
-            term = t.content[0]  # this was a sum/maximum/minimum with only one term, so we just consider this term as an expression to be optimized
+    if isinstance(term, PartialConstraint):
+        if isinstance(term.constraint, ConstraintElement):
+            term = auxiliary().replace_partial_constraint(term)
+        elif isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):
+            t = term.constraint.arguments[TypeCtrArg.LIST]
+            if len(t.content) == 1 and TypeCtrArg.COEFFS not in term.constraint.arguments:
+                term = t.content[0]  # this was a sum/maximum/minimum with only one term, so we just consider this term as an expression to be optimized
     if isinstance(term, ScalarProduct):
         term = Sum(term)  # to have a PartialConstraint
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"
