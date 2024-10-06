@@ -2091,7 +2091,7 @@ def _optimize(term, minimization):
 
     ObjEntities.items = []  # TODO currently, we overwrite the objective if one was posted
     if isinstance(term, PartialConstraint):
-        if isinstance(term.constraint, ConstraintElement):
+        if isinstance(term.constraint, (ConstraintElement, ConstraintCount)):
             term = auxiliary().replace_partial_constraint(term)
         elif isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):
             t = term.constraint.arguments[TypeCtrArg.LIST]
