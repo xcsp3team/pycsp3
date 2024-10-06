@@ -36,7 +36,8 @@ def cursing():
     def _int_add(self, other):
         if not OpOverrider.activated:
             return self.__add__(other)
-        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
+        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other) + (
+                    str(type(self)) + "-" + str(type(other)))
         if self == 0:
             return other
         if isinstance(other, ScalarProduct):
