@@ -37,7 +37,7 @@ def cursing():
         if not OpOverrider.activated:
             return self.__add__(other)
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other) + (
-                    str(type(self)) + "-" + str(type(other)))
+                str(type(self)) + "-" + str(type(other)))
         if self == 0:
             return other
         if isinstance(other, ScalarProduct):
@@ -557,6 +557,9 @@ class OpOverrider:
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            assert other.val in (0, 1)
+            return self if other.val == 0 else ConstraintDummyConstant(1)
         if isinstance(other, bool) and len(queue_in) == 0:
             # TODO how to extend it (without second condition part) ? should we use an option -dontcombinebool (pb with JapanEncoding)
             return self if other is False else True
@@ -576,6 +579,9 @@ class OpOverrider:
         return Node.disjunction(self, other)
 
     def __and__(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            assert other.val in (0, 1)
+            return self if other.val == 1 else ConstraintDummyConstant(0)
         if isinstance(other, bool) and len(queue_in) == 0:
             # TODO how to extend it (without second condition part) ? should we use an option -dontcombinebool (pb with JapanEncoding)
             return self if other is True else False

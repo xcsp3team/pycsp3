@@ -1,9 +1,11 @@
 import types
 from collections import OrderedDict
+from enum import unique
+from itertools import permutations, combinations
 
 from pycsp3 import functions
 from pycsp3.classes import main
-from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, ConditionNode
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, ConditionNode, inside
 from pycsp3.classes.auxiliary.enums import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeAnn, TypeConditionOperator, TypeOrderedOperator, TypeRank
 from pycsp3.classes.auxiliary.tables import to_ordinary_table, to_reified_ordinary_table
 from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr
@@ -12,7 +14,7 @@ from pycsp3.classes.nodes import TypeNode, Node
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
 from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, integers_to_string, table_to_string, flatten, is_matrix, is_2d_list, error, error_if, \
-    warning, is_windows, possible_range
+    warning, is_windows, possible_range, unique_type_in
 
 
 class Parameter:
@@ -948,6 +950,16 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
         assert isinstance(other, int)
         return ConstraintDummyConstant(1 if self.val > other else 0)
 
+    def __or__(self, other):
+        assert isinstance(other, ECtr) and self.val == 0, "For the moment"
+        return other
+
+    def __add__(self, other):
+        return other if self.val == 0 else other + self.val
+
+    def __mul__(self, other):
+        return self if self.val == 0 else other if self.val == 1 else other * self.val
+
 
 ''' PartialConstraints and ScalarProduct '''
 
@@ -988,15 +1000,27 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return auxiliary().replace_partial_constraint(self), auxiliary().replace_partial_constraint(other)
 
     def __eq__(self, other):
-        if isinstance(self.constraint, ConstraintElement) and is_1d_list(other, (int, Variable)):
+        if isinstance(self.constraint, ConstraintElement):
             tab = self.constraint.arguments[TypeCtrArg.LIST].content
             idx = self.constraint.arguments[TypeCtrArg.INDEX].content
-            assert isinstance(tab, list) and all(isinstance(row, (tuple, list)) and len(row) == len(other) for row in tab)
-            if isinstance(tab[0], tuple):
-                tab = curser.cp_array([curser.cp_array(row) for row in tab])
-            return [tab[:, i][idx] == other[i] for i in range(len(other))]
-            # return [tab[idx][i] == other[i] for i in range(len(other))]
-
+            if is_1d_list(other, (int, Variable)):
+                assert isinstance(tab, list) and all(isinstance(row, (tuple, list)) and len(row) == len(other) for row in tab)
+                if isinstance(tab[0], tuple):
+                    tab = curser.cp_array([curser.cp_array(row) for row in tab])
+                return [tab[:, i][idx] == other[i] for i in range(len(other))]
+            elif isinstance(other, (set, frozenset)):
+                # for the moment, one possible use is handled below TODO other possible uses
+                assert all(isinstance(v, Variable) for v in other)
+                other = sorted(list(other), key=lambda x: x.id)  # we need to impose an order to build a table constraint
+                assert isinstance(idx, Variable) and all(isinstance(t, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in t) for t in tab)
+                tab = [sorted(list(set(t))) for t in tab]  # to discard possible multi-occurrences (raise a waring if it is not the case?)
+                T = []
+                for i, row in enumerate(tab):
+                    assert len(row) <= len(other)
+                    for p in permutations(row):
+                        for c in combinations(range(len(other)), len(row)):
+                            T.append((i,) + tuple(inside(row) if j not in c else p[c.index(j)] for j in range(len(other))))
+                return (idx, other) in T
         other = self._simplify_with_auxiliary_variables(other)
         if isinstance(self.constraint, (ConstraintElement, ConstraintElementMatrix)) and isinstance(other, (int, Variable)):
             if isinstance(self.constraint, ConstraintElement):

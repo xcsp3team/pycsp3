@@ -1340,7 +1340,7 @@ def Sum(term, *others, condition=None):
     if any(v is None or (isinstance(v, int) and v == 0) for v in terms):  # note that False is of type int and equal to 0
         terms = [v for v in terms if v is not None and not (isinstance(v, int) and v == 0)]
     if len(terms) == 0:
-        return 0  # TODO ConstraintDummyConstant(0)   # None
+        return ConstraintDummyConstant(0)  # 0, None
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
     checkType(terms, ([Variable], [Node], [Variable, Node], [ScalarProduct]))  # , [PartialConstraint], [ECtr]))
     terms, coeffs = _get_terms_coeffs(terms)
