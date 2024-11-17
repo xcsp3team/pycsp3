@@ -149,7 +149,10 @@ def cursing():
         if isinstance(other, Node):
             other = auxiliary().replace_node(other)
         if isinstance(other, PartialConstraint):
-            queue_in.append((list(self), auxiliary().replace_partial_constraint(other)))
+            if len(self) > 0 and all(isinstance(v, int) for v in self):  # TODO more cases?
+                queue_in.append((list(self), other))
+            else:
+                queue_in.append((list(self), auxiliary().replace_partial_constraint(other)))
             return True
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
             queue_in.append((list(self), other))

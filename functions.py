@@ -206,8 +206,11 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         r = len(inspect.signature(dom).parameters)  # r=1 means that it must be a lambda *args:
         assert len(size) == r or r == 1, "The number of arguments of the lambda must be equal to the number of dimensions of the multidimensional array "
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
-    if isinstance(dom, (tuple, list, set)):
-        dom = Domain(set(flatten(dom)))
+    if isinstance(dom, (tuple, list, set, frozenset)):
+        vals = set(flatten(dom))
+        assert len(vals) > 0
+        min_value, max_value = min(vals), max(vals)
+        dom = range(min_value, max_value + 1) if isinstance(min_value, int) and 3 < len(vals) == (max_value - min_value + 1) else Domain(vals)
     var_objects = Variable.build_variables_array(array_name, size, dom)
     if isinstance(array_name, list):
         assert (len(array_name) == len(var_objects))
