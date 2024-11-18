@@ -543,7 +543,7 @@ class ConstraintSum(ConstraintWithCondition):
         assert isinstance(term, (Variable, Node))
         self.arguments[TypeCtrArg.LIST].content.append(term)
         if TypeCtrArg.COEFFS in self.arguments:
-            self.arguments[TypeCtrArg.COEFFS].content.append(term)
+            self.arguments[TypeCtrArg.COEFFS].content.append(1)
         return self
 
 
