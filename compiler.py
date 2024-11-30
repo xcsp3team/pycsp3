@@ -115,7 +115,10 @@ def _load_data():
                 tmp = arg.split('=')
                 val = _arg_value(tmp[1])
                 compilation_data[tmp[0]] = val
-                s += "-" + str(val)
+                df = options.dataformat
+                if df:
+                    assert df.count("{") == 1
+                s += "-" + (df.format(val) if df else str(val))
             else:
                 assert arg.endswith("json")
                 assert os.path.exists(arg), "The file " + arg + " does not exist (in the specified directory)." + str(os.path)

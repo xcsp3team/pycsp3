@@ -1645,6 +1645,7 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     :return: a Cardinality constraint
     """
     terms = flatten(within, within_complement)
+    assert len(terms) > 0, "Cardinality constraint posted over a sequence of zero variable"
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
