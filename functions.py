@@ -1944,12 +1944,13 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
     """
     terms = flatten(partition, partition_complement)
     assert len(terms) > 0, "A binPacking with an empty scope"
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
     checkType(terms, [Variable])
     if isinstance(sizes, int):
         sizes = [sizes for _ in range(len(terms))]
     sizes = flatten(sizes)
     checkType(sizes, [int])
-    assert len(terms) == len(sizes)
+    assert len(terms) == len(sizes), str(len(terms)) + " vs " + str(len(sizes))
     assert limits is None or loads is None
     if limits is not None:
         assert condition is None

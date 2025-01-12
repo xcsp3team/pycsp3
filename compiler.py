@@ -65,7 +65,7 @@ class Compilation:
 def _load_options():
     # note that parser and export are automatically rewritten as dataparser and dataexport
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output", "suffix", "callback")
-    options.set_flags("dataexport", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
+    options.set_flags("dataexport", "datasober", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
                       "keepSmartTransitions", "keepsum", "unchangescalar", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues",
                       "groupsumcoeffs", "usemeta", "dontuseauxcache", "dontadjustindexing", "dontbuildsimilarconstraints", "debug", "mini", "uncurse",
                       "existbyelement")

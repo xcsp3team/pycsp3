@@ -11,7 +11,7 @@ from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.utilities import (flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_1d_tuple, is_2d_list, is_matrix, is_square_matrix,
-                                    is_cube, ANY, structured_list, warning, error_if)
+                                    is_cube, ANY, structured_list, warning, error_if, AttributeDict)
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -1014,6 +1014,9 @@ class ListMix(list):  # list that may contain together integers, variables and n
         return structured_list(self)
 
 
+test = False
+
+
 def convert_to_namedtuples(obj):
     def with_only_alphanumeric_keys(obj):  # alphanum or '_'
         if isinstance(obj, dict):
@@ -1042,17 +1045,23 @@ def convert_to_namedtuples(obj):
             if is_1d_list(obj, Variable):
                 return ListVar(obj)
             if is_1d_list(obj, dict):
+                if test:
+                    return [AttributeDict(recursive_convert_to_namedtuples(v)) for v in obj]
                 nt = namedtuple("nt" + str(recursive_convert_to_namedtuples.cnt), obj[0].keys())
                 recursive_convert_to_namedtuples.cnt += 1
                 return [nt(*(recursive_convert_to_namedtuples(v) for (k, v) in d.items())) for d in obj]
             t = [recursive_convert_to_namedtuples(v) for v in obj]
             return ListInt(t) if isinstance(t[0], ListInt) else ListVar(t) if isinstance(t[0], ListVar) else t
         if isinstance(obj, dict):
+            if test:
+                return AttributeDict({k: recursive_convert_to_namedtuples(v) for (k, v) in obj.items()})
             nt = namedtuple("nt" + str(recursive_convert_to_namedtuples.cnt), obj.keys())
             recursive_convert_to_namedtuples.cnt += 1
             return nt(*(recursive_convert_to_namedtuples(v) for (k, v) in obj.items()))
         return obj
 
+    if options.datasober:
+        return obj
     if not with_only_alphanumeric_keys(obj):
         warning("some key of some dictionary involved in the data is not alphanumeric, so no conversion to named tuples is performed\n")
         return obj  # not possible to make the conversion in that case

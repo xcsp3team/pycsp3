@@ -56,6 +56,7 @@ CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
 
 Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
+Item = namedtuple("Item", ("bin", "size"))
 
 if sys.argv:
     from pycsp3.compiler import Compilation
