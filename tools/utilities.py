@@ -250,6 +250,23 @@ def integer_scaling(values):
     return [int(w * (10 ** scale)) for w in [Decimal(v) for v in values]]
 
 
+def number_of_values_for_sum_ge(tab, limit, reverse=False):
+    assert isinstance(tab, list) and all(tab[i] <= tab[i + 1] for i in range(len(tab) - 1))
+    csum = 0
+    if not reverse:
+        for i, v in enumerate(tab):
+            csum += v
+            if csum >= limit:
+                return i + 1
+        return -1
+    else:
+        for i in range(len(tab) - 1, -1, -1):
+            csum += tab[i]
+            if csum >= limit:
+                return len(tab) - i
+        return -1
+
+
 def decrement(t):
     if isinstance(t, int):
         return t - 1

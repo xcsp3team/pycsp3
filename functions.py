@@ -1908,6 +1908,7 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         origins = auxiliary().replace_ints(origins)
     checkType(origins, [Variable])
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else flatten(lengths)
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(lengths, nodes_too=True)
     if _is_mixed_list(lengths):
         lengths = auxiliary().replace_ints(lengths)
     checkType(lengths, ([Variable], [int]))
