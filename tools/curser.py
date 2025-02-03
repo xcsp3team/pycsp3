@@ -465,6 +465,8 @@ class OpOverrider:
         return Node.build(TypeNode.SUB, other, self)
 
     def __mul__(self, other):
+        # if isinstance(other, int) and other == 1:
+        #     return self
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
         # if isinstance(other, int) and other == 0: return Node(TypeNode.INT, 0)
@@ -478,6 +480,8 @@ class OpOverrider:
         return Node.build(TypeNode.MUL, other, self)
 
     def __mod__(self, other):
+        if isinstance(self, Variable) and isinstance(other, int) and 0 <= self.dom.smallest_value() and self.dom.greatest_value() < other:
+            return self
         return Node.build(TypeNode.MOD, self, other)
 
     def __pow__(self, other):

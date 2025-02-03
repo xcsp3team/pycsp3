@@ -1599,6 +1599,8 @@ def NValues(within, *within_complement, excepting=None, condition=None):
             terms[i] = auxiliary().replace_partial_constraint(t)
         elif isinstance(t, int):
             terms[i] = auxiliary().replace_int(t)
+    if _is_mixed_list(terms):
+        terms = [auxiliary().replace_node(t) if isinstance(t, Node) else t for t in terms]
     checkType(terms, ([Variable], [Node]))
     if excepting is not None:
         excepting = flatten(excepting)
