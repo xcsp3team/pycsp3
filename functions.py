@@ -2241,16 +2241,18 @@ def value(x, *, sol=-1):
     return x.values[sol]
 
 
-def values(m, *, sol=-1):
+def values(variables, *variables_complement, sol=-1):
     """
     Returns a list similar to the specified structure with the values assigned to the involved variables
-    when the solution at the specified index has been found
+    when the solution in the specified order (sol) has been found
 
-    :param m: a structure (typically list) of any dimension involving variables
-    :param sol: the index of a found solution
+    :param variables: the first term (typically, a list) containing variables on which the function applies
+    :param variables_complement: the other terms (if any) on which the function applies
+    :param sol: the order (index) of a found solution
     """
+    m = flatten(variables, variables_complement)
     if isinstance(m, Variable):
         return value(m, sol=sol)
     if isinstance(m, (list, tuple, set, frozenset, types.GeneratorType)):
-        g = [values(v, sol=sol) for v in m]
+        g = [value(v, sol=sol) for v in m]
         return ListInt(g) if len(g) > 0 and (isinstance(g[0], (int, ListInt)) or g[0] == ANY) else g
