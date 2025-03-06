@@ -2230,27 +2230,27 @@ def unpost(i=None, j=None):
         CtrEntities.items[i].delete(j)
 
 
-def value(x, *, sol=-1):
+def value(model_variable, *, sol=-1):
     """
     Returns the value assigned to the specified variable when the solution at the specified index has been found
 
-    :param x: a variable
+    :param model_variable: a variable of the model
     :param sol: the index of a found solution
     """
-    assert isinstance(x, Variable) and len(x.values) > 0
-    return x.values[sol]
+    assert isinstance(model_variable, Variable) and len(model_variable.values) > 0
+    return model_variable.values[sol]
 
 
-def values(variables, *variables_complement, sol=-1):
+def values(model_variables, *model_variables_complement, sol=-1):
     """
     Returns a list similar to the specified structure with the values assigned to the involved variables
     when the solution in the specified order (sol) has been found
 
-    :param variables: the first term (typically, a list) containing variables on which the function applies
-    :param variables_complement: the other terms (if any) on which the function applies
+    :param model_variables: the first term (typically, a list) containing variables on which the function applies
+    :param model_variables_complement: the other terms (if any) on which the function applies
     :param sol: the order (index) of a found solution
     """
-    m = flatten(variables, variables_complement)
+    m = flatten(model_variables, model_variables_complement)
     if isinstance(m, Variable):
         return value(m, sol=sol)
     if isinstance(m, (list, tuple, set, frozenset, types.GeneratorType)):

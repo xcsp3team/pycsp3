@@ -833,7 +833,7 @@ class ConstraintAdhoc(ConstraintUnmergeable):
         if note:
             self.arg(TypeCtrArg.NOTE, note)
         for k, v in d.items():
-            self.arg(k, v, adhoc=True)
+            self.arg(k, v, content_ordered=True, adhoc=True)
 
 
 class ConstraintInstantiationRefutation(Constraint):
