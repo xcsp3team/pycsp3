@@ -270,40 +270,43 @@ class ConstraintExtension(Constraint):
                 if any(isinstance(v, (list, set, frozenset)) for v in t):
                     table[i] = tuple(tuple(v) if isinstance(v, (list, set, frozenset)) else v for v in t)
             h = hash(tuple(table))
-
         if len(scope) == 1:  # if arity 1
             if h not in ConstraintExtension.cache:
                 ConstraintExtension.cache[h] = integers_to_string(table) if isinstance(table[0], int) else " ".join(v for v in sorted(table))
             return ConstraintExtension.cache[h]
 
         possible_parallelism = not options.safe and not is_windows()
-        if h in ConstraintExtension.cache_for_knowing_if_hybrid:
-            hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[h]
+        if options.safetables:
+            hybrid = 0  # we assume that the tables are ordinary/starred
         else:
-            check_hybrid2 = True
-            hybrid = 0
-            for t in table:
-                for v in t:
-                    error_if(isinstance(v, Node), "Bad form")
-                    if isinstance(v, ConditionNode):
-                        hybrid = 2
+            if h in ConstraintExtension.cache_for_knowing_if_hybrid:
+                hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[h]
+            else:
+                check_hybrid2 = True
+                hybrid = 0
+                for t in table:
+                    for v in t:
+                        error_if(isinstance(v, Node), "Bad form")
+                        if isinstance(v, ConditionNode):
+                            hybrid = 2
+                            if not check_hybrid2:
+                                break
+                            else:
+                                assert True  # TODO test to be written
+                        elif hybrid == 0 and not (isinstance(v, (int, str)) or v is ANY):
+                            hybrid = 1
+                    if hybrid == 2:
                         if not check_hybrid2:
                             break
-                        else:
-                            assert True  # TODO test to be written
-                    elif hybrid == 0 and not (isinstance(v, (int, str)) or v is ANY):
-                        hybrid = 1
-                if hybrid == 2:
-                    if not check_hybrid2:
-                        break
-            # hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelization attempt showed no gain.
-            ConstraintExtension.cache_for_knowing_if_hybrid[h] = hybrid
+                # hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelization attempt showed no gain.
+                ConstraintExtension.cache_for_knowing_if_hybrid[h] = hybrid
 
         if hybrid == 0:  # if not hybrid
             if not self.restrict_table_wrt_domains:
                 if h not in ConstraintExtension.cache:  # we can directly use caching here (without paying attention to domains)
                     table.sort()
-                    table = ConstraintExtension.remove_redundant_tuples(table)
+                    if not options.safetables:
+                        table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=possible_parallelism)
                 return ConstraintExtension.cache[h]
             else:

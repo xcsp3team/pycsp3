@@ -68,7 +68,7 @@ def _load_options():
     options.set_flags("dataexport", "datasober", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
                       "keepSmartTransitions", "keepsum", "unchangescalar", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues",
                       "groupsumcoeffs", "usemeta", "dontuseauxcache", "dontadjustindexing", "dontbuildsimilarconstraints", "debug", "mini", "uncurse",
-                      "existbyelement")
+                      "existbyelement", "safetables")
 
     if options.checker is None:
         options.checker = "fast"

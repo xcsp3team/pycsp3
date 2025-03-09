@@ -721,20 +721,21 @@ def _Extension(*, scope, table, positive=True):
     if len(scope) == 1:
         assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
     else:  # if all(isinstance(x, VariableInteger) for x in scope):
-        for i, t in enumerate(table):
-            if isinstance(t, (list, types.GeneratorType)):
-                table[i] = t = tuple(t)
-            else:
-                assert isinstance(t, tuple), str(t)
-            # we now manage shortcut expressions as in col(i) instead of eq(col(i)), and discard trivial ranges
-            if any(isinstance(v, (range, Node)) for v in t):
-                table[i] = tuple(eq(v) if isinstance(v, Node) else v.start if isinstance(v, range) and len(v) == 1 else v for v in t)
-            if len(t) != len(scope):
-                t = tuple(flatten(t))
-                assert len(t) == len(scope), (
-                        "The length of each tuple must be the same as the arity (here, we have " + str(len(t)) + " vs " + str(len(scope)) + "). "
-                        + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
-                table[i] = t
+        if not options.safetables:
+            for i, t in enumerate(table):
+                if isinstance(t, (list, types.GeneratorType)):
+                    table[i] = t = tuple(t)
+                else:
+                    assert isinstance(t, tuple), str(t)
+                # we now manage shortcut expressions as in col(i) instead of eq(col(i)), and discard trivial ranges
+                if any(isinstance(v, (range, Node)) for v in t):
+                    table[i] = tuple(eq(v) if isinstance(v, Node) else v.start if isinstance(v, range) and len(v) == 1 else v for v in t)
+                if len(t) != len(scope):
+                    t = tuple(flatten(t))
+                    assert len(t) == len(scope), (
+                            "The length of each tuple must be the same as the arity (here, we have " + str(len(t)) + " vs " + str(len(scope)) + "). "
+                            + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
+                    table[i] = t
     return ECtr(ConstraintExtension(scope, table, positive, options.keephybrid, options.restricttableswrtdomains))
 
 
