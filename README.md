@@ -160,6 +160,23 @@ For Windows:
 python -m pip install --upgrade pycsp3
 ```
 
+## Using the development version via Github and pip
+
+You can install the current development version (the master branch of this repo) by explicitly indicating that you want to use the repo to pip.
+
+For linux/Mac:
+
+```console
+pip3 install --upgrade git+https://github.com/xcsp3team/pycsp3.git
+```
+
+For Windows:
+
+```console
+python -m pip install --upgrade git+https://github.com/xcsp3team/pycsp3.git
+```
+
+
 ## Working with a Pool of Models
 
 A GitHub repository is now available with more than 340 models
