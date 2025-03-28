@@ -183,10 +183,13 @@ class Node(Entity):
         self.type = node_type
         self.cnt = [args] if isinstance(args, Node) else args  # for empty SET (we have []])
         # cnt is for content (either a leaf value or a list of sons)
-        self.arity = len(self.cnt) if isinstance(self.cnt, list) else 0
+        # self.arity = len(self.cnt) if isinstance(self.cnt, list) else 0
 
         self.abstractTree = None
         self.abstractValues = None
+
+    def arity(self):
+        return len(self.cnt) if isinstance(self.cnt, list) else 0
 
     def __bool__(self):
         warning("A node is evaluated as a Boolean (technically, __bool__ is called)."
@@ -217,7 +220,7 @@ class Node(Entity):
         if not isinstance(other, Node) or self.type != other.type or self.is_leaf() != other.is_leaf():
             return False
         if not self.is_leaf():
-            return self.arity == other.arity and all(self[i].eq__safe(other[i]) for i in range(self.arity))
+            return self.arity() == other.arity() and all(self[i].eq__safe(other[i]) for i in range(self.arity()))
         return self.cnt.eq__safe(other.cnt) if isinstance(self.cnt, Variable) else self.cnt == other.cnt
 
     def __str_hybrid__(self):
@@ -227,7 +230,7 @@ class Node(Entity):
             return str(self.cnt)
         if self.type == ADD or self.type == SUB:
             msg = "An hybrid tuple must be of the form {eq|lt|le|ge|gt|ne}{var|integer}{+|-}{var|integer}"
-            assert self.arity == 2, msg
+            assert self.arity() == 2, msg
             assert self[0].type in (INT, COL) and self[1].type in (INT, COL), msg
             return self[0].__str_hybrid__() + ("+" if self.type == TypeNode.ADD else "-") + self[1].__str_hybrid__()
         else:
@@ -364,7 +367,7 @@ class Node(Entity):
             self.cnt = sons
 
     def var_val_if_binary_type(self, t):
-        if self.type != t or self.arity != 2 or self[0].type == self[1].type:
+        if self.type != t or self.arity() != 2 or self[0].type == self[1].type:
             return None
         if self[0].type == VAR and self[1].type == INT:
             return self[0].cnt, self[1].cnt
@@ -374,7 +377,7 @@ class Node(Entity):
             return None
 
     def tree_val_if_binary_type(self, t):
-        if self.type != t or self.arity != 2 or self[0].type == self[1].type:
+        if self.type != t or self.arity() != 2 or self[0].type == self[1].type:
             return None
         if self[0].type != INT and self[1].type == INT:
             return self[0].cnt if self[0].type == VAR else self[0], self[1].cnt
@@ -386,7 +389,7 @@ class Node(Entity):
     def first_node_satisfying(self, predicate):
         if predicate(self):
             return self
-        if self.arity == 0:
+        if self.arity() == 0:
             return None  # since node already tested just above
         return next((v for son in self.cnt if (v := son.first_node_satisfying(predicate)) is not None), None)
 
@@ -533,6 +536,7 @@ class Node(Entity):
         # if len(args) == 2 and isinstance(args[0], Variable) and isinstance(args[1], int):
         #     if (args[1] == 1 and type in (TypeNode.MUL, TypeNode.DIV)) or (args[1] == 0 and type in (TypeNode.ADD, TypeNode.SUB)):
         #         return Node(TypeNode.VAR,args[0])
+
         node = Node(tn, Node._create_sons(*args))
         if tn == EQ and all(son.type.is_predicate_operator() for son in node.cnt):
             node = Node(IFF, node.cnt)
@@ -596,11 +600,11 @@ class Node(Entity):
             if node1.type == SET:
                 return 0  # because two empty sets
             assert False
-        if node1.arity < node2.arity:
+        if node1.arity() < node2.arity():
             return -1
-        if node1.arity > node2.arity:
+        if node1.arity() > node2.arity():
             return 1
-        for i in range(node1.arity):
+        for i in range(node1.arity()):
             res = Node.compare_to(node1[i], node2[i])
             if res != 0:
                 return res
@@ -660,9 +664,9 @@ class Matcher:
         if target is var_or_val:
             return source.type in (VAR, INT)
         if target is any_add_val:
-            return source.type == ADD and source.arity == 2 and source[1].type == INT
+            return source.type == ADD and source.arity() == 2 and source[1].type == INT
         if target is var_add_val:
-            return source.type == ADD and source.arity == 2 and source[0].type == VAR and source[1].type == INT
+            return source.type == ADD and source.arity() == 2 and source[0].type == VAR and source[1].type == INT
         if target is sub:
             return source.type == SUB
         if target is non:
@@ -670,19 +674,19 @@ class Matcher:
         if target is set_vals:  # abstract set => we control that source is either an empty set or a set built on only longs
             return source.type == SET and all(son.type == INT for son in source.cnt)
         if target is min_vars:  # abstract min => we control that source is a min built on only variables
-            return source.type == MIN and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type == MIN and source.arity() >= 2 and all(son.type == VAR for son in source.cnt)
         if target is max_vars:  # abstract max => we control that source is a max built on only variables
-            return source.type == MAX and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type == MAX and source.arity() >= 2 and all(son.type == VAR for son in source.cnt)
         if target is logic_vars:
-            return source.type.is_logical_operator() and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type.is_logical_operator() and source.arity() >= 2 and all(son.type == VAR for son in source.cnt)
         if target is add_vars:
-            return source.type == ADD and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type == ADD and source.arity() >= 2 and all(son.type == VAR for son in source.cnt)
         if target is mul_vars:
-            return source.type == MUL and source.arity >= 2 and all(son.type == VAR for son in source.cnt)
+            return source.type == MUL and source.arity() >= 2 and all(son.type == VAR for son in source.cnt)
         if target is add_mul_vals:
-            return source.type == ADD and source.arity >= 2 and all(son.type == VAR or x_mul_k.matches(son) for son in source.cnt)
+            return source.type == ADD and source.arity() >= 2 and all(son.type == VAR or x_mul_k.matches(son) for son in source.cnt)
         if target is add_mul_vars:
-            return source.type == ADD and source.arity >= 2 and all(x_mul_y.matches(son) for son in source.cnt)
+            return source.type == ADD and source.arity() >= 2 and all(x_mul_y.matches(son) for son in source.cnt)
         if target.type != SPECIAL:
             if target.is_leaf() != source.is_leaf() or target.type != source.type:
                 return False
@@ -708,7 +712,7 @@ class Matcher:
                 return False
         if not isinstance(target, NodeAbstract) and target.is_leaf():
             return True  # it seems that we have no more control to do
-        return target.arity == source.arity and all(self._matching(source[i], target[i], level + 1) for i in range(target.arity))
+        return target.arity() == source.arity() and all(self._matching(source[i], target[i], level + 1) for i in range(target.arity()))
 
     def matches(self, tree: Node):
         return self._matching(tree, self.target, 0)
@@ -737,7 +741,7 @@ any_symop_not = Matcher(NodeAbstract(SYMOP, [any_node, non]))
 x_mul_k__eq_l = Matcher(Node(EQ, [Node(MUL, [var, val]), val]))
 l__eq_x_mul_k = Matcher(Node(EQ, [val, Node(MUL, [var, val])]))
 flattenable = Matcher(any_cond, lambda r, p: p == 0 and r.type.is_flattenable() and any(son.type == r.type for son in r.cnt))
-mergeable = Matcher(any_cond, lambda r, p: p == 0 and r.type.is_mergeable() and r.arity >= 2 and r[-1].type == r[- 2].type == INT)
+mergeable = Matcher(any_cond, lambda r, p: p == 0 and r.type.is_mergeable() and r.arity() >= 2 and r[-1].type == r[- 2].type == INT)
 sub_relop_sub = Matcher(NodeAbstract(RELOP, [sub, sub]))
 any_relop_sub = Matcher(NodeAbstract(RELOP, [any_node, sub]))
 sub_relop_any = Matcher(NodeAbstract(RELOP, [sub, any_node]))

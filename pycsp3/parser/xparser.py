@@ -293,7 +293,7 @@ class Recognizer:
         self.cb = callbacks
 
         def basic_condition(r: Node):
-            assert r.type.is_relational_operator() and r.arity == 2 and r[1].type in (TypeNode.VAR, TypeNode.INT)
+            assert r.type.is_relational_operator() and r.arity() == 2 and r[1].type in (TypeNode.VAR, TypeNode.INT)
             return Condition.build_condition((r.relop(0), r[1].cnt))
 
         self.unary_rules = {

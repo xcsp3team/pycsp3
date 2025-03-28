@@ -963,6 +963,9 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
     def __mul__(self, other):
         return self if self.val == 0 else other if self.val == 1 else other * self.val
 
+    def __str__(self):
+        return "Dummy: " + str(self.val)
+
 
 ''' PartialConstraints and ScalarProduct '''
 

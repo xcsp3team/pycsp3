@@ -1339,6 +1339,7 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
+
     if any(isinstance(t, ScalarProduct) for t in terms):
         terms = flatten([t.to_terms() if isinstance(t, ScalarProduct) else t for t in terms])
     if any(v is None or (isinstance(v, int) and v == 0) for v in terms):  # note that False is of type int and equal to 0
@@ -1355,8 +1356,8 @@ def Sum(term, *others, condition=None):
             d[t] = d.get(t, 0) + 1
         if any(v > 1 for v in d.values()):
             terms, coeffs = [list(v) for v in zip(*d.items())]
-    terms, coeffs = _manage_coeffs(terms, coeffs)
 
+    terms, coeffs = _manage_coeffs(terms, coeffs)
     if len(terms) == 1 and (coeffs is None or coeffs[0] == 1):
         if condition is None:
             return terms[0]
@@ -1430,6 +1431,8 @@ def Exist(within, *within_complement, value=None, reified_by=None):
     :return: a constraint Count
     """
     terms = flatten(within, within_complement)
+    if len(terms) == 0:
+        return ConstraintDummyConstant(0)
     assert len(terms) >= 1
     if reified_by is not None:
         assert isinstance(reified_by, Variable) and reified_by.dom.is_binary()
@@ -1648,6 +1651,10 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     :return: a Cardinality constraint
     """
     terms = flatten(within, within_complement)
+    if len(terms) == 0:
+        assert all((isinstance(v, int) and v == 0) or (isinstance(v, range) and 0 in v) for k, v in occurrences.items())  # TODO and for Var ?
+        warning("A constraint Cardinality discarded because defined with 0 term")
+        return ConstraintDummyConstant(1)
     assert len(terms) > 0, "Cardinality constraint posted over a sequence of zero variable"
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
