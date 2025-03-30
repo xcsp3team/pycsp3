@@ -544,8 +544,15 @@ class OpOverrider:
             return object.__eq__(self, other)
         if isinstance(other, (tuple, list)):
             other = other[0] if len(other) == 1 else functions.conjunction(other)
-        if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
-            return Node.build(TypeNode.EQ, self[0], self[1])
+
+        if isinstance(other, int):
+            if other == 1 and isinstance(self, Variable) and self.dom.is_binary() and not self.negation:
+                return self
+            if other == 0 and isinstance(self, Variable) and self.dom.is_binary() and self.negation:
+                return self
+            if other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
+                return Node.build(TypeNode.EQ, self[0], self[1])
+
         self, other = OpOverrider._replace(self, other)
         # if isinstance(other, ConstraintDummyConstant):
         #     other = other.val
@@ -560,8 +567,14 @@ class OpOverrider:
             return object.__ne__(self, other)
         if isinstance(other, (tuple, list)):
             other = other[0] if len(other) == 1 else functions.conjunction(other)
-        if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
-            return Node.build(TypeNode.NE, self[0], self[1])
+
+        if isinstance(other, int):
+            if other == 0 and isinstance(self, Variable) and self.dom.is_binary() and not self.negation:
+                return self
+            if other == 1 and isinstance(self, Variable) and self.dom.is_binary() and self.negation:
+                return self
+            if other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
+                return Node.build(TypeNode.NE, self[0], self[1])
         self, other = OpOverrider._replace(self, other)
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 

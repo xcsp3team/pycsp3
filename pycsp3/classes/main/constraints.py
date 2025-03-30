@@ -1,6 +1,4 @@
-import types
 from collections import OrderedDict
-from enum import unique
 from itertools import permutations, combinations
 
 from pycsp3 import functions
@@ -14,7 +12,7 @@ from pycsp3.classes.nodes import TypeNode, Node
 from pycsp3.dashboard import options
 from pycsp3.tools import curser
 from pycsp3.tools.utilities import ANY, is_1d_list, matrix_to_string, integers_to_string, table_to_string, flatten, is_matrix, is_2d_list, error, error_if, \
-    warning, is_windows, possible_range, unique_type_in
+    warning, is_windows, possible_range
 
 
 class Parameter:

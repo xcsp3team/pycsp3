@@ -555,6 +555,19 @@ def Slide(*args, expression=None, circular=None, offset=None, collect=None):
     return ESlide([EToGather(entities)])
 
 
+def _01_to_node(arg):
+    if isinstance(arg, Variable):
+        assert arg.dom.is_binary()
+        b = arg.negation
+        arg.negation = False
+        return Node.build(TypeNode.EQ, arg, 0 if b else 1)  # transformed into a basic logical equation
+    if isinstance(arg, PartialConstraint):
+        assert isinstance(arg.constraint, ConstraintElement)  # TODO to be extended (other cases should be possible)
+        assert all(isinstance(t, Variable) and t.dom.is_binary() for t in arg.constraint.arguments[TypeCtrArg.LIST].content)  # TODO to be extended
+        return arg == 1
+    return arg
+
+
 def _group(*_args, block=False):
     def _remove_dummy_constraints(tab):
         if any(isinstance(v, ConstraintDummyConstant) for v in tab):
@@ -580,6 +593,8 @@ def _group(*_args, block=False):
     tab = _remove_dummy_constraints(flatten(*_args))
     if len(tab) == 0:
         return None
+    for i in range(len(tab)):
+        tab[i] = _01_to_node(tab[i])
     entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(tab))
     checkType(entities, [ECtr, ECtrs, EMetaCtr])
     return EBlock(_block_reorder(entities)) if block else EToGather(entities)
@@ -648,11 +663,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
                 for j, l in enumerate(arg):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
-        if isinstance(arg, Variable):
-            assert arg.dom.is_binary()
-            b = arg.negation
-            arg.negation = False
-            arg = (arg == (0 if b else 1))  # transformed into a basic logical equation
+        arg = _01_to_node(arg)
         assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list)), "non authorized type " + str(arg) + " " + str(type(arg))
         comment_at_2 = any(comment != '' for comment in comments2[i])
         tag_at_2 = any(tag != '' for tag in tags2[i])
