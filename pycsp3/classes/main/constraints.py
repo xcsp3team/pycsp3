@@ -671,10 +671,8 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         if index is not None:
             lst_flatten = flatten(lst)
             aux = auxiliary().replace_element_index(len(lst_flatten), index)
-            if aux:  # this is the case when we need another variable to have a correct indexing
-                self.arg(TypeCtrArg.INDEX, aux, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
-            else:
-                self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
+            index = index if aux is None else aux  # aux is the case when we need another variable to have a correct indexing
+            self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
         if condition:
             self.arg(TypeCtrArg.CONDITION, condition)  # Condition.build_condition((TypeConditionOperator.EQ, value)))
         if reified_by is not None:
@@ -702,6 +700,12 @@ class ConstraintElementMatrix(ConstraintWithCondition):
         self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst,  # side-effect use of content_compressible for matrix
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
                      [(TypeCtrArg.START_COL_INDEX, start_col_index)] if start_col_index else []))
+
+        aux1 = auxiliary().replace_element_index(len(lst), index1)
+        index1 = index1 if aux1 is None else aux1  # aux1 is the case when we need another variable to have a correct indexing
+        aux2 = auxiliary().replace_element_index(len(lst[0]), index2)
+        index2 = index2 if aux2 is None else aux2  # aux2 is the case when we need another variable to have a correct indexing
+
         self.arg(TypeCtrArg.INDEX, [index1, index2], content_ordered=True)
         if value:
             self.arg(TypeCtrArg.CONDITION, Condition.build_condition((TypeConditionOperator.EQ, value)))
