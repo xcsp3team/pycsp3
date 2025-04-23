@@ -1425,8 +1425,18 @@ def global_indirection(c):
             pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))
             condition = Condition.build_condition((TypeConditionOperator.EQ, len(lst)))
         elif isinstance(c, ConstraintAllEqual):
-            pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
-            condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
+            mode = 0  # TODO hard coding ; which is the best way?
+            if mode == 0:
+                t = c.arguments[TypeCtrArg.LIST].content
+                if len(t) <= 1:
+                    return ConstraintDummyConstant(1)
+                return Node.build(TypeConditionOperator.EQ, t)
+                # return auxiliary().replace_node(Node.build(TypeConditionOperator.EQ, t), values=(0, 1))
+                # functions.satisfy(aux == Node.build(TypeConditionOperator.EQ, t))  # functions.conjunction(t[0] == t[i] for i in range(1, len(t))))
+            elif mode == 1:
+                pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
+                condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
+            # elif mode == 2:   TODO using a reified table here ? (see paper by O. Lhomme)
     if pc is None:
         warning("You use a global constraint/function in a complex expression.\n" +
                 "\tHowever, this constraint cannot be externalized by introducing an auxiliary variable.\n" +

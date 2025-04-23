@@ -519,7 +519,7 @@ def Match(Expr, *, Cases):
         #         (not isinstance(k, (tuple, list, set, frozenset)) and Expr == k) or (isinstance(k, (tuple, list, set, frozenset)) and Expr in k)]
 
 
-def Iff(*args, meta=True):
+def Iff(*args, meta=False):
     """
     Builds a meta-constraint Iff from the specified arguments.
     For example: Iff(Sum(x) > 10, AllDifferent(x))
@@ -1426,6 +1426,9 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
         values = [auxiliary().replace_node(value)]
     values = sorted(set(values))  # ordered set of values
     checkType(values, ([int], [Variable]))
+    if options.mini and value is not None and value == 1 and all(isinstance(term, Variable) and term.dom.is_binary() for term in terms):
+        return Sum(terms)
+
     # terms = list(terms)
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
@@ -1614,9 +1617,10 @@ def NValues(within, *within_complement, excepting=None, condition=None):
             terms[i] = auxiliary().replace_partial_constraint(t)
         elif isinstance(t, int):
             terms[i] = auxiliary().replace_int(t)
-    if _is_mixed_list(terms):
-        terms = [auxiliary().replace_node(t) if isinstance(t, Node) else t for t in terms]
-    checkType(terms, ([Variable], [Node]))
+    # if _is_mixed_list(terms):
+    #     terms = [auxiliary().replace_node(t) if isinstance(t, Node) else t for t in terms]
+    checkType(terms, ([Variable], [Node], [Variable, Node]))
+    # checkType(terms, ([Variable], [Node]))
     if excepting is not None:
         excepting = flatten(excepting)
         checkType(excepting, [int])

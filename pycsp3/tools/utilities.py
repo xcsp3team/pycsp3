@@ -267,6 +267,20 @@ def number_of_values_for_sum_ge(tab, limit, reverse=False):
         return -1
 
 
+def number_of_values_for_sum_gt(tab, limit, reverse=False):
+    return number_of_values_for_sum_ge(tab, limit + 1, reverse)
+
+
+def number_max_of_values_for_sum_le(tab, limit, reverse=False):
+    nb = number_of_values_for_sum_gt(tab, limit, reverse)
+    return len(tab) if nb == -1 else nb - 1
+
+
+def number_max_of_values_for_sum_lt(tab, limit, reverse=False):
+    nb = number_of_values_for_sum_ge(tab, limit, reverse)
+    return len(tab) if nb == -1 else nb - 1
+
+
 def decrement(t):
     if isinstance(t, int):
         return t - 1
