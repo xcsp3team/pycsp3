@@ -4,6 +4,7 @@ import sys
 import types
 from collections.abc import Iterable
 from decimal import Decimal
+from itertools import product
 from multiprocessing import cpu_count, Pool
 from time import time
 
@@ -134,12 +135,14 @@ def flatten(*args, keep_none=False, keep_tuples=False):
     return tools.curser.cp_array(t)  # previously: return t
 
 
-def is_containing(t, types, *, check_first_only=False):
+def is_containing(t, types, *, check_first_only=False):  # None are discarded
     if isinstance(t, (list, tuple, set, frozenset)):
         if len(t) == 0:
             return None
         found = False
         for v in t:
+            if v is None:
+                continue
             if not is_containing(v, types, check_first_only=check_first_only):
                 return False
             if check_first_only:
@@ -386,6 +389,14 @@ def structured_list(m, level=1):
         s = ("\n" + gap * level).join(structured_list(v, level + 1) for v in m)
         return "[\n" + gap * level + s + "\n" + (gap * (level - 1) + "]") + ("," if level > 1 else "")
     return "[" + ", ".join(str(v) for v in m) + "]"
+
+
+def build_table(domains, predicate):
+    T = []
+    for t in product(*domains):
+        if predicate(*t):
+            T.append(t)
+    return T
 
 
 def is_windows():

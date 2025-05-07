@@ -101,6 +101,8 @@ def _load_model():
 
 def _load_data():
     def _load_data_sequence(raw_data):
+        if options.dataformat is None and all(v.isdigit() for v in raw_data) and any(v[0] == '0' for v in raw_data):
+            options.dataformat = "-".join("{:0" + str(len(v)) + "d}" for v in raw_data)
         od = [None if v in None_Values else int(v) if v and v.isdigit() else v for v in raw_data]
         return OrderedDict([("f" + str(i), od[i]) for i, v in enumerate(raw_data)]), od
         # return DataVisitor(raw_data).visit(ast.parse(inspect.getsource(Compilation.model)))

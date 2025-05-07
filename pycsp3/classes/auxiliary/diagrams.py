@@ -110,6 +110,7 @@ class Automaton(Diagram):
         super().__init__(transitions)
         self.start = start
         self.final = [final] if isinstance(final, str) else sorted(q for q in set(final) if q in self.states)
+        self.access = None
         assert isinstance(self.start, str) and all(isinstance(f, str) for f in self.final), Diagram.MSG_STATE
 
     # TODO: it seems that there is a problem with this function: to be fixed!
@@ -141,6 +142,37 @@ class Automaton(Diagram):
         final = [state for state in dfa if any(tok in self.final for tok in state.split('_'))]
         transitions = [(state, symbol, dfa[state][symbol]) for state in dfa for symbol in symbols if symbol in dfa[state]]
         return Automaton(start=self.start, final=final, transitions=transitions)
+
+    def contains(self, t):  # currently can only be used if deterministic automaton
+        if self.access is None:
+            # TODO control that the automaton is deterministic
+            self.access = {(qb, w): qa for (qb, w, qa) in self.transitions}
+        state = self.start
+        for v in t:
+            if (state, v) not in self.access:
+                return None
+            state = self.access[(state, v)]
+        return state in self.final
+
+    def __rec_tuples_for(self, state, i, domains, t, T):
+        for v in domains[i]:
+            if (state, v) not in self.access:
+                continue
+            t[i] = v
+            if i + 1 == len(domains):
+                if self.access[(state, v)] in self.final:
+                    T.append(tuple(t))
+            else:
+                self.__rec_tuples_for(self.access[(state, v)], i + 1, domains, t, T)
+
+    def to_table(self, domains):
+        if self.access is None:
+            # TODO control that the automaton is deterministic
+            self.access = {(qb, w): qa for (qb, w, qa) in self.transitions}
+        T = []
+        self.__rec_tuples_for(self.start, 0, domains, [0] * len(domains), T)
+        # return  [t for t in itertools.product(*domains) if self.contains(t)]  # can be very inefficient
+        return T
 
     def __str__(self):
         return "Automaton(start=" + str(self.start) + ", " + Diagram.__str__(self) + ", final=[" + ",".join(str(v) for v in self.final) + "])"
