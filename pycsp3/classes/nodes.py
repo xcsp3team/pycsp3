@@ -8,7 +8,7 @@ from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeArithmetic
 from pycsp3.classes.auxiliary.enums import auto
 from pycsp3.classes.entities import Entity, EVar
 from pycsp3.classes.main.variables import Variable
-from pycsp3.tools.utilities import flatten, warning, neg_range, abs_range, add_range, possible_range
+from pycsp3.tools.utilities import flatten, warning, warning_if, neg_range, abs_range, add_range, possible_range
 
 ARIOP, RELOP, SETOP, UNALOP, SYMOP = TypeAbstractOperation.ARIOP, TypeAbstractOperation.RELOP, TypeAbstractOperation.SETOP, TypeAbstractOperation.UNALOP, TypeAbstractOperation.SYMOP
 
@@ -523,6 +523,10 @@ class Node(Entity):
 
     @staticmethod
     def build(node_type, *args):
+        if node_type in (DIV, MOD) and len(args) == 2 and isinstance(args[1], Variable):
+            removed = args[1].dom.remove(0)
+            warning_if(removed, "value 0 removed from the domain of " + str(args[1]) + " because involved in a division")
+
         tn = TypeNode.value_of(node_type)  # for handling the cases where type is of type str or TypeConditionOperator
         if tn is SET:
             assert len(args) == 1

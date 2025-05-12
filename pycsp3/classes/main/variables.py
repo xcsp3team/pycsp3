@@ -58,6 +58,25 @@ class Domain:
                     assert v < w
             self.values = None  # will be defined later if necessary as either a range, or a list of int or a list of str
 
+    def remove(self, v):
+        assert self.values is None
+        if v in self.original_values:
+            self.original_values.remove(v)
+            return True
+        else:
+            for i, w in enumerate(self.original_values):
+                if isinstance(w, range) and v in w:
+                    if v == w.start:
+                        self.original_values[i] = range(v + 1, w.stop, w.step) if v + 1 != w.stop - 1 else v + 1
+                    elif v == w.stop - 1:
+                        self.original_values[i] = range(w.start, w.stop - 1, w.step) if w.start != w.stop - 2 else w.start
+                    else:
+                        assert w.step == 1  # for the moment
+                        self.original_values[i] = range(w.start, v) if w.start != v - 1 else w.start
+                        self.original_values.insert(i + 1, range(v + 1, w.stop) if v + 1 != w.stop - 1 else v + 1)
+                    return True
+        return False
+
     def __iter__(self):
         if len(self.original_values) == 1 and isinstance(self.original_values[0], range):
             return self.original_values[0].__iter__()
