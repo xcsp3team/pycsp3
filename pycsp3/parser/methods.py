@@ -13,6 +13,11 @@ from pycsp3.tools.utilities import ANY
 
 # to speed up re.split(DELIM_LISTS,_) (use re_lists.split(_))
 re_lists = re.compile(DELIMITER_LISTS)
+re_whitespace = re.compile(DELIMITER_WHITESPACE)
+re_two_dots = re.compile(DELIMITER_TWO_DOTS)
+
+is_int = re.compile(r'^-?\d+$').match
+
 
 # A class to represent several occurrences of the same value.
 class Occurrences:
@@ -42,9 +47,10 @@ def replace_intern_commas(string):
 
 
 def parse_integer_or_interval(token):
-    t = re.split(DELIMITER_TWO_DOTS, token)
-    if len(t) == 1:
+    if ".." not in token:
         return int(token)
+
+    t = re_two_dots.split(token)
     assert len(t) == 2
     a, b = int(t[0]), int(t[1])
     assert a <= b
@@ -144,9 +150,18 @@ def parse_data(parser, token):
 def parse_sequence(parser, seq, delimiter=DELIMITER_WHITESPACE):
     if isinstance(seq, Element):
         seq = seq.text.strip()
+
+    if delimiter == DELIMITER_WHITESPACE:
+        splitter = re_whitespace.split
+    else:
+        splitter = re.compile(delimiter).split
+    
     t = []
-    for token in re.split(delimiter, seq):
-        if token.startswith("not("):
+    for token in splitter(seq):
+        # Fast path for simple integers
+        if is_int(token):
+            t.append(int(token))
+        elif token.startswith("not("):
             t.append(parse_expression(parser, token))
         else:
             pos = token.find("[")
