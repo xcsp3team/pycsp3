@@ -1722,6 +1722,7 @@ def Maximum(term, *others, condition=None):
     :return: a component/constraint Maximum
     """
     terms = _extremum_terms(term, others)
+    assert len(terms) > 0
     if len(terms) == 1 and condition is None:
         return terms[0]  # Node(condition.operator, [terms[0], condition.right_operand()])
     c = ConstraintMaximum(terms, condition)
@@ -1738,6 +1739,7 @@ def Minimum(term, *others, condition=None):
     :return: a component/constraint Minimum
     """
     terms = _extremum_terms(term, others)
+    assert len(terms) > 0
     if len(terms) == 1 and condition is None:
         return terms[0]  # Node(condition.operator, [terms[0], condition.right_operand()])
     c = ConstraintMinimum(terms, condition)

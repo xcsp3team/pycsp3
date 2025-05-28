@@ -50,8 +50,8 @@ def add_range(r1: range, r2: range):
     return range(r1.start + r2.start, r1.stop + r2.stop - 1)
 
 
-def possible_range(s: set[int], control_int=False):
-    assert isinstance(s, set) and (not control_int or all(isinstance(v, int) for v in s))
+def possible_range(s: list[int] | set[int], control_int=False):
+    assert isinstance(s, (list, set)) and (not control_int or all(isinstance(v, int) for v in s))
     t = sorted(s)
     return range(t[0], t[-1] + 1) if 1 < t[-1] - t[0] + 1 == len(t) else t
 

@@ -305,13 +305,23 @@ class Node(Entity):
                 if all_ranges and all(pv.start >= 0 and pv.step == 1 for pv in pvs):
                     return range(multiply(pv.start for pv in pvs), multiply(pv.stop - 1 for pv in pvs) + 1)
                 return possible_range({multiply(p) for p in product(*(pv for pv in pvs))})  # or numpy.prod ?
-            # TODO: in case of all_ranges being False, possibility of improving the efficiency of the code below for MIN and MAX
             if self.type == MIN:
-                return range(min(pv.start for pv in pvs), min(pv.stop for pv in pvs)) if all_ranges \
-                    else possible_range({min(p) for p in product(*(pv for pv in pvs))})
+                if all_ranges:
+                    return range(min(pv.start for pv in pvs), min(pv.stop for pv in pvs))
+                last = min(pv[-1] for pv in pvs)
+                t = sorted(set(flatten(pvs)))
+                return possible_range(t[0:t.index(last) + 1])
+                # approximation: range(min(pv[0] for pv in pvs), min(pv[-1] for pv in pvs))
+                # old code: possible_range({min(p) for p in product(*(pv for pv in pvs))})
             if self.type == MAX:
-                return range(max(pv.start for pv in pvs), max(pv.stop for pv in pvs)) if all_ranges \
-                    else possible_range({max(p) for p in product(*(pv for pv in pvs))})
+                if all_ranges:
+                    return range(max(pv.start for pv in pvs), max(pv.stop for pv in pvs))
+                first = max(pv[0] for pv in pvs)
+                t = sorted(set(flatten(pvs)))
+                return possible_range(t[t.index(first):])
+                # approximation: range(max(pv[0] for pv in pvs), max(pv[-1] for pv in pvs))
+                # old code: possible_range({max(p) for p in product(*(pv for pv in pvs))})
+
         assert False, "The operator " + str(self.type) + " currently not implemented"
 
     def mark_as_used(self):
