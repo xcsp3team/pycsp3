@@ -202,6 +202,8 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         comment, tags = comment_and_tags_of(function_name="VarArray")
 
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
+    if isinstance(dom, int):  # TODO: should we print a warning?
+        dom = range(dom)
     if isinstance(dom, type(lambda: 0)):
         r = len(inspect.signature(dom).parameters)  # r=1 means that it must be a lambda *args:
         assert len(size) == r or r == 1, "The number of arguments of the lambda must be equal to the number of dimensions of the multidimensional array "
