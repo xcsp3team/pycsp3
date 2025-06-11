@@ -135,13 +135,14 @@ def flatten(*args, keep_none=False, keep_tuples=False):
     return tools.curser.cp_array(t)  # previously: return t
 
 
-def is_containing(t, types, *, check_first_only=False):  # None are discarded
+def is_containing(t, types, *, check_first_only=False):  # None are discarded except if this is what is looked for
     if isinstance(t, (list, tuple, set, frozenset)):
         if len(t) == 0:
             return None
         found = False
+        treat_none = (isinstance(types, (tuple, list, set, frozenset)) and type(None) in types) or type(None) == types
         for v in t:
-            if v is None:
+            if not treat_none and v is None:
                 continue
             if not is_containing(v, types, check_first_only=check_first_only):
                 return False

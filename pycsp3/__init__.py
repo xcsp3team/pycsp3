@@ -8,8 +8,8 @@ from itertools import product, permutations
 __python_version__ = str(sys.version).split(os.linesep)[0].split(' ')[0]
 __pycsp3_version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt'), encoding='utf-8').read()
 
-if sys.version_info[0] < 3 or sys.version_info[1] < 6:
-    raise Exception(os.linesep + " Python should be at least 3.6" + os.linesep + " Your version is Python " + __python_version__)
+if sys.version_info[0] < 3 or sys.version_info[1] < 10:
+    raise Exception(os.linesep + " Python should be at least 3.10" + os.linesep + " Your version is Python " + __python_version__)
 
 from pycsp3.functions import variant, subvariant, Var, VarArray, VarArrayMultiple, var, satisfy, minimize, maximize, annotate
 from pycsp3.functions import And, Or, Not, Xor, Match, If, Iff, Slide

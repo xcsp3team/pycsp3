@@ -8,7 +8,7 @@ print("setup version", __version__)
 
 setup(name='pycsp3',
       version=__version__,
-      python_requires='>=3',
+      python_requires='>=3.10',
       project_urls={
           'Documentation': 'https://pycsp.org/',
           'Installation': 'http://pycsp.org/documentation/installation',
