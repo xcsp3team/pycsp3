@@ -3,11 +3,11 @@
 </div>
 
 <br />
-<h2> PyCSP3 v2.4 <sub><sup>(August 28, 2024)</sup></sub> </h2> 
+<h2> PyCSP3 v2.5 <sub><sup>(June 11, 2025)</sup></sub> </h2> 
 
 <!-- PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). -->
 
-This is Version 2.4 of PyCSP3, a library in Python (version 3.10 or later) for modeling combinatorial constrained problems;
+This is Version 2.5 of PyCSP3, a library in Python (version 3.10 or later) for modeling combinatorial constrained problems;
 see [www.pycsp.org](https://pycsp.org). With PyCSP3, it is possible to generate instances of:
 
 1. CSP (Constraint Satisfaction Problem)
@@ -30,7 +30,7 @@ At this stage, one can run two embedded solvers:
 <!-- Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf). -->
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-For example, see the solvers involved in the [2022 and 2023 Competitions](https://www.xcsp.org/competitions/).
+For example, see the solvers involved in the [2022, 2023 and 2024 Competitions](https://www.xcsp.org/competitions/).
 It is also immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are present in directories `pycsp3/solvers/ace`
 and  `pycsp3/solvers/choco`.
 For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
@@ -175,7 +175,6 @@ For Windows:
 ```console
 python -m pip install --upgrade git+https://github.com/xcsp3team/pycsp3.git
 ```
-
 
 ## Working with a Pool of Models
 
