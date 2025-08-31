@@ -100,15 +100,31 @@ def _load_model():
 
 
 def _load_data():
+    def _arg_value(s):
+        if len(s) > 0 and s[0] == '[' and s[-1] == ']':
+            return [_arg_value(tok) for tok in s[1:-1].split(",")]
+        return None if s in None_Values else int(s) if s.isdigit() else s
+
     def _load_data_sequence(raw_data):
         if options.dataformat is None and all(v.isdigit() for v in raw_data) and any(v[0] == '0' for v in raw_data):
             options.dataformat = "-".join("{:0" + str(len(v)) + "d}" for v in raw_data)
-        od = [None if v in None_Values else int(v) if v and v.isdigit() else v for v in raw_data]
+        od = [_arg_value(v) for v in raw_data]
         return OrderedDict([("f" + str(i), od[i]) for i, v in enumerate(raw_data)]), od
         # return DataVisitor(raw_data).visit(ast.parse(inspect.getsource(Compilation.model)))
 
-    def _arg_value(s):
-        return None if s in None_Values else int(s) if s.isdigit() else s
+    def _handle_possible_raw_data_subtuple(args):
+        t = []
+        i = 0
+        while i < len(args):
+            if '[' not in args[i]:
+                t.append(args[i])
+                i += 1
+            else:
+                j = next((k for k in range(i + 1, len(args)) if ']' in args[k]), -1)
+                assert j != -1
+                t.append(",".join(args[k] for k in range(i, j + 1)))
+                i = j + 1
+        return t
 
     def _load_multiple_data_pieces():  # formatting instructions not possible in that case
         s = ""
@@ -146,10 +162,12 @@ def _load_data():
     #    for k, v in compilation_data.items(): setattr(compilation_data, k, v)  ordered_data = list(compilation_data.values())
     if (data[0], data[-1]) in [('[', ']'), ('(', ')')]:  # NB: these characters may be needed to be escaped as in \[2,3\]
         args = data[1:-1].split(",")
+        args = _handle_possible_raw_data_subtuple(args)
+
         if "json" in data:
             return _load_multiple_data_pieces()
         if '=' in data:
-            assert data.count('=') == data.count(',') + 1, "badly formed string of data " + data
+            # assert data.count('=') == data.count(',') + 1, "badly formed string of data " + data
             ordered_data = []
             for arg in args:
                 t = arg.split('=')
