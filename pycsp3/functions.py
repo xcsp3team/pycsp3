@@ -1855,24 +1855,30 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         assert len(origins[0]) == len(origins[1]) == len(lengths[0]) == len(lengths[1])
         origins = [(origins[0][i], origins[1][i]) for i in range(len(origins[0]))]
         lengths = [(lengths[0][i], lengths[1][i]) for i in range(len(lengths[0]))]
+    if any(isinstance(v, Node) for v in origins):
+        origins = [auxiliary().replace_node(v) if isinstance(v, Node) else v for v in origins]
     checkType(origins, [int, Variable])
     if not isinstance(origins[0], Variable) and not isinstance(origins[0], tuple):  # if 2D but not tuples
         origins = [tuple(origin) for origin in origins]
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else lengths
+    if any(isinstance(v, Node) for v in lengths):
+        lengths = [auxiliary().replace_node(v) if isinstance(v, Node) else v for v in lengths]
     if not isinstance(lengths[0], (int, Variable)) and not isinstance(lengths[0], tuple):  # if 2D but not tuples
         lengths = [tuple(length) for length in lengths]
-    checkType(lengths, ([int, Variable]))
+    checkType(lengths, ([int, Variable, Node]))
     if isinstance(origins, list) and len(origins) > 0 and isinstance(origins[0], tuple) and len(origins[0]) == 2:  # if 2D
         # currently, only variables are authorized in origins
         origins = [(auxiliary().replace_int(u) if isinstance(u, int) else u, auxiliary().replace_int(v) if isinstance(v, int) else v)
                    for (u, v) in origins]
     if isinstance(lengths, list) and len(lengths) > 0 and isinstance(lengths[0], tuple) and len(lengths[0]) == 2:  # if 2D
-        # currently, either only variables or only integers
+        # currently, can handle variables, integers and nodes
         b0 = _is_mixed_list(lengths, 0)
         b1 = _is_mixed_list(lengths, 1)
         if b0 or b1:
-            lengths = [(auxiliary().replace_int(u) if b0 and isinstance(u, int) else u, auxiliary().replace_int(v) if b1 and isinstance(v, int) else v)
-                       for (u, v) in lengths]
+            lengths = [(
+                auxiliary().replace_int(u) if b0 and isinstance(u, int) else auxiliary().replace_node(u) if b0 and isinstance(u, Node) else u,
+                auxiliary().replace_int(v) if b1 and isinstance(v, int) else auxiliary().replace_node(v) if b1 and isinstance(v, Node) else v
+            ) for (u, v) in lengths]
     if options.mini:
         assert zero_ignored is True  # for the moment
         t = []
@@ -2044,7 +2050,7 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
 ''' Constraints on Graphs'''
 
 
-def Circuit(successors, *successors_complement, start_index=0, size=None):
+def Circuit(successors, *successors_complement, start_index=0, size=None, no_self_looping=False):
     """
     Builds and returns a constraint Circuit.
 
@@ -2058,6 +2064,10 @@ def Circuit(successors, *successors_complement, start_index=0, size=None):
     checkType(successors, [Variable])
     checkType(start_index, int)
     checkType(size, (int, Variable, type(None)))
+    assert size == None or no_self_looping == False
+    if no_self_looping:
+        assert start_index == 0
+        return [successors[i] != i for i in range(len(successors))] + [ECtr(ConstraintCircuit(successors, start_index, size))]
     return ECtr(ConstraintCircuit(successors, start_index, size))
 
 
