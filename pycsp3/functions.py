@@ -805,6 +805,8 @@ def min(*args):
 
     :return: either a node, root of a tree expression, or the smallest item of the specified arguments
     """
+    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
+        args = [v for v in args[0]]
     return args[0] if len(args) == 1 and isinstance(args[0], (int, str)) else Node.build(TypeNode.MIN, *args) if len(args) > 1 and any(
         isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 
@@ -817,6 +819,8 @@ def max(*args):
 
     :return: either a node, root of a tree expression, or the largest item of the specified arguments
     """
+    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
+        args = [v for v in args[0]]
     return args[0] if len(args) == 1 and isinstance(args[0], (int, str)) else Node.build(TypeNode.MAX, *args) if len(args) > 1 and any(
         isinstance(a, (Node, Variable)) for a in args) else maxPython(*args)
 
@@ -1135,6 +1139,8 @@ def AllEqual(term, *others, excepting=None):
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
     checkType(excepting, ([int], type(None)))
     terms = flatten(term, others)
+    if len(terms) == 0:
+        return ConstraintDummyConstant(1)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
     checkType(terms, ([Variable], [Node]))
     return ECtr(ConstraintAllEqual(terms, excepting))
@@ -2064,7 +2070,10 @@ def Circuit(successors, *successors_complement, start_index=0, size=None, no_sel
     checkType(successors, [Variable])
     checkType(start_index, int)
     checkType(size, (int, Variable, type(None)))
-    assert size == None or no_self_looping == False
+    assert size is None or no_self_looping == False
+    if size is not None and size == len(successors):
+        size = None
+        no_self_looping = True
     if no_self_looping:
         assert start_index == 0
         return [successors[i] != i for i in range(len(successors))] + [ECtr(ConstraintCircuit(successors, start_index, size))]
