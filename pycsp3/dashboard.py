@@ -40,7 +40,7 @@ class _Options:
                 if len(t) == 1:
                     flag = t[0].lower()
                     flag = 'dataexport' if flag == 'export' else flag
-                    flag = 'keephybrid' if flag == 'hybrid' else flag
+                    flag = 'keep_hybrid' if flag == 'hybrid' else flag
                     if flag in self.flags:
                         vars(self)[flag] = True
                         assert flag not in self.values or flag == 'dataexport', "You have to specify a value for the option -" + flag

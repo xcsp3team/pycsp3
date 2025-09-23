@@ -65,10 +65,11 @@ class Compilation:
 def _load_options():
     # note that parser and export are automatically rewritten as dataparser and dataexport
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output", "suffix", "callback")
-    options.set_flags("dataexport", "datasober", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognizeSlides", "keepHybrid",
-                      "keepSmartTransitions", "keepsum", "unchangescalar", "restrictTablesWrtDomains", "dontruncompactor", "dontcompactValues",
-                      "groupsumcoeffs", "usemeta", "dontuseauxcache", "dontadjustindexing", "dontbuildsimilarconstraints", "debug", "mini", "uncurse",
-                      "existbyelement", "safetables")
+    options.set_flags("dataexport", "data_sober", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognize_slides", "keep_hybrid",
+                      "keep_smart_transitions", "keep_sum", "unchange_scalar", "restrict_tables_wrt_domains", "dont_run_compactor", "dont_compact_Values",
+                      "group_sum_coeffs", "use_meta", "dont_use_aux_cache", "dont_adjust_indexing", "dont_build_similar_constraints", "debug", "mini",
+                      "uncurse",
+                      "exist_by_element", "safe_tables", "force_element_index")
 
     if options.checker is None:
         options.checker = "fast"
@@ -319,12 +320,12 @@ def _compile(disabling_opoverrider=False, verbose=1):
         fullname = fullname + options.suffix if not fullname.endswith(".xml") else fullname[:-4] + options.suffix + ".xml"
     stopwatch = Stopwatch()
     options.verbose and print("  PyCSP3 (Python:" + platform.python_version() + ", Path:" + os.path.abspath(__file__) + ")\n")
-    if not options.dontbuildsimilarconstraints:
+    if not options.dont_build_similar_constraints:
         build_similar_constraints()
     options.verbose and print("\tWCK for generating groups:", stopwatch.elapsed_time(reset=True), "seconds")
     handle_slides()
     options.verbose and print("\tWCK for handling slides:", stopwatch.elapsed_time(reset=True), "seconds")
-    if options.dontruncompactor is False:
+    if options.dont_run_compactor is False:
         build_compact_forms()
         options.verbose and print("\tWCK for compacting forms:", stopwatch.elapsed_time(reset=True), "seconds")
 

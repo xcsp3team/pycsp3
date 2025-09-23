@@ -68,7 +68,7 @@ def detecting_groups_recursively(ctr_entities):
                 entities[i] = group  # constraint replaced by the new group (and other constraints of the group will be now ignored since flagged to False)
             groups.append(group)
             if len(entities) > 100 and len(groups) == 2 and len(groups[0].entities) + len(groups[1].entities) < 5:  # len(entities) // 5:
-                print("\tStopping to detect groups")  # because it may be very expensive (and not very efficient)
+                print("\tStopping group detection")  # because it may be very expensive (and not very efficient)
                 break
         return [e for e in entities if e is not None] if removal else entities
 

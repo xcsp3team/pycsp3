@@ -173,7 +173,7 @@ def _slide(entity, scope, offset, circular, group):
 
 
 def _group(entity):
-    if options.recognizeslides:
+    if options.recognize_slides:
         all_args = entity.original_all_args if hasattr(entity, "original_all_args") else entity.all_args
         if len(all_args) > 3 and len(all_args[0]) > 1:
             res = _identify_slide(entity)

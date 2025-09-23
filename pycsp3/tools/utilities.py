@@ -330,7 +330,7 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
 
         return "".join(s)
     else:
-        print("Creation of a table of size: " + str(len(table)) + (" in parallel" if parallel and len(table) >= LIMIT else ""))
+        print("\tCreation of a table of size: " + str(len(table)) + (" in parallel" if parallel and len(table) >= LIMIT else ""))
         n_threads = cpu_count()
         size = len(table) // n_threads
         pool = Pool(n_threads)

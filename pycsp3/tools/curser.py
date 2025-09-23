@@ -6,7 +6,7 @@ from pycsp3.classes.entities import ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintAllDifferentList, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
     ConstraintRefutation, ConstraintDummyConstant, auxiliary, global_indirection, manage_global_indirection)
-from pycsp3.classes.main.variables import Variable, VariableInteger
+from pycsp3.classes.main.variables import Domain, Variable, VariableInteger
 from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
 from pycsp3.libs.forbiddenfruit import curse
@@ -583,7 +583,7 @@ class OpOverrider:
             assert other.val in (0, 1)
             return self if other.val == 0 else ConstraintDummyConstant(1)
         if isinstance(other, bool) and len(queue_in) == 0:
-            # TODO how to extend it (without second condition part) ? should we use an option -dontcombinebool (pb with JapanEncoding)
+            # TODO how to extend it (without second condition part) ? should we use an option -dont_combine_bool (pb with JapanEncoding)
             return self if other is False else True
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
@@ -605,9 +605,9 @@ class OpOverrider:
             assert other.val in (0, 1)
             return self if other.val == 1 else ConstraintDummyConstant(0)
         if isinstance(other, bool) and len(queue_in) == 0:
-            # TODO how to extend it (without second condition part) ? should we use an option -dontcombinebool (pb with JapanEncoding)
+            # TODO how to extend it (without second condition part) ? should we use an option -dont_combine_bool (pb with JapanEncoding)
             return self if other is True else False
-        # if isinstance(other, bool):  # TODO should we keep it? or use an option -dontcombinebool
+        # if isinstance(other, bool):  # TODO should we keep it? or use an option -dont_combine_bool
         #     return self if other is True else False
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
@@ -740,10 +740,12 @@ class OpOverrider:
                 return k
             return -1
 
+        if isinstance(indexes, str) and functions.var(indexes) is not None:
+            indexes = functions.var(indexes)
         if isinstance(indexes, int):
             assert isinstance(array, list) and len(array) > 0
             if indexes >= len(array):
-                error_if(options.dontadjustindexing, "Indexing problem " + str(indexes))
+                error_if(options.dont_adjust_indexing, "Indexing problem " + str(indexes))
                 new_index = indexes % len(array)
                 if OpOverrider.array_indexing_warning is False:
                     s = "Auto-adjustment of array indexing: " + str(indexes) + " -> " + str(new_index) + " in " + str(list.__getitem__(array, new_index))
@@ -813,9 +815,17 @@ class OpOverrider:
                 if res is not None and res[1] == 1:  # in case we had x*1 or 1*x, we replace by x
                     indexes = res[0]
                 else:
+                    values = indexes.possible_values()
                     n = len(array)  # note that we force the domain of the aux variable with the parameter values
+                    if not options.force_element_index:
+                        if isinstance(values, range):
+                            assert 0 <= values.start and values.stop <= n
+                        else:
+                            assert is_1d_list(values, int) and len(values) > 0 and 0 <= values[0] and values[-1] < n
                     indexes = auxiliary().replace_node(indexes, values=range(n))
         if isinstance(indexes, Variable):
+            if indexes.dom.is_infinite():
+                indexes.dom = Domain(range(len(array)))
             return PartialConstraint(ConstraintElement(array, index=indexes))
         if isinstance(indexes, tuple):
             assert len(indexes) > 1
@@ -1079,7 +1089,7 @@ def convert_to_namedtuples(obj):
             return nt(*(recursive_convert_to_namedtuples(v) for (k, v) in obj.items()))
         return obj
 
-    if options.datasober:
+    if options.data_sober:
         return obj
     if not with_only_alphanumeric_keys(obj):
         warning("some key of some dictionary involved in the data is not alphanumeric, so no conversion to named tuples is performed\n")

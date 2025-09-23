@@ -113,6 +113,8 @@ def Var(term=None, *others, dom=None, id=None):
     if not started_modeling and not options.uncurse:
         cursing()
         started_modeling = True
+    if term is None and dom is None and id is None:
+        return auxiliary().new_var(math.inf)  # TODO printing a warning?
     if term is None and dom is None:
         dom = Domain(math.inf)
     assert not (term and dom)
@@ -359,7 +361,7 @@ def And(*args, meta=False):
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint And, or its reified form
     """
-    if options.usemeta or meta:
+    if options.use_meta or meta:
         return EAnd(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
     return conjunction(*args)
 
@@ -376,7 +378,7 @@ def Or(*args, meta=False):
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint Or, or its reified form
     """
-    if options.usemeta or meta:
+    if options.use_meta or meta:
         return EOr(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
     return disjunction(*args)
 
@@ -393,7 +395,7 @@ def Not(arg, meta=False):
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint Not, or its reified form
     """
-    if options.usemeta or meta:
+    if options.use_meta or meta:
         return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(arg)))
     res = manage_global_indirection(arg)
     if res is None:
@@ -413,7 +415,7 @@ def Xor(*args, meta=False):
     :param meta true if a meta-constraint form must be really posted
     :return: a meta-constraint Xor, or its reified form
     """
-    if options.usemeta or meta:
+    if options.use_meta or meta:
         return EXor(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
     return xor(*args)
 
@@ -448,7 +450,7 @@ def If(test, *test_complement, Then, Else=None, meta=False):
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list)  # after flatten, we have a list
     if len(thens) == 0:
         return None if Else is None else Or(tests, Else)
-    if options.usemeta or meta:
+    if options.use_meta or meta:
         if Else is None:
             return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(tests, thens))))
         else:
@@ -734,7 +736,7 @@ def _Extension(*, scope, table, positive=True):
     if len(scope) == 1:
         assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
     else:  # if all(isinstance(x, VariableInteger) for x in scope):
-        if not options.safetables:
+        if not options.safe_tables:
             for i, t in enumerate(table):
                 if isinstance(t, (list, types.GeneratorType)):
                     table[i] = t = tuple(t)
@@ -749,7 +751,7 @@ def _Extension(*, scope, table, positive=True):
                             "The length of each tuple must be the same as the arity (here, we have " + str(len(t)) + " vs " + str(len(scope)) + "). "
                             + "Maybe a problem with slicing: you must for example write x[i:i+3,0] instead of x[i:i+3][0]")
                     table[i] = t
-    return ECtr(ConstraintExtension(scope, table, positive, options.keephybrid, options.restricttableswrtdomains))
+    return ECtr(ConstraintExtension(scope, table, positive, options.keep_hybrid, options.restrict_tables_wrt_domains))
 
 
 def Table(*, scope, supports=None, conflicts=None):
@@ -1368,7 +1370,7 @@ def Sum(term, *others, condition=None):
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
     checkType(terms, ([Variable], [Node], [Variable, Node], [ScalarProduct]))  # , [PartialConstraint], [ECtr]))
     terms, coeffs = _get_terms_coeffs(terms)
-    if options.groupsumcoeffs and all(isinstance(v, Variable) for v in terms) and coeffs is None:
+    if options.group_sum_coeffs and all(isinstance(v, Variable) for v in terms) and coeffs is None:
         # maybe some variables occurs several times
         d = dict()
         for t in terms:
@@ -1473,7 +1475,7 @@ def Exist(within, *within_complement, value=None, reified_by=None):
             return disjunction(terms)
         # if all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that interesting?
         #     return disjunction(terms)
-    if options.existbyelement:
+    if options.exist_by_element:
         aux = auxiliary().new_var(0, 1)
         satisfy(ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=aux)))
         return aux
@@ -1856,8 +1858,9 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         origins = list(origins)
     if isinstance(lengths, zip):
         lengths = list(lengths)
-    if len(origins) == 2 and len(lengths) == 2 and all(isinstance(t, (list, tuple)) for t in [origins[0], origins[1], lengths[0], lengths[1]]) and len(
-            origins[0]) != 2:
+    if len(origins) == 2 and isinstance(lengths, (tuple, list)) and len(lengths) == 2 and all(
+            isinstance(t, (list, tuple)) for t in [origins[0], origins[1], lengths[0], lengths[1]]) and len(
+        origins[0]) != 2:
         assert len(origins[0]) == len(origins[1]) == len(lengths[0]) == len(lengths[1])
         origins = [(origins[0][i], origins[1][i]) for i in range(len(origins[0]))]
         lengths = [(lengths[0][i], lengths[1][i]) for i in range(len(lengths[0]))]

@@ -60,7 +60,7 @@ class Diagram:
                 ["(" + q1 + "," + (l.str_tuple() if isinstance(l, Condition) else str(l)) + "," + q2 + ")" for (q1, l, q2) in t])
 
         if self.num not in Diagram._cache:
-            if options.keepsmarttransitions or all(isinstance(label, (int, str)) for _, label, _ in self.transitions):
+            if options.keep_smart_transitions or all(isinstance(label, (int, str)) for _, label, _ in self.transitions):
                 Diagram._cache[self.num] = _string(self.transitions)
             else:
                 trs = self.flat_transitions(scp)

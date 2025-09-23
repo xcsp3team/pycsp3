@@ -43,7 +43,7 @@ class Domain:
         else:
             self.type = None
             self.original_values = []
-            _add_value(*args)
+            _add_value(args)
             assert self.type, "You have defined a variable with an empty domain; fix this"
             self.original_values.sort(key=lambda v: v.start if isinstance(v, range) else v)
             for i in range(len(self.original_values) - 1):
@@ -76,27 +76,6 @@ class Domain:
                         self.original_values.insert(i + 1, range(v + 1, w.stop) if v + 1 != w.stop - 1 else v + 1)
                     return True
         return False
-
-    def __iter__(self):
-        if len(self.original_values) == 1 and isinstance(self.original_values[0], range):
-            return self.original_values[0].__iter__()
-        return self.all_values().__iter__()  # original_values.__iter__()
-
-    def __getitem__(self, item):
-        if len(self.original_values) == 1 and isinstance(self.original_values[0], range):
-            return self.original_values[0].__getitem__(item)
-        return self.all_values().__getitem__(item)
-
-    def __eq__(self, other):
-        return isinstance(other, Domain) and self.type == other.type and self.original_values == other.original_values
-
-    def __hash__(self):
-        return super().__hash__()
-
-    def __repr__(self):
-        if len(self.original_values) == 1 and self.original_values[0] == math.inf:
-            return "-infinity..+infinity"
-        return " ".join(str(v.start) + ".." + str(v.stop - 1) if isinstance(v, range) else str(v) for v in self.original_values)
 
     def smallest_value(self):
         v = self.original_values[0]
@@ -138,6 +117,30 @@ class Domain:
                 else:
                     return False
         return zero and one
+
+    def is_infinite(self):
+        return len(self.original_values) == 1 and self.original_values[0] == math.inf
+
+    def __iter__(self):
+        if len(self.original_values) == 1 and isinstance(self.original_values[0], range):
+            return self.original_values[0].__iter__()
+        return self.all_values().__iter__()  # original_values.__iter__()
+
+    def __getitem__(self, item):
+        if len(self.original_values) == 1 and isinstance(self.original_values[0], range):
+            return self.original_values[0].__getitem__(item)
+        return self.all_values().__getitem__(item)
+
+    def __eq__(self, other):
+        return isinstance(other, Domain) and self.type == other.type and self.original_values == other.original_values
+
+    def __hash__(self):
+        return super().__hash__()
+
+    def __repr__(self):
+        if self.is_infinite():  # len(self.original_values) == 1 and self.original_values[0] == math.inf:
+            return "-infinity..+infinity"
+        return " ".join(str(v.start) + ".." + str(v.stop - 1) if isinstance(v, range) else str(v) for v in self.original_values)
 
 
 class Variable:

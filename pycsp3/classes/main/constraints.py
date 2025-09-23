@@ -274,7 +274,7 @@ class ConstraintExtension(Constraint):
             return ConstraintExtension.cache[h]
 
         possible_parallelism = not options.safe and not is_windows()
-        if options.safetables:
+        if options.safe_tables:
             hybrid = 0  # we assume that the tables are ordinary/starred
         else:
             if h in ConstraintExtension.cache_for_knowing_if_hybrid:
@@ -303,7 +303,7 @@ class ConstraintExtension(Constraint):
             if not self.restrict_table_wrt_domains:
                 if h not in ConstraintExtension.cache:  # we can directly use caching here (without paying attention to domains)
                     table.sort()
-                    if not options.safetables:
+                    if not options.safe_tables:
                         table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=possible_parallelism)
                 return ConstraintExtension.cache[h]
@@ -1078,7 +1078,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             return Node.build(TypeNode.MUL, self._simplify_operation(other))
         # we have a ConstraintSum (self) and an integer (other)
         args = self.constraint.arguments
-        if not options.keepsum and TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
+        if not options.keep_sum and TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
             return auxiliary().replace_partial_constraint(self) * other
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
         value = args[TypeCtrArg.CONDITION]
@@ -1178,7 +1178,7 @@ class ScalarProduct:
         self.coeffs = flatten([coefficients] * len(variables) if isinstance(coefficients, int) else coefficients)
         assert len(self.variables) == len(self.coeffs), str(self.variables) + " " + str(self.coeffs)
         n0s = len(list(v for v in coefficients if isinstance(v, int) and v == 0))  # TODO hard coding (10% below)
-        if n0s > 0 and not options.unchangescalar and ((n0s * 100) // len(coefficients) > 10) and any(isinstance(v, int) and v == 0 for v in coefficients):
+        if n0s > 0 and not options.unchange_scalar and ((n0s * 100) // len(coefficients) > 10) and any(isinstance(v, int) and v == 0 for v in coefficients):
             indexes = [i for i in range(len(self.variables)) if not isinstance(self.coeffs[i], int) or self.coeffs[i] != 0]
             self.variables = [self.variables[i] for i in indexes]
             self.coeffs = [self.coeffs[i] for i in indexes]
@@ -1263,7 +1263,7 @@ class _Auxiliary:
         self.cache = []
 
     def new_var(self, *args):
-        dom = args[0] if len(args) == 1 and isinstance(args[0], Domain) else Domain(args)
+        dom = args[0] if len(args) == 1 and isinstance(args[0], Domain) else Domain(*args)
         assert dom.type == TypeVar.INTEGER
         index = len(self._introduced_variables)
         name = self.prefix + "[" + str(index) + "]"
@@ -1291,7 +1291,7 @@ class _Auxiliary:
 
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
-        if not options.dontuseauxcache:
+        if not options.dont_use_aux_cache:
             for c, x in self.cache:
                 if pc.constraint.equal_except_condition(c):
                     # if functions.protect().execute(pc.constraint.equal_except_condition(c)):
@@ -1398,7 +1398,7 @@ def auxiliary():
 
 def global_indirection(c):
     pc = None
-    if options.usemeta:
+    if options.use_meta:
         return None  # to force using meta-constraints
     if isinstance(c, ConstraintInstantiation):  # we transform an instantiation into a conjunction (Node)
         return c.to_intension()
