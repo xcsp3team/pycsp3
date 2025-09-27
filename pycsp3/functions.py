@@ -175,11 +175,19 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         assert all(isinstance(dom, Domain) or dom is None for dom in doms)
         return VarArray(size=len(doms), dom=lambda i: doms[i])
 
+    if isinstance(size, range):
+        assert size.start == 0 and len(size) > 0
+        size = size.stop
+    if isinstance(size, (tuple, list)) and all(isinstance(s, range) for s in size):
+        assert all(s.start == 0 and len(s) > 0 for s in size)
+        size = [s.stop for s in size]
+
     if dom_border is not None:
         assert len(size) == 2 and dom is not None
         if isinstance(dom, type(lambda: 0)):
             return VarArray(size=size, dom=lambda i, j: dom_border if i in (0, size[0] - 1) or j in (0, size[1] - 1) else dom(i, j))
         return VarArray(size=size, dom=lambda i, j: dom_border if i in (0, size[0] - 1) or j in (0, size[1] - 1) else dom)
+
     size = [size] if isinstance(size, int) else size
     if len(size) > 1 and isinstance(size[-1], (tuple, list)):  # it means that the last dimension is of variable length
         if isinstance(dom, type(lambda: 0)):
