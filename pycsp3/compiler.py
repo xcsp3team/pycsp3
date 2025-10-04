@@ -64,12 +64,11 @@ class Compilation:
 
 def _load_options():
     # note that parser and export are automatically rewritten as dataparser and dataexport
-    options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "tocsp", "checker", "solver", "output", "suffix", "callback")
+    options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "to_csp", "checker", "solver", "output", "suffix", "callback")
     options.set_flags("dataexport", "data_sober", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognize_slides", "keep_hybrid",
                       "keep_smart_transitions", "keep_sum", "unchange_scalar", "restrict_tables_wrt_domains", "dont_run_compactor", "dont_compact_Values",
                       "group_sum_coeffs", "use_meta", "dont_use_aux_cache", "dont_adjust_indexing", "dont_build_similar_constraints", "debug", "mini",
-                      "uncurse",
-                      "exist_by_element", "safe_tables", "force_element_index")
+                      "uncurse", "exist_by_element", "safe_tables", "force_element_index", "dont_display_warnings")
 
     if options.checker is None:
         options.checker = "fast"

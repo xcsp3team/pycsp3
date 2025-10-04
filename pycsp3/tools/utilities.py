@@ -424,15 +424,6 @@ class Error:
     errorOccurrence = False
 
 
-def warning(message):
-    print("\n  " + ORANGE + "Warning: " + WHITE + message + "\n")
-
-
-def warning_if(test, message):
-    if test:
-        warning(message)
-
-
 def error(message):
     Error.errorOccurrence = True
     print("\n\t" + RED + "ERROR: " + WHITE, message)
@@ -446,6 +437,25 @@ def error(message):
 def error_if(test, message):
     if test:
         error(message)
+
+
+_warning_already_printed = {"array_indexing_warning": False, "simplifying_disjunction": False, "simplifying_conjucntion": False}
+
+
+def warning(message, type_message=None):
+    if type_message is not None:
+        if type_message not in _warning_already_printed:
+            error("bad call (bug to be fixed)")
+        elif _warning_already_printed[type_message] is True:
+            return
+        else:
+            _warning_already_printed[type_message] = True
+    print("\n  " + ORANGE + "Warning: " + WHITE + message + (" (other similar cases not displayed)" if type_message is not None else "") + "\n")
+
+
+def warning_if(test, message):
+    if test:
+        warning(message)
 
 
 polyominoes = [

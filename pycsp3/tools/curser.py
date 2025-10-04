@@ -297,7 +297,6 @@ def cursing():
 
 class OpOverrider:
     activated = False
-    array_indexing_warning = False
 
     @staticmethod
     def enable():
@@ -747,10 +746,8 @@ class OpOverrider:
             if indexes >= len(array):
                 error_if(options.dont_adjust_indexing, "Indexing problem " + str(indexes))
                 new_index = indexes % len(array)
-                if OpOverrider.array_indexing_warning is False:
-                    s = "Auto-adjustment of array indexing: " + str(indexes) + " -> " + str(new_index) + " in " + str(list.__getitem__(array, new_index))
-                    warning(s + "\n\t   Other possible similar cases are not displayed")
-                    OpOverrider.array_indexing_warning = True  # to avoid displaying a lot of messages
+                s = "Auto-adjustment of array indexing: " + str(indexes) + " -> " + str(new_index) + " in " + str(list.__getitem__(array, new_index))
+                warning(s, "array_indexing_warning")
                 indexes = new_index
             return list.__getitem__(array, indexes)
         if isinstance(indexes, types.GeneratorType) or (isinstance(indexes, abc.Iterable) and not isinstance(indexes, list)):
@@ -767,10 +764,8 @@ class OpOverrider:
         if isinstance(indexes, slice):
             r = range(indexes.start or 0, indexes.stop or len(array), indexes.step or 1)
             if r.stop > len(array):
-                if OpOverrider.array_indexing_warning is False:
-                    s = "Auto-adjustment of array indexing from a slice " + str(indexes)
-                    warning(s + "\n\t   Other possible similar cases are not displayed")
-                    OpOverrider.array_indexing_warning = True  # to avoid displaying a lot of messages
+                s = "Auto-adjustment of array indexing from a slice " + str(indexes)
+                warning(s, "array_indexing_warning")
                 lst = [list.__getitem__(array, u) for u in [v % len(array) for v in r]]
                 return ListVar(lst) if lv else ListInt(lst)
         # we check with the next statement if a selection of cells is expected

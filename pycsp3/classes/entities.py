@@ -47,6 +47,9 @@ class Entity:
         self.tags = other.tags
         return self
 
+    def __repr__(self):
+        return type(self).__name__ + (" " + self.id if self.id is not None else "")
+
 
 class EVar(Entity):
     def __init__(self, x, comment=None, tags=None):
