@@ -113,6 +113,7 @@ def Var(term=None, *others, dom=None, id=None):
     if not started_modeling and not options.uncurse:
         cursing()
         started_modeling = True
+
     if term is None and dom is None and id is None:
         return auxiliary().new_var(math.inf)  # TODO printing a warning?
     if term is None and dom is None:
@@ -127,6 +128,10 @@ def Var(term=None, *others, dom=None, id=None):
             dom = sorted(dom)
             if dom[-1] - dom[0] + 1 == len(dom):
                 dom = range(dom[0], dom[-1] + 1)
+        if hasattr(dom, '__call__'):  # if it is a function
+            from inspect import signature
+            assert len(signature(dom).parameters) == 0
+            dom = dom.__call__()
         dom = Domain(dom)
     error_if(dom.type not in {TypeVar.INTEGER, TypeVar.SYMBOLIC},
              "Currently, only integer and symbolic variables are supported. Problem with " + str(dom))
@@ -456,6 +461,16 @@ def If(test, *test_complement, Then, Else=None, meta=False):
 
     tests, thens = flatten(test, test_complement), [v for v in flatten(Then) if not (isinstance(v, ConstraintDummyConstant) and v.val == 1)]
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list)  # after flatten, we have a list
+    if len(queue_in) == 0 and any(isinstance(arg, bool) for arg in tests):
+        print("\tSimplifying conjunction expression in 'test' part of If by discarding Boolean values directly assessed")
+        if any(isinstance(arg, bool) and arg is False for arg in tests):
+            return ConstraintDummyConstant(0)
+        tests = [arg for arg in tests if not isinstance(arg, bool)]
+    if any(isinstance(arg, ConstraintDummyConstant) for arg in tests):
+        if any(isinstance(arg, ConstraintDummyConstant) and arg.val == 0 for arg in tests):
+            return ConstraintDummyConstant(0)
+        assert all(not isinstance(arg, ConstraintDummyConstant) or arg.val == 1 for arg in tests)
+        tests = [arg for arg in tests if not isinstance(arg, ConstraintDummyConstant)]
     if len(thens) == 0:
         return None if Else is None else Or(tests, Else)
     if options.use_meta or meta:
@@ -1012,6 +1027,16 @@ def conjunction(*args):
     #     return Count(t) == len(t)
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    if len(queue_in) == 0 and any(isinstance(arg, bool) for arg in args):
+        print("\tSimplifying conjunction expression by discarding Boolean values directly assessed")
+        if any(isinstance(arg, bool) and arg is False for arg in args):
+            return ConstraintDummyConstant(0)
+        args = [arg for arg in args if not isinstance(arg, bool)]
+    if any(isinstance(arg, ConstraintDummyConstant) for arg in args):
+        if any(isinstance(arg, ConstraintDummyConstant) and arg.val == 0 for arg in args):
+            return ConstraintDummyConstant(0)
+        assert all(not isinstance(arg, ConstraintDummyConstant) or arg.val == 1 for arg in args)
+        args = [arg for arg in args if not isinstance(arg, ConstraintDummyConstant)]
     if len(args) == 0:
         return ConstraintDummyConstant(1)
     return Node.conjunction(manage_global_indirection(*args))
@@ -1024,7 +1049,13 @@ def both(this, And):
 
     :return: a node, root of a tree expression
     """
-    return conjunction(this, And)
+    if isinstance(this, ConstraintDummyConstant):
+        assert this.val in (0, 1)
+        return ConstraintDummyConstant(0) if this.val == 0 else And
+    if isinstance(And, ConstraintDummyConstant):
+        assert And.val in (0, 1)
+        return ConstraintDummyConstant(0) if And.val == 0 else this
+    return this & And
 
 
 def disjunction(*args):
@@ -1036,6 +1067,16 @@ def disjunction(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    if len(queue_in) == 0 and any(isinstance(arg, bool) for arg in args):
+        print("\tSimplifying disjunction expression by discarding Boolean values directly assessed")
+        if any(isinstance(arg, bool) and arg is True for arg in args):
+            return ConstraintDummyConstant(1)
+        args = [arg for arg in args if not isinstance(arg, bool)]
+    if any(isinstance(arg, ConstraintDummyConstant) for arg in args):
+        if any(isinstance(arg, ConstraintDummyConstant) and arg.val == 1 for arg in args):
+            return ConstraintDummyConstant(1)
+        assert all(not isinstance(arg, ConstraintDummyConstant) or arg.val == 0 for arg in args)
+        args = [arg for arg in args if not isinstance(arg, ConstraintDummyConstant)]
     if len(args) == 0:
         return ConstraintDummyConstant(0)
     return Node.disjunction(manage_global_indirection(*args))
@@ -1048,7 +1089,7 @@ def either(this, Or):
 
     :return: a node, root of a tree expression
     """
-    return disjunction(this, Or)
+    return this | Or  # disjunction(this, Or)
 
 
 ''' Language-based Constraints '''

@@ -72,6 +72,10 @@ class _Star(float):
         super().__init__()
         self.val = val
 
+    def __mul__(self, other):
+        assert self is ANY and isinstance(other, int) and other > 0
+        return [ANY] * other
+
     def __repr__(self):
         return "*"
 
