@@ -439,7 +439,8 @@ def error_if(test, message):
         error(message)
 
 
-_warning_already_printed = {"array_indexing_warning": False, "simplifying_disjunction": False, "simplifying_conjucntion": False}
+_warning_already_printed = {"array_indexing_warning": False, "simplifying_disjunction": False, "simplifying_conjunction": False,
+                            "simplifying_both_mode_disjunction": False, "simplifying_both_mode_conjunction": False}
 
 
 def warning(message, type_message=None):

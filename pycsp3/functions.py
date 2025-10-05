@@ -434,18 +434,25 @@ def Xor(*args, meta=False):
 
 
 def _simplify_expression(args, disjunction_mode: bool):
+    # assert len(queue_in) == 0 or all(not isinstance(arg, bool) for arg in args)
     val = 1 if disjunction_mode else 0
-    if len(queue_in) == 0 and any(isinstance(arg, bool) for arg in args):
-        warning("Simplifying expression in " + str(args) + " by discarding Boolean values directly assessed",
-                "simplifying_" + ("disjunction" if disjunction_mode else "conjunction"))
-        if any(isinstance(arg, bool) and arg == disjunction_mode for arg in args):
-            return ConstraintDummyConstant(val)
-        args = [arg for arg in args if not isinstance(arg, bool)]
+    if any(isinstance(arg, bool) for arg in args):
+        if len(queue_in) == 0:
+            warning("Simplifying expression in " + str(args) + " by discarding Boolean values directly assessed",
+                    "simplifying_" + ("disjunction" if disjunction_mode else "conjunction"))
+            if any(isinstance(arg, bool) and arg == disjunction_mode for arg in args):
+                return ConstraintDummyConstant(val)
+            args = [arg for arg in args if not isinstance(arg, bool)]
+        else:
+            warning("Simplifying expression in " + str(args) + " with both 'in expressions' queued and direct Boolean values",
+                    "simplifying_both_mode_" + ("disjunction" if disjunction_mode else "conjunction"))
     if any(isinstance(arg, ConstraintDummyConstant) for arg in args):
         if any(isinstance(arg, ConstraintDummyConstant) and arg.val == val for arg in args):
             return ConstraintDummyConstant(val)
         assert all(not isinstance(arg, ConstraintDummyConstant) or arg.val == (0 if val == 1 else 1) for arg in args)
         args = [arg for arg in args if not isinstance(arg, ConstraintDummyConstant)]
+    if len(args) == 0:
+        return ConstraintDummyConstant(1 if val == 0 else 1)
     return args
 
 
@@ -479,8 +486,10 @@ def If(test, *test_complement, Then, Else=None, meta=False):
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list)  # after flatten, we have a list
     res = _simplify_expression(tests, False)
     if isinstance(res, ConstraintDummyConstant):
-        assert res.val == 0
-        return res
+        if res.val == 1:
+            return thens
+        else:
+            return Else
     tests = res
     if len(thens) == 0:
         return None if Else is None else Or(tests, Else)
@@ -799,9 +808,12 @@ def Table(*, scope, supports=None, conflicts=None):
     :return: a constraint Table (Extension)
     """
     assert scope is not None and (supports is None) != (conflicts is None)
-    table = supports if supports is not None else conflicts
+    positive = supports is not None
+    table = supports if positive else conflicts
     table = list(table) if isinstance(table, (set, frozenset)) else table
-    return _Extension(scope=scope, table=table, positive=supports is not None)
+    if not positive and len(conflicts) == 0:
+        return None
+    return _Extension(scope=scope, table=table, positive=positive)
 
 
 def _Intension(node):
@@ -1040,12 +1052,8 @@ def conjunction(*args):
         args = tuple(args[0])
     res = _simplify_expression(args, False)
     if isinstance(res, ConstraintDummyConstant):
-        assert res.val == 0
         return res
-    args = res
-    if len(args) == 0:
-        return ConstraintDummyConstant(1)
-    return Node.conjunction(manage_global_indirection(*args))
+    return Node.conjunction(manage_global_indirection(*res))
 
 
 def both(this, And):
@@ -1055,14 +1063,17 @@ def both(this, And):
 
     :return: a node, root of a tree expression
     """
+    if this is None:
+        return And
+    if And is None:
+        return this
     res = _simplify_expression([this, And], False)
     if isinstance(res, ConstraintDummyConstant):
-        assert res.val == 0
         return res
     assert len(res) in (1, 2)
     if len(res) == 1:
         return res[0]
-    return this & And  # conjucntion(this, And)
+    return this & And  # conjunction(this, And)
 
 
 def disjunction(*args):
@@ -1076,12 +1087,8 @@ def disjunction(*args):
         args = tuple(args[0])
     res = _simplify_expression(args, True)
     if isinstance(res, ConstraintDummyConstant):
-        assert res.val == 1
         return res
-    args = res
-    if len(args) == 0:
-        return ConstraintDummyConstant(0)
-    return Node.disjunction(manage_global_indirection(*args))
+    return Node.disjunction(manage_global_indirection(*res))
 
 
 def either(this, Or):
@@ -1091,9 +1098,12 @@ def either(this, Or):
 
     :return: a node, root of a tree expression
     """
+    if this is None:
+        return Or
+    if And is None:
+        return this
     res = _simplify_expression([this, And], True)
     if isinstance(res, ConstraintDummyConstant):
-        assert res.val == 1
         return res
     assert len(res) in (1, 2)
     if len(res) == 1:
