@@ -1248,6 +1248,8 @@ def cp_array(*t):
     for i, e in enumerate(t):
         if isinstance(e, PartialConstraint):
             t[i] = auxiliary().replace_partial_constraint(e)
+        elif isinstance(e, ScalarProduct):
+            t[i] = auxiliary().replace_partial_constraint(PartialConstraint(ConstraintSum(e.variables, e.coeffs, None)))
     typ = unique_type_in(t)
     if typ is int:
         return ListInt(t)

@@ -1096,10 +1096,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
     def __rsub__(self, other):  # other - self
-        if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-        # TODO better way of handling this? (and if other is not an int?)
-        return Node.build(TypeNode.SUB, other, auxiliary().replace_partial_constraint(self))
+        return Node.build(TypeNode.SUB, other, self)  # TODO better way of handling this? (and if other is not an int?)
 
     def __mul__(self, other):
         if not isinstance(other, int):
@@ -1121,20 +1118,16 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     __rmul__ = __mul__
 
     def __floordiv__(self, other):  # self // other
-        if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-        return Node.build(TypeNode.DIV, auxiliary().replace_partial_constraint(self), other)
+        return Node.build(TypeNode.DIV, self, other)
 
     def __rfloordiv__(self, other):  # other // self
-        return Node.build(TypeNode.DIV, other, auxiliary().replace_partial_constraint(self))
+        return Node.build(TypeNode.DIV, other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def __mod__(self, other):  # self % other
-        if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-        return Node.build(TypeNode.MOD, auxiliary().replace_partial_constraint(self), other)
+        return Node.build(TypeNode.MOD, self, other)
 
     def __rmod__(self, other):  # other // self
-        return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(self))
+        return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def __getitem__(self, i):
         assert isinstance(self.constraint, ConstraintElement), (
@@ -1273,36 +1266,21 @@ class ScalarProduct:
         return PartialConstraint.combine_partial_objects(other, TypeNode.SUB, pc)
 
     def __mul__(self, other):
-        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
-        if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-        return Node.build(TypeNode.MUL, auxiliary().replace_partial_constraint(pc), other)
+        return Node.build(TypeNode.MUL, self, other)
 
     __rmul__ = __mul__
 
     def __floordiv__(self, other):
-        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
-        if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-        return Node.build(TypeNode.DIV, auxiliary().replace_partial_constraint(pc), other)
+        return Node.build(TypeNode.DIV, self, other)
 
     def __rfloordiv__(self, other):
-        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
-        if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-        return Node.build(TypeNode.DIV, other, auxiliary().replace_partial_constraint(pc))
+        return Node.build(TypeNode.DIV, other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def __mod__(self, other):
-        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
-        if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-        return Node.build(TypeNode.MOD, auxiliary().replace_partial_constraint(pc), other)
+        return Node.build(TypeNode.MOD, self, other)
 
     def __rmod__(self, other):
-        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
-        if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-        return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(pc))
+        return Node.build(TypeNode.MOD, other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def to_terms(self):
         return [self.variables[i] * self.coeffs[i] for i in range(len(self.variables))]
@@ -1372,6 +1350,10 @@ class _Auxiliary:
         aux = self.__replace(pc, Domain(values))
         self.cache.append((pc.constraint, aux))
         return aux
+
+    def replace_scalar_product(self, sp):
+        assert isinstance(sp, ScalarProduct)
+        return self.replace_partial_constraint(PartialConstraint(ConstraintSum(sp.variables, sp.coeffs, None)))
 
     def replace_constraint_with_condition(self, cc):
         assert isinstance(cc, ECtr) and isinstance(cc.constraint, ConstraintWithCondition)

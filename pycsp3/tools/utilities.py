@@ -134,6 +134,8 @@ def flatten(*args, keep_none=False, keep_tuples=False):
             t.extend(flatten(*arg, keep_none=keep_none, keep_tuples=keep_tuples))
         else:
             t.append(arg)
+    if len(t) == 1:
+        return t  # to avoid replacing ScalarProduct for example in an objective
     # if len(args) == 1:
     #     flatten.cache[id(args[0])] = t
     return tools.curser.cp_array(t)  # will replace PartialConstraint objects
