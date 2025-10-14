@@ -9,6 +9,7 @@ from pycsp3.classes.auxiliary.enums import auto
 from pycsp3.classes.entities import Entity, EVar
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import flatten, warning, warning_if, neg_range, abs_range, add_range, possible_range
+from pycsp3.dashboard import options
 
 ARIOP, RELOP, SETOP, UNALOP, SYMOP = TypeAbstractOperation.ARIOP, TypeAbstractOperation.RELOP, TypeAbstractOperation.SETOP, TypeAbstractOperation.UNALOP, TypeAbstractOperation.SYMOP
 
@@ -191,15 +192,30 @@ class Node(Entity):
     def arity(self):
         return len(self.cnt) if isinstance(self.cnt, list) else 0
 
+    def _extract_logical_operator(self):
+        import inspect
+        from pycsp3.tools.curser import OpOverrider
+
+        fi = inspect.stack()[2]  # is that always 2 ?????
+        ln = fi.code_context[fi.index]
+        present_and, present_or = " and " in ln, " or " in ln
+        if present_and != present_or:
+            OpOverrider.and_or_store = (self, TypeNode.AND if present_and else TypeNode.OR)
+            return present_and  # this way, we return True for 'and', and False with 'or'
+        return True  # default
+
     def __bool__(self):
         warning("A node is evaluated as a Boolean (technically, __bool__ is called)."
                 + "\n\tIt is likely a problem with the use of logical operators."
-                + "\n\tFor example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])"
+                + "\n\tFor example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1] or x[0] == x[2])"
                 + "\n\tIt is also possible that you write: If(cond, Then=...) while cond being not constraint-based"
-                + "\n\t  that is, not involving a variable of the model; and this is not possible."
+                + "\n\t  that is, not involving a variable of the model; and this may be problematic."
                 + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide."
                 + "\n\tThis is: " + str(self) + "\n")
         # exit(1)
+
+        if options.accept_and_or_extensional_use:
+            return self._extract_logical_operator()
         return True
 
     def __getitem__(self, i):

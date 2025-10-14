@@ -1689,7 +1689,9 @@ def NValues(within, *within_complement, excepting=None, condition=None):
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
-        return 0
+        return ConstraintDummyConstant(0)
+    if len(terms) == 1 and excepting is None and condition is None:
+        return ConstraintDummyConstant(1)
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)

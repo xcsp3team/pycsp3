@@ -962,8 +962,30 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
     def __add__(self, other):
         return other if self.val == 0 else other + self.val
 
+    __radd__ = __add__
+
+    def __sub__(self, other):  # self - other
+        return -other if self.val == 0 else self.val - other
+
+    def __rsub__(self, other):  # other - self
+        return other if self.val == 0 else other - self.val
+
     def __mul__(self, other):
         return self if self.val == 0 else other if self.val == 1 else other * self.val
+
+    __rmul__ = __mul__
+
+    def __floordiv__(self, other):  # self // other
+        return self if self.val == 0 else self.val // other
+
+    def __rfloordiv__(self, other):  # other // self
+        return other if self.val == 1 else other // self.val
+
+    def __mod__(self, other):  # self % other
+        return self if self.val == 0 else self.val % other
+
+    def __rmod__(self, other):  # other % self
+        return 0 if self.val == 1 else self.val % other
 
     def __str__(self):
         return "Dummy: " + str(self.val)
@@ -1063,12 +1085,18 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
+    __radd__ = __add__
+
     def __sub__(self, other):
         if isinstance(self.constraint, ConstraintSum) and isinstance(other, int):
             self.constraint.add(-other)
             return self
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
+
+    def __rsub__(self, other):  # other - self
+        # TODO better way of handling this? (and if other is not an int?)
+        return Node.build(TypeNode.SUB, other, auxiliary().replace_partial_constraint(self))
 
     def __mul__(self, other):
         if not isinstance(other, int):
@@ -1089,6 +1117,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     def __rmul__(self, other):
         return PartialConstraint.__mul__(self, other)
+
+    __rmul__ = __mul__
 
     def __floordiv__(self, other):
         if isinstance(other, PartialConstraint):

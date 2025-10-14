@@ -68,7 +68,7 @@ def _load_options():
     options.set_flags("dataexport", "data_sober", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognize_slides", "keep_hybrid",
                       "keep_smart_transitions", "keep_sum", "unchange_scalar", "restrict_tables_wrt_domains", "dont_run_compactor", "dont_compact_Values",
                       "group_sum_coeffs", "use_meta", "dont_use_aux_cache", "dont_adjust_indexing", "dont_build_similar_constraints", "debug", "mini",
-                      "uncurse", "exist_by_element", "safe_tables", "force_element_index", "dont_display_warnings")
+                      "uncurse", "exist_by_element", "safe_tables", "force_element_index", "dont_display_warnings", "accept_and_or_extensional_use")
 
     if options.checker is None:
         options.checker = "fast"
@@ -244,22 +244,28 @@ def load_json_data(filename, *, storing=False):
     assert filename.endswith(".json")
     if filename.startswith("http"):
         # import requests
-        #
         # response = requests.get(filename)
-        # if response.status_code != 204:
-        #     data = json.loads(response.content, object_pairs_hook=OrderedDict)
+        # if response.status_code != 204:  data = json.loads(response.content, object_pairs_hook=OrderedDict)
 
         from urllib.request import urlopen
 
         data = json.loads(urlopen(filename).read(), object_pairs_hook=OrderedDict)
+        Compilation.string_data = "-" + filename[filename.rindex("/") + 1:-5]  # "/" is necessary in the URL since it starts with http
     else:
         if os.path.exists(filename):
             fn = filename
         elif filename[0] == '.':
-            fn = os.path.abspath('.') + filename[1:]
+            assert filename[1:].startswith(os.sep)
+            fn = os.path.abspath('.') + filename[len(os.sep):]
         else:
-            fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
+            # is file in the directory of the model file?
+            path = "." if os.sep not in sys.argv[0] else sys.argv[0][:sys.argv[0].rindex(os.sep)]
+            if os.path.exists(path + os.sep + filename):
+                fn = path + os.sep + filename
+            else:
+                fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
         assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
+        Compilation.string_data = "-" + filename[0 if os.sep not in filename else filename.rindex(os.sep) + 1:-5]
         with open(fn) as f:
             data = json.loads(f.read(), object_pairs_hook=OrderedDict)
     data = convert_to_namedtuples(data)
