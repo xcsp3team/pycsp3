@@ -552,21 +552,19 @@ class Node(Entity):
         if node_type in (DIV, MOD) and len(args) == 2 and isinstance(args[1], Variable):
             removed = args[1].dom.remove(0)
             warning_if(removed, "value 0 removed from the domain of " + str(args[1]) + " because involved in a division")
-
         tn = TypeNode.value_of(node_type)  # for handling the cases where type is of type str or TypeConditionOperator
         if tn is SET:
             assert len(args) == 1
             elements = list(args[0])
             sorted_sons = sorted(elements, key=lambda v: str(v)) if len(elements) > 0 and not isinstance(elements[0], int) else sorted(elements)
             return Node(tn, Node._create_sons(*sorted_sons))  # *sorted(args[0])))
-        args = flatten(Node.build(SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args)
-        assert tn.is_valid_arity(len(args)), "Problem: Bad arity for node " + tn.name + ". It is " + str(
-            len(args)) + " but it should be between " + str(tn.min_arity) + " and " + str(tn.max_arity)
+        args = flatten([Node.build(SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args])
+        assert tn.is_valid_arity(len(args)), ("Problem: Bad arity for node " + tn.name + ". It is " + str(len(args))
+                                              + " but it should be between " + str(tn.min_arity) + " and " + str(tn.max_arity))
         # Do we activate these simple modifications below?
         # if len(args) == 2 and isinstance(args[0], Variable) and isinstance(args[1], int):
         #     if (args[1] == 1 and type in (TypeNode.MUL, TypeNode.DIV)) or (args[1] == 0 and type in (TypeNode.ADD, TypeNode.SUB)):
         #         return Node(TypeNode.VAR,args[0])
-
         node = Node(tn, Node._create_sons(*args))
         if tn == EQ and all(son.type.is_predicate_operator() for son in node.cnt):
             node = Node(IFF, node.cnt)

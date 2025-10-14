@@ -1078,19 +1078,20 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return self.add_condition(TypeConditionOperator.GT, self._simplify_with_auxiliary_variables(other))
 
     def __add__(self, other):
-        if isinstance(self.constraint, ConstraintSum) and (
-                isinstance(other, (int, ECtr)) or isinstance(other, PartialConstraint) and not isinstance(other.constraint, ConstraintSum)):
-            self.constraint.add(other)
-            return self
+        if isinstance(self.constraint, ConstraintSum):
+            if isinstance(other, (int, ECtr)) or isinstance(other, PartialConstraint) and not isinstance(other.constraint, ConstraintSum):
+                self.constraint.add(other)
+                return self
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
     __radd__ = __add__
 
     def __sub__(self, other):
-        if isinstance(self.constraint, ConstraintSum) and isinstance(other, int):
-            self.constraint.add(-other)
-            return self
+        if isinstance(self.constraint, ConstraintSum):
+            if isinstance(other, int):
+                self.constraint.add(-other)
+                return self
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
@@ -1173,6 +1174,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         assert operator in {TypeNode.ADD, TypeNode.SUB}
         if isinstance(obj1, ScalarProduct):
             obj1 = PartialConstraint(ConstraintSum(obj1.variables, obj1.coeffs, None))  # to be sure to have at least one PartialConstraint
+        # if isinstance(obj2, ScalarProduct):
+        #     obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))  # to be sure to have at least one PartialConstraint
         assert isinstance(obj1, PartialConstraint) or isinstance(obj2, PartialConstraint)
         if obj2 is None:
             return obj1
@@ -1186,7 +1189,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))
         elif isinstance(obj2, int):
             aux = auxiliary().replace_partial_constraint(obj1)
-            return aux + obj2 if operator is TypeNode.ADD else aux - obj2
+            return aux + obj2 if operator is TypeNode.ADD else aux - obj2 if not inverted else obj2 - aux
         elif not isinstance(obj2, PartialConstraint):
             error("The type of the operand of the partial constraint is wrong as it is " + str(type(obj2)))
         obj1, obj2 = (obj1, obj2) if not inverted else (obj2, obj1)  # we invert back
@@ -1260,8 +1263,22 @@ class ScalarProduct:
     def __add__(self, other):
         return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
+    __radd__ = __add__
+
     def __sub__(self, other):
         return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
+
+    def __rsub__(self, other):  # other - self
+        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+        return PartialConstraint.combine_partial_objects(other, TypeNode.SUB, pc)
+
+    def __mul__(self, other):
+        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+        return Node.build(TypeNode.MUL, auxiliary().replace_partial_constraint(pc), other)
+
+    __rmul__ = __mul__
 
     def __floordiv__(self, other):
         pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
@@ -1269,17 +1286,23 @@ class ScalarProduct:
             other = auxiliary().replace_partial_constraint(other)
         return Node.build(TypeNode.DIV, auxiliary().replace_partial_constraint(pc), other)
 
+    def __rfloordiv__(self, other):
+        pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
+        return Node.build(TypeNode.DIV, other, auxiliary().replace_partial_constraint(pc))
+
     def __mod__(self, other):
         pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
         return Node.build(TypeNode.MOD, auxiliary().replace_partial_constraint(pc), other)
 
-    def __mul__(self, other):
+    def __rmod__(self, other):
         pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
-        return Node.build(TypeNode.MUL, auxiliary().replace_partial_constraint(pc), other)
+        return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(pc))
 
     def to_terms(self):
         return [self.variables[i] * self.coeffs[i] for i in range(len(self.variables))]

@@ -136,7 +136,7 @@ def flatten(*args, keep_none=False, keep_tuples=False):
             t.append(arg)
     # if len(args) == 1:
     #     flatten.cache[id(args[0])] = t
-    return tools.curser.cp_array(t)  # previously: return t
+    return tools.curser.cp_array(t)  # will replace PartialConstraint objects
 
 
 def is_containing(t, types, *, check_first_only=False):  # None are discarded except if this is what is looked for

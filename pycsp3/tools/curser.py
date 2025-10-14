@@ -40,8 +40,6 @@ def cursing():
                 str(type(self)) + "-" + str(type(other)))
         if self == 0:
             return other
-        if isinstance(other, ScalarProduct):
-            other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, Node):
             return Node.build(TypeNode.ADD, self, other)
         return self.__add__(other)
@@ -52,8 +50,6 @@ def cursing():
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
         # if self == 0:  # problem is other is a PartialConstraint
         #     return -other
-        if isinstance(other, ScalarProduct):
-            other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, Node):
             return Node.build(TypeNode.SUB, self, other)
         return self.__sub__(other)
@@ -68,8 +64,6 @@ def cursing():
         #   _extract_correct_frame(function_name) of inspector.py (which indirectly calls inspect.stack(context=1))
         if isinstance(self, int) and self == 0:
             return 0
-        if isinstance(other, ScalarProduct):
-            other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, Node):
             return Node.build(TypeNode.MUL, self, other)
         return self.__mul__(other)
@@ -80,8 +74,6 @@ def cursing():
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
         if self == 0:
             return 0
-        if isinstance(other, ScalarProduct):
-            other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, (Variable, Node)):
             return Node.build(TypeNode.DIV, self, other)
         return self.__floordiv__(other)
@@ -92,8 +84,6 @@ def cursing():
         assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
         if self == 0:
             return 0
-        if isinstance(other, ScalarProduct):
-            other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, (Variable, Node)):
             return Node.build(TypeNode.MOD, self, other)
         return self.__mod__(other)
