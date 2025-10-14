@@ -44,9 +44,6 @@ def cursing():
             other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, Node):
             return Node.build(TypeNode.ADD, self, other)
-        # if isinstance(other, PartialConstraint):
-        #     return Node.build(TypeNode.ADD, self, auxiliary().replace_partial_constraint(other))
-        # other cases ???  PartialConstraint of type sum ??
         return self.__add__(other)
 
     def _int_sub(self, other):
@@ -59,9 +56,6 @@ def cursing():
             other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, Node):
             return Node.build(TypeNode.SUB, self, other)
-        # if isinstance(other, PartialConstraint):
-        #     return Node.build(TypeNode.SUB, self, auxiliary().replace_partial_constraint(other))
-        # other cases ???  PartialConstraint of type sum ??
         return self.__sub__(other)
 
     def _int_mul(self, other):
@@ -78,9 +72,6 @@ def cursing():
             other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, Node):
             return Node.build(TypeNode.MUL, self, other)
-        # if isinstance(other, PartialConstraint):
-        #     return Node.build(TypeNode.MUL, self, auxiliary().replace_partial_constraint(other))
-        # other cases ???  PartialConstraint of type sum ??
         return self.__mul__(other)
 
     def _int_floordiv(self, other):
@@ -93,9 +84,6 @@ def cursing():
             other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, (Variable, Node)):
             return Node.build(TypeNode.DIV, self, other)
-        if isinstance(other, PartialConstraint):
-            return Node.build(TypeNode.DIV, self, auxiliary().replace_partial_constraint(other))
-        # other cases ???  PartialConstraint of type sum ??
         return self.__floordiv__(other)
 
     def _int_mod(self, other):
@@ -108,9 +96,6 @@ def cursing():
             other = functions.Sum(other)  # to get a partial constraint
         if isinstance(other, (Variable, Node)):
             return Node.build(TypeNode.MOD, self, other)
-        if isinstance(other, PartialConstraint):
-            return Node.build(TypeNode.MOD, self, auxiliary().replace_partial_constraint(other))
-        # other cases ???  PartialConstraint of type sum ??
         return self.__mod__(other)
 
     def _dict_add(self, other):  # for being able to merge dictionaries (to be removed when python 3.9 will be widely adopted)

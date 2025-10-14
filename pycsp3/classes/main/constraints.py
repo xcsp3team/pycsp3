@@ -1095,6 +1095,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
     def __rsub__(self, other):  # other - self
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)
         # TODO better way of handling this? (and if other is not an int?)
         return Node.build(TypeNode.SUB, other, auxiliary().replace_partial_constraint(self))
 
@@ -1106,8 +1108,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             return Node.build(TypeNode.MUL, self._simplify_operation(other))
         # we have a ConstraintSum (self) and an integer (other)
         args = self.constraint.arguments
-        if not options.keep_sum and TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
-            return auxiliary().replace_partial_constraint(self) * other
+        # if not options.keep_sum and TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
+        #     return auxiliary().replace_partial_constraint(self) * other
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
         value = args[TypeCtrArg.CONDITION]
         del args[TypeCtrArg.CONDITION]  # we delete and put back below this argument to have arguments in the right order
@@ -1115,25 +1117,28 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         args[TypeCtrArg.CONDITION] = value
         return self
 
-    def __rmul__(self, other):
-        return PartialConstraint.__mul__(self, other)
-
     __rmul__ = __mul__
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other):  # self // other
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
         return Node.build(TypeNode.DIV, auxiliary().replace_partial_constraint(self), other)
 
-    def __mod__(self, other):
+    def __rfloordiv__(self, other):  # other // self
+        return Node.build(TypeNode.DIV, other, auxiliary().replace_partial_constraint(self))
+
+    def __mod__(self, other):  # self % other
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
         return Node.build(TypeNode.MOD, auxiliary().replace_partial_constraint(self), other)
 
+    def __rmod__(self, other):  # other // self
+        return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(self))
+
     def __getitem__(self, i):
-        assert isinstance(self.constraint, ConstraintElement), ("\nBad form. Did you forget to use parentheses? " +
-                                                                "For example, you must write (x[0] == x[1])  | (x[0] == x[2]) " +
-                                                                "instead of (x[0] == x[1])  or (x[0] == x[2])")
+        assert isinstance(self.constraint, ConstraintElement), (
+                "\nBad form. Did you forget to use parentheses? " + "For example, you must write (x[0] == x[1])  | (x[0] == x[2]) " +
+                "instead of (x[0] == x[1])  or (x[0] == x[2])")
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
         assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
