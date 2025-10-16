@@ -108,7 +108,7 @@ def different_values(*args):
     return all(a != b for (a, b) in combinations(args, 2))
 
 
-def flatten(*args, keep_none=False, keep_tuples=False):
+def flatten(*args, keep_none=False, keep_tuples=False, call_cp_array=True):
     """
     Returns a list with all elements that can be encountered when looking into the specified arguments.
     Typically, this is a list (of possibly any dimension).
@@ -129,16 +129,16 @@ def flatten(*args, keep_none=False, keep_tuples=False):
         elif isinstance(arg, types.GeneratorType):
             res = list(arg)
             if len(res) > 0:
-                t.extend(flatten(*res, keep_none=keep_none, keep_tuples=keep_tuples))
+                t.extend(flatten(*res, keep_none=keep_none, keep_tuples=keep_tuples, call_cp_array=call_cp_array))
         elif isinstance(arg, Iterable):
-            t.extend(flatten(*arg, keep_none=keep_none, keep_tuples=keep_tuples))
+            t.extend(flatten(*arg, keep_none=keep_none, keep_tuples=keep_tuples, call_cp_array=call_cp_array))
         else:
             t.append(arg)
     if len(t) == 1:
         return t  # to avoid replacing ScalarProduct for example in an objective
     # if len(args) == 1:
     #     flatten.cache[id(args[0])] = t
-    return tools.curser.cp_array(t)  # will replace PartialConstraint objects
+    return tools.curser.cp_array(t) if call_cp_array else t  # will replace PartialConstraint and ScalarProduct objects if cp_array called
 
 
 def is_containing(t, types, *, check_first_only=False):  # None are discarded except if this is what is looked for

@@ -19,104 +19,26 @@ unsafe_cache = False  # see for example Pic since the table is released as it oc
 
 
 def cursing():
-    def _bool_or(self, other):
-        if not OpOverrider.activated:
-            return self.__or__(other)
-        if isinstance(self, bool):
-            return True if self is True else other
-        return self.__or__(other)
-
-    def _bool_and(self, other):
-        if not OpOverrider.activated:
-            return self.__and__(other)
-        if isinstance(self, bool):
-            return False if self is False else other
-        return self.__and__(other)
-
-    def _int_add(self, other):
-        if not OpOverrider.activated:
-            return self.__add__(other)
-        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other) + (
-                str(type(self)) + "-" + str(type(other)))
-        if self == 0:
-            return other
-        if isinstance(other, Node):
-            return Node.build(TypeNode.ADD, self, other)
-        return self.__add__(other)
-
-    def _int_sub(self, other):
-        if not OpOverrider.activated:
-            return self.__sub__(other)
-        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
-        # if self == 0:  # problem is other is a PartialConstraint
-        #     return -other
-        if isinstance(other, Node):
-            return Node.build(TypeNode.SUB, self, other)
-        return self.__sub__(other)
-
-    def _int_mul(self, other):
-        if not OpOverrider.activated:
-            return self.__mul__(other)
-        # Warning: it is not possible to keep:
-        #   assert isinstance(self, int)
-        # because * can be used with characters/strings as in: '/' * 3
-        # then, for example, a problem is raised in the statement:
-        #   _extract_correct_frame(function_name) of inspector.py (which indirectly calls inspect.stack(context=1))
-        if isinstance(self, int) and self == 0:
-            return 0
-        if isinstance(other, Node):
-            return Node.build(TypeNode.MUL, self, other)
-        return self.__mul__(other)
-
-    def _int_floordiv(self, other):
-        if not OpOverrider.activated:
-            return self.__floordiv__(other)
-        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
-        if self == 0:
-            return 0
-        if isinstance(other, (Variable, Node)):
-            return Node.build(TypeNode.DIV, self, other)
-        return self.__floordiv__(other)
-
-    def _int_mod(self, other):
-        if not OpOverrider.activated:
-            return self.__mod__(other)
-        assert isinstance(self, int), "The expression with operator + is badly formed: " + str(self) + "+" + str(other)
-        if self == 0:
-            return 0
-        if isinstance(other, (Variable, Node)):
-            return Node.build(TypeNode.MOD, self, other)
-        return self.__mod__(other)
-
-    def _dict_add(self, other):  # for being able to merge dictionaries (to be removed when python 3.9 will be widely adopted)
-        if isinstance(other, dict):
-            d = self.copy()
-            d.update(other)
-            return d
-        raise NotImplementedError  # return save_dict_add(self, other)
-
-    def _tuple_mul(self, other):  # for being able to use scalar products
-        if not OpOverrider.activated:
-            return self.__mul__(other)
-        if is_containing(self, (Variable, Node), check_first_only=True):
-            return ScalarProduct(self, other)
-        if is_containing(self, int) and isinstance(other, (list, tuple)) and is_containing(other, (Variable, Node), check_first_only=True):
-            return ScalarProduct(other, self)
-        return self.__mul__(other)
-
     def _list_mul(self, other):  # for being able to use scalar products
         if not OpOverrider.activated:
             return self.__mul__(other)
-        if is_containing(self, (Variable, Node), check_first_only=True):
-            return ScalarProduct(self, other)
-        # if is_containing(self, int) and is_containing(other, (Variable, Node)):
-        #     return ScalarProduct(self, other)
+        if isinstance(self, (tuple, list)) and isinstance(other, (tuple, list)):
+            if len(self) == len(other):
+                if is_containing(self, (Variable, Node), check_first_only=True):
+                    return ScalarProduct(self, other)
+                elif is_containing(other, (Variable, Node), check_first_only=True):
+                    return ScalarProduct(other, self)
+        if isinstance(self, int) and isinstance(other, (tuple, list)) and is_containing(other, (Variable, Node), check_first_only=True):
+            return ScalarProduct(other, [self] * len(other))
+        if isinstance(other, int) and isinstance(self, (tuple, list)) and is_containing(self, (Variable, Node), check_first_only=True):
+            return ScalarProduct(self, [other] * len(self))
         return self.__mul__(other)
 
-    # def _list_rmul(self, other):
-    #     return _list_mul(other, self)
+    # def _list_rmul(self, other):  # TODO: should we activate it?
+    #     return _list_mul(self, other)
 
-    def _tuple_contains(self, other):
+    def _tuple_contains(self, other):  # for being able to use 'in' when expressing extension constraints (we need this even not wished
+        # because sometimes Python changes lists into tuples in comprehension expressions
         if not OpOverrider.activated:
             return self.__contains__(other)
         # if len(self) == 0:
@@ -240,26 +162,7 @@ def cursing():
             return True
         return self.__contains__(other)
 
-    def _enumerate_contains(self, other):
-        if not OpOverrider.activated:
-            return self.__contains__(other)
-        if is_containing(other, Variable):
-            tmp = list(self)
-            if len(tmp) > 0 and isinstance(tmp[0], (tuple, int)):
-                queue_in.append((tmp, other))
-                return True
-        return self.__contains__(other)
-
-    curse(bool, "__or__", _bool_or)
-    curse(bool, "__and__", _bool_and)
-    curse(int, "__add__", _int_add)
-    curse(int, "__sub__", _int_sub)
-    curse(int, "__mul__", _int_mul)
-    curse(int, "__floordiv__", _int_floordiv)
-    curse(int, "__mod__", _int_mod)
-    curse(dict, "__add__", _dict_add)
     # curse(tuple, "__eq__", _tuple_eq)  # Not possible with the current version of forbidden fruit
-    curse(tuple, "__mul__", _tuple_mul)
     # curse(list, "__getitem__", _list_getitem) # TODO: not working. why? because of forbiddenfruit?
     curse(list, "__mul__", _list_mul)
     # curse(list, "__rmul__", _list_rmul)
@@ -267,7 +170,6 @@ def cursing():
     curse(list, "__contains__", _list_contains)
     curse(set, "__contains__", _set_contains)
     curse(range, "__contains__", _range_contains)
-    curse(enumerate, "__contains__", _enumerate_contains)
 
 
 class OpOverrider:
@@ -299,13 +201,16 @@ class OpOverrider:
         Variable.__rsub__ = Node.__rsub__ = OpOverrider.__rsub__
         Variable.__mul__ = Node.__mul__ = OpOverrider.__mul__
         Variable.__rmul__ = Node.__rmul__ = OpOverrider.__rmul__
-        Variable.__pow__ = Node.__pow__ = OpOverrider.__pow__
-        Variable.__mod__ = Node.__mod__ = OpOverrider.__mod__
         Variable.__floordiv__ = Node.__floordiv__ = OpOverrider.__floordiv__
         Variable.__rfloordiv__ = Node.__rfloordiv__ = OpOverrider.__rfloordiv__
+        Variable.__mod__ = Node.__mod__ = OpOverrider.__mod__
+        Variable.__rmod__ = Node.__rmod__ = OpOverrider.__rmod__
+        Variable.__pow__ = Node.__pow__ = OpOverrider.__pow__
 
         ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = OpOverrider.__and__
+        ECtr.__rand__ = EMetaCtr.__rand__ = Variable.__rand__ = Node.__rand__ = OpOverrider.__rand__
         ECtr.__or__ = EMetaCtr.__or__ = Variable.__or__ = Node.__or__ = OpOverrider.__or__
+        ECtr.__ror__ = EMetaCtr.__ror__ = Variable.__ror__ = Node.__ror__ = OpOverrider.__ror__
         ECtr.__invert__ = Node.__invert__ = OpOverrider.__invert__  # we keep __invert__ for Variable
         ECtr.__xor__ = EMetaCtr.__xor__ = Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
         Variable.__rshift__ = Node.__rshift__ = OpOverrider.__rshift__  # TODO ECtr and EMetaCtr too?
@@ -335,13 +240,16 @@ class OpOverrider:
         Variable.__rsub__ = Node.__rsub__ = None
         Variable.__mul__ = Node.__mul__ = None
         Variable.__rmul__ = Node.__rmul__ = None
-        Variable.__pow__ = Node.__pow__ = None
-        Variable.__mod__ = Node.__mod__ = None
         Variable.__floordiv__ = Node.__floordiv__ = None
         Variable.__rfloordiv__ = Node.__rfloordiv__ = None
+        Variable.__mod__ = Node.__mod__ = None
+        Variable.__rmod__ = Node.__rmod__ = None
+        Variable.__pow__ = Node.__pow__ = None
 
         ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = None
+        ECtr.__rand__ = EMetaCtr.__rand__ = Variable.__rand__ = Node.__rand__ = None
         ECtr.__or__ = EMetaCtr.__or__ = Variable.__or__ = Node.__or__ = None
+        ECtr.__ror__ = EMetaCtr.__ror__ = Variable.__ror__ = Node.__ror__ = None
         ECtr.__invert__ = Node.__invert__ = None  # we keep __invert__ for Variable
         ECtr.__xor__ = EMetaCtr.__xor__ = Variable.__xor__ = Node.__xor__ = None
         Variable.__rshift__ = Node.__rshift__ = None
@@ -390,7 +298,7 @@ class OpOverrider:
     def __neg__(self):
         return self.cnt[0] if isinstance(self, Node) and self.type == TypeNode.NEG else Node.build(TypeNode.NEG, self)
 
-    def __add__(self, other):
+    def __add__(self, other, r_call=False):
         if isinstance(other, ConstraintDummyConstant):
             other = other.val
         if isinstance(other, int):
@@ -411,12 +319,14 @@ class OpOverrider:
                     return other + self[0].cnt - self[1].cnt
             return PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other) if isinstance(other.constraint, ConstraintSum) else other + self
         assert other is not None, "One argument is None (coming from an undefined variable from an array?)"
-        return Node.build(TypeNode.ADD, self, other)
+        return Node.build(TypeNode.ADD, (self, other) if not r_call else (other, self))
 
     def __radd__(self, other):
-        return Node.build(TypeNode.ADD, other, self)
+        return self.__add__(other, r_call=True)
 
     def __sub__(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         if isinstance(other, int):
             if other == 0:
                 return self
@@ -439,12 +349,22 @@ class OpOverrider:
             return PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other) if isinstance(other.constraint, ConstraintSum) else -(other - self)
         return Node.build(TypeNode.SUB, self, other)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other):  # other - sub
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
+        if isinstance(other, int):
+            if other == 0:
+                return -self
         return Node.build(TypeNode.SUB, other, self)
 
-    def __mul__(self, other):
-        # if isinstance(other, int) and other == 1:
-        #     return self
+    def __mul__(self, other, r_call=False):
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
+        if isinstance(other, int):
+            if other == 0:
+                return ConstraintDummyConstant(0)
+            if other == 1:
+                return self
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
         # if isinstance(other, int) and other == 0: return Node(TypeNode.INT, 0)
@@ -452,24 +372,34 @@ class OpOverrider:
             return Node.build(TypeNode.NEG, Node.build(TypeNode.MUL, *self[0].cnt, other))
         if isinstance(other, Node) and other.type == TypeNode.NEG and isinstance(other[0], Node) and other[0].type == TypeNode.MUL:
             return Node.build(TypeNode.NEG, Node.build(TypeNode.MUL, self, *other[0].cnt))
-        return Node.build(TypeNode.MUL, self, other)
+        return Node.build(TypeNode.MUL, (self, other) if not r_call else (other, self))
 
     def __rmul__(self, other):
-        return Node.build(TypeNode.MUL, other, self)
-
-    def __mod__(self, other):
-        if isinstance(self, Variable) and isinstance(other, int) and 0 <= self.dom.smallest_value() and self.dom.greatest_value() < other:
-            return self
-        return Node.build(TypeNode.MOD, self, other)
-
-    def __pow__(self, other):
-        return Node.build(TypeNode.POW, self, other)
+        return self.__mul__(other, r_call=True)
 
     def __floordiv__(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
+        if isinstance(other, int):
+            if other == 1:
+                return self
         return Node.build(TypeNode.DIV, self, other)
 
     def __rfloordiv__(self, other):
         return Node.build(TypeNode.DIV, other, self)
+
+    def __mod__(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
+        if isinstance(self, Variable) and isinstance(other, int) and 0 <= self.dom.smallest_value() and self.dom.greatest_value() < other:
+            return self
+        return Node.build(TypeNode.MOD, self, other)
+
+    def __rmod__(self, other):
+        return Node.build(TypeNode.MOD, other, self)
+
+    def __pow__(self, other):
+        return Node.build(TypeNode.POW, self, other)
 
     @staticmethod
     def _replace(arg1, arg2):
@@ -535,7 +465,6 @@ class OpOverrider:
         if OpOverrider.and_or_store is not None:
             node, op = OpOverrider.and_or_store
             OpOverrider.and_or_store = None
-            print("hhh", self, other, node, op)
             return Node.build(op, node, self == other)
 
         res = manage_global_indirection(self, other)
@@ -607,6 +536,8 @@ class OpOverrider:
             return Node.disjunction(self, *other)
         return Node.disjunction(self, other)
 
+    __ror__ = __or__
+
     def __and__(self, other):
         if isinstance(other, ConstraintDummyConstant):
             assert other.val in (0, 1)
@@ -625,6 +556,8 @@ class OpOverrider:
         self, other = res
         assert self is not None and other is not None  # object.__and__(self, other) is not valid
         return Node.conjunction(self, other)
+
+    __rand__ = __and__
 
     def __invert__(self):
         if isinstance(self, PartialConstraint):
@@ -943,6 +876,8 @@ class ListVar(list):
             assert is_containing(t1, (Variable, Node))
             return ScalarProduct(list(t1), list(t2))
         assert is_containing(self, (Variable, Node))  # Node possible ?
+        if isinstance(other, int):
+            other = [other] * len(self)
         return ScalarProduct(self, list(other) if isinstance(other, (tuple, range, types.GeneratorType)) else other)
 
     __rmul__ = __mul__

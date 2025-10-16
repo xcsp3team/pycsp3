@@ -494,6 +494,10 @@ class ConstraintSum(ConstraintWithCondition):
         if coefficients is not None and any(not isinstance(v, int) or v != 1 for v in coefficients):
             self.arg(TypeCtrArg.COEFFS, coefficients, content_ordered=True)
         self.arg(TypeCtrArg.CONDITION, condition)
+        # if len(lst) > 0 and isinstance(lst[0], Variable) and is_1d_list(coefficients, int):
+        #     print("hhhh", lst, coefficients)
+        #     for va in Variable.arrays:
+        #         print(va)
 
     @staticmethod
     def _min_or_max_term_value(x, c, is_min):
@@ -546,6 +550,11 @@ class ConstraintSum(ConstraintWithCondition):
         if TypeCtrArg.COEFFS in self.arguments:
             self.arguments[TypeCtrArg.COEFFS].content.append(1)
         return self
+
+    def to_terms(self):
+        vs = self.arguments[TypeCtrArg.LIST].content
+        cs = self.arguments[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in self.arguments else None
+        return vs if cs is None else [vs[i] * cs[i] for i in range(len(vs))]
 
 
 class ConstraintCount(ConstraintWithCondition):
@@ -999,7 +1008,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         self.constraint = constraint
 
     def add_condition(self, operator, right_operand):
-        if isinstance(right_operand, (int, Variable)):
+        if isinstance(right_operand, (int, Variable)):  # or not isinstance(self.constraint, ConstraintSum):  # and isinstance(right_operand, Variable):
             return ECtr(self.constraint.set_condition(operator, right_operand))
         # TODO : which kind of right operand is authorized? just a partial sum?
         assert isinstance(self.constraint, ConstraintSum)
@@ -1007,6 +1016,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return ECtr(pc.constraint.set_condition(operator, 0))
 
     def _simplify_with_auxiliary_variables(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         if isinstance(other, (int, Variable)):
             return other
         if isinstance(other, Node):
@@ -1219,6 +1230,8 @@ class ScalarProduct:
             pc = ConstraintDummyConstant(0)
         else:
             pc = PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+        if isinstance(right_operand, ConstraintDummyConstant):
+            right_operand = right_operand.val
         if isinstance(right_operand, Node) and right_operand.var_val_if_binary_type(TypeNode.MUL):
             return pc.add_condition(operator, right_operand)
         if operator == TypeConditionOperator.LT:
@@ -1380,6 +1393,8 @@ class _Auxiliary:
             return self.replace_constraint_with_condition(term)
         if node_too and isinstance(term, Node):
             return self.replace_node(term, values=values)
+        if isinstance(term, ConstraintDummyConstant):
+            return self.replace_int(term.val)
         return term
 
     def replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(self, terms, *, nodes_too=False, values=None):

@@ -230,7 +230,7 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         dom = range(min_value, max_value + 1) if isinstance(min_value, int) and 3 < len(vals) == (max_value - min_value + 1) else Domain(vals)
     var_objects = Variable.build_variables_array(array_name, size, dom)
     if isinstance(array_name, list):
-        assert (len(array_name) == len(var_objects))
+        assert len(array_name) == len(var_objects)
         for i in range(len(array_name)):
             Variable.name2obj[array_name[i]] = var_objects[i]
             EVar(var_objects[i], None, None)  # object wrapping the variables
@@ -810,7 +810,7 @@ def Table(*, scope, supports=None, conflicts=None):
     assert scope is not None and (supports is None) != (conflicts is None)
     positive = supports is not None
     table = supports if positive else conflicts
-    table = list(table) if isinstance(table, (set, frozenset)) else table
+    table = list(table)  # if isinstance(table, (tuple, set, frozenset, types.GeneratorType)) else table
     if not positive and len(conflicts) == 0:
         return None
     return _Extension(scope=scope, table=table, positive=positive)
@@ -1073,7 +1073,7 @@ def both(this, And):
     assert len(res) in (1, 2)
     if len(res) == 1:
         return res[0]
-    return this & And  # conjunction(this, And)
+    return Node.conjunction(manage_global_indirection(*res))  # res[0] & res[1]
 
 
 def disjunction(*args):
@@ -1100,15 +1100,15 @@ def either(this, Or):
     """
     if this is None:
         return Or
-    if And is None:
+    if Or is None:
         return this
-    res = _simplify_expression([this, And], True)
+    res = _simplify_expression([this, Or], True)
     if isinstance(res, ConstraintDummyConstant):
         return res
     assert len(res) in (1, 2)
     if len(res) == 1:
         return res[0]
-    return this | Or  # disjunction(this, Or)
+    return Node.disjunction(manage_global_indirection(*res))  # res[0] | res[1]
 
 
 ''' Language-based Constraints '''
@@ -1399,6 +1399,9 @@ def Sum(term, *others, condition=None):
                 else:
                     pair = tree.tree_val_if_binary_type(TypeNode.MUL)
                 if pair is None:
+                    # if tree.type in (TypeNode.ADD, TypeNode.SUB):
+                    pair = (tree, 1)  # TODO should we do that (for  all cases) ?
+                if pair is None:
                     break
                 t1.append(pair[0])
                 t2.append(pair[1])
@@ -1427,12 +1430,16 @@ def Sum(term, *others, condition=None):
             OpOverrider.enable()
         return terms, coeffs
 
-    terms = flatten(list(term)) if isinstance(term, types.GeneratorType) else flatten(term, others)
-
-    if any(isinstance(t, ScalarProduct) for t in terms):
-        terms = flatten([t.to_terms() if isinstance(t, ScalarProduct) else t for t in terms])
-    if any(v is None or (isinstance(v, int) and v == 0) for v in terms):  # note that False is of type int and equal to 0
-        terms = [v for v in terms if v is not None and not (isinstance(v, int) and v == 0)]
+    terms = flatten(term, others, call_cp_array=False)
+    if any(isinstance(t, (ScalarProduct)) for t in terms) or any(
+            isinstance(t, (PartialConstraint)) and isinstance(t.constraint, (ConstraintSum)) for t in terms):
+        terms = flatten(
+            [t.to_terms() if isinstance(t, ScalarProduct) else t.constraint.to_terms() if isinstance(t, (PartialConstraint)) and isinstance(t.constraint, (
+                ConstraintSum)) else t for t in terms])
+    if any(v is None or (isinstance(v, int) and v == 0) or isinstance(v, ConstraintDummyConstant) for v in
+           terms):  # note that False is of type int and equal to 0
+        terms = [v.val if isinstance(v, ConstraintDummyConstant) else v for v in terms if
+                 v is not None and not (isinstance(v, int) and v == 0) and not (isinstance(v, ConstraintDummyConstant) and v.val == 0)]
     if len(terms) == 0:
         return ConstraintDummyConstant(0)  # 0, None
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
@@ -1787,7 +1794,7 @@ def _extremum_terms(term, others):
     #     return None
     # if len(terms) == 1:
     #     return terms[0]
-    checkType(terms, ([Variable, Node, int], [PartialConstraint]))
+    checkType(terms, ([Variable, Node, int, ConstraintDummyConstant], [PartialConstraint]))
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms)
     return terms
 
