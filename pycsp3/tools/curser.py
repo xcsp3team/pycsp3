@@ -399,6 +399,8 @@ class OpOverrider:
         return Node.build(TypeNode.MOD, other, self)
 
     def __pow__(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         return Node.build(TypeNode.POW, self, other)
 
     @staticmethod
@@ -415,6 +417,8 @@ class OpOverrider:
             OpOverrider.and_or_store = None
             return Node.build(op, node, self < other)
 
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         if self is None or other is None:
             return object.__lt__(self, other)
         if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
@@ -428,6 +432,8 @@ class OpOverrider:
             OpOverrider.and_or_store = None
             return Node.build(op, node, self <= other)
 
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         if self is None or other is None:
             return object.__le__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
@@ -441,6 +447,8 @@ class OpOverrider:
             OpOverrider.and_or_store = None
             return Node.build(op, node, self >= other)
 
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         if self is None or other is None:
             return object.__ge__(self, other)
         if isinstance(other, int) and other == 1 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
@@ -454,6 +462,8 @@ class OpOverrider:
             OpOverrider.and_or_store = None
             return Node.build(op, node, self > other)
 
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         if self is None or other is None:
             return object.__gt__(self, other)
         if isinstance(other, int) and other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
@@ -467,6 +477,8 @@ class OpOverrider:
             OpOverrider.and_or_store = None
             return Node.build(op, node, self == other)
 
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Iff(self, other, meta=True)
@@ -495,6 +507,8 @@ class OpOverrider:
             OpOverrider.and_or_store = None
             return Node.build(op, node, self != other)
 
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Xor(self, other, meta=True)  # TODO: is it always appropriate?
@@ -583,6 +597,9 @@ class OpOverrider:
         return Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            assert other.val in (0, 1)
+            other = other.val
         if isinstance(other, PartialConstraint):
             other = auxiliary().replace_partial_constraint(other)
             assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
