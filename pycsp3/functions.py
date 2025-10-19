@@ -438,14 +438,18 @@ def _simplify_expression(args, disjunction_mode: bool):
     val = 1 if disjunction_mode else 0
     if any(isinstance(arg, bool) for arg in args):
         if len(queue_in) == 0:
-            warning("Simplifying expression in " + str(args) + " by discarding Boolean values directly assessed",
-                    "simplifying_" + ("disjunction" if disjunction_mode else "conjunction"))
+            if len(args) > 1:
+                warning("Simplifying expression in " + str(args) + " by discarding Boolean values directly assessed",
+                        "simplifying_" + ("disjunction" if disjunction_mode else "conjunction"))
             if any(isinstance(arg, bool) and arg == disjunction_mode for arg in args):
                 return ConstraintDummyConstant(val)
             args = [arg for arg in args if not isinstance(arg, bool)]
-        else:
+        else:  # TODO should we do that?
             warning("Simplifying expression in " + str(args) + " with both 'in expressions' queued and direct Boolean values",
                     "simplifying_both_mode_" + ("disjunction" if disjunction_mode else "conjunction"))
+            if any(isinstance(arg, bool) and arg == disjunction_mode for arg in args):
+                return ConstraintDummyConstant(val)
+            args = [arg for arg in args if not isinstance(arg, bool)]
     if any(isinstance(arg, ConstraintDummyConstant) for arg in args):
         if any(isinstance(arg, ConstraintDummyConstant) and arg.val == val for arg in args):
             return ConstraintDummyConstant(val)

@@ -270,8 +270,13 @@ class ConstraintExtension(Constraint):
             h = hash(tuple(table))
         if len(scope) == 1:  # if arity 1
             if h not in ConstraintExtension.cache:
-                ConstraintExtension.cache[h] = integers_to_string(table) if isinstance(table[0], int) else " ".join(v for v in sorted(table))
-            return ConstraintExtension.cache[h]
+                table.sort()
+                recordable_ordinary = len(table) < 2_000 and table[-1] != ANY
+                table_s = integers_to_string(table) if isinstance(table[0], int) else " ".join(v for v in table)
+                ConstraintExtension.cache[h] = (table if recordable_ordinary else None, table_s)
+            table_ordinary_cache, table_s_cache = ConstraintExtension.cache[h]
+            self.original_small_ordinary_table = table_ordinary_cache
+            return table_s_cache
 
         possible_parallelism = not options.safe and not is_windows()
         if options.safe_tables:
@@ -305,17 +310,23 @@ class ConstraintExtension(Constraint):
                     table.sort()
                     if not options.safe_tables:
                         table = ConstraintExtension.remove_redundant_tuples(table)
-                    ConstraintExtension.cache[h] = table_to_string(table, parallel=possible_parallelism)
-                return ConstraintExtension.cache[h]
+                    recordable_ordinary = len(table) < 2_000 and all(isinstance(v, int) for t in table for v in t)
+                    ConstraintExtension.cache[h] = (table if recordable_ordinary else None, table_to_string(table, parallel=possible_parallelism))
+                table_ordinary_cache, table_s_cache = ConstraintExtension.cache[h]
+                self.original_small_ordinary_table = table_ordinary_cache
+                return table_s_cache
             else:
                 domains = [x.dom for x in scope]
                 if h in ConstraintExtension.cache:  # we need to be careful about domains when caching here
-                    domains_cache, table_cache = ConstraintExtension.cache[h]
+                    table_ordinary_cache, domains_cache, table_s_cache = ConstraintExtension.cache[h]
                     if domains == domains_cache:
-                        return table_cache
+                        self.original_small_ordinary_table = table_ordinary_cache
+                        return table_s_cache
                 table.sort()
+                recordable_ordinary = len(table) < 2_000 and all(isinstance(v, int) for t in table for v in t)
                 table_s = table_to_string(table, restricting_domains=domains, parallel=possible_parallelism)
-                ConstraintExtension.cache[h] = (domains, table_s)
+                ConstraintExtension.cache[h] = (table if recordable_ordinary else None, domains, table_s)
+                self.original_small_ordinary_table = table if recordable_ordinary else None
                 return table_s
         else:  # it is hybrid (level 1 or 2)
             if self.keep_hybrid:  # currently, no restriction of tables (wrt domains) in that case
@@ -327,9 +338,9 @@ class ConstraintExtension(Constraint):
             else:
                 domains = [x.dom for x in scope]
                 if h in ConstraintExtension.cache:  # we need to be careful about domains when caching here
-                    domains_cache, table_cache = ConstraintExtension.cache[h]
+                    domains_cache, table_s_cache = ConstraintExtension.cache[h]
                     if domains == domains_cache:
-                        return table_cache
+                        return table_s_cache
                 table = ConstraintExtension.convert_hybrid_to_ordinary(scope, table)
                 table = ConstraintExtension.remove_redundant_tuples(table)
                 table_s = table_to_string(table, restricting_domains=domains if self.restrict_table_wrt_domains else None, parallel=possible_parallelism)
@@ -340,6 +351,7 @@ class ConstraintExtension(Constraint):
         super().__init__(TypeCtr.EXTENSION)
         self.keep_hybrid = keep_hybrid
         self.restrict_table_wrt_domains = restrict_table_wrt_domains
+        self.original_small_ordinary_table = None  # to be recorded for possible reification use later
         assert is_1d_list(scope, Variable)
         assert len(table) == 0 or (len(scope) == 1 and (is_1d_list(table, int) or is_1d_list(table, str))) or (len(scope) > 1 and len(scope) == len(table[0]))
         self.arg(TypeCtrArg.LIST, scope, content_ordered=True)
@@ -1492,6 +1504,15 @@ def global_indirection(c):
                 pc = PartialConstraint(ConstraintNValues(c.arguments[TypeCtrArg.LIST].content, None, None))
                 condition = Condition.build_condition((TypeConditionOperator.EQ, 1))
             # elif mode == 2:   TODO using a reified table here ? (see paper by O. Lhomme)
+        elif isinstance(c, ConstraintExtension):
+            lst = c.arguments[TypeCtrArg.LIST].content
+            assert isinstance(lst, (tuple, list)) and all(isinstance(x, VariableInteger) for x in lst)
+            assert TypeCtrArg.SUPPORTS in c.arguments  # for the moment
+            table = c.arguments[TypeCtrArg.SUPPORTS].content
+            assert c.original_small_ordinary_table is not None
+            var = auxiliary().new_var(0, 1)
+            auxiliary().collect_table(lst, var, to_reified_ordinary_table(c.original_small_ordinary_table, [x.dom for x in lst]))
+            return var
     if pc is None:
         warning("You use a global constraint/function in a complex expression.\n" +
                 "\tHowever, this constraint cannot be externalized by introducing an auxiliary variable.\n" +

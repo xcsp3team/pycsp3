@@ -323,7 +323,7 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
             "*" if v == ANY else v.str_tuple()
             for v in t) + ")"
 
-    LIMIT = 100000  # hard coding
+    LIMIT = 100_000  # hard coding
     if not parallel or len(table) < LIMIT:
         s = []
         previous = ""
