@@ -362,7 +362,7 @@ class OpOverrider:
             other = other.val
         if isinstance(other, int):
             if other == 0:
-                return ConstraintDummyConstant(0)
+                return 0  # ConstraintDummyConstant(0)
             if other == 1:
                 return self
         if isinstance(other, PartialConstraint):

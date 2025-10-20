@@ -549,7 +549,7 @@ class ConstraintSum(ConstraintWithCondition):
         if TypeCtrArg.COEFFS in self.arguments:
             self.arguments[TypeCtrArg.COEFFS].content = [-v for v in self.arguments[TypeCtrArg.COEFFS].content]
         else:
-            self.arg(TypeCtrArg.COEFFS, [-1 for _ in range(len(self.arguments[TypeCtrArg.LIST]))])
+            self.arg(TypeCtrArg.COEFFS, [-1 for _ in self.arguments[TypeCtrArg.LIST].content])
         return self
 
     def add(self, term):
@@ -558,9 +558,15 @@ class ConstraintSum(ConstraintWithCondition):
         elif isinstance(term, (PartialConstraint, ECtr)):
             term = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(term)
         assert isinstance(term, (Variable, Node))
-        self.arguments[TypeCtrArg.LIST].content.append(term)
-        if TypeCtrArg.COEFFS in self.arguments:
-            self.arguments[TypeCtrArg.COEFFS].content.append(1)
+        if isinstance(term, Node) and term.type == TypeNode.NEG:
+            if TypeCtrArg.COEFFS not in self.arguments:
+                self.arg(TypeCtrArg.COEFFS, [1 for _ in self.arguments[TypeCtrArg.LIST].content])
+            self.arguments[TypeCtrArg.LIST].content.append(term.cnt)
+            self.arguments[TypeCtrArg.COEFFS].content.append(-1)
+        else:
+            self.arguments[TypeCtrArg.LIST].content.append(term)
+            if TypeCtrArg.COEFFS in self.arguments:
+                self.arguments[TypeCtrArg.COEFFS].content.append(1)
         return self
 
     def to_terms(self):
@@ -1085,6 +1091,14 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         # pair = self._simplify_with_auxiliary_variables(other)
         # return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
 
+    def __neg__(self):
+        if isinstance(self.constraint, ConstraintSum):
+            args = self.constraint.arguments
+            cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
+            self.constraint.arg(TypeCtrArg.COEFFS, [-c for c in cs])
+            return self
+        return - auxiliary().replace_partial_constraint(self)
+
     def __ne__(self, other):
         return self.add_condition(TypeConditionOperator.NE, self._simplify_with_auxiliary_variables(other))
 
@@ -1105,6 +1119,10 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             if isinstance(other, (int, ECtr)) or isinstance(other, PartialConstraint) and not isinstance(other.constraint, ConstraintSum):
                 self.constraint.add(other)
                 return self
+        if isinstance(other, PartialConstraint) and isinstance(other.constraint, ConstraintSum):
+            if not isinstance(self.constraint, ConstraintSum):
+                other.constraint.add(self)
+                return other
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
@@ -1112,9 +1130,13 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     def __sub__(self, other):
         if isinstance(self.constraint, ConstraintSum):
-            if isinstance(other, int):
+            if isinstance(other, (int, ECtr)) or isinstance(other, PartialConstraint) and not isinstance(other.constraint, ConstraintSum):
                 self.constraint.add(-other)
                 return self
+        if isinstance(other, PartialConstraint) and isinstance(other.constraint, ConstraintSum):
+            if not isinstance(self.constraint, ConstraintSum):
+                other.constraint.add(-self)
+                return other
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
