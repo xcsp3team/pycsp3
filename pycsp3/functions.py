@@ -25,7 +25,7 @@ from pycsp3.classes.nodes import TypeNode, Node
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, warning, warning_if, error_if)
+from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, error, warning, warning_if, error_if)
 
 from pycsp3.classes.auxiliary.tables import to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2
 
@@ -445,11 +445,14 @@ def _simplify_expression(args, disjunction_mode: bool):
                 return ConstraintDummyConstant(val)
             args = [arg for arg in args if not isinstance(arg, bool)]
         else:  # TODO should we do that?
-            warning("Simplifying expression in " + str(args) + " with both 'in expressions' queued and direct Boolean values",
-                    "simplifying_both_mode_" + ("disjunction" if disjunction_mode else "conjunction"))
-            if any(isinstance(arg, bool) and arg == disjunction_mode for arg in args):
-                return ConstraintDummyConstant(val)
-            args = [arg for arg in args if not isinstance(arg, bool)]
+            error("You must avoid the construction you use with 'in' in complex expressions."
+                  + " For unary table constraints, use among() and not_among() as for example:"
+                  + " x[0].among(2,4),  x[1].not_among(range(5))")
+            # warning("Simplifying expression in " + str(args) + " with both 'in expressions' queued and direct Boolean values",
+            #         "simplifying_both_mode_" + ("disjunction" if disjunction_mode else "conjunction"))
+            # if any(isinstance(arg, bool) and arg == disjunction_mode for arg in args):
+            #     return ConstraintDummyConstant(val)
+            # args = [arg for arg in args if not isinstance(arg, bool)]
     if any(isinstance(arg, ConstraintDummyConstant) for arg in args):
         if any(isinstance(arg, ConstraintDummyConstant) and arg.val == val for arg in args):
             return ConstraintDummyConstant(val)
@@ -1361,7 +1364,7 @@ def Precedence(within, *, values=None, covered=False):
     if len(values) > 1:
         return ECtr(ConstraintPrecedence(flatten(within), values=values, covered=covered))
     else:
-        warning("A constraint Precedence discarded because defined with " + str(len(values)) + " values")
+        warning("A constraint Precedence discarded because defined with " + str(len(values)) + " values", "precedence_" + str(len(values)) + "_value")
         return None
 
 
@@ -1759,7 +1762,7 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     terms = flatten(within, within_complement)
     if len(terms) == 0:
         assert all((isinstance(v, int) and v == 0) or (isinstance(v, range) and 0 in v) for k, v in occurrences.items())  # TODO and for Var ?
-        warning("A constraint Cardinality discarded because defined with 0 term")
+        warning("A constraint Cardinality discarded because defined with 0 term", "cardinality_0_term")
         return ConstraintDummyConstant(1)
     assert len(terms) > 0, "Cardinality constraint posted over a sequence of zero variable"
     for i, t in enumerate(terms):
@@ -1926,7 +1929,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         assert origins is None and lengths is None
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
         if len(tasks) <= 1:
-            warning("A constraint NoOverlap discarded because defined with " + str(len(tasks)) + " task")
+            warning("A constraint NoOverlap discarded because defined with " + str(len(tasks)) + " task", "nooverlap_" + str(len(tasks)) + "_task")
             return ConstraintDummyConstant(1)  # return None
         assert isinstance(tasks, list) and len(tasks) > 0
         for i, task in enumerate(tasks):
@@ -2012,10 +2015,10 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         assert origins is None and lengths is None and ends is None and heights is None
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
         if len(tasks) == 0:
-            warning("A constraint Cumulative transformed because defined with 0 task")
+            warning("A constraint Cumulative transformed because defined with 0 task", "cumulative_0_task")
             return ConstraintDummyConstant(0)  # auxiliary().replace_int(0)
         if len(tasks) == 1:
-            warning("A constraint Cumulative transformed because defined with 1 task only")
+            warning("A constraint Cumulative transformed because defined with 1 task only", "cumulative_1_task")
             h = tasks[0][2 if len(tasks[0]) == 3 else 3]  # the height for the task
             return h if isinstance(h, Variable) else ConstraintDummyConstant(h)  # auxiliary().replace_int(h)
 

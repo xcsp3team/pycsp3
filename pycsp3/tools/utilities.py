@@ -442,7 +442,9 @@ def error_if(test, message):
 
 
 _warning_already_printed = {"array_indexing_warning": False, "simplifying_disjunction": False, "simplifying_conjunction": False,
-                            "simplifying_both_mode_disjunction": False, "simplifying_both_mode_conjunction": False}
+                            "simplifying_both_mode_disjunction": False, "simplifying_both_mode_conjunction": False, "cardinality_0_term": False,
+                            "nooverlap_0_task": False, "nooverlap_1_task": False, "cumulative_0_task": False, "cumulative_1_task": False,
+                            "precedence_0_value": False, "precedence_1_value": False}
 
 
 def warning(message, type_message=None):

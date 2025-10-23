@@ -261,6 +261,8 @@ class VariableInteger(Variable):
 
     def among(self, *values):
         values = flatten(values)
+        if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
+            values = list(values[0])
         if len(values) == 0:
             return main.constraints.ConstraintDummyConstant(0)
         assert len(values) > 0 and all(isinstance(v, int) for v in values)
@@ -268,6 +270,8 @@ class VariableInteger(Variable):
 
     def not_among(self, *values):
         values = flatten(values)
+        if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
+            values = list(values[0])
         if len(values) == 0:
             return main.constraints.ConstraintDummyConstant(1)
         assert len(values) > 0 and all(isinstance(v, int) for v in values)
