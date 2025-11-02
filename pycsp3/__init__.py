@@ -20,7 +20,7 @@ from pycsp3.functions import (Table, Regular, AllDifferent, AllDifferentList, Al
                               BinPacking, Knapsack, Flow, Circuit, Clause, Adhoc)
 from pycsp3.functions import posted, objective, unpost, value, values
 
-from pycsp3.tools.curser import columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, cp_array
+from pycsp3.tools.curser import rows, columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, diagonals, cp_array
 from pycsp3.tools.utilities import (ANY, ALL, combinations, different_values, decrement, flatten, alphabet_positions, all_primes, integer_scaling,
                                     number_of_values_for_sum_ge, number_of_values_for_sum_gt, number_max_of_values_for_sum_le, number_max_of_values_for_sum_lt,
                                     build_table, warning)

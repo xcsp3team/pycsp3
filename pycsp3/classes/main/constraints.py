@@ -1198,6 +1198,18 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         assert is_2d_list(lst, int) and isinstance(index, Variable)
         return (index, item) in sorted([(i, v) for i, t in enumerate(lst) for v in t])
 
+    def among(self, right_operand):
+        return ECtr(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
+
+    def is_in(self, right_operand):
+        return ECtr(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
+
+    def not_among(self, right_operand):
+        return ECtr(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
+
+    def is_not_in(self, right_operand):
+        return ECtr(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
+
     def __str__(self):
         c = self.constraint
         # assert len(c.arguments) == 2

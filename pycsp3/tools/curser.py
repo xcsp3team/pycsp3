@@ -1069,6 +1069,18 @@ def _list(t, mode):
     return ListVar(v for v in t) if mode == 0 else ListInt(v for v in t) if mode == 1 else list(v for v in t)
 
 
+def rows(m):
+    """
+    Returns a list with the rows of the specified matrix
+
+    :param m: a matrix (i.e. a two-dimensional list)
+    :return: the matrix (possibly after converting its type)
+    """
+    assert is_matrix(m)
+    mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
+    return _list((row for row in m), mode)
+
+
 def columns(m):
     """
     Returns the transpose matrix of the specified matrix
@@ -1171,6 +1183,18 @@ def diagonals_up(m, *, broken=False):
         return _list((diagonal_up(m, i, -1, False) for i in range(len(m))), mode)
     return _list((diagonal_up(m, i, 0, False) for i in range(1, len(m))), mode) + \
         _list((diagonal_up(m, len(m) - 1, j, False) for j in range(1, len(m) - 1)), mode)
+
+
+def diagonals(m):
+    """
+      Returns a list with the two main diagonals of the specified matrix
+
+      :param m: a matrix (i.e. a two-dimensional list)
+      :return: a list with the two main diagonals
+      """
+    assert is_square_matrix(m), "The specified first parameter must be a square matrix."
+    mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
+    return _list((diagonal_down(m), diagonal_up(m)), mode)
 
 
 def cp_array(*t):

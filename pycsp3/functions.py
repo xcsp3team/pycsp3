@@ -183,9 +183,9 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     if isinstance(size, range):
         assert size.start == 0 and len(size) > 0
         size = size.stop
-    if isinstance(size, (tuple, list)) and all(isinstance(s, range) for s in size):
-        assert all(s.start == 0 and len(s) > 0 for s in size)
-        size = [s.stop for s in size]
+    if isinstance(size, (tuple, list)) and any(isinstance(s, range) for s in size):
+        assert all(s.start == 0 and len(s) > 0 for s in size if isinstance(s, range))
+        size = [s.stop if isinstance(s, range) else s for s in size]
 
     if dom_border is not None:
         assert len(size) == 2 and dom is not None
@@ -559,18 +559,25 @@ def Match(Expr, *, Cases):
     assert isinstance(Cases, dict)
     if isinstance(Expr, (tuple, list)):
         r = len(Expr)
-        assert r > 1 and all(isinstance(v, (Variable, Node)) for v in Expr)
-        assert all(isinstance(k, (tuple, list)) and len(k) == r and all(isinstance(v, int) for v in k) for k in Cases.keys())
-        return [disjunction([Expr[i] != k[i] for i in range(r)] + [v]) for k, v in Cases.items()]
+        assert r > 1 and all(isinstance(k, (tuple, list)) and len(k) == r for k in Cases.keys())
+        log = isinstance(Expr[0], (Variable, Node))
+        assert all(log == isinstance(v, (Variable, Node)) for v in Expr)
+        if log:
+            assert all(isinstance(v, int) for k in Cases.keys() for v in k)
+            return [disjunction([Expr[i] != k[i] for i in range(r)] + [v]) for k, v in Cases.items()]
+        else:
+            assert all(type(Expr[i]) == type(k[i]) for k in Cases.keys() for i in range(r))
+            return [v for k, v in Cases.items() if all(Expr[i] == k[i] for i in range(r))]
 
     t = [(k, w) for k, v in Cases.items() for w in (v if isinstance(v, (tuple, list, set, frozenset)) else [v])]
     if isinstance(Expr, (Variable, Node)):
         return [expr(~k.operator, Expr, k.right_operand()) | v if isinstance(k, Condition)
                 else (Expr != k if not isinstance(k, (tuple, list, set, frozenset)) else not_belong(Expr, k)) | v for k, v in t]
     else:
-        assert False, "Bad construction with Match: the expression must be a variable or an expression involving a variable"
-        # return [v for k, v in t if
-        #         (not isinstance(k, (tuple, list, set, frozenset)) and Expr == k) or (isinstance(k, (tuple, list, set, frozenset)) and Expr in k)]
+        assert all(type(Expr) == type(v) for k in Cases for v in (k if isinstance(k, (tuple, list, set, frozenset, range)) else [k]))
+        return [v for k, v in Cases.items() if
+                (not isinstance(k, (tuple, list, set, frozenset, range)) and Expr == k) or (isinstance(k, (tuple, list, set, frozenset, range)) and Expr in k)]
+        # assert False, "Bad construction with Match: the expression must be a variable or an expression involving a variable"
 
 
 def Iff(*args, meta=False):
