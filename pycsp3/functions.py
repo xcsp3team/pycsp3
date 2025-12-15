@@ -459,7 +459,7 @@ def _simplify_expression(args, disjunction_mode: bool):
         assert all(not isinstance(arg, ConstraintDummyConstant) or arg.val == (0 if val == 1 else 1) for arg in args)
         args = [arg for arg in args if not isinstance(arg, ConstraintDummyConstant)]
     if len(args) == 0:
-        return ConstraintDummyConstant(1 if val == 0 else 1)
+        return ConstraintDummyConstant(1 if val == 0 else 0)
     return args
 
 
@@ -488,7 +488,6 @@ def If(test, *test_complement, Then, Else=None, meta=False):
 
     # if len(testOthers) == 0 and isinstance(test, bool):  # We don't allow that because otherwise 'in' no more usable as in If(x[0] in (2,3), Then=...
     #     return Then if test else Else
-
     tests, thens = flatten(test, test_complement), [v for v in flatten(Then) if not (isinstance(v, ConstraintDummyConstant) and v.val == 1)]
     assert isinstance(tests, list) and len(tests) > 0 and isinstance(thens, list)  # after flatten, we have a list
     res = _simplify_expression(tests, False)
@@ -505,6 +504,12 @@ def If(test, *test_complement, Then, Else=None, meta=False):
             return EIfThen(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(tests, thens))))
         else:
             return EIfThenElse(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(tests, thens, Else))))
+    if Else is None and len(thens) == 1 and isinstance(thens[0], ConstraintDummyConstant):
+        if thens[0].val == 0:
+            return disjunction(test == 0 for test in tests)
+        else:
+            assert thens[0].val == 1
+            return ConstraintDummyConstant(1)
 
     tests, thens = manage_global_indirection(tests, also_pc=True), manage_global_indirection(thens, also_pc=True)  # we get None or a list
     assert tests is not None and thens is not None and len(tests) > 0 and len(thens) > 0
@@ -791,6 +796,7 @@ def _Extension(*, scope, table, positive=True):
     checkType(positive, bool)
 
     if len(scope) == 1:
+        table = [v[0] for v in table if isinstance(v, tuple) and len(v) == 1]
         assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
     else:  # if all(isinstance(x, VariableInteger) for x in scope):
         if not options.safe_tables:
@@ -821,6 +827,7 @@ def Table(*, scope, supports=None, conflicts=None):
 
     :return: a constraint Table (Extension)
     """
+    scope = flatten(scope)
     assert scope is not None and (supports is None) != (conflicts is None)
     positive = supports is not None
     table = supports if positive else conflicts
@@ -2259,6 +2266,18 @@ def _optimize(term, minimization):
         return EObjective(ObjectivePartial(way, term)).note(comment[0]).tag(tag[0])
 
 
+deco_exec = False
+
+
+def deco(f):
+    global deco_exec
+
+    deco_exec = True
+
+    return f
+
+
+@deco
 def minimize(term):
     """
     Builds and returns an objective that corresponds to minimizing the specified term.
