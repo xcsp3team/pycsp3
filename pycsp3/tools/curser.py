@@ -754,9 +754,12 @@ class OpOverrider:
             #     if is_2d_list(array) and isinstance(indexes, (tuple, list)) and all(
             #             isinstance(v, (tuple, list)) and len(v) == 2 and all(isinstance(w, int) for w in v) for v in indexes):
             #         return ListInt([list.__getitem__(list.__getitem__(array, v), w) for v, w in indexes])
-        if isinstance(indexes, tuple) and isinstance(indexes[0], int):
-            rest = indexes[1:]
-            return array[indexes[0]][rest[0] if len(rest) == 1 else rest]
+        if isinstance(indexes, tuple):
+            if len(indexes) == 0:
+                return ListVar([]) if lv else ListInt([])
+            if isinstance(indexes[0], int):
+                rest = indexes[1:]
+                return array[indexes[0]][rest[0] if len(rest) == 1 else rest]
         if isinstance(indexes, PartialConstraint):
             indexes = auxiliary().replace_partial_constraint(indexes)
         elif isinstance(indexes, Node):

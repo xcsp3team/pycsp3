@@ -1069,6 +1069,7 @@ def conjunction(*args):
     # t = flatten(args)
     # if len(t) > 3:
     #     return Count(t) == len(t)
+
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
     res = _simplify_expression(args, False)
