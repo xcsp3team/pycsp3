@@ -796,7 +796,7 @@ def _Extension(*, scope, table, positive=True):
     checkType(positive, bool)
 
     if len(scope) == 1:
-        table = [v[0] for v in table if isinstance(v, tuple) and len(v) == 1]
+        table = [v[0] if isinstance(v, tuple) and len(v) == 1 else v for v in table]
         assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
     else:  # if all(isinstance(x, VariableInteger) for x in scope):
         if not options.safe_tables:
