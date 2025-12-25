@@ -226,8 +226,12 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     if isinstance(dom, (tuple, list, set, frozenset)):
         vals = set(flatten(dom))
         assert len(vals) > 0
-        min_value, max_value = min(vals), max(vals)
-        dom = range(min_value, max_value + 1) if isinstance(min_value, int) and 3 < len(vals) == (max_value - min_value + 1) else Domain(vals)
+        if all(isinstance(v, int) for v in vals):
+            min_value, max_value = min(vals), max(vals)
+            dom = range(min_value, max_value + 1) if 3 < len(vals) == (max_value - min_value + 1) else Domain(vals)
+        else:
+            dom = Domain(vals)
+
     var_objects = Variable.build_variables_array(array_name, size, dom)
     if isinstance(array_name, list):
         assert len(array_name) == len(var_objects)

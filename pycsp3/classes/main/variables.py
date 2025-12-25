@@ -46,16 +46,19 @@ class Domain:
             _add_value(args)
             assert self.type, "You have defined a variable with an empty domain; fix this"
             self.original_values.sort(key=lambda v: v.start if isinstance(v, range) else v)
+            discard = [False] * len(self.original_values)
             for i in range(len(self.original_values) - 1):
                 v, w = self.original_values[i], self.original_values[i + 1]
                 if isinstance(v, range) and isinstance(w, range):
                     assert v.stop <= w.start
                 elif isinstance(v, range):
-                    assert v.stop <= w
+                    if v.stop > w:
+                        discard[i + 1] = True
                 elif isinstance(w, range):
                     assert v < w.start
                 else:
                     assert v < w
+            self.original_values = [v for i, v in enumerate(self.original_values) if not discard[i]]
             self.values = None  # will be defined later if necessary as either a range, or a list of int or a list of str
 
     def remove(self, v):
