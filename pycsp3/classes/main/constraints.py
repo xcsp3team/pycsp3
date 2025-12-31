@@ -1222,6 +1222,10 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     @staticmethod
     def combine_partial_objects(obj1, operator, obj2):  # currently, only partial sums can be combined
         assert operator in {TypeNode.ADD, TypeNode.SUB}
+        if isinstance(obj1, ConstraintDummyConstant):
+            obj1 = obj1.val
+        if isinstance(obj2, ConstraintDummyConstant):
+            obj2 = obj2.val
         if isinstance(obj1, ScalarProduct):
             obj1 = PartialConstraint(ConstraintSum(obj1.variables, obj1.coeffs, None))  # to be sure to have at least one PartialConstraint
         # if isinstance(obj2, ScalarProduct):
@@ -1238,6 +1242,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         elif isinstance(obj2, ScalarProduct):
             obj2 = PartialConstraint(ConstraintSum(obj2.variables, obj2.coeffs, None))
         elif isinstance(obj2, int):
+            if obj2 == 0 and not inverted:
+                return obj1
             aux = auxiliary().replace_partial_constraint(obj1)
             return aux + obj2 if operator is TypeNode.ADD else aux - obj2 if not inverted else obj2 - aux
         elif not isinstance(obj2, PartialConstraint):
