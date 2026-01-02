@@ -782,6 +782,13 @@ class OpOverrider:
         if isinstance(indexes, Variable):
             if indexes.dom.is_infinite():
                 indexes.dom = Domain(range(len(array)))
+            if isinstance(array, ListInt):
+                if is_1d_list(array, int):
+                    if all(array[0] == v for v in array):
+                        return ConstraintDummyConstant(array[0])
+                elif is_2d_list(array, int):
+                    if all(array[0] == t for t in array):  # all rows are identical
+                        return array[0]
             return PartialConstraint(ConstraintElement(array, index=indexes))
         if isinstance(indexes, tuple):
             assert len(indexes) > 1
@@ -791,6 +798,9 @@ class OpOverrider:
                 index0 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[0], node_too=True, values=range(n))
                 index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True, values=range(m))
                 if all(isinstance(i, Variable) for i in (index0, index1)):
+                    if is_2d_list(array, int):
+                        if all(array[0] == t for t in array):  # because all rows are identical, we keep only one dimension
+                            return array[0][index1]
                     return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
                 if isinstance(index0, Variable) and isinstance(index1, int):
                     return PartialConstraint(ConstraintElement(array[:, index1], index=index0))
