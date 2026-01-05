@@ -136,6 +136,12 @@ class ECtr(Entity):
                 + "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide.\n")
         return True
 
+    def __repr__(self) -> str:
+        return str(self.constraint)
+
+    def __str__(self) -> str:
+        return str(self.constraint)
+
     def to_table(self):  # experimental
         c = self.constraint
         if c.name == TypeCtr.ALL_DIFFERENT and c.arguments[TypeCtrArg.LIST].lifted and TypeCtrArg.EXCEPT not in c.arguments:
