@@ -1331,6 +1331,10 @@ class ScalarProduct:
         return PartialConstraint.combine_partial_objects(other, TypeNode.SUB, pc)
 
     def __mul__(self, other):
+        if isinstance(other, int):
+            for i in range(len(self.coeffs)):
+                self.coeffs[i] *= other
+            return self
         return Node.build(TypeNode.MUL, self, other)
 
     __rmul__ = __mul__
