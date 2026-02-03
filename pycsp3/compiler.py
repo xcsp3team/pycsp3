@@ -234,7 +234,7 @@ def _load(*, console=False):
     options.verbose and print("\tWCK for loading model and data:", Compilation.stopwatch.elapsed_time(), "seconds")
 
 
-def load_json_data(filename, *, storing=False):
+def load_json_data(filename, *, storing=False, record_string_data=True):
     """
     Loads and returns the data from the specified JSON file (possibly given by a URL)
 
@@ -250,7 +250,8 @@ def load_json_data(filename, *, storing=False):
         from urllib.request import urlopen
 
         data = json.loads(urlopen(filename).read(), object_pairs_hook=OrderedDict)
-        Compilation.string_data = "-" + filename[filename.rindex("/") + 1:-5]  # "/" is necessary in the URL since it starts with http
+        if record_string_data:
+            Compilation.string_data = "-" + filename[filename.rindex("/") + 1:-5]  # "/" is necessary in the URL since it starts with http
     else:
         if os.path.exists(filename):
             fn = filename
@@ -265,7 +266,8 @@ def load_json_data(filename, *, storing=False):
             else:
                 fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
         assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
-        Compilation.string_data = "-" + filename[0 if os.sep not in filename else filename.rindex(os.sep) + 1:-5]
+        if record_string_data:
+            Compilation.string_data = "-" + filename[0 if os.sep not in filename else filename.rindex(os.sep) + 1:-5]
         with open(fn) as f:
             data = json.loads(f.read(), object_pairs_hook=OrderedDict)
     data = convert_to_namedtuples(data)
@@ -275,7 +277,8 @@ def load_json_data(filename, *, storing=False):
         data = data[0]  # the value instead of a tuple of size 1
     if storing:
         Compilation.data = data
-        Compilation.string_data = "-" + _basic_token(filename)
+        if record_string_data:
+            Compilation.string_data = "-" + _basic_token(filename)
     return data
 
 
