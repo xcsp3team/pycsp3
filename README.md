@@ -3,11 +3,11 @@
 </div>
 
 <br />
-<h2> PyCSP3 v2.5 <sub><sup>(June 11, 2025)</sup></sub> </h2> 
+<h2> PyCSP3 v2.6 <sub><sup>(March 1, 2026)</sup></sub> </h2> 
 
 <!-- PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). -->
 
-This is Version 2.5 of PyCSP3, a library in Python (version 3.10 or later) for modeling combinatorial constrained problems;
+This is Version 2.6 of PyCSP3, a library in Python (version 3.10 or later) for modeling combinatorial constrained problems;
 see [www.pycsp.org](https://pycsp.org). With PyCSP3, it is possible to generate instances of:
 
 1. CSP (Constraint Satisfaction Problem)
