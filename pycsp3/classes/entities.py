@@ -7,7 +7,6 @@ from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.inspector import checkType
 from pycsp3.tools.utilities import flatten, is_containing, warning, ANY, combinations
 
-
 class Entity:
     def __init__(self, name, comment=None, tags=None):
         self.id = name

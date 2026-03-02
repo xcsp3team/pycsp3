@@ -10,6 +10,7 @@ from importlib import util
 
 from lxml import etree
 
+
 from pycsp3.dashboard import options
 from pycsp3.problems.data import parsing
 from pycsp3.tools.aggregator import build_similar_constraints

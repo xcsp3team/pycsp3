@@ -29,6 +29,8 @@ from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tu
 
 from pycsp3.classes.auxiliary.tables import to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2
 
+
+
 ''' Global Variables '''
 
 absPython, maxPython, minPython = abs, max, min
