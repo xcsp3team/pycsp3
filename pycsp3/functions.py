@@ -29,8 +29,6 @@ from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tu
 
 from pycsp3.classes.auxiliary.tables import to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2
 
-
-
 ''' Global Variables '''
 
 absPython, maxPython, minPython = abs, max, min
@@ -801,13 +799,23 @@ def _Extension(*, scope, table, positive=True):
     assert len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
     checkType(positive, bool)
 
+    if len(table) < 100 and any(isinstance(t, (list, types.GeneratorType)) for t in table):  # TODO hard coding (100)
+        new_table = []
+        for i, t in enumerate(table):
+            if isinstance(t, list):
+                new_table.append(tuple(t))
+            elif isinstance(t, types.GeneratorType):
+                new_table.extend(v for v in t)
+            else:
+                new_table.append(t)
+        table = new_table
     if len(scope) == 1:
         table = [v[0] if isinstance(v, tuple) and len(v) == 1 else v for v in table]
         assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
     else:  # if all(isinstance(x, VariableInteger) for x in scope):
         if not options.safe_tables:
             for i, t in enumerate(table):
-                if isinstance(t, (list, types.GeneratorType)):
+                if isinstance(t, (list)):  # , types.GeneratorType)):
                     table[i] = t = tuple(t)
                 else:
                     assert isinstance(t, tuple), str(t)
