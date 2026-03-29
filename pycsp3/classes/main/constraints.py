@@ -1451,6 +1451,8 @@ class _Auxiliary:
             return self.replace_node(term, values=values)
         if isinstance(term, ConstraintDummyConstant):
             return self.replace_int(term.val)
+        if isinstance(term, int):
+            return self.replace_int(term)
         return term
 
     def replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(self, terms, *, nodes_too=False, values=None):
