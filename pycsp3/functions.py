@@ -25,7 +25,7 @@ from pycsp3.classes.nodes import TypeNode, Node
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
-from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, error, warning, warning_if, error_if)
+from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, error, warning, warning_if, error_if, is_2d_list)
 
 from pycsp3.classes.auxiliary.tables import to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2
 
@@ -124,6 +124,8 @@ def Var(term=None, *others, dom=None, id=None):
     if not isinstance(dom, Domain):
         if isinstance(dom, (set, frozenset)):
             dom = list(dom)
+        if is_2d_list(dom, int):
+            dom = list(set(flatten(dom)))
         if isinstance(dom, (tuple, list)) and len(dom) > 1 and isinstance(dom[0], int):
             dom = sorted(dom)
             if dom[-1] - dom[0] + 1 == len(dom):
