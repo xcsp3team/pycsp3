@@ -233,7 +233,6 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
             dom = range(min_value, max_value + 1) if 3 < len(vals) == (max_value - min_value + 1) else Domain(vals)
         else:
             dom = Domain(vals)
-
     var_objects = Variable.build_variables_array(array_name, size, dom)
     if isinstance(array_name, list):
         assert len(array_name) == len(var_objects)
@@ -2062,7 +2061,7 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         else:
             origins, lengths, ends, heights = zip(*tasks)
     origins = flatten(origins)
-    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(origins, nodes_too=True)
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(origins, nodes_too=True, int_too=False)
     if _is_mixed_list(origins):
         origins = auxiliary().replace_ints(origins)
     checkType(origins, [Variable])

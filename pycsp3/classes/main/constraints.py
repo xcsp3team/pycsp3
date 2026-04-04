@@ -1441,7 +1441,7 @@ class _Auxiliary:
             values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
         return self.__replace(node, Domain(values))
 
-    def replace_partial_constraint_and_constraint_with_condition_and_possibly_node(self, term, *, node_too=False, values=None):
+    def replace_partial_constraint_and_constraint_with_condition_and_possibly_node(self, term, *, node_too=False, int_too=False, values=None):
         # TODO: for the moment, values is only used for a node
         if isinstance(term, PartialConstraint):
             return self.replace_partial_constraint(term)
@@ -1451,14 +1451,14 @@ class _Auxiliary:
             return self.replace_node(term, values=values)
         if isinstance(term, ConstraintDummyConstant):
             return self.replace_int(term.val)
-        if isinstance(term, int):
+        if int_too and isinstance(term, int):
             return self.replace_int(term)
         return term
 
-    def replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(self, terms, *, nodes_too=False, values=None):
+    def replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(self, terms, *, nodes_too=False, int_too=False, values=None):
         assert isinstance(terms, list)
         for i, term in enumerate(terms):
-            terms[i] = self.replace_partial_constraint_and_constraint_with_condition_and_possibly_node(term, node_too=nodes_too, values=values)
+            terms[i] = self.replace_partial_constraint_and_constraint_with_condition_and_possibly_node(term, node_too=nodes_too, int_too=int_too, values=values)
         return terms
 
     def replace_element_index(self, length, index):

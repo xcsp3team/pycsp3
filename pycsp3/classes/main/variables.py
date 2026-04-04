@@ -174,6 +174,10 @@ class Variable:
             domain = domain(*indexes)
             if domain is None:
                 return None
+            if not isinstance(domain, range):
+                domain = flatten(domain)
+                if isinstance(domain, list) and all(domain[i] + 1 == domain[i + 1] for i in range(len(domain) - 1)):
+                    domain = range(domain[0], domain[-1] + 1)
         if isinstance(domain, (tuple, list)):
             domain = flatten(domain)
             assert all(isinstance(v, int) for v in domain) or all(isinstance(v, str) for v in domain)  # possible, even if using a set is recommended
