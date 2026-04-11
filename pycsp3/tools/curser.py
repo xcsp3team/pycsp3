@@ -775,7 +775,7 @@ class OpOverrider:
                     n = len(array)  # note that we force the domain of the aux variable with the parameter values
                     if not options.force_element_index:
                         if isinstance(values, range):
-                            assert 0 <= values.start and values.stop <= n
+                            error_if(not( 0 <= values.start and values.stop <= n), "Problem with an index ; maybe -force_element_index is appropriate!")
                         else:
                             assert is_1d_list(values, int) and len(values) > 0 and 0 <= values[0] and values[-1] < n
                     indexes = auxiliary().replace_node(indexes, values=range(n))
