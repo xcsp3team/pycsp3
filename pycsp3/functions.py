@@ -1717,7 +1717,7 @@ def Hamming(term, *others):
     elif len(others) > 0:
         term = list((term,) + others)
     lists = [flatten(v) for v in term]
-    assert all(checkType(t, [Variable]) for t in lists) and len(lists) == 2 and len(lists[0]) == len(lists[1])
+    assert all(checkType(t, ([Variable],[int])) for t in lists) and len(lists) == 2 and len(lists[0]) == len(lists[1])
     return Sum(lists[0][j] != lists[1][j] for j in range(len(lists[0])))
 
 

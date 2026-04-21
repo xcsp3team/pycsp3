@@ -25,8 +25,9 @@ class DataParser:
             values = data_value[1:-1].split(',')
         else:
             values = [data_value]
-        if len(values) == 1 and os.path.isdir(values[0]):  # in case of a directory, consider all files in the directory; this is very specific
-            values = [os.path.join(values[0], f) for f in os.listdir(values[0]) if os.path.isfile(os.path.join(values[0], f))]
+        if len(values) == 1 and os.path.isdir(values[0]):  # in case of a directory, consider all files in the directory
+            # this is very specific as we concat contents of files (in the order of their names)
+            values = [os.path.join(values[0], f) for f in sorted(os.listdir(values[0])) if os.path.isfile(os.path.join(values[0], f))]
         error_if(len(values) == 1 and not values[0].startswith("http") and not os.path.isfile(values[0]),
                  " It seems that the filename " + values[0] + " is not found")
         self.lines = []
