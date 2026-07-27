@@ -21,7 +21,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic
-from pycsp3.classes.nodes import TypeNode, Node
+from pycsp3.classes.nodes import TypeNode, Node, neg_var
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
@@ -1468,18 +1468,16 @@ def Sum(term, *others, condition=None):
         return terms, coeffs
 
     terms = flatten(term, others, call_cp_array=False)
-    if any(isinstance(t, (ScalarProduct)) for t in terms) or any(
-            isinstance(t, (PartialConstraint)) and isinstance(t.constraint, (ConstraintSum)) for t in terms):
+    if any(isinstance(t, ScalarProduct) for t in terms) or any(isinstance(t, PartialConstraint) and isinstance(t.constraint, ConstraintSum) for t in terms):
         terms = flatten(
-            [t.to_terms() if isinstance(t, ScalarProduct) else t.constraint.to_terms() if isinstance(t, (PartialConstraint)) and isinstance(t.constraint, (
-                ConstraintSum)) else t for t in terms])
-    if any(v is None or (isinstance(v, int) and v == 0) or isinstance(v, ConstraintDummyConstant) for v in
-           terms):  # note that False is of type int and equal to 0
+            [t.to_terms() if isinstance(t, ScalarProduct) else t.constraint.to_terms() if isinstance(t, PartialConstraint) and isinstance(t.constraint,
+                ConstraintSum) else t for t in terms])
+    if any(v is None or (isinstance(v, int) and v == 0) or isinstance(v, ConstraintDummyConstant) for v in terms):  # note False is of type int and equal to 0
         terms = [v.val if isinstance(v, ConstraintDummyConstant) else v for v in terms if
                  v is not None and not (isinstance(v, int) and v == 0) and not (isinstance(v, ConstraintDummyConstant) and v.val == 0)]
     if len(terms) == 0:
         return ConstraintDummyConstant(0)  # 0, None
-    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini and any(not isinstance(term, Variable) and not neg_var.matches(term) for term in terms))
     checkType(terms, ([Variable], [Node], [Variable, Node], [ScalarProduct]))  # , [PartialConstraint], [ECtr]))
     terms, coeffs = _get_terms_coeffs(terms)
     if options.group_sum_coeffs and all(isinstance(v, Variable) for v in terms) and coeffs is None:

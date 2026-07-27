@@ -697,6 +697,11 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
         if index is not None:
             lst_flatten = flatten(lst)
+            # if index.dom.smallest_value() < 0 or index.dom.greatest_value() >= len(lst_flatten):  # if value outside possible indexes
+            #     if not options.force_element_index:
+            #         error("Problem with an index ; maybe -force_element_index is appropriate!")
+            #     # else:
+            #     #     functions.satisfy(index != v for v in index.dom if v < 0 or v >= len(lst_flatten))
             aux = auxiliary().replace_element_index(len(lst_flatten), index)
             index = index if aux is None else aux  # aux is the case when we need another variable to have a correct indexing
             self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
@@ -1462,11 +1467,17 @@ class _Auxiliary:
         return terms
 
     def replace_element_index(self, length, index):
-        if all(0 <= v < length for v in index.dom):
+        if index.dom.smallest_value() >= 0 and index.dom.greatest_value() < length:  # if value not outside possible indexes
             return None
+        if not options.force_element_index:
+            error("Problem with an indexing expression ; maybe -force_element_index is appropriate, "
+                  "or maybe replace array[index] by array[aux] after having posed ((aux := Var()) == index)")
         aux = self.new_var(possible_range({v for v in index.dom if 0 <= v < length}))
+        functions.satisfy(index == aux)
+
         # below, should we replace ANY by a specific value (for avoiding interchangeable values)?
-        self.collect_table(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
+        #self.collect_table(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
+        #self.collect_table(index, aux, {(v, v) for v in index.dom if 0 <= v < length})
         # functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
         return aux
 

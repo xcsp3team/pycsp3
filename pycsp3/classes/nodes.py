@@ -754,6 +754,8 @@ class Matcher:
 
 # # # Canonization
 
+neg_var = Matcher(Node(NEG, var))
+
 x_mul_k = Matcher(Node(MUL, [var, val]))
 x_mul_y = Matcher(Node(MUL, [var, var]))
 k_mul_x = Matcher(Node(MUL, [val, var]))  # used in some other contexts (when non canonized forms)
