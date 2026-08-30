@@ -1471,13 +1471,16 @@ def Sum(term, *others, condition=None):
     if any(isinstance(t, ScalarProduct) for t in terms) or any(isinstance(t, PartialConstraint) and isinstance(t.constraint, ConstraintSum) for t in terms):
         terms = flatten(
             [t.to_terms() if isinstance(t, ScalarProduct) else t.constraint.to_terms() if isinstance(t, PartialConstraint) and isinstance(t.constraint,
-                ConstraintSum) else t for t in terms])
+                                                                                                                                          ConstraintSum) else t
+             for t in terms])
     if any(v is None or (isinstance(v, int) and v == 0) or isinstance(v, ConstraintDummyConstant) for v in terms):  # note False is of type int and equal to 0
         terms = [v.val if isinstance(v, ConstraintDummyConstant) else v for v in terms if
                  v is not None and not (isinstance(v, int) and v == 0) and not (isinstance(v, ConstraintDummyConstant) and v.val == 0)]
     if len(terms) == 0:
         return ConstraintDummyConstant(0)  # 0, None
-    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini and any(not isinstance(term, Variable) and not neg_var.matches(term) for term in terms))
+    terms = auxiliary().replace_ints(terms) if any(v for v in terms if isinstance(v, int)) else terms
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini and any(
+        not isinstance(term, Variable) and not neg_var.matches(term) for term in terms))
     checkType(terms, ([Variable], [Node], [Variable, Node], [ScalarProduct]))  # , [PartialConstraint], [ECtr]))
     terms, coeffs = _get_terms_coeffs(terms)
     if options.group_sum_coeffs and all(isinstance(v, Variable) for v in terms) and coeffs is None:
@@ -1715,7 +1718,7 @@ def Hamming(term, *others):
     elif len(others) > 0:
         term = list((term,) + others)
     lists = [flatten(v) for v in term]
-    assert all(checkType(t, ([Variable],[int])) for t in lists) and len(lists) == 2 and len(lists[0]) == len(lists[1])
+    assert all(checkType(t, ([Variable], [int])) for t in lists) and len(lists) == 2 and len(lists[0]) == len(lists[1])
     return Sum(lists[0][j] != lists[1][j] for j in range(len(lists[0])))
 
 
@@ -1992,6 +1995,11 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         origins = [(auxiliary().replace_int(u) if isinstance(u, int) else u, auxiliary().replace_int(v) if isinstance(v, int) else v)
                    for (u, v) in origins]
     if isinstance(lengths, list) and len(lengths) > 0 and isinstance(lengths[0], tuple) and len(lengths[0]) == 2:  # if 2D
+        # for the moment, we do not keep nodes in NoOverlap. TODO to be changed?
+        if is_containing(lengths[0], Node):
+            lengths[0] = tuple(auxiliary().replace_nodes(list(lengths[0])))
+        if is_containing(lengths[1], Node):
+            lengths[1] = tuple(auxiliary().replace_nodes(list(lengths[1])))
         # currently, can handle variables, integers and nodes
         b0 = _is_mixed_list(lengths, 0)
         b1 = _is_mixed_list(lengths, 1)

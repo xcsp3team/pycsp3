@@ -1446,6 +1446,12 @@ class _Auxiliary:
             values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
         return self.__replace(node, Domain(values))
 
+    def replace_nodes(self, nodes, *, values=None):
+        assert isinstance(nodes, list)
+        for i, node in enumerate(nodes):
+            nodes[i] = self.replace_node(node, values=values) if isinstance(node, Node) else node
+        return nodes
+
     def replace_partial_constraint_and_constraint_with_condition_and_possibly_node(self, term, *, node_too=False, int_too=False, values=None):
         # TODO: for the moment, values is only used for a node
         if isinstance(term, PartialConstraint):
@@ -1476,8 +1482,8 @@ class _Auxiliary:
         functions.satisfy(index == aux)
 
         # below, should we replace ANY by a specific value (for avoiding interchangeable values)?
-        #self.collect_table(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
-        #self.collect_table(index, aux, {(v, v) for v in index.dom if 0 <= v < length})
+        # self.collect_table(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
+        # self.collect_table(index, aux, {(v, v) for v in index.dom if 0 <= v < length})
         # functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
         return aux
 
