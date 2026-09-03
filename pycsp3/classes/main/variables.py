@@ -270,6 +270,7 @@ class VariableInteger(Variable):
         values = flatten(values)
         if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
             values = list(values[0])
+        values = [v for v in values if v in self.dom]
         if len(values) == 0:
             return main.constraints.ConstraintDummyConstant(0)
         assert len(values) > 0 and all(isinstance(v, int) for v in values)
@@ -279,6 +280,7 @@ class VariableInteger(Variable):
         values = flatten(values)
         if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
             values = list(values[0])
+        values = [v for v in values if v in self.dom]
         if len(values) == 0:
             return main.constraints.ConstraintDummyConstant(1)
         assert len(values) > 0 and all(isinstance(v, int) for v in values)
