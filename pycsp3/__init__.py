@@ -75,7 +75,8 @@ if sys.argv:
             print("\n")
             print(traceback.format_exc())
             exit(1)
-    elif sys.argv[0] == '':  # console mode
+    elif (sys.argv[0] == '' or not sys.argv[0].endswith(".py")
+          or os.path.basename(sys.argv[0]).endswith("kernel_launcher.py")):  # console mode (including notebooks, e.g., Jupyter or Colab)
         Compilation.load(console=True)
         data = None
     elif "pycsp3/problems/tests/" in sys.argv[0]:  # test mode
