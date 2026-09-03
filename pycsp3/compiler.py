@@ -63,7 +63,7 @@ class Compilation:
         return _compile(disabling_opoverrider, verbose=verbose)
 
 
-def _load_options():
+def _load_options(console=False):
     # note that parser and export are automatically rewritten as dataparser and dataexport
     options.set_values("data", "dataparser", "dataexport", "dataformat", "variant", "to_csp", "checker", "solver", "output", "suffix", "callback")
     options.set_flags("dataexport", "data_sober", "solve", "display", "verbose", "lzma", "sober", "ev", "safe", "recognize_slides", "keep_hybrid",
@@ -74,7 +74,7 @@ def _load_options():
     if options.checker is None:
         options.checker = "fast"
     assert options.checker in {"complete", "fast", "none"}
-    options.parse(sys.argv[1:])
+    options.parse([] if console else sys.argv[1:])  # the arguments of the kernel launcher must be ignored in notebooks
 
 
 def _basic_token(name):
@@ -214,7 +214,7 @@ def _load_dataparser(parser_file, data_value):
 def _load(*, console=False):
     Compilation.stopwatch = Stopwatch()
 
-    _load_options()
+    _load_options(console=console)
     if console is False:
         Compilation.model, Compilation.string_model = _load_model()
         if options.dataparser:
