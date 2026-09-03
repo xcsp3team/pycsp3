@@ -448,6 +448,8 @@ _warning_already_printed = {"array_indexing_warning": False, "simplifying_disjun
 
 
 def warning(message, type_message=None):
+    if options.dont_display_warnings:
+        return
     if type_message is not None:
         if type_message not in _warning_already_printed:
             error("bad call (bug to be fixed)")

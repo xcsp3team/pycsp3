@@ -11,6 +11,7 @@ class _Options:
         self.flags = tuple()  # Boolean options
         self.parameters = []
         self.parameters_cursor = 0
+        self.dont_display_warnings = False  # set here too, because warnings may be displayed before the flags are set
 
     def set_values(self, *values):
         self.values = [value.lower() for value in values]
@@ -34,6 +35,8 @@ class _Options:
             return None
 
     def parse(self, args):
+        if "-dont_display_warnings" in [arg.lower() for arg in args]:
+            self.dont_display_warnings = True  # set first, so that the position of this flag in the command line is irrelevant
         for arg in args:
             if arg[0] == '-':
                 t = arg[1:].split('=', 1)
