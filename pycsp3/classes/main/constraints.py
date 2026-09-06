@@ -480,6 +480,12 @@ class ConstraintLexMatrix(ConstraintUnmergeable):
         self.arg(TypeCtrArg.OPERATOR, operator)
 
 
+class ConstraintDisjoint(ConstraintUnmergeable):
+    def __init__(self, lst):
+        super().__init__(TypeCtr.DISJOINT)
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=True, lifted=True)
+
+
 class ConstraintPrecedence(Constraint):
     def __init__(self, lst, *, values=None, covered=False):
         super().__init__(TypeCtr.PRECEDENCE)
@@ -1596,7 +1602,7 @@ def manage_global_indirection(*args, also_pc=False):
            "\n\tIt is likely a problem with the use of logical operators" +
            "\n\tFor example, you must write (x[0] == x[1])  | (x[0] == x[2]) instead of (x[0] == x[1])  or (x[0] == x[2])" +
            "\n\tIt is also possible that you write: If(cond, Then=...) while cond being not constraint-based" +
-           "\n\t  that is, not involving a variable of the model; and this is not possible." +
+           "\n\t  that is, not involving a variable of the model; and this may be problematic." +
            "\n\tSee also the end of section about constraint Intension in chapter 'Twenty popular constraints' of the guide\n")
 
     t = []

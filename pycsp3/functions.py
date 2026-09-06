@@ -15,7 +15,7 @@ from pycsp3.classes.main.annotations import (
 from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
-    ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
+    ConstraintDisjoint, ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
     ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
@@ -579,7 +579,7 @@ def Match(Expr, *, Cases):
             assert all(type(Expr[i]) == type(k[i]) for k in Cases.keys() for i in range(r))
             return [v for k, v in Cases.items() if all(Expr[i] == k[i] for i in range(r))]
 
-    t = [(k, w) for k, v in Cases.items() for w in (v if isinstance(v, (tuple, list, set, frozenset)) else [v])]
+    t = [(k, w) for k, v in Cases.items() for w in (v if isinstance(v, (tuple, list, set, frozenset)) else [v]) if w is not None]
     if isinstance(Expr, (Variable, Node)):
         return [expr(~k.operator, Expr, k.right_operand()) | v if isinstance(k, Condition)
                 else (Expr != k if not isinstance(k, (tuple, list, set, frozenset)) else not_belong(Expr, k)) | v for k, v in t]
@@ -1370,6 +1370,24 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
     :return: a constraint Lexicographic
     """
     return _lex(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix)
+
+
+def Disjoint(term, *others):
+    """
+    Builds and returns a constraint Disjoint.
+
+    :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+
+    :return: a constraint Disjoint
+    """
+    if isinstance(term, types.GeneratorType):
+        term = [v for v in term]
+    elif len(others) > 0:
+        term = list((term,) + others)
+    lists = [flatten(v) for v in term]
+    assert all(checkType(t, [Variable]) and len(t) > 1 for t in lists)
+    return ECtr(ConstraintDisjoint(lists))
 
 
 def Precedence(within, *, values=None, covered=False):
