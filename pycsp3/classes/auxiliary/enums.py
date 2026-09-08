@@ -346,6 +346,9 @@ class TypeOrderedOperator(Enum):
 
 @unique
 class TypeRank(Enum):
+    """
+    The ranking condition on an index, when several indexes are possible (used, e.g., by MaximumArg and MinimumArg).
+    """
     FIRST, LAST, ANY = auto(3)
 
     def __str__(self):
@@ -358,11 +361,17 @@ class TypeRank(Enum):
 
 @unique
 class TypeSolver(Enum):
+    """
+    The solvers that can be piloted by PyCSP3.
+    """
     ACE, CHOCO = auto(2)
 
 
 @unique
 class TypeStatus(Enum):
+    """
+    The status of a solving operation, as reported by the solver.
+    """
     UNSAT, SAT, OPTIMUM, CORE, UNKNOWN = auto(5)
 
     def __str__(self):

@@ -1110,7 +1110,7 @@ def ring(matrix, k=0):
     """
     Returns the kth ring of the specified matrix
 
-    :param matrix:  a matrix (i.e. a two-dimensional list)
+    :param matrix: a matrix (i.e. a two-dimensional list)
     :param k: the index of the ring (from the outside towards the inside, starting at 0)
     :return: the list of variables forming the kth ring of the specified matrix
     """

@@ -55,7 +55,10 @@ CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
 
 Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
+""" A task, as involved in the constraint Cumulative: its origin (starting time), its length (duration) and its height (amount of consumed resource) """
+
 Item = namedtuple("Item", ("bin", "size"))
+""" An item, as involved in bin-packing problems: the bin it is put in, and its size """
 
 if sys.argv:
     from pycsp3.compiler import Compilation
@@ -156,7 +159,7 @@ def bound():
 
 def core():
     """
-    returns the core identified by the last extraction operation, or None
+    Returns the core identified by the last extraction operation, or None
     """
     return None if _solver is None else _solver.core
 
