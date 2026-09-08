@@ -1044,7 +1044,7 @@ def min(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
         args = [v for v in args[0]]
-    return args[0] if len(args) == 1 and isinstance(args[0], (int, str)) else Node.build(TypeNode.MIN, *args) if len(args) > 1 and any(
+    return args[0] if len(args) == 1 and isinstance(args[0], (int, str,Node)) else Node.build(TypeNode.MIN, *args) if len(args) > 1 and any(
         isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
 
 
@@ -1061,7 +1061,7 @@ def max(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
         args = [v for v in args[0]]
-    return args[0] if len(args) == 1 and isinstance(args[0], (int, str)) else Node.build(TypeNode.MAX, *args) if len(args) > 1 and any(
+    return args[0] if len(args) == 1 and isinstance(args[0], (int, str, Node)) else Node.build(TypeNode.MAX, *args) if len(args) > 1 and any(
         isinstance(a, (Node, Variable)) for a in args) else maxPython(*args)
 
 
