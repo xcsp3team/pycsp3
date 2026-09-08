@@ -461,13 +461,16 @@ def Not(arg, meta=False):
     :param arg: a constraint
     :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint Not, or its reified form
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Not(AllDifferent(x)))
     """
     if options.use_meta or meta:
         return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(arg)))
     res = manage_global_indirection(arg)
     if res is None:
         return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(arg)))
-    return ~res  # TODO to be checked
+    return ~res[0] if len(res) == 1 else ~conjunction(*res)
 
 
 def Xor(*args, meta=False):
