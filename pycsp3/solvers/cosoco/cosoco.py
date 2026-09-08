@@ -20,11 +20,6 @@ class Cosoco(SolverProcess):
             args_solver += " -nbsols=" + dict_simplified_options["limit_sols"]
         if "nolimit" in dict_simplified_options:
             args_solver += " -nbsols=0"
-        if "limit_sols" in dict_simplified_options and dict_simplified_options["limit_sols"] != "1" \
-                or "nolimit" in dict_simplified_options:
-            # cosoco prints the last solution twice, once when it is found and once at the end,
-            # so it is recorded twice in the history.
-            print("  The last solution is reported twice by cosoco when several ones are asked")
         if "limit_runs" in dict_simplified_options:
             print("  Limiting the number of runs not implemented in cosoco")
         if "varheuristic" in dict_simplified_options:
