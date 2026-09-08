@@ -91,6 +91,13 @@ ALL = "all"
 
 
 def combinations(n, size):
+    """
+    Returns an iterator over all combinations of the specified size.
+
+    :param n: an iterable object, or an integer n standing for range(n)
+    :param size: the size of each combination
+    :return: an iterator over all combinations of the specified size
+    """
     return itertools.combinations(n if not isinstance(n, int) else range(n), size)
 
 
@@ -100,8 +107,7 @@ def combinations(n, size):
 
 def different_values(*args):
     """
-    Returns True if
-     all specified integers are different
+    Returns True if all specified integers are different
     :return: True if all specified integers are different
     """
     assert all(isinstance(arg, int) for arg in args)
@@ -211,7 +217,7 @@ def alphabet_positions(s):
     """
     Returns a tuple with the indexes of the letters (with respect to the 26 letters of the Latin alphabet) of the specified string.
 
-    @param s: a string
+    :param s: a string
     """
 
     if isinstance(s, (list, tuple, set, frozenset, types.GeneratorType)):
@@ -261,6 +267,14 @@ def integer_scaling(values):
 
 
 def number_of_values_for_sum_ge(tab, limit, reverse=False):
+    """
+    Returns the minimum number of values of the specified sorted list whose sum reaches the specified limit.
+
+    :param tab: a list of integers, sorted in increasing order
+    :param limit: the limit to be reached
+    :param reverse: if True, values are summed from the end of the list (i.e., the greatest ones first)
+    :return: the minimum number of values whose sum is greater than or equal to the limit, or -1 if the limit cannot be reached
+    """
     assert isinstance(tab, list) and all(tab[i] <= tab[i + 1] for i in range(len(tab) - 1))
     csum = 0
     if not reverse:
@@ -278,20 +292,53 @@ def number_of_values_for_sum_ge(tab, limit, reverse=False):
 
 
 def number_of_values_for_sum_gt(tab, limit, reverse=False):
+    """
+    Returns the minimum number of values of the specified sorted list whose sum exceeds the specified limit.
+
+    :param tab: a list of integers, sorted in increasing order
+    :param limit: the limit to be exceeded
+    :param reverse: if True, values are summed from the end of the list (i.e., the greatest ones first)
+    :return: the minimum number of values whose sum is greater than the limit, or -1 if the limit cannot be exceeded
+    """
     return number_of_values_for_sum_ge(tab, limit + 1, reverse)
 
 
 def number_max_of_values_for_sum_le(tab, limit, reverse=False):
+    """
+    Returns the maximum number of values of the specified sorted list whose sum stays within the specified limit.
+
+    :param tab: a list of integers, sorted in increasing order
+    :param limit: the limit that must not be exceeded
+    :param reverse: if True, values are summed from the end of the list (i.e., the greatest ones first)
+    :return: the maximum number of values whose sum is less than or equal to the limit
+    """
     nb = number_of_values_for_sum_gt(tab, limit, reverse)
     return len(tab) if nb == -1 else nb - 1
 
 
 def number_max_of_values_for_sum_lt(tab, limit, reverse=False):
+    """
+    Returns the maximum number of values of the specified sorted list whose sum stays below the specified limit.
+
+    :param tab: a list of integers, sorted in increasing order
+    :param limit: the limit that must be stayed below
+    :param reverse: if True, values are summed from the end of the list (i.e., the greatest ones first)
+    :return: the maximum number of values whose sum is strictly less than the limit
+    """
     nb = number_of_values_for_sum_ge(tab, limit, reverse)
     return len(tab) if nb == -1 else nb - 1
 
 
 def decrement(t):
+    """
+    Decrements by 1 the specified integer, or every integer of the specified (possibly nested) list.
+
+    This is convenient when data are given with indexing starting at 1, whereas PyCSP3 indexes from 0.
+    Note that the specified list is modified in place, and returned.
+
+    :param t: an integer, or a (possibly nested) list of integers or of tuples of integers
+    :return: the specified object, with every integer decremented by 1
+    """
     if isinstance(t, int):
         return t - 1
     if isinstance(t, types.GeneratorType):
@@ -399,6 +446,13 @@ def structured_list(m, level=1):
 
 
 def build_table(domains, predicate):
+    """
+    Builds and returns the table (list of tuples) of all combinations of values satisfying the specified predicate.
+
+    :param domains: the list of domains, one per column of the table
+    :param predicate: a Boolean function taking as many arguments as there are domains
+    :return: the list of tuples satisfying the predicate
+    """
     T = []
     for t in product(*domains):
         if predicate(*t):
@@ -448,6 +502,12 @@ _warning_already_printed = {"array_indexing_warning": False, "simplifying_disjun
 
 
 def warning(message, type_message=None):
+    """
+    Displays the specified warning message, unless warnings have been disabled.
+
+    :param message: the message to be displayed
+    :param type_message: when specified, the kind of warning, so that similar cases are only displayed one time (None, by default)
+    """
     if options.dont_display_warnings:
         return
     if type_message is not None:

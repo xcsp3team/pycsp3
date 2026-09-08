@@ -360,7 +360,7 @@ def inside(*v):
 
 def complement(*v):
     """
-     Builds an object Condition whose operator is 'not in'
+    Builds an object Condition whose operator is 'not in'
     and the (right operand) is defined from the specified argument(s)
 
     :param v: a range, a set, a tuple or a list of integers

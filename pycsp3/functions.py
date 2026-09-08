@@ -41,7 +41,7 @@ started_modeling = False  # It becomes true when the first variable or array of 
 def protect():
     """
     Disables the redefined operators (==, >, >=, etc.), and returns the object OpOverrider.
-    On can then execute some code in protected mode by calling execute().
+    One can then execute some code in protected mode by calling execute().
     Once the code is executed, the redefined operators are reactivated.
 
     The code typically looks like:
@@ -162,14 +162,14 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     The number of dimensions of the array is given by the number of values in size.
     The size of the ith dimension is given by the ith value of size.
     The domain is either the same for all variables, and then directly given by dom,
-    or specific to each variable, in which case dom must a function.
+    or specific to each variable, in which case dom must be a function.
 
     :param size: the size of each dimension of the array
     :param dom: the domain of the variables
     :param dom_border: the domain of the cells at the border of the (two-dimensional) array
     :param id: the id (name) of the array, or None (usually, None)
     :param comment: a string
-    :param tags a (possibly empty) list of tags
+    :param tags: a (possibly empty) list of tags
     :return: an array of variables
     """
     global started_modeling
@@ -257,6 +257,16 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
 
 
 def VarArrayMultiple(*, size, fields):
+    """
+    Builds and returns an array of named tuples of variables, each field being declared with its own domain.
+
+    This is convenient when several variables must be associated with each cell of an array; a variable of
+    a cell is then accessed by the name of its field.
+
+    :param size: the size (an integer) or the dimensions (a list of integers) of the array
+    :param fields: a dictionary mapping the name of each field to the domain of the corresponding variables
+    :return: an array of named tuples of variables
+    """
     assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
     size = [size] if isinstance(size, int) else size
     checkType(size, [int])
@@ -376,7 +386,7 @@ def And(*args, meta=False):
     reification is employed.
 
     :param args: a tuple of constraints
-    :param meta true if a meta-constraint form must be really posted
+    :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint And, or its reified form
     """
     if options.use_meta or meta:
@@ -393,7 +403,7 @@ def Or(*args, meta=False):
     reification is employed.
 
     :param args: a tuple of constraints
-    :param meta true if a meta-constraint form must be really posted
+    :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint Or, or its reified form
     """
     if options.use_meta or meta:
@@ -410,7 +420,7 @@ def Not(arg, meta=False):
     reification is employed.
 
     :param arg: a constraint
-    :param meta true if a meta-constraint form must be really posted
+    :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint Not, or its reified form
     """
     if options.use_meta or meta:
@@ -430,7 +440,7 @@ def Xor(*args, meta=False):
     reification is employed.
 
     :param args: a tuple of constraints
-    :param meta true if a meta-constraint form must be really posted
+    :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint Xor, or its reified form
     """
     if options.use_meta or meta:
@@ -485,9 +495,9 @@ def If(test, *test_complement, Then, Else=None, meta=False):
 
     :param test: the condition expression
     :param test_complement: the other terms (if any) of the condition expression (assuming a conjunction)
-    :param Then the Then part
-    :param Else the Else part
-    :param meta true if a meta-constraint form must be really posted
+    :param Then: the Then part
+    :param Else: the Else part
+    :param meta: true if a meta-constraint form must be really posted
     :return: a complex form of constraint(s) based on the control structure 'if then else'
     """
 
@@ -566,6 +576,17 @@ def If(test, *test_complement, Then, Else=None, meta=False):
 
 
 def Match(Expr, *, Cases):
+    """
+    Builds and returns the constraints corresponding to a case analysis on the specified expression.
+
+    In the dictionary Cases, each key gives the value(s), or the condition, the expression is compared with,
+    and the associated value gives the constraint that must hold in that case. When the expression is not
+    variable-based, only the constraints of the matching cases are returned.
+
+    :param Expr: the expression (a variable, a tuple of variables, or a constant term) subject to the case analysis
+    :param Cases: a dictionary mapping values, tuples of values, sets, ranges or conditions to constraints
+    :return: the list of constraints corresponding to the case analysis
+    """
     assert isinstance(Cases, dict)
     if isinstance(Expr, (tuple, list)):
         r = len(Expr)
@@ -599,7 +620,7 @@ def Iff(*args, meta=False):
     reification is employed.
 
     :param args: a tuple of constraints
-    :param meta true if a meta-constraint form must be really posted
+    :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint Iff, or its reified form
     """
     if meta:
@@ -971,8 +992,8 @@ def ift(test, Then, Else):
     Without any parent, it becomes a constraint.
 
     :param test: the condition expression
-    :param Then the Then part
-    :param Else the Else part
+    :param Then: the Then part
+    :param Else: the Else part
 
     :return: a node, root of a tree expression
     """
@@ -1020,6 +1041,16 @@ def ift(test, Then, Else):
 
 
 def belong(x, values):
+    """
+    Builds and returns a Boolean expression that holds iff the specified term belongs to the specified values.
+
+    When the first argument is an integer and the second one a list of variables, the expression holds iff
+    at least one of these variables is assigned this integer.
+
+    :param x: a variable, or an integer
+    :param values: a set of integers (possibly given by a range), or a list of variables
+    :return: a Boolean expression that holds iff the term belongs to the values
+    """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
     if isinstance(x, int):
@@ -1040,6 +1071,16 @@ def belong(x, values):
 
 
 def not_belong(x, values):
+    """
+    Builds and returns a Boolean expression that holds iff the specified term does not belong to the specified values.
+
+    When the first argument is an integer and the second one a list of variables, the expression holds iff
+    none of these variables is assigned this integer.
+
+    :param x: a variable, or an integer
+    :param values: a set of integers (possibly given by a range), or a list of variables
+    :return: a Boolean expression that holds iff the term does not belong to the values
+    """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
     if isinstance(x, int):
@@ -1396,7 +1437,7 @@ def Precedence(within, *, values=None, covered=False):
 
     :param within: the scope of the constraint
     :param values: the values such that the ith value must precede the i+1th value in the scope.
-    when None, all values in the scope of the first variable are considered
+    When None, all values in the scope of the first variable are considered
     :param covered: if True, all specified values must be assigned to the variables of the scope
     :return: a constraint Precedence
     """
@@ -1576,13 +1617,13 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
 
 def Exist(within, *within_complement, value=None, reified_by=None):
     """
-    Builds and returns a constraint Count that checks if at least one of the term evaluates to the specified value,
+    Builds and returns a constraint Count that checks if at least one of the terms evaluates to the specified value,
     or to 1 (seen as True) when value is None.
 
-    :param within: the (first) term, typically  a list of variables or expressions, on which the count applies
+    :param within: the (first) term, typically a list of variables or expressions, on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
-    :param value the value to be found if not None (None, by default)
-    :reified_by if present (not None) a 01 variable corresponding to the reification of the constraint
+    :param value: the value to be found if not None (None, by default)
+    :param reified_by: if present (not None) a 01 variable corresponding to the reification of the constraint
     :return: a constraint Count
     """
     terms = flatten(within, within_complement)
@@ -1635,7 +1676,7 @@ def NotExist(within, *within_complement, value=None):
 
     :param within: the (first) term, typically a list of variables or expressions, on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
-    :param value the value to be tested if not None (None, by default)
+    :param value: the value to be tested if not None (None, by default)
     :return: a constraint Count
     """
     terms = flatten(within, within_complement)
@@ -1664,7 +1705,7 @@ def ExactlyOne(within, *within_complement, value=None):
 
     :param within: the first term on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
-    :param value the value to be found if not None (None, by default)
+    :param value: the value to be found if not None (None, by default)
     :return: a constraint Count
     """
     terms = flatten(within, within_complement)
@@ -1683,7 +1724,7 @@ def AtLeastOne(within, *within_complement, value=None):
 
     :param within: the first term on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
-    :param value the value to be found if not None (None, by default)
+    :param value: the value to be found if not None (None, by default)
     :return: a constraint Count
     """
     return Exist(within, within_complement, value=value)
@@ -1696,7 +1737,7 @@ def AtMostOne(within, *within_complement, value=None):
 
     :param within: the first term on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
-    :param value the value to be found if not None (None, by default)
+    :param value: the value to be found if not None (None, by default)
     :return: a constraint Count
     """
     terms = flatten(within, within_complement)
@@ -1909,10 +1950,10 @@ def MinimumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MinimumArg (that becomes a constraint when subject to a condition).
 
-    :param term: the first term on which the maximum applies
-    :param others: the other terms (if any) on which the maximum applies
+    :param term: the first term on which the minimum applies
+    :param others: the other terms (if any) on which the minimum applies
     :param rank: ranking condition on the index (ANY, FIRST or LAST); ANY if None
-    :param condition: a condition directly specified for the maximum (typically, None)
+    :param condition: a condition directly specified for the minimum (typically, None)
     :return: a component/constraint MinimumArg
     """
     terms = _extremum_terms(term, others)
@@ -1966,7 +2007,7 @@ def _is_mixed_list(t, index=-1):
 def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
     """
     Builds and returns a constraint NoOverlap.
-    Either the tasks are specified as pairs, or the tasks are given by the name parameters origins and lengths.
+    Either the tasks are specified as pairs, or the tasks are given by the named parameters origins and lengths.
 
     :param tasks: the tasks given as pairs composed of an origin and a length
     :param origins: the origins of the tasks
@@ -2054,10 +2095,10 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
 def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=None, condition=None):
     """
     Builds and returns a component Cumulative (that becomes a constraint when subject to a condition).
-    Either the tasks are specified as tuples of size 3 or 4, or the tasks are given by the name parameters
+    Either the tasks are specified as tuples of size 3 or 4, or the tasks are given by the named parameters
     origins, lengths and heights (and possibly ends).
 
-    :param tasks:
+    :param tasks: the tasks, given as tuples of size 3 or 4 (typically, None when the named parameters are used)
     :param origins: the origins of the tasks
     :param lengths: the lengths of the tasks
     :param ends: the ends of the tasks (typically, None)
@@ -2148,13 +2189,13 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
 
 def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=None, profits, pcondition=None):
     """
-    Builds and returns a component Knapsack that must guarantee that a condition holds wrt the capacity of the knapsack
-    (when considering accumulated weights of selected items) and another condition holds wrt the profits.
+    Builds and returns a component Knapsack that must guarantee that a condition holds with respect to the capacity of the knapsack
+    (when considering accumulated weights of selected items) and another condition holds with respect to the profits.
     The second condition is typically specified outside the function which then represents ("returns")
     the accumulated profits of selected items.
     One has to specify either wlimit or wcondition.
 
-    :param selection: the (first) term, typically a list of variables on which the component applies (indicating how many copies of each item is selected)
+    :param selection: the (first) term, typically a list of variables on which the component applies (indicating how many copies of each item are selected)
     :param selection_complement: the other terms (if any) on which the component applies
     :param weights: the weights associated with the items
     :param wlimit: the limit of the knapsack (if wcondition is None)
@@ -2176,6 +2217,20 @@ def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=
 
 
 def Flow(term, *others, balance, arcs, weights=None, condition=None):
+    """
+    Builds and returns a component Flow (that becomes a constraint when subject to a condition).
+
+    The component ensures that the flow circulating on the specified arcs respects the balance of each node.
+    When weights are specified, the value of the component is the cost of the flow.
+
+    :param term: the (first) term, typically a list of variables, one per arc
+    :param others: the other terms (if any) on which the component applies
+    :param balance: the balance of the nodes, given by an integer (the same for all of them) or a list of integers
+    :param arcs: the list of arcs, each arc being a pair (tuple) of node numbers
+    :param weights: the weight (cost) of the arcs, given by an integer or a list of integers (None, by default)
+    :param condition: a condition directly specified for the Flow (typically, None)
+    :return: a component Flow
+    """
     terms = flatten(term, others)
     assert len(terms) > 0, "A Flow with an empty scope"
     if isinstance(weights, int):
@@ -2249,9 +2304,9 @@ def Adhoc(form, note=None, **d):
     Builds a constraint adhoc from the specified arguments.
 
     :param form: a label (string) indicating the form of the adhoc constraint
-    :note: a comment
-    :d: a dictionary with all arguments of the adhoc constraint
-    :return: a constraint Hadhoc
+    :param note: a comment
+    :param d: a dictionary with all arguments of the adhoc constraint
+    :return: a constraint Adhoc
     """
     return ECtr(ConstraintAdhoc(form, note, d))
 
@@ -2344,6 +2399,21 @@ def maximize(term):
 
 
 def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None, filtering=None, prepro=None, search=None, restarts=None):
+    """
+    Builds and returns a list of annotations, used to guide the solver.
+
+    Each kind of annotation can be specified at most one time.
+
+    :param decision: the list of decision variables
+    :param output: the list of variables whose values must be output
+    :param varHeuristic: the annotation about the variable ordering heuristic
+    :param valHeuristic: the annotation about the value ordering heuristic
+    :param filtering: the annotation about the filtering (propagation) to be used
+    :param prepro: the annotation about preprocessing
+    :param search: the annotation about search
+    :param restarts: the annotation about restarts
+    :return: a list of annotations
+    """
     def add_annotation(obj, Ann):
         if obj:
             ann = Ann(obj)
@@ -2369,10 +2439,10 @@ def posted(i=None, j=None):
     """
     Returns the list of posted constraints when no parameter is specified.
     Returns the constraints of the ith posted operation, otherwise; possibly
-    a subset is returned if teh second parameter j is specified.
+    a subset is returned if the second parameter j is specified.
 
     :param i: the number/index of the posting operation (i.e., call to satisfy())
-    :param j: the number (or slice) of the constraint wrt the ith posting operation
+    :param j: the number (or slice) of the constraint with respect to the ith posting operation
     """
     t = []
     if i is None or i is ALL:  # all posted constraints are returned
