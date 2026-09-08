@@ -885,6 +885,17 @@ def _Intension(node):
 
 
 def col(*args):
+    """
+    Builds and returns a node denoting the ith column of a hybrid tuple.
+
+    Hybrid (smart) tables accept, besides plain values, expressions of the form
+    op(col(i)) where op is a relational operator among eq, ne, lt, le, gt and ge,
+    and col(i) refers to the value of the tuple at index i. An offset can be
+    added, as in eq(col(i) + 1).
+
+    :param args: the index of the column
+    :return: a node denoting the specified column of a hybrid tuple
+    """
     assert len(args) == 1 and isinstance(args[0], int)
     return Node(TypeNode.COL, args[0])
 
