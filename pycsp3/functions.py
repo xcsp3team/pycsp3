@@ -44,8 +44,9 @@ def protect():
     One can then execute some code in protected mode by calling execute().
     Once the code is executed, the redefined operators are reactivated.
 
-    The code typically looks like:
-      protect().execute(...)
+    The code typically looks like::
+
+        protect().execute(...)
 
     :return: the object OpOverrider
     """
@@ -98,10 +99,11 @@ def Var(term=None, *others, dom=None, id=None):
     """
     Builds a stand-alone variable with the specified domain.
     The domain is either given by the named parameter dom, or given
-    by the sequence of terms passed as parameters. For example:
-      x = Var(0,1)
-      y = Var(range(10))
-      z = Var(v for v in range(100) if v%3 == 0)
+    by the sequence of terms passed as parameters. For example::
+
+        x = Var(0, 1)
+        y = Var(range(10))
+        z = Var(v for v in range(100) if v % 3 == 0)
 
     :param term: the first term defining the domain, or None
     :param others: the other terms defining the domain, or None
