@@ -22,9 +22,9 @@ class Cosoco(SolverProcess):
             args_solver += " -nbsols=0"
         if "limit_sols" in dict_simplified_options and dict_simplified_options["limit_sols"] != "1" \
                 or "nolimit" in dict_simplified_options:
-            # cosoco does enumerate every solution, but only the last one is printed as
-            # <instantiation>; the earlier ones use the compact form, which is not parsed.
-            print("  Only the last solution is reported when several ones are asked to cosoco")
+            # cosoco prints the last solution twice, once when it is found and once at the end,
+            # so it is recorded twice in the history.
+            print("  The last solution is reported twice by cosoco when several ones are asked")
         if "limit_runs" in dict_simplified_options:
             print("  Limiting the number of runs not implemented in cosoco")
         if "varheuristic" in dict_simplified_options:
