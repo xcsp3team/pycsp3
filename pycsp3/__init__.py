@@ -55,10 +55,21 @@ CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
 
 Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
-""" A task, as involved in the constraint Cumulative: its origin (starting time), its length (duration) and its height (amount of consumed resource) """
+""" A task, as involved in the constraint Cumulative: its origin (starting time), its length (duration) and its height (amount of consumed resource)
+
+:example:
+    s = VarArray(size=3, dom=range(10))
+    satisfy(Cumulative(Task(origin=s[i], length=2, height=1) for i in range(3)) <= 2)
+"""
 
 Item = namedtuple("Item", ("bin", "size"))
-""" An item, as involved in bin-packing problems: the bin it is put in, and its size """
+""" An item, as involved in bin-packing problems: the bin it is put in, and its size
+
+:example:
+    b = VarArray(size=3, dom=range(2))
+    items = [Item(bin=b[i], size=i + 1) for i in range(3)]
+    print(items[0].size)
+"""
 
 if sys.argv:
     from pycsp3.compiler import Compilation
@@ -112,6 +123,11 @@ def solver(name=None):
 
     :param name: the name of the solver to be built, or None (by default)
     :return: either the current solver if the specified name is None, or a newly created solver whose name is specified
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        solve(solver=ACE)
+        print(solver())
     """
     return _solver if name is None else _set_solver(name)
 
@@ -123,6 +139,11 @@ def compile(filename=None, *, verbose=0):
     :param filename: the filename of the compiled problem instance
     :param verbose: verbosity level from -1 to 2
     :return: a pair composed of a string (filename) and a Boolean (True if a COP, False otherwise)
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        filename, cop = compile()
+        print(filename, cop)
     """
     from pycsp3.compiler import Compilation
     filename, cop = Compilation.compile(filename, verbose=verbose)
@@ -132,6 +153,11 @@ def compile(filename=None, *, verbose=0):
 def status():
     """
     Returns the status of the last solving operation, or None
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        solve()
+        print(status())
     """
     return None if _solver is None else _solver.status
 
@@ -139,6 +165,11 @@ def status():
 def solution():
     """
     Returns a complex object corresponding to the last found solution, or None
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        if solve() is SAT:
+            print(solution())
     """
     return None if _solver is None else _solver.last_solution
 
@@ -146,6 +177,11 @@ def solution():
 def n_solutions():
     """
     Returns the number of solutions found by the last solving operation, or None
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        solve(sols=ALL)
+        print(n_solutions())
     """
     return None if _solver is None else _solver.n_solutions
 
@@ -153,6 +189,12 @@ def n_solutions():
 def bound():
     """
     Returns the bound found by the last solving operation, or None
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        minimize(Sum(x))
+        if solve() is OPTIMUM:
+            print(bound())
     """
     return None if _solver is None else _solver.bound
 
@@ -160,6 +202,11 @@ def bound():
 def core():
     """
     Returns the core identified by the last extraction operation, or None
+    :example:
+        x = VarArray(size=2, dom=range(2))
+        satisfy(x[0] == 0, x[0] == 1)
+        if solve(extraction=True) is CORE:
+            print(core())
     """
     return None if _solver is None else _solver.core
 
@@ -184,6 +231,11 @@ def solve(*, solver=ACE, options="", filename=None, verbose=-1, sols=None, extra
     :param sols: number of solutions to be found (ALL if no limit)
     :param extraction: True if an unsatisfiable core of constraints must be sought
     :return: the status of the solving operation
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        if solve() is SAT:
+            print(values(x))
     """
     global _solver
     instance = compile(filename, verbose=verbose)

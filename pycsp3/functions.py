@@ -49,6 +49,10 @@ def protect():
         protect().execute(...)
 
     :return: the object OpOverrider
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        print(protect().execute(x[0] == x[1]))
     """
     return OpOverrider.disable()
 
@@ -65,6 +69,12 @@ def variant(name=None):
 
     :param name: the name of a variant, or None
     :return: the name of the variant specified by the user, or a Boolean
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        if variant("table"):
+            satisfy(Table(x, {(0, 1, 2)}))
+        else:
+            satisfy(AllDifferent(x))
     """
     assert options.variant is None or isinstance(options.variant, str)
     pos = -1 if options.variant is None else options.variant.find("-")  # position of dash in options.variant
@@ -81,6 +91,12 @@ def subvariant(name=None):
 
     :param name: the name of a sub-variant, or None
     :return: the name of the sub-variant specified by the user, or a Boolean
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        if subvariant("short"):
+            satisfy(x[0] < x[1])
+        else:
+            satisfy(AllDifferent(x))
     """
     assert options.variant is None or isinstance(options.variant, str)
     pos = -1 if options.variant is None else options.variant.find("-")  # position of dash in options.variant
@@ -110,6 +126,10 @@ def Var(term=None, *others, dom=None, id=None):
     :param dom: the domain of the variable, or None
     :param id: the id (name) of the variable, or None (usually, None)
     :return: a stand-alone Variable with the specified domain
+    :example:
+        x = Var(range(10))
+        y = Var(0, 2, 4)
+        satisfy(x < y)
     """
     global started_modeling
     if not started_modeling and not options.uncurse:
@@ -173,6 +193,10 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     :param comment: a string
     :param tags: a (possibly empty) list of tags
     :return: an array of variables
+    :example:
+        x = VarArray(size=5, dom=range(10))
+        y = VarArray(size=[2, 3], dom={0, 1})
+        satisfy(AllDifferent(x))
     """
     global started_modeling
     if not started_modeling and not options.uncurse:
@@ -268,6 +292,9 @@ def VarArrayMultiple(*, size, fields):
     :param size: the size (an integer) or the dimensions (a list of integers) of the array
     :param fields: a dictionary mapping the name of each field to the domain of the corresponding variables
     :return: an array of named tuples of variables
+    :example:
+        t = VarArrayMultiple(size=3, fields={"start": range(10), "duration": range(1, 4)})
+        satisfy(Increasing(t.start))
     """
     assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
     size = [size] if isinstance(size, int) else size
@@ -297,6 +324,10 @@ def var(name):
     """
     Returns the variable or variable array whose name is specified
     :param name: the name of the variable or variable array to be returned
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        print(var("x[0]"))
     """
     assert isinstance(name, str)
     error_if(name not in Variable.name2obj,
@@ -390,6 +421,9 @@ def And(*args, meta=False):
     :param args: a tuple of constraints
     :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint And, or its reified form
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(And(Sum(x) > 4, AllDifferent(x)))
     """
     if options.use_meta or meta:
         return EAnd(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -407,6 +441,9 @@ def Or(*args, meta=False):
     :param args: a tuple of constraints
     :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint Or, or its reified form
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Or(Sum(x) > 4, AllDifferent(x)))
     """
     if options.use_meta or meta:
         return EOr(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -444,6 +481,9 @@ def Xor(*args, meta=False):
     :param args: a tuple of constraints
     :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint Xor, or its reified form
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Xor(Sum(x) > 4, AllDifferent(x)))
     """
     if options.use_meta or meta:
         return EXor(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -501,6 +541,9 @@ def If(test, *test_complement, Then, Else=None, meta=False):
     :param Else: the Else part
     :param meta: true if a meta-constraint form must be really posted
     :return: a complex form of constraint(s) based on the control structure 'if then else'
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(If(x[0] > 0, Then=AllDifferent(x)))
     """
 
     # if len(testOthers) == 0 and isinstance(test, bool):  # We don't allow that because otherwise 'in' no more usable as in If(x[0] in (2,3), Then=...
@@ -588,6 +631,10 @@ def Match(Expr, *, Cases):
     :param Expr: the expression (a variable, a tuple of variables, or a constant term) subject to the case analysis
     :param Cases: a dictionary mapping values, tuples of values, sets, ranges or conditions to constraints
     :return: the list of constraints corresponding to the case analysis
+    :example:
+        x = Var(range(3))
+        y = VarArray(size=3, dom=range(2))
+        satisfy(Match(x, Cases={0: y[0] == 1, 1: y[1] == 1, 2: y[2] == 1}))
     """
     assert isinstance(Cases, dict)
     if isinstance(Expr, (tuple, list)):
@@ -624,6 +671,9 @@ def Iff(*args, meta=False):
     :param args: a tuple of constraints
     :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint Iff, or its reified form
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Iff(Sum(x) > 4, AllDifferent(x)))
     """
     if meta:
         return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -640,6 +690,9 @@ def Slide(*args, expression=None, circular=None, offset=None, collect=None):
 
     :param args: a tuple of constraints
     :return: a meta-constraint Slide
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Slide(x[i] < x[i + 1] for i in range(3)))
     """
     if expression is not None:  # the meta-constraint is defined directly by the user
         return ECtr(ConstraintSlide(*args, expression, circular, offset, collect))
@@ -715,6 +768,9 @@ def satisfy(*args, no_comment_tags_extraction=False):
 
     :param args: the different constraints to be posted
     :return: an object wrapping the posted constraints
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x), x[0] < x[1])
     """
 
     def _reorder(l):  # if constraints are given in (sub-)lists inside tuples; we flatten and reorder them to hopefully improve compactness
@@ -864,6 +920,9 @@ def Table(*, scope, supports=None, conflicts=None):
     :param conflicts: the set/list of tuples, seen as conflicts (negative table)
 
     :return: a constraint Table (Extension)
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy((x[0], x[1], x[2]) in {(0, 1, 2), (1, 2, 0)})
     """
     scope = flatten(scope)
     assert scope is not None and (supports is None) != (conflicts is None)
@@ -895,6 +954,9 @@ def col(*args):
 
     :param args: the index of the column
     :return: a node denoting the specified column of a hybrid tuple
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy((x[0], x[1], x[2]) in {(0, 1, 2), (1, eq(col(0)), 2)})
     """
     assert len(args) == 1 and isinstance(args[0], int)
     return Node(TypeNode.COL, args[0])
@@ -907,6 +969,9 @@ def abs(arg):
     Otherwise, the function returns, as usual, the absolute value of the specified argument
 
     :return: either a node, root of a tree expression, or the absolute value of the specified argument
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(abs(x[0] - x[1]) > 1)
     """
     if isinstance(arg, PartialConstraint):
         arg = auxiliary().replace_partial_constraint(arg)
@@ -922,6 +987,9 @@ def min(*args):
     Otherwise, the function returns, as usual, the smallest item of the specified arguments
 
     :return: either a node, root of a tree expression, or the smallest item of the specified arguments
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(min(x[0], x[1]) == 0)
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
         args = [v for v in args[0]]
@@ -936,6 +1004,9 @@ def max(*args):
     Otherwise, the function returns, as usual, the largest item of the specified arguments
 
     :return: either a node, root of a tree expression, or the largest item of the specified arguments
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(max(x[0], x[1]) == 3)
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
         args = [v for v in args[0]]
@@ -950,6 +1021,9 @@ def xor(*args):
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression or the argument if there is only one
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(xor(x[0] == 0, x[1] == 1))
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
@@ -963,6 +1037,9 @@ def iff(*args):
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(iff(x[0] == 0, x[1] == 1))
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
@@ -981,6 +1058,9 @@ def imply(*args):
 
     :param args: a tuple of two arguments
     :return: a node, root of a tree expression
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(imply(x[0] == 0, x[1] == 1))
     """
     assert len(args) == 2
     cnd, tp = args  # condition and then part
@@ -1009,6 +1089,9 @@ def ift(test, Then, Else):
     :param Else: the Else part
 
     :return: a node, root of a tree expression
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(ift(x[0] == 0, x[1], x[2]) == 2)
     """
     # assert len(args) == 3
     # test, Then, Else = args  # condition, then part and else part
@@ -1063,6 +1146,9 @@ def belong(x, values):
     :param x: a variable, or an integer
     :param values: a set of integers (possibly given by a range), or a list of variables
     :return: a Boolean expression that holds iff the term belongs to the values
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(belong(x[0], {0, 2}))
     """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
@@ -1093,6 +1179,9 @@ def not_belong(x, values):
     :param x: a variable, or an integer
     :param values: a set of integers (possibly given by a range), or a list of variables
     :return: a Boolean expression that holds iff the term does not belong to the values
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(not_belong(x[0], {0, 2}))
     """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
@@ -1122,6 +1211,9 @@ def expr(operator, *args):
 
     :param operator: a string, or a constant from TypeNode or a constant from TypeConditionOperator or TypeOrderedOperator
     :return: a node, root of a tree expression
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(expr("lt", x[0], x[1]))
     """
     return Node.build(operator, *args)
 
@@ -1132,6 +1224,9 @@ def conjunction(*args):
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(conjunction(x[i] == i for i in range(3)))
     """
 
     # return Count(manage_global_indirection(*args)) == len(args)
@@ -1153,6 +1248,9 @@ def both(this, And):
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(both(x[0] == 0, x[1] == 1))
     """
     if this is None:
         return And
@@ -1173,6 +1271,9 @@ def disjunction(*args):
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(disjunction(x[i] == 0 for i in range(3)))
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
@@ -1188,6 +1289,9 @@ def either(this, Or):
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(either(x[0] == 0, x[1] == 1))
     """
     if this is None:
         return Or
@@ -1213,6 +1317,10 @@ def Regular(*, scope, automaton):
     :param automaton: the automaton defining the semantics of the constraint
 
     :return: a constraint Regular
+    :example:
+        x = VarArray(size=4, dom=range(2))
+        a = Automaton(start="q0", final="q1", transitions=[("q0", 0, "q0"), ("q0", 1, "q1"), ("q1", 1, "q1")])
+        satisfy(Regular(scope=x, automaton=a))
     """
     scope = flatten(scope)
     checkType(scope, [Variable])
@@ -1247,6 +1355,9 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     :param excepting: the value(s) that must be ignored (None, most of the time)
     :param matrix: if True, the matrix version must be considered
     :return: a constraint AllDifferent
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(AllDifferent(x))
     """
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
     checkType(excepting, ([int], type(None)))
@@ -1275,6 +1386,9 @@ def AllDifferentList(term, *others, excepting=None):
     :param others: the other terms (if any) on which the constraint applies
     :param excepting: the tuple(s) that must be ignored (None, most of the time)
     :return: a constraint AllDifferentList
+    :example:
+        x = VarArray(size=[3, 2], dom=range(3))
+        satisfy(AllDifferentList(x))
     """
     if isinstance(term, types.GeneratorType):
         term = [v for v in term]
@@ -1296,6 +1410,9 @@ def AllEqual(term, *others, excepting=None):
     :param others: the other terms (if any) on which the constraint applies
     :param excepting: the value(s) that must be ignored (None, most of the time)
     :return: a constraint AllEqual
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(AllEqual(x))
     """
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
     checkType(excepting, ([int], type(None)))
@@ -1316,6 +1433,9 @@ def AllEqualList(term, *others, excepting=None):
     :param others: the other terms (if any) on which the constraint applies
     :param excepting: the tuple(s) that must be ignored (None, most of the time)
     :return: a constraint AllEqualList
+    :example:
+        x = VarArray(size=[3, 2], dom=range(3))
+        satisfy(AllEqualList(x))
     """
     if isinstance(term, types.GeneratorType):
         term = [v for v in term]
@@ -1361,6 +1481,9 @@ def Increasing(term, *others, strict=False, lengths=None):
     :param strict: if True, strict ordering must be considered
     :param lengths: the lengths (durations) that must separate the values
     :return: a constraint Increasing
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Increasing(x, strict=True))
     """
     return _ordered(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, lengths)
 
@@ -1374,6 +1497,9 @@ def Decreasing(term, *others, strict=False, lengths=None):
     :param strict: if True, strict ordering must be considered
     :param lengths: the lengths (durations) that must separate the values
     :return: a constraint Decreasing
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Decreasing(x))
     """
     return _ordered(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, lengths)
 
@@ -1409,6 +1535,9 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
     :param strict: if True, strict ordering must be considered
     :param matrix: if True, the matrix version must be considered
     :return: a constraint Lexicographic
+    :example:
+        x = VarArray(size=[3, 2], dom=range(3))
+        satisfy(LexIncreasing(x))
     """
     return _lex(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, matrix)
 
@@ -1422,6 +1551,9 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
     :param strict: if True, strict ordering must be considered
     :param matrix: if True, the matrix version must be considered
     :return: a constraint Lexicographic
+    :example:
+        x = VarArray(size=[3, 2], dom=range(3))
+        satisfy(LexDecreasing(x))
     """
     return _lex(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix)
 
@@ -1434,6 +1566,9 @@ def Disjoint(term, *others):
     :param others: the other terms (if any) on which the constraint applies
 
     :return: a constraint Disjoint
+    :example:
+        x = VarArray(size=[2, 3], dom=range(6))
+        satisfy(Disjoint(x))
     """
     if isinstance(term, types.GeneratorType):
         term = [v for v in term]
@@ -1453,6 +1588,9 @@ def Precedence(within, *, values=None, covered=False):
     When None, all values in the scope of the first variable are considered
     :param covered: if True, all specified values must be assigned to the variables of the scope
     :return: a constraint Precedence
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Precedence(x, values=[0, 1]))
     """
     assert len(within) > 2
     if values is None:
@@ -1489,6 +1627,9 @@ def Sum(term, *others, condition=None):
     :param others: the other terms (if any) on which the sum applies
     :param condition: a condition directly specified for the sum (typically, None)
     :return: a component/constraint Sum
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Sum(x) == 6)
     """
 
     def _get_terms_coeffs(terms):
@@ -1579,6 +1720,9 @@ def Product(term, *others):
     :param term: the first term on which the product applies
     :param others: the other terms (if any) on which the product applies
     :return: a node, root of a tree expression
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Product(x) == 0)
     """
 
     terms = flatten(term, others)
@@ -1601,6 +1745,9 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
     :param values: the values to be counted
     :param condition: a condition directly specified for the count (typically, None)
     :return: a component/constraint Count
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Count(x, value=0) == 1)
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -1638,6 +1785,9 @@ def Exist(within, *within_complement, value=None, reified_by=None):
     :param value: the value to be found if not None (None, by default)
     :param reified_by: if present (not None) a 01 variable corresponding to the reification of the constraint
     :return: a constraint Count
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Exist(x, value=0))
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -1678,6 +1828,9 @@ def AnyHold(within, *within_complement):
     :param within: the first term on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
     :return: a constraint Count
+    :example:
+        b = VarArray(size=3, dom={0, 1})
+        satisfy(AnyHold(b))
     """
     return Exist(within, within_complement, value=None)
 
@@ -1691,6 +1844,9 @@ def NotExist(within, *within_complement, value=None):
     :param within_complement: the other terms (if any) on which the count applies
     :param value: the value to be tested if not None (None, by default)
     :return: a constraint Count
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(NotExist(x, value=0))
     """
     terms = flatten(within, within_complement)
     res = Count(terms, value=value)
@@ -1707,6 +1863,9 @@ def NoneHold(within, *within_complement):
     :param within: the first term on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
     :return: a constraint Count
+    :example:
+        b = VarArray(size=3, dom={0, 1})
+        satisfy(NoneHold(b))
     """
     return NotExist(within, within_complement, value=None)
 
@@ -1720,6 +1879,9 @@ def ExactlyOne(within, *within_complement, value=None):
     :param within_complement: the other terms (if any) on which the count applies
     :param value: the value to be found if not None (None, by default)
     :return: a constraint Count
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(ExactlyOne(x, value=0))
     """
     terms = flatten(within, within_complement)
     res = Count(terms, value=value)
@@ -1739,6 +1901,9 @@ def AtLeastOne(within, *within_complement, value=None):
     :param within_complement: the other terms (if any) on which the count applies
     :param value: the value to be found if not None (None, by default)
     :return: a constraint Count
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(AtLeastOne(x, value=0))
     """
     return Exist(within, within_complement, value=value)
 
@@ -1752,6 +1917,9 @@ def AtMostOne(within, *within_complement, value=None):
     :param within_complement: the other terms (if any) on which the count applies
     :param value: the value to be found if not None (None, by default)
     :return: a constraint Count
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(AtMostOne(x, value=0))
     """
     terms = flatten(within, within_complement)
     res = Count(terms, value=value)
@@ -1768,6 +1936,9 @@ def AllHold(within, *within_complement):
     :param within: the first term on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
     :return: a constraint Count
+    :example:
+        b = VarArray(size=3, dom={0, 1})
+        satisfy(AllHold(b))
     """
     terms = flatten(within, within_complement)
     res = Count(terms)  # , value=value)
@@ -1784,6 +1955,10 @@ def Hamming(term, *others):
     :param term: the first term on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
     :return: a constraint Sum
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        y = VarArray(size=3, dom=range(3))
+        satisfy(Hamming(x, y) == 2)
     """
     if isinstance(term, types.GeneratorType):
         term = [v for v in term]
@@ -1803,6 +1978,9 @@ def NValues(within, *within_complement, excepting=None, condition=None):
     :param excepting: the value(s) that must be ignored (None, most of the time)
     :param condition: a condition directly specified for the count (typically, None)
     :return: a component/constraint NValues
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(NValues(x) == 2)
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -1834,6 +2012,9 @@ def NumberDistinctValues(within, *within_complement, excepting=None, condition=N
         :param excepting: the value(s) that must be ignored (None, most of the time)
         :param condition: a condition directly specified for the count (typically, None)
         :return: a component/constraint NValues
+        :example:
+            x = VarArray(size=4, dom=range(4))
+            satisfy(NumberDistinctValues(x) == 2)
         """
     return NValues(within, *within_complement, excepting=excepting, condition=condition)
 
@@ -1845,6 +2026,9 @@ def NotAllEqual(term, *others):
       :param term: the first term on which the constraint applies
       :param others: the other terms (if any) on which the constraint applies
       :return: a constraint NValues (equivalent to NotAllEqual)
+      :example:
+          x = VarArray(size=4, dom=range(4))
+          satisfy(NotAllEqual(x))
       """
     return NValues(term, others) > 1
 
@@ -1861,6 +2045,9 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     :param occurrences: a dictionary indicating the restriction (constant, range or variable) of occurrences per value
     :param closed: if True, variables must be assigned to values (keys of the dictionary)
     :return: a Cardinality constraint
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Cardinality(x, occurrences={0: 1, 1: 1, 2: 1, 3: 1}))
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -1917,6 +2104,9 @@ def Maximum(term, *others, condition=None):
     :param others: the other terms (if any) on which the maximum applies
     :param condition: a condition directly specified for the maximum (typically, None)
     :return: a component/constraint Maximum
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Maximum(x) == 3)
     """
     terms = _extremum_terms(term, others)
     assert len(terms) > 0
@@ -1934,6 +2124,9 @@ def Minimum(term, *others, condition=None):
     :param others: the other terms (if any) on which the minimum applies
     :param condition: a condition directly specified for the minimum (typically, None)
     :return: a component/constraint Minimum
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Minimum(x) == 0)
     """
     terms = _extremum_terms(term, others)
     assert len(terms) > 0
@@ -1952,6 +2145,9 @@ def MaximumArg(term, *others, rank=None, condition=None):
     :param rank: ranking condition on the index (ANY, FIRST or LAST); ANY if None
     :param condition: a condition directly specified for the maximum (typically, None)
     :return: a component/constraint MaximumArg
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(MaximumArg(x) == 0)
     """
     terms = _extremum_terms(term, others)
     checkType(rank, (type(None), TypeRank))
@@ -1968,6 +2164,9 @@ def MinimumArg(term, *others, rank=None, condition=None):
     :param rank: ranking condition on the index (ANY, FIRST or LAST); ANY if None
     :param condition: a condition directly specified for the minimum (typically, None)
     :return: a component/constraint MinimumArg
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(MinimumArg(x) == 0)
     """
     terms = _extremum_terms(term, others)
     checkType(rank, (type(None), TypeRank))
@@ -1984,6 +2183,10 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
     :param start_index1: the number used for indexing the first variable in the first list (0, by default)
     :param start_index2: the number used for indexing the first variable in the second list (0, by default)
     :return: a constraint Channel
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        y = VarArray(size=3, dom=range(3))
+        satisfy(Channel(x, y))
     """
     list1 = flatten(list1)
     checkType(list1, [Variable])
@@ -2027,6 +2230,9 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
     :param lengths: the lengths of the tasks
     :param zero_ignored: if True, the tasks with length 0 must be discarded
     :return: a constraint NoOverlap
+    :example:
+        s = VarArray(size=3, dom=range(10))
+        satisfy(NoOverlap(origins=s, lengths=[2, 3, 1]))
     """
     if tasks is not None:
         assert origins is None and lengths is None
@@ -2118,6 +2324,9 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     :param heights: the heights (amounts of resource consumption) of the tasks
     :param condition: a condition directly specified for the Cumulative (typically, None)
     :return: a component/constraint Cumulative
+    :example:
+        s = VarArray(size=3, dom=range(10))
+        satisfy(Cumulative(origins=s, lengths=[2, 3, 1], heights=[1, 1, 2]) <= 2)
     """
     if tasks is not None:
         assert origins is None and lengths is None and ends is None and heights is None
@@ -2178,6 +2387,9 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
     :param loads: the loads of bins (if limits is None)
     :param condition: a condition directly specified for the BinPacking (typically, None)
     :return: a component/constraint BinPacking
+    :example:
+        b = VarArray(size=4, dom=range(2))
+        satisfy(BinPacking(b, sizes=[3, 2, 2, 1]) <= 5)
     """
     terms = flatten(partition, partition_complement)
     assert len(terms) > 0, "A binPacking with an empty scope"
@@ -2216,6 +2428,9 @@ def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=
     :param profits: the benefits associated with the items
     :param pcondition: a condition on the profits directly specified for the Knapsack (typically, None)
     :return: a component/constraint Knapsack
+    :example:
+        b = VarArray(size=4, dom={0, 1})
+        satisfy(Knapsack(b, weights=[3, 2, 2, 1], wlimit=5, profits=[4, 3, 2, 1]) >= 6)
     """
 
     terms = flatten(selection, selection_complement)
@@ -2243,6 +2458,9 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
     :param weights: the weight (cost) of the arcs, given by an integer or a list of integers (None, by default)
     :param condition: a condition directly specified for the Flow (typically, None)
     :return: a component Flow
+    :example:
+        f = VarArray(size=3, dom=range(4))
+        satisfy(Flow(f, balance=[2, 0, -2], arcs=[(0, 1), (1, 2), (0, 2)], weights=[1, 2, 3]) <= 10)
     """
     terms = flatten(term, others)
     assert len(terms) > 0, "A Flow with an empty scope"
@@ -2274,6 +2492,9 @@ def Circuit(successors, *successors_complement, start_index=0, size=None, no_sel
     :param start_index: the number used for indexing the first variable/node in the list of terms
     :param size: the size of the circuit (a constant, a variable or None)
     :return: a constraint Circuit
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Circuit(x))
     """
     successors = flatten(successors, successors_complement)
     checkType(successors, [Variable])
@@ -2300,6 +2521,9 @@ def Clause(variables, *variables_complement, phases=None):
         :param variables_complement: the other terms (if any) on which the constraint applies
         :param phases: the phase of the variables involved in the clause
         :return: a constraint Clause
+        :example:
+            b = VarArray(size=3, dom={0, 1})
+            satisfy(Clause(b, phases=[True, False, True]))
         """
     variables = flatten(variables, variables_complement)
     phases = [False] * len(variables) if phases is None else flatten(phases)
@@ -2320,6 +2544,9 @@ def Adhoc(form, note=None, **d):
     :param note: a comment
     :param d: a dictionary with all arguments of the adhoc constraint
     :return: a constraint Adhoc
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(Adhoc("myform", t=[0, 1, 2]))
     """
     return ECtr(ConstraintAdhoc(form, note, d))
 
@@ -2393,6 +2620,10 @@ def minimize(term):
 
     :param term: the term to be minimized
     :return: the objective to be minimized
+    :example:
+        x = VarArray(size=3, dom=range(10))
+        satisfy(AllDifferent(x))
+        minimize(Sum(x))
     """
     return _optimize(term, True)
 
@@ -2404,6 +2635,10 @@ def maximize(term):
 
     :param term: the term to be maximized
     :return: the objective to be maximized
+    :example:
+        x = VarArray(size=3, dom=range(10))
+        satisfy(AllDifferent(x))
+        maximize(Sum(x))
     """
     return _optimize(term, False)
 
@@ -2426,6 +2661,10 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
     :param search: the annotation about search
     :param restarts: the annotation about restarts
     :return: a list of annotations
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        annotate(decision=x)
     """
     def add_annotation(obj, Ann):
         if obj:
@@ -2456,6 +2695,10 @@ def posted(i=None, j=None):
 
     :param i: the number/index of the posting operation (i.e., call to satisfy())
     :param j: the number (or slice) of the constraint with respect to the ith posting operation
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        print(posted())
     """
     t = []
     if i is None or i is ALL:  # all posted constraints are returned
@@ -2482,6 +2725,11 @@ def posted(i=None, j=None):
 def objective():
     """
     Returns the objective of the model, or None if no one has been defined by calling either the function minimize() or the function maximize()
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        minimize(Sum(x))
+        print(objective())
     """
     assert len(ObjEntities.items) <= 1
     return ObjEntities.items[0].constraint if len(ObjEntities.items) == 1 else None
@@ -2498,6 +2746,11 @@ def unpost(i=None, j=None):
     :param i: the index of the posting operation (call to satisfy) to be discarded (if j is None)
     :param j: the index (or slice) of the constraint(s) to be removed inside the group of constraints
               corresponding to the specified posting operation
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        satisfy(x[0] == 0)
+        unpost(1)
     """
     if i is None:
         i = -1
@@ -2518,6 +2771,11 @@ def value(model_variable, *, sol=-1):
 
     :param model_variable: a variable of the model
     :param sol: the index of a found solution
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        if solve() is SAT:
+            print(value(x[0]))
     """
     assert isinstance(model_variable, Variable) and len(model_variable.values) > 0
     return model_variable.values[sol]
@@ -2531,6 +2789,11 @@ def values(model_variables, *model_variables_complement, sol=-1):
     :param model_variables: the first term (typically, a list) containing variables on which the function applies
     :param model_variables_complement: the other terms (if any) on which the function applies
     :param sol: the order (index) of a found solution
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        if solve() is SAT:
+            print(values(x))
     """
     m = flatten(model_variables, model_variables_complement)
     if isinstance(m, Variable):

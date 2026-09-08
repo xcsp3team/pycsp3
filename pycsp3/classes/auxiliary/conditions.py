@@ -278,6 +278,10 @@ def lt(v):
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
+    :example:
+        x = Var(range(10))
+        b = VarArray(size=2, dom={0, 1})
+        satisfy(Match(x, Cases={lt(5): b[0] == 1, ge(5): b[1] == 1}))
     """
     return _build_condition(LT, v)
 
@@ -289,6 +293,10 @@ def le(v):
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
+    :example:
+        x = Var(range(10))
+        b = VarArray(size=2, dom={0, 1})
+        satisfy(Match(x, Cases={le(4): b[0] == 1, gt(4): b[1] == 1}))
     """
     return _build_condition(LE, v)
 
@@ -300,6 +308,10 @@ def ge(v):
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
+    :example:
+        x = Var(range(10))
+        b = VarArray(size=2, dom={0, 1})
+        satisfy(Match(x, Cases={ge(5): b[0] == 1, lt(5): b[1] == 1}))
     """
     return _build_condition(GE, v)
 
@@ -311,6 +323,10 @@ def gt(v):
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
+    :example:
+        x = Var(range(10))
+        b = VarArray(size=2, dom={0, 1})
+        satisfy(Match(x, Cases={gt(4): b[0] == 1, le(4): b[1] == 1}))
     """
     return _build_condition(GT, v)
 
@@ -322,6 +338,10 @@ def eq(v):
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
+    :example:
+        x = Var(range(10))
+        b = VarArray(size=2, dom={0, 1})
+        satisfy(Match(x, Cases={eq(0): b[0] == 1, ne(0): b[1] == 1}))
     """
     return _build_condition(EQ, v)
 
@@ -333,6 +353,10 @@ def ne(v):
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
+    :example:
+        x = Var(range(10))
+        b = VarArray(size=2, dom={0, 1})
+        satisfy(Match(x, Cases={ne(0): b[0] == 1, eq(0): b[1] == 1}))
     """
     return _build_condition(NE, v)
 
@@ -365,5 +389,8 @@ def complement(*v):
 
     :param v: a range, a set, a tuple or a list of integers
     :return: an object Condition
+    :example:
+        b = VarArray(size=4, dom={0, 1})
+        satisfy(Knapsack(b, weights=[3, 2, 2, 1], wcondition=complement(range(3)), profits=[4, 3, 2, 1]) >= 6)
     """
     return _inside_outside(NOTIN, v)

@@ -241,6 +241,11 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
 
     :param filename: name (possibly a URL) of a JSON file
     :return: the loaded data
+    :example:
+        open("instance.json", "w").write('{"n": 4, "k": 2}')
+        data = load_json_data("instance.json")
+        x = VarArray(size=data.n, dom=range(data.k))
+        satisfy(AllDifferent(x))
     """
     assert filename.endswith(".json")
     if filename.startswith("http"):
@@ -289,6 +294,11 @@ def default_data(filename):
 
     :param filename: name (possibly a URL) of a JSON file
     :return: the loaded data
+    :example:
+        open("defaults.json", "w").write('{"n": 4, "k": 2}')
+        data = default_data("defaults.json")
+        x = VarArray(size=data.n, dom=range(data.k))
+        satisfy(AllDifferent(x))
     """
     return load_json_data(filename, storing=True)
 

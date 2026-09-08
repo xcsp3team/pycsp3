@@ -38,6 +38,10 @@ def to_ordinary_table(table, domains, *, possibly_starred=False):
     :param domains: the domains of integers to be considered for each column of the table
     :param possibly_starred: if True, the returned table may be starred (and not purely ordinary)
     :return: an ordinary or starred table
+    :example:
+        T = to_ordinary_table({(0, ANY), (1, 1)}, [2, 2])
+        x = VarArray(size=2, dom=range(2))
+        satisfy((x[0], x[1]) in T)
     """
 
     def _tuple_of_interest(t):

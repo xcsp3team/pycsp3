@@ -1088,6 +1088,9 @@ def rows(m):
 
     :param m: a matrix (i.e. a two-dimensional list)
     :return: the matrix (possibly after converting its type)
+    :example:
+        x = VarArray(size=[3, 3], dom=range(3))
+        satisfy(AllDifferent(row) for row in rows(x))
     """
     assert is_matrix(m)
     mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
@@ -1100,6 +1103,9 @@ def columns(m):
 
     :param m: a matrix (i.e. a two-dimensional list)
     :return: the transpose matrix
+    :example:
+        x = VarArray(size=[3, 3], dom=range(3))
+        satisfy(AllDifferent(col) for col in columns(x))
     """
     assert is_matrix(m)
     mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
@@ -1113,6 +1119,9 @@ def ring(matrix, k=0):
     :param matrix: a matrix (i.e. a two-dimensional list)
     :param k: the index of the ring (from the outside towards the inside, starting at 0)
     :return: the list of variables forming the kth ring of the specified matrix
+    :example:
+        x = VarArray(size=[4, 4], dom=range(4))
+        satisfy(AllDifferent(ring(x, 0)))
     """
     assert is_matrix(matrix) and isinstance(k, int) and k < min(len(matrix), len(matrix[0])) // 2
     n, m = len(matrix), len(matrix[0])
@@ -1134,6 +1143,9 @@ def diagonal_down(m, i=-1, j=-1, check=True):
     :param j: index of column (possibly -1)
     :param check: true when the structure of the matrix must be controlled
     :return: the main downward diagonal (or another stipulated downward diagonal)
+    :example:
+        x = VarArray(size=[3, 3], dom=range(3))
+        satisfy(AllDifferent(diagonal_down(x)))
     """
     if check is True:
         assert is_square_matrix(m), "The specified first parameter must be a square matrix."
@@ -1152,6 +1164,9 @@ def diagonals_down(m, *, broken=False):
     :param m: a matrix (i.e. a two-dimensional list)
     :param broken: true when broken diagonals must be completed
     :return: the list of downward diagonals
+    :example:
+        x = VarArray(size=[3, 3], dom=range(3))
+        satisfy(AllDifferent(d) for d in diagonals_down(x))
     """
     assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
@@ -1171,6 +1186,9 @@ def diagonal_up(m, i=-1, j=-1, check=True):
        :param j: index of column (possibly -1)
        :param check: true when the structure of the matrix must be controlled
        :return: the main upward diagonal (or another stipulated upward diagonal)
+       :example:
+           x = VarArray(size=[3, 3], dom=range(3))
+           satisfy(AllDifferent(diagonal_up(x)))
        """
     if check is True:
         assert is_square_matrix(m), "The specified first parameter must be a square matrix."
@@ -1189,6 +1207,9 @@ def diagonals_up(m, *, broken=False):
       :param m: a matrix (i.e. a two-dimensional list)
       :param broken: true when broken diagonals must be completed
       :return: the list of upward diagonals
+      :example:
+          x = VarArray(size=[3, 3], dom=range(3))
+          satisfy(AllDifferent(d) for d in diagonals_up(x))
       """
     assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
@@ -1204,6 +1225,9 @@ def diagonals(m):
 
       :param m: a matrix (i.e. a two-dimensional list)
       :return: a list with the two main diagonals
+      :example:
+          x = VarArray(size=[3, 3], dom=range(3))
+          satisfy(AllDifferent(d) for d in diagonals(x))
       """
     assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     mode = 0 if is_matrix(m, Variable) else 1 if is_matrix(m, int) else 2
@@ -1219,6 +1243,10 @@ def cp_array(*t):
 
     :param t: a list (of any dimension)
     :return: the same list, possibly converted into one of the two more specific types ListInt and ListVar
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        t = cp_array([2, 0, 1])
+        satisfy(t[x[0]] == 1)
     """
     if len(t) == 1:
         t = t[0]

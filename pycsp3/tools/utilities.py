@@ -84,10 +84,21 @@ class _Star(float):
 
 
 ANY = _Star("Inf")  #: used to represent * in short tables
-""" Constant used to represent * in starred tables """
+""" Constant used to represent * in starred tables
+
+:example:
+    x = VarArray(size=3, dom=range(3))
+    satisfy((x[0], x[1], x[2]) in {(0, ANY, 1), (1, 1, ANY)})
+"""
 
 ALL = "all"
-""" Constant used to indicate, for example, that all solutions must be sought """
+""" Constant used to indicate, for example, that all solutions must be sought
+
+:example:
+    x = VarArray(size=3, dom=range(3))
+    satisfy(AllDifferent(x))
+    print(ALL)
+"""
 
 
 def combinations(n, size):
@@ -97,6 +108,9 @@ def combinations(n, size):
     :param n: an iterable object, or an integer n standing for range(n)
     :param size: the size of each combination
     :return: an iterator over all combinations of the specified size
+    :example:
+        x = VarArray(size=4, dom=range(4))
+        satisfy(x[i] != x[j] for i, j in combinations(4, 2))
     """
     return itertools.combinations(n if not isinstance(n, int) else range(n), size)
 
@@ -109,6 +123,8 @@ def different_values(*args):
     """
     Returns True if all specified integers are different
     :return: True if all specified integers are different
+    :example:
+        print(different_values(1, 2, 3))
     """
     assert all(isinstance(arg, int) for arg in args)
     return all(a != b for (a, b) in combinations(args, 2))
@@ -120,6 +136,9 @@ def flatten(*args, keep_none=False, keep_tuples=False, call_cp_array=True):
     Typically, this is a list (of possibly any dimension).
 
     :param keep_none: if True, None values are not discarded
+    :example:
+        x = VarArray(size=[2, 2], dom=range(4))
+        satisfy(AllDifferent(flatten(x)))
     """
     # if not hasattr(flatten, "cache"):  # cannot work (changing to TupleInt and TupleVar instead of ListInt and ListVar while guaranteeing the lifetime? how?)
     #     flatten.cache = {}
@@ -218,6 +237,8 @@ def alphabet_positions(s):
     Returns a tuple with the indexes of the letters (with respect to the 26 letters of the Latin alphabet) of the specified string.
 
     :param s: a string
+    :example:
+        print(alphabet_positions("abc"))
     """
 
     if isinstance(s, (list, tuple, set, frozenset, types.GeneratorType)):
@@ -230,6 +251,9 @@ def all_primes(limit):
     Returns a list with all prime numbers that are strictly less than the specified limit.
 
     :param limit: an integer
+    :example:
+        x = VarArray(size=3, dom=range(20))
+        satisfy(belong(x[0], set(all_primes(20))))
     """
     sieve = [True] * limit
     for i in range(3, int(limit ** 0.5) + 1, 2):
@@ -251,6 +275,8 @@ def value_in_base(decimal_value, length, base):
 def integer_scaling(values):
     """
     Returns a list with all specified values after possibly converting them (when decimal) into integers by means of automatic scaling
+    :example:
+        print(integer_scaling([0.5, 1.25]))
     """
     values = list(values) if isinstance(values, types.GeneratorType) else values
     values = [str(v) for v in values]
@@ -274,6 +300,8 @@ def number_of_values_for_sum_ge(tab, limit, reverse=False):
     :param limit: the limit to be reached
     :param reverse: if True, values are summed from the end of the list (i.e., the greatest ones first)
     :return: the minimum number of values whose sum is greater than or equal to the limit, or -1 if the limit cannot be reached
+    :example:
+        print(number_of_values_for_sum_ge([1, 2, 3, 4], 5))
     """
     assert isinstance(tab, list) and all(tab[i] <= tab[i + 1] for i in range(len(tab) - 1))
     csum = 0
@@ -299,6 +327,8 @@ def number_of_values_for_sum_gt(tab, limit, reverse=False):
     :param limit: the limit to be exceeded
     :param reverse: if True, values are summed from the end of the list (i.e., the greatest ones first)
     :return: the minimum number of values whose sum is greater than the limit, or -1 if the limit cannot be exceeded
+    :example:
+        print(number_of_values_for_sum_gt([1, 2, 3, 4], 5))
     """
     return number_of_values_for_sum_ge(tab, limit + 1, reverse)
 
@@ -311,6 +341,8 @@ def number_max_of_values_for_sum_le(tab, limit, reverse=False):
     :param limit: the limit that must not be exceeded
     :param reverse: if True, values are summed from the end of the list (i.e., the greatest ones first)
     :return: the maximum number of values whose sum is less than or equal to the limit
+    :example:
+        print(number_max_of_values_for_sum_le([1, 2, 3, 4], 5))
     """
     nb = number_of_values_for_sum_gt(tab, limit, reverse)
     return len(tab) if nb == -1 else nb - 1
@@ -324,6 +356,8 @@ def number_max_of_values_for_sum_lt(tab, limit, reverse=False):
     :param limit: the limit that must be stayed below
     :param reverse: if True, values are summed from the end of the list (i.e., the greatest ones first)
     :return: the maximum number of values whose sum is strictly less than the limit
+    :example:
+        print(number_max_of_values_for_sum_lt([1, 2, 3, 4], 5))
     """
     nb = number_of_values_for_sum_ge(tab, limit, reverse)
     return len(tab) if nb == -1 else nb - 1
@@ -338,6 +372,10 @@ def decrement(t):
 
     :param t: an integer, or a (possibly nested) list of integers or of tuples of integers
     :return: the specified object, with every integer decremented by 1
+    :example:
+        data = decrement([[1, 2], [3, 4]])
+        x = VarArray(size=2, dom=range(4))
+        satisfy(x[0] == data[0][0])
     """
     if isinstance(t, int):
         return t - 1
@@ -452,6 +490,10 @@ def build_table(domains, predicate):
     :param domains: the list of domains, one per column of the table
     :param predicate: a Boolean function taking as many arguments as there are domains
     :return: the list of tuples satisfying the predicate
+    :example:
+        x = VarArray(size=2, dom=range(4))
+        T = build_table([range(4), range(4)], lambda a, b: a + b == 3)
+        satisfy((x[0], x[1]) in T)
     """
     T = []
     for t in product(*domains):
@@ -507,6 +549,8 @@ def warning(message, type_message=None):
 
     :param message: the message to be displayed
     :param type_message: when specified, the kind of warning, so that similar cases are only displayed one time (None, by default)
+    :example:
+        warning("the data file looks empty")
     """
     if options.dont_display_warnings:
         return

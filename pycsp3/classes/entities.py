@@ -350,6 +350,12 @@ class AnnEntities:
 def clear():
     """
     Removes everything that was declared (variables) or posted (constraints, objective)
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        satisfy(AllDifferent(x))
+        clear()
+        y = VarArray(size=2, dom=range(2))
+        satisfy(y[0] != y[1])
     """
     VarEntities.items = []
     VarEntities.varToEVar = dict()
