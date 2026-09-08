@@ -239,7 +239,7 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
     """
     Loads and returns the data from the specified JSON file (possibly given by a URL)
 
-    :param filename: name (possibly ULR) of a JSON file
+    :param filename: name (possibly a URL) of a JSON file
     :return: the loaded data
     """
     assert filename.endswith(".json")
@@ -287,7 +287,7 @@ def default_data(filename):
     """
     Loads data from the specified JSON file (possibly given by a URL)
 
-    :param filename: mane (possibly ULR) of a JSON file
+    :param filename: name (possibly a URL) of a JSON file
     :return: the loaded data
     """
     return load_json_data(filename, storing=True)
