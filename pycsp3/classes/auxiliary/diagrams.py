@@ -106,6 +106,10 @@ class Automaton(Diagram):
         :param start: the starting state
         :param transitions: a set of transitions
         :param final: the final state(s)
+        :example:
+            x = VarArray(size=4, dom=range(2))
+            a = Automaton(start="q0", final="q1", transitions=[("q0", 0, "q0"), ("q0", 1, "q1"), ("q1", 1, "q1")])
+            satisfy(Regular(scope=x, automaton=a))
         """
         super().__init__(transitions)
         self.start = start
@@ -184,6 +188,10 @@ class MDD(Diagram):
         Builds an MDD from the specified set of transitions
 
         :param transitions: a set of transitions
+        :example:
+            x = VarArray(size=3, dom=range(2))
+            m = MDD([("r", 0, "n1"), ("r", 1, "n2"), ("n1", 1, "t"), ("n2", 0, "t")])
+            satisfy(x in m)
         """
         if isinstance(transitions, types.GeneratorType):
             transitions = [t for t in transitions]
