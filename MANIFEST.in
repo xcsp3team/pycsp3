@@ -2,6 +2,7 @@ include pycsp3/version.txt
 recursive-include pycsp3/problems/ *.*
 recursive-include pycsp3/solvers/ace/ *.*
 recursive-include pycsp3/solvers/choco/ *.*
+recursive-include pycsp3/solvers/cosoco/ *
 
 global-exclude __pycache__
 global-exclude *.pyc

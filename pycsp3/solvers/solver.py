@@ -252,9 +252,9 @@ class SolverProcess:
                 return TypeStatus.UNKNOWN
 
             if "limit=no" in string_options or ("limit_sols" in dict_simplified_options and int(dict_simplified_options["limit_sols"]) > 1):
-                # TODo findall does not seem to work with the output of Choco. why?
+                # re.DOTALL because some solvers (e.g., cosoco) spread an instantiation over several lines
                 roots = [etree.fromstring(("<instantiation" + tok + "</instantiation>").replace("\nv", ""), etree.XMLParser(remove_blank_text=True))
-                         for tok in re.findall(r"<instantiation(.*?)</instantiation>", stdout)]
+                         for tok in re.findall(r"<instantiation(.*?)</instantiation>", stdout, re.DOTALL)]
             else:
                 left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
                 roots = [etree.fromstring(stdout[left:right + len("</instantiation>")].replace("\nv", ""), etree.XMLParser(remove_blank_text=True))]
