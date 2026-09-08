@@ -55,19 +55,26 @@ CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
 
 Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
-""" A task, as involved in the constraint Cumulative: its origin (starting time), its length (duration) and its height (amount of consumed resource)
+""" Task is a predefined named tuple, as involved in the constraint Cumulative: its origin (starting time), its length (duration) and its height (amount of consumed resource)
 
 :example:
     s = VarArray(size=3, dom=range(10))
-    satisfy(Cumulative(Task(origin=s[i], length=2, height=1) for i in range(3)) <= 2)
+    
+    tasks = [Task(origin=s[i], length=2, height=1) for i in range(3)]
+    
+    satisfy(
+       Cumulative(tasks) <= 2
+    )
 """
 
 Item = namedtuple("Item", ("bin", "size"))
-""" An item, as involved in bin-packing problems: the bin it is put in, and its size
+""" Item is a predefined named tuple, as involved in bin-packing problems: the bin it is put in, and its size
 
 :example:
     b = VarArray(size=3, dom=range(2))
+    
     items = [Item(bin=b[i], size=i + 1) for i in range(3)]
+    
     print(items[0].size)
 """
 

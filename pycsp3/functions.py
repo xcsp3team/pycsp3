@@ -71,8 +71,9 @@ def variant(name=None):
     :return: the name of the variant specified by the user, or a Boolean
     :example:
         x = VarArray(size=3, dom=range(3))
+
         if variant("table"):
-            satisfy(Table(x, {(0, 1, 2)}))
+            satisfy(Table(x, {(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)}))
         else:
             satisfy(AllDifferent(x))
     """
@@ -92,11 +93,12 @@ def subvariant(name=None):
     :param name: the name of a sub-variant, or None
     :return: the name of the sub-variant specified by the user, or a Boolean
     :example:
-        x = VarArray(size=3, dom=range(3))
-        if subvariant("short"):
-            satisfy(x[0] < x[1])
+        x = VarArray(size=2, dom=range(10))
+
+        if subvariant("relaxed"):
+            satisfy(x[0] != x[1])
         else:
-            satisfy(AllDifferent(x))
+            satisfy(x[0] < x[1])
     """
     assert options.variant is None or isinstance(options.variant, str)
     pos = -1 if options.variant is None else options.variant.find("-")  # position of dash in options.variant
@@ -118,8 +120,8 @@ def Var(term=None, *others, dom=None, id=None):
     by the sequence of terms passed as parameters. For example::
 
         x = Var(0, 1)
-        y = Var(range(10))
-        z = Var(v for v in range(100) if v % 3 == 0)
+        y = Var(dom=range(10))
+        z = Var(dom={v for v in range(100) if v % 3 == 0})
 
     :param term: the first term defining the domain, or None
     :param others: the other terms defining the domain, or None
@@ -127,8 +129,9 @@ def Var(term=None, *others, dom=None, id=None):
     :param id: the id (name) of the variable, or None (usually, None)
     :return: a stand-alone Variable with the specified domain
     :example:
-        x = Var(range(10))
+        x = Var(dom=range(10))
         y = Var(0, 2, 4)
+
         satisfy(x < y)
     """
     global started_modeling
@@ -196,7 +199,7 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     :example:
         x = VarArray(size=5, dom=range(10))
         y = VarArray(size=[2, 3], dom={0, 1})
-        satisfy(AllDifferent(x))
+        z = VarArray(size=10, dom=lambda i: range(i+1))
     """
     global started_modeling
     if not started_modeling and not options.uncurse:
@@ -293,8 +296,12 @@ def VarArrayMultiple(*, size, fields):
     :param fields: a dictionary mapping the name of each field to the domain of the corresponding variables
     :return: an array of named tuples of variables
     :example:
-        t = VarArrayMultiple(size=3, fields={"start": range(10), "duration": range(1, 4)})
-        satisfy(Increasing(t.start))
+        points = VarArrayMultiple(size=10, fields={"x": range(100), "y": range(200)})
+
+        satisfy(
+          points[0] == points[-1],
+          points[1].x != points[2].x
+        )
     """
     assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
     size = [size] if isinstance(size, int) else size
@@ -325,9 +332,24 @@ def var(name):
     Returns the variable or variable array whose name is specified
     :param name: the name of the variable or variable array to be returned
     :example:
-        x = VarArray(size=3, dom=range(3))
-        satisfy(AllDifferent(x))
-        print(var("x[0]"))
+        x = Var(range(10))
+        y = Var(dom=range(5), id="yy_12")
+        Var(dom=range(10), id="z")
+
+        d = dict()
+        a = 1
+        d[0] = Var(0, 1, id="d_0")
+        d[a] = Var(0, 1, id="d_1")
+
+        satisfy(
+           x >= 3,
+           var("x") <= 6,
+           y > 2,
+           var("yy_12") < 4,
+           var("z") != 4,
+           d[0] + d[1] != 0,
+           var("d_0") + var("d_1") != 2
+        )
     """
     assert isinstance(name, str)
     error_if(name not in Variable.name2obj,
@@ -546,7 +568,14 @@ def If(test, *test_complement, Then, Else=None, meta=False):
     :return: a complex form of constraint(s) based on the control structure 'if then else'
     :example:
         x = VarArray(size=3, dom=range(3))
-        satisfy(If(x[0] > 0, Then=AllDifferent(x)))
+
+        satisfy(
+           If(
+              x[0] > 0,
+              Then=AllDifferent(x),
+              Else=AllEqual(x)
+           )
+        )
     """
 
     # if len(testOthers) == 0 and isinstance(test, bool):  # We don't allow that because otherwise 'in' no more usable as in If(x[0] in (2,3), Then=...
@@ -636,8 +665,19 @@ def Match(Expr, *, Cases):
     :return: the list of constraints corresponding to the case analysis
     :example:
         x = Var(range(3))
+
         y = VarArray(size=3, dom=range(2))
-        satisfy(Match(x, Cases={0: y[0] == 1, 1: y[1] == 1, 2: y[2] == 1}))
+
+        satisfy(
+           Match(
+              x,
+              Cases={
+                 0: y[0] == 1,
+                 1: y[1] == 1,
+                 2: y[2] == 1
+              }
+           )
+        )
     """
     assert isinstance(Cases, dict)
     if isinstance(Expr, (tuple, list)):
@@ -695,7 +735,10 @@ def Slide(*args, expression=None, circular=None, offset=None, collect=None):
     :return: a meta-constraint Slide
     :example:
         x = VarArray(size=4, dom=range(4))
-        satisfy(Slide(x[i] < x[i + 1] for i in range(3)))
+
+        satisfy(
+           Slide(x[i] < x[i + 1] for i in range(3))
+        )
     """
     if expression is not None:  # the meta-constraint is defined directly by the user
         return ECtr(ConstraintSlide(*args, expression, circular, offset, collect))
@@ -770,10 +813,15 @@ def satisfy(*args, no_comment_tags_extraction=False):
     Posts all constraints that are specified as arguments
 
     :param args: the different constraints to be posted
+    :param no_comment_tags_extraction: discard comments and tags (when compiling), if set to True
     :return: an object wrapping the posted constraints
     :example:
-        x = VarArray(size=3, dom=range(3))
-        satisfy(AllDifferent(x), x[0] < x[1])
+        x = VarArray(size=10, dom=range(10))
+
+        satisfy(
+           AllDifferent(x),
+           x[0] + x[-1] > 6
+        )
     """
 
     def _reorder(l):  # if constraints are given in (sub-)lists inside tuples; we flatten and reorder them to hopefully improve compactness
@@ -2625,8 +2673,14 @@ def minimize(term):
     :return: the objective to be minimized
     :example:
         x = VarArray(size=3, dom=range(10))
-        satisfy(AllDifferent(x))
-        minimize(Sum(x))
+
+        satisfy(
+           Decreasing(x)
+        )
+
+        minimize(
+           Sum(x)
+        )
     """
     return _optimize(term, True)
 
@@ -2640,8 +2694,14 @@ def maximize(term):
     :return: the objective to be maximized
     :example:
         x = VarArray(size=3, dom=range(10))
-        satisfy(AllDifferent(x))
-        maximize(Sum(x))
+
+        satisfy(
+           Increasing(x)
+        )
+
+        maximize(
+           Sum(x)
+        )
     """
     return _optimize(term, False)
 
@@ -2666,8 +2726,14 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
     :return: a list of annotations
     :example:
         x = VarArray(size=3, dom=range(3))
-        satisfy(AllDifferent(x))
-        annotate(decision=x)
+
+        satisfy(
+           AllDifferent(x)
+        )
+
+        annotate(
+           decision=x
+        )
     """
     def add_annotation(obj, Ann):
         if obj:

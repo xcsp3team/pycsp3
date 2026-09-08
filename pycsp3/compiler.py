@@ -242,10 +242,16 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
     :param filename: name (possibly a URL) of a JSON file
     :return: the loaded data
     :example:
-        open("instance.json", "w").write('{"n": 4, "k": 2}')
-        data = load_json_data("instance.json")
-        x = VarArray(size=data.n, dom=range(data.k))
-        satisfy(AllDifferent(x))
+        data = load_json_data("https://raw.githubusercontent.com/xcsp3team/pycsp3-models/main/realistic/RIP/25-0-j060-01-01.json")
+
+        x = VarArray(size=len(data.jobs), dom=range(data.horizon))
+
+        satisfy(
+           NoOverlap(
+              origins=x,
+              lengths=[job.duration for job in data.jobs]
+           )
+        )
     """
     assert filename.endswith(".json")
     if filename.startswith("http"):
@@ -290,14 +296,18 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
 
 def default_data(filename):
     """
-    Loads data from the specified JSON file (possibly given by a URL)
+    Loads data from the specified JSON file (possibly given by a URL).
+    This method is similar to 'load_json_data()' but expected to be used when loading a unique data file corresponding to a problem instance when the user does not specify any data file
 
     :param filename: name (possibly a URL) of a JSON file
     :return: the loaded data
     :example:
-        open("defaults.json", "w").write('{"n": 4, "k": 2}')
+        # suppose that defaults.json is a file whose content is: '{"n": 4, "k": 2}'
+
         data = default_data("defaults.json")
+
         x = VarArray(size=data.n, dom=range(data.k))
+
         satisfy(AllDifferent(x))
     """
     return load_json_data(filename, storing=True)
