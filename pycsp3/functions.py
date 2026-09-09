@@ -1042,7 +1042,7 @@ def min(*args):
         x = VarArray(size=4, dom=range(4))
         satisfy(min(x[0], x[1]) == 0)
     """
-    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
+    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = [v for v in args[0]]
     return args[0] if len(args) == 1 and isinstance(args[0], (int, str, Variable, Node)) else Node.build(TypeNode.MIN, *args) if len(args) > 1 and any(
         isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
@@ -1059,7 +1059,7 @@ def max(*args):
         x = VarArray(size=4, dom=range(4))
         satisfy(max(x[0], x[1]) == 3)
     """
-    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
+    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = [v for v in args[0]]
     return args[0] if len(args) == 1 and isinstance(args[0], (int, str, Variable, Node)) else Node.build(TypeNode.MAX, *args) if len(args) > 1 and any(
         isinstance(a, (Node, Variable)) for a in args) else maxPython(*args)
