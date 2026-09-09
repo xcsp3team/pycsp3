@@ -1,18 +1,39 @@
+import importlib
+import subprocess
+import sys
+
 from pycsp3.solvers.solver import SolverProcess  # , SolverPy4J
 
-try:
-    from cosoco_bin import PATH as COSOCO_BIN
-except ImportError:
-    raise ImportError(
-        "The cosoco solver is not installed. Install it with:\n"
-        "    pip install pycsp3[cosoco]\n"
-        "  (or: pip install cosoco)"
-    )
+
+def _cosoco_binary():
+    # cosoco ships as the separate PyPI package "cosoco", which exposes the
+    # path of its bundled executable as cosoco_bin.PATH. It is an optional
+    # dependency (extra [cosoco]); when a plain install lacks it, fetch it on
+    # demand, the first time the solver is actually asked for.
+    try:
+        from cosoco_bin import PATH
+        return PATH
+    except ImportError:
+        pass
+    print("cosoco is not installed; installing it now (pip install cosoco) ...", file=sys.stderr)
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "cosoco>=2.6.1"], check=True)
+    except (OSError, subprocess.CalledProcessError) as e:
+        raise ImportError(
+            "cosoco is not installed and installing it automatically failed. "
+            "Install it manually with:\n"
+            "    pip install pycsp3[cosoco]\n"
+            "  (or: pip install cosoco)"
+        ) from e
+    importlib.invalidate_caches()
+    from cosoco_bin import PATH
+    return PATH
 
 
 class Cosoco(SolverProcess):
     def __init__(self):
-        super().__init__(name="cosoco", command=COSOCO_BIN, cp=COSOCO_BIN)
+        binary = _cosoco_binary()
+        super().__init__(name="cosoco", command=binary, cp=binary)
 
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):
         # cosoco prints solutions in a compact form by default; level 2 is the XCSP3
