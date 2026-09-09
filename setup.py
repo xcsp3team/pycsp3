@@ -30,4 +30,4 @@ setup(name='pycsp3',
       long_description=open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8').read(),
       long_description_content_type='text/markdown',
       license='MIT',
-      platforms='LINUX')
+      platforms=['Linux', 'macOS'])
