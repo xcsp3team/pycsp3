@@ -449,11 +449,14 @@ def And(*args, meta=False):
         x = VarArray(size=3, dom=range(5))  # x[i] is the quantity of work assigned to the ith machine
 
         satisfy(
-           And(b[0] == 1, x[0] > 0)
+           Sum(x) == 7,
+
+           [And(b[i] == 1, x[i] > 0) for i in range(3)]
         )
 
+        # a solution: [1, 1, 1] [1, 2, 4]
         if solve() is SAT:
-           print(values(b))
+           print(values(b), values(x))
     """
     if options.use_meta or meta:
         return EAnd(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -481,6 +484,7 @@ def Or(*args, meta=False):
            Or(b[2] == 1, b[3] == 1)
         )
 
+        # a solution: [0, 1, 0, 1]
         if solve() is SAT:
            print(values(b))
     """
@@ -531,6 +535,7 @@ def Xor(*args, meta=False):
            Xor(b[0] == 1, b[1] == 1)
         )
 
+        # a solution: [0, 1]
         if solve() is SAT:
            print(values(b))
     """
@@ -744,11 +749,14 @@ def Iff(*args, meta=False):
         b = VarArray(size=3, dom={0, 1})  # b[j] is 1 iff the jth bin is opened
 
         satisfy(
+           Sum(b) == 2,
+
            [Iff(b[j] == 1, Exist(x[i] == j for i in range(5))) for j in range(3)]
         )
 
+        # a solution: [0, 0, 0, 0, 1] [1, 1, 0]
         if solve() is SAT:
-           print(values(x))
+           print(values(x), values(b))
     """
     if meta:
         return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -1012,6 +1020,7 @@ def Table(*, scope, supports=None, conflicts=None):
            (x[0], x[1], x[2]) in {(0, 1, 2), (0, 2, 3), (1, ANY, 3), (2, 3, 0)}
         )
 
+        # a solution: [0, 1, 2]
         if solve() is SAT:
            print(values(x))
 
@@ -1063,6 +1072,7 @@ def col(*args):
            (x[0], x[1], x[2], x[3]) in [(ANY, ANY, col(0), gt(col(1))), (0, 0, ANY, ANY)]
         )
 
+        # a solution: [1, 0, 1, 1]
         if solve() is SAT:
            print(values(x))
     """
@@ -1087,6 +1097,7 @@ def abs(arg):
            AllDifferent(abs(x[i] - x[i + 1]) for i in range(4))
         )
 
+        # a solution: [0, 4, 1, 3, 2]
         if solve() is SAT:
            print(values(x))
     """
@@ -1110,11 +1121,14 @@ def min(*args):
         z = Var(dom=range(20))  # z is the starting time of the delivery
 
         satisfy(
-           z >= min(x)
+           x[0] == 8, x[1] == 5, x[2] == 11,
+
+           z == min(x)
         )
 
+        # a solution: [8, 5, 11] 5
         if solve() is SAT:
-           print(values(x))
+           print(values(x), value(z))
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
         args = [v for v in args[0]]
@@ -1135,11 +1149,14 @@ def max(*args):
         z = Var(dom=range(20))  # z is the closing time of the workshop
 
         satisfy(
+           x[0] == 8, x[1] == 5, x[2] == 11,
+
            z == max(x)
         )
 
+        # a solution: [8, 5, 11] 11
         if solve() is SAT:
-           print(values(x))
+           print(values(x), value(z))
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset)):
         args = [v for v in args[0]]
@@ -1162,6 +1179,7 @@ def xor(*args):
            [xor(b[i][0] == 1, b[i][1] == 1) for i in range(4)]
         )
 
+        # a solution: [0, 1, 0, 1, 0, 1, 0, 1]
         if solve() is SAT:
            print(values(b))
     """
@@ -1188,6 +1206,7 @@ def iff(*args):
            [iff(b[d] == 1, x[d] != 0) for d in range(7)]
         )
 
+        # a solution: [0, 0, 1, 1, 1, 1, 1] [0, 0, 1, 1, 1, 1, 1]
         if solve() is SAT:
            print(values(x), values(b))
     """
@@ -1219,6 +1238,7 @@ def imply(*args):
            [imply(b[i] == 1, s[i] == 1) for i in range(4)]
         )
 
+        # a solution: [0, 0, 1, 1] [0, 0, 1, 1]
         if solve() is SAT:
            print(values(b), values(s))
     """
@@ -1260,6 +1280,7 @@ def ift(test, Then, Else):
            [c[i] == ift(x[i] == 0, 3, 7) for i in range(3)]
         )
 
+        # a solution: [0, 1, 1] [3, 7, 7]
         if solve() is SAT:
            print(values(x), values(c))
     """
@@ -1326,6 +1347,7 @@ def belong(x, values):
            [belong(x[i], range(5)) for i in range(3)]
         )
 
+        # a solution: [0, 1, 2]
         if solve() is SAT:
            print(values(x))
     """
@@ -1368,6 +1390,7 @@ def not_belong(x, values):
            [not_belong(x[i], [5, 6]) for i in range(3)]
         )
 
+        # a solution: [0, 1, 2]
         if solve() is SAT:
            print(values(x))
     """
@@ -1409,6 +1432,7 @@ def expr(operator, *args):
            expr("eq", x[2], expr("add", x[0], x[1]))
         )
 
+        # a solution: [0, 1, 1]
         if solve() is SAT:
            print(values(x))
     """
@@ -1422,14 +1446,17 @@ def conjunction(*args):
 
     :return: a node, root of a tree expression
     :example:
-        # a room is suitable when all the required equipments are present
+        # a room is suitable when all the required equipments are present in it
         b = VarArray(size=4, dom={0, 1})  # b[k] is 1 iff the kth equipment is present in the room
         required = [0, 2, 3]
 
         satisfy(
+           Sum(b) == 3,
+
            conjunction(b[k] == 1 for k in required)
         )
 
+        # a solution: [1, 0, 1, 1]
         if solve() is SAT:
            print(values(b))
     """
@@ -1462,6 +1489,7 @@ def both(this, And):
            both(d >= 5, s >= 10)
         )
 
+        # a solution: [10]
         if solve() is SAT:
            print(values(s))
     """
@@ -1493,6 +1521,7 @@ def disjunction(*args):
            disjunction(x == g for g in available)
         )
 
+        # a solution: [1]
         if solve() is SAT:
            print(values(x))
     """
@@ -1519,6 +1548,7 @@ def either(this, Or):
            either(s[0] + durations[0] <= s[1], s[1] + durations[1] <= s[0])
         )
 
+        # a solution: [0, 4]
         if solve() is SAT:
            print(values(s))
     """
@@ -1555,9 +1585,12 @@ def Regular(*, scope, automaton):
         x = VarArray(size=7, dom=range(3))  # x[d] is the shift of the employee on day d
 
         satisfy(
+           Count(x, value=0) == 2,
+
            Regular(scope=x, automaton=automaton)
         )
 
+        # a solution: [0, 1, 1, 0, 1, 1, 1]
         if solve() is SAT:
            print(values(x))
     """
@@ -1585,6 +1618,7 @@ def Mdd(*, scope, mdd):
            x in m
         )
 
+        # a solution: [0, 2, 0]
         if solve() is SAT:
            print(values(x))
     """
@@ -1618,6 +1652,7 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
            [AllDifferent(x[i:i + 3, j:j + 3]) for i in (0, 3, 6) for j in (0, 3, 6)]
         )
 
+        # a solution: [1, 2, 3, 4, 5, 6, 7, 8, 9, 4, 5, 6, 7, 8, 9, 1, 2, 3, 7, 8, 9, 1, 2, 3, ...]
         if solve() is SAT:
            print(values(x))
 
@@ -1663,6 +1698,7 @@ def AllDifferentList(term, *others, excepting=None):
            AllDifferentList(x)
         )
 
+        # a solution: [2, 0, 3, 4, 1, 3, 1, 0]
         if solve() is SAT:
            print(values(x))
     """
@@ -1696,6 +1732,7 @@ def AllEqual(term, *others, excepting=None):
            AllEqual(x)
         )
 
+        # a solution: [10, 10, 10, 10]
         if solve() is SAT:
            print(values(x))
     """
@@ -1780,6 +1817,7 @@ def Increasing(term, *others, strict=False, lengths=None):
            Increasing(x)
         )
 
+        # a solution: [0, 0, 11, 19]
         if solve() is SAT:
            print(values(x))
 
@@ -1812,6 +1850,7 @@ def Decreasing(term, *others, strict=False, lengths=None):
            Decreasing(x)
         )
 
+        # a solution: [9, 3, 0, 0, 0]
         if solve() is SAT:
            print(values(x))
     """
@@ -1859,6 +1898,7 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
            LexIncreasing(x)
         )
 
+        # a solution: [0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2]
         if solve() is SAT:
            print(values(x))
 
@@ -1889,6 +1929,7 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
            LexDecreasing(x)
         )
 
+        # a solution: [0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1]
         if solve() is SAT:
            print(values(x))
     """
@@ -1932,11 +1973,15 @@ def Precedence(within, *, values=None, covered=False):
     :example:
         # symmetry breaking in graph colouring: the colours must be used in the order of their numbers
         x = VarArray(size=6, dom=range(6))  # x[i] is the colour of the ith node
+        edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 0)]
 
         satisfy(
+           [x[i] != x[j] for (i, j) in edges],
+
            Precedence(x, values=range(6))
         )
 
+        # a solution: [0, 1, 0, 1, 0, 1]
         if solve() is SAT:
            print(values(x))
 
@@ -1988,9 +2033,12 @@ def Sum(term, *others, condition=None):
         x = VarArray(size=6, dom={0, 1})  # x[i] is 1 iff the ith item is selected
 
         satisfy(
+           Sum(x) == 3,
+
            Sum(x * weights) <= 10
         )
 
+        # a solution: [0, 0, 1, 1, 0, 1]
         if solve() is SAT:
            print(values(x))
 
@@ -2099,6 +2147,7 @@ def Product(term, *others):
            Product(x) >= 60
         )
 
+        # a solution: [1, 7, 9]
         if solve() is SAT:
            print(values(x))
     """
@@ -2133,6 +2182,7 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
            Count(x, value=2) == 1  # exactly one night shift
         )
 
+        # a solution: [0, 0, 0, 0, 0, 0, 2]
         if solve() is SAT:
            print(values(x))
 
@@ -2185,9 +2235,12 @@ def Exist(within, *within_complement, value=None, reified_by=None):
         neighbours = [[0, 1, 2], [0, 1, 3], [0, 2, 4], [1, 3, 5], [2, 4, 5], [3, 4, 5]]
 
         satisfy(
+           Sum(b) == 2,
+
            [Exist(b[j] for j in neighbours[i]) for i in range(6)]
         )
 
+        # a solution: [0, 0, 1, 1, 0, 0]
         if solve() is SAT:
            print(values(b))
     """
@@ -2240,6 +2293,7 @@ def AnyHold(within, *within_complement):
            AnyHold(x[i] == 0 for i in range(4))
         )
 
+        # a solution: [0, 1, 2, 3]
         if solve() is SAT:
            print(values(x))
     """
@@ -2256,13 +2310,16 @@ def NotExist(within, *within_complement, value=None):
     :param value: the value to be tested if not None (None, by default)
     :return: a constraint Count
     :example:
-        # no employee can be assigned the night shift (here, the shift 2) on the week-end
+        # no employee can be assigned the night shift (here, the shift 2) during the week-end
         x = VarArray(size=7, dom=range(3))  # x[d] is the shift of the employee on day d
 
         satisfy(
+           Count(x, value=2) == 2,
+
            NotExist([x[5] == 2, x[6] == 2])
         )
 
+        # a solution: [0, 0, 0, 2, 2, 0, 0]
         if solve() is SAT:
            print(values(x))
     """
@@ -2282,13 +2339,16 @@ def NoneHold(within, *within_complement):
     :param within_complement: the other terms (if any) on which the count applies
     :return: a constraint Count
     :example:
-        # the two forbidden patterns must not appear in the sequence
-        x = VarArray(size=5, dom=range(3))
+        # the forbidden pattern (two consecutive working days) must not appear in the sequence
+        x = VarArray(size=5, dom=range(3))  # x[d] is the shift on day d (0 meaning a day off)
 
         satisfy(
+           Count(x, value=1) == 2,
+
            NoneHold(both(x[i] == 1, x[i + 1] == 1) for i in range(4))
         )
 
+        # a solution: [0, 0, 1, 0, 1]
         if solve() is SAT:
            print(values(x))
     """
@@ -2312,6 +2372,7 @@ def ExactlyOne(within, *within_complement, value=None):
            [ExactlyOne(b[i]) for i in range(4)]
         )
 
+        # a solution: [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]
         if solve() is SAT:
            print(values(b))
     """
@@ -2342,6 +2403,7 @@ def AtLeastOne(within, *within_complement, value=None):
            [AtLeastOne(b[i] for i in c) for c in covers]
         )
 
+        # a solution: [0, 0, 1, 1, 1]
         if solve() is SAT:
            print(values(b))
     """
@@ -2368,6 +2430,7 @@ def AtMostOne(within, *within_complement, value=None):
            [AtMostOne(b[i] for i in g) for g in incompatible]
         )
 
+        # a solution: [0, 0, 1, 0, 1]
         if solve() is SAT:
            print(values(b))
     """
@@ -2395,6 +2458,7 @@ def AllHold(within, *within_complement):
            AllHold(s[i] + 3 <= s[j] for (i, j) in precedences)
         )
 
+        # a solution: [0, 3, 3, 6]
         if solve() is SAT:
            print(values(s))
     """
@@ -2422,6 +2486,7 @@ def Hamming(term, *others):
            Hamming(x, previous) <= 2
         )
 
+        # a solution: [0, 0, 0, 2, 0]
         if solve() is SAT:
            print(values(x))
     """
@@ -2456,6 +2521,7 @@ def NValues(within, *within_complement, excepting=None, condition=None):
            NValues(x)
         )
 
+        # an optimal solution: [0, 1, 1, 0, 0, 1] 2
         if solve() is OPTIMUM:
            print(values(x), bound())
 
@@ -2504,6 +2570,7 @@ def NumberDistinctValues(within, *within_complement, excepting=None, condition=N
            NumberDistinctValues(x) <= 3
         )
 
+        # a solution: [0, 0, 0, 0, 0, 0]
         if solve() is SAT:
            print(values(x))
     """
@@ -2526,6 +2593,7 @@ def NotAllEqual(term, *others):
            [NotAllEqual(x[i] for i in e) for e in hyperedges]
         )
 
+        # a solution: [0, 0, 1, 0, 0, 1]
         if solve() is SAT:
            print(values(x))
     """
@@ -2552,6 +2620,7 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
            Cardinality(x, occurrences={0: 3, 1: 3, 2: range(2, 5), 3: range(1, 4)})
         )
 
+        # a solution: [0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3]
         if solve() is SAT:
            print(values(x))
 
@@ -2630,6 +2699,7 @@ def Maximum(term, *others, condition=None):
            Maximum(s[i] + durations[i] for i in range(4))
         )
 
+        # an optimal solution: [0, 3, 8, 10] 14
         if solve() is OPTIMUM:
            print(values(s), bound())
     """
@@ -2661,6 +2731,7 @@ def Minimum(term, *others, condition=None):
            Minimum(x)
         )
 
+        # an optimal solution: [25, 25, 25, 25] 25
         if solve() is OPTIMUM:
            print(values(x), bound())
     """
@@ -2692,6 +2763,7 @@ def MaximumArg(term, *others, rank=None, condition=None):
            MaximumArg(x) == y
         )
 
+        # a solution: [0, 1, 2, 3] 3
         if solve() is SAT:
            print(values(x), value(y))
 
@@ -2730,6 +2802,7 @@ def MinimumArg(term, *others, rank=None, condition=None):
            MinimumArg(x) == y
         )
 
+        # a solution: [0, 3, 48, 49] 0
         if solve() is SAT:
            print(values(x), value(y))
     """
@@ -2757,6 +2830,7 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
            Channel(x, y)
         )
 
+        # a solution: [0, 1, 2, 3, 4, 5, 6, 7]
         if solve() is SAT:
            print(values(x))
 
@@ -2818,6 +2892,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
            NoOverlap(origins=s, lengths=[3, 5, 2, 4])
         )
 
+        # a solution: [0, 3, 8, 10]
         if solve() is SAT:
            print(values(s))
 
@@ -2930,8 +3005,9 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
            Cumulative(origins=s, lengths=[3, 5, 2, 4, 3], heights=[2, 1, 3, 2, 1]) <= 4
         )
 
-        if solve() is OPTIMUM:
-           print(values(s), bound())
+        # a solution: [0, 0, 3, 5, 0]
+        if solve() is SAT:
+           print(values(s))
 
         # the durations can be given by variables, and the used quantity of resource be minimized
         d = VarArray(size=5, dom=range(1, 6))
@@ -3013,6 +3089,7 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
            BinPacking(x, sizes=sizes) <= 10
         )
 
+        # a solution: [0, 0, 1, 0, 2, 1]
         if solve() is SAT:
            print(values(x))
 
@@ -3071,8 +3148,9 @@ def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=
            Knapsack(x, weights=weights, wlimit=10, profits=profits) >= 15
         )
 
-        if solve() is OPTIMUM:
-           print(values(x), bound())
+        # a solution: [0, 0, 1, 1, 0, 1]
+        if solve() is SAT:
+           print(values(x))
 
         # the condition on the weight can be given explicitly, and the profit be linked to a variable
         z = Var(dom=range(36))
@@ -3120,8 +3198,9 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
            Flow(f, balance=[5, 0, 0, -5], arcs=arcs, weights=[2, 3, 1, 4]) <= 40
         )
 
-        if solve() is OPTIMUM:
-           print(values(f), bound())
+        # a solution: [0, 5, 0, 5]
+        if solve() is SAT:
+           print(values(f))
 
         # the cost of the flow can be linked to a variable, so as to be minimized
         z = Var(dom=range(100))
@@ -3177,6 +3256,7 @@ def Circuit(successors, *successors_complement, start_index=0, size=None, no_sel
            Sum(cp_array(distances[i])[x[i]] for i in range(4))
         )
 
+        # an optimal solution: [1, 2, 3, 0] 14
         if solve() is OPTIMUM:
            print(values(x), bound())
 
@@ -3220,6 +3300,7 @@ def Clause(variables, *variables_complement, phases=None):
            Clause(b, phases=[True, False, True])
         )
 
+        # a solution: [0, 0, 0]
         if solve() is SAT:
            print(values(b))
     """
@@ -3250,6 +3331,7 @@ def Adhoc(form, note=None, **d):
            Adhoc("mySpecificForm", list=x, coeffs=[1, 2, 3, 4])
         )
 
+        # a solution: [0, 0, 0, 0]
         if solve() is SAT:
            print(values(x))
     """
@@ -3529,6 +3611,7 @@ def value(model_variable, *, sol=-1):
            [Count(x, value=i) == x[i] for i in range(4)]
         )
 
+        # a solution: 1 2
         if solve() is SAT:
            print(value(x[0]), value(x[1]))
     """
