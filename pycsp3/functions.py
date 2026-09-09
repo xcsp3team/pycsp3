@@ -76,6 +76,10 @@ def variant(name=None):
             satisfy(Table(x, {(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)}))
         else:
             satisfy(AllDifferent(x))
+
+        # a solution: [0, 1, 2]
+        if solve() is SAT:
+           print(values(x))
     """
     assert options.variant is None or isinstance(options.variant, str)
     pos = -1 if options.variant is None else options.variant.find("-")  # position of dash in options.variant
@@ -99,6 +103,10 @@ def subvariant(name=None):
             satisfy(x[0] != x[1])
         else:
             satisfy(x[0] < x[1])
+
+        # a solution: [0, 1]
+        if solve() is SAT:
+           print(values(x))
     """
     assert options.variant is None or isinstance(options.variant, str)
     pos = -1 if options.variant is None else options.variant.find("-")  # position of dash in options.variant
@@ -133,6 +141,10 @@ def Var(term=None, *others, dom=None, id=None):
         y = Var(0, 2, 4)
 
         satisfy(x < y)
+
+        # a solution: 0
+        if solve() is SAT:
+           print(value(x))
     """
     global started_modeling
     if not started_modeling and not options.uncurse:
@@ -302,6 +314,10 @@ def VarArrayMultiple(*, size, fields):
           points[0] == points[-1],
           points[1].x != points[2].x
         )
+
+        # a solution: [0, 0, 0, *, 1, *, *, *, *, *, *, *, *, *, *, *, *, *, 0, 0]
+        if solve() is SAT:
+           print(values(points))
     """
     assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
     size = [size] if isinstance(size, int) else size
@@ -350,6 +366,10 @@ def var(name):
            d[0] + d[1] != 0,
            var("d_0") + var("d_1") != 2
         )
+
+        # a solution: 3
+        if solve() is SAT:
+           print(value(x))
     """
     assert isinstance(name, str)
     error_if(name not in Variable.name2obj,
@@ -507,6 +527,10 @@ def Not(arg, meta=False):
     :example:
         x = VarArray(size=4, dom=range(4))
         satisfy(Not(AllDifferent(x)))
+
+        # a solution: [0, 0, 0, 0]
+        if solve() is SAT:
+           print(values(x))
     """
     if options.use_meta or meta:
         return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(arg)))
@@ -605,6 +629,10 @@ def If(test, *test_complement, Then, Else=None, meta=False):
               Else=AllEqual(x)
            )
         )
+
+        # a solution: [0, 0, 0]
+        if solve() is SAT:
+           print(values(x))
     """
 
     # if len(testOthers) == 0 and isinstance(test, bool):  # We don't allow that because otherwise 'in' no more usable as in If(x[0] in (2,3), Then=...
@@ -707,6 +735,10 @@ def Match(Expr, *, Cases):
               }
            )
         )
+
+        # a solution: [1, 0, 0]
+        if solve() is SAT:
+           print(values(y))
     """
     assert isinstance(Cases, dict)
     if isinstance(Expr, (tuple, list)):
@@ -779,6 +811,10 @@ def Slide(*args, expression=None, circular=None, offset=None, collect=None):
         satisfy(
            Slide(x[i] < x[i + 1] for i in range(3))
         )
+
+        # a solution: [0, 1, 2, 3]
+        if solve() is SAT:
+           print(values(x))
     """
     if expression is not None:  # the meta-constraint is defined directly by the user
         return ECtr(ConstraintSlide(*args, expression, circular, offset, collect))
@@ -862,6 +898,10 @@ def satisfy(*args, no_comment_tags_extraction=False):
            AllDifferent(x),
            x[0] + x[-1] > 6
         )
+
+        # a solution: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        if solve() is SAT:
+           print(values(x))
     """
 
     def _reorder(l):  # if constraints are given in (sub-)lists inside tuples; we flatten and reorder them to hopefully improve compactness
@@ -1034,6 +1074,17 @@ def Table(*, scope, supports=None, conflicts=None):
         # a solution: [0, 1]
         if solve() is SAT:
            print(values(y))
+    :example:
+        # the table can also be given by calling the function, with 'supports' or 'conflicts'
+        x = VarArray(size=3, dom=range(4))
+
+        satisfy(
+           Table(scope=x, supports={(0, 1, 2), (0, 2, 3), (1, 1, 3), (2, 3, 0)})
+        )
+
+        # a solution: [0, 1, 2]
+        if solve() is SAT:
+           print(values(x))
     """
     scope = flatten(scope)
     assert scope is not None and (supports is None) != (conflicts is None)
@@ -1670,6 +1721,18 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         # a solution: [0, 0, 0, 0, 0, 0, 0, 0]
         if solve() is SAT:
            print(values(y))
+    :example:
+        # with 'matrix', the values on each row and on each column of the matrix must be all different
+        # this is the Latin square problem (a Sudoku without the constraints on the blocks)
+        x = VarArray(size=[4, 4], dom=range(4))
+
+        satisfy(
+           AllDifferent(x, matrix=True)
+        )
+
+        # a solution: [0, 1, 2, 3, 1, 0, 3, 2, 2, 3, 0, 1, 3, 2, 1, 0]
+        if solve() is SAT:
+           print(values(x))
     """
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
     checkType(excepting, ([int], type(None)))
@@ -1709,6 +1772,18 @@ def AllDifferentList(term, *others, excepting=None):
         # a solution: [2, 0, 3, 4, 1, 3, 1, 0]
         if solve() is SAT:
            print(values(x))
+    :example:
+        # with 'excepting', the tuples that are equal to the specified one are ignored
+        # here, the pair (0, 0) means that the meeting is not scheduled, and can then be repeated
+        x = VarArray(size=[4, 2], dom=range(5))  # x[i] is the pair (day, room) of the ith meeting
+
+        satisfy(
+           AllDifferentList(x, excepting=(0, 0))
+        )
+
+        # a solution: [0, 0, 0, 0, 0, 0, 0, 0]
+        if solve() is SAT:
+           print(values(x))
     """
     if isinstance(term, types.GeneratorType):
         term = [v for v in term]
@@ -1741,6 +1816,19 @@ def AllEqual(term, *others, excepting=None):
         )
 
         # a solution: [10, 10, 10, 10]
+        if solve() is SAT:
+           print(values(x))
+    :example:
+        # with 'excepting', the specified value is ignored (here, 0 means that the line is stopped)
+        x = VarArray(size=4, dom=range(100))  # x[i] is the quantity produced by the ith line
+
+        satisfy(
+           Count(x, value=0) == 1,
+
+           AllEqual(x, excepting=0)
+        )
+
+        # a solution: [0, 1, 1, 1]
         if solve() is SAT:
            print(values(x))
     """
@@ -1865,6 +1953,18 @@ def Decreasing(term, *others, strict=False, lengths=None):
         # a solution: [9, 3, 0, 0, 0]
         if solve() is SAT:
            print(values(x))
+    :example:
+        # with 'strict', the values must be strictly decreasing, and 'lengths' gives minimal distances
+        # here, the tanks are emptied one after the other, each operation taking some time
+        x = VarArray(size=4, dom=range(30))  # x[i] is the time at which the ith tank is emptied
+
+        satisfy(
+           Decreasing(x, strict=True, lengths=[5, 3, 4])
+        )
+
+        # a solution: [0, 0, 0, 0]
+        if solve() is SAT:
+           print(values(x))
     """
     return _ordered(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, lengths)
 
@@ -1926,6 +2026,17 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
         # a solution: [0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2]
         if solve() is SAT:
            print(values(x))
+    :example:
+        # with 'strict', two rows of the matrix cannot be identical
+        x = VarArray(size=[3, 4], dom=range(2))  # x[i][j] is 1 iff the ith machine performs the jth operation
+
+        satisfy(
+           LexIncreasing(x, strict=True)
+        )
+
+        # a solution: [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0]
+        if solve() is SAT:
+           print(values(x))
     """
     return _lex(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, matrix)
 
@@ -1950,6 +2061,19 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
         )
 
         # a solution: [0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1]
+        if solve() is SAT:
+           print(values(x))
+    :example:
+        # with 'matrix', both the rows and the columns are lexicographically ordered
+        x = VarArray(size=[3, 3], dom=range(2))
+
+        satisfy(
+           [Sum(row) == 1 for row in x],
+
+           LexDecreasing(x, matrix=True)
+        )
+
+        # a solution: [1, 0, 0, 0, 1, 0, 0, 0, 1]
         if solve() is SAT:
            print(values(x))
     """
@@ -2273,6 +2397,20 @@ def Exist(within, *within_complement, value=None, reified_by=None):
         )
 
         # a solution: [0, 0, 1, 1, 0, 0]
+        if solve() is SAT:
+           print(values(b))
+    :example:
+        # with 'reified_by', a 0/1 variable is made equivalent to the constraint
+        b = VarArray(size=5, dom={0, 1})  # b[i] is 1 iff the ith station is built
+        r = Var(dom={0, 1})  # r is 1 iff at least one of the two first stations is built
+
+        satisfy(
+           Sum(b) == 1,
+
+           Exist(b[0], b[1], reified_by=r)
+        )
+
+        # a solution: [0, 0, 0, 0, 1]
         if solve() is SAT:
            print(values(b))
     """
@@ -2609,6 +2747,19 @@ def NumberDistinctValues(within, *within_complement, excepting=None, condition=N
         # a solution: [0, 0, 0, 0, 0, 0]
         if solve() is SAT:
            print(values(x))
+    :example:
+        # with 'excepting', the value 0 (here, meaning 'no colour yet') is not counted
+        x = VarArray(size=6, dom=range(4))  # x[i] is the colour of the ith node
+
+        satisfy(
+           Count(x, value=0) == 2,
+
+           NumberDistinctValues(x, excepting=0) == 2
+        )
+
+        # a solution: [0, 0, 1, 1, 1, 2]
+        if solve() is SAT:
+           print(values(x))
     """
     return NValues(within, *within_complement, excepting=excepting, condition=condition)
 
@@ -2670,6 +2821,14 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
         # a solution: [2, 2, 2, 3, 3, 3]
         if solve() is SAT:
            print(values(y))
+    :example:
+        # the number of occurrences of a value can also be given by a variable
+        x = VarArray(size=8, dom=range(3))  # x[i] is the shift of the ith employee
+        z = Var(dom=range(2, 5))  # z is the number of employees assigned the shift 0
+
+        satisfy(
+           Cardinality(x, occurrences={0: z, 1: range(2, 5), 2: range(2, 5)})
+        )
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -2845,6 +3004,13 @@ def MinimumArg(term, *others, rank=None, condition=None):
         # a solution: [0, 3, 48, 49] 0
         if solve() is SAT:
            print(values(x), value(y))
+    :example:
+        # with 'rank', when several suppliers propose the smallest price (here, the last one is wanted)
+        x = VarArray(size=4, dom=range(3))  # x[i] is the price proposed by the ith supplier
+
+        satisfy(
+           MinimumArg(x, rank=TypeRank.LAST) == 3
+        )
     """
     terms = _extremum_terms(term, others)
     checkType(rank, (type(None), TypeRank))
@@ -2954,6 +3120,14 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         # a solution: [1, 7, 0]
         if solve() is SAT:
            print(values(x))
+    :example:
+        # with 'zero_ignored' set to False, the tasks of length 0 are not discarded any more,
+        # and so, cannot be put at the same time as another task
+        s = VarArray(size=3, dom=range(10))  # s[i] is the starting time of the ith task
+
+        satisfy(
+           NoOverlap(origins=s, lengths=[2, 0, 3], zero_ignored=False)
+        )
     """
     if tasks is not None:
         assert origins is None and lengths is None
@@ -3073,6 +3247,16 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         # an optimal solution: [0, 0, 1, 2, 2] 3
         if solve() is OPTIMUM:
            print(values(s), bound())
+    :example:
+        # the ends of the tasks can be given too, for example when they are needed elsewhere
+        s = VarArray(size=4, dom=range(20))  # s[i] is the starting time of the ith task
+        e = VarArray(size=4, dom=range(20))  # e[i] is the ending time of the ith task
+
+        satisfy(
+           Cumulative(origins=s, lengths=[3, 5, 2, 4], ends=e, heights=[2, 1, 3, 2]) <= 4,
+
+           Maximum(e) <= 12
+        )
     """
     if tasks is not None:
         assert origins is None and lengths is None and ends is None and heights is None
@@ -3341,6 +3525,13 @@ def Circuit(successors, *successors_complement, start_index=0, size=None, no_sel
         # a solution: [0, 2, 3, 1]
         if solve() is SAT:
            print(values(y))
+    :example:
+        # with 'start_index', when the nodes are not numbered from 0 (here, the cities are numbered from 1)
+        x = VarArray(size=4, dom=range(1, 5))  # x[i] is the city visited just after the (i+1)th city
+
+        satisfy(
+           Circuit(x, start_index=1)
+        )
     """
     successors = flatten(successors, successors_complement)
     checkType(successors, [Variable])
@@ -3492,6 +3683,10 @@ def minimize(term):
         minimize(
            Sum(x)
         )
+
+        # an optimal solution: [0, 0, 0] 0
+        if solve() is OPTIMUM:
+           print(values(x), bound())
     """
     return _optimize(term, True)
 
@@ -3513,6 +3708,10 @@ def maximize(term):
         maximize(
            Sum(x)
         )
+
+        # an optimal solution: [9, 9, 9] 27
+        if solve() is OPTIMUM:
+           print(values(x), bound())
     """
     return _optimize(term, False)
 
@@ -3545,6 +3744,10 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
         annotate(
            decision=x
         )
+
+        # a solution: [0, 1, 2]
+        if solve() is SAT:
+           print(values(x))
     """
 
     def add_annotation(obj, Ann):
@@ -3590,6 +3793,20 @@ def posted(i=None, j=None):
 
         print(posted())  # all the posted constraints
         print(posted(1))  # the constraints posted by the second call to satisfy()
+    :example:
+        # with a second parameter, only a subset of the constraints of a posting operation is returned
+        x = VarArray(size=4, dom=range(4))
+
+        satisfy(
+           AllDifferent(x),
+
+           x[0] == 3,
+
+           x[1] != 2
+        )
+
+        print(posted(0, 1))  # the second constraint of the first call to satisfy()
+        print(posted(0, slice(1, 3)))  # the second and third constraints
     """
     t = []
     if i is None or i is ALL:  # all posted constraints are returned
@@ -3658,6 +3875,27 @@ def unpost(i=None, j=None):
         )
 
         unpost(1)  # the constraint posted by the second call to satisfy() is removed
+
+        # a solution: [0, 1, 2, 3]
+        if solve() is SAT:
+           print(values(x))
+    :example:
+        # with a second parameter, only a subset of the constraints of a posting operation is removed
+        x = VarArray(size=4, dom=range(4))
+
+        satisfy(
+           AllDifferent(x),
+
+           x[0] == 3,
+
+           x[1] != 2
+        )
+
+        unpost(0, 1)  # only the constraint x[0] == 3 is removed
+
+        # a solution: [0, 1, 2, 3]
+        if solve() is SAT:
+           print(values(x))
     """
     if i is None:
         i = -1
