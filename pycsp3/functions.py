@@ -315,9 +315,9 @@ def VarArrayMultiple(*, size, fields):
           points[1].x != points[2].x
         )
 
-        # a solution: [0, 0, 0, *, 1, *, *, *, *, *, *, *, *, *, *, *, *, *, 0, 0]
+        # a solution: [0, 0]
         if solve() is SAT:
-           print(values(points))
+           print(values(points[0]))
     """
     assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
     size = [size] if isinstance(size, int) else size
@@ -1715,10 +1715,12 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         y = VarArray(size=8, dom=range(5))  # y[i] is the machine assigned to the ith job (0 meaning none)
 
         satisfy(
+           Count(y, value=0) == 4,  # four jobs are not assigned any machine
+
            AllDifferent(y, excepting=0)
         )
 
-        # a solution: [0, 0, 0, 0, 0, 0, 0, 0]
+        # a solution: [0, 0, 0, 0, 1, 2, 3, 4]
         if solve() is SAT:
            print(values(y))
     :example:
@@ -1773,15 +1775,17 @@ def AllDifferentList(term, *others, excepting=None):
         if solve() is SAT:
            print(values(x))
     :example:
-        # with 'excepting', the tuples that are equal to the specified one are ignored
+        # with 'excepting', the tuples equal to the specified one are ignored
         # here, the pair (0, 0) means that the meeting is not scheduled, and can then be repeated
         x = VarArray(size=[4, 2], dom=range(5))  # x[i] is the pair (day, room) of the ith meeting
 
         satisfy(
+           [Sum(x[i]) > 0 for i in (0, 1)],  # the two first meetings are scheduled
+
            AllDifferentList(x, excepting=(0, 0))
         )
 
-        # a solution: [0, 0, 0, 0, 0, 0, 0, 0]
+        # a solution: [0, 1, 0, 2, 0, 0, 0, 0]
         if solve() is SAT:
            print(values(x))
     """
@@ -1954,15 +1958,16 @@ def Decreasing(term, *others, strict=False, lengths=None):
         if solve() is SAT:
            print(values(x))
     :example:
-        # with 'strict', the values must be strictly decreasing, and 'lengths' gives minimal distances
-        # here, the tanks are emptied one after the other, each operation taking some time
-        x = VarArray(size=4, dom=range(30))  # x[i] is the time at which the ith tank is emptied
+        # with 'strict', two consecutive values cannot be equal any more
+        x = VarArray(size=4, dom=range(10))  # x[i] is the number of items put in the ith bin
 
         satisfy(
-           Decreasing(x, strict=True, lengths=[5, 3, 4])
+           Sum(x) == 14,
+
+           Decreasing(x, strict=True)
         )
 
-        # a solution: [0, 0, 0, 0]
+        # a solution: [5, 4, 3, 2]
         if solve() is SAT:
            print(values(x))
     """
@@ -2195,10 +2200,12 @@ def Sum(term, *others, condition=None):
         z = Var(dom=range(100))
 
         satisfy(
+           z == 42,
+
            Sum(y[i] * (i + 1) for i in range(6)) == z
         )
 
-        # a solution: [0, 0, 0, 0, 0, 0]
+        # a solution: [0, 0, 0, 0, 0, 7]
         if solve() is SAT:
            print(values(y))
     """
@@ -2410,9 +2417,9 @@ def Exist(within, *within_complement, value=None, reified_by=None):
            Exist(b[0], b[1], reified_by=r)
         )
 
-        # a solution: [0, 0, 0, 0, 1]
+        # a solution: [0, 0, 0, 0, 1] 0
         if solve() is SAT:
-           print(values(b))
+           print(values(b), value(r))
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -2696,13 +2703,15 @@ def NValues(within, *within_complement, excepting=None, condition=None):
            print(values(x), bound())
     :example:
         # with 'excepting', the value 0 (here, meaning 'no team') is not counted
-        y = VarArray(size=8, dom=range(4))
+        y = VarArray(size=8, dom=range(4))  # y[i] is the team of the ith player
 
         satisfy(
-           NValues(y, excepting=0) <= 2
+           Count(y, value=0) == 2,  # two players have no team
+
+           NValues(y, excepting=0) == 2
         )
 
-        # a solution: [0, 0, 0, 0, 0, 0, 0, 0]
+        # a solution: [0, 0, 1, 1, 1, 1, 1, 2]
         if solve() is SAT:
            print(values(y))
     """
@@ -2739,12 +2748,15 @@ def NumberDistinctValues(within, *within_complement, excepting=None, condition=N
     :example:
         # counting the number of different colours used for colouring the nodes of a graph
         x = VarArray(size=6, dom=range(6))  # x[i] is the colour of the ith node
+        edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
 
         satisfy(
+           [x[i] != x[j] for (i, j) in edges],
+
            NumberDistinctValues(x) <= 3
         )
 
-        # a solution: [0, 0, 0, 0, 0, 0]
+        # a solution: [0, 1, 0, 1, 0, 1]
         if solve() is SAT:
            print(values(x))
     :example:
@@ -3048,9 +3060,9 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
            Channel(b, z)
         )
 
-        # a solution: [0, 0, 0, 0, 0, 0, 0, 1]
+        # a solution: [0, 0, 0, 0, 0, 0, 0, 1] 7
         if solve() is SAT:
-           print(values(b))
+           print(values(b), value(z))
     """
     list1 = flatten(list1)
     checkType(list1, [Variable])
@@ -3117,9 +3129,9 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
            [(x[i] + widths[i] <= 10, y[i] + heights[i] <= 10) for i in range(3)]
         )
 
-        # a solution: [1, 7, 0]
+        # a solution: [1, 7, 0] [2, 4, 5]
         if solve() is SAT:
-           print(values(x))
+           print(values(x), values(y))
     :example:
         # with 'zero_ignored' set to False, the tasks of length 0 are not discarded any more,
         # and so, cannot be put at the same time as another task
@@ -3341,9 +3353,9 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
            BinPacking(x, sizes=sizes, loads=loads)
         )
 
-        # a solution: [0, 0, 1, 0, 2, 1]
+        # a solution: [0, 0, 1, 0, 2, 1] [9, 8, 6, 0]
         if solve() is SAT:
-           print(values(x))
+           print(values(x), values(loads))
     """
     terms = flatten(partition, partition_complement)
     assert len(terms) > 0, "A binPacking with an empty scope"
@@ -3560,13 +3572,15 @@ def Clause(variables, *variables_complement, phases=None):
         :return: a constraint Clause
     :example:
         # a SAT-like model: at least one of the three literals of the clause must be true
-        b = VarArray(size=3, dom={0, 1})
+        b = VarArray(size=3, dom={0, 1})  # the literals are b[0], not(b[1]) and b[2]
 
         satisfy(
+           b[1] == 1,  # the second literal is then false
+
            Clause(b, phases=[True, False, True])
         )
 
-        # a solution: [0, 0, 0]
+        # a solution: [0, 1, 1]
         if solve() is SAT:
            print(values(b))
     """
