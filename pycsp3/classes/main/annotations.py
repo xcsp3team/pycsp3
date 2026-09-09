@@ -87,7 +87,8 @@ class AnnotationVarHeuristic(AnnotationHeuristic):
     def __init__(self, h):
         super().__init__(TypeAnn.VAR_HEURISTIC)
         checkType(h, VarHeuristic)
-        self.attributes.append((TypeAnnArg.LC, h.lc))
+        if h.lc is not None:  # otherwise, the attribute would be written as lc="None"
+            self.attributes.append((TypeAnnArg.LC, h.lc))
         if h.staticParts:
             self.arg(TypeAnnArg.STATIC, h.staticParts[0])
         self.add_arguments(h.randomPart, h.minPart, h.maxPart)

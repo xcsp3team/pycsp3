@@ -239,9 +239,12 @@ def _annotation(entity, *, possible_simplified_form=False):
         return None
     elt = _element(c.name, entity, attributes=c.attributes)
     arguments = [arg for arg in c.arguments.values() if arg.content is not None]  # we keep only valid (non null) arguments
-    if c.name == TypeAnn.VAL_HEURISTIC:
-        assert len(arguments) == 1 and arguments[0].name == TypeAnnArg.STATICS, "for the moment"
-        _argument(elt, arguments[0], arguments[0].name, arguments[0].content)
+    if c.name in (TypeAnn.VAR_HEURISTIC, TypeAnn.VAL_HEURISTIC):
+        if len(arguments) == 1 and arguments[0].name == TypeAnnArg.STATIC:
+            _text(elt, arguments[0].content)  # simplified form, when only a static order of the variables is given
+        else:
+            for arg in arguments:  # the forms static, random, min and max are all written as sub-elements
+                _argument(elt, arg, arg.name, arg.content)
     else:
         assert len(arguments) == 1, "for the moment"
         _text(elt, arguments[0].content)
