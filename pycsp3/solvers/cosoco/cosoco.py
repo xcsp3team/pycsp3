@@ -1,9 +1,13 @@
-import os
-
 from pycsp3.solvers.solver import SolverProcess  # , SolverPy4J
 
-COSOCO_DIR = os.sep.join(__file__.split(os.sep)[:-1]) + os.sep
-COSOCO_BIN = COSOCO_DIR + "cosoco"
+try:
+    from cosoco_bin import PATH as COSOCO_BIN
+except ImportError:
+    raise ImportError(
+        "The cosoco solver is not installed. Install it with:\n"
+        "    pip install pycsp3[cosoco]\n"
+        "  (or: pip install cosoco)"
+    )
 
 
 class Cosoco(SolverProcess):
