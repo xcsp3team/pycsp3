@@ -1023,13 +1023,17 @@ def Table(*, scope, supports=None, conflicts=None):
         # a solution: [0, 1, 2]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # the forbidden combinations (conflicts) can be given instead, by using the operator 'not in'
         y = VarArray(size=2, dom=range(4))
 
         satisfy(
            (y[0], y[1]) not in {(0, 0), (1, 2), (3, 3)}
         )
+
+        # a solution: [0, 1]
+        if solve() is SAT:
+           print(values(y))
     """
     scope = flatten(scope)
     assert scope is not None and (supports is None) != (conflicts is None)
@@ -1655,13 +1659,17 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         # a solution: [1, 2, 3, 4, 5, 6, 7, 8, 9, 4, 5, 6, 7, 8, 9, 1, 2, 3, 7, 8, 9, 1, 2, 3, ...]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # with 'excepting', when a value (here, 0) means 'no resource' and can then be repeated
         y = VarArray(size=8, dom=range(5))  # y[i] is the machine assigned to the ith job (0 meaning none)
 
         satisfy(
            AllDifferent(y, excepting=0)
         )
+
+        # a solution: [0, 0, 0, 0, 0, 0, 0, 0]
+        if solve() is SAT:
+           print(values(y))
     """
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
     checkType(excepting, ([int], type(None)))
@@ -1820,13 +1828,17 @@ def Increasing(term, *others, strict=False, lengths=None):
         # a solution: [0, 0, 11, 19]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # a strictly increasing sequence of positions, with minimal distances given by 'lengths'
         p = VarArray(size=4, dom=range(30))
 
         satisfy(
            Increasing(p, strict=True, lengths=[3, 2, 5])
         )
+
+        # a solution: [0, 4, 7, 13]
+        if solve() is SAT:
+           print(values(p))
     """
     return _ordered(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, lengths)
 
@@ -1901,11 +1913,19 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
         # a solution: [0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # with 'matrix', both the rows and the columns are lexicographically ordered
+        x = VarArray(size=[3, 4], dom=range(3))  # x[w][d] is the shift on day d of week w
+
         satisfy(
+           [Sum(row) == 4 for row in x],
+
            LexIncreasing(x, matrix=True)
         )
+
+        # a solution: [0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2]
+        if solve() is SAT:
+           print(values(x))
     """
     return _lex(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, matrix)
 
@@ -1984,13 +2004,17 @@ def Precedence(within, *, values=None, covered=False):
         # a solution: [0, 1, 0, 1, 0, 1]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # with 'covered', each specified value must be used (here, the three shifts must all appear)
         y = VarArray(size=7, dom=range(3))
 
         satisfy(
            Precedence(y, values=[0, 1, 2], covered=True)
         )
+
+        # a solution: [0, 0, 0, 0, 0, 1, 2]
+        if solve() is SAT:
+           print(values(y))
     """
     assert len(within) > 2
     if values is None:
@@ -2041,7 +2065,7 @@ def Sum(term, *others, condition=None):
         # a solution: [0, 0, 1, 1, 0, 1]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # the sum of some expressions, subject to a condition involving a variable
         y = VarArray(size=6, dom=range(10))
         z = Var(dom=range(100))
@@ -2049,6 +2073,10 @@ def Sum(term, *others, condition=None):
         satisfy(
            Sum(y[i] * (i + 1) for i in range(6)) == z
         )
+
+        # a solution: [0, 0, 0, 0, 0, 0]
+        if solve() is SAT:
+           print(values(y))
     """
 
     def _get_terms_coeffs(terms):
@@ -2185,13 +2213,17 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
         # a solution: [0, 0, 0, 0, 0, 0, 2]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # counting the occurrences of several values, here the two working shifts over two weeks
         y = VarArray(size=14, dom=range(3))
 
         satisfy(
            Count(y, values=[1, 2]) == 10
         )
+
+        # a solution: [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        if solve() is SAT:
+           print(values(y))
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -2524,13 +2556,17 @@ def NValues(within, *within_complement, excepting=None, condition=None):
         # an optimal solution: [0, 1, 1, 0, 0, 1] 2
         if solve() is OPTIMUM:
            print(values(x), bound())
-
+    :example:
         # with 'excepting', the value 0 (here, meaning 'no team') is not counted
         y = VarArray(size=8, dom=range(4))
 
         satisfy(
            NValues(y, excepting=0) <= 2
         )
+
+        # a solution: [0, 0, 0, 0, 0, 0, 0, 0]
+        if solve() is SAT:
+           print(values(y))
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -2623,13 +2659,17 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
         # a solution: [0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # with 'closed', to indicate that the employees can only be assigned the listed shifts
         y = VarArray(size=6, dom=range(10))
 
         satisfy(
            Cardinality(y, occurrences={2: range(4), 3: range(4), 5: range(4)}, closed=True)
         )
+
+        # a solution: [2, 2, 2, 3, 3, 3]
+        if solve() is SAT:
+           print(values(y))
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -2766,7 +2806,7 @@ def MaximumArg(term, *others, rank=None, condition=None):
         # a solution: [0, 1, 2, 3] 3
         if solve() is SAT:
            print(values(x), value(y))
-
+    :example:
         # with 'rank', when several machines have the greatest load (here, the last such one is wanted)
         z = VarArray(size=4, dom=range(3))
 
@@ -2833,7 +2873,7 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
         # a solution: [0, 1, 2, 3, 4, 5, 6, 7]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # with a single list of 0/1 variables and a variable: the position of the unique 1
         b = VarArray(size=8, dom={0, 1})
         z = Var(dom=range(8))
@@ -2841,6 +2881,10 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
         satisfy(
            Channel(b, z)
         )
+
+        # a solution: [0, 0, 0, 0, 0, 0, 0, 1]
+        if solve() is SAT:
+           print(values(b))
     """
     list1 = flatten(list1)
     checkType(list1, [Variable])
@@ -2895,7 +2939,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         # a solution: [0, 3, 8, 10]
         if solve() is SAT:
            print(values(s))
-
+    :example:
         # packing rectangles in a 10x10 square: the rectangles cannot overlap in the plane
         widths, heights = [4, 3, 5], [2, 6, 3]
         x = VarArray(size=3, dom=range(10))
@@ -2906,6 +2950,10 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
 
            [(x[i] + widths[i] <= 10, y[i] + heights[i] <= 10) for i in range(3)]
         )
+
+        # a solution: [1, 7, 0]
+        if solve() is SAT:
+           print(values(x))
     """
     if tasks is not None:
         assert origins is None and lengths is None
@@ -3008,10 +3056,11 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         # a solution: [0, 0, 3, 5, 0]
         if solve() is SAT:
            print(values(s))
-
+    :example:
         # the durations can be given by variables, and the used quantity of resource be minimized
-        d = VarArray(size=5, dom=range(1, 6))
-        z = Var(dom=range(10))
+        s = VarArray(size=5, dom=range(20))  # s[i] is the starting time of the ith task
+        d = VarArray(size=5, dom=range(1, 6))  # d[i] is the duration of the ith task
+        z = Var(dom=range(10))  # z is the quantity of resource that is used
 
         satisfy(
            Cumulative(origins=s, lengths=d, heights=[2, 1, 3, 2, 1]) <= z
@@ -3020,6 +3069,10 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         minimize(
            z
         )
+
+        # an optimal solution: [0, 0, 1, 2, 2] 3
+        if solve() is OPTIMUM:
+           print(values(s), bound())
     """
     if tasks is not None:
         assert origins is None and lengths is None and ends is None and heights is None
@@ -3092,15 +3145,21 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
         # a solution: [0, 0, 1, 0, 2, 1]
         if solve() is SAT:
            print(values(x))
-
-        # with 'limits', when the bins have different capacities, and with 'loads' to get the load of each bin
-        loads = VarArray(size=4, dom=range(24))
+    :example:
+        # with 'limits', when the bins have different capacities, and with 'loads' to get their loads
+        sizes = [4, 3, 5, 2, 6, 3]
+        x = VarArray(size=6, dom=range(4))  # x[i] is the bin in which the ith item is put
+        loads = VarArray(size=4, dom=range(24))  # loads[j] is the load of the jth bin
 
         satisfy(
            BinPacking(x, sizes=sizes, limits=[10, 8, 12, 6]),
 
            BinPacking(x, sizes=sizes, loads=loads)
         )
+
+        # a solution: [0, 0, 1, 0, 2, 1]
+        if solve() is SAT:
+           print(values(x))
     """
     terms = flatten(partition, partition_complement)
     assert len(terms) > 0, "A binPacking with an empty scope"
@@ -3151,9 +3210,11 @@ def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=
         # a solution: [0, 0, 1, 1, 0, 1]
         if solve() is SAT:
            print(values(x))
-
+    :example:
         # the condition on the weight can be given explicitly, and the profit be linked to a variable
-        z = Var(dom=range(36))
+        weights, profits = [4, 3, 5, 2, 6, 3], [7, 4, 9, 2, 8, 5]
+        x = VarArray(size=6, dom={0, 1})  # x[i] is 1 iff the ith item is selected
+        z = Var(dom=range(36))  # z is the total profit
 
         satisfy(
            Knapsack(x, weights=weights, wcondition=le(10), profits=profits, pcondition=("eq", z))
@@ -3162,6 +3223,10 @@ def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=
         maximize(
            z
         )
+
+        # an optimal solution: [0, 0, 1, 1, 0, 1] 16
+        if solve() is OPTIMUM:
+           print(values(x), bound())
     """
 
     terms = flatten(selection, selection_complement)
@@ -3201,9 +3266,11 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
         # a solution: [0, 5, 0, 5]
         if solve() is SAT:
            print(values(f))
-
+    :example:
         # the cost of the flow can be linked to a variable, so as to be minimized
-        z = Var(dom=range(100))
+        arcs = [(0, 1), (0, 2), (1, 3), (2, 3)]
+        f = VarArray(size=4, dom=range(6))  # f[k] is the quantity sent through the kth arc
+        z = Var(dom=range(100))  # z is the cost of the transportation
 
         satisfy(
            Flow(f, balance=[5, 0, 0, -5], arcs=arcs, weights=[2, 3, 1, 4]) == z
@@ -3212,6 +3279,10 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
         minimize(
            z
         )
+
+        # an optimal solution: [5, 0, 5, 0] 15
+        if solve() is OPTIMUM:
+           print(values(f), bound())
     """
     terms = flatten(term, others)
     assert len(terms) > 0, "A Flow with an empty scope"
@@ -3259,13 +3330,17 @@ def Circuit(successors, *successors_complement, start_index=0, size=None, no_sel
         # an optimal solution: [1, 2, 3, 0] 14
         if solve() is OPTIMUM:
            print(values(x), bound())
-
+    :example:
         # without 'no_self_looping', a city can be skipped (a self-loop meaning 'not visited')
         y = VarArray(size=4, dom=range(4))
 
         satisfy(
            Circuit(y, size=3)
         )
+
+        # a solution: [0, 2, 3, 1]
+        if solve() is SAT:
+           print(values(y))
     """
     successors = flatten(successors, successors_complement)
     checkType(successors, [Variable])
