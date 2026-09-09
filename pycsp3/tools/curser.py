@@ -585,15 +585,11 @@ class OpOverrider:
             self = gi
         if isinstance(self, VariableInteger):
             return Variable.__invert__(self)
-        if isinstance(self, Node):  # we simplify when possible
+        if isinstance(self, Node):  # we simplify when possible (while building new nodes, as the node may be shared)
             if ~self.type is not None:
-                self.type = ~self.type
-                return self
+                return Node(~self.type, self.cnt)
             if self.type in (TypeNode.AND, TypeNode.OR) and all(~son.type is not None for son in self.cnt):
-                for son in self.cnt:
-                    son.type = ~son.type
-                self.type = TypeNode.OR if self.type == TypeNode.AND else TypeNode.AND
-                return self
+                return Node(TypeNode.OR if self.type == TypeNode.AND else TypeNode.AND, [Node(~son.type, son.cnt) for son in self.cnt])
         return Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
