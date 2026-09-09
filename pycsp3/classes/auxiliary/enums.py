@@ -364,7 +364,7 @@ class TypeSolver(Enum):
     """
     The solvers that can be piloted by PyCSP3.
     """
-    ACE, CHOCO = auto(2)
+    ACE, CHOCO, COSOCO = auto(3)
 
 
 @unique

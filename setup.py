@@ -24,9 +24,10 @@ setup(name='pycsp3',
       packages=find_packages(exclude=["problems/g7_todo/"]),
       package_dir={'pycsp3': 'pycsp3'},
       install_requires=['lxml'],  # , 'py4j', 'numpy'],
+      extras_require={'cosoco': ['cosoco>=2.6.1']},
       include_package_data=True,
       description='Modeling Constrained Combinatorial Problems in Python',
       long_description=open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding='utf-8').read(),
       long_description_content_type='text/markdown',
       license='MIT',
-      platforms='LINUX')
+      platforms=['Linux', 'macOS'])

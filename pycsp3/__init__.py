@@ -54,6 +54,9 @@ ACE = TypeSolver.ACE
 CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
 
+COSOCO = TypeSolver.COSOCO
+""" Solver cosoco """
+
 Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
 """ Task is a predefined named tuple, as involved in the constraint Cumulative: its origin (starting time), its length (duration) and its height (amount of consumed resource)
 
@@ -117,6 +120,9 @@ def _set_solver(name):
     if name == CHOCO:
         from pycsp3.solvers.choco import Choco
         _solver = Choco()
+    elif name == COSOCO:
+        from pycsp3.solvers.cosoco import Cosoco
+        _solver = Cosoco()
     else:  # Fallback case => ace
         from pycsp3.solvers.ace import Ace
         _solver = Ace()
@@ -251,7 +257,11 @@ def solve(*, solver=ACE, options="", filename=None, verbose=-1, sols=None, extra
     else:
         if isinstance(solver, TypeSolver):
             if sols == ALL or isinstance(sols, int) and sols > 1:  # options for displaying all solution in XML format
-                options += " -xe -xc=false" if solver == ACE else " -a "
+                if solver == ACE:
+                    options += " -xe -xc=false"
+                elif solver == CHOCO:
+                    options += " -a "
+                # cosoco takes it through -nbsols, and stops on an option it does not know
             solver = "[" + solver.name.lower()
             if verbose != -1:
                 solver += "," + ("v" if verbose == 0 else "vv" if verbose == 1 else "vvv")
