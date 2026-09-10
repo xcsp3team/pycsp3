@@ -24,7 +24,12 @@ def _global_value_of(variable):
     if len(frames) == 0:
         return None
     globs = frames[0].frame.f_globals
-    return str(globs[variable]) if variable in globs.keys() else None
+    if variable not in globs.keys():
+        return None
+    value = globs[variable]
+    # functions, classes and modules are discarded: their string representation involves a memory address,
+    # and so, the generated instance would not be reproducible (besides, they are not data of the model)
+    return None if callable(value) or inspect.ismodule(value) else str(value)
 
 
 def is_comment_line(line):

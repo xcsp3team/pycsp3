@@ -827,9 +827,10 @@ def Slide(*args, expression=None, circular=None, offset=None, collect=None):
 def _01_to_node(arg):
     if isinstance(arg, Variable):
         assert arg.dom.is_binary()
-        b = arg.negation
-        arg.negation = False
-        return Node.build(TypeNode.EQ, arg, 0 if b else 1)  # transformed into a basic logical equation
+        # the declared variable is used: arg may be a variant (as built by ~x), which is a distinct object,
+        # unknown of VarEntities.varToEVarArray (and modifying it in place would corrupt the expressions using it)
+        x = Variable.name2obj.get(arg.id, arg)
+        return Node.build(TypeNode.EQ, x, 0 if arg.negation else 1)  # transformed into a basic logical equation
     if isinstance(arg, PartialConstraint):
         assert isinstance(arg.constraint, ConstraintElement)  # TODO to be extended (other cases should be possible)
         assert all(isinstance(t, Variable) and t.dom.is_binary() for t in arg.constraint.arguments[TypeCtrArg.LIST].content)  # TODO to be extended
@@ -2428,7 +2429,7 @@ def Exist(within, *within_complement, value=None, reified_by=None):
     if reified_by is not None:
         assert isinstance(reified_by, Variable) and reified_by.dom.is_binary()
         if reified_by.negation:
-            reified_by.negation = False
+            reified_by = Variable.name2obj.get(reified_by.id, reified_by)  # the declared variable (see _01_to_node)
             aux = auxiliary().new_var(0, 1)
             satisfy(aux != reified_by)
             reified_by = aux
