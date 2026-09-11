@@ -1,5 +1,6 @@
 import inspect
 import sys
+import re
 
 from pycsp3.dashboard import options
 from pycsp3.tools.utilities import flatten, is_windows
@@ -315,9 +316,14 @@ def comments_and_tags_of_parameters_of(*, function_name, args, no_extraction=Fal
 
 def extract_declaration_for(function_name):
     code = list(reversed(_extract_code(function_name)))
+    pattern = f"{function_name}\\s*\\("
     for line in code:
-        if function_name in line and not is_comment_line(line):
-            pos = line.find(function_name)
+        if is_comment_line(line):
+            continue
+        res = re.search(pattern, line)
+        if res is not None:  # function_name in line and not is_comment_line(line):
+            pos = res.span()[0]
+            # assert pos == line.find(function_name ), str(pos) + " vs " + str(line.find(function_name ))
             if "=" in line[:pos]:
                 break
     else:
