@@ -17,7 +17,7 @@ from pycsp3.functions import protect, col, abs, min, max, xor, iff, imply, ift, 
 from pycsp3.functions import (Table, Regular, AllDifferent, AllDifferentList, AllEqual, AllEqualList, Increasing, Decreasing, LexIncreasing, LexDecreasing,
                               Disjoint, Precedence, Sum, Product, Count, Exist, NotExist, ExactlyOne, AtLeastOne, AtMostOne, AnyHold, NoneHold, AllHold, Hamming, NValues,
                               NumberDistinctValues, NotAllEqual, Cardinality, Maximum, Minimum, MaximumArg, MinimumArg, Channel, NoOverlap, Cumulative,
-                              BinPacking, Knapsack, Flow, Circuit, Clause, Adhoc)
+                              BinPacking, Knapsack, Flow, Circuit, Clause, Adhoc, ConstraintDummyConstant)
 from pycsp3.functions import posted, objective, unpost, value, values
 
 from pycsp3.tools.curser import rows, columns, ring, diagonal_down, diagonals_down, diagonal_up, diagonals_up, diagonals, cp_array

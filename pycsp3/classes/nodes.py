@@ -549,6 +549,9 @@ class Node(Entity):
 
     @staticmethod
     def build(node_type, *args):
+        if node_type == LE and len(args) == 2 and isinstance(args[0], Node) and args[0].type.is_predicate_operator() and isinstance(args[1], int) and args[
+            1] > 0:
+            return Node(INT,1) #print("ggg", node_type, args)
         if node_type in (DIV, MOD) and len(args) == 2 and isinstance(args[1], Variable):
             removed = args[1].dom.remove(0)
             warning_if(removed, "value 0 removed from the domain of " + str(args[1]) + " because involved in a division")

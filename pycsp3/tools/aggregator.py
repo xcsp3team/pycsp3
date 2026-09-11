@@ -159,8 +159,9 @@ def _compute_group_abstraction_intension(group):
                 old = "%" + str(min(t))
                 # while old in abstract_tree:
                 abstract_tree = _replace_parameter(abstract_tree, old, par)
-    if any(len(args) == 0 for args in all_args):
-        error("A group with at least an empty argument list")
+    all_args = [args for args in all_args if len(args) != 0]
+    # if any(len(args) == 0 for args in all_args):
+    #     error("A group with at least an empty argument list")
     return abstract_tree, all_args
 
 
@@ -216,6 +217,7 @@ def _compute_group_abstraction_other(group, *, from_slide=False):
                 if name in group.diff_argument_names and name != var_args_argument:
                     add_content(ce.constraint.arguments[name].content)
             add_content(ce.constraint.arguments[var_args_argument].content)
+        # if len(tmp) > 0:
         all_args.append(tmp)
     return abstraction, all_args
 
@@ -232,7 +234,7 @@ def building_groups_recursively(entities, previous=None, from_slide=False):
             _build_group(e, from_slide)
             e.copy_basic_attributes_of(previous)
             # previous.clearBasicAttributes()
-        if isinstance(e, (ESlide, EToGather, EBlock, EToSatisfy)):
+        elif isinstance(e, (ESlide, EToGather, EBlock, EToSatisfy)):
             building_groups_recursively(e.entities, e, from_slide or isinstance(e, ESlide))
 
 

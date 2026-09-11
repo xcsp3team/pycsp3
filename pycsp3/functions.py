@@ -1414,15 +1414,22 @@ def belong(x, values):
         return disjunction(y == x for y in values if y)
     assert isinstance(x, Variable)
     if isinstance(values, range):
-        if values.step != 1 or len(values) < 10:
+        if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
         else:
             return Node.in_range(x, values)
     elif isinstance(values, int):
         values = [values]
     assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
+    values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded (and are not put in the generated instance)
+    if len(values) == 0:
+        return ConstraintDummyConstant(0)
+    if len(values) == len(x.dom.all_values()):
+        return ConstraintDummyConstant(1)
     if len(values) == 1:
         return Node.build(EQ, x, values[0])
+    if len(values) >= 8 and values[-1] - values[0] + 1 == len(values):
+        return Node.in_range(x, range(values[0], values[-1] + 1))
     return Node.build(IN, x, Node.build(SET, values))
 
 
@@ -1457,15 +1464,22 @@ def not_belong(x, values):
         return conjunction(y != x for y in values if y)
     assert isinstance(x, Variable)
     if isinstance(values, range):
-        if values.step != 1 or len(values) < 10:
+        if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
         else:
             return Node.not_in_range(x, values)
     elif isinstance(values, int):
         values = [values]
     assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
+    values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded (and are not put in the generated instance)
+    if len(values) == 0:
+        return ConstraintDummyConstant(1)
+    if len(values) == len(x.dom.all_values()):
+        return ConstraintDummyConstant(0)
     if len(values) == 1:
         return Node.build(NE, x, values[0])
+    if len(values) >= 8 and values[-1] - values[0] + 1 == len(values):
+        return Node.not_in_range(x, range(values[0], values[-1] + 1))
     return Node.build(NOTIN, x, Node.build(SET, values))
 
 
