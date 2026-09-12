@@ -1300,6 +1300,14 @@ def imply(*args):
     """
     assert len(args) == 2
     cnd, tp = args  # condition and then part
+    if isinstance(cnd, bool) or isinstance(tp, bool):
+        assert len(queue_in) == 0
+        if cnd is False or tp is True:
+            return ConstraintDummyConstant(1)  # True
+        if cnd is True:
+            return tp
+        assert tp is False
+        return ~tp
     if isinstance(tp, (tuple, list, set, frozenset)):
         tp = list(tp)  # to transform sets into lists
         assert len(tp) >= 1
@@ -1421,14 +1429,14 @@ def belong(x, values):
     elif isinstance(values, int):
         values = [values]
     assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
-    values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded (and are not put in the generated instance)
+    values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded
     if len(values) == 0:
         return ConstraintDummyConstant(0)
     if len(values) == len(x.dom.all_values()):
         return ConstraintDummyConstant(1)
     if len(values) == 1:
         return Node.build(EQ, x, values[0])
-    if len(values) >= 8 and values[-1] - values[0] + 1 == len(values):
+    if values[-1] - values[0] + 1 == len(values) >= 8:
         return Node.in_range(x, range(values[0], values[-1] + 1))
     return Node.build(IN, x, Node.build(SET, values))
 
@@ -1471,14 +1479,14 @@ def not_belong(x, values):
     elif isinstance(values, int):
         values = [values]
     assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
-    values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded (and are not put in the generated instance)
+    values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded
     if len(values) == 0:
         return ConstraintDummyConstant(1)
     if len(values) == len(x.dom.all_values()):
         return ConstraintDummyConstant(0)
     if len(values) == 1:
         return Node.build(NE, x, values[0])
-    if len(values) >= 8 and values[-1] - values[0] + 1 == len(values):
+    if values[-1] - values[0] + 1 == len(values) >= 8:
         return Node.not_in_range(x, range(values[0], values[-1] + 1))
     return Node.build(NOTIN, x, Node.build(SET, values))
 
