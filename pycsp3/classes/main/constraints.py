@@ -1032,6 +1032,9 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
     def __str__(self):
         return "Dummy: " + str(self.val)
 
+    def canonization(self, strong=True):
+        return self
+
 
 ''' PartialConstraints and ScalarProduct '''
 

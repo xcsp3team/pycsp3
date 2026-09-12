@@ -182,6 +182,7 @@ class Node(Entity):
         Node.all_nodes.append(self)
         self.used = False
         self.type = node_type
+        assert node_type is not None, str(node_type) + " " + str(args)
         self.cnt = [args] if isinstance(args, Node) else args  # for empty SET (we have []])
         # cnt is for content (either a leaf value or a list of sons)
         # self.arity = len(self.cnt) if isinstance(self.cnt, list) else 0
@@ -664,6 +665,8 @@ any_node = Node(SPECIAL, "any")
 any_cond = Node(SPECIAL, "anyc")  # any under condition
 var = Node(SPECIAL, "var")
 val = Node(SPECIAL, "val")
+zer = Node(SPECIAL, "zer")
+one = Node(SPECIAL, "one")
 var_or_val = Node(SPECIAL, "var-or-val")
 any_add_val = Node(SPECIAL, "any-add-val")
 var_add_val = Node(SPECIAL, "var-add-val")
@@ -698,6 +701,10 @@ class Matcher:
             return source.type == VAR
         if target is val:
             return source.type == INT
+        if target is zer:
+            return source.type == INT and source.cnt == 0
+        if target is one:
+            return source.type == INT and source.cnt == 1
         if target is var_or_val:
             return source.type in (VAR, INT)
         if target is any_add_val:
@@ -790,6 +797,10 @@ val__relop__var_add_val = Matcher(NodeAbstract(RELOP, [val, var_add_val]))
 imp_logop = Matcher(Node(IMP, [any_cond, any_node]), lambda r, p: p == 1 and r.type.is_logically_invertible())
 imp_not = Matcher(Node(IMP, [Node(NOT, any_node), any_node]))
 
+eq_logop_0 = Matcher(Node(EQ, [any_cond, zer]), lambda r, p: p == 1 and r.arity() == 2 and r.type.is_relational_operator())
+eq_0_logop = Matcher(Node(EQ, [zer, any_cond]), lambda r, p: p == 1 and r.arity() == 2 and r.type.is_relational_operator())
+# ne_logop_1 ??? TODO
+
 canonization_rules_1 = {
     abs_sub: lambda r: Node(DIST, r[0].cnt),  # abs(sub(a,b)) => dist(a,b)
     abs_neg: lambda r: Node(ABS, r[0].cnt),  # abs(neg(a)) => abs(a)
@@ -829,7 +840,10 @@ canonization_rules_2 = {
     val__relop__var_add_val: lambda r: Node(r.type, [Node(INT, r[0].val(0) - r[1][1].val(0)), r[1][0]]),
 
     imp_logop: lambda r: Node(OR, [r[0].logical_inversion(), r[1]]),  # seems better to do that
-    imp_not: lambda r: Node(OR, [r[0][0], r[1]])
+    imp_not: lambda r: Node(OR, [r[0][0], r[1]]),
+
+    eq_logop_0: lambda r: Node(r[0].type.logical_inversion(), [r[0][0], r[0][1]]),  # e.g., eq(eq(...), 0) => ne(...)
+    eq_0_logop: lambda r: Node(r[1].type.logical_inversion(), [r[1][0], r[1][1]]),  # e.g., eq(0,eq(...)) => ne(...)
 }
 
 # # # recognizing constraints (primitives)

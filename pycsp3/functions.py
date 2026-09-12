@@ -1099,6 +1099,7 @@ def Table(*, scope, supports=None, conflicts=None):
 
 def _Intension(node):
     checkType(node, Node)
+    # node= node.canonization(strong=True) // Good idea ?
     ctr = ECtr(ConstraintIntension(node))
     if ctr.blank_basic_attributes():
         ctr.copy_basic_attributes_of(node)
@@ -1239,6 +1240,14 @@ def xor(*args):
         if solve() is SAT:
            print(values(b))
     """
+    if len(args) == 2 and isinstance(args[0], bool) or isinstance(args[1], bool):
+        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        if isinstance(args[0], bool) and isinstance(args[1], bool):
+            return ConstraintDummyConstant(1 if args[0] is not args[1] else 0)
+        if isinstance(args[0], bool):
+            return ~args[1] if args[0] else args[1]
+        if isinstance(args[1], bool):
+            return ~args[0] if args[1] else args[0]
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
     args = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args]
@@ -1269,6 +1278,16 @@ def iff(*args):
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
     assert len(args) >= 2
+
+    if len(args) == 2 and isinstance(args[0], bool) or isinstance(args[1], bool):
+        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        if isinstance(args[0], bool) and isinstance(args[1], bool):
+            return ConstraintDummyConstant(1 if args[0] is args[1] else 0)
+        if isinstance(args[0], bool):
+            return args[1] if args[0] else ~args[1]
+        if isinstance(args[1], bool):
+            return args[0] if args[1] else ~args[0]
+
     res = manage_global_indirection(*args)
     if res is None:
         return Iff(*args, meta=True)
@@ -1301,11 +1320,11 @@ def imply(*args):
     assert len(args) == 2
     cnd, tp = args  # condition and then part
     if isinstance(cnd, bool) or isinstance(tp, bool):
-        assert len(queue_in) == 0
+        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
         if cnd is False or tp is True:
             return ConstraintDummyConstant(1)  # True
         if cnd is True:
-            return tp
+            return ConstraintDummyConstant(0) if tp is False else tp
         assert tp is False
         return ~tp
     if isinstance(tp, (tuple, list, set, frozenset)):
@@ -1353,6 +1372,10 @@ def ift(test, Then, Else):
     if isinstance(test, ConstraintDummyConstant):
         assert test.val in (0, 1)
         return Then if test.val == 1 else Else
+    if isinstance(test, bool):
+        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        return Then if test else Else
+
     if Else is None:
         return imply(test, Then)
     if isinstance(test, (tuple, list)):
@@ -1546,6 +1569,11 @@ def conjunction(*args):
 
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    if len(queue_in) == 0:
+        args = [v for v in args if v is not True]
+        if any(v is False for v in args):
+            return ConstraintDummyConstant(0)
+
     res = _simplify_expression(args, False)
     if isinstance(res, ConstraintDummyConstant):
         return res
@@ -1605,6 +1633,11 @@ def disjunction(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    if len(queue_in) == 0:
+        args = [v for v in args if v is not False]
+        if any(v is True for v in args):
+            return ConstraintDummyConstant(1)
+
     res = _simplify_expression(args, True)
     if isinstance(res, ConstraintDummyConstant):
         return res
