@@ -242,11 +242,16 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
     :param filename: name (possibly a URL) of a JSON file
     :return: the loaded data
     :example:
+        # the JSON file describes an instance of the Resource Investment Problem (RIP)
+        # its content is of the form (only the first job is shown):
+        # {"horizon": 96, "costs": [7, ...], "jobs": [{"duration": 8, "successors": [3, 8, 13], "requirements": [10, 0, 0, 0]}, ...]}
         data = load_json_data("https://raw.githubusercontent.com/xcsp3team/pycsp3-models/main/realistic/RIP/25-0-j060-01-01.json")
 
-        x = VarArray(size=len(data.jobs), dom=range(data.horizon))
+        # the JSON objects are converted into named tuples: their fields are accessed with a dot, as in data.horizon or job.duration
+        x = VarArray(size=len(data.jobs), dom=range(data.horizon))  # x[i] is the starting time of the ith job
 
         satisfy(
+           # the jobs cannot overlap in time (only a simplified model is given here)
            NoOverlap(
               origins=x,
               lengths=[job.duration for job in data.jobs]
@@ -302,13 +307,19 @@ def default_data(filename):
     :param filename: name (possibly a URL) of a JSON file
     :return: the loaded data
     :example:
-        # suppose that defaults.json is a file whose content is: '{"n": 4, "k": 2}'
-
+        # suppose that defaults.json is a file whose content is: '{"n": 4, "k": 5}'
+        # default_data() is used when a unique data file is associated with the model (no option -data on the command line)
+        # the file is looked for in the current directory, then in the directory of the model
         data = default_data("defaults.json")
 
+        # the loaded data are converted into a named tuple: here, data.n is 4 and data.k is 5
         x = VarArray(size=data.n, dom=range(data.k))
 
-        satisfy(AllDifferent(x))
+        satisfy(
+           AllDifferent(x)
+        )
+
+        # a solution: [0, 1, 2, 3]
     """
     return load_json_data(filename, storing=True)
 

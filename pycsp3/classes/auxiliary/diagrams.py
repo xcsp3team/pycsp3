@@ -101,7 +101,8 @@ class Automaton(Diagram):
 
     def __init__(self, *, start, transitions, final):
         """
-        Builds an automaton from the specified arguments: a starting state, a set of transitions and a set of final states
+        Builds an automaton from the specified arguments: a starting state, a set of transitions and a set of final states.
+        An automaton recognizes words (sequences of values); it is typically used with the constraint Regular, as in x in automaton.
 
         :param start: the starting state
         :param transitions: a set of transitions
@@ -185,7 +186,8 @@ class Automaton(Diagram):
 class MDD(Diagram):
     def __init__(self, transitions):
         """
-        Builds an MDD from the specified set of transitions
+        Builds an MDD from the specified set of transitions.
+        An MDD (multi-valued decision diagram) compactly represents a set of tuples, each path from the root to the terminal node being a tuple; it is used as in x in mdd.
 
         :param transitions: a set of transitions
         :example:

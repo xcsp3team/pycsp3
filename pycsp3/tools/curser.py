@@ -1131,8 +1131,8 @@ def ring(matrix, k=0):
 
 def diagonal_down(m, i=-1, j=-1, check=True):
     """
-    Returns the main downward diagonal, or another downward diagonal when the values
-    of the parameters i and j are not both equal to -1
+    Returns the main downward diagonal of the specified square matrix, or the one starting at cell (i, j) when i and j are specified.
+    A downward diagonal goes from top-left to bottom-right; when only i is specified, a broken diagonal (wrapping around the matrix) is returned.
 
     :param m: a matrix (i.e. a two-dimensional list)
     :param i: index of row (possibly -1)
@@ -1174,18 +1174,18 @@ def diagonals_down(m, *, broken=False):
 
 def diagonal_up(m, i=-1, j=-1, check=True):
     """
-       Returns the main upward diagonal, or another upward diagonal when the values
-       of the parameters i and j are not both equal to -1
+    Returns the main upward diagonal of the specified square matrix, or the one starting at cell (i, j) when i and j are specified.
+    An upward diagonal goes from bottom-left to top-right; when only i is specified, a broken diagonal (wrapping around the matrix) is returned.
 
-       :param m: a matrix (i.e. a two-dimensional list)
-       :param i: index of row (possibly -1)
-       :param j: index of column (possibly -1)
-       :param check: true when the structure of the matrix must be controlled
-       :return: the main upward diagonal (or another stipulated upward diagonal)
-       :example:
-           x = VarArray(size=[3, 3], dom=range(3))
-           satisfy(AllDifferent(diagonal_up(x)))
-       """
+    :param m: a matrix (i.e. a two-dimensional list)
+    :param i: index of row (possibly -1)
+    :param j: index of column (possibly -1)
+    :param check: true when the structure of the matrix must be controlled
+    :return: the main upward diagonal (or another stipulated upward diagonal)
+    :example:
+        x = VarArray(size=[3, 3], dom=range(3))
+        satisfy(AllDifferent(diagonal_up(x)))
+    """
     if check is True:
         assert is_square_matrix(m), "The specified first parameter must be a square matrix."
     if i == -1 and j == -1:
@@ -1232,10 +1232,8 @@ def diagonals(m):
 
 def cp_array(*t):
     """
-    Converts and returns a list containing integers into a list from the more specific type ListInt.
-    Converts and returns a list containing variables into a list from the more specific type ListVar.
-    Returns the same list in all other cases.
-    This method may be required for posting constraints Element.
+    Converts the specified list into a list that can be indexed by a variable, as in cp_array(t)[x] (constraint Element).
+    A list of integers becomes a ListInt, a list of variables becomes a ListVar, and any other list is returned unchanged.
 
     :param t: a list (of any dimension)
     :return: the same list, possibly converted into one of the two more specific types ListInt and ListVar
