@@ -1501,7 +1501,8 @@ class _Auxiliary:
         return aux
 
     def replace_int(self, v):
-        assert isinstance(v, int)
+        assert isinstance(v, (int, ConstraintDummyConstant))
+        v = v.val if isinstance(v, ConstraintDummyConstant) else v
         # if v in _Auxiliary.cache_ints:  # for the moment, we do not use it because it may cause some problems with some constraints (similar variables)
         #     return _Auxiliary.cache_ints[v]
         aux = self.new_var(v)

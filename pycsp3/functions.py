@@ -1458,7 +1458,7 @@ def belong(x, values):
     if len(values) == len(x.dom.all_values()):
         return ConstraintDummyConstant(1)
     if len(values) == 1:
-        return Node.build(EQ, x, values[0])
+        return x if x.dom.is_binary() and values[0] == 1 else Node.build(EQ, x, values[0])
     if values[-1] - values[0] + 1 == len(values) >= 8:
         return Node.in_range(x, range(values[0], values[-1] + 1))
     return Node.build(IN, x, Node.build(SET, values))
@@ -1508,7 +1508,7 @@ def not_belong(x, values):
     if len(values) == len(x.dom.all_values()):
         return ConstraintDummyConstant(0)
     if len(values) == 1:
-        return Node.build(NE, x, values[0])
+        return x if x.dom.is_binary() and values[0] == 0 else Node.build(NE, x, values[0])
     if values[-1] - values[0] + 1 == len(values) >= 8:
         return Node.not_in_range(x, range(values[0], values[-1] + 1))
     return Node.build(NOTIN, x, Node.build(SET, values))
@@ -3141,7 +3141,7 @@ def _is_mixed_list(t, index=-1):
     present_int, present_var, present_node = False, False, False
     for v in t:
         v = v if index == -1 else v[index]
-        if isinstance(v, int):
+        if isinstance(v, (int, ConstraintDummyConstant)):
             present_int = True
         elif isinstance(v, Variable):
             present_var = True
@@ -3222,8 +3222,10 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         lengths = [(lengths[0][i], lengths[1][i]) for i in range(len(lengths[0]))]
     if any(isinstance(v, Node) for v in origins):
         origins = [auxiliary().replace_node(v) if isinstance(v, Node) else v for v in origins]
+    # if _is_mixed_list(origins):  TODO a voir
+    #     origins = [auxiliary().replace_int(v) if isinstance(v, int) else v for v in origins]
     checkType(origins, [int, Variable])
-    if not isinstance(origins[0], Variable) and not isinstance(origins[0], tuple):  # if 2D but not tuples
+    if not isinstance(origins[0], (int, Variable)) and not isinstance(origins[0], tuple):  # if 2D but not tuples
         origins = [tuple(origin) for origin in origins]
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else lengths
     if any(isinstance(v, Node) for v in lengths):
@@ -3363,6 +3365,8 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
             heights[i] = auxiliary().replace_partial_constraint(h)
         elif isinstance(h, Node):
             heights[i] = auxiliary().replace_node(h)
+        elif isinstance(h, ConstraintDummyConstant):
+                heights[i] = auxiliary().replace_int(h.val)
     checkType(heights, ([Variable], [int]))
     ends = flatten(ends) if ends is not None else ends  # ends is optional
     checkType(ends, ([Variable], type(None)))
