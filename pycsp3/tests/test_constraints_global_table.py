@@ -28,44 +28,47 @@ CYCLE = "#105: hybrid tables with restrictions referring to columns in a cycle m
 INVALID = "#106: invalid tables are reported without explicit message, or accepted"
 ACE_CONFLICTS = "xcsp3team/ACE#14: ACE fails on a table of conflicts with the symbol *"
 ACE_HYBRID = "xcsp3team/ACE#15: ACE finds wrong solutions with some hybrid tables of level 2"
-COSOCO_CONFLICTS = "xcsp3team/cosoco#75: cosoco does not support a table of conflicts with the symbol *"
 COSOCO_HYBRID = "xcsp3team/cosoco#76: cosoco finds wrong solutions or fails on hybrid tables"
-CHOCO_STARS = "CHOCO does not handle the symbol * in tables of conflicts and in symbolic tables"
-CHOCO_HYBRID = "CHOCO does not handle hybrid tables (which are not part of XCSP3-core)"
 
 # For each group of tests and each constraint (as written in the tests), the known bugs: pairs (solvers, reason)
 KNOWN = {
     ("ordinary", "x in [[0, 1, 2], [0, 2, 3], [1, 1, 3], [2, 3, 0]]"): [(ALL, LISTS)],
     ("ordinary", "x not in [[0, 1, 2], [3, 3, 3]]"): [(ALL, LISTS)],
     ("empty", "x not in []"): [(ALL, LISTS)],
-    ("starred", "x not in {(0, ANY, 2), (ANY, 3, ANY)}"): [("ACE", ACE_CONFLICTS), ("COSOCO", COSOCO_CONFLICTS)],
-    ("starred", "Table(scope=x, conflicts=[(ANY, 1, ANY)])"): [("ACE", ACE_CONFLICTS), ("COSOCO", COSOCO_CONFLICTS)],
+    ("starred", "x not in {(0, ANY, 2), (ANY, 3, ANY)}"): [("ACE", ACE_CONFLICTS)],
+    ("starred", "Table(scope=x, conflicts=[(ANY, 1, ANY)])"): [("ACE", ACE_CONFLICTS)],
     ("hybrid", "x in [(ne(col(1)), ne(col(2)), ne(col(0)))]"): [(ALL, CYCLE)],
-    ("hybrid", "x not in [(lt(2), ANY, ge(4))]"): [("ACE", ACE_CONFLICTS), ("COSOCO", COSOCO_CONFLICTS)],
+    ("hybrid", "x not in [(lt(2), ANY, ge(4))]"): [("ACE", ACE_CONFLICTS)],
     ("kept", "x in [(0, 0, 0), (gt(4), ANY, ANY), (ANY, range(1, 3), le(col(1)))]"): [("ACE", ACE_HYBRID)],
     ("kept", "x in [(eq(col(1) + 1), ANY, lt(col(1) + 3))]"): [("ACE", ACE_HYBRID)],
     ("kept", "x in [(ne(col(1)), ne(col(2)), ne(col(0)))]"): [("ACE", ACE_HYBRID)],
-    ("kept", "x in [(ANY, ANY, eq(col(0) + col(1)))]"): [("ACE", ACE_HYBRID)],
-    ("kept", "x not in [(ANY, ANY, eq(col(0) + col(1)))]"): [("ACE", ACE_HYBRID)],
-    ("kept", "x not in [(lt(2), ANY, ge(4))]"): [("ACE", ACE_HYBRID)],
     ("symbolic", "s[0] in ['a', 'c']"): [(("ACE", "CHOCO"), LISTS)],
     ("symbolic", "s[1] not in ['a']"): [(("ACE", "CHOCO"), LISTS)],
 }
 
-# The cases not handled by CHOCO (without being reported)
-CHOCO_SKIPPED = {
-    ("starred", "x not in {(0, ANY, 2), (ANY, 3, ANY)}"): CHOCO_STARS,
-    ("starred", "Table(scope=x, conflicts=[(ANY, 1, ANY)])"): CHOCO_STARS,
-    ("hybrid", "x not in [(lt(2), ANY, ge(4))]"): CHOCO_STARS,
-    ("symbolic", "s in [('a', ANY), ('c', 'b')]"): CHOCO_STARS,
+# The cases that a solver says it does not handle (not reported): for each group of tests and each constraint, the solvers and the reasons
+STARS = {"CHOCO": "CHOCO does not handle the symbol * in tables of conflicts (Negative tables with symbol * are not supported)",
+         "COSOCO": "cosoco does not handle the symbol * in tables of conflicts (Extension constraint with star and conflict tuples is not yet supported)"}
+ACE_UNIMPLEMENTED = "ACE does not implement this hybrid table (not implemented)"
+SKIPPED = {
+    ("starred", "x not in {(0, ANY, 2), (ANY, 3, ANY)}"): STARS,
+    ("starred", "Table(scope=x, conflicts=[(ANY, 1, ANY)])"): STARS,
+    ("hybrid", "x not in [(lt(2), ANY, ge(4))]"): STARS,
+    ("symbolic", "s in [('a', ANY), ('c', 'b')]"): {"CHOCO": "CHOCO does not handle the symbol * in symbolic tables"},
+    ("kept", "x in [(ANY, ANY, eq(col(0) + col(1)))]"): {"ACE": ACE_UNIMPLEMENTED},
+    ("kept", "x not in [(ANY, ANY, eq(col(0) + col(1)))]"): {"ACE": ACE_UNIMPLEMENTED},
+    ("kept", "x not in [(lt(2), ANY, ge(4))]"): {"ACE": "ACE does not implement negative hybrid tables (unimplemented case for negative hybrid tables)"},
 }
+CHOCO_HYBRID = "CHOCO does not handle hybrid tables (which are not part of XCSP3-core)"
 
 
 def known(request, group, constraint):
     """Marks (or skips) the running test according to the known bugs of the specified group of tests and constraint."""
     solver = request.node.callspec.params.get("solver")
-    if solver == "CHOCO" and (group == "kept" or (group, constraint) in CHOCO_SKIPPED):
-        pytest.skip(CHOCO_HYBRID if group == "kept" else CHOCO_SKIPPED[(group, constraint)])
+    if solver == "CHOCO" and group == "kept":
+        pytest.skip(CHOCO_HYBRID)
+    if solver in SKIPPED.get((group, constraint), {}):
+        pytest.skip(SKIPPED[(group, constraint)][solver])
     for solvers, reason in KNOWN.get((group, constraint), []) + ([("COSOCO", COSOCO_HYBRID)] if group == "kept" else []):
         bug_for(request, solvers, reason)
 

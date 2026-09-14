@@ -15,7 +15,8 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 ALL = ("ACE", "CHOCO", "COSOCO")
 PYTHON_DIVISION = "#95: // and % are translated into div and mod, which round towards 0 (and not towards negative infinity as in Python)"
 ACE_NEGATIVE = "xcsp3team/ACE#12: ACE fails on abs, dist, mul, div and mod with negative values"
-ACE_POW = "xcsp3team/ACE#13: ACE does not implement pow with a variable exponent"
+# The cases that a solver says it does not handle (not reported): for each constraint, the solvers and the reasons
+SKIPPED = {"x ** z == y": {"ACE": "ACE does not implement pow with a variable exponent (not implemented)"}}
 CHOCO_POW = "chocoteam/choco-solver#1248: CHOCO does not support pow in some intensional constraints"
 XOR_IFF = "#98: the test on Boolean arguments of xor() and iff() is wrong (IndexError, arguments silently discarded)"
 BELONG_NONE = "#100: None in the list of variables of belong() and not_belong() makes the call fail"
@@ -34,7 +35,7 @@ KNOWN = {
     "7 % x == y": [(ALL, PYTHON_DIVISION)],
     "x ** 3 == y": [("CHOCO", CHOCO_POW)],
     "x % 3 == z": [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
-    "x ** z == y": [("ACE", ACE_POW), ("CHOCO", CHOCO_POW)],
+    "x ** z == y": [("CHOCO", CHOCO_POW)],
     "2 ** z == y": [(ALL, "#96: the operator ** cannot be used with an integer base and a variable exponent (no __rpow__)")],
     "abs(x) == y": [("ACE", ACE_NEGATIVE)],
     "xor([x > 0, y > 0])": [(ALL, XOR_IFF)],
@@ -67,6 +68,9 @@ def check(request, run, solver,constraints, variables, predicate, prefix=""):
     solutions with the tuples of the Cartesian product of the domains satisfying the predicate.
     """
     for constraint in constraints:
+        skipped = SKIPPED.get(constraint, {}).get(request.node.callspec.params.get("solver"))
+        if skipped:
+            pytest.skip(skipped)
         for solvers, reason in KNOWN.get(constraint, []):
             bug_for(request, solvers, reason)
     declarations = "\n".join(f"{name} = Var(dom={dom})" for name, dom in variables)
