@@ -161,7 +161,7 @@ def Var(term=None, *others, dom=None, id=None):
         if is_2d_list(dom, int):
             dom = list(set(flatten(dom)))
         if isinstance(dom, (tuple, list)) and len(dom) > 1 and all(isinstance(v, int) for v in dom):
-            dom = sorted(dom)
+            dom = sorted(set(dom))  # a set discards the values given several times (as in VarArray())
             if dom[-1] - dom[0] + 1 == len(dom):
                 dom = range(dom[0], dom[-1] + 1)
         if hasattr(dom, '__call__'):  # if it is a function

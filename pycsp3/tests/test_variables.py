@@ -48,6 +48,15 @@ def test_var_domain(run, declaration, values):
     assert declared_variables(run(declaration)) == {"x": values}
 
 
+@pytest.mark.parametrize("declaration, text", [
+    ("x = Var(dom=[0, 0, 1, 2])", "0..2"),
+    ("x = Var(3, 1, 2, 3, 1)", "1..3"),
+    ("x = Var(dom=[5, 0, 5])", "0 5"),
+])
+def test_var_domain_with_repeated_values(run, declaration, text):
+    assert run(declaration).xml.find("variables/var").text.strip() == text
+
+
 def test_var_large_domain(run):
     assert declared_variables(run("x = Var(dom=range(-10**9, 10**9))")) == {"x": ["-1000000000..999999999"]}
 

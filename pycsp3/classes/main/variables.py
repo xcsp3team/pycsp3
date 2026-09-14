@@ -47,8 +47,9 @@ class Domain:
             self.original_values = []
             _add_value(args)
             assert self.type, "You have defined a variable with an empty domain; fix this"
-            self.original_values.sort(key=lambda v: v.start if isinstance(v, range) else v)
-            values = []  # the sorted values are merged: overlapping intervals, a value in an interval, a value given several times
+            # a set discards the values (and intervals) given several times; then, the sorted values are merged (overlapping intervals, a value in an interval)
+            self.original_values = sorted(set(self.original_values), key=lambda v: v.start if isinstance(v, range) else v)
+            values = []
             for v in self.original_values:
                 last = values[-1] if len(values) > 0 else None
                 if isinstance(last, range) and isinstance(v, range) and v.start < last.stop:
@@ -57,8 +58,6 @@ class Domain:
                     continue  # v is in the interval
                 elif isinstance(v, range) and last is not None and not isinstance(last, range) and last >= v.start:
                     values[-1] = v  # last is in the interval (being sorted, last == v.start)
-                elif last is not None and not isinstance(last, range) and last == v:
-                    continue  # v is given several times
                 else:
                     values.append(v)
             self.original_values = values
