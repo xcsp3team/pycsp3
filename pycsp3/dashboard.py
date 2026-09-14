@@ -69,3 +69,11 @@ class _Options:
 
 
 options = _Options()
+""" The options given on the command line (e.g., -data, -variant or -keep_hybrid), each one being accessible as a field (e.g., options.data or options.keep_hybrid)
+
+:example:
+    from pycsp3.dashboard import options
+
+    # the same as giving the option -keep_hybrid on the command line (useful in a notebook, where there is no command line)
+    options.keep_hybrid = True
+"""

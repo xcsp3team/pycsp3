@@ -44,14 +44,17 @@ def protect():
     One can then execute some code in protected mode by calling execute().
     Once the code is executed, the redefined operators are reactivated.
 
-    The code typically looks like::
-
-        protect().execute(...)
-
     :return: the object OpOverrider
     :example:
+        # the code typically looks like protect().execute(...)
         x = VarArray(size=3, dom=range(3))
-        satisfy(AllDifferent(x))
+
+        satisfy(
+           AllDifferent(x)
+        )
+
+        # without protect(), x[0] == x[1] builds an expression, displayed as eq(x[0],x[1])
+        # in protected mode, the operator == is not redefined: the two variables are simply compared, which gives False
         print(protect().execute(x[0] == x[1]))
     """
     return OpOverrider.disable()
@@ -70,16 +73,21 @@ def variant(name=None):
     :param name: the name of a variant, or None
     :return: the name of the variant specified by the user, or a Boolean
     :example:
+        # when the variant 'table' is activated (see the command line below), variant("table") is True,
+        # and variant() (without argument) returns 'table'
         x = VarArray(size=3, dom=range(3))
 
         if variant("table"):
-            satisfy(Table(x, {(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)}))
+            # with the variant 'table', the permutations of 0, 1 and 2 are listed as supports
+            satisfy(Table(scope=x, supports={(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)}))
         else:
+            # without the option -variant (or with another variant), a global constraint is posted instead
             satisfy(AllDifferent(x))
 
         # a solution: [0, 1, 2]
-        if solve() is SAT:
-           print(values(x))
+    :example:
+        # the command line to be typed for activating the variant 'table'
+        python model.py -variant=table
     """
     assert options.variant is None or isinstance(options.variant, str)
     pos = -1 if options.variant is None else options.variant.find("-")  # position of dash in options.variant
@@ -97,16 +105,21 @@ def subvariant(name=None):
     :param name: the name of a sub-variant, or None
     :return: the name of the sub-variant specified by the user, or a Boolean
     :example:
+        # when the variant 'main' and its sub-variant 'relaxed' are activated (see the command line below),
+        # variant("main") and subvariant("relaxed") are both True
         x = VarArray(size=2, dom=range(10))
 
         if subvariant("relaxed"):
+            # with the sub-variant 'relaxed', the two values just need to be different
             satisfy(x[0] != x[1])
         else:
+            # otherwise, the two values must be strictly ordered
             satisfy(x[0] < x[1])
 
         # a solution: [0, 1]
-        if solve() is SAT:
-           print(values(x))
+    :example:
+        # the command line to be typed for activating the variant 'main' and its sub-variant 'relaxed'
+        python model.py -variant=main-relaxed
     """
     assert options.variant is None or isinstance(options.variant, str)
     pos = -1 if options.variant is None else options.variant.find("-")  # position of dash in options.variant
@@ -125,11 +138,7 @@ def Var(term=None, *others, dom=None, id=None):
     """
     Builds a stand-alone variable with the specified domain.
     The domain is either given by the named parameter dom, or given
-    by the sequence of terms passed as parameters. For example::
-
-        x = Var(0, 1)
-        y = Var(dom=range(10))
-        z = Var(dom={v for v in range(100) if v % 3 == 0})
+    by the sequence of terms passed as parameters.
 
     :param term: the first term defining the domain, or None
     :param others: the other terms defining the domain, or None
@@ -143,8 +152,25 @@ def Var(term=None, *others, dom=None, id=None):
         satisfy(x < y)
 
         # a solution: 0
-        if solve() is SAT:
-           print(value(x))
+    :example:
+        # the domain can be given by the terms passed as parameters, or by the named parameter dom
+        x = Var(0, 1)  # x is a 0/1 variable
+        y = Var(dom=range(10))  # y takes a value between 0 and 9
+        z = Var(dom={v for v in range(100) if v % 3 == 0})  # z is a multiple of 3 less than 100
+    :example:
+        # symbolic variables: the values of the domain are symbols (strings) instead of integers
+        c = Var(dom={"red", "green", "blue"})  # c is the colour of the car
+        m = Var("petrol", "diesel", "electric")  # m is the engine of the car (the symbols can also be given as terms)
+
+        satisfy(
+           # a symbolic variable can be compared with a symbol
+           c != "red",
+
+           # symbolic variables can be involved in tables (here, the forbidden combinations)
+           (c, m) not in {("blue", "diesel"), ("blue", "electric")}
+        )
+
+        # a solution: blue petrol
     """
     global started_modeling
     if not started_modeling and not options.uncurse:
@@ -212,6 +238,17 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         x = VarArray(size=5, dom=range(10))
         y = VarArray(size=[2, 3], dom={0, 1})
         z = VarArray(size=10, dom=lambda i: range(i+1))
+    :example:
+        # an array of symbolic variables: map colouring, where two neighbouring regions cannot have the same colour
+        x = VarArray(size=4, dom={"red", "green", "blue"})  # x[i] is the colour of the ith region
+
+        satisfy(
+           [x[i] != x[i + 1] for i in range(3)],
+
+           x[0] == "red"
+        )
+
+        # a solution: ['red', 'blue', 'green', 'blue']
     """
     global started_modeling
     if not started_modeling and not options.uncurse:
@@ -316,8 +353,6 @@ def VarArrayMultiple(*, size, fields):
         )
 
         # a solution: [0, 0]
-        if solve() is SAT:
-           print(values(points[0]))
     """
     assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
     size = [size] if isinstance(size, int) else size
@@ -368,8 +403,6 @@ def var(name):
         )
 
         # a solution: 3
-        if solve() is SAT:
-           print(value(x))
     """
     assert isinstance(name, str)
     error_if(name not in Variable.name2obj,
@@ -455,10 +488,9 @@ def _wrap_intension_constraints(entities):
 def And(*args, meta=False):
     """
     Builds a meta-constraint And from the specified arguments.
-    For example: And(Sum(x) > 10, AllDifferent(x))
+    The meta-constraint holds iff all the specified constraints hold.
 
-    When the parameter 'meta' is not true,
-    reification is employed.
+    When the parameter 'meta' is not true, reification is employed.
 
     :param args: a tuple of constraints
     :param meta: true if a meta-constraint form must be really posted
@@ -475,8 +507,16 @@ def And(*args, meta=False):
         )
 
         # a solution: [1, 1, 1] [1, 2, 4]
-        if solve() is SAT:
-           print(values(b), values(x))
+    :example:
+        # a meta-constraint And can combine global constraints and expressions
+        x = VarArray(size=4, dom=range(6))
+
+        satisfy(
+           # the sum of x must be greater than 10, and the values of x must be all different
+           And(Sum(x) > 10, AllDifferent(x))
+        )
+
+        # a solution: [0, 2, 4, 5]
     """
     if options.use_meta or meta:
         return EAnd(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -486,10 +526,9 @@ def And(*args, meta=False):
 def Or(*args, meta=False):
     """
     Builds a meta-constraint Or from the specified arguments.
-    For example: Or(Sum(x) > 10, AllDifferent(x))
+    The meta-constraint holds iff at least one of the specified constraints holds.
 
-    When the parameter 'meta' is not true,
-    reification is employed.
+    When the parameter 'meta' is not true, reification is employed.
 
     :param args: a tuple of constraints
     :param meta: true if a meta-constraint form must be really posted
@@ -505,8 +544,16 @@ def Or(*args, meta=False):
         )
 
         # a solution: [0, 1, 0, 1]
-        if solve() is SAT:
-           print(values(b))
+    :example:
+        # a meta-constraint Or can combine global constraints and expressions
+        x = VarArray(size=4, dom=range(6))
+
+        satisfy(
+           # the sum of x must be greater than 10, or the values of x must be all different
+           Or(Sum(x) > 10, AllDifferent(x))
+        )
+
+        # a solution: [0, 1, 2, 3]
     """
     if options.use_meta or meta:
         return EOr(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -516,21 +563,22 @@ def Or(*args, meta=False):
 def Not(arg, meta=False):
     """
     Builds a meta-constraint Not from the specified argument.
-    For example: Not(AllDifferent(x))
+    The meta-constraint holds iff the specified constraint does not hold.
 
-    When the parameter 'meta' is not true,
-    reification is employed.
+    When the parameter 'meta' is not true, reification is employed.
 
     :param arg: a constraint
     :param meta: true if a meta-constraint form must be really posted
     :return: a meta-constraint Not, or its reified form
     :example:
+        # the values of x cannot be all different: at least two of them must be equal
         x = VarArray(size=4, dom=range(4))
-        satisfy(Not(AllDifferent(x)))
+
+        satisfy(
+           Not(AllDifferent(x))
+        )
 
         # a solution: [0, 0, 0, 0]
-        if solve() is SAT:
-           print(values(x))
     """
     if options.use_meta or meta:
         return ENot(_wrap_intension_constraints(_complete_partial_forms_of_constraints(arg)))
@@ -543,10 +591,9 @@ def Not(arg, meta=False):
 def Xor(*args, meta=False):
     """
     Builds a meta-constraint Xor from the specified arguments.
-    For example: Xor(Sum(x) > 10, AllDifferent(x))
+    For two constraints, the meta-constraint holds iff exactly one of them holds.
 
-    When the parameter 'meta' is not true,
-    reification is employed.
+    When the parameter 'meta' is not true, reification is employed.
 
     :param args: a tuple of constraints
     :param meta: true if a meta-constraint form must be really posted
@@ -560,8 +607,16 @@ def Xor(*args, meta=False):
         )
 
         # a solution: [0, 1]
-        if solve() is SAT:
-           print(values(b))
+    :example:
+        # a meta-constraint Xor can combine global constraints and expressions
+        x = VarArray(size=4, dom=range(6))
+
+        satisfy(
+           # exactly one of the two must hold: the sum of x is greater than 10, or the values of x are all different
+           Xor(Sum(x) > 10, AllDifferent(x))
+        )
+
+        # a solution: [0, 1, 5, 5]
     """
     if options.use_meta or meta:
         return EXor(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -600,18 +655,11 @@ def _simplify_expression(args, disjunction_mode: bool):
 
 def If(test, *test_complement, Then, Else=None, meta=False):
     """
-    Builds a complex form of constraint(s), based on the general control structure 'if then else'
-    that can possibly be decomposed, at compilation time.
+    Builds a complex form of constraint(s), based on the general control structure 'if then else'.
+    When the test holds, the Then part must hold; otherwise, the Else part (if any) must hold.
 
-    For example:
-      - If(Sum(x) > 10, Then=AllDifferent(x))
-      - If(Sum(x) > 10, Then=AllDifferent(x), Else=AllEqual(x))
-      - If(w > 0, y != z, Then=w == y + z)
-      - If(w > 0, y != z, Then=[w == y + z, v != 1])
-      - If(Sum(x) > 10, Then=y == z, Else=[AllEqual(x), y < 3])
-
-    When the parameter 'meta' is not true (the usual and default case),
-    reification may be employed.
+    This structure can possibly be decomposed at compilation time: when the parameter 'meta' is not true
+    (the usual and default case), reification may be employed.
 
     :param test: the condition expression
     :param test_complement: the other terms (if any) of the condition expression (assuming a conjunction)
@@ -620,9 +668,11 @@ def If(test, *test_complement, Then, Else=None, meta=False):
     :param meta: true if a meta-constraint form must be really posted
     :return: a complex form of constraint(s) based on the control structure 'if then else'
     :example:
+        # the values of x must be all different when the first one is positive, and all equal otherwise
         x = VarArray(size=3, dom=range(3))
 
         satisfy(
+           # the test is given first, then the Then part and, possibly, the Else part
            If(
               x[0] > 0,
               Then=AllDifferent(x),
@@ -631,8 +681,32 @@ def If(test, *test_complement, Then, Else=None, meta=False):
         )
 
         # a solution: [0, 0, 0]
-        if solve() is SAT:
-           print(values(x))
+    :example:
+        # other forms of If: with or without an Else part, with several tests, and with several constraints
+        x = VarArray(size=4, dom=range(5))
+        v = Var(range(5))
+        w = Var(range(5))
+        y = Var(range(5))
+        z = Var(range(5))
+
+        satisfy(
+           # when the sum of x is greater than 10, the values of x must be all different
+           If(Sum(x) > 10, Then=AllDifferent(x)),
+
+           # the same, with an Else part: otherwise, the values of x must be all equal
+           If(Sum(x) > 10, Then=AllDifferent(x), Else=AllEqual(x)),
+
+           # several tests can be given (they form a conjunction): when w > 0 and y != z, w must be equal to y + z
+           If(w > 0, y != z, Then=w == y + z),
+
+           # the Then part can be a list of constraints
+           If(w > 0, y != z, Then=[w == y + z, v != 1]),
+
+           # the Else part can be a list of constraints too
+           If(Sum(x) > 10, Then=y == z, Else=[AllEqual(x), y < 3])
+        )
+
+        # a solution: [0, 0, 0, 0] 0 0 0 0
     """
 
     # if len(testOthers) == 0 and isinstance(test, bool):  # We don't allow that because otherwise 'in' no more usable as in If(x[0] in (2,3), Then=...
@@ -721,11 +795,14 @@ def Match(Expr, *, Cases):
     :param Cases: a dictionary mapping values, tuples of values, sets, ranges or conditions to constraints
     :return: the list of constraints corresponding to the case analysis
     :example:
-        x = Var(range(3))
+        # a case analysis on the value of x: the cell of y selected by x must be set to 1
+        x = Var(range(3))  # x is the index of the selected cell
 
-        y = VarArray(size=3, dom=range(2))
+        y = VarArray(size=3, dom=range(2))  # y[k] is 1 iff the kth cell is set
 
         satisfy(
+           # each key of Cases is a value of x, associated with the constraint that must hold in that case
+           # a key can also be a tuple, a set, a range or a condition such as lt(2)
            Match(
               x,
               Cases={
@@ -737,8 +814,6 @@ def Match(Expr, *, Cases):
         )
 
         # a solution: [1, 0, 0]
-        if solve() is SAT:
-           print(values(y))
     """
     assert isinstance(Cases, dict)
     if isinstance(Expr, (tuple, list)):
@@ -767,10 +842,9 @@ def Match(Expr, *, Cases):
 def Iff(*args, meta=False):
     """
     Builds a meta-constraint Iff from the specified arguments.
-    For example: Iff(Sum(x) > 10, AllDifferent(x))
+    For two constraints, the meta-constraint holds iff both of them hold, or none of them holds.
 
-    When the parameter 'meta' is not true,
-    reification is employed.
+    When the parameter 'meta' is not true, reification is employed.
 
     :param args: a tuple of constraints
     :param meta: true if a meta-constraint form must be really posted
@@ -787,8 +861,16 @@ def Iff(*args, meta=False):
         )
 
         # a solution: [0, 0, 0, 0, 1] [1, 1, 0]
-        if solve() is SAT:
-           print(values(x), values(b))
+    :example:
+        # a meta-constraint Iff can combine global constraints and expressions
+        x = VarArray(size=4, dom=range(6))
+
+        satisfy(
+           # the sum of x is greater than 10 if and only if the values of x are all different
+           Iff(Sum(x) > 10, AllDifferent(x))
+        )
+
+        # a solution: [0, 0, 0, 0]
     """
     if meta:
         return EIff(_wrap_intension_constraints(_complete_partial_forms_of_constraints(flatten(*args))))
@@ -798,23 +880,33 @@ def Iff(*args, meta=False):
 def Slide(*args, expression=None, circular=None, offset=None, collect=None):
     """
     Builds a meta-constraint Slide from the specified arguments.
-    Slide((x[i], x[i + 1]) in table for i in range(n - 1))
+    A slide is a sequence of similar constraints, obtained by sliding the same constraint over a sequence of variables.
 
-    According to the specified constraints, the compiler may or may not succeed
-    in generating a slide meta-constraint.
+    According to the specified constraints, the compiler may or may not succeed in generating a slide meta-constraint.
 
     :param args: a tuple of constraints
     :return: a meta-constraint Slide
     :example:
+        # the values of x must be strictly increasing, by comparing each pair of consecutive variables
         x = VarArray(size=4, dom=range(4))
 
         satisfy(
+           # the same constraint slides over the sequence, which the compiler may render as a compact meta-constraint
            Slide(x[i] < x[i + 1] for i in range(3))
         )
 
         # a solution: [0, 1, 2, 3]
-        if solve() is SAT:
-           print(values(x))
+    :example:
+        # with Slide, the same table constraint is posted on each pair of consecutive variables
+        n = 5
+        table = [(0, 1), (1, 2), (2, 0)]  # the allowed pairs of consecutive values
+        x = VarArray(size=n, dom=range(3))
+
+        satisfy(
+           Slide((x[i], x[i + 1]) in table for i in range(n - 1))
+        )
+
+        # a solution: [0, 1, 2, 0, 1]
     """
     if expression is not None:  # the meta-constraint is defined directly by the user
         return ECtr(ConstraintSlide(*args, expression, circular, offset, collect))
@@ -887,22 +979,26 @@ def satisfy_from_auxiliary(t):
 
 def satisfy(*args, no_comment_tags_extraction=False):
     """
-    Posts all constraints that are specified as arguments
+    Posts all constraints that are specified as arguments.
+    The solutions of the model must satisfy all the posted constraints; satisfy() can be called several times.
 
     :param args: the different constraints to be posted
     :param no_comment_tags_extraction: discard comments and tags (when compiling), if set to True
     :return: an object wrapping the posted constraints
     :example:
+        # the constraints are given as arguments of satisfy(), separated by commas
+        # the comments preceding them are kept (as notes) in the generated XCSP3 file
         x = VarArray(size=10, dom=range(10))
 
         satisfy(
+           # all the values must be different
            AllDifferent(x),
+
+           # the sum of the first and last values must be greater than 6
            x[0] + x[-1] > 6
         )
 
         # a solution: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        if solve() is SAT:
-           print(values(x))
     """
 
     def _reorder(l):  # if constraints are given in (sub-)lists inside tuples; we flatten and reorder them to hopefully improve compactness
@@ -1046,6 +1142,8 @@ def _Extension(*, scope, table, positive=True):
 def Table(*, scope, supports=None, conflicts=None):
     """
     Builds and returns a constraint Table.
+    A table lists the combinations of values (tuples) that the variables can take (supports), or cannot take (conflicts).
+    It is usually posted with the operators 'in' and 'not in', as in (x[0], x[1]) in {(0, 1), (1, 2)}.
 
     :param scope: the sequence of (distinct) involved variables
     :param supports: the set/list of tuples, seen as supports (positive table)
@@ -1062,8 +1160,6 @@ def Table(*, scope, supports=None, conflicts=None):
         )
 
         # a solution: [0, 1, 2]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # the forbidden combinations (conflicts) can be given instead, by using the operator 'not in'
         y = VarArray(size=2, dom=range(4))
@@ -1073,8 +1169,6 @@ def Table(*, scope, supports=None, conflicts=None):
         )
 
         # a solution: [0, 1]
-        if solve() is SAT:
-           print(values(y))
     :example:
         # the table can also be given by calling the function, with 'supports' or 'conflicts'
         x = VarArray(size=3, dom=range(4))
@@ -1084,8 +1178,6 @@ def Table(*, scope, supports=None, conflicts=None):
         )
 
         # a solution: [0, 1, 2]
-        if solve() is SAT:
-           print(values(x))
     """
     scope = flatten(scope)
     assert scope is not None and (supports is None) != (conflicts is None)
@@ -1130,8 +1222,6 @@ def col(*args):
         )
 
         # a solution: [1, 0, 1, 1]
-        if solve() is SAT:
-           print(values(x))
     """
     assert len(args) == 1 and isinstance(args[0], int)
     return Node(TypeNode.COL, args[0])
@@ -1139,9 +1229,8 @@ def col(*args):
 
 def abs(arg):
     """
-    If the specified argument is a node or a variable of the model, the function builds
-    and returns a node 'abs', root of a tree expression where the specified argument is a child.
-    Otherwise, the function returns, as usual, the absolute value of the specified argument
+    Builds and returns a node 'abs' if the argument is a node or a variable of the model, and its usual absolute value otherwise.
+    The node represents the absolute value of the argument, as in abs(x[0] - x[1]) > 2 (a distance).
 
     :return: either a node, root of a tree expression, or the absolute value of the specified argument
     :example:
@@ -1155,8 +1244,6 @@ def abs(arg):
         )
 
         # a solution: [0, 4, 1, 3, 2]
-        if solve() is SAT:
-           print(values(x))
     """
     if isinstance(arg, PartialConstraint):
         arg = auxiliary().replace_partial_constraint(arg)
@@ -1167,9 +1254,8 @@ def abs(arg):
 
 def min(*args):
     """
-    When one of the specified arguments is a node or a variable of the model, the function builds
-    and returns a node 'min', root of a tree expression where specified arguments are children.
-    Otherwise, the function returns, as usual, the smallest item of the specified arguments
+    Builds and returns a node 'min' if one argument is a node or a variable of the model, and the usual smallest item otherwise.
+    The node represents the smallest value among the arguments, as in z == min(x).
 
     :return: either a node, root of a tree expression, or the smallest item of the specified arguments
     :example:
@@ -1184,8 +1270,6 @@ def min(*args):
         )
 
         # a solution: [8, 5, 11] 5
-        if solve() is SAT:
-           print(values(x), value(z))
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = [v for v in args[0]]
@@ -1195,9 +1279,8 @@ def min(*args):
 
 def max(*args):
     """
-    When one of the specified arguments is a node or a variable of the model, the function builds
-    and returns a node 'max', root of a tree expression where specified arguments are children.
-    Otherwise, the function returns, as usual, the largest item of the specified arguments
+    Builds and returns a node 'max' if one argument is a node or a variable of the model, and the usual largest item otherwise.
+    The node represents the largest value among the arguments, as in z == max(x).
 
     :return: either a node, root of a tree expression, or the largest item of the specified arguments
     :example:
@@ -1212,8 +1295,6 @@ def max(*args):
         )
 
         # a solution: [8, 5, 11] 11
-        if solve() is SAT:
-           print(values(x), value(z))
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = [v for v in args[0]]
@@ -1223,8 +1304,8 @@ def max(*args):
 
 def xor(*args):
     """
-    If there is only one argument, returns it.
-    Otherwise, builds and returns a node 'xor', root of a tree expression where specified arguments are children.
+    Builds and returns a node 'xor', root of a tree expression where specified arguments are children.
+    For two arguments, the expression holds iff exactly one of them holds (with only one argument, this argument is returned).
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression or the argument if there is only one
@@ -1237,8 +1318,6 @@ def xor(*args):
         )
 
         # a solution: [0, 1, 0, 1, 0, 1, 0, 1]
-        if solve() is SAT:
-           print(values(b))
     """
     if len(args) == 2 and isinstance(args[0], bool) or isinstance(args[1], bool):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
@@ -1257,6 +1336,7 @@ def xor(*args):
 def iff(*args):
     """
     Builds and returns a node 'iff', root of a tree expression where specified arguments are children.
+    For two arguments, the expression holds iff both of them hold, or none of them holds.
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
@@ -1272,8 +1352,6 @@ def iff(*args):
         )
 
         # a solution: [0, 0, 1, 1, 1, 1, 1] [0, 0, 1, 1, 1, 1, 1]
-        if solve() is SAT:
-           print(values(x), values(b))
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
@@ -1298,6 +1376,7 @@ def iff(*args):
 def imply(*args):
     """
     Builds and returns a node 'imply', root of a tree expression where specified arguments are children.
+    The expression holds iff the second argument holds whenever the first one holds.
     Without any parent, it becomes a constraint.
 
     :param args: a tuple of two arguments
@@ -1314,8 +1393,6 @@ def imply(*args):
         )
 
         # a solution: [0, 0, 1, 1] [0, 0, 1, 1]
-        if solve() is SAT:
-           print(values(b), values(s))
     """
     assert len(args) == 2
     cnd, tp = args  # condition and then part
@@ -1345,6 +1422,7 @@ def imply(*args):
 def ift(test, Then, Else):
     """
     Builds and returns a node 'ifthenelse', root of a tree expression where specified arguments are children.
+    The expression takes the value of Then when the test holds, and the value of Else otherwise, as in c == ift(x == 0, 3, 7).
     Without any parent, it becomes a constraint.
 
     :param test: the condition expression
@@ -1364,8 +1442,6 @@ def ift(test, Then, Else):
         )
 
         # a solution: [0, 1, 1] [3, 7, 7]
-        if solve() is SAT:
-           print(values(x), values(c))
     """
     # assert len(args) == 3
     # test, Then, Else = args  # condition, then part and else part
@@ -1435,8 +1511,6 @@ def belong(x, values):
         )
 
         # a solution: [0, 1, 2]
-        if solve() is SAT:
-           print(values(x))
     """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
@@ -1485,8 +1559,6 @@ def not_belong(x, values):
         )
 
         # a solution: [0, 1, 2]
-        if solve() is SAT:
-           print(values(x))
     """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
@@ -1534,8 +1606,6 @@ def expr(operator, *args):
         )
 
         # a solution: [0, 1, 1]
-        if solve() is SAT:
-           print(values(x))
     """
     return Node.build(operator, *args)
 
@@ -1543,6 +1613,7 @@ def expr(operator, *args):
 def conjunction(*args):
     """
     Builds and returns a node 'and', root of a tree expression where specified arguments are children.
+    The expression holds iff all the arguments hold.
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
@@ -1558,8 +1629,6 @@ def conjunction(*args):
         )
 
         # a solution: [1, 0, 1, 1]
-        if solve() is SAT:
-           print(values(b))
     """
 
     # return Count(manage_global_indirection(*args)) == len(args)
@@ -1583,6 +1652,7 @@ def conjunction(*args):
 def both(this, And):
     """
     Builds and returns a node 'and', root of a tree expression where the two specified arguments are children.
+    The expression holds iff the two arguments hold.
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
@@ -1596,8 +1666,6 @@ def both(this, And):
         )
 
         # a solution: [10]
-        if solve() is SAT:
-           print(values(s))
     """
     if this is None:
         return And
@@ -1615,6 +1683,7 @@ def both(this, And):
 def disjunction(*args):
     """
     Builds and returns a node 'or', root of a tree expression where specified arguments are children.
+    The expression holds iff at least one of the arguments holds.
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
@@ -1628,8 +1697,6 @@ def disjunction(*args):
         )
 
         # a solution: [1]
-        if solve() is SAT:
-           print(values(x))
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
@@ -1647,6 +1714,7 @@ def disjunction(*args):
 def either(this, Or):
     """
     Builds and returns a node 'or', root of a tree expression where the two specified arguments are children.
+    The expression holds iff at least one of the two arguments holds.
     Without any parent, it becomes a constraint.
 
     :return: a node, root of a tree expression
@@ -1660,8 +1728,6 @@ def either(this, Or):
         )
 
         # a solution: [0, 4]
-        if solve() is SAT:
-           print(values(s))
     """
     if this is None:
         return Or
@@ -1682,6 +1748,7 @@ def either(this, Or):
 def Regular(*, scope, automaton):
     """
     Builds and returns a constraint Regular.
+    The sequence of values assigned to the variables must be a word recognized by the specified automaton.
 
     :param scope: the sequence of (distinct) involved variables
     :param automaton: the automaton defining the semantics of the constraint
@@ -1702,8 +1769,6 @@ def Regular(*, scope, automaton):
         )
 
         # a solution: [0, 1, 1, 0, 1, 1, 1]
-        if solve() is SAT:
-           print(values(x))
     """
     scope = flatten(scope)
     checkType(scope, [Variable])
@@ -1730,8 +1795,6 @@ def Mdd(*, scope, mdd):
         )
 
         # a solution: [0, 2, 0]
-        if solve() is SAT:
-           print(values(x))
     """
     scope = flatten(scope)
     checkType(scope, [Variable])
@@ -1745,6 +1808,7 @@ def Mdd(*, scope, mdd):
 def AllDifferent(term, *others, excepting=None, matrix=False):
     """
     Builds and returns a constraint AllDifferent.
+    The terms (typically, variables) must all take different values; the values given by 'excepting' can be repeated.
 
     :param term: the (first) term, typically a list of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -1764,8 +1828,6 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         )
 
         # a solution: [1, 2, 3, 4, 5, 6, 7, 8, 9, 4, 5, 6, 7, 8, 9, 1, 2, 3, 7, 8, 9, 1, 2, 3, ...]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'excepting', when a value (here, 0) means 'no resource' and can then be repeated
         y = VarArray(size=8, dom=range(5))  # y[i] is the machine assigned to the ith job (0 meaning none)
@@ -1777,8 +1839,6 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         )
 
         # a solution: [0, 0, 0, 0, 1, 2, 3, 4]
-        if solve() is SAT:
-           print(values(y))
     :example:
         # with 'matrix', the values on each row and on each column of the matrix must be all different
         # this is the Latin square problem (a Sudoku without the constraints on the blocks)
@@ -1789,8 +1849,6 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         )
 
         # a solution: [0, 1, 2, 3, 1, 0, 3, 2, 2, 3, 0, 1, 3, 2, 1, 0]
-        if solve() is SAT:
-           print(values(x))
     """
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
     checkType(excepting, ([int], type(None)))
@@ -1814,6 +1872,7 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
 def AllDifferentList(term, *others, excepting=None):
     """
     Builds and returns a constraint AllDifferentList.
+    The lists must all be different, that is, two lists cannot be assigned the same sequence of values.
 
     :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -1828,8 +1887,6 @@ def AllDifferentList(term, *others, excepting=None):
         )
 
         # a solution: [2, 0, 3, 4, 1, 3, 1, 0]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'excepting', the tuples equal to the specified one are ignored
         # here, the pair (0, 0) means that the meeting is not scheduled, and can then be repeated
@@ -1842,8 +1899,6 @@ def AllDifferentList(term, *others, excepting=None):
         )
 
         # a solution: [0, 1, 0, 2, 0, 0, 0, 0]
-        if solve() is SAT:
-           print(values(x))
     """
     if isinstance(term, types.GeneratorType):
         term = [v for v in term]
@@ -1860,6 +1915,7 @@ def AllDifferentList(term, *others, excepting=None):
 def AllEqual(term, *others, excepting=None):
     """
     Builds and returns a constraint AllEqual.
+    The terms (typically, variables) must all take the same value; the values given by 'excepting' are ignored.
 
     :param term: the (first) term, typically a list of variables or expressions, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -1876,8 +1932,6 @@ def AllEqual(term, *others, excepting=None):
         )
 
         # a solution: [10, 10, 10, 10]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'excepting', the specified value is ignored (here, 0 means that the line is stopped)
         x = VarArray(size=4, dom=range(100))  # x[i] is the quantity produced by the ith line
@@ -1889,8 +1943,6 @@ def AllEqual(term, *others, excepting=None):
         )
 
         # a solution: [0, 1, 1, 1]
-        if solve() is SAT:
-           print(values(x))
     """
     excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
     checkType(excepting, ([int], type(None)))
@@ -1904,8 +1956,10 @@ def AllEqual(term, *others, excepting=None):
 
 def AllEqualList(term, *others, excepting=None):
     """
-    Builds and returns a constraint AllEqualList. In case only two lists are given, and excepting is None,
-    a group of intensional constraints of the form x[i] == y[i] is posted
+    Builds and returns a constraint AllEqualList.
+    The lists must all be equal, that is, they must be assigned the same sequence of values.
+
+    When only two lists are given (and excepting is None), a group of intensional constraints of the form x[i] == y[i] is posted.
 
     :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -1957,6 +2011,7 @@ def _ordered(term, others, operator, lengths):
 def Increasing(term, *others, strict=False, lengths=None):
     """
     Builds and returns a constraint Increasing.
+    The values assigned to the terms must be in increasing order (strictly, when 'strict' is True), possibly separated by the specified lengths.
 
     :param term: the (first) term, typically a list of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -1974,8 +2029,6 @@ def Increasing(term, *others, strict=False, lengths=None):
         )
 
         # a solution: [0, 0, 11, 19]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # a strictly increasing sequence of positions, with minimal distances given by 'lengths'
         p = VarArray(size=4, dom=range(30))
@@ -1985,8 +2038,6 @@ def Increasing(term, *others, strict=False, lengths=None):
         )
 
         # a solution: [0, 4, 7, 13]
-        if solve() is SAT:
-           print(values(p))
     """
     return _ordered(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, lengths)
 
@@ -1994,6 +2045,7 @@ def Increasing(term, *others, strict=False, lengths=None):
 def Decreasing(term, *others, strict=False, lengths=None):
     """
     Builds and returns a constraint Decreasing.
+    The values assigned to the terms must be in decreasing order (strictly, when 'strict' is True), possibly separated by the specified lengths.
 
     :param term: the (first) term, typically a list of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -2011,8 +2063,6 @@ def Decreasing(term, *others, strict=False, lengths=None):
         )
 
         # a solution: [9, 3, 0, 0, 0]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'strict', two consecutive values cannot be equal any more
         x = VarArray(size=4, dom=range(10))  # x[i] is the number of items put in the ith bin
@@ -2024,8 +2074,6 @@ def Decreasing(term, *others, strict=False, lengths=None):
         )
 
         # a solution: [5, 4, 3, 2]
-        if solve() is SAT:
-           print(values(x))
     """
     return _ordered(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, lengths)
 
@@ -2055,6 +2103,8 @@ def _lex(term, others, operator, matrix):
 def LexIncreasing(term, *others, strict=False, matrix=False):
     """
     Builds and returns a constraint (increasing) Lexicographic.
+    The lists must be in lexicographically increasing order (as words in a dictionary), strictly when 'strict' is True.
+    With 'matrix', both the rows and the columns of the matrix must be ordered.
 
     :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -2072,8 +2122,6 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
         )
 
         # a solution: [0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'matrix', both the rows and the columns are lexicographically ordered
         x = VarArray(size=[3, 4], dom=range(3))  # x[w][d] is the shift on day d of week w
@@ -2085,8 +2133,6 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
         )
 
         # a solution: [0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'strict', two rows of the matrix cannot be identical
         x = VarArray(size=[3, 4], dom=range(2))  # x[i][j] is 1 iff the ith machine performs the jth operation
@@ -2096,8 +2142,6 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
         )
 
         # a solution: [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0]
-        if solve() is SAT:
-           print(values(x))
     """
     return _lex(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, matrix)
 
@@ -2105,6 +2149,8 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
 def LexDecreasing(term, *others, strict=False, matrix=False):
     """
     Builds and returns a constraint (decreasing) Lexicographic.
+    The lists must be in lexicographically decreasing order (as words in a dictionary), strictly when 'strict' is True.
+    With 'matrix', both the rows and the columns of the matrix must be ordered.
 
     :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -2122,8 +2168,6 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
         )
 
         # a solution: [0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'matrix', both the rows and the columns are lexicographically ordered
         x = VarArray(size=[3, 3], dom=range(2))
@@ -2135,8 +2179,6 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
         )
 
         # a solution: [1, 0, 0, 0, 1, 0, 0, 0, 1]
-        if solve() is SAT:
-           print(values(x))
     """
     return _lex(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix)
 
@@ -2144,6 +2186,7 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
 def Disjoint(term, *others):
     """
     Builds and returns a constraint Disjoint.
+    Two different lists cannot share a value: a value assigned to a variable of a list cannot be assigned to a variable of another list.
 
     :param term: the (first) term, typically a list of lists of variables, on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -2169,6 +2212,8 @@ def Disjoint(term, *others):
 def Precedence(within, *, values=None, covered=False):
     """
     Builds and returns a constraint Precedence.
+    For two consecutive values v and w, a variable can be assigned w only if a previous variable is assigned v;
+    this is typically used for breaking symmetries between interchangeable values.
 
     :param within: the scope of the constraint
     :param values: the values such that the ith value must precede the i+1th value in the scope.
@@ -2187,8 +2232,6 @@ def Precedence(within, *, values=None, covered=False):
         )
 
         # a solution: [0, 1, 0, 1, 0, 1]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'covered', each specified value must be used (here, the three shifts must all appear)
         y = VarArray(size=7, dom=range(3))
@@ -2198,8 +2241,6 @@ def Precedence(within, *, values=None, covered=False):
         )
 
         # a solution: [0, 0, 0, 0, 0, 1, 2]
-        if solve() is SAT:
-           print(values(y))
     """
     assert len(within) > 2
     if values is None:
@@ -2230,7 +2271,8 @@ def _wrapping_by_complete_or_partial_constraint(ctr):
 
 def Sum(term, *others, condition=None):
     """
-    Builds and returns a component Sum (that becomes a constraint when subject to a condition)
+    Builds and returns a component Sum (that becomes a constraint when subject to a condition).
+    The component represents the sum of the terms (possibly weighted), which is typically compared with a value, as in Sum(x) <= 10.
 
     :param term: the first term on which the sum applies
     :param others: the other terms (if any) on which the sum applies
@@ -2248,8 +2290,6 @@ def Sum(term, *others, condition=None):
         )
 
         # a solution: [0, 0, 1, 1, 0, 1]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # the sum of some expressions, subject to a condition involving a variable
         y = VarArray(size=6, dom=range(10))
@@ -2262,8 +2302,6 @@ def Sum(term, *others, condition=None):
         )
 
         # a solution: [0, 0, 0, 0, 0, 7]
-        if solve() is SAT:
-           print(values(y))
     """
 
     def _get_terms_coeffs(terms):
@@ -2349,7 +2387,8 @@ def Sum(term, *others, condition=None):
 
 def Product(term, *others):
     """
-    Builds and returns a node 'mul', root of a tree expression where specified arguments are children
+    Builds and returns a node 'mul', root of a tree expression where specified arguments are children.
+    The node represents the product of the terms, as in Product(x) >= 60.
 
     :param term: the first term on which the product applies
     :param others: the other terms (if any) on which the product applies
@@ -2363,8 +2402,6 @@ def Product(term, *others):
         )
 
         # a solution: [1, 7, 9]
-        if solve() is SAT:
-           print(values(x))
     """
 
     terms = flatten(term, others)
@@ -2379,6 +2416,8 @@ def Product(term, *others):
 def Count(within, *within_complement, value=None, values=None, condition=None):
     """
     Builds and returns a component Count (that becomes a constraint when subject to a condition).
+    The component represents the number of terms taking the specified value (or one of the specified values), as in Count(x, value=0) >= 2.
+
     Either the named parameter value or the named parameter values must be used.
 
     :param within: the (first) term, typically a list of variables or expressions, on which the count applies
@@ -2398,8 +2437,6 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
         )
 
         # a solution: [0, 0, 0, 0, 0, 0, 2]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # counting the occurrences of several values, here the two working shifts over two weeks
         y = VarArray(size=14, dom=range(3))
@@ -2409,8 +2446,6 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
         )
 
         # a solution: [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        if solve() is SAT:
-           print(values(y))
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -2440,8 +2475,8 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
 
 def Exist(within, *within_complement, value=None, reified_by=None):
     """
-    Builds and returns a constraint Count that checks if at least one of the terms evaluates to the specified value,
-    or to 1 (seen as True) when value is None.
+    Builds and returns a constraint Count that checks if at least one term takes the specified value.
+    When value is None, it checks if at least one term evaluates to 1 (seen as True).
 
     :param within: the (first) term, typically a list of variables or expressions, on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
@@ -2460,8 +2495,6 @@ def Exist(within, *within_complement, value=None, reified_by=None):
         )
 
         # a solution: [0, 0, 1, 1, 0, 0]
-        if solve() is SAT:
-           print(values(b))
     :example:
         # with 'reified_by', a 0/1 variable is made equivalent to the constraint
         b = VarArray(size=5, dom={0, 1})  # b[i] is 1 iff the ith station is built
@@ -2474,8 +2507,6 @@ def Exist(within, *within_complement, value=None, reified_by=None):
         )
 
         # a solution: [0, 0, 0, 0, 1] 0
-        if solve() is SAT:
-           print(values(b), value(r))
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -2527,16 +2558,14 @@ def AnyHold(within, *within_complement):
         )
 
         # a solution: [0, 1, 2, 3]
-        if solve() is SAT:
-           print(values(x))
     """
     return Exist(within, within_complement, value=None)
 
 
 def NotExist(within, *within_complement, value=None):
     """
-    Builds and returns a constraint Count that checks that no term evaluates to the specified value,
-    or to 1 (seen as True) when value is None.
+    Builds and returns a constraint Count that checks that no term takes the specified value.
+    When value is None, it checks that no term evaluates to 1 (seen as True).
 
     :param within: the (first) term, typically a list of variables or expressions, on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
@@ -2553,8 +2582,6 @@ def NotExist(within, *within_complement, value=None):
         )
 
         # a solution: [0, 0, 0, 2, 2, 0, 0]
-        if solve() is SAT:
-           print(values(x))
     """
     terms = flatten(within, within_complement)
     res = Count(terms, value=value)
@@ -2582,16 +2609,14 @@ def NoneHold(within, *within_complement):
         )
 
         # a solution: [0, 0, 1, 0, 1]
-        if solve() is SAT:
-           print(values(x))
     """
     return NotExist(within, within_complement, value=None)
 
 
 def ExactlyOne(within, *within_complement, value=None):
     """
-    Builds and returns a constraint Count that checks that exactly one term evaluates to 1 (seen as True) when value is not specified,
-    or to the value (when the parameter is specified, and not None)
+    Builds and returns a constraint Count that checks that exactly one term evaluates to 1 (seen as True).
+    When the parameter value is specified (and not None), it checks instead that exactly one term takes this value.
 
     :param within: the first term on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
@@ -2606,8 +2631,6 @@ def ExactlyOne(within, *within_complement, value=None):
         )
 
         # a solution: [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]
-        if solve() is SAT:
-           print(values(b))
     """
     terms = flatten(within, within_complement)
     res = Count(terms, value=value)
@@ -2620,8 +2643,8 @@ def ExactlyOne(within, *within_complement, value=None):
 
 def AtLeastOne(within, *within_complement, value=None):
     """
-    Builds and returns a constraint Count that checks that at least one term evaluates to 1 (seen as True) when value is not specified,
-    or to the value (when the parameter is specified, and not None).
+    Builds and returns a constraint Count that checks that at least one term evaluates to 1 (seen as True).
+    When the parameter value is specified (and not None), it checks instead that at least one term takes this value.
 
     :param within: the first term on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
@@ -2637,16 +2660,14 @@ def AtLeastOne(within, *within_complement, value=None):
         )
 
         # a solution: [0, 0, 1, 1, 1]
-        if solve() is SAT:
-           print(values(b))
     """
     return Exist(within, within_complement, value=value)
 
 
 def AtMostOne(within, *within_complement, value=None):
     """
-    Builds and returns a constraint Count that checks that at most one term evaluates to 1 (seen as True) when value is not specified,
-    or to the value (when the parameter is specified, and not None).
+    Builds and returns a constraint Count that checks that at most one term evaluates to 1 (seen as True).
+    When the parameter value is specified (and not None), it checks instead that at most one term takes this value.
 
     :param within: the first term on which the count applies
     :param within_complement: the other terms (if any) on which the count applies
@@ -2664,8 +2685,6 @@ def AtMostOne(within, *within_complement, value=None):
         )
 
         # a solution: [0, 0, 1, 0, 1]
-        if solve() is SAT:
-           print(values(b))
     """
     terms = flatten(within, within_complement)
     res = Count(terms, value=value)
@@ -2692,8 +2711,6 @@ def AllHold(within, *within_complement):
         )
 
         # a solution: [0, 3, 3, 6]
-        if solve() is SAT:
-           print(values(s))
     """
     terms = flatten(within, within_complement)
     res = Count(terms)  # , value=value)
@@ -2706,6 +2723,7 @@ def AllHold(within, *within_complement):
 def Hamming(term, *others):
     """
     Builds and returns a constraint Sum, corresponding to the Hamming distance of the two specified lists.
+    The Hamming distance is the number of indexes at which the two lists have different values, as in Hamming(x, previous) <= 2.
 
     :param term: the first term on which the constraint applies
     :param others: the other terms (if any) on which the constraint applies
@@ -2720,8 +2738,6 @@ def Hamming(term, *others):
         )
 
         # a solution: [0, 0, 0, 2, 0]
-        if solve() is SAT:
-           print(values(x))
     """
     if isinstance(term, types.GeneratorType):
         term = [v for v in term]
@@ -2735,6 +2751,7 @@ def Hamming(term, *others):
 def NValues(within, *within_complement, excepting=None, condition=None):
     """
     Builds and returns a component NValues (that becomes a constraint when subject to a condition).
+    The component represents the number of distinct values taken by the terms (ignoring those given by 'excepting'), as in NValues(x) <= 3.
 
     :param within: the (first) term, typically a list of variables, on which the NValues applies
     :param within_complement: the other terms (if any) on which the NValues applies
@@ -2755,8 +2772,6 @@ def NValues(within, *within_complement, excepting=None, condition=None):
         )
 
         # an optimal solution: [0, 1, 1, 0, 0, 1] 2
-        if solve() is OPTIMUM:
-           print(values(x), bound())
     :example:
         # with 'excepting', the value 0 (here, meaning 'no team') is not counted
         y = VarArray(size=8, dom=range(4))  # y[i] is the team of the ith player
@@ -2768,8 +2783,6 @@ def NValues(within, *within_complement, excepting=None, condition=None):
         )
 
         # a solution: [0, 0, 1, 1, 1, 1, 1, 2]
-        if solve() is SAT:
-           print(values(y))
     """
     terms = flatten(within, within_complement)
     if len(terms) == 0:
@@ -2793,14 +2806,14 @@ def NValues(within, *within_complement, excepting=None, condition=None):
 
 def NumberDistinctValues(within, *within_complement, excepting=None, condition=None):
     """
-        Builds and returns a component NValues (that becomes a constraint when subject to a condition).
-        This function is an alias for the function 'NValues()'
+    Builds and returns a component NValues (that becomes a constraint when subject to a condition).
+    It represents the number of distinct values taken by the terms; this function is an alias for the function 'NValues()'.
 
-        :param within: the (first) term, typically a list of variables, on which the NValues applies
-        :param within_complement: the other terms (if any) on which the NValues applies
-        :param excepting: the value(s) that must be ignored (None, most of the time)
-        :param condition: a condition directly specified for the count (typically, None)
-        :return: a component/constraint NValues
+    :param within: the (first) term, typically a list of variables, on which the NValues applies
+    :param within_complement: the other terms (if any) on which the NValues applies
+    :param excepting: the value(s) that must be ignored (None, most of the time)
+    :param condition: a condition directly specified for the count (typically, None)
+    :return: a component/constraint NValues
     :example:
         # counting the number of different colours used for colouring the nodes of a graph
         x = VarArray(size=6, dom=range(6))  # x[i] is the colour of the ith node
@@ -2813,8 +2826,6 @@ def NumberDistinctValues(within, *within_complement, excepting=None, condition=N
         )
 
         # a solution: [0, 1, 0, 1, 0, 1]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'excepting', the value 0 (here, meaning 'no colour yet') is not counted
         x = VarArray(size=6, dom=range(4))  # x[i] is the colour of the ith node
@@ -2826,19 +2837,18 @@ def NumberDistinctValues(within, *within_complement, excepting=None, condition=N
         )
 
         # a solution: [0, 0, 1, 1, 1, 2]
-        if solve() is SAT:
-           print(values(x))
     """
     return NValues(within, *within_complement, excepting=excepting, condition=condition)
 
 
 def NotAllEqual(term, *others):
     """
-      Builds and returns a component NValues (capturing NotAllEqual)
+    Builds and returns a component NValues (capturing NotAllEqual).
+    The terms cannot all take the same value: at least two of them must be different.
 
-      :param term: the first term on which the constraint applies
-      :param others: the other terms (if any) on which the constraint applies
-      :return: a constraint NValues (equivalent to NotAllEqual)
+    :param term: the first term on which the constraint applies
+    :param others: the other terms (if any) on which the constraint applies
+    :return: a constraint NValues (equivalent to NotAllEqual)
     :example:
         # hypergraph colouring: the nodes of each hyperedge cannot all have the same colour
         x = VarArray(size=6, dom=range(3))  # x[i] is the colour of the ith node
@@ -2849,8 +2859,6 @@ def NotAllEqual(term, *others):
         )
 
         # a solution: [0, 0, 1, 0, 0, 1]
-        if solve() is SAT:
-           print(values(x))
     """
     return NValues(term, others) > 1
 
@@ -2858,9 +2866,9 @@ def NotAllEqual(term, *others):
 def Cardinality(within, *within_complement, occurrences, closed=False):
     """
     Builds and returns a constraint Cardinality.
+    For each value (key of occurrences), the number of variables assigned this value must be as specified (a constant, a range or a variable).
 
-    When occurrences is given under the form of a list or tuple t,
-    a dictionary is computed as dict(enumerate(t))
+    When occurrences is given under the form of a list or tuple t, a dictionary is computed as dict(enumerate(t)).
 
     :param within: the (first) term, typically a list of variables, on which the constraint applies
     :param within_complement: the other terms (if any) on which the constraint applies
@@ -2876,8 +2884,6 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
         )
 
         # a solution: [0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 3, 3]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'closed', to indicate that the employees can only be assigned the listed shifts
         y = VarArray(size=6, dom=range(10))
@@ -2887,8 +2893,6 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
         )
 
         # a solution: [2, 2, 2, 3, 3, 3]
-        if solve() is SAT:
-           print(values(y))
     :example:
         # the number of occurrences of a value can also be given by a variable
         x = VarArray(size=8, dom=range(3))  # x[i] is the shift of the ith employee
@@ -2948,6 +2952,7 @@ def _extremum_terms(term, others):
 def Maximum(term, *others, condition=None):
     """
     Builds and returns a component Maximum (that becomes a constraint when subject to a condition).
+    The component represents the largest value taken by the terms, which is typically compared with a value or a variable, as in Maximum(x) <= 10.
 
     :param term: the first term on which the maximum applies
     :param others: the other terms (if any) on which the maximum applies
@@ -2967,8 +2972,6 @@ def Maximum(term, *others, condition=None):
         )
 
         # an optimal solution: [0, 3, 8, 10] 14
-        if solve() is OPTIMUM:
-           print(values(s), bound())
     """
     terms = _extremum_terms(term, others)
     assert len(terms) > 0
@@ -2981,6 +2984,7 @@ def Maximum(term, *others, condition=None):
 def Minimum(term, *others, condition=None):
     """
     Builds and returns a component Minimum (that becomes a constraint when subject to a condition).
+    The component represents the smallest value taken by the terms, which is typically compared with a value or a variable, as in Minimum(x) >= 2.
 
     :param term: the first term on which the minimum applies
     :param others: the other terms (if any) on which the minimum applies
@@ -2999,8 +3003,6 @@ def Minimum(term, *others, condition=None):
         )
 
         # an optimal solution: [25, 25, 25, 25] 25
-        if solve() is OPTIMUM:
-           print(values(x), bound())
     """
     terms = _extremum_terms(term, others)
     assert len(terms) > 0
@@ -3013,6 +3015,7 @@ def Minimum(term, *others, condition=None):
 def MaximumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MaximumArg (that becomes a constraint when subject to a condition).
+    The component represents the index of a term taking the largest value (with 'rank', the first or the last such index).
 
     :param term: the first term on which the maximum applies
     :param others: the other terms (if any) on which the maximum applies
@@ -3031,8 +3034,6 @@ def MaximumArg(term, *others, rank=None, condition=None):
         )
 
         # a solution: [0, 1, 2, 3] 3
-        if solve() is SAT:
-           print(values(x), value(y))
     :example:
         # with 'rank', when several machines have the greatest load (here, the last such one is wanted)
         z = VarArray(size=4, dom=range(3))
@@ -3050,6 +3051,7 @@ def MaximumArg(term, *others, rank=None, condition=None):
 def MinimumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MinimumArg (that becomes a constraint when subject to a condition).
+    The component represents the index of a term taking the smallest value (with 'rank', the first or the last such index).
 
     :param term: the first term on which the minimum applies
     :param others: the other terms (if any) on which the minimum applies
@@ -3070,8 +3072,6 @@ def MinimumArg(term, *others, rank=None, condition=None):
         )
 
         # a solution: [0, 3, 48, 49] 0
-        if solve() is SAT:
-           print(values(x), value(y))
     :example:
         # with 'rank', when several suppliers propose the smallest price (here, the last one is wanted)
         x = VarArray(size=4, dom=range(3))  # x[i] is the price proposed by the ith supplier
@@ -3089,6 +3089,8 @@ def MinimumArg(term, *others, rank=None, condition=None):
 def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
     """
     Builds a constraint Channel between the two specified lists.
+    With two lists x and y, x[i] = j iff y[j] = i (typically, a permutation and its inverse); with a single list x, x[i] = j iff x[j] = i.
+    With a list of 0/1 variables and a variable z, the list contains a unique 1, at the index given by z.
 
     :param list1: the first list to be channeled
     :param list2: the second list to be channeled
@@ -3105,8 +3107,6 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
         )
 
         # a solution: [0, 1, 2, 3, 4, 5, 6, 7]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with a single list of 0/1 variables and a variable: the position of the unique 1
         b = VarArray(size=8, dom={0, 1})
@@ -3117,8 +3117,6 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
         )
 
         # a solution: [0, 0, 0, 0, 0, 0, 0, 1] 7
-        if solve() is SAT:
-           print(values(b), value(z))
     """
     list1 = flatten(list1)
     checkType(list1, [Variable])
@@ -3155,6 +3153,8 @@ def _is_mixed_list(t, index=-1):
 def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
     """
     Builds and returns a constraint NoOverlap.
+    The tasks, each one given by an origin and a length, cannot overlap (in time for 1D tasks, in the plane for 2D rectangles).
+
     Either the tasks are specified as pairs, or the tasks are given by the named parameters origins and lengths.
 
     :param tasks: the tasks given as pairs composed of an origin and a length
@@ -3171,8 +3171,6 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         )
 
         # a solution: [0, 3, 8, 10]
-        if solve() is SAT:
-           print(values(s))
     :example:
         # packing rectangles in a 10x10 square: the rectangles cannot overlap in the plane
         widths, heights = [4, 3, 5], [2, 6, 3]
@@ -3186,8 +3184,6 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         )
 
         # a solution: [1, 7, 0] [2, 4, 5]
-        if solve() is SAT:
-           print(values(x), values(y))
     :example:
         # with 'zero_ignored' set to False, the tasks of length 0 are not discarded any more,
         # and so, cannot be put at the same time as another task
@@ -3279,6 +3275,8 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
 def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=None, condition=None):
     """
     Builds and returns a component Cumulative (that becomes a constraint when subject to a condition).
+    At any time, the total height (amount of resource) of the tasks in progress is subject to the condition, typically '<= capacity'.
+
     Either the tasks are specified as tuples of size 3 or 4, or the tasks are given by the named parameters
     origins, lengths and heights (and possibly ends).
 
@@ -3298,8 +3296,6 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         )
 
         # a solution: [0, 0, 3, 5, 0]
-        if solve() is SAT:
-           print(values(s))
     :example:
         # the durations can be given by variables, and the used quantity of resource be minimized
         s = VarArray(size=5, dom=range(20))  # s[i] is the starting time of the ith task
@@ -3315,8 +3311,6 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
         )
 
         # an optimal solution: [0, 0, 1, 2, 2] 3
-        if solve() is OPTIMUM:
-           print(values(s), bound())
     :example:
         # the ends of the tasks can be given too, for example when they are needed elsewhere
         s = VarArray(size=4, dom=range(20))  # s[i] is the starting time of the ith task
@@ -3375,11 +3369,10 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
 
 def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None, condition=None):
     """
-    Builds and returns a component BinPacking that:
-      - either is directly a constraint when capacities (limits or loads) are given
-      - or becomes a constraint when subject to a condition (specified outside the function)
-    Capacities can be given by integers or variables, by specifying either limits or loads.
-    When capacities are absent (both limits and loads being None), BinPacking is a component
+    Builds and returns a component BinPacking, which puts items of given sizes into bins.
+    The load of a bin (the total size of its items) must not exceed the specified limits, or be equal to the specified loads.
+
+    Capacities (limits or loads) can be given by integers or variables. When they are absent, BinPacking is a component
     that must be subject to a condition, typically '<= k' where k is a value used as the same limit for all bins.
 
     :param partition: the (first) term, typically a list of variables, on which the component applies (indicating how the items are partitioned into bins)
@@ -3399,8 +3392,6 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
         )
 
         # a solution: [0, 0, 1, 0, 2, 1]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with 'limits', when the bins have different capacities, and with 'loads' to get their loads
         sizes = [4, 3, 5, 2, 6, 3]
@@ -3414,8 +3405,6 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
         )
 
         # a solution: [0, 0, 1, 0, 2, 1] [9, 8, 6, 0]
-        if solve() is SAT:
-           print(values(x), values(loads))
     """
     terms = flatten(partition, partition_complement)
     assert len(terms) > 0, "A binPacking with an empty scope"
@@ -3440,11 +3429,11 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
 
 def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=None, profits, pcondition=None):
     """
-    Builds and returns a component Knapsack that must guarantee that a condition holds with respect to the capacity of the knapsack
-    (when considering accumulated weights of selected items) and another condition holds with respect to the profits.
-    The second condition is typically specified outside the function which then represents ("returns")
-    the accumulated profits of selected items.
-    One has to specify either wlimit or wcondition.
+    Builds and returns a component Knapsack, which selects items (possibly several copies of each) having weights and profits.
+    The total weight of the selected items must respect the capacity, and the component represents their total profit.
+
+    The condition on the weights is given by either wlimit or wcondition; the condition on the profits is typically
+    specified outside the function, as in Knapsack(...) >= 15.
 
     :param selection: the (first) term, typically a list of variables on which the component applies (indicating how many copies of each item are selected)
     :param selection_complement: the other terms (if any) on which the component applies
@@ -3464,8 +3453,6 @@ def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=
         )
 
         # a solution: [0, 0, 1, 1, 0, 1]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # the condition on the weight can be given explicitly, and the profit be linked to a variable
         weights, profits = [4, 3, 5, 2, 6, 3], [7, 4, 9, 2, 8, 5]
@@ -3481,8 +3468,6 @@ def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=
         )
 
         # an optimal solution: [0, 0, 1, 1, 0, 1] 16
-        if solve() is OPTIMUM:
-           print(values(x), bound())
     """
 
     terms = flatten(selection, selection_complement)
@@ -3520,8 +3505,6 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
         )
 
         # a solution: [0, 5, 0, 5]
-        if solve() is SAT:
-           print(values(f))
     :example:
         # the cost of the flow can be linked to a variable, so as to be minimized
         arcs = [(0, 1), (0, 2), (1, 3), (2, 3)]
@@ -3537,8 +3520,6 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
         )
 
         # an optimal solution: [5, 0, 5, 0] 15
-        if solve() is OPTIMUM:
-           print(values(f), bound())
     """
     terms = flatten(term, others)
     assert len(terms) > 0, "A Flow with an empty scope"
@@ -3564,6 +3545,7 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
 def Circuit(successors, *successors_complement, start_index=0, size=None, no_self_looping=False):
     """
     Builds and returns a constraint Circuit.
+    With x[i] being the successor of the ith node, the arcs must form a single circuit; a node i such that x[i] = i is not part of it.
 
     :param successors: the (first) term on which the constraint applies (indicating the successors of variables)
     :param successors_complement: the other terms (if any) on which the constraint applies
@@ -3584,8 +3566,6 @@ def Circuit(successors, *successors_complement, start_index=0, size=None, no_sel
         )
 
         # an optimal solution: [1, 2, 3, 0] 14
-        if solve() is OPTIMUM:
-           print(values(x), bound())
     :example:
         # without 'no_self_looping', a city can be skipped (a self-loop meaning 'not visited')
         y = VarArray(size=4, dom=range(4))
@@ -3595,8 +3575,6 @@ def Circuit(successors, *successors_complement, start_index=0, size=None, no_sel
         )
 
         # a solution: [0, 2, 3, 1]
-        if solve() is SAT:
-           print(values(y))
     :example:
         # with 'start_index', when the nodes are not numbered from 0 (here, the cities are numbered from 1)
         x = VarArray(size=4, dom=range(1, 5))  # x[i] is the city visited just after the (i+1)th city
@@ -3624,12 +3602,13 @@ def Circuit(successors, *successors_complement, start_index=0, size=None, no_sel
 
 def Clause(variables, *variables_complement, phases=None):
     """
-        Builds and returns a constraint Clause.
+    Builds and returns a constraint Clause.
+    At least one literal of the clause must be true, a literal being a 0/1 variable or its negation (according to 'phases').
 
-        :param variables: the first term on which the constraint applies
-        :param variables_complement: the other terms (if any) on which the constraint applies
-        :param phases: the phase of the variables involved in the clause
-        :return: a constraint Clause
+    :param variables: the first term on which the constraint applies
+    :param variables_complement: the other terms (if any) on which the constraint applies
+    :param phases: the phase of the variables involved in the clause
+    :return: a constraint Clause
     :example:
         # a SAT-like model: at least one of the three literals of the clause must be true
         b = VarArray(size=3, dom={0, 1})  # the literals are b[0], not(b[1]) and b[2]
@@ -3641,8 +3620,6 @@ def Clause(variables, *variables_complement, phases=None):
         )
 
         # a solution: [0, 1, 1]
-        if solve() is SAT:
-           print(values(b))
     """
     variables = flatten(variables, variables_complement)
     phases = [False] * len(variables) if phases is None else flatten(phases)
@@ -3658,6 +3635,7 @@ def Clause(variables, *variables_complement, phases=None):
 def Adhoc(form, note=None, **d):
     """
     Builds a constraint adhoc from the specified arguments.
+    It represents a form of constraint that is not defined in XCSP3, given by a label and some arguments, for the solvers able to handle it.
 
     :param form: a label (string) indicating the form of the adhoc constraint
     :param note: a comment
@@ -3672,8 +3650,6 @@ def Adhoc(form, note=None, **d):
         )
 
         # a solution: [0, 0, 0, 0]
-        if solve() is SAT:
-           print(values(x))
     """
     return ECtr(ConstraintAdhoc(form, note, d))
 
@@ -3748,19 +3724,19 @@ def minimize(term):
     :param term: the term to be minimized
     :return: the objective to be minimized
     :example:
+        # the values of x must be in decreasing order, and their sum as small as possible
         x = VarArray(size=3, dom=range(10))
 
         satisfy(
            Decreasing(x)
         )
 
+        # the objective is the sum of the values (its optimal value is given after the solution below)
         minimize(
            Sum(x)
         )
 
         # an optimal solution: [0, 0, 0] 0
-        if solve() is OPTIMUM:
-           print(values(x), bound())
     """
     return _optimize(term, True)
 
@@ -3773,19 +3749,19 @@ def maximize(term):
     :param term: the term to be maximized
     :return: the objective to be maximized
     :example:
+        # the values of x must be in increasing order, and their sum as large as possible
         x = VarArray(size=3, dom=range(10))
 
         satisfy(
            Increasing(x)
         )
 
+        # the objective is the sum of the values (its optimal value is given after the solution below)
         maximize(
            Sum(x)
         )
 
         # an optimal solution: [9, 9, 9] 27
-        if solve() is OPTIMUM:
-           print(values(x), bound())
     """
     return _optimize(term, False)
 
@@ -3809,19 +3785,19 @@ def annotate(*, decision=None, output=None, varHeuristic=None, valHeuristic=None
     :param restarts: the annotation about restarts
     :return: a list of annotations
     :example:
+        # the solver is guided by indicating the variables on which it must take decisions
         x = VarArray(size=3, dom=range(3))
 
         satisfy(
            AllDifferent(x)
         )
 
+        # the solver branches only on the variables of x (each kind of annotation is given at most once)
         annotate(
            decision=x
         )
 
         # a solution: [0, 1, 2]
-        if solve() is SAT:
-           print(values(x))
     """
 
     def add_annotation(obj, Ann):
@@ -3951,8 +3927,6 @@ def unpost(i=None, j=None):
         unpost(1)  # the constraint posted by the second call to satisfy() is removed
 
         # a solution: [0, 1, 2, 3]
-        if solve() is SAT:
-           print(values(x))
     :example:
         # with a second parameter, only a subset of the constraints of a posting operation is removed
         x = VarArray(size=4, dom=range(4))
@@ -3968,8 +3942,6 @@ def unpost(i=None, j=None):
         unpost(0, 1)  # only the constraint x[0] == 3 is removed
 
         # a solution: [0, 1, 2, 3]
-        if solve() is SAT:
-           print(values(x))
     """
     if i is None:
         i = -1
@@ -4008,8 +3980,8 @@ def value(model_variable, *, sol=-1):
 
 def values(model_variables, *model_variables_complement, sol=-1):
     """
-    Returns a list similar to the specified structure with the values assigned to the involved variables
-    when the solution in the specified order (sol) has been found
+    Returns the values assigned to the specified variables in a found solution, with the same structure as the variables.
+    By default, the last found solution is considered; another one can be selected with the parameter sol.
 
     :param model_variables: the first term (typically, a list) containing variables on which the function applies
     :param model_variables_complement: the other terms (if any) on which the function applies

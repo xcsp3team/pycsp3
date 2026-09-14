@@ -640,3 +640,15 @@ polyominoes = [
         "low4": [(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (3, 1)]
     }
 ]
+""" The polyominoes of size 1 to 6: polyominoes[k] maps the name of each polyomino of size k to its cells, given as relative coordinates
+
+:example:
+    from pycsp3.tools.utilities import polyominoes
+    from pycsp3.classes.auxiliary.enums import TypeSquareSymmetry
+
+    # the cells of the pentomino L
+    print(polyominoes[5]["L"])
+
+    # the orientations of the pentomino Y, obtained by rotations and reflections
+    print(len(TypeSquareSymmetry.symmetric_patterns(polyominoes[5]["Y"])))  # 8
+"""

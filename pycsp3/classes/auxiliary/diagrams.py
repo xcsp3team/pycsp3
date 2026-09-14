@@ -101,7 +101,8 @@ class Automaton(Diagram):
 
     def __init__(self, *, start, transitions, final):
         """
-        Builds an automaton from the specified arguments: a starting state, a set of transitions and a set of final states
+        Builds an automaton from the specified arguments: a starting state, a set of transitions and a set of final states.
+        An automaton recognizes words (sequences of values); it is typically used with the constraint Regular, as in x in automaton.
 
         :param start: the starting state
         :param transitions: a set of transitions
@@ -119,6 +120,24 @@ class Automaton(Diagram):
 
     # TODO: it seems that there is a problem with this function: to be fixed!
     def deterministic_copy(self, scp):
+        """
+        Returns a deterministic automaton recognizing the same words as this one, built by means of the subset construction.
+        The labels of transitions are computed with respect to the domain of the specified variables (all having the same domain).
+
+        :param scp: the variables the automaton is applied to
+        :return: a deterministic automaton equivalent to this one
+        :example:
+            x = VarArray(size=3, dom=range(2))
+
+            # the automaton is non-deterministic: from the state a, the value 0 leads to a or b
+            a = Automaton(start="a", final="c", transitions=[("a", 0, "a"), ("a", 0, "b"), ("b", 1, "c")])
+            d = a.deterministic_copy(x)
+            print(d)  # Automaton(start=a, transitions={(a,0,a_b),(a_b,0,a_b),(a_b,1,c)}, final=[c])
+
+            satisfy(
+               x in d
+            )
+        """
         nfa = {}
         symbols = set()
         for state1, symbol, state2 in self.flat_transitions(flatten(scp)):
@@ -148,6 +167,19 @@ class Automaton(Diagram):
         return Automaton(start=self.start, final=final, transitions=transitions)
 
     def contains(self, t):  # currently can only be used if deterministic automaton
+        """
+        Returns True if the specified word (sequence of values) is recognized by this automaton, which must be deterministic.
+        False is returned if the word is read but does not end in a final state, and None if it cannot be read (no transition for some value).
+
+        :param t: a sequence of values
+        :return: True, False or None
+        :example:
+            a = Automaton(start="a", final="b", transitions=[("a", 0, "a"), ("a", 1, "b"), ("b", 1, "b")])
+
+            print(a.contains([0, 1, 1]))  # True
+            print(a.contains([0, 0]))  # False
+            print(a.contains([1, 0]))  # None
+        """
         if self.access is None:
             # TODO control that the automaton is deterministic
             self.access = {(qb, w): qa for (qb, w, qa) in self.transitions}
@@ -170,6 +202,23 @@ class Automaton(Diagram):
                 self.__rec_tuples_for(self.access[(state, v)], i + 1, domains, t, T)
 
     def to_table(self, domains):
+        """
+        Returns the tuples (words) recognized by this automaton, which must be deterministic, when values are taken from the specified domains.
+        This allows us to replace a constraint Regular by a table constraint.
+
+        :param domains: the domains of the successive values of words (e.g., a list of ranges)
+        :return: the list of tuples recognized by the automaton
+        :example:
+            a = Automaton(start="a", final="b", transitions=[("a", 0, "a"), ("a", 1, "b"), ("b", 1, "b")])
+            print(a.to_table([range(2)] * 3))  # [(0, 0, 1), (0, 1, 1), (1, 1, 1)]
+
+            x = VarArray(size=3, dom=range(2))
+
+            satisfy(
+               # a table constraint equivalent to x in a
+               x in a.to_table([x[i].dom for i in range(3)])
+            )
+        """
         if self.access is None:
             # TODO control that the automaton is deterministic
             self.access = {(qb, w): qa for (qb, w, qa) in self.transitions}
@@ -185,7 +234,8 @@ class Automaton(Diagram):
 class MDD(Diagram):
     def __init__(self, transitions):
         """
-        Builds an MDD from the specified set of transitions
+        Builds an MDD from the specified set of transitions.
+        An MDD (multi-valued decision diagram) compactly represents a set of tuples, each path from the root to the terminal node being a tuple; it is used as in x in mdd.
 
         :param transitions: a set of transitions
         :example:

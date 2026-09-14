@@ -273,8 +273,8 @@ def _build_condition(operator, v):
 
 def lt(v):
     """
-    Builds an object Condition whose operator is lt (strictly less than)
-    and the (right operand) is the specified argument
+    Builds an object Condition whose operator is lt (strictly less than), and whose right operand is the specified argument.
+    A condition can be given to some components (e.g., wcondition=lt(10) for Knapsack), or used in hybrid tables (e.g., lt(col(0))).
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
@@ -288,8 +288,8 @@ def lt(v):
 
 def le(v):
     """
-    Builds an object Condition whose operator is le (less than or equal)
-    and the (right operand) is the specified argument
+    Builds an object Condition whose operator is le (less than or equal), and whose right operand is the specified argument.
+    A condition can be given to some components (e.g., wcondition=le(10) for Knapsack), or used in hybrid tables (e.g., le(col(0))).
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
@@ -303,8 +303,8 @@ def le(v):
 
 def ge(v):
     """
-    Builds an object Condition whose operator is ge (greater than or equal)
-    and the (right operand) is the specified argument
+    Builds an object Condition whose operator is ge (greater than or equal), and whose right operand is the specified argument.
+    A condition can be given to some components (e.g., wcondition=ge(10) for Knapsack), or used in hybrid tables (e.g., ge(col(0))).
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
@@ -318,8 +318,8 @@ def ge(v):
 
 def gt(v):
     """
-    Builds an object Condition whose operator is gt (strictly greater than)
-    and the (right operand) is the specified argument
+    Builds an object Condition whose operator is gt (strictly greater than), and whose right operand is the specified argument.
+    A condition can be given to some components (e.g., wcondition=gt(10) for Knapsack), or used in hybrid tables (e.g., gt(col(0))).
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
@@ -333,8 +333,8 @@ def gt(v):
 
 def eq(v):
     """
-    Builds an object Condition whose operator is eq (equal to)
-    and the (right operand) is the specified argument
+    Builds an object Condition whose operator is eq (equal to), and whose right operand is the specified argument.
+    A condition can be given to some components (e.g., wcondition=eq(10) for Knapsack), or used in hybrid tables (e.g., eq(col(0))).
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
@@ -348,8 +348,8 @@ def eq(v):
 
 def ne(v):
     """
-    Builds an object Condition whose operator is 'ne' (not equal to)
-    and the (right operand) is the specified argument
+    Builds an object Condition whose operator is ne (not equal to), and whose right operand is the specified argument.
+    A condition can be given to some components (e.g., wcondition=ne(10) for Knapsack), or used in hybrid tables (e.g., ne(col(0))).
 
     :param v: either an integer or the root node of an expression
     :return: an object Condition
@@ -384,8 +384,8 @@ def inside(*v):
 
 def complement(*v):
     """
-    Builds an object Condition whose operator is 'not in'
-    and the (right operand) is defined from the specified argument(s)
+    Builds an object Condition whose operator is 'not in', and whose right operand is defined from the specified argument(s).
+    The term subject to the condition must take a value outside the specified values, as in wcondition=complement(range(3)) for Knapsack.
 
     :param v: a range, a set, a tuple or a list of integers
     :return: an object Condition
