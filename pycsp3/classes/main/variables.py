@@ -16,6 +16,8 @@ class Domain:
 
         def _add_value(arg):
             assert isinstance(arg, (tuple, list, set, frozenset, range, int, str)), "Bad type for the domain " + str(arg) + " of type " + str(type(arg))
+            if isinstance(arg, bool):  # a Boolean is an integer in Python, but must be written as 0 or 1 in XCSP3
+                arg = int(arg)
             if isinstance(arg, (tuple, list, set, frozenset)):
                 arg = list(arg)
                 if len(arg) > 2 and all(isinstance(arg, int) for arg in args) and all(arg[i] + 1 == arg[i + 1] for i in range(len(arg) - 1)):
