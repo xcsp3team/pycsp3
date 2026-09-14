@@ -238,10 +238,7 @@ class Variable:
         self.values = []  # values of the successive found solutions
 
     def name(self, name):
-        def _valid_identifier(s):
-            return isinstance(s, str) and all(c.isalnum() or c == '_' for c in s)  # other characters to be allowed?
-
-        error_if(not _valid_identifier(name), "The identifier " + str(name) + " is not valid")
+        error_if(not functions._valid_identifier(name), "The identifier " + str(name) + " is not valid")
         error_if(name in Variable.name2obj, "The identifier " + str(name) + " is used twice. This is not possible")
         Variable.name2obj[name] = self
 

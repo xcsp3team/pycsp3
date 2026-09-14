@@ -117,8 +117,8 @@ def subvariant(name=None):
 ''' Declaring stand-alone variables and arrays '''
 
 
-def _valid_identifier(s):
-    return isinstance(s, str) and all(c.isalnum() or c == '_' for c in s)  # other characters to be allowed?
+def _valid_identifier(s):  # as in XCSP3: a letter followed by letters, digits and underscores
+    return isinstance(s, str) and len(s) > 0 and s[0].isascii() and s[0].isalpha() and all(c.isascii() and (c.isalnum() or c == '_') for c in s)
 
 
 def Var(term=None, *others, dom=None, id=None):
