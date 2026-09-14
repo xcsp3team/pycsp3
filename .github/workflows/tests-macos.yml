@@ -1,0 +1,12 @@
+name: MacOS tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  tests:
+    uses: ./.github/workflows/reusable-tests.yml
+    with:
+      os: macos-latest

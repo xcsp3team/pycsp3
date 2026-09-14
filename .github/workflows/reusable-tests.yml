@@ -1,12 +1,15 @@
-name: Unit tests
+name: Tests
 
 on:
-  push:
-  pull_request:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -29,5 +32,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: files-of-the-tests
+          name: files-of-the-tests-${{ inputs.os }}
           path: pycsp3/tests/output/
