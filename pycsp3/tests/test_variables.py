@@ -302,7 +302,8 @@ def test_vararray_invalid_dom_border(run, declaration):
 @pytest.mark.parametrize("size, dom, n_variables", [
     ("[2, [1, 3]]", "range(2)", 4),
     ("[3, [1, 0, 2]]", "range(2)", 3),
-    pytest.param("[2, [1, 3]]", "lambda i, j: range(j + 2)", 4, marks=bug("#74: with a lambda for dom, the lengths of the last dimension are ignored")),
+    ("[2, [1, 3]]", "lambda i, j: range(j + 2)", 4),
+    ("[3, [2, 0, 1]]", "lambda i, j: {i, j + 5}", 3),
 ])
 def test_vararray_variable_length(run, size, dom, n_variables):
     r = run(f"""

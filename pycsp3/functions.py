@@ -240,7 +240,7 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     size = [size] if isinstance(size, int) else size
     if len(size) > 1 and isinstance(size[-1], (tuple, list)):  # it means that the last dimension is of variable length
         if isinstance(dom, type(lambda: 0)):
-            return VarArray(size=size[:-1] + [max(size[-1])], dom=dom)
+            return VarArray(size=size[:-1] + [max(size[-1])], dom=lambda *ids: dom(*ids) if ids[-1] < size[-1][ids[-2]] else None)
         return VarArray(size=size[:-1] + [max(size[-1])], dom=lambda *ids: dom if ids[-1] < size[-1][ids[-2]] else None)
 
     checkType(size, [int])
