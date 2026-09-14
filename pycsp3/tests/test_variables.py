@@ -168,8 +168,9 @@ def test_vararray_size(run, size, cells):
     "[3, 'a']",
     not_explicit("range(0)"),
     not_explicit("range(1, 3)"),
-    pytest.param("-1", marks=bug("#70: a negative size gives no variable, silently")),
-    pytest.param("[2, -1]", marks=bug("#70: a negative size gives no variable, silently")),
+    "-1",
+    "[2, -1]",
+    "[-2, 3]",
 ])
 def test_vararray_invalid_size(run, size):
     assert_fails(run(f"x = VarArray(size={size}, dom=range(2))"))

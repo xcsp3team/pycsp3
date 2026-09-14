@@ -242,8 +242,8 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
             return VarArray(size=size[:-1] + [max(size[-1])], dom=dom)
         return VarArray(size=size[:-1] + [max(size[-1])], dom=lambda *ids: dom if ids[-1] < size[-1][ids[-2]] else None)
 
-    error_if(any(dimension == 0 for dimension in size), "No dimension must not be equal to 0")
     checkType(size, [int])
+    error_if(any(dimension <= 0 for dimension in size), "Each dimension of an array must be strictly positive (size=" + str(size) + ")")
 
     # checkType(dom, (range, Domain, [int, range, str, Domain, type(None)], type(lambda: 0)))  # TODO a problem with large sets
     ext_name = extract_declaration_for("VarArray")
