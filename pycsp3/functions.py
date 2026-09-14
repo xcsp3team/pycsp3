@@ -321,6 +321,7 @@ def VarArrayMultiple(*, size, fields):
            print(values(points[0]))
     """
     assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
+    error_if(len(fields) == 0, "At least one field must be given to VarArrayMultiple()")
     size = [size] if isinstance(size, int) else size
     checkType(size, [int])
 

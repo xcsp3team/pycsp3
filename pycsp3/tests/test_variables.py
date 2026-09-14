@@ -441,7 +441,7 @@ def test_vararraymultiple_python_objects(run):
     "p = VarArrayMultiple(fields={'a': range(3)})",
     "p = VarArrayMultiple(size=2)",
     "p = VarArrayMultiple(2, {'a': range(3)})",
-    pytest.param("p = VarArrayMultiple(size=2, fields={})", marks=bug("#72: without fields, nothing is declared, silently")),
+    "p = VarArrayMultiple(size=2, fields={})",
 ])
 def test_vararraymultiple_invalid(run, declaration):
     assert_fails(run(declaration))
