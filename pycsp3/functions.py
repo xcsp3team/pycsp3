@@ -155,7 +155,7 @@ def Var(term=None, *others, dom=None, id=None):
         return auxiliary().new_var(math.inf)  # TODO printing a warning?
     if term is None and dom is None:
         dom = Domain(math.inf)
-    assert not (term and dom)
+    error_if(term is not None and dom is not None, "The domain of a variable must be given either by terms or by the parameter dom, but not both")
     if term is not None:
         dom = flatten(term, others)
     if not isinstance(dom, Domain):
