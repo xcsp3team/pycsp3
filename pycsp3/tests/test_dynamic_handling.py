@@ -3,7 +3,7 @@ Tests of the section Dynamic Handling of the API (https://pycsp.org/documentatio
 clear(), posted(), objective(), unpost(), value(), values(), solve(), status(), solution(), n_solutions(), bound(), ...
 """
 
-from harness import assert_solutions, brute_force, bug
+from harness import assert_solutions, brute_force
 
 
 def test_solve_model_without_constraints(run, solver):
@@ -24,7 +24,6 @@ def test_solve_model_whose_constraints_are_true(run, solver):
     assert_solutions(r, {(0,), (1,), (2,)})
 
 
-@bug("#84: the error of the solver is not displayed: solve() only gives UNKNOWN")
 def test_solver_error_is_reported(run):
     r = run("""
         x = VarArray(size=3, dom={"red", "green", "blue"})  # symbolic variables, not handled by cosoco

@@ -248,7 +248,9 @@ class SolverProcess:
             if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
                 return TypeStatus.UNSAT
             if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
-                print("  Actually, the instance was not solved")
+                print("  Actually, the instance was not solved; the last lines displayed by " + self.name + " are:")
+                for line in [line for line in stdout.splitlines() if line.strip() not in ("", "c")][-10:]:  # so that an error of the solver is visible
+                    print("    " + line)
                 return TypeStatus.UNKNOWN
 
             if "limit=no" in string_options or ("limit_sols" in dict_simplified_options and int(dict_simplified_options["limit_sols"]) > 1):
@@ -295,10 +297,11 @@ class SolverProcess:
             return TypeStatus.OPTIMUM if optimal else TypeStatus.SAT
 
         def execute(cmd):
+            # the error output is recorded with the standard output (otherwise, it would be lost, the pipe being never read)
             if not is_windows():
-                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
+                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, preexec_fn=os.setsid)
             else:
-                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
             stopped = False
             handler = signal.getsignal(signal.SIGINT)
 
