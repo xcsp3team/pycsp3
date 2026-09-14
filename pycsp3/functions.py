@@ -8,7 +8,7 @@ from pycsp3.classes.auxiliary.enums import TypeOrderedOperator, TypeConditionOpe
 from pycsp3.classes.auxiliary.diagrams import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
-    AnnEntities, CtrEntities, ObjEntities)
+    AnnEntities, CtrEntities, ObjEntities, VarEntities)
 from pycsp3.classes.main.annotations import (
     AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
     AnnotationRestarts)
@@ -843,11 +843,20 @@ def _01_to_node(arg):
     return arg
 
 
+def _false_constraint():
+    # a constraint that cannot be satisfied (posted for the constant 0): the first variable of the model takes no value of its domain
+    x = next((v for e in VarEntities.items for v in ([e.variable] if isinstance(e, EVar) else e.flatVars)), None)
+    error_if(x is None, "A constraint is trivially false (constant 0), but the model has no variable")
+    warning("A constraint is trivially false (constant 0): the model is unsatisfiable")
+    return _Extension(scope=[x], table=list(x.dom.all_values()), positive=False)
+
+
 def _group(*_args, block=False):
     def _remove_dummy_constraints(tab):
         if any(isinstance(v, ConstraintDummyConstant) for v in tab):
-            warning_if(any(isinstance(v, ConstraintDummyConstant) and v.val != 1 for v in tab), "It seems that there is a bad expression in the model")
-            return [v for v in tab if not isinstance(v, ConstraintDummyConstant)]
+            warning_if(any(isinstance(v, ConstraintDummyConstant) and v.val not in (0, 1) for v in tab), "It seems that there is a bad expression in the model")
+            return [_false_constraint() if isinstance(v, ConstraintDummyConstant) and v.val == 0 else v for v in tab if
+                    not isinstance(v, ConstraintDummyConstant) or v.val == 0]
         return tab
 
     def _block_reorder(_entities):
@@ -927,8 +936,10 @@ def satisfy(*args, no_comment_tags_extraction=False):
         if arg is None:
             continue
         if isinstance(arg, ConstraintDummyConstant):
-            warning_if(arg.val != 1, "It seems that there is a bad expression in the model " + str(arg))
-            continue
+            if arg.val != 0:  # the constant 1 (true) is discarded
+                warning_if(arg.val != 1, "It seems that there is a bad expression in the model " + str(arg))
+                continue
+            arg = _false_constraint()
         if isinstance(arg, (tuple, set, frozenset, types.GeneratorType)):
             arg = list(arg)
         if isinstance(arg, list) and any(v is None for v in arg):

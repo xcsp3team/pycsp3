@@ -12,7 +12,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, d
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
 NOT_EXPLICIT = "#83: the error is not explicit (assert without message, or exception raised by Python inside PyCSP3)"
 NO_DOMAIN_VAR = "#81: without domain, Var() builds an auxiliary variable aux_gb[i], or a variable, with an infinite domain"
-FALSE_DISCARDED = "#79: the constant 0 (false) is discarded with a warning, instead of making the model unsatisfiable"
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 
 
@@ -572,14 +571,15 @@ def test_variable_name_in_constraints(run, solver):
     pytest.param("x.among(-1, 0)", {0}, id="among(-1, 0)"),
     pytest.param("x.among(1.5, 2)", {2}, id="among(1.5, 2)"),
     pytest.param("x.among(range(5))", {0, 1, 2, 3, 4}, id="among(range(5))"),
-    pytest.param("x.among(7, 8)", set(), id="among(7, 8)", marks=bug(FALSE_DISCARDED)),
-    pytest.param("x.among()", set(), id="among()", marks=bug(FALSE_DISCARDED)),
+    pytest.param("x.among(7, 8)", set(), id="among(7, 8)"),
+    pytest.param("x.among()", set(), id="among()"),
+    pytest.param("[x.among(7, 8), x.among(1, 3)]", set(), id="[among(7, 8), among(1, 3)]"),
     pytest.param("x.not_among(1, 3)", {0, 2, 4}, id="not_among(1, 3)"),
     pytest.param("x.not_among([1, 3])", {0, 2, 4}, id="not_among([1, 3])"),
     pytest.param("x.not_among(range(1, 4))", {0, 4}, id="not_among(range(1, 4))"),
     pytest.param("x.not_among(2)", {0, 1, 3, 4}, id="not_among(2)"),
     pytest.param("x.not_among(2, 9)", {0, 1, 3, 4}, id="not_among(2, 9)"),
-    pytest.param("x.not_among(range(5))", set(), id="not_among(range(5))", marks=bug(FALSE_DISCARDED)),
+    pytest.param("x.not_among(range(5))", set(), id="not_among(range(5))"),
     pytest.param("x.not_among(7, 8)", {0, 1, 2, 3, 4}, id="not_among(7, 8)"),
     pytest.param("x.not_among()", {0, 1, 2, 3, 4}, id="not_among()"),
 ])
