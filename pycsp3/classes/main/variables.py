@@ -8,6 +8,17 @@ from pycsp3.tools.utilities import error_if, flatten
 
 
 class Domain:
+    """
+    The domain of a variable, i.e., the set of values it can take, as given by the field dom of the variable.
+    A domain can be iterated over and indexed; it is displayed in a compact form (e.g., 0..4 for range(5)).
+
+    :example:
+        x = Var(dom={1, 3, 5, 6, 7})
+
+        print(x.dom)  # 1 3 5 6 7
+        print([v for v in x.dom if v % 2 == 1])  # [1, 3, 5, 7]
+    """
+
     def __init__(self, *args):
         def set_type(d_type):
             if self.type is None:
@@ -81,14 +92,38 @@ class Domain:
         return False
 
     def smallest_value(self):
+        """
+        Returns the smallest value of the domain.
+
+        :return: the smallest value of the domain
+        :example:
+            x = Var(dom=range(1, 10))
+            print(x.dom.smallest_value())  # 1
+        """
         v = self.original_values[0]
         return v.start if isinstance(v, range) else v  # self.original_values[0].smallest()
 
     def greatest_value(self):
+        """
+        Returns the greatest value of the domain.
+
+        :return: the greatest value of the domain
+        :example:
+            x = Var(dom=range(1, 10))
+            print(x.dom.greatest_value())  # 9
+        """
         v = self.original_values[-1]
         return v.stop - 1 if isinstance(v, range) else v  # self.original_values[-1].greatest()
 
     def all_values(self):
+        """
+        Returns all values of the domain, in increasing order.
+
+        :return: a range if the domain is an interval, a list of values otherwise
+        :example:
+            x = Var(dom={0, 2, 4})
+            print(x.dom.all_values())  # [0, 2, 4]
+        """
         if self.values is None:  # must then be computed
             if len(self.original_values) == 1 and isinstance(self.original_values[0], range):
                 self.values = self.original_values[0]
@@ -147,6 +182,22 @@ class Domain:
 
 
 class Variable:
+    """
+    A variable of the model, as built by Var() or VarArray() (more precisely, an object of the subclass VariableInteger or VariableSymbolic).
+    Its identifier is given by the field id and its domain by the field dom; after solving, the field value gives
+    its value in the last found solution, and the field values its values in the successive found solutions.
+
+    :example:
+        x = VarArray(size=3, dom=range(3))
+
+        satisfy(
+           AllDifferent(x)
+        )
+
+        print(x[0].id, x[0].dom)  # x[0] 0..2
+        if solve() is SAT:
+            print(x[0].value)  # 0
+    """
     name2obj = dict()  # Dictionary (keys: names of variables - values: variable objects)
 
     arrays = []  # the arrays of variables, as introduced by the user in the model
@@ -236,6 +287,21 @@ class Variable:
         self.values = []  # values of the successive found solutions
 
     def name(self, name):
+        """
+        Records the specified identifier as an additional name of the variable, so that the variable can be retrieved with var().
+        The identifier must be composed of letters, digits and underscores, and must not be already used.
+
+        :param name: the additional name of the variable
+        :example:
+            x = VarArray(size=3, dom=range(5))
+
+            # the variable x[0] can now be retrieved by the name 'first'
+            x[0].name("first")
+
+            satisfy(
+               var("first") > x[1]
+            )
+        """
         def _valid_identifier(s):
             return isinstance(s, str) and all(c.isalnum() or c == '_' for c in s)  # other characters to be allowed?
 
@@ -263,10 +329,36 @@ class Variable:
 
 
 class VariableInteger(Variable):
+    """
+    An integer variable, as built by Var() or VarArray() with a domain of integers.
+    Besides the fields of Variable, it offers the methods among() and not_among().
+
+    :example:
+        x = Var(range(10))
+        print(type(x).__name__)  # VariableInteger
+    """
+
     def __init__(self, name, dom):
         super().__init__(name, dom)
 
     def among(self, *values):
+        """
+        Returns an expression stating that the variable takes one of the specified values, as belong() does.
+        The values that are not in the domain of the variable are ignored; if no value remains, the constant 0 (false) is returned.
+
+        :param values: the values, given as a sequence of integers, a list or a range
+        :return: an expression, or the constant 0 if no specified value is in the domain
+        :example:
+            x = VarArray(size=3, dom=range(5))
+
+            satisfy(
+               # x[0] is either 1 or 2
+               x[0].among(1, 2),
+
+               # x[1] is between 1 and 3 if x[2] is 0
+               If(x[2] == 0, Then=x[1].among(range(1, 4)))
+            )
+        """
         values = flatten(values)
         if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
             values = list(values[0])
@@ -277,6 +369,23 @@ class VariableInteger(Variable):
         return functions.belong(self, values)
 
     def not_among(self, *values):
+        """
+        Returns an expression stating that the variable takes none of the specified values, as not_belong() does.
+        The values that are not in the domain of the variable are ignored; if no value remains, the constant 1 (true) is returned.
+
+        :param values: the values, given as a sequence of integers, a list or a range
+        :return: an expression, or the constant 1 if no specified value is in the domain
+        :example:
+            x = VarArray(size=3, dom=range(5))
+
+            satisfy(
+               # x[0] is neither 1 nor 2
+               x[0].not_among(1, 2),
+
+               # x[1] is not between 1 and 3 if x[2] is 0
+               If(x[2] == 0, Then=x[1].not_among(range(1, 4)))
+            )
+        """
         values = flatten(values)
         if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
             values = list(values[0])

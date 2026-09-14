@@ -133,6 +133,24 @@ class Logger:
 
 
 class Instantiation:
+    """
+    A solution found by a solver, as returned by solution().
+    Its fields are root (the solution as an XML element), variables (the list of variables), values (their values, in the same order)
+    and pretty_solution (the solution as an XML string, which is also what str() gives).
+
+    :example:
+        x = VarArray(size=3, dom=range(3))
+
+        satisfy(
+           AllDifferent(x)
+        )
+
+        if solve() is SAT:
+            s = solution()
+            print(s.variables)  # [x[0], x[1], x[2]]
+            print(s.values)  # [0, 1, 2]
+    """
+
     def __init__(self, root, variables, values, pretty_solution):
         self.root = root
         self.variables = variables
@@ -147,6 +165,21 @@ class Instantiation:
 
 
 class SolverProcess:
+    """
+    A solver run as an external process (e.g., ACE or Choco), as returned by solver().
+    After an execution, the fields status, last_solution, n_solutions, bound and core give information about it.
+
+    :example:
+        x = VarArray(size=3, dom=range(3))
+
+        satisfy(
+           AllDifferent(x)
+        )
+
+        solve()
+        # the solver run by solve(), and the status of its last execution
+        print(solver().name, solver().status)  # ACE SAT
+    """
     automatic_call = False
 
     def __init__(self, *, name, command, cp):
@@ -175,11 +208,45 @@ class SolverProcess:
         return self.last_log
 
     def setting(self, value):
+        """
+        Sets the specific options of the solver, written as on its command line, to be used by the next executions.
+        The specified options replace those previously set.
+
+        :param value: a string with the options (e.g., "-valh=Last" for ACE), or None
+        :example:
+            x = VarArray(size=3, dom=range(3))
+
+            satisfy(
+               AllDifferent(x)
+            )
+
+            ace = solver(ACE)
+            # the value heuristic of ACE selects the last value of the domains
+            ace.setting("-valh=Last")
+            print(ace.solve(compile()))  # SAT
+        """
         if value is not None:
             value = str(value).strip()
             self.options = " " + value if self.options != "" else value
 
     def log_suffix(self, _extend_filename_logger):
+        """
+        Sets the suffix of the name of the log files recording the output of the solver (by default, the number of the execution).
+        Log files are named solver_MAC_PID_SUFFIX.log, where MAC is the hardware address of the machine and PID the identifier of the process.
+
+        :param _extend_filename_logger: the suffix of the name of log files
+        :example:
+            x = VarArray(size=3, dom=range(3))
+
+            satisfy(
+               AllDifferent(x)
+            )
+
+            ace = solver(ACE)
+            ace.log_suffix("first")
+            ace.solve(compile())
+            print(ace.get_logger())  # the name of the log file ends with _first.log
+        """
         self.log_filename_suffix = _extend_filename_logger
 
     def parse_general_options(self, string_options, dict_options, dict_simplified_options):  # specific options via args are managed automatically
@@ -367,6 +434,31 @@ class SolverProcess:
 
     def solve(self, instance, string_options="", dict_options=None, dict_simplified_options=None, compiler=False, *, verbose=0, automatic=False,
               extraction=False):
+        """
+        Runs the solver on the specified instance, as returned by compile(), and returns the status of this operation.
+        This is what the function solve() does after compiling the model; calling this method allows us to compile the model,
+        choose the solver and run it in separate statements.
+
+        :param instance: a pair composed of the filename of an XCSP3 instance and a Boolean (True for a COP), as returned by compile()
+        :param string_options: general options, as for the option -solver, e.g., "limit=10sols" or "[ace,limit=10sols,v]"
+        :param dict_options: for internal use
+        :param dict_simplified_options: for internal use
+        :param compiler: for internal use (True when the solver is run by means of the option -solve)
+        :param verbose: verbosity level from -1 to 2
+        :param automatic: for internal use
+        :param extraction: True if an unsatisfiable core of constraints must be sought
+        :return: the status of the solving operation
+        :example:
+            x = VarArray(size=3, dom=range(3))
+
+            satisfy(
+               AllDifferent(x)
+            )
+
+            instance = compile()
+            ace = solver(ACE)
+            print(ace.solve(instance))  # SAT
+        """
         self.status = self._solve(instance, string_options, dict_options, dict_simplified_options, compiler, verbose=verbose, automatic=automatic,
                                   extraction=extraction)
         return self.status

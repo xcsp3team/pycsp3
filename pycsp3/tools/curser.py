@@ -173,6 +173,16 @@ def cursing():
 
 
 class OpOverrider:
+    """
+    The object redefining the operators of Python (==, <, +, &, etc.) so that they build expressions on variables, as returned by protect().
+    Calling protect() disables the redefined operators, and calling execute() on the returned object reactivates them.
+
+    :example:
+        x = VarArray(size=3, dom=range(3))
+
+        # in protected mode, the two variables are simply compared (as Python objects)
+        print(protect().execute(x[0] == x[1]))  # False
+    """
     activated = False
 
     and_or_store = None
@@ -270,6 +280,21 @@ class OpOverrider:
 
     @staticmethod
     def execute(arg):
+        """
+        Reactivates the redefined operators (==, <, &, etc.), and returns the specified argument.
+        This method is meant to be chained with protect(), as in protect().execute(expr): expr is then evaluated while the operators are disabled.
+
+        :param arg: the value of the code executed in protected mode
+        :return: the specified argument
+        :example:
+            x = VarArray(size=3, dom=range(3))
+
+            # the operator == builds an expression, displayed as eq(x[0],x[1])
+            print(x[0] == x[1])
+
+            # in protected mode, the two variables are simply compared (as Python objects)
+            print(protect().execute(x[0] == x[1]))  # False
+        """
         OpOverrider.enable()
         return arg
 
@@ -824,6 +849,27 @@ class OpOverrider:
 
 
 class ListInt(list):
+    """
+    A list (possibly multi-dimensional) of integers, as returned by cp_array() or obtained when loading data.
+    Contrary to a Python list, it can be indexed by a variable, which gives a constraint Element, as in t[i] == v,
+    and it can be multiplied by a list of variables, which gives a weighted sum, as in t * x.
+
+    :example:
+        # when data are loaded (e.g., with -data), the lists of integers are automatically of type ListInt
+        t = cp_array([3, 5, 7])
+        print(type(t).__name__)  # ListInt
+
+        i = Var(range(3))
+        v = Var(range(10))
+
+        satisfy(
+           # v is the value of t at index i
+           t[i] == v
+        )
+
+        # a solution: i=0, v=3
+    """
+
     def __init__(self, integers):
         super().__init__(integers)  # self.extend(integers)
 
@@ -878,6 +924,27 @@ class ListInt(list):
 
 
 class ListVar(list):
+    """
+    A list (possibly multi-dimensional) of variables, as returned by VarArray() or cp_array().
+    Contrary to a Python list, it can be indexed by a variable, which gives a constraint Element, as in x[i] == 2,
+    and it can be compared to another list, which gives a lexicographic constraint, as in x <= y.
+    After solving, its field values gives the values of its variables in the last found solution.
+    For a two-dimensional list, the methods at_border(), around(), beside() and cross() give the neighbourhood of a cell.
+
+    :example:
+        x = VarArray(size=3, dom=range(3))
+        y = VarArray(size=3, dom=range(3))
+        i = Var(range(3))
+
+        satisfy(
+           # the value of x at index i is 2
+           x[i] == 2,
+
+           # x is lexicographically less than or equal to y
+           x <= y
+        )
+    """
+
     # def __new__(self, variables):  # if we subclass tuple instead of list (while removing __init__)
     #     return super().__new__(ListVar, variables)
 
@@ -932,24 +999,84 @@ class ListVar(list):
         return self._post_lex(other, functions.LexDecreasing, True)
 
     def at_border(self, i, j):
+        """
+        Returns True if the cell at the specified indexes is on the border of this two-dimensional list, i.e., in its first or last row or column.
+
+        :param i: the index of a row
+        :param j: the index of a column
+        :return: True if the cell (i, j) is on the border
+        :example:
+            x = VarArray(size=[4, 4], dom=range(2))
+
+            satisfy(
+               # the cells on the border are set to 0
+               x[i][j] == 0 for i in range(4) for j in range(4) if x.at_border(i, j)
+            )
+        """
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
         return i in {0, n - 1} or j in {0, m - 1}
 
     def around(self, i, j):
+        """
+        Returns the variables of the (up to 8) cells adjacent to the cell at the specified indexes, orthogonally or diagonally.
+
+        :param i: the index of a row
+        :param j: the index of a column
+        :return: a list with the variables of the cells around the cell (i, j)
+        :example:
+            x = VarArray(size=[3, 3], dom=range(2))
+            print(x.around(0, 0))  # [x[0][1], x[1][0], x[1][1]]
+
+            satisfy(
+               # the central cell has exactly 3 neighbours set to 1 (as in the game of life)
+               Sum(x.around(1, 1)) == 3
+            )
+        """
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
         return ListVar([self[i + k][j + p] for k in [-1, 0, 1] for p in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + p < m and (k, p) != (0, 0)])
 
     def beside(self, i, j):
+        """
+        Returns the variables of the (up to 4) cells orthogonally adjacent to the cell at the specified indexes: left, right, up and down.
+
+        :param i: the index of a row
+        :param j: the index of a column
+        :return: a list with the variables of the cells beside the cell (i, j)
+        :example:
+            x = VarArray(size=[3, 3], dom=range(2))
+            print(x.beside(0, 0))  # [x[0][1], x[1][0]]
+
+            satisfy(
+               # exactly one of the 4 neighbours of the central cell is set to 1
+               ExactlyOne(x.beside(1, 1), value=1)
+            )
+        """
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
         return ListVar([self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
 
     def cross(self, i, j):
+        """
+        Returns the variable of the cell at the specified indexes, followed by the variables of the (up to 4) cells orthogonally adjacent to it:
+        left, right, up and down.
+
+        :param i: the index of a row
+        :param j: the index of a column
+        :return: a list with the variables of the cell (i, j) and of the cells beside it
+        :example:
+            x = VarArray(size=[3, 3], dom=range(2))
+            print(x.cross(0, 0))  # [x[0][0], x[0][1], x[1][0]]
+
+            satisfy(
+               # the central cell and its 4 neighbours are not all set to 1
+               Sum(x.cross(1, 1)) <= 4
+            )
+        """
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
         n, m = len(self), len(self[i])
         assert 0 <= i < n and 0 <= j < m
