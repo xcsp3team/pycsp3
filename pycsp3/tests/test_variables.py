@@ -610,6 +610,10 @@ def test_among_invalid(run, code):
     ("Domain({1, 3, 5, 6, 7})", "1 3 5 6 7", 1, 7, [1, 3, 5, 6, 7]),
     ("Domain(3, range(5, 8), 1)", "1 3 5..7", 1, 7, [1, 3, 5, 6, 7]),
     ("Domain(range(5), 3)", "0..4", 0, 4, [0, 1, 2, 3, 4]),
+    ("Domain(range(5), 3, 4)", "0..4", 0, 4, [0, 1, 2, 3, 4]),
+    ("Domain(3, range(3, 6))", "3..5", 3, 5, [3, 4, 5]),
+    ("Domain(range(5), range(3, 8), range(10, 13))", "0..7 10..12", 0, 12, [0, 1, 2, 3, 4, 5, 6, 7, 10, 11, 12]),
+    ("Domain(range(5), 5)", "0..4 5", 0, 5, [0, 1, 2, 3, 4, 5]),
     ("Domain(-2, -5)", "-5 -2", -5, -2, [-5, -2]),
     ("Domain(7)", "7", 7, 7, [7]),
     ("Domain([4, 5, 6])", "4 5 6", 4, 6, [4, 5, 6]),
@@ -647,7 +651,6 @@ def test_domain_of_variable(run):
     assert "equality False True" in r.lines
 
 
-@bug("#82: overlapping intervals make Domain() fail (bare AssertionError), while an integer already in an interval is accepted")
 def test_domain_overlapping_intervals(run):
     r = run("""
         from pycsp3.classes.main.variables import Domain

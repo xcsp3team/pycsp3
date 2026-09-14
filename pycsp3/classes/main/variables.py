@@ -48,19 +48,20 @@ class Domain:
             _add_value(args)
             assert self.type, "You have defined a variable with an empty domain; fix this"
             self.original_values.sort(key=lambda v: v.start if isinstance(v, range) else v)
-            discard = [False] * len(self.original_values)
-            for i in range(len(self.original_values) - 1):
-                v, w = self.original_values[i], self.original_values[i + 1]
-                if isinstance(v, range) and isinstance(w, range):
-                    assert v.stop <= w.start
-                elif isinstance(v, range):
-                    if v.stop > w:
-                        discard[i + 1] = True
-                elif isinstance(w, range):
-                    assert v < w.start
+            values = []  # the sorted values are merged: overlapping intervals, a value in an interval, a value given several times
+            for v in self.original_values:
+                last = values[-1] if len(values) > 0 else None
+                if isinstance(last, range) and isinstance(v, range) and v.start < last.stop:
+                    values[-1] = range(last.start, max(last.stop, v.stop))
+                elif isinstance(last, range) and not isinstance(v, range) and v < last.stop:
+                    continue  # v is in the interval
+                elif isinstance(v, range) and last is not None and not isinstance(last, range) and last >= v.start:
+                    values[-1] = v  # last is in the interval (being sorted, last == v.start)
+                elif last is not None and not isinstance(last, range) and last == v:
+                    continue  # v is given several times
                 else:
-                    discard[i + 1] = v == w  # a value given several times is kept only once (values being sorted, v <= w)
-            self.original_values = [v for i, v in enumerate(self.original_values) if not discard[i]]
+                    values.append(v)
+            self.original_values = values
             self.values = None  # will be defined later if necessary as either a range, or a list of int or a list of str
 
     def remove(self, v):
