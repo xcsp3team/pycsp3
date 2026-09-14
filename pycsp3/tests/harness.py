@@ -121,11 +121,12 @@ class Run:
 def _execute(code, directory, args, files, timeout):
     (directory / "model.py").write_text(code)
     for name, content in (files or {}).items():
+        (directory / name).parent.mkdir(parents=True, exist_ok=True)  # the name may contain subdirectories, as in "instances/a.txt"
         (directory / name).write_text(content)
     env = dict(os.environ)
     env["PYTHONPATH"] = str(ROOT) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     try:
-        process = subprocess.run([sys.executable, "model.py", *args], cwd=directory, env=env,
+        process = subprocess.run([sys.executable, "model.py", *args], cwd=directory, env=env, stdin=subprocess.DEVNULL,  # input() never waits
                                  capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         pytest.fail("the model has not been run in " + str(timeout) + " seconds (directory: " + str(directory) + ")")
