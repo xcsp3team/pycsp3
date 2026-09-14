@@ -11,7 +11,7 @@ from pycsp3.classes.main.constraints import ConstraintIntension
 from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.slider import _identify_slide
-from pycsp3.tools.utilities import warning, table_to_string, flatten
+from pycsp3.tools.utilities import warning, table_to_string
 
 SIZE_LIMIT_FOR_USING_AS = 12  # when building domains of variables of arrays of variables (and using the attribute 'as')
 
@@ -90,7 +90,7 @@ def _variables():
                 if x is not None:
                     dom2vars[str(x.dom)].append(x)
             dom2vars = DefaultListOrderedDict(sorted(dom2vars.items(), key=lambda item: [y.indexes for y in item[1]]))
-            if len(dom2vars) == 1 and all(x is not None for x in flatten(va.variables, keep_none=True)):  # the holes (None) must not be declared
+            if len(dom2vars) == 1:  # and not va.is_containing_hole():  # TODO do we keep the second part of the condition?
                 elt.append(_simple_var(va, str(va.flatVars[0].dom), dom2var))
             else:
                 elt.append(_complex_var(va, dom2vars))

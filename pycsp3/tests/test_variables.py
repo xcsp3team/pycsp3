@@ -241,7 +241,11 @@ def test_vararray_domain_depending_on_indexes_solutions(run, solver, dom):
     assert_solutions(r, brute_force([range(1), range(2), range(2), range(3)], lambda *t: sum(t) == 2))
 
 
-def test_vararray_hole_solutions(run, solver):
+COSOCO_HOLES = "xcsp3team/cosoco#72: cosoco gives individually the values of the variables involved in no constraint, and pycsp3 fails when recording those of holes"
+
+
+def test_vararray_hole_solutions(run, solver, request):
+    bug_for(request, "COSOCO", COSOCO_HOLES)
     r = run("""
         x = VarArray(size=3, dom=lambda i: None if i == 1 else range(2))
         satisfy(x[0] != x[2])
@@ -250,13 +254,9 @@ def test_vararray_hole_solutions(run, solver):
     assert_solutions(r, {(0, 1), (1, 0)})
 
 
-@pytest.mark.parametrize("declaration", [
-    "x = VarArray(size=3, dom=lambda i: None if i == 1 else range(2))",
-    "from pycsp3.classes.main.variables import Domain\nx = VarArray([Domain(range(2)), None, Domain(range(2))])",
-    "x = VarArray(size=3, dom=lambda i: None if i == 1 else range(i + 1))",
-])
-def test_vararray_hole_not_declared(run, declaration):
-    assert sorted(declared_variables(run(declaration))) == ["x[0]", "x[2]"]
+def test_vararray_hole_not_declared(run):
+    # when the variables of the array have different domains (otherwise, the array is declared with a single domain, holes included)
+    assert sorted(declared_variables(run("x = VarArray(size=3, dom=lambda i: None if i == 1 else range(i + 1))"))) == ["x[0]", "x[2]"]
 
 
 def test_vararray_positional_domains(run):
@@ -317,7 +317,8 @@ def test_vararray_variable_length(run, size, dom, n_variables):
     assert "variables " + str(n_variables) in r.lines, r.report()
 
 
-def test_vararray_variable_length_solutions(run, solver):
+def test_vararray_variable_length_solutions(run, solver, request):
+    bug_for(request, "COSOCO", COSOCO_HOLES)
     r = run("""
         x = VarArray(size=[2, [1, 3]], dom=range(2))
         satisfy(Sum(x[1]) == x[0][0] + 1)
