@@ -251,6 +251,8 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     if isinstance(ext_name, list):
         array_name = ext_name
         error_if(id, "The parameter 'id' is not compatible with the specification of a list of individual names")
+        error_if(len(size) != 1 or size[0] != len(ext_name),
+                 "The size " + str(size) + " must be the number of individual names " + str(ext_name) + " (a one-dimensional array being expected)")
         error_if(any(not _valid_identifier(v) for v in ext_name), "Some identifiers in " + str(ext_name) + " are not valid")
         error_if(any(v in Variable.name2obj for v in ext_name), "Some identifiers in " + str(ext_name) + " are used twice.")
     else:

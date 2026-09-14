@@ -343,7 +343,8 @@ def test_vararray_identifier(run, declaration, names):
     "x, y = VarArray(size=[2, 2], dom=range(2))",
     "x, y = VarArray(size=2, dom=range(2), id='w')",
     pytest.param("x, x = VarArray(size=2, dom=range(2))", marks=bug("#76: the same name given twice in a declaration of individual names is accepted")),
-    pytest.param("x, y = VarArray(size=3, dom=range(2))", marks=bug("#75: the size 3 does not match the 2 names, silently")),
+    "x, y = VarArray(size=3, dom=range(2))",
+    "x, y, z = VarArray(size=2, dom=range(2))",
 ])
 def test_vararray_invalid_identifier(run, declaration):
     assert_fails(run(declaration))
