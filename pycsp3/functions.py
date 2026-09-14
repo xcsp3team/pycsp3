@@ -255,6 +255,7 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
                  "The size " + str(size) + " must be the number of individual names " + str(ext_name) + " (a one-dimensional array being expected)")
         error_if(any(not _valid_identifier(v) for v in ext_name), "Some identifiers in " + str(ext_name) + " are not valid")
         error_if(any(v in Variable.name2obj for v in ext_name), "Some identifiers in " + str(ext_name) + " are used twice.")
+        error_if(len(set(ext_name)) != len(ext_name), "Some identifiers in " + str(ext_name) + " are given several times.")
     else:
         array_name = id if id else ext_name  # the specified name, if present, has priority
         error_if(not _valid_identifier(array_name), "The variable identifier " + str(array_name) + " is not valid")

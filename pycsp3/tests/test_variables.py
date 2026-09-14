@@ -342,7 +342,8 @@ def test_vararray_identifier(run, declaration, names):
     "x = VarArray(size=2, dom=range(2))\ny = Var(dom=range(2), id='x')",
     "x, y = VarArray(size=[2, 2], dom=range(2))",
     "x, y = VarArray(size=2, dom=range(2), id='w')",
-    pytest.param("x, x = VarArray(size=2, dom=range(2))", marks=bug("#76: the same name given twice in a declaration of individual names is accepted")),
+    "x, x = VarArray(size=2, dom=range(2))",
+    "x, y, x = VarArray(size=3, dom=range(2))",
     "x, y = VarArray(size=3, dom=range(2))",
     "x, y, z = VarArray(size=2, dom=range(2))",
 ])
