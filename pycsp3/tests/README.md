@@ -84,8 +84,35 @@ def test_size_zero(run):  # no solver: the model is only executed (and compiled 
 - `brute_force(domains, predicate)` gives the expected solutions; `assert_solutions` and `assert_optimum`
   compare them with the ones found.
 
+- `assert_fails(r)` checks that the model fails (error of PyCSP3 or uncaught exception), and
+  `declared_variables(r)` gives the variables declared in the XCSP3 file with the values of their domains.
+
 Models must be tiny (a few variables, small domains): the time of a test is mainly the time to launch
 the solvers.
+
+## Known bugs
+
+A test failing because of a bug of PyCSP3 or of a solver expresses the correct behaviour, and is marked
+as an expected failure, with the reason (displayed in the summary of pytest, as `xfail`). Each bug is
+reported in a GitHub issue (labels `bug` and `unit-tests`), whose number starts the reason:
+
+```python
+@bug("#78: var() returns a Python list for an array, which cannot be indexed by a variable")
+def test_var_function_array_indexed_by_variable(run, solver): ...
+
+pytest.param("x = Var(dom=True)", [1], marks=bug("#67: the domain True gives an invalid XCSP3 file"))
+
+def test_vararray_symbolic_solutions(run, solver, request):
+    bug_for(request, "COSOCO", "xcsp3team/cosoco#71: cosoco does not handle symbolic variables")  # only for this solver
+```
+
+The marks are strict: once a bug is fixed, the test fails (`XPASS`), so as to remove its mark. A fix is
+thus a commit that corrects the bug, removes the mark, and closes the issue with `Fixes #N` in its message.
+
+## Continuous integration
+
+The workflow `.github/workflows/tests.yml` runs the tests on each push and pull request; when a test fails,
+the files of the tests are kept as an artifact of the run (`files-of-the-tests`).
 
 ## Organization
 

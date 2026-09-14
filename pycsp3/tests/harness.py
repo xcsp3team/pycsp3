@@ -87,6 +87,11 @@ class Run:
         return [t for s in self.raw_solutions for t in product(*([v] if v is not None else dom for v, dom in zip(s, self.domains)))]
 
     @property
+    def lines(self):
+        """The lines displayed by the model (and by PyCSP3), stripped."""
+        return [line.strip() for line in self.stdout.splitlines()]
+
+    @property
     def error(self):
         """The message displayed by the function error() of PyCSP3, or None."""
         m = re.search(r"ERROR:\s*(.*)", self.stdout)
@@ -161,6 +166,92 @@ def run_model(code, directory, *, solver=None, args=(), files=None, header=True,
         r.optimization = _execute(code + SOLVING.format(solver=solver, marker=MARKER, enumerating=False),
                                   directory / "optimization", args, files, timeout)
     return r
+
+
+def bug(reason):
+    """
+    Marks a test, or a parameter of a test, failing because of a bug of PyCSP3 (or of a solver).
+    The mark is strict: once the bug is fixed, the test fails, so as to remove the mark.
+    """
+    return pytest.mark.xfail(strict=True, reason="bug: " + reason)
+
+
+def bug_for(request, solvers, reason):
+    """
+    Marks the running test as failing because of a bug, when it is run with one of the specified solvers
+    (a name, or a tuple of names). To be called at the start of a test using the fixture solver.
+    """
+    solvers = (solvers,) if isinstance(solvers, str) else solvers
+    if request.node.callspec.params.get("solver") in solvers:
+        request.applymarker(bug(reason))
+
+
+def assert_fails(r):
+    """
+    Checks that running the model has failed with an explicit message, that is to say:
+     - an error reported by PyCSP3 (function error()),
+     - or an exception raised by an assert or a raise statement with a message,
+     - or an exception raised by Python on a line of the model itself (e.g., a missing argument), or an IndexError/KeyError.
+    An assert without message, or an exception raised by Python inside PyCSP3 (e.g., TypeError: '<' not supported
+    between instances of 'str' and 'int'), is not explicit.
+    """
+    assert not r.ok, "the model should fail\n" + r.report()
+    if r.error is not None:
+        return
+    assert r.exception is not None, "the model fails without any message\n" + r.report()
+    lines = [line for line in r.stderr.splitlines() if line.strip()]
+    frames = [i for i, line in enumerate(lines) if line.lstrip().startswith("File ")]
+    location = lines[frames[-1]] if frames else ""
+    statement = lines[frames[-1] + 1].strip() if frames and frames[-1] + 1 < len(lines) else ""
+    message = lines[-1].partition(":")[2].strip()
+    explicit = ((statement.startswith("assert") and r.exception == "AssertionError" or statement.startswith("raise")) and message) \
+               or '/model.py", line' in location or r.exception in ("IndexError", "KeyError")
+    assert explicit, "the error is not explicit: " + lines[-1] + " (raised by: " + statement + ")\n" + r.report()
+
+
+def _domain_values(text):
+    values = []
+    for token in text.split():
+        bounds = re.fullmatch(r"(-?\d+)\.\.(-?\d+)", token)
+        if bounds and int(bounds.group(2)) - int(bounds.group(1)) < 100000:
+            values.extend(range(int(bounds.group(1)), int(bounds.group(2)) + 1))
+        elif re.fullmatch(r"-?\d+", token):
+            values.append(int(token))
+        else:
+            values.append(token)  # a symbol, or an interval too large for being expanded
+    return values
+
+
+def _expand(token, name, sizes):
+    brackets = re.findall(r"\[([^\]]*)\]", token)
+    indexes = [range(sizes[k]) if b == "" else range(int(b.split("..")[0]), int(b.split("..")[1]) + 1) if ".." in b else [int(b)]
+               for k, b in enumerate(brackets)]
+    return [name + "".join("[" + str(i) + "]" for i in t) for t in product(*indexes)]
+
+
+def declared_variables(r):
+    """
+    Returns the variables declared in the generated XCSP3 file, as a dict mapping the id of each variable
+    (e.g., x or y[1][2]) to the list of the values of its domain.
+    """
+    assert r.ok, r.report()
+    assert r.xml is not None, "no XCSP3 file has been generated\n" + r.report()
+    variables = {}
+    for element in r.xml.find("variables"):
+        name = element.get("id")
+        if element.tag == "var":
+            variables[name] = _domain_values(element.text)
+            continue
+        sizes = [int(s) for s in re.findall(r"\[(\d+)\]", element.get("size"))]
+        cells = [name + "".join("[" + str(i) + "]" for i in t) for t in product(*(range(s) for s in sizes))]
+        domains = element.findall("domain")
+        if len(domains) == 0:
+            variables.update((cell, _domain_values(element.text)) for cell in cells)
+        for domain in domains:
+            tokens = domain.get("for").split()
+            names = [c for c in cells if c not in variables] if tokens == ["others"] else [v for token in tokens for v in _expand(token, name, sizes)]
+            variables.update((v, _domain_values(domain.text)) for v in names)
+    return variables
 
 
 def brute_force(domains, predicate):

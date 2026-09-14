@@ -1,3 +1,4 @@
+import hashlib
 import re
 import shutil
 from itertools import count
@@ -26,7 +27,9 @@ def solver(request):
 @pytest.fixture
 def run(request):
     """Runs a model in a new process, in its own subdirectory run<i> of the directory of the test (see harness.run_model)."""
-    name = re.sub(r"[^\w\-\[\].,=+]", "_", request.node.name)[:150]
+    name = re.sub(r"[^\w\-\[\].,=+]", "_", request.node.name)
+    if name != request.node.name or len(name) > 120:  # a digest keeps distinct the names differing only by replaced characters (e.g., < and >)
+        name = name[:120] + "-" + hashlib.sha1(request.node.name.encode()).hexdigest()[:8]
     directory = OUTPUT / request.node.path.stem / name
     shutil.rmtree(directory, ignore_errors=True)
     directory.mkdir(parents=True)
