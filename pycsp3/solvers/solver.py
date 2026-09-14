@@ -329,14 +329,8 @@ class SolverProcess:
             print("Did you forget to indicate the variant of the model?")
             return None
 
-        if model is not None and not cop and Compilation.without_constraints:
-            # the solvers do not handle instances without constraints (ace fails, choco and cosoco give no values): every combination of values being
-            # a solution, the solver is not run, and a solution where any value can be assigned to each variable (*) is recorded
-            print("\n The instance has no constraint, so the solver is not run: any value can be assigned to each variable (* in the solution).")
-            names = [e.id if isinstance(e, EVar) else e.id + "[]" * len(e.size) for e in VarEntities.items]
-            n_values = sum(1 if isinstance(e, EVar) else len(flatten(e.variables, keep_none=True)) for e in VarEntities.items)
-            return extract_result_and_solution("<instantiation type='solution'> <list> " + " ".join(names) + " </list> <values> " + " ".join(["*"] * n_values)
-                                               + " </values> </instantiation>\ns SATISFIABLE\nd FOUND SOLUTIONS 1\n")
+        # the solvers do not handle instances without constraints (ace fails, choco and cosoco give no values)
+        assert model is None or not Compilation.without_constraints, "The instance has no constraint, so the solver is not run"
 
         if automatic is False and SolverProcess.automatic_call:
             print("\n You attempt to solve the instance with both -solve and the function solve().")

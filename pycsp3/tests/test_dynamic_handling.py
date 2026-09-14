@@ -3,25 +3,20 @@ Tests of the section Dynamic Handling of the API (https://pycsp.org/documentatio
 clear(), posted(), objective(), unpost(), value(), values(), solve(), status(), solution(), n_solutions(), bound(), ...
 """
 
-from harness import assert_solutions, brute_force
+import pytest
+
+from harness import assert_fails
 
 
-def test_solve_model_without_constraints(run, solver):
-    r = run("""
-        x = VarArray(size=2, dom=range(2))
-        y = Var(dom={3, 5})
-        z = VarArray(size=3, dom=lambda i: None if i == 1 else range(i + 1))
-    """, solver=solver)
-    assert r.n_solutions == 1 and r.raw_solutions == [(None, None, None, None, None)], r.report()
-    assert_solutions(r, brute_force([range(2), range(2), [3, 5], range(1), range(3)], lambda *t: True))
-
-
-def test_solve_model_whose_constraints_are_true(run, solver):
-    r = run("""
-        x = Var(dom=range(3))
-        satisfy(x.among(range(3)))
-    """, solver=solver)
-    assert_solutions(r, {(0,), (1,), (2,)})
+@pytest.mark.parametrize("model", [
+    pytest.param("x = VarArray(size=2, dom=range(2))\ny = Var(dom={3, 5})", id="no constraint"),
+    pytest.param("x = Var(dom=range(3))\nsatisfy(x.among(range(3)))", id="constraints simplified into true"),
+    pytest.param("x = VarArray(size=2, dom=range(2))\nminimize(Sum(x))", id="objective without constraint"),
+])
+def test_solve_model_without_constraints(run, solver, model):
+    r = run(model, solver=solver)
+    assert_fails(r)
+    assert "The instance has no constraint, so the solver is not run" in r.stderr, r.report()
 
 
 def test_solver_error_is_reported(run):
