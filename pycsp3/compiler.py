@@ -33,6 +33,7 @@ class Compilation:
     stopwatch = None
     stopwatch2 = None
     done = False
+    without_constraints = False  # True if the last compiled instance has no constraint
     pathname = ""
     filename = ""
 
@@ -366,6 +367,7 @@ def _compile(disabling_opoverrider=False, verbose=1):
 
     else:
         root = build_document()
+        Compilation.without_constraints = root is not None and root.find("constraints") is None
         if root is not None:
             pretty_text = etree.tostring(root, pretty_print=True, xml_declaration=False, encoding='UTF-8').decode("UTF-8")
             if options.display:

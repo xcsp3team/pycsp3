@@ -6,10 +6,22 @@ clear(), posted(), objective(), unpost(), value(), values(), solve(), status(), 
 from harness import assert_solutions, brute_force, bug
 
 
-@bug("#80: solving a model without constraints fails: pycsp3 raises AttributeError with choco and cosoco, and ace gives UNKNOWN")
 def test_solve_model_without_constraints(run, solver):
-    r = run("x = VarArray(size=2, dom=range(2))", solver=solver)
-    assert_solutions(r, brute_force([range(2)] * 2, lambda a, b: True))
+    r = run("""
+        x = VarArray(size=2, dom=range(2))
+        y = Var(dom={3, 5})
+        z = VarArray(size=3, dom=lambda i: None if i == 1 else range(i + 1))
+    """, solver=solver)
+    assert r.n_solutions == 1 and r.raw_solutions == [(None, None, None, None, None)], r.report()
+    assert_solutions(r, brute_force([range(2), range(2), [3, 5], range(1), range(3)], lambda *t: True))
+
+
+def test_solve_model_whose_constraints_are_true(run, solver):
+    r = run("""
+        x = Var(dom=range(3))
+        satisfy(x.among(range(3)))
+    """, solver=solver)
+    assert_solutions(r, {(0,), (1,), (2,)})
 
 
 @bug("#84: the error of the solver is not displayed: solve() only gives UNKNOWN")
