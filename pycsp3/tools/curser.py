@@ -931,28 +931,28 @@ class ListVar(list):
     def __gt__(self, other):
         return self._post_lex(other, functions.LexDecreasing, True)
 
-    def at_border(self, i, j):
+    def _dimensions(self, i, j):  # returns the numbers of rows and columns, after having checked that (i, j) is a cell
         assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
-        n, m = len(self), len(self[i])
-        assert 0 <= i < n and 0 <= j < m
+        n = len(self)
+        error_if(not isinstance(i, int) or not 0 <= i < n, "The index " + str(i) + " is not the index of a row of the array (of size " + str(n) + ")")
+        m = len(list.__getitem__(self, i))  # the list is directly accessed (no auto-adjustment of indexing)
+        error_if(not isinstance(j, int) or not 0 <= j < m, "The index " + str(j) + " is not the index of a column of the array (of size " + str(m) + ")")
+        return n, m
+
+    def at_border(self, i, j):
+        n, m = self._dimensions(i, j)
         return i in {0, n - 1} or j in {0, m - 1}
 
     def around(self, i, j):
-        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
-        n, m = len(self), len(self[i])
-        assert 0 <= i < n and 0 <= j < m
+        n, m = self._dimensions(i, j)
         return ListVar([self[i + k][j + p] for k in [-1, 0, 1] for p in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + p < m and (k, p) != (0, 0)])
 
     def beside(self, i, j):
-        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
-        n, m = len(self), len(self[i])
-        assert 0 <= i < n and 0 <= j < m
+        n, m = self._dimensions(i, j)
         return ListVar([self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
 
     def cross(self, i, j):
-        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
-        n, m = len(self), len(self[i])
-        assert 0 <= i < n and 0 <= j < m
+        n, m = self._dimensions(i, j)
         return ListVar([self[i][j]] + [self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
 
     def __str__(self):

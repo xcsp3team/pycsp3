@@ -7,15 +7,10 @@ from itertools import product
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, declared_variables
+from harness import assert_fails, assert_solutions, brute_force, bug_for, declared_variables
 
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
-NOT_EXPLICIT = "#83: the error is not explicit (assert without message, or exception raised by Python inside PyCSP3)"
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
-
-
-def not_explicit(*values):
-    return pytest.param(*values, marks=bug(NOT_EXPLICIT))
 
 
 # ------------------------------------------------------------------------------------------------------------ Var()
@@ -58,7 +53,7 @@ def test_var_large_domain(run):
 
 
 @pytest.mark.parametrize("declaration", [
-    not_explicit("x = Var(0, 'red')"),
+    "x = Var(0, 'red')",
     "x = Var(dom=set())",
     "x = Var(dom=[])",
     "x = Var(dom={})",
@@ -68,7 +63,7 @@ def test_var_large_domain(run):
     "x = Var(dom=[1.5, 2.5])",
     "x = Var(dom=[None])",
     "x = Var(dom=object())",
-    not_explicit("x = Var(dom=lambda i: range(4))"),
+    "x = Var(dom=lambda i: range(4))",
     "x = Var(dom=lambda: None)",
     "x = Var(1, 2, dom=range(3))",
     "x = Var(0, 1, dom=range(3))",
@@ -160,13 +155,13 @@ def test_vararray_size(run, size, cells):
 @pytest.mark.parametrize("size", [
     "0",
     "[2, 0]",
-    not_explicit("2.0"),
+    "2.0",
     "'3'",
-    not_explicit("None"),
-    not_explicit("[]"),
+    "None",
+    "[]",
     "[3, 'a']",
-    not_explicit("range(0)"),
-    not_explicit("range(1, 3)"),
+    "range(0)",
+    "range(1, 3)",
     "-1",
     "[2, -1]",
     "[-2, 3]",
@@ -196,16 +191,16 @@ def test_vararray_domain(run, dom, values):
 
 @pytest.mark.parametrize("declaration", [
     "x = VarArray(size=2, dom=0)",
-    not_explicit("x = VarArray(size=2, dom=set())"),
-    not_explicit("x = VarArray(size=2, dom=[])"),
+    "x = VarArray(size=2, dom=set())",
+    "x = VarArray(size=2, dom=[])",
     "x = VarArray(size=2, dom={'a', 1})",
     "x = VarArray(size=2, dom=2.5)",
     "x = VarArray(size=2, dom=object())",
-    not_explicit("x = VarArray(size=2, dom=lambda i: set())"),
-    not_explicit("x = VarArray(size=2, dom=lambda i: [])"),
+    "x = VarArray(size=2, dom=lambda i: set())",
+    "x = VarArray(size=2, dom=lambda i: [])",
     "x = VarArray(size=2, dom=lambda: range(2))",
     "x = VarArray(size=2, dom=lambda i, j: range(2))",
-    not_explicit("x = VarArray(size=[2, 3], dom=lambda i: range(2))"),
+    "x = VarArray(size=[2, 3], dom=lambda i: range(2))",
     "x = VarArray(size=[2, 3], dom=lambda i, j, k: range(2))",
     "x = VarArray(size=3)",
     "x = VarArray(size=3, dom=None)",
@@ -264,10 +259,10 @@ def test_vararray_positional_domains(run):
 
 
 @pytest.mark.parametrize("declaration", [
-    not_explicit("x = VarArray([range(2)])"),
-    not_explicit("x = VarArray((Domain(range(2)),))"),
-    not_explicit("x = VarArray([Domain(range(2))], size=1)"),
-    not_explicit("x = VarArray([Domain(range(2))], dom=range(2))"),
+    "x = VarArray([range(2)])",
+    "x = VarArray((Domain(range(2)),))",
+    "x = VarArray([Domain(range(2))], size=1)",
+    "x = VarArray([Domain(range(2))], dom=range(2))",
     "x = VarArray([])",
 ])
 def test_vararray_invalid_positional_domains(run, declaration):
@@ -291,9 +286,9 @@ def test_vararray_dom_border_with_lambda(run):
 
 
 @pytest.mark.parametrize("declaration", [
-    not_explicit("x = VarArray(size=3, dom=range(5), dom_border={0})"),
+    "x = VarArray(size=3, dom=range(5), dom_border={0})",
     "x = VarArray(size=[3, 3], dom_border={0})",
-    not_explicit("x = VarArray(size=[2, 2, 2], dom=range(2), dom_border={0})"),
+    "x = VarArray(size=[2, 2, 2], dom=range(2), dom_border={0})",
 ])
 def test_vararray_invalid_dom_border(run, declaration):
     assert_fails(run(declaration))
@@ -430,13 +425,13 @@ def test_vararraymultiple_python_objects(run):
 
 
 @pytest.mark.parametrize("declaration", [
-    not_explicit("p = VarArrayMultiple(size=2, fields={'a': range(3), 1: range(2)})"),
-    not_explicit("p = VarArrayMultiple(size=2, fields=['a', 'b'])"),
-    not_explicit("p = VarArrayMultiple(size=2, fields=None)"),
+    "p = VarArrayMultiple(size=2, fields={'a': range(3), 1: range(2)})",
+    "p = VarArrayMultiple(size=2, fields=['a', 'b'])",
+    "p = VarArrayMultiple(size=2, fields=None)",
     "p = VarArrayMultiple(size=0, fields={'a': range(3)})",
     "p = VarArrayMultiple(size='2', fields={'a': range(3)})",
     "p = VarArrayMultiple(size=2, fields={'a b': range(3)})",
-    not_explicit("p = VarArrayMultiple(size=2, fields={'a': set()})"),
+    "p = VarArrayMultiple(size=2, fields={'a': set()})",
     "p = VarArrayMultiple(fields={'a': range(3)})",
     "p = VarArrayMultiple(size=2)",
     "p = VarArrayMultiple(2, {'a': range(3)})",
@@ -470,7 +465,7 @@ def test_var_function(run):
     assert "found True True True [y[0], y[1]]" in r.lines, r.report()
 
 
-@pytest.mark.parametrize("call", ["var('u')", "var('X')", "var('')", not_explicit("var(12)"), not_explicit("var(None)"), not_explicit("var(x)"), "var('x[5]')"])
+@pytest.mark.parametrize("call", ["var('u')", "var('X')", "var('')", "var(12)", "var(None)", "var(x)", "var('x[5]')"])
 def test_var_function_invalid(run, call):
     assert_fails(run("x = VarArray(size=2, dom=range(3))\n" + call))
 
@@ -596,7 +591,7 @@ def test_among(run, solver, expression, allowed):
 
 @pytest.mark.parametrize("code", [
     "x = Var(dom={'a', 'b'})\nsatisfy(x.among('a'))",
-    not_explicit("x = Var(dom=range(5))\ny = Var(dom=range(5))\nsatisfy(x.among(y))"),
+    "x = Var(dom=range(5))\ny = Var(dom=range(5))\nsatisfy(x.among(y))",
 ])
 def test_among_invalid(run, code):
     assert_fails(run(code))
@@ -695,11 +690,11 @@ def test_listvar_neighbourhood_of_small_arrays(run):
 
 
 @pytest.mark.parametrize("call", [
-    not_explicit("x.at_border(3, 0)"),
-    not_explicit("x.at_border(0, -1)"),
-    not_explicit("x.around(-1, 0)"),
-    not_explicit("x.beside(0, 3)"),
-    not_explicit("x.cross(3, 3)"),
+    "x.at_border(3, 0)",
+    "x.at_border(0, -1)",
+    "x.around(-1, 0)",
+    "x.beside(0, 3)",
+    "x.cross(3, 3)",
     "y.at_border(0, 0)",
     "y.around(0, 0)",
     "y.beside(0, 0)",

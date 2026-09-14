@@ -160,13 +160,13 @@ def Var(term=None, *others, dom=None, id=None):
             dom = list(dom)
         if is_2d_list(dom, int):
             dom = list(set(flatten(dom)))
-        if isinstance(dom, (tuple, list)) and len(dom) > 1 and isinstance(dom[0], int):
+        if isinstance(dom, (tuple, list)) and len(dom) > 1 and all(isinstance(v, int) for v in dom):
             dom = sorted(dom)
             if dom[-1] - dom[0] + 1 == len(dom):
                 dom = range(dom[0], dom[-1] + 1)
         if hasattr(dom, '__call__'):  # if it is a function
             from inspect import signature
-            assert len(signature(dom).parameters) == 0
+            error_if(len(signature(dom).parameters) != 0, "The function given for the domain of a stand-alone variable must have no parameter")
             dom = dom.__call__()
         dom = Domain(dom)
     error_if(dom.type not in {TypeVar.INTEGER, TypeVar.SYMBOLIC},
@@ -217,19 +217,24 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
 
     error_if(doms is None and dom is None, "The domain of the variables of an array must be given (parameter dom)")
     if doms is not None:
-        assert isinstance(doms, list) and size is None and dom is None and dom_border is None and comment is None
-        assert all(isinstance(dom, Domain) or dom is None for dom in doms)
+        error_if(not isinstance(doms, list), "The domains given as first parameter of VarArray() must be in a list (of objects Domain or None)")
+        error_if(size is not None or dom is not None or dom_border is not None or comment is not None,
+                 "When the domains are given as first parameter of VarArray(), the parameters size, dom, dom_border and comment cannot be used")
+        error_if(any(not isinstance(d, Domain) and d is not None for d in doms), "The domains given as first parameter of VarArray() must be objects Domain or None")
         return VarArray(size=len(doms), dom=lambda i: doms[i])
 
+    msg = "A range given for the size of an array must start at 0 and be non-empty"
     if isinstance(size, range):
-        assert size.start == 0 and len(size) > 0
+        error_if(size.start != 0 or len(size) == 0, msg)
         size = size.stop
     if isinstance(size, (tuple, list)) and any(isinstance(s, range) for s in size):
-        assert all(s.start == 0 and len(s) > 0 for s in size if isinstance(s, range))
+        error_if(any(s.start != 0 or len(s) == 0 for s in size if isinstance(s, range)), msg)
         size = [s.stop if isinstance(s, range) else s for s in size]
+    error_if(not isinstance(size, (int, tuple, list)) or isinstance(size, (tuple, list)) and len(size) == 0,
+             "The size of an array must be an integer or a non-empty list of integers (size=" + str(size) + ")")
 
     if dom_border is not None:
-        assert len(size) == 2 and dom is not None
+        error_if(isinstance(size, int) or len(size) != 2, "The parameter dom_border can only be used with a two-dimensional array")
         if isinstance(dom, type(lambda: 0)):
             return VarArray(size=size, dom=lambda i, j: dom_border if i in (0, size[0] - 1) or j in (0, size[1] - 1) else dom(i, j))
         return VarArray(size=size, dom=lambda i, j: dom_border if i in (0, size[0] - 1) or j in (0, size[1] - 1) else dom)
@@ -264,12 +269,13 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     if isinstance(dom, int):  # TODO: should we print a warning?
         dom = range(dom)
     if isinstance(dom, type(lambda: 0)):
-        r = len(inspect.signature(dom).parameters)  # r=1 means that it must be a lambda *args:
-        assert len(size) == r or r == 1, "The number of arguments of the lambda must be equal to the number of dimensions of the multidimensional array "
+        parameters = inspect.signature(dom).parameters.values()
+        error_if(not any(p.kind == p.VAR_POSITIONAL for p in parameters) and len(parameters) != len(size),  # a function with *args is always accepted
+                 "The number of parameters of the function given for dom must be the number of dimensions of the array (" + str(len(size)) + ")")
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
     if isinstance(dom, (tuple, list, set, frozenset)):
         vals = set(flatten(dom))
-        assert len(vals) > 0
+        error_if(len(vals) == 0, "The domain of the variables of an array must not be empty")
         if all(isinstance(v, int) for v in vals):
             min_value, max_value = min(vals), max(vals)
             dom = range(min_value, max_value + 1) if 3 < len(vals) == (max_value - min_value + 1) else Domain(vals)
@@ -320,7 +326,8 @@ def VarArrayMultiple(*, size, fields):
         if solve() is SAT:
            print(values(points[0]))
     """
-    assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
+    error_if(not isinstance(fields, dict) or any(not isinstance(k, str) for k in fields),
+             "The fields of VarArrayMultiple() must be given by a dictionary mapping names (strings) to domains")
     error_if(len(fields) == 0, "At least one field must be given to VarArrayMultiple()")
     size = [size] if isinstance(size, int) else size
     checkType(size, [int])
@@ -373,7 +380,7 @@ def var(name):
         if solve() is SAT:
            print(value(x))
     """
-    assert isinstance(name, str)
+    error_if(not isinstance(name, str), "The name given to var() must be a string, and not " + str(name))
     error_if(name not in Variable.name2obj,
              "the variable, or variable array, specified when calling the function 'var()' with the name " + name + " has not been declared")
     return Variable.name2obj[name]

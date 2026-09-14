@@ -177,6 +177,7 @@ class Variable:
             domain = domain(*indexes)
             if domain is None:
                 return None
+            error_if(isinstance(domain, (tuple, list, set, frozenset, range)) and len(domain) == 0, "The domain of the variable " + name + " is empty")
             if not isinstance(domain, range):
                 domain = flatten(domain)
                 if isinstance(domain, list) and all(domain[i] + 1 == domain[i + 1] for i in range(len(domain) - 1)):
@@ -268,6 +269,7 @@ class VariableInteger(Variable):
 
     def among(self, *values):
         values = flatten(values)
+        error_if(any(isinstance(v, Variable) for v in values), "The values given to among() must be integers (belong() can be used with variables)")
         if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
             values = list(values[0])
         values = [v for v in values if v in self.dom]
@@ -278,6 +280,7 @@ class VariableInteger(Variable):
 
     def not_among(self, *values):
         values = flatten(values)
+        error_if(any(isinstance(v, Variable) for v in values), "The values given to not_among() must be integers (not_belong() can be used with variables)")
         if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
             values = list(values[0])
         values = [v for v in values if v in self.dom]
