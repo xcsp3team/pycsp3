@@ -76,12 +76,20 @@ def test_var_large_domain(run):
     "x = Var(dom=lambda: None)",
     "x = Var(1, 2, dom=range(3))",
     "x = Var(0, 1, dom=range(3))",
-    "x = Var()",
-    "x = Var(dom=None)",
-    "x = Var(id='foo')",
 ])
 def test_var_invalid_domain(run, declaration):
     assert_fails(run(declaration))
+
+
+@pytest.mark.parametrize("declaration, variables", [
+    ("x = Var()", {"aux_gb[0]": ["-infinity..+infinity"]}),
+    ("x = Var(dom=None)", {"aux_gb[0]": ["-infinity..+infinity"]}),
+    ("x = Var()\ny = Var()", {"aux_gb[0]": ["-infinity..+infinity"], "aux_gb[1]": ["-infinity..+infinity"]}),
+    ("x = Var(id='z')", {"z": ["-infinity..+infinity"]}),
+])
+def test_var_without_domain(run, declaration, variables):
+    # without domain, a variable with an infinite domain is built (useful for constraints Element): an auxiliary variable when no id is given
+    assert declared_variables(run(declaration)) == variables
 
 
 @pytest.mark.parametrize("declaration, name", [
