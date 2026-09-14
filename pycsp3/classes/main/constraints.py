@@ -1490,7 +1490,7 @@ class _Auxiliary:
             return None
         if not options.force_element_index:
             error("Problem with an indexing expression ; maybe -force_element_index is appropriate, "
-                  "or maybe replace array[index] by array[aux] after having posed ((aux := Var()) == index)")
+                  "or maybe replace array[index] by array[aux] after having posed ((aux := Var(dom=range(len(array)))) == index)")
         aux = self.new_var(possible_range({v for v in index.dom if 0 <= v < length}))
         functions.satisfy(index == aux)
 

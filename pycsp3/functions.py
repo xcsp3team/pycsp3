@@ -151,10 +151,7 @@ def Var(term=None, *others, dom=None, id=None):
         cursing()
         started_modeling = True
 
-    if term is None and dom is None and id is None:
-        return auxiliary().new_var(math.inf)  # TODO printing a warning?
-    if term is None and dom is None:
-        dom = Domain(math.inf)
+    error_if(term is None and dom is None, "The domain of a variable must be given, either by terms or by the parameter dom")
     error_if(term is not None and dom is not None, "The domain of a variable must be given either by terms or by the parameter dom, but not both")
     if term is not None:
         dom = flatten(term, others)

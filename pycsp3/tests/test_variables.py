@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, d
 
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
 NOT_EXPLICIT = "#83: the error is not explicit (assert without message, or exception raised by Python inside PyCSP3)"
-NO_DOMAIN_VAR = "#81: without domain, Var() builds an auxiliary variable aux_gb[i], or a variable, with an infinite domain"
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 
 
@@ -73,9 +72,9 @@ def test_var_large_domain(run):
     "x = Var(dom=lambda: None)",
     "x = Var(1, 2, dom=range(3))",
     "x = Var(0, 1, dom=range(3))",
-    pytest.param("x = Var()", marks=bug(NO_DOMAIN_VAR)),
-    pytest.param("x = Var(dom=None)", marks=bug(NO_DOMAIN_VAR)),
-    pytest.param("x = Var(id='foo')", marks=bug(NO_DOMAIN_VAR)),
+    "x = Var()",
+    "x = Var(dom=None)",
+    "x = Var(id='foo')",
 ])
 def test_var_invalid_domain(run, declaration):
     assert_fails(run(declaration))
