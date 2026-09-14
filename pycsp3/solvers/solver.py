@@ -255,6 +255,8 @@ class SolverProcess:
                 # re.DOTALL because some solvers (e.g., cosoco) spread an instantiation over several lines
                 roots = [etree.fromstring(("<instantiation" + tok + "</instantiation>").replace("\nv", ""), etree.XMLParser(remove_blank_text=True))
                          for tok in re.findall(r"<instantiation(.*?)</instantiation>", stdout, re.DOTALL)]
+                # choco displays the last solution a second time (after the line s SATISFIABLE), with the same id
+                roots = [root for i, root in enumerate(roots) if i == 0 or root.get("id") is None or root.get("id") != roots[i - 1].get("id")]
             else:
                 left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
                 roots = [etree.fromstring(stdout[left:right + len("</instantiation>")].replace("\nv", ""), etree.XMLParser(remove_blank_text=True))]
