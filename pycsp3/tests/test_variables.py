@@ -47,7 +47,9 @@ def not_explicit(*values):
     ("x = Var('red', 'green')", ["green", "red"]),
     ("x = Var(dom={'red', 'green', 'blue'})", ["blue", "green", "red"]),
     ("x = Var(dom=['b', 'a'])", ["a", "b"]),
-    pytest.param("x = Var(dom=[0, 0, 1])", [0, 1], marks=bug("#69: a repeated value makes Var() fail (bare AssertionError), while VarArray() accepts it")),
+    ("x = Var(dom=[0, 0, 1])", [0, 1]),
+    ("x = Var(2, 5, 2)", [2, 5]),
+    ("x = Var('a', 'b', 'a')", ["a", "b"]),
     ("x = Var(dom=True)", [1]),
 ])
 def test_var_domain(run, declaration, values):

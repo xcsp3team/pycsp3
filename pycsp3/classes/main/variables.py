@@ -59,7 +59,7 @@ class Domain:
                 elif isinstance(w, range):
                     assert v < w.start
                 else:
-                    assert v < w
+                    discard[i + 1] = v == w  # a value given several times is kept only once (values being sorted, v <= w)
             self.original_values = [v for i, v in enumerate(self.original_values) if not discard[i]]
             self.values = None  # will be defined later if necessary as either a range, or a list of int or a list of str
 
