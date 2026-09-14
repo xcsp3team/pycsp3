@@ -12,7 +12,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, d
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
 NOT_EXPLICIT = "#83: the error is not explicit (assert without message, or exception raised by Python inside PyCSP3)"
 NO_DOMAIN_VAR = "#81: without domain, Var() builds an auxiliary variable aux_gb[i], or a variable, with an infinite domain"
-HOLE = "#73: a hole (None) is declared in the XCSP3 file"
 FALSE_DISCARDED = "#79: the constant 0 (false) is discarded with a warning, instead of making the model unsatisfiable"
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 
@@ -238,8 +237,7 @@ def test_vararray_domain_depending_on_indexes_solutions(run, solver, dom):
     assert_solutions(r, brute_force([range(1), range(2), range(2), range(3)], lambda *t: sum(t) == 2))
 
 
-def test_vararray_hole_solutions(run, solver, request):
-    bug_for(request, "COSOCO", HOLE + ": cosoco gives its value, and pycsp3 fails when recording it")
+def test_vararray_hole_solutions(run, solver):
     r = run("""
         x = VarArray(size=3, dom=lambda i: None if i == 1 else range(2))
         satisfy(x[0] != x[2])
@@ -249,9 +247,8 @@ def test_vararray_hole_solutions(run, solver, request):
 
 
 @pytest.mark.parametrize("declaration", [
-    pytest.param("x = VarArray(size=3, dom=lambda i: None if i == 1 else range(2))", marks=bug(HOLE + " when the other variables have the same domain")),
-    pytest.param("from pycsp3.classes.main.variables import Domain\nx = VarArray([Domain(range(2)), None, Domain(range(2))])",
-                 marks=bug(HOLE + " when the other variables have the same domain")),
+    "x = VarArray(size=3, dom=lambda i: None if i == 1 else range(2))",
+    "from pycsp3.classes.main.variables import Domain\nx = VarArray([Domain(range(2)), None, Domain(range(2))])",
     "x = VarArray(size=3, dom=lambda i: None if i == 1 else range(i + 1))",
 ])
 def test_vararray_hole_not_declared(run, declaration):
@@ -315,8 +312,7 @@ def test_vararray_variable_length(run, size, dom, n_variables):
     assert "variables " + str(n_variables) in r.lines, r.report()
 
 
-def test_vararray_variable_length_solutions(run, solver, request):
-    bug_for(request, "COSOCO", HOLE + ": cosoco gives the values of x[0][1] and x[0][2], and pycsp3 fails when recording them")
+def test_vararray_variable_length_solutions(run, solver):
     r = run("""
         x = VarArray(size=[2, [1, 3]], dom=range(2))
         satisfy(Sum(x[1]) == x[0][0] + 1)
