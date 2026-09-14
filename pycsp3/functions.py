@@ -294,8 +294,8 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
             assert isinstance(t, list)
             return ListVar(_to_ListVar(x) for x in t)
 
-        Variable.name2obj[array_name] = var_objects
         lv = _to_ListVar(var_objects)
+        Variable.name2obj[array_name] = lv  # so that var() returns the same ListVar as VarArray()
         EVarArray(lv, array_name, comment, tags)  # object wrapping the array of variables
         Variable.arrays.append(lv)
         return lv

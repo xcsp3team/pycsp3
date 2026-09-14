@@ -489,7 +489,6 @@ def test_var_function_in_constraints(run, solver):
     assert_solutions(r, brute_force([range(10)] * 2, lambda x, z: x >= 3 and z < x - 6))
 
 
-@bug("#78: var() returns a Python list for an array (not a ListVar), which cannot be indexed by a variable (TypeError)")
 def test_var_function_array_indexed_by_variable(run, solver):
     r = run("""
         y = VarArray(size=3, dom=range(3))
