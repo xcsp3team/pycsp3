@@ -218,6 +218,7 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         cursing()
         started_modeling = True
 
+    error_if(doms is None and dom is None, "The domain of the variables of an array must be given (parameter dom)")
     if doms is not None:
         assert isinstance(doms, list) and size is None and dom is None and dom_border is None and comment is None
         assert all(isinstance(dom, Domain) or dom is None for dom in doms)

@@ -208,8 +208,8 @@ def test_vararray_domain(run, dom, values):
     "x = VarArray(size=2, dom=lambda i, j: range(2))",
     not_explicit("x = VarArray(size=[2, 3], dom=lambda i: range(2))"),
     "x = VarArray(size=[2, 3], dom=lambda i, j, k: range(2))",
-    pytest.param("x = VarArray(size=3)", marks=bug("#71: without domain, no variable is declared, silently")),
-    pytest.param("x = VarArray(size=3, dom=None)", marks=bug("#71: without domain, no variable is declared, silently")),
+    "x = VarArray(size=3)",
+    "x = VarArray(size=3, dom=None)",
 ])
 def test_vararray_invalid_domain(run, declaration):
     assert_fails(run(declaration))
@@ -295,7 +295,7 @@ def test_vararray_dom_border_with_lambda(run):
 
 @pytest.mark.parametrize("declaration", [
     not_explicit("x = VarArray(size=3, dom=range(5), dom_border={0})"),
-    not_explicit("x = VarArray(size=[3, 3], dom_border={0})"),
+    "x = VarArray(size=[3, 3], dom_border={0})",
     not_explicit("x = VarArray(size=[2, 2, 2], dom=range(2), dom_border={0})"),
 ])
 def test_vararray_invalid_dom_border(run, declaration):
