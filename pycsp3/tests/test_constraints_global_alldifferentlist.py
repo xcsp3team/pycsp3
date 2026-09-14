@@ -15,7 +15,8 @@ SINGLE_LIST = "#120: AllDifferentList() with a single list posts AllDifferent on
 LISTS_OF_ONE = "#121: AllDifferentList() on lists of one variable generates lists that are not allowed in XCSP3"
 INVALID = "#122: invalid arguments of AllDifferentList() are accepted, or reported without explicit message"
 REPEATED = "#119: a variable (or a list) given several times to AllDifferent() (or AllDifferentList()) is not reported"
-COSOCO = "xcsp3team/cosoco#79: cosoco loses solutions of allDifferent-list with except or with negative values"
+COSOCO_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions or fails with except (here, allDifferent-list with except)"
+COSOCO_NEGATIVE = "xcsp3team/cosoco#79: cosoco says that allDifferent-list with negative values is unsatisfiable"
 
 # The cases that a solver says it does not handle, and the symbolic lists (not reported)
 CHOCO_EXCEPT = "CHOCO does not handle allDifferent-list with except (RuntimeException: UNSUPPORTED)"
@@ -76,7 +77,7 @@ def test_alldifferentlist_on_different_domains(run, solver):
 
 
 def test_alldifferentlist_on_negative_values(run, solver, request):
-    bug_for(request, "COSOCO", COSOCO)
+    bug_for(request, "COSOCO", COSOCO_NEGATIVE)
     check(run, solver, "x = VarArray(size=[3, 2], dom=range(-1, 1))\nsatisfy(AllDifferentList(x))", [range(-1, 1)] * 6, lambda *t: different_lists(rows(t, 2)))
 
 
@@ -119,7 +120,7 @@ def test_alldifferentlist_excepting(run, solver, request, excepting, tuples):
         if solver == "CHOCO":
             pytest.skip(CHOCO_EXCEPT)
         if excepting != "(5, 5)":
-            bug_for(request, "COSOCO", COSOCO)
+            bug_for(request, "COSOCO", COSOCO_EXCEPT)
     check(run, solver, X32 + f"satisfy(AllDifferentList(x, excepting={excepting}))", D32, lambda *t: different_lists(rows(t, 2), tuples))
 
 
