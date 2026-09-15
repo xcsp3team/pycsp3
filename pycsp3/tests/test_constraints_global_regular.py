@@ -13,7 +13,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-STATES = "#109: the start and final states of an automaton are not checked"
 RANGES = "#110: labels given by ranges cannot be used with variables of different domains"
 INVALID = "#111: invalid automata are reported without explicit message, or accepted"
 COSOCO_NFA = "xcsp3team/cosoco#77: cosoco loses solutions with a non-deterministic automaton"
@@ -154,20 +153,25 @@ def test_automaton_used_with_several_domains(run, solver):
     assert_solutions(r, brute_force([range(4)] * 3 + [range(3, 6)] * 3, lambda *t: accepts(t[:3], "a", spec["transitions"], "b") and accepts(t[3:], "a", spec["transitions"], "b")))
 
 
-@pytest.mark.parametrize("spec", [
-    dict(start="a", transitions=[("a", 0, "a"), ("a", 1, "b")], final=[]),
-    dict(start="a", transitions=[("a", 0, "a"), ("a", 1, "b")], final=["z"]),
-    dict(start="a", transitions=[("a", 0, "a"), ("a", 1, "b")], final="z"),
-    dict(start="z", transitions=[("a", 0, "a"), ("a", 1, "b")], final="b"),
-], ids=["no final state", "final state not in transitions (list)", "final state not in transitions (string)", "start state not in transitions"])
-def test_automata_without_recognized_word(run, solver, request, spec):
-    # no word can be recognized: either the model is unsatisfiable, or an error is reported
-    bug_for(request, ("CHOCO", "COSOCO") if spec["start"] == "z" else "CHOCO", STATES)
-    r = run(automaton(spec) + "x = VarArray(size=3, dom={0, 1})\nsatisfy(x in A)", solver=solver)
-    if r.ok:
-        assert_solutions(r, set())
-    else:
-        assert_fails(r)
+@pytest.mark.parametrize("spec, message", [
+    (dict(start="a", transitions=[("a", 0, "a"), ("a", 1, "b")], final=[]),
+     "An automaton must have at least one final state appearing in its transitions, which is not the case of []"),
+    (dict(start="a", transitions=[("a", 0, "a"), ("a", 1, "b")], final=["z"]),
+     "An automaton must have at least one final state appearing in its transitions, which is not the case of ['z']"),
+    (dict(start="a", transitions=[("a", 0, "a"), ("a", 1, "b")], final="z"),
+     "An automaton must have at least one final state appearing in its transitions, which is not the case of 'z'"),
+    (dict(start="z", transitions=[("a", 0, "a"), ("a", 1, "b")], final="b"), "The start state 'z' of an automaton must be a state of its transitions"),
+    (dict(start="a", transitions=[("a", 0, "a"), ("a", 1, "b")], final=[0]),
+     "The final states of an automaton must be given by a string or a collection of strings, which is not the case of [0]"),
+    (dict(start="a", transitions=[("a", 0, "a"), ("a", 1, "b")], final=5),
+     "The final states of an automaton must be given by a string or a collection of strings, which is not the case of 5"),
+], ids=["no final state", "final state not in transitions (list)", "final state not in transitions (string)", "start state not in transitions",
+        "final state not a string", "final states not a collection"])
+def test_automata_with_invalid_states(run, spec, message):
+    # no word could be recognized, or the states are badly given: an explicit error is reported
+    r = run(automaton(spec) + "x = VarArray(size=3, dom={0, 1})\nsatisfy(x in A)")
+    assert_fails(r)
+    assert message in r.stdout, r.report()
 
 
 # ------------------------------------------------------------------------------------------ methods of Automaton
@@ -254,6 +258,8 @@ def test_automaton_deterministic_copy_states(run, name, text):
     (DOC, "{0, 1}", "(a,0,a)(a,1,b)(b,1,c)(c,0,d)(d,0,d)(d,1,e)(e,0,e)", "a", "e"),
     (dict(start="a", transitions=[("a", 0, "b"), ("b", 1, "a")], final=["b", "a"]), "{0, 1}", "(a,0,b)(b,1,a)", "a", "a b"),
     (dict(start="a", transitions=[("a", range(0, 2), "b"), ("b", [2, 3], "a")], final="a"), "range(4)", "(a,0,b)(a,1,b)(b,2,a)(b,3,a)", "a", "a"),
+    # the final states that do not appear in the transitions are discarded (they cannot be reached)
+    (dict(start="a", transitions=[("a", 0, "a"), ("a", 1, "b")], final=["z", "b"]), "{0, 1}", "(a,0,a)(a,1,b)", "a", "b"),
 ])
 def test_xcsp3_regular(run, spec, dom, transitions, start, final):
     r = run(automaton(spec) + f"x = VarArray(size=4, dom={dom})\nsatisfy(x in A)")
@@ -270,7 +276,7 @@ def test_xcsp3_regular(run, spec, dom, transitions, start, final):
     "A = Automaton(start='a', transitions=[('a', 0)], final='a')",
     "A = Automaton(start='a', transitions=[('a', 0, 1)], final='a')",
     "A = Automaton(start=0, transitions=[('a', 0, 'a')], final='a')",
-    pytest.param("A = Automaton(start='a', transitions=[('a', 0, 'a')], final=[0])", marks=bug(STATES)),
+    "A = Automaton(start='a', transitions=[('a', 0, 'a')], final=[0])",
     pytest.param("A = Automaton(start='a', transitions=(('a', 0, 'a'),), final='a')", marks=bug(INVALID)),
     pytest.param("A = Automaton(start='a', transitions=(t for t in [('a', 0, 'a')]), final='a')", marks=bug(INVALID)),
     pytest.param("A = Automaton(start='a', transitions=[('a', 2.5, 'a')], final='a')\nsatisfy(x in A)", marks=bug(INVALID)),

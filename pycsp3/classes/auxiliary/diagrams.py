@@ -3,7 +3,7 @@ import types
 from pycsp3.classes.auxiliary.conditions import Condition, inside
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in
-from pycsp3.tools.utilities import flatten
+from pycsp3.tools.utilities import error_if, flatten
 
 
 class Diagram:
@@ -112,10 +112,16 @@ class Automaton(Diagram):
             satisfy(Regular(scope=x, automaton=a))
         """
         super().__init__(transitions)
+        error_if(not isinstance(start, str), "The start state of an automaton must be a string, which is not the case of " + repr(start))
+        error_if(start not in self.states, "The start state " + repr(start) + " of an automaton must be a state of its transitions")
         self.start = start
-        self.final = [final] if isinstance(final, str) else sorted(q for q in set(final) if q in self.states)
+        finals = [final] if isinstance(final, str) else list(final) if isinstance(final, (list, tuple, set, frozenset)) else None
+        error_if(finals is None or any(not isinstance(q, str) for q in finals),
+                 "The final states of an automaton must be given by a string or a collection of strings, which is not the case of " + repr(final))
+        # the final states that do not appear in the transitions are discarded, since they cannot be reached
+        self.final = sorted(q for q in set(finals) if q in self.states)
+        error_if(len(self.final) == 0, "An automaton must have at least one final state appearing in its transitions, which is not the case of " + repr(final))
         self.access = None
-        assert isinstance(self.start, str) and all(isinstance(f, str) for f in self.final), Diagram.MSG_STATE
 
     def deterministic_copy(self, scp):
         """
