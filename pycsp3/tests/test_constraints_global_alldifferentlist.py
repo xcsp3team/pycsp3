@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-LISTS_OF_ONE = "#121: AllDifferentList() on lists of one variable generates lists that are not allowed in XCSP3"
 INVALID = "#122: invalid arguments of AllDifferentList() are accepted, or reported without explicit message"
 COSOCO_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions or fails with except (here, allDifferent-list with except)"
 COSOCO_NEGATIVE = "xcsp3team/cosoco#79: cosoco says that allDifferent-list with negative values is unsatisfiable"
@@ -59,10 +58,19 @@ def test_alldifferentlist_forms(run, solver, constraint):
 
 @pytest.mark.parametrize("n, m, d", [(2, 2, 2), (3, 2, 2), (4, 2, 2), (5, 2, 2), (2, 3, 2), (3, 1, 3), (4, 1, 3)],
                          ids=["2 lists", "3 lists", "4 lists (all the pairs)", "5 lists (pigeonhole)", "lists of 3 variables", "lists of 1 variable", "lists of 1 variable (pigeonhole)"])
-def test_alldifferentlist_sizes(run, solver, request, n, m, d):
-    if m == 1:
-        bug_for(request, "ACE", LISTS_OF_ONE)
+def test_alldifferentlist_sizes(run, solver, n, m, d):
     check(run, solver, f"x = VarArray(size=[{n}, {m}], dom=range({d}))\nsatisfy(AllDifferentList(x))", [range(d)] * (n * m), lambda *t: different_lists(rows(t, m)))
+
+
+@pytest.mark.parametrize("constraint, text", [("AllDifferentList(x)", "x[][]"), ("AllDifferentList(x, excepting=(0,))", "x[][] except 0")])
+def test_xcsp3_alldifferentlist_on_lists_of_one_variable(run, constraint, text):
+    # allDifferent-list requires lists of at least two variables: allDifferent is posted on the variables
+    r = run(f"x = VarArray(size=[3, 1], dom=range(3))\nsatisfy({constraint})")
+    assert r.ok, r.report()
+    c = r.xml.find("constraints/allDifferent")
+    assert c is not None, r.report()
+    lst, exc = c.find("list"), c.find("except")
+    assert (lst.text if lst is not None else c.text).strip() + ("" if exc is None else " except " + exc.text.strip()) == text, r.report()
 
 
 def test_alldifferentlist_on_columns(run, solver):

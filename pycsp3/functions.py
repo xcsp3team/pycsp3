@@ -1953,6 +1953,8 @@ def AllDifferentList(term, *others, excepting=None):
         seen.add(key)
     if len(lists) == 1:
         return None  # a single list is always different from the other ones (as for AllDifferent() with a single variable)
+    if len(lists) > 0 and len(lists[0]) == 1:  # allDifferent-list requires lists of at least two variables: AllDifferent is posted on the variables
+        return AllDifferent([t[0] for t in lists], excepting=excepting)
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 
@@ -2031,6 +2033,8 @@ def AllEqualList(term, *others, excepting=None):
         return None  # a single list is always equal to the other ones (as for AllEqual() with a single variable)
     if len(lists) == 2 and excepting is None:
         return [lists[0][i] == lists[1][i] for i in range(len(lists[0]))]
+    if len(lists) > 0 and len(lists[0]) == 1:  # allEqual-list requires lists of at least two variables: AllEqual is posted on the variables
+        return AllEqual([t[0] for t in lists], excepting=excepting)
     return ECtr(ConstraintAllEqualList(lists, excepting))
 
 

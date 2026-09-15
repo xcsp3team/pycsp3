@@ -14,7 +14,6 @@ ALL = ("ACE", "CHOCO", "COSOCO")
 NOT_CORE = ("#125: AllEqualList() generates allEqual-list, which is not part of XCSP3-core and is handled by no solver "
             "(ACE and CHOCO: Missing Implementation, or xcsp3team/XCSP3-Java-Tools#21 with except; cosoco: wrong solutions, xcsp3team/cosoco#81)")
 SEVERAL_TUPLES = "#126: excepting with several tuples generates an invalid element <except>, or is refused without explicit message"
-LISTS_OF_ONE = "#121: AllEqualList() on lists of one variable generates lists that are not allowed in XCSP3"
 INVALID = "#122: invalid arguments of AllEqualList() are accepted, or reported without explicit message"
 
 # The symbolic lists (not reported)
@@ -63,9 +62,20 @@ def test_allequallist_forms(run, solver, request, constraint):
                               "3 lists of 1 variable"])
 def test_allequallist_sizes(run, solver, request, n, m, d):
     # with two lists, PyCSP3 posts x[0][j] == x[1][j] for each index j
-    if n > 2:
-        bug_for(request, ALL, LISTS_OF_ONE if m == 1 else NOT_CORE)
+    if n > 2 and m > 1:
+        bug_for(request, ALL, NOT_CORE)
     check(run, solver, f"x = VarArray(size=[{n}, {m}], dom=range({d}))\nsatisfy(AllEqualList(x))", [range(d)] * (n * m), lambda *t: equal_lists(rows(t, m)))
+
+
+@pytest.mark.parametrize("constraint, text", [("AllEqualList(x)", "x[][]"), ("AllEqualList(x, excepting=(0,))", "x[][] except 0")])
+def test_xcsp3_allequallist_on_lists_of_one_variable(run, constraint, text):
+    # allEqual-list requires lists of at least two variables: allEqual is posted on the variables
+    r = run(f"x = VarArray(size=[3, 1], dom=range(3))\nsatisfy({constraint})")
+    assert r.ok, r.report()
+    c = r.xml.find("constraints/allEqual")
+    assert c is not None, r.report()
+    lst, exc = c.find("list"), c.find("except")
+    assert (lst.text if lst is not None else c.text).strip() + ("" if exc is None else " except " + exc.text.strip()) == text, r.report()
 
 
 @pytest.mark.parametrize("size", ["[3, 2]", "[2, 3]"], ids=["2 columns", "3 columns"])
