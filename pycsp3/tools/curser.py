@@ -391,20 +391,24 @@ class OpOverrider:
         if isinstance(other, int):
             if other == 1:
                 return self
-        return Node.build(TypeNode.DIV, self, other)
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)  # replaced once, since other may occur twice in the node
+        return Node.floor_div(self, other)  # with the semantics of Python
 
     def __rfloordiv__(self, other):
-        return Node.build(TypeNode.DIV, other, self)
+        return Node.floor_div(other, self)  # with the semantics of Python
 
     def __mod__(self, other):
         if isinstance(other, ConstraintDummyConstant):
             other = other.val
         if isinstance(self, Variable) and isinstance(other, int) and 0 <= self.dom.smallest_value() and self.dom.greatest_value() < other:
             return self
-        return Node.build(TypeNode.MOD, self, other)
+        if isinstance(other, PartialConstraint):
+            other = auxiliary().replace_partial_constraint(other)  # replaced once, since other may occur twice in the node
+        return Node.floor_mod(self, other)  # with the semantics of Python
 
     def __rmod__(self, other):
-        return Node.build(TypeNode.MOD, other, self)
+        return Node.floor_mod(other, self)  # with the semantics of Python
 
     def __pow__(self, other):
         if isinstance(other, ConstraintDummyConstant):

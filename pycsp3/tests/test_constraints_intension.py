@@ -13,33 +13,24 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-PYTHON_DIVISION = "#95: // and % are translated into div and mod, which round towards 0 (and not towards negative infinity as in Python)"
 ACE_NEGATIVE = "xcsp3team/ACE#12: ACE fails on abs, dist, mul, div and mod with negative values"
 # The cases that a solver says it does not handle (not reported): for each constraint, the solvers and the reasons
 SKIPPED = {"x ** z == y": {"ACE": "ACE does not implement pow with a variable exponent (not implemented)"}}
 CHOCO_POW = "chocoteam/choco-solver#1248: CHOCO does not support pow in some intensional constraints"
+CHOCO_MOD = "chocoteam/choco-solver#1248: mod loses the solutions where the dividend is negative and not a multiple of the divisor"
 
 # For each constraint (as written in the tests), the known bugs: pairs (solvers, reason)
 KNOWN = {
     "x * y == -2": [("ACE", ACE_NEGATIVE)],
-    "x // 2 == y": [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
-    "x // -2 == y": [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
-    "x // y == 1": [("ACE", ACE_NEGATIVE)],
-    "7 // x == y": [(ALL, PYTHON_DIVISION)],
-    "x % 3 == y": [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
-    "x % -3 == y": [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
-    "x % y == 1": [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
-    "7 % x == y": [(ALL, PYTHON_DIVISION)],
     "x ** 3 == y": [("CHOCO", CHOCO_POW)],
-    "x % 3 == z": [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
     "x ** z == y": [("CHOCO", CHOCO_POW)],
     "abs(x) == y": [("ACE", ACE_NEGATIVE)],
     "iff(x > 0, y > 0, b)": [("CHOCO", "chocoteam/choco-solver#1248: iff with more than two arguments is evaluated with associativity, instead of all the arguments being equivalent"),
                              ("COSOCO", "xcsp3team/cosoco#74: cosoco ignores the arguments of iff after the second one")],
     'expr("eq", y, expr("abs", x))': [("ACE", ACE_NEGATIVE)],
     'expr("eq", y, expr("dist", x, 1))': [("ACE", ACE_NEGATIVE)],
-    'expr("eq", y, expr("div", x, 2))': [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
-    'expr("eq", y, expr("mod", x, 2))': [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
+    'expr("eq", y, expr("div", x, 2))': [("ACE", ACE_NEGATIVE)],
+    'expr("eq", y, expr("mod", x, 2))': [("ACE", ACE_NEGATIVE), ("CHOCO", CHOCO_MOD)],
     'expr("eq", y, expr("pow", x, 2))': [("CHOCO", CHOCO_POW)],
 }
 
@@ -75,6 +66,14 @@ def _mod(a, b):  # the remainder of Python
     return None if b == 0 else a % b
 
 
+def _xcsp3_div(a, b):  # the integer division of XCSP3 (operator div), rounding towards 0
+    return abs(a) // abs(b) * (1 if (a >= 0) == (b > 0) else -1)
+
+
+def _xcsp3_mod(a, b):  # the remainder of XCSP3 (operator mod), with the sign of the dividend
+    return a - b * _xcsp3_div(a, b)
+
+
 # -------------------------------------------------------------------------------------------------- arithmetic operators
 
 @pytest.mark.parametrize("constraint, predicate", [
@@ -104,6 +103,10 @@ def _mod(a, b):  # the remainder of Python
     ("x % -3 == y", lambda x, y: x % -3 == y),
     ("x % y == 1", lambda x, y: _mod(x, y) == 1),
     ("7 % x == y", lambda x, y: _mod(7, x) == y),
+    ("(x + y) // 2 == 1", lambda x, y: (x + y) // 2 == 1),
+    ("(x - y) % 4 == 3", lambda x, y: (x - y) % 4 == 3),
+    ("Sum([x, y]) % 3 == 1", lambda x, y: (x + y) % 3 == 1),
+    ("x // (y + 4) == -1", lambda x, y: x // (y + 4) == -1),
     ("x ** 2 == y + 3", lambda x, y: x ** 2 == y + 3),
     ("x ** 3 == y", lambda x, y: x ** 3 == y),
     ("(x < 1) + (y > 0) == 1", lambda x, y: (x < 1) + (y > 0) == 1),  # Boolean expressions used as 0/1 values
@@ -483,8 +486,8 @@ def test_belong_invalid(run, call):
     ('expr("eq", y, expr("dist", x, 1))', lambda x, y: y == abs(x - 1)),
     ('expr("eq", y, expr("min", x, 0))', lambda x, y: y == min(x, 0)),
     ('expr("eq", y, expr("max", x, 0, -y))', lambda x, y: y == max(x, 0, -y)),
-    ('expr("eq", y, expr("div", x, 2))', lambda x, y: y == x // 2),
-    ('expr("eq", y, expr("mod", x, 2))', lambda x, y: y == x % 2),
+    ('expr("eq", y, expr("div", x, 2))', lambda x, y: y == _xcsp3_div(x, 2)),  # the operators of XCSP3, rounding towards 0
+    ('expr("eq", y, expr("mod", x, 2))', lambda x, y: y == _xcsp3_mod(x, 2)),
     ('expr("eq", y, expr("pow", x, 2))', lambda x, y: y == x ** 2),
     ('expr("eq", y, expr("sqr", x))', lambda x, y: y == x * x),
     ('expr("and", x > 0, y > 0)', lambda x, y: x > 0 and y > 0),
@@ -536,6 +539,10 @@ def test_intension_functions_invalid_messages(run, call, message):
     ("not_belong(x, {0, 2, 5})", "notin(x,set(0,2,5))"),
     ("belong(z, range(3, 15))", "and(ge(z,3),lt(z,15))"),
     ('expr("le", x, y)', "le(x,y)"),
+    ("x // 2 == y", "eq(div(x,2),y)"),  # operands that cannot be negative: the semantics of Python and XCSP3 are the same
+    ("x % 3 < y", "lt(mod(x,3),y)"),
+    ("x // -2 == y", "eq(div(sub(x,mod(add(mod(x,-2),-2),-2)),-2),y)"),  # the semantics of Python
+    ("(x - y) % 3 == 1", "eq(mod(add(mod(sub(x,y),3),3),3),1)"),
 ])
 def test_xcsp3_expressions(run, constraint, text):
     r = run(f"x = Var(dom=range(10))\ny = Var(dom=range(10))\nz = Var(dom=range(20))\nsatisfy({constraint})")
