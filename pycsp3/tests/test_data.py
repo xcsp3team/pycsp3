@@ -198,11 +198,26 @@ def test_data_json_single_non_identifier_key(run, code, args):
     assert "value 3" in r.lines, r.report()
 
 
-@bug("#87: keys that are Python keywords or start with an underscore make the loading fail")
-@pytest.mark.parametrize("key", ["class", "if", "_x"])
+@pytest.mark.parametrize("key", ["class", "if", "None", "_x", "_"])
 def test_data_json_keys_not_allowed_in_named_tuples(run, key):
     # as for any key that is not an identifier, the data are not converted into named tuples
     r = run(f'print("values", data["{key}"], data["b"])', args=["-data=data.json"], files={"data.json": json.dumps({key: 3, "b": 4})})
+    assert "no conversion to named tuples is performed" in r.stdout, r.report()
+    assert "values 3 4" in r.lines, r.report()
+
+
+def test_data_json_nested_key_not_allowed_in_named_tuples(run):
+    r = run('print("values", data["items"][1]["class"], data["n"])', args=["-data=data.json"],
+            files={"data.json": '{"items": [{"class": 1}, {"class": 2}], "n": 0}'})
+    assert "no conversion to named tuples is performed" in r.stdout, r.report()
+    assert "values 2 0" in r.lines, r.report()
+
+
+@pytest.mark.parametrize("key", ["type", "match", "case", "x_"])
+def test_data_json_soft_keywords_in_named_tuples(run, key):
+    # soft keywords are accepted as field names of named tuples
+    r = run(f'print("values", data.{key}, data.b)', args=["-data=data.json"], files={"data.json": json.dumps({key: 3, "b": 4})})
+    assert "no conversion to named tuples is performed" not in r.stdout, r.report()
     assert "values 3 4" in r.lines, r.report()
 
 

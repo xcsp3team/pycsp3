@@ -1,3 +1,4 @@
+import keyword
 import types
 from collections import deque, namedtuple, abc
 
@@ -1016,11 +1017,14 @@ test = False
 
 
 def convert_to_namedtuples(obj):
-    def with_only_alphanumeric_keys(obj):  # alphanum or '_'
+    def valid_field_name(k):  # as required by namedtuple(): an identifier, not a keyword, not starting with '_'
+        return isinstance(k, str) and k.isidentifier() and not keyword.iskeyword(k) and not k.startswith('_')
+
+    def with_only_valid_field_names(obj):
         if isinstance(obj, dict):
-            if any(not k.isidentifier() for k in obj.keys()):
+            if any(not valid_field_name(k) for k in obj.keys()):
                 return False
-            return all(with_only_alphanumeric_keys(v) for v in obj.values())
+            return all(with_only_valid_field_names(v) for v in obj.values())
         if isinstance(obj, (int, str)):
             return True
         try:
@@ -1028,7 +1032,7 @@ def convert_to_namedtuples(obj):
         except TypeError:  # not iterable
             return True
         else:  # iterable
-            return all(with_only_alphanumeric_keys(v) for v in obj)
+            return all(with_only_valid_field_names(v) for v in obj)
 
     def recursive_convert_to_namedtuples(obj):
         if not hasattr(recursive_convert_to_namedtuples, "cnt"):
@@ -1066,8 +1070,9 @@ def convert_to_namedtuples(obj):
 
     if options.data_sober:
         return obj
-    if not with_only_alphanumeric_keys(obj):
-        warning("some key of some dictionary involved in the data is not alphanumeric, so no conversion to named tuples is performed\n")
+    if not with_only_valid_field_names(obj):
+        warning("some key of some dictionary involved in the data cannot be a field name of a named tuple (not an identifier, a Python keyword, "
+                + "or starting with '_'), so no conversion to named tuples is performed\n")
         return obj  # not possible to make the conversion in that case
     return recursive_convert_to_namedtuples(obj)
 
