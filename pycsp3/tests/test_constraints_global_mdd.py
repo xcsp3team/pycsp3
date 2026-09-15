@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-NOT_IN = "#107: x not in M (M being an MDD) posts x in M"
 RANGES = "#110: labels given by ranges cannot be used with variables of different domains"
 INVALID = "#111: invalid MDDs are reported without explicit message, or accepted"
 STRUCTURE = "#112: the structure of an MDD is not checked (roots, terminal nodes, cycles, length of the paths)"
@@ -66,14 +65,11 @@ def test_mdd_stand_alone_variables(run, solver):
     assert_solutions(r, {(0, 2, 0), (1, 2, 0), (2, 0, 0)})
 
 
-def test_mdd_not_in(run, solver, request):
-    bug_for(request, ALL, NOT_IN)
-    # the tuples that are not paths of the MDD (or an error if 'not in' cannot be used with an MDD)
-    r = run(f"M = MDD({DOC!r})\nx = VarArray(size=3, dom=range(3))\nsatisfy(x not in M)", solver=solver)
-    if r.ok:
-        assert_solutions(r, brute_force([range(3)] * 3, lambda *t: not accepts(t, DOC)))
-    else:
-        assert_fails(r)
+def test_mdd_not_in(run):
+    # 'not in' cannot be used with an MDD: an explicit error is reported (instead of posting x in M)
+    r = run(f"M = MDD({DOC!r})\nx = VarArray(size=3, dom=range(3))\nsatisfy(x not in M)")
+    assert_fails(r)
+    assert "The operator 'not in' cannot be used with an MDD: only 'x in M' is possible (constraint MDD)" in r.stdout, r.report()
 
 
 def test_mdd_on_rows(run, solver):

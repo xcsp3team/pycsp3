@@ -13,7 +13,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-NOT_IN = "#107: x not in A (A being an automaton) posts x in A"
 DETERMINISTIC_COPY = "#108: Automaton.deterministic_copy() does not terminate, or loses all the transitions"
 STATES = "#109: the start and final states of an automaton are not checked"
 RANGES = "#110: labels given by ranges cannot be used with variables of different domains"
@@ -66,14 +65,11 @@ def test_regular_forms(run, solver, constraint, predicate):
     check(run, solver, DOC, 7, {0, 1}, constraint, predicate)
 
 
-def test_regular_not_in(run, solver, request):
-    # the words that are not recognized by the automaton (or an error if 'not in' cannot be used with an automaton)
-    bug_for(request, ALL, NOT_IN)
-    r = run(automaton(DOC) + "x = VarArray(size=5, dom={0, 1})\nsatisfy(x not in A)", solver=solver)
-    if r.ok:
-        assert_solutions(r, brute_force([[0, 1]] * 5, lambda *t: not accepts(t, A, DOC["transitions"], E)))
-    else:
-        assert_fails(r)
+def test_regular_not_in(run):
+    # 'not in' cannot be used with an automaton: an explicit error is reported (instead of posting x in A)
+    r = run(automaton(DOC) + "x = VarArray(size=5, dom={0, 1})\nsatisfy(x not in A)")
+    assert_fails(r)
+    assert "The operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)" in r.stdout, r.report()
 
 
 def test_regular_on_rows_and_columns(run, solver):
