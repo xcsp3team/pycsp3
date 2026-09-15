@@ -1894,6 +1894,11 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # an integer is reported below by checkType()
         return None
     checkType(terms, ([Variable, Node]))
+    seen = set()  # identities of the variables (== being redefined for building expressions)
+    for t in terms:
+        if isinstance(t, Variable):
+            error_if(id(t) in seen, "A variable cannot be given several times to AllDifferent(), which is the case of " + str(t))
+            seen.add(id(t))
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)  # only if mini
     return ECtr(ConstraintAllDifferent(terms, excepting))
 
@@ -1941,6 +1946,11 @@ def AllDifferentList(term, *others, excepting=None):
     excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
     assert all(len(t) == len(lists[0]) for t in lists)  # and (excepting is None or len(excepting) == len(lists[0]))
+    seen = set()  # identities of the variables of the lists (== being redefined for building expressions)
+    for t in lists:
+        key = tuple(id(x) for x in t)
+        error_if(key in seen, "A list cannot be given several times to AllDifferentList(), which is the case of " + str(t))
+        seen.add(key)
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 

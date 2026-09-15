@@ -14,7 +14,6 @@ ALL = ("ACE", "CHOCO", "COSOCO")
 SINGLE_LIST = "#120: AllDifferentList() with a single list posts AllDifferent on the variables of this list"
 LISTS_OF_ONE = "#121: AllDifferentList() on lists of one variable generates lists that are not allowed in XCSP3"
 INVALID = "#122: invalid arguments of AllDifferentList() are accepted, or reported without explicit message"
-REPEATED = "#119: a variable (or a list) given several times to AllDifferent() (or AllDifferentList()) is not reported"
 COSOCO_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions or fails with except (here, allDifferent-list with except)"
 COSOCO_NEGATIVE = "xcsp3team/cosoco#79: cosoco says that allDifferent-list with negative values is unsatisfiable"
 
@@ -146,14 +145,11 @@ def test_alldifferentlist_with_a_single_list(run, solver, request, constraint):
 
 
 @pytest.mark.parametrize("constraint", ["AllDifferentList(x[0], x[0])", "AllDifferentList(x[0], x[1], x[0])"])
-def test_alldifferentlist_with_a_repeated_list(run, solver, request, constraint):
-    bug_for(request, "ACE", REPEATED)
-    # a list cannot be different from itself: either the model is unsatisfiable, or an error is reported
-    r = run(X32 + f"satisfy({constraint})", solver=solver)
-    if r.ok:
-        assert_solutions(r, set())
-    else:
-        assert_fails(r)
+def test_alldifferentlist_with_a_repeated_list(run, constraint):
+    # a list cannot be different from itself: an explicit error is reported (ACE fails on such constraints)
+    r = run(X32 + f"satisfy({constraint})")
+    assert_fails(r)
+    assert "A list cannot be given several times to AllDifferentList(), which is the case of [x[0][0], x[0][1]]" in r.stdout, r.report()
 
 
 # ----------------------------------------------------------------------------------------------------- XCSP3 files

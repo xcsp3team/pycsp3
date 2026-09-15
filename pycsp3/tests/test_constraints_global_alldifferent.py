@@ -14,7 +14,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 COSOCO_HOLES = "xcsp3team/cosoco#72: cosoco gives individually the values of the variables involved in no constraint, and pycsp3 fails when recording those of holes"
-REPEATED = "#119: a variable given several times to AllDifferent() is not reported"
 ACE_NON_SQUARE = "xcsp3team/ACE#16: ACE fails on allDifferent-matrix with a non-square matrix"
 COSOCO_MATRIX_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions of allDifferent-matrix with except"
 COSOCO_MATRIX_ROWS = ("cosoco fails on allDifferent-matrix whose matrix is given by explicit rows (Matrix variable (x does not exist), "
@@ -106,14 +105,11 @@ def test_alldifferent_trivially_true(run, solver, constraint):
 
 
 @pytest.mark.parametrize("constraint", ["AllDifferent(x[0], x[0])", "AllDifferent(x[0], x[1], x[0])", "AllDifferent(x + [x[1]])"])
-def test_alldifferent_with_a_repeated_variable(run, solver, request, constraint):
-    bug_for(request, "ACE" if constraint == "AllDifferent(x[0], x[0])" else ("ACE", "COSOCO"), REPEATED)
-    # a variable cannot be different from itself: either the model is unsatisfiable, or an error is reported
-    r = run(X3 + f"satisfy({constraint})", solver=solver)
-    if r.ok:
-        assert_solutions(r, set())
-    else:
-        assert_fails(r)
+def test_alldifferent_with_a_repeated_variable(run, constraint):
+    # a variable cannot be different from itself: an explicit error is reported (the solvers do not agree on such constraints)
+    r = run(X3 + f"satisfy({constraint})")
+    assert_fails(r)
+    assert "A variable cannot be given several times to AllDifferent(), which is the case of x[" in r.stdout, r.report()
 
 
 # ----------------------------------------------------------------------------------------------------- expressions
