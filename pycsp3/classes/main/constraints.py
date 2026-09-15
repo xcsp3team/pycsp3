@@ -211,6 +211,25 @@ class ConstraintIntension(Constraint):
         return Diffs() if self.abstract_tree() == other.abstract_tree() else False
 
 
+class _TableKey:
+    """
+    The key of a table in the caches of ConstraintExtension. Two different tables may have the same hash code (in Python,
+    hash(-1) == hash(-2)): so, the table itself is kept, and compared when the hash codes are the same.
+    The hash code is computed only once (possibly raising TypeError if the table is not hashable).
+    """
+    __slots__ = ("table", "h")
+
+    def __init__(self, table):
+        self.table = table
+        self.h = hash(table)
+
+    def __hash__(self):
+        return self.h
+
+    def __eq__(self, other):
+        return isinstance(other, _TableKey) and self.h == other.h and self.table == other.table
+
+
 class ConstraintExtension(Constraint):
     cache = dict()
     cache_for_knowing_if_hybrid = dict()
@@ -260,14 +279,14 @@ class ConstraintExtension(Constraint):
     def process_table(self, scope, table):
         if len(table) == 0:
             return None
-        # we compute the hash code of the table
+        # we compute the key of the table in the caches (the table itself, and not only its hash code, which may be shared by different tables)
         try:
-            h = hash(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
+            h = _TableKey(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
         except TypeError:
             for i, t in enumerate(table):
                 if any(isinstance(v, (list, set, frozenset)) for v in t):
                     table[i] = tuple(tuple(v) if isinstance(v, (list, set, frozenset)) else v for v in t)
-            h = hash(tuple(table))
+            h = _TableKey(tuple(table) + (self.keep_hybrid,))
         if len(scope) == 1:  # if arity 1
             if h not in ConstraintExtension.cache:
                 table.sort()

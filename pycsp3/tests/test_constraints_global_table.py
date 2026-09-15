@@ -22,7 +22,6 @@ D6 = [range(6)] * 3
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-HASH = "#103: tables with the same hash code are confused (a table is silently replaced by another one)"
 LISTS = "#104: in and not in: some tables given as lists are reported as badly formed arguments"
 CYCLE = "#105: hybrid tables with restrictions referring to columns in a cycle make the conversion fail"
 INVALID = "#106: invalid tables are reported without explicit message, or accepted"
@@ -148,8 +147,18 @@ def test_large_table_given_by_lists(run, solver):
 ])
 def test_tables_with_the_same_hash(run, solver, request, constraints, predicate):
     # in Python, hash(-1) == hash(-2): two different tables may have the same hash
-    bug_for(request, ALL, HASH)
     check(run, solver, f"x = VarArray(size=4, dom=range(-3, 4))\nsatisfy({constraints})", [range(-3, 4)] * 4, predicate)
+
+
+@pytest.mark.parametrize("constraints, texts", [
+    ("(x[0], x[1]) in {(0, -1), (1, 1)}, (x[2], x[3]) in {(0, -2), (1, 1)}", ["(0,-1)(1,1)", "(0,-2)(1,1)"]),
+    ("x[0] in [-1, 2], x[1] in [-2, 2]", ["-1 2", "-2 2"]),
+    ("(x[0], x[1]) not in {(0, -1)}, (x[2], x[3]) not in {(0, -2)}", ["(0,-1)", "(0,-2)"]),
+])
+def test_tables_with_the_same_hash_xcsp3(run, constraints, texts):
+    r = run(f"x = VarArray(size=4, dom=range(-3, 4))\nsatisfy({constraints})")
+    assert r.ok, r.report()
+    assert [e.find("supports" if e.find("supports") is not None else "conflicts").text.strip() for e in r.xml.iter("extension")] == texts, r.report()
 
 
 # ------------------------------------------------------------------------------------------------------ unary tables
