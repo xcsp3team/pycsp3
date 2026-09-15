@@ -1577,12 +1577,10 @@ def expr(operator, *args):
         if solve() is SAT:
            print(values(x))
     """
-    tn = None
-    if isinstance(operator, (str, TypeNode, TypeOrderedOperator, TypeConditionOperator)):
-        try:
-            tn = TypeNode.value_of(operator)
-        except KeyError:  # an unknown name
-            pass
+    try:
+        tn = TypeNode.value_of(operator)  # None when operator is not of a type that can be converted into a TypeNode
+    except KeyError:  # an unknown name
+        tn = None
     error_if(tn is None, "The first argument of expr() must be an operator (a string such as \"lt\" or \"add\", or a TypeNode), which is not the case of "
              + repr(operator))
     return Node.build(operator, *args)
