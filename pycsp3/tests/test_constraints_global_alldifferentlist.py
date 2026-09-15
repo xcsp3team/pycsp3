@@ -7,11 +7,10 @@ Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being co
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-INVALID = "#122: invalid arguments of AllDifferentList() are accepted, or reported without explicit message"
 COSOCO_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions or fails with except (here, allDifferent-list with except)"
 COSOCO_NEGATIVE = "xcsp3team/cosoco#79: cosoco says that allDifferent-list with negative values is unsatisfiable"
 
@@ -180,24 +179,38 @@ def test_xcsp3_alldifferentlist(run, constraint, lists, excepting):
 # --------------------------------------------------------------------------------------------------- invalid cases
 
 @pytest.mark.parametrize("constraint", [
-    pytest.param("AllDifferentList(x[0], [x[1][0]])", marks=bug(INVALID)),
-    pytest.param("AllDifferentList([x[0][0], x[0][1]], [x[1][0], x[1][1], x[2][0]])", marks=bug(INVALID)),
+    "AllDifferentList(x[0], [x[1][0]])",
+    "AllDifferentList([x[0][0], x[0][1]], [x[1][0], x[1][1], x[2][0]])",
     "AllDifferentList([x[0][0] + 1, x[0][1]], x[1])",
     "AllDifferentList(x[0], [0, 1])",
     "AllDifferentList(x, excepting=0)",
-    pytest.param("AllDifferentList(x, excepting=(0,))", marks=bug(INVALID)),
-    pytest.param("AllDifferentList(x, excepting=(0, 0, 0))", marks=bug(INVALID)),
-    pytest.param("AllDifferentList(x, excepting=[(0, 0), (1,)])", marks=bug(INVALID)),
+    "AllDifferentList(x, excepting=(0,))",
+    "AllDifferentList(x, excepting=(0, 0, 0))",
+    "AllDifferentList(x, excepting=[(0, 0), (1,)])",
     "AllDifferentList(x, excepting=('a', 'b'))",
     "AllDifferentList(x, excepting=(0.5, 1))",
-    pytest.param("AllDifferentList([])", marks=bug(INVALID)),
-    pytest.param("AllDifferentList(None)", marks=bug(INVALID)),
+    "AllDifferentList([])",
+    "AllDifferentList(None)",
 ])
 def test_invalid_alldifferentlist(run, constraint):
     assert_fails(run(X32 + f"satisfy({constraint})"))
 
 
-@bug(INVALID)
 def test_alldifferentlist_on_an_array_with_holes(run):
     # a list with a hole (None) cannot be compared with complete lists
-    assert_fails(run("x = VarArray(size=[3, 2], dom=lambda i, j: None if (i, j) == (1, 1) else range(2))\nsatisfy(AllDifferentList(x))"))
+    r = run("x = VarArray(size=[3, 2], dom=lambda i, j: None if (i, j) == (1, 1) else range(2))\nsatisfy(AllDifferentList(x))")
+    assert_fails(r)
+    assert "The lists given to AllDifferentList() cannot contain None (e.g., a hole of an array), which is the case of [x[1][0], None]" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, message", [
+    ("AllDifferentList(None)", "AllDifferentList() requires lists of variables, which is not the case of None"),
+    ("AllDifferentList([])", "AllDifferentList() requires lists of variables, which is not the case of []"),
+    ("AllDifferentList(x[0], [x[1][0]])", "The lists given to AllDifferentList() must have the same length, which is not the case of [x[0][0], x[0][1]] and [x[1][0]]"),
+    ("AllDifferentList(x, excepting=(0,))", "The tuples of excepting given to AllDifferentList() must have the length of the lists (2), which is not the case of (0,)"),
+    ("AllDifferentList(x, excepting=(0, 0, 0))", "The tuples of excepting given to AllDifferentList() must have the length of the lists (2), which is not the case of (0, 0, 0)"),
+    ("AllDifferentList(x, excepting=[(0, 0), (1,)])", "The tuples of excepting given to AllDifferentList() must have the length of the lists (2), which is not the case of (1,)"),
+])
+def test_invalid_alldifferentlist_messages(run, constraint, message):
+    r = run(X32 + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()

@@ -14,7 +14,6 @@ ALL = ("ACE", "CHOCO", "COSOCO")
 NOT_CORE = ("#125: AllEqualList() generates allEqual-list, which is not part of XCSP3-core and is handled by no solver "
             "(ACE and CHOCO: Missing Implementation, or xcsp3team/XCSP3-Java-Tools#21 with except; cosoco: wrong solutions, xcsp3team/cosoco#81)")
 SEVERAL_TUPLES = "#126: excepting with several tuples generates an invalid element <except>, or is refused without explicit message"
-INVALID = "#122: invalid arguments of AllEqualList() are accepted, or reported without explicit message"
 
 # The symbolic lists (not reported)
 SYMBOLIC = "allEqual-list on symbolic variables is not part of XCSP3-core (ACE and CHOCO fail, cosoco has no symbolic variables)"
@@ -220,24 +219,38 @@ def test_xcsp3_allequallist_on_two_lists(run):
 # --------------------------------------------------------------------------------------------------- invalid cases
 
 @pytest.mark.parametrize("constraint", [
-    pytest.param("AllEqualList(x[0], [x[1][0]])", marks=bug(INVALID)),
-    pytest.param("AllEqualList([x[0][0], x[0][1]], [x[1][0], x[1][1], x[2][0]])", marks=bug(INVALID)),
+    "AllEqualList(x[0], [x[1][0]])",
+    "AllEqualList([x[0][0], x[0][1]], [x[1][0], x[1][1], x[2][0]])",
     "AllEqualList([x[0][0] + 1, x[0][1]], x[1])",
     "AllEqualList(x[0], [0, 1])",
     "AllEqualList(x, excepting=0)",
-    pytest.param("AllEqualList(x, excepting=(0,))", marks=bug(INVALID)),
-    pytest.param("AllEqualList(x, excepting=(0, 0, 0))", marks=bug(INVALID)),
-    pytest.param("AllEqualList(x, excepting=[(0, 0), (1,)])", marks=bug(INVALID)),
+    "AllEqualList(x, excepting=(0,))",
+    "AllEqualList(x, excepting=(0, 0, 0))",
+    "AllEqualList(x, excepting=[(0, 0), (1,)])",
     "AllEqualList(x, excepting=('a', 'b'))",
     "AllEqualList(x, excepting=(0.5, 1))",
-    pytest.param("AllEqualList([])", marks=bug(INVALID)),
-    pytest.param("AllEqualList(None)", marks=bug(INVALID)),
+    "AllEqualList([])",
+    "AllEqualList(None)",
 ])
 def test_invalid_allequallist(run, constraint):
     assert_fails(run(X32 + f"satisfy({constraint})"))
 
 
-@bug(INVALID)
 def test_allequallist_on_an_array_with_holes(run):
     # a list with a hole (None) cannot be compared with complete lists
-    assert_fails(run("x = VarArray(size=[3, 2], dom=lambda i, j: None if (i, j) == (1, 1) else range(2))\nsatisfy(AllEqualList(x))"))
+    r = run("x = VarArray(size=[3, 2], dom=lambda i, j: None if (i, j) == (1, 1) else range(2))\nsatisfy(AllEqualList(x))")
+    assert_fails(r)
+    assert "The lists given to AllEqualList() cannot contain None (e.g., a hole of an array), which is the case of [x[1][0], None]" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, message", [
+    ("AllEqualList(None)", "AllEqualList() requires lists of variables, which is not the case of None"),
+    ("AllEqualList([])", "AllEqualList() requires lists of variables, which is not the case of []"),
+    ("AllEqualList(x[0], [x[1][0]])", "The lists given to AllEqualList() must have the same length, which is not the case of [x[0][0], x[0][1]] and [x[1][0]]"),
+    ("AllEqualList(x, excepting=(0,))", "The tuples of excepting given to AllEqualList() must have the length of the lists (2), which is not the case of (0,)"),
+    ("AllEqualList(x, excepting=(0, 0, 0))", "The tuples of excepting given to AllEqualList() must have the length of the lists (2), which is not the case of (0, 0, 0)"),
+    ("AllEqualList(x, excepting=[(0, 0), (1,)])", "The tuples of excepting given to AllEqualList() must have the length of the lists (2), which is not the case of (1,)"),
+])
+def test_invalid_allequallist_messages(run, constraint, message):
+    r = run(X32 + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()

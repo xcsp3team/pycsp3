@@ -1903,6 +1903,34 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     return ECtr(ConstraintAllDifferent(terms, excepting))
 
 
+def _check_lists_of_list_constraint(name, term, others, excepting):
+    """
+    Returns the lists of variables given to AllDifferentList() or AllEqualList() (whose name is specified), after checking them:
+    at least one list, no hole, lists of the same length, and tuples of excepting of the same length as the lists
+    """
+    error_if(term is None, name + "() requires lists of variables, which is not the case of None")
+    if isinstance(term, types.GeneratorType):
+        term = [v for v in term]
+    elif len(others) > 0:
+        term = list((term,) + others)
+    lists = [flatten(v, keep_none=True) for v in term]
+    error_if(len(lists) == 0, name + "() requires lists of variables, which is not the case of " + str(term))
+    for t in lists:
+        if any(v is None for v in t):
+            error("The lists given to " + name + "() cannot contain None (e.g., a hole of an array), which is the case of " + str(t))
+    assert all(checkType(t, [Variable]) for t in lists)
+    for t in lists:
+        if len(t) != len(lists[0]):
+            error("The lists given to " + name + "() must have the same length, which is not the case of " + str(lists[0]) + " and " + str(t))
+    several = isinstance(excepting, (list, set, frozenset)) and len(excepting) > 0 and all(isinstance(e, (tuple, list)) for e in excepting)
+    tuples = excepting if several else [excepting] if isinstance(excepting, (tuple, list, range)) and len(excepting) > 0 else []
+    for e in tuples:
+        if len(e) != len(lists[0]):
+            error("The tuples of excepting given to " + name + "() must have the length of the lists (" + str(len(lists[0])) + "), which is not the case of "
+                  + str(tuple(e)))
+    return lists
+
+
 def AllDifferentList(term, *others, excepting=None):
     """
     Builds and returns a constraint AllDifferentList.
@@ -1937,15 +1965,9 @@ def AllDifferentList(term, *others, excepting=None):
         if solve() is SAT:
            print(values(x))
     """
-    if isinstance(term, types.GeneratorType):
-        term = [v for v in term]
-    elif len(others) > 0:
-        term = list((term,) + others)
-    lists = [flatten(v) for v in term]
-    assert all(checkType(t, [Variable]) for t in lists)
+    lists = _check_lists_of_list_constraint("AllDifferentList", term, others, excepting)
     excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
-    assert all(len(t) == len(lists[0]) for t in lists)  # and (excepting is None or len(excepting) == len(lists[0]))
     seen = set()  # identities of the variables of the lists (== being redefined for building expressions)
     for t in lists:
         key = tuple(id(x) for x in t)
@@ -2020,15 +2042,9 @@ def AllEqualList(term, *others, excepting=None):
            AllEqualList(x)
         )
     """
-    if isinstance(term, types.GeneratorType):
-        term = [v for v in term]
-    elif len(others) > 0:
-        term = list((term,) + others)
-    lists = [flatten(v) for v in term]
-    assert all(checkType(t, [Variable]) for t in lists)
+    lists = _check_lists_of_list_constraint("AllEqualList", term, others, excepting)
     excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
-    assert all(len(t) == len(lists[0]) for t in lists) and (excepting is None or len(excepting) == len(lists[0]))
     if len(lists) == 1:
         return None  # a single list is always equal to the other ones (as for AllEqual() with a single variable)
     if len(lists) == 2 and excepting is None:
