@@ -43,12 +43,19 @@ class Diagram:
                 t.append((state1, label, state2))
         return t
 
+    def _label_values(self, scp):
+        """
+        Returns a function giving, for a source state, the values with which the labels given by ranges (conditions) are developed:
+        by default, the union of the domains of the variables of the scope (the variables may have different domains).
+        """
+        values = sorted({v for x in scp for v in x.dom.all_values()})
+        return lambda state: values
+
     def flat_transitions(self, scp):
-        values = scp[0].dom.all_values()
-        assert all(values == scp[i].dom.all_values() for i in range(1, len(scp)))
+        values_for = self._label_values(scp)
         trs = []
         for (q1, l, q2) in self.transitions:
-            labels = [l] if isinstance(l, (int, str)) else l if isinstance(l, (list, tuple, set, frozenset)) else list(l.filtering(values))
+            labels = [l] if isinstance(l, (int, str)) else l if isinstance(l, (list, tuple, set, frozenset)) else list(l.filtering(values_for(q1)))
             for label in labels:
                 assert isinstance(label, (int, str)), "currently, the label of a transition is necessarily an integer or a symbol"
                 trs.append((q1, label, q2))
@@ -214,6 +221,27 @@ class MDD(Diagram):
             transitions = [t for t in transitions]
         assert isinstance(transitions, list)  # currently, a list is wanted for an MDD (and not a set); to be changed?
         super().__init__(transitions)
+
+    def _label_values(self, scp):
+        """
+        For an MDD, the labels given by ranges (conditions) of the transitions leaving a node are developed with the domain of the
+        variable of its level, the level of a node being its distance from a root (a node without incoming transition).
+        The union of the domains is used for a node whose level is not an index of the scope (MDD whose structure is not valid).
+        """
+        union = Diagram._label_values(self, scp)
+        successors = {}
+        for (q1, _, q2) in self.transitions:
+            successors.setdefault(q1, []).append(q2)
+        targets = {q2 for (_, _, q2) in self.transitions}
+        levels, frontier, level = {}, [q for q in self.states if q not in targets], 0
+        while len(frontier) > 0:
+            following = []
+            for q in frontier:
+                if q not in levels:
+                    levels[q] = level
+                    following.extend(successors.get(q, []))
+            frontier, level = following, level + 1
+        return lambda state: scp[levels[state]].dom.all_values() if levels.get(state, len(scp)) < len(scp) else union(state)
 
     def __str__(self):
         return "MDD(" + Diagram.__str__(self) + ")"

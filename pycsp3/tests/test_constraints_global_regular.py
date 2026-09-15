@@ -13,9 +13,10 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-RANGES = "#110: labels given by ranges cannot be used with variables of different domains"
 INVALID = "#111: invalid automata are reported without explicit message, or accepted"
 COSOCO_NFA = "xcsp3team/cosoco#77: cosoco loses solutions with a non-deterministic automaton"
+ACE_DOMAINS = ("ACE fails on regular when the variables have different domains (java.lang.Exception in MDD$Node.buildRootFromAutomaton), "
+               "to be reported to xcsp3team/ACE")
 
 # The cases that a solver says it does not handle (not reported)
 ACE_NFA = "ACE does not handle non-deterministic automata (unimplemented case for non deterministic automaton)"
@@ -140,10 +141,18 @@ def test_automaton_on_symbolic_variables(run, solver):
 
 def test_automaton_with_ranges_on_different_domains(run, solver, request):
     # the labels given by ranges are applied to variables with different domains
-    bug_for(request, ALL, RANGES)
-    spec = dict(start="a", transitions=[("a", range(0, 2), "a"), ("a", range(2, 4), "b"), ("b", range(0, 4), "b")], final="b")
+    bug_for(request, "ACE", ACE_DOMAINS)
+    spec =dict(start="a", transitions=[("a", range(0, 2), "a"), ("a", range(2, 4), "b"), ("b", range(0, 4), "b")], final="b")
     r = run(automaton(spec) + "x = VarArray(size=3, dom=lambda i: range(2 + i))\nsatisfy(x in A)", solver=solver)
     assert_solutions(r, brute_force([range(2), range(3), range(4)], lambda *t: accepts(t, "a", spec["transitions"], "b")))
+
+
+def test_automaton_with_ranges_on_different_domains_xcsp3(run):
+    # the labels given by ranges are developed with the union of the domains of the variables
+    spec = dict(start="a", transitions=[("a", range(0, 2), "a"), ("a", range(2, 4), "b"), ("b", range(0, 4), "b")], final="b")
+    r = run(automaton(spec) + "x = VarArray(size=3, dom=lambda i: range(2 + i))\nsatisfy(x in A)")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/regular/transitions").text.strip() == "(a,0,a)(a,1,a)(a,2,b)(a,3,b)(b,0,b)(b,1,b)(b,2,b)(b,3,b)", r.report()
 
 
 def test_automaton_used_with_several_domains(run, solver):

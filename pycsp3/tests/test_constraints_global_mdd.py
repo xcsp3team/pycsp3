@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-RANGES = "#110: labels given by ranges cannot be used with variables of different domains"
 INVALID = "#111: invalid MDDs are reported without explicit message, or accepted"
 STRUCTURE = "#112: the structure of an MDD is not checked (roots, terminal nodes, cycles, length of the paths)"
 SET = "#113: the transitions of an MDD cannot be given by a set"
@@ -141,11 +140,18 @@ def test_mdd_on_symbolic_variables(run, solver):
     pytest.skip(SYMBOLIC)
 
 
-def test_mdd_with_ranges_on_different_domains(run, solver, request):
-    bug_for(request, ALL, RANGES)
+def test_mdd_with_ranges_on_different_domains(run, solver):
     transitions = [("r", range(0, 2), "a"), ("r", range(2, 4), "b"), ("a", range(0, 4), "t"), ("b", range(0, 2), "t")]
     r = run(f"M = MDD({transitions!r})\nx = VarArray(size=2, dom=lambda i: range(3 + i))\nsatisfy(x in M)", solver=solver)
     assert_solutions(r, brute_force([range(3), range(4)], lambda *t: accepts(t, transitions)))
+
+
+def test_mdd_with_ranges_on_different_domains_xcsp3(run):
+    # the labels given by ranges are developed with the domain of the variable of the level of the source node (3 is not in the domain of x[0])
+    transitions = [("r", range(0, 2), "a"), ("r", range(2, 4), "b"), ("a", range(0, 4), "t"), ("b", range(0, 2), "t")]
+    r = run(f"M = MDD({transitions!r})\nx = VarArray(size=2, dom=lambda i: range(3 + i))\nsatisfy(x in M)")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/mdd/transitions").text.strip() == "(r,0,a)(r,1,a)(r,2,b)(a,0,t)(a,1,t)(a,2,t)(a,3,t)(b,0,t)(b,1,t)", r.report()
 
 
 @pytest.mark.parametrize("transitions, n", [
