@@ -106,10 +106,11 @@ def remaining_lines(skip_curr=False):
 
 
 def next_lines(skip_curr=False, *, prefix_stop):
-    if skip_curr:
-        next_line()
+    if skip_curr:  # silently, the error below being reported if there is no more line
+        _dataParser.curr_line_index += 1
     left = _dataParser.curr_line_index
-    right = next((j for j in range(left, len(_dataParser.lines)) if _dataParser.lines[j].startswith(prefix_stop)), -1)
+    right = next((j for j in range(left, len(_dataParser.lines)) if _dataParser.lines[j].startswith(prefix_stop)), None)
+    error_if(right is None, "next_lines(): no line starts with " + repr(prefix_stop))
     _dataParser.curr_line_index = right
     _dataParser.curr_line_tokens = None
     return _dataParser.lines[left:right]

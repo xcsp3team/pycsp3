@@ -582,10 +582,16 @@ def test_parser_next_lines(run, call, shown):
     assert "data " + shown in r.lines, r.report()
 
 
-@bug("#93: next_lines() silently drops the last line when no line starts with prefix_stop")
-def test_parser_next_lines_without_stop(run):
+@pytest.mark.parametrize("call, text", [
+    ('next_lines(skip_curr=True, prefix_stop="end")', "edges\n0 1\n1 2\n"),
+    ('next_lines(skip_curr=True, prefix_stop="end")', "end\n"),  # skip_curr on the last line
+    ('next_lines(prefix_stop="x")', "edges\n0 1\n"),
+])
+def test_parser_next_lines_without_stop(run, call, text):
     # the line starting with the prefix must exist
-    assert_fails(run_parser(run, 'data["e"] = next_lines(skip_curr=True, prefix_stop="end")\ndata["l"] = line()', "edges\n0 1\n1 2\n"))
+    r = run_parser(run, f'data["e"] = {call}\ndata["l"] = line()', text)
+    assert_fails(r)
+    assert "next_lines(): no line starts with" in r.stdout and "Warning: no more line" not in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("text, costs, current", [
