@@ -19,7 +19,7 @@ from pycsp3.tools.compactor import build_compact_forms
 from pycsp3.tools.curser import OpOverrider, convert_to_namedtuples, is_namedtuple
 from pycsp3.tools.inspector import build_dynamic_object
 from pycsp3.tools.slider import handle_slides
-from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE, Error, error
+from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE, Error, error, error_if
 from pycsp3.tools.xcsp import build_document
 
 None_Values = ['None', '', 'null']  # adding 'none'?
@@ -106,8 +106,14 @@ def _load_model():
         raise
 
 
-def _single_value(data):  # the value of data of size 1, data being a named tuple, or a dictionary when its keys cannot be field names of named tuples
-    return next(iter(data.values())) if isinstance(data, dict) else data[0]
+def _simplified_data(data):  # None for empty data, and the value instead of data of size 1
+    if not hasattr(data, "__len__"):  # a number, a Boolean or None (possible roots of a JSON file) is given as such
+        return data
+    if len(data) == 0:
+        return None
+    if len(data) == 1:  # data being a named tuple, or a dictionary when its keys cannot be field names of named tuples
+        return next(iter(data.values())) if isinstance(data, dict) else data[0]
+    return data
 
 
 def _load_data():
@@ -242,10 +248,7 @@ def _load(*, console=False):
         Compilation.data = convert_to_namedtuples(Compilation.data)
         Compilation.string_data = Compilation.string_data.replace("/", "-")
         Compilation.original_data = Compilation.data
-        if len(Compilation.data) == 0:
-            Compilation.data = None
-        elif len(Compilation.data) == 1:
-            Compilation.data = _single_value(Compilation.data)  # the value instead of a tuple of size 1
+        Compilation.data = _simplified_data(Compilation.data)
     else:
         Compilation.string_model = "Console"
         Compilation.string_data = ""
@@ -271,7 +274,8 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
            )
         )
     """
-    assert filename.endswith(".json")
+    error_if(not isinstance(filename, str), "The name of a JSON file must be a string (possibly a URL), which is not the case of " + repr(filename))
+    error_if(not filename.endswith(".json"), "The name of a JSON file must end with .json, which is not the case of " + repr(filename))
     if filename.startswith("http"):
         # import requests
         # response = requests.get(filename)
@@ -285,9 +289,8 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
     else:
         if os.path.exists(filename):
             fn = filename
-        elif filename[0] == '.':
-            assert filename[1:].startswith(os.sep)
-            fn = os.path.abspath('.') + filename[len(os.sep):]
+        elif filename.startswith("." + os.sep) or filename.startswith(".." + os.sep):
+            fn = os.path.abspath(filename)
         else:
             # is file in the directory of the model file?
             path = "." if os.sep not in sys.argv[0] else sys.argv[0][:sys.argv[0].rindex(os.sep)]
@@ -301,10 +304,7 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
         with open(fn) as f:
             data = json.loads(f.read(), object_pairs_hook=OrderedDict)
     data = convert_to_namedtuples(data)
-    if len(data) == 0:
-        data = None
-    elif len(data) == 1:
-        data = _single_value(data)  # the value instead of a tuple of size 1
+    data = _simplified_data(data)
     if storing:
         Compilation.data = data
         if record_string_data:

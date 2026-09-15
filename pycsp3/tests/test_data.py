@@ -12,7 +12,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
-JSON_INVALID = "#89: invalid file names and JSON contents are reported without explicit message"
 UNTIL = "#92: numbers_in_lines_until() concatenates the lines without separator, which merges numbers"
 PARSING_INVALID = "#94: invalid arguments of the data parsing functions are reported without explicit message"
 # Displays the variable data, the named tuples built from data (nt0, nt1, ...) being displayed without their names
@@ -254,13 +253,12 @@ def test_data_json_objects_with_different_keys(run, second, code, args):
     assert "The objects of a list must have the same keys" in r.stdout, r.report()
 
 
-@pytest.mark.parametrize("content", [pytest.param("5", marks=bug(JSON_INVALID)), '"abc"'])
-def test_data_json_scalar(run, content):
-    r = run(SHOW, args=["-data=data.json"], files={"data.json": content})
-    if r.ok:
-        assert "data " + repr(json.loads(content)) in r.lines, r.report()
-    else:
-        assert_fails(r)
+@pytest.mark.parametrize("content", ["5", "-2.5", "true", "null", '"abc"'])
+@pytest.mark.parametrize("code, args", [(SHOW, ["-data=data.json"]), ('data = load_json_data("data.json")\n' + SHOW, [])])
+def test_data_json_scalar(run, content, code, args):
+    # the root of the JSON file is given as such
+    r = run(code, args=args, files={"data.json": content})
+    assert "data " + repr(json.loads(content)) in r.lines, r.report()
 
 
 def test_data_json_invalid(run):
@@ -329,13 +327,39 @@ def test_default_data_when_no_data_given(run, args, values):
     'load_json_data("missing.json")',
     'load_json_data("sub/missing.json")',
     'default_data("missing.json")',
-    pytest.param('load_json_data("data.txt")', marks=bug(JSON_INVALID)),
-    pytest.param('load_json_data("../missing.json")', marks=bug(JSON_INVALID)),
-    pytest.param('load_json_data(5)', marks=bug(JSON_INVALID)),
-    pytest.param('load_json_data(None)', marks=bug(JSON_INVALID)),
+    'load_json_data("data.txt")',
+    'load_json_data("")',
+    'load_json_data("../missing.json")',
+    'load_json_data("./missing.json")',
+    'load_json_data(5)',
+    'load_json_data(None)',
+    'load_json_data(["data.json"])',
+    'default_data(None)',
 ])
 def test_load_json_data_invalid(run, call):
     assert_fails(run("d = " + call, files={"data.txt": '{"n": 3}'}))
+
+
+@pytest.mark.parametrize("call, message", [
+    ('load_json_data("data.txt")', "The name of a JSON file must end with .json, which is not the case of 'data.txt'"),
+    ('load_json_data(5)', "The name of a JSON file must be a string (possibly a URL), which is not the case of 5"),
+    ('load_json_data("../missing.json")', "missing.json does not exist"),
+])
+def test_load_json_data_invalid_messages(run, call, message):
+    r = run("d = " + call, files={"data.txt": '{"n": 3}'})
+    assert not r.ok and message in r.stdout + r.stderr, r.report()
+
+
+def test_load_json_data_parent_directory(run):
+    # the model sub/m.py is run from the directory sub: ../data.json is the file data.json of the parent directory
+    r = run("""
+        import subprocess, sys
+        p = subprocess.run([sys.executable, "m.py"], capture_output=True, text=True, cwd="sub")
+        print(p.stdout)
+        print(p.stderr, file=sys.stderr)
+        sys.exit(p.returncode)
+    """, header=False, files={"sub/m.py": 'from pycsp3 import *\nprint("loaded", load_json_data("../data.json"))\n', "data.json": '{"t": [1, 2]}'})
+    assert "loaded [1, 2]" in r.lines, r.report()
 
 
 @pytest.mark.parametrize("args, files, name, content", [
