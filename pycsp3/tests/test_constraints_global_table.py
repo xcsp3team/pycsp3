@@ -22,7 +22,6 @@ D6 = [range(6)] * 3
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-CYCLE = "#105: hybrid tables with restrictions referring to columns in a cycle make the conversion fail"
 INVALID = "#106: invalid tables are reported without explicit message, or accepted"
 ACE_CONFLICTS = "xcsp3team/ACE#14: ACE fails on a table of conflicts with the symbol *"
 ACE_HYBRID = "xcsp3team/ACE#15: ACE finds wrong solutions with some hybrid tables of level 2"
@@ -32,7 +31,6 @@ COSOCO_HYBRID = "xcsp3team/cosoco#76: cosoco finds wrong solutions or fails on h
 KNOWN = {
     ("starred", "x not in {(0, ANY, 2), (ANY, 3, ANY)}"): [("ACE", ACE_CONFLICTS)],
     ("starred", "Table(scope=x, conflicts=[(ANY, 1, ANY)])"): [("ACE", ACE_CONFLICTS)],
-    ("hybrid", "x in [(ne(col(1)), ne(col(2)), ne(col(0)))]"): [(ALL, CYCLE)],
     ("hybrid", "x not in [(lt(2), ANY, ge(4))]"): [("ACE", ACE_CONFLICTS)],
     ("kept", "x in [(0, 0, 0), (gt(4), ANY, ANY), (ANY, range(1, 3), le(col(1)))]"): [("ACE", ACE_HYBRID)],
     ("kept", "x in [(eq(col(1) + 1), ANY, lt(col(1) + 3))]"): [("ACE", ACE_HYBRID)],
@@ -236,6 +234,19 @@ HYBRID = [
 def test_hybrid_tables(run, solver, request, constraint, predicate):
     # by default, hybrid tables are converted into ordinary (or starred) tables
     known(request, "hybrid", constraint)
+    check(run, solver, X6 + f"satisfy({constraint})", D6, predicate)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("x in [(ne(col(1)), ne(col(2)), 3)]", lambda a, b, c: a != b and b != c and c == 3),  # a chain of restrictions
+    ("x in [(eq(col(1) + 1), eq(col(2) + 1), ANY)]", lambda a, b, c: a == b + 1 and b == c + 1),
+    ("x in [(lt(col(1)), lt(col(2)), gt(col(0) + 2))]", lambda a, b, c: a < b < c and c > a + 2),  # a cycle
+    ("x in [(ANY, ne(col(2)), ne(col(1) - 1))]", lambda a, b, c: b != c and c != b - 1),
+    ("x in [(eq(col(1) + col(2)), gt(col(0) - 4), ANY), (0, 0, 0)]", lambda a, b, c: (a == b + c and b > a - 4) or (a, b, c) == (0, 0, 0)),
+    ("x not in [(ne(col(1)), ne(col(2)), ne(col(0)))]", lambda a, b, c: not (a != b and b != c and c != a)),
+])
+def test_hybrid_tables_with_restrictions_referring_to_restricted_columns(run, solver, constraint, predicate):
+    # a restriction referring to a column with a restriction (e.g., in a chain or a cycle): the conversion enumerates the involved columns
     check(run, solver, X6 + f"satisfy({constraint})", D6, predicate)
 
 
