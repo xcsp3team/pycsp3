@@ -3,7 +3,7 @@ import types
 from pycsp3.classes.auxiliary.conditions import Condition, inside
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in
-from pycsp3.tools.utilities import error_if, flatten
+from pycsp3.tools.utilities import error, error_if, flatten
 
 
 class Diagram:
@@ -27,9 +27,10 @@ class Diagram:
 
     @staticmethod
     def _add_transitions(transitions):
-        assert len(transitions) > 0, "at least one transition must be present"
-        assert isinstance(transitions, (list, set))
+        if not isinstance(transitions, (list, set)) or len(transitions) == 0:
+            error("The transitions must be given by a non-empty list or set of 3-tuples, which is not the case of " + repr(transitions))
         t = []
+        checked_states = set()
         for transition in transitions:
             if isinstance(transition, list):
                 transition = tuple(transition)
@@ -37,6 +38,14 @@ class Diagram:
             assert len(transition) == 3, "Error: each transition must be composed of 3 elements"
             state1, label, state2 = transition
             assert isinstance(state1, str) and isinstance(state2, str), Diagram.MSG_STATE
+            for state in (state1, state2):
+                if state not in checked_states:
+                    if len(state) == 0 or any(c.isspace() or c in "()," for c in state):  # such characters would break the syntax of transitions
+                        error("The name of a state must be a non-empty string without space, comma or parenthesis, which is not the case of " + repr(state))
+                    checked_states.add(state)
+            if not (isinstance(label, (int, str, range)) or (isinstance(label, (tuple, list, set, frozenset)) and all(isinstance(v, (int, str)) for v in label))):
+                error("The label of a transition must be an integer, a symbol, a range or a collection of integers (or symbols), which is not the case of "
+                      + repr(label) + " in " + repr(transition))
             label = inside(label) if isinstance(label, range) else set(label) if isinstance(label, (tuple, list)) else label
             check_if_already_present = False  # TODO making it as an option?
             if not check_if_already_present or (state1, label, state2) not in t:
@@ -87,7 +96,7 @@ class Automaton(Diagram):
         :param k: a third index
         :return: the name of a state from the specified argument(s)
         """
-        assert j is not None or k is None
+        error_if(j is None and k is not None, "Automaton.q(): a third index k cannot be given without a second index j")
         suffix = ("x" + str(j) if j is not None else "") + ("x" + str(k) if k is not None else "")
         return "q" + str(i) + suffix
 
@@ -219,7 +228,8 @@ class MDD(Diagram):
         """
         if isinstance(transitions, types.GeneratorType):
             transitions = [t for t in transitions]
-        assert isinstance(transitions, list)  # currently, a list is wanted for an MDD (and not a set); to be changed?
+        if not isinstance(transitions, list):  # currently, a list is wanted for an MDD (and not a set); to be changed?
+            error("The transitions of an MDD must be given by a list of 3-tuples, which is not the case of " + repr(transitions))
         super().__init__(transitions)
 
     def _label_values(self, scp):

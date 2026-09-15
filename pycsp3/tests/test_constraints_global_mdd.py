@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-INVALID = "#111: invalid MDDs are reported without explicit message, or accepted"
 STRUCTURE = "#112: the structure of an MDD is not checked (roots, terminal nodes, cycles, length of the paths)"
 SET = "#113: the transitions of an MDD cannot be given by a set"
 WRITING = "#114: the transitions of an MDD are not written from the root, and labels outside the domains are kept, which makes the solvers fail"
@@ -193,16 +192,32 @@ def test_xcsp3_mdd(run, transitions, dom, text):
     "M = MDD([])",
     "M = MDD([('r', 0)])",
     "M = MDD([('r', 0, 1)])",
-    pytest.param("M = MDD(5)", marks=bug(INVALID)),
-    pytest.param("M = MDD('abc')", marks=bug(INVALID)),
-    pytest.param("M = MDD([('r', 2.5, 't')])\nsatisfy(x in M)", marks=bug(INVALID)),
-    pytest.param("M = MDD([('r', 'z', 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(x in M)", marks=bug(INVALID)),
-    pytest.param("M = MDD([('r 1', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(x in M)", marks=bug(INVALID)),
+    "M = MDD(5)",
+    "M = MDD('abc')",
+    "M = MDD([('r', 2.5, 't')])\nsatisfy(x in M)",
+    "M = MDD([('r', 'z', 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(x in M)",
+    "M = MDD([('r 1', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(x in M)",
     "satisfy(Mdd(scope=x, mdd=5))",
     "satisfy(Mdd(scope=x, mdd=[('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')]))",
     "M = MDD([('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(Mdd(scope=[x[0], 1, x[2]], mdd=M))",
-    pytest.param("M = MDD([('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(Mdd(scope=[], mdd=M))", marks=bug(INVALID)),
+    "M = MDD([('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(Mdd(scope=[], mdd=M))",
     "M = MDD([('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(Mdd(mdd=M))",
 ])
 def test_invalid_mdd_arguments(run, code):
     assert_fails(run(IMPORT + "x = VarArray(size=3, dom={0, 1})\n" + code))
+
+
+@pytest.mark.parametrize("code, message", [
+    ("M = MDD(5)", "The transitions of an MDD must be given by a list of 3-tuples, which is not the case of 5"),
+    ("M = MDD('abc')", "The transitions of an MDD must be given by a list of 3-tuples, which is not the case of 'abc'"),
+    ("M = MDD([('r', 2.5, 't')])",
+     "The label of a transition must be an integer, a symbol, a range or a collection of integers (or symbols), which is not the case of 2.5 in ('r', 2.5, 't')"),
+    ("M = MDD([('r', 'z', 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(x in M)",
+     "The label 'z' of the transition ('r', 'z', 'a') is a symbol, which is not possible for the integer variables of the scope of the constraint Mdd"),
+    ("M = MDD([('r 1', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])",
+     "The name of a state must be a non-empty string without space, comma or parenthesis, which is not the case of 'r 1'"),
+    ("M = MDD([('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(Mdd(scope=[], mdd=M))", "The scope of the constraint Mdd must not be empty"),
+])
+def test_invalid_mdd_arguments_messages(run, code, message):
+    r = run(IMPORT + "x = VarArray(size=3, dom={0, 1})\n" + code)
+    assert not r.ok and message in r.stdout, r.report()

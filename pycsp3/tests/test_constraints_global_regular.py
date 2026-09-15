@@ -9,11 +9,10 @@ computed by brute force.
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-INVALID = "#111: invalid automata are reported without explicit message, or accepted"
 COSOCO_NFA = "xcsp3team/cosoco#77: cosoco loses solutions with a non-deterministic automaton"
 ACE_DOMAINS = ("ACE fails on regular when the variables have different domains (java.lang.Exception in MDD$Node.buildRootFromAutomaton), "
                "to be reported to xcsp3team/ACE")
@@ -194,7 +193,7 @@ def test_automaton_states(run):
     assert "states_for ['q0', 'q1', 'q2'] ['q1', 'q5'] ['q2', 'q4'] ['qa', 'qb']" in r.lines
 
 
-@pytest.mark.parametrize("call", [pytest.param("Automaton.q(1, None, 2)", marks=bug(INVALID)), "Automaton.states_for()", "Automaton.states_for([])", "Automaton.states_for(1.5)"])
+@pytest.mark.parametrize("call", ["Automaton.q(1, None, 2)", "Automaton.states_for()", "Automaton.states_for([])", "Automaton.states_for(1.5)"])
 def test_automaton_states_invalid(run, call):
     assert_fails(run(f"v = {call}"))
 
@@ -286,17 +285,36 @@ def test_xcsp3_regular(run, spec, dom, transitions, start, final):
     "A = Automaton(start='a', transitions=[('a', 0, 1)], final='a')",
     "A = Automaton(start=0, transitions=[('a', 0, 'a')], final='a')",
     "A = Automaton(start='a', transitions=[('a', 0, 'a')], final=[0])",
-    pytest.param("A = Automaton(start='a', transitions=(('a', 0, 'a'),), final='a')", marks=bug(INVALID)),
-    pytest.param("A = Automaton(start='a', transitions=(t for t in [('a', 0, 'a')]), final='a')", marks=bug(INVALID)),
-    pytest.param("A = Automaton(start='a', transitions=[('a', 2.5, 'a')], final='a')\nsatisfy(x in A)", marks=bug(INVALID)),
-    pytest.param("A = Automaton(start='a', transitions=[('a', 'z', 'a')], final='a')\nsatisfy(x in A)", marks=bug(INVALID)),
-    pytest.param("A = Automaton(start='a b', transitions=[('a b', 0, 'a b')], final='a b')\nsatisfy(x in A)", marks=bug(INVALID)),
+    "A = Automaton(start='a', transitions=(('a', 0, 'a'),), final='a')",
+    "A = Automaton(start='a', transitions=(t for t in [('a', 0, 'a')]), final='a')",
+    "A = Automaton(start='a', transitions=[('a', 2.5, 'a')], final='a')\nsatisfy(x in A)",
+    "A = Automaton(start='a', transitions=[('a', 'z', 'a')], final='a')\nsatisfy(x in A)",
+    "A = Automaton(start='a b', transitions=[('a b', 0, 'a b')], final='a b')\nsatisfy(x in A)",
+    "A = Automaton(start='a', transitions=[('a', 0, 'a,b')], final='a')",
+    "A = Automaton(start='a', transitions=[('a', [0, None], 'a')], final='a')",
     "A = Automaton(start='a', transitions=[('a', 0, 'a')])",
     "satisfy(Regular(scope=x, automaton=5))",
     "satisfy(Regular(scope=x, automaton=[('a', 0, 'a')]))",
     "A = Automaton(start='a', transitions=[('a', 0, 'a')], final='a')\nsatisfy(Regular(scope=[x[0], 1], automaton=A))",
     "A = Automaton(start='a', transitions=[('a', 0, 'a')], final='a')\nsatisfy(Regular(automaton=A))",
-    pytest.param("A = Automaton(start='a', transitions=[('a', 0, 'a')], final='a')\nsatisfy(Regular(scope=[], automaton=A))", marks=bug(INVALID)),
+    "A = Automaton(start='a', transitions=[('a', 0, 'a')], final='a')\nsatisfy(Regular(scope=[], automaton=A))",
 ])
 def test_invalid_automata(run, code):
     assert_fails(run("x = VarArray(size=3, dom={0, 1})\n" + code))
+
+
+@pytest.mark.parametrize("code, message", [
+    ("A = Automaton(start='a', transitions=(('a', 0, 'a'),), final='a')",
+     "The transitions must be given by a non-empty list or set of 3-tuples, which is not the case of (('a', 0, 'a'),)"),
+    ("A = Automaton(start='a', transitions=[('a', 2.5, 'a')], final='a')",
+     "The label of a transition must be an integer, a symbol, a range or a collection of integers (or symbols), which is not the case of 2.5 in ('a', 2.5, 'a')"),
+    ("A = Automaton(start='a', transitions=[('a', 'z', 'a')], final='a')\nsatisfy(x in A)",
+     "The label 'z' of the transition ('a', 'z', 'a') is a symbol, which is not possible for the integer variables of the scope of the constraint Regular"),
+    ("A = Automaton(start='a b', transitions=[('a b', 0, 'a b')], final='a b')",
+     "The name of a state must be a non-empty string without space, comma or parenthesis, which is not the case of 'a b'"),
+    ("A = Automaton(start='a', transitions=[('a', 0, 'a')], final='a')\nsatisfy(Regular(scope=[], automaton=A))", "The scope of the constraint Regular must not be empty"),
+    ("v = Automaton.q(1, None, 2)", "Automaton.q(): a third index k cannot be given without a second index j"),
+])
+def test_invalid_automata_messages(run, code, message):
+    r = run("x = VarArray(size=3, dom={0, 1})\n" + code)
+    assert not r.ok and message in r.stdout, r.report()

@@ -1730,6 +1730,21 @@ def either(this, Or):
 ''' Language-based Constraints '''
 
 
+def _check_scope_and_labels_of_diagram(scope, diagram, name):  # name is the name of the constraint (Regular or Mdd)
+    error_if(len(scope) == 0, "The scope of the constraint " + name + " must not be empty")
+    if all(isinstance(x, VariableInteger) for x in scope):
+        expected = int
+    elif all(isinstance(x, VariableSymbolic) for x in scope):
+        expected = str
+    else:
+        return
+    for (q1, label, q2) in diagram.transitions:
+        for v in [label] if isinstance(label, (int, str)) else label if isinstance(label, (set, frozenset)) else []:  # ranges (conditions) are integers
+            if not isinstance(v, expected):
+                error("The label " + repr(v) + " of the transition " + repr((q1, label, q2)) + " is " + ("a symbol" if expected is int else "an integer")
+                      + ", which is not possible for the " + ("integer" if expected is int else "symbolic") + " variables of the scope of the constraint " + name)
+
+
 def Regular(*, scope, automaton):
     """
     Builds and returns a constraint Regular.
@@ -1759,6 +1774,7 @@ def Regular(*, scope, automaton):
     scope = flatten(scope)
     checkType(scope, [Variable])
     checkType(automaton, Automaton)
+    _check_scope_and_labels_of_diagram(scope, automaton, "Regular")
     return ECtr(ConstraintRegular(scope, automaton))
 
 
@@ -1787,6 +1803,7 @@ def Mdd(*, scope, mdd):
     scope = flatten(scope)
     checkType(scope, [Variable])
     checkType(mdd, MDD)
+    _check_scope_and_labels_of_diagram(scope, mdd, "Mdd")
     return ECtr(ConstraintMdd(scope, mdd))
 
 
