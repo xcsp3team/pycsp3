@@ -1030,7 +1030,8 @@ def satisfy(*args, no_comment_tags_extraction=False):
 
 def _Extension(*, scope, table, positive=True):
     scope = flatten(scope)
-    assert len(scope) == len(set(scope))
+    if len(scope) != len(set(scope)):
+        error("The variables of the scope of a table constraint must be distinct, which is not the case of " + str(scope))
     checkType(scope, [Variable])
     assert isinstance(table, list)
     assert len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
@@ -1115,11 +1116,14 @@ def Table(*, scope, supports=None, conflicts=None):
            print(values(x))
     """
     scope = flatten(scope)
-    assert scope is not None and (supports is None) != (conflicts is None)
+    error_if((supports is None) == (conflicts is None), "Table() requires exactly one of the parameters supports and conflicts")
     positive = supports is not None
     table = supports if positive else conflicts
+    if not isinstance(table, (list, tuple, set, frozenset, range, types.GeneratorType)):
+        error("The " + ("supports" if positive else "conflicts") + " of Table() must be given by a list, a tuple, a set or a range "
+              + "(of tuples, or of values for a unary table), which is not the case of " + str(table))
     table = list(table)  # if isinstance(table, (tuple, set, frozenset, types.GeneratorType)) else table
-    if not positive and len(conflicts) == 0:
+    if not positive and len(table) == 0:
         return None
     return _Extension(scope=scope, table=table, positive=positive)
 

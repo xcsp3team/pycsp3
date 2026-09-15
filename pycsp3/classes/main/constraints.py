@@ -301,13 +301,15 @@ class ConstraintExtension(Constraint):
         if options.safe_tables:
             hybrid = 0  # we assume that the tables are ordinary/starred
         else:
-            if h in ConstraintExtension.cache_for_knowing_if_hybrid:
-                hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[h]
+            integer = tuple(isinstance(x, VariableInteger) for x in scope)
+            key = (h, integer)  # the types of the values are checked with respect to the types of the variables, while looking for hybrid restrictions
+            if key in ConstraintExtension.cache_for_knowing_if_hybrid:
+                hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[key]
             else:
                 check_hybrid2 = True
                 hybrid = 0
                 for t in table:
-                    for v in t:
+                    for j, v in enumerate(t):
                         error_if(isinstance(v, Node), "Bad form")
                         if isinstance(v, ConditionNode):
                             hybrid = 2
@@ -315,13 +317,17 @@ class ConstraintExtension(Constraint):
                                 break
                             else:
                                 assert True  # TODO test to be written
-                        elif hybrid == 0 and not (isinstance(v, (int, str)) or v is ANY):
+                        elif isinstance(v, (int, str)):
+                            if isinstance(v, str) == integer[j]:
+                                error("The value " + repr(v) + " of the tuple " + str(t) + " is " + ("a symbol" if integer[j] else "an integer")
+                                      + ", which is not possible for the " + ("integer" if integer[j] else "symbolic") + " variable " + str(scope[j]))
+                        elif hybrid == 0 and v is not ANY:
                             hybrid = 1
                     if hybrid == 2:
                         if not check_hybrid2:
                             break
                 # hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelization attempt showed no gain.
-                ConstraintExtension.cache_for_knowing_if_hybrid[h] = hybrid
+                ConstraintExtension.cache_for_knowing_if_hybrid[key] = hybrid
 
         if hybrid == 0:  # if not hybrid
             if not self.restrict_table_wrt_domains:

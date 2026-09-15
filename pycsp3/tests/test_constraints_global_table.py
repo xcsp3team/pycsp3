@@ -10,7 +10,7 @@ from itertools import product
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 COSOCO_HOLES = "xcsp3team/cosoco#72: cosoco gives individually the values of the variables involved in no constraint, and pycsp3 fails when recording those of holes"
@@ -22,7 +22,6 @@ D6 = [range(6)] * 3
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-INVALID = "#106: invalid tables are reported without explicit message, or accepted"
 ACE_CONFLICTS = "xcsp3team/ACE#14: ACE fails on a table of conflicts with the symbol *"
 ACE_HYBRID = "xcsp3team/ACE#15: ACE finds wrong solutions with some hybrid tables of level 2"
 COSOCO_HYBRID = "xcsp3team/cosoco#76: cosoco finds wrong solutions or fails on hybrid tables"
@@ -328,22 +327,41 @@ def test_xcsp3_hybrid_table_kept(run):
 # ---------------------------------------------------------------------------------------------------- invalid tables
 
 @pytest.mark.parametrize("constraint", [
-    pytest.param("(x[0], x[0]) in {(0, 0), (1, 1)}", marks=bug(INVALID)),
+    "(x[0], x[0]) in {(0, 0), (1, 1)}",
     "(x[0], x[1]) in {(0, 1, 2)}",
     "x in {(0, 1), (1, 2)}",
     "x in [(0, 1, 2), (0, 1)]",
-    pytest.param("x in {(0, 1, 'a')}", marks=bug(INVALID)),
+    "x in {(0, 1, 'a')}",
     "x in {(0, 1, 2.5)}",
     "x in {(0, 1, None)}",
     "(x[0], 1, x[2]) in {(0, 1, 2)}",
-    pytest.param("Table(scope=x)", marks=bug(INVALID)),
-    pytest.param("Table(scope=x, supports=[(0, 1, 2)], conflicts=[(1, 1, 1)])", marks=bug(INVALID)),
+    "Table(scope=x)",
+    "Table(scope=x, supports=[(0, 1, 2)], conflicts=[(1, 1, 1)])",
     "Table(supports=[(0, 1, 2)])",
-    pytest.param("Table(scope=[x[0], x[0]], supports=[(0, 0)])", marks=bug(INVALID)),
+    "Table(scope=[x[0], x[0]], supports=[(0, 0)])",
     "Table(scope=[], supports=[(0, 1, 2)])",
     "Table(scope=x, supports=[0, 1])",
-    pytest.param("Table(scope=x, supports=5)", marks=bug(INVALID)),
+    "Table(scope=x, supports=5)",
+    "Table(scope=x, conflicts=None)",
     "x[0] in ['a', 'b']",
 ])
 def test_invalid_tables(run, constraint):
     assert_fails(run(X3 + f"satisfy({constraint})"))
+
+
+@pytest.mark.parametrize("constraint, message", [
+    ("(x[0], x[0]) in {(0, 0), (1, 1)}", "The variables of the scope of a table constraint must be distinct, which is not the case of [x[0], x[0]]"),
+    ("Table(scope=x)", "Table() requires exactly one of the parameters supports and conflicts"),
+    ("Table(scope=x, supports=[(0, 1, 2)], conflicts=[(1, 1, 1)])", "Table() requires exactly one of the parameters supports and conflicts"),
+    ("Table(scope=x, supports=5)", "The supports of Table() must be given by a list, a tuple, a set or a range (of tuples, or of values for a unary table), which is not the case of 5"),
+    ("x in {(0, 1, 'a')}", "The value 'a' of the tuple (0, 1, 'a') is a symbol, which is not possible for the integer variable x[2]"),
+    ("s in {('a', 'b'), ('a', 1)}", "The value 1 of the tuple ('a', 1) is an integer, which is not possible for the symbolic variable s[1]"),
+    ("(x[0], s[0]) in {(0, 'a'), ('b', 'a')}", "The value 'b' of the tuple ('b', 'a') is a symbol, which is not possible for the integer variable x[0]"),
+])
+def test_invalid_tables_messages(run, constraint, message):
+    r = run(X3 + "s = VarArray(size=2, dom={'a', 'b', 'c'})\n" + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()
+
+
+def test_table_of_conflicts_given_by_a_generator(run, solver):
+    check(run, solver, X3 + "satisfy(Table(scope=x, conflicts=((i, i, i) for i in range(4))))", [range(4)] * 3, lambda a, b, c: not (a == b == c))
