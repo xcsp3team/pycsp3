@@ -206,26 +206,32 @@ def test_data_json_keys_not_allowed_in_named_tuples(run, key):
     assert "values 3 4" in r.lines, r.report()
 
 
-OBJECTS = "#86: the objects of a list are converted with the keys of the first object"
+OBJECTS_ORDERS = '{"items": [{"a": 1, "b": 2}, {"b": 3, "a": 4}], "n": 0}'
 
 
-@bug(OBJECTS)
-def test_data_json_objects_with_keys_in_different_orders(run):
-    r = run('print("items", [(item.a, item.b) for item in data.items])', args=["-data=data.json"],
-            files={"data.json": '{"items": [{"a": 1, "b": 2}, {"b": 3, "a": 4}], "n": 0}'})
-    assert "items [(1, 2), (4, 3)]" in r.lines, r.report()
+@pytest.mark.parametrize("code, args", [
+    ('print("items", [(item.a, item.b) for item in data.items], [tuple(item) for item in data.items])', ["-data=data.json"]),
+    ('items = load_json_data("data.json").items\nprint("items", [(item.a, item.b) for item in items], [tuple(item) for item in items])', []),
+])
+def test_data_json_objects_with_keys_in_different_orders(run, code, args):
+    # the values are given by name; the fields of all the objects are in the order of the keys of the first object
+    r = run(code, args=args, files={"data.json": OBJECTS_ORDERS})
+    assert "items [(1, 2), (4, 3)] [(1, 2), (4, 3)]" in r.lines, r.report()
 
 
-@bug(OBJECTS)
+def test_data_json_nested_objects_with_keys_in_different_orders(run):
+    r = run('print("items", [(item.a, [(p.x, p.y) for p in item.t]) for item in data.items])', args=["-data=data.json"],
+            files={"data.json": '{"items": [{"a": 1, "t": [{"x": 1, "y": 2}, {"y": 3, "x": 4}]}, {"t": [], "a": 2}], "n": 0}'})
+    assert "items [(1, [(1, 2), (4, 3)]), (2, [])]" in r.lines, r.report()
+
+
 @pytest.mark.parametrize("second", ['{"a": 3, "c": 4}', '{"a": 3}', '{"a": 3, "b": 4, "c": 5}'])
-def test_data_json_objects_with_different_keys(run, second):
-    r = run('print("items", [item._asdict() for item in data.items])', args=["-data=data.json"],
-            files={"data.json": '{"items": [{"a": 1, "b": 2}, ' + second + '], "n": 0}'})
-    # either each object keeps its own fields, or an error is reported; a value is never given to another field
-    if r.ok:
-        assert "items " + str([{"a": 1, "b": 2}, json.loads(second)]) in r.lines, r.report()
-    else:
-        assert_fails(r)
+@pytest.mark.parametrize("code, args", [('print("items", data.items)', ["-data=data.json"]), ('print("items", load_json_data("data.json"))', [])])
+def test_data_json_objects_with_different_keys(run, second, code, args):
+    # an error is reported: a value is never given to another field
+    r = run(code, args=args, files={"data.json": '{"items": [{"a": 1, "b": 2}, ' + second + '], "n": 0}'})
+    assert_fails(r)
+    assert "The objects of a list must have the same keys" in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("content", [pytest.param("5", marks=bug(JSON_INVALID)), '"abc"'])

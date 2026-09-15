@@ -11,7 +11,7 @@ from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.utilities import (flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_1d_tuple, is_2d_list, is_matrix, is_square_matrix,
-                                    is_cube, ANY, structured_list, warning, error_if, AttributeDict)
+                                    is_cube, ANY, structured_list, warning, error, error_if, AttributeDict)
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -1045,9 +1045,15 @@ def convert_to_namedtuples(obj):
             if is_1d_list(obj, dict):
                 if test:
                     return [AttributeDict(recursive_convert_to_namedtuples(v)) for v in obj]
-                nt = namedtuple("nt" + str(recursive_convert_to_namedtuples.cnt), obj[0].keys())
+                keys = list(obj[0].keys())
+                other = next((d for d in obj if set(d.keys()) != set(keys)), None)
+                if other is not None:
+                    error("The objects of a list must have the same keys, which is not the case of an object with keys " + str(keys)
+                          + " and an object with keys " + str(list(other.keys())))
+                nt = namedtuple("nt" + str(recursive_convert_to_namedtuples.cnt), keys)
                 recursive_convert_to_namedtuples.cnt += 1
-                return [nt(*(recursive_convert_to_namedtuples(v) for (k, v) in d.items())) for d in obj]
+                # values given by name, the keys of an object being possibly in another order than those of the first object
+                return [nt(**{k: recursive_convert_to_namedtuples(v) for (k, v) in d.items()}) for d in obj]
             t = [recursive_convert_to_namedtuples(v) for v in obj]
             return ListInt(t) if isinstance(t[0], ListInt) else ListVar(t) if isinstance(t[0], ListVar) else t
         if isinstance(obj, dict):
