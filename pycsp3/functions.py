@@ -1466,8 +1466,10 @@ def belong(x, values):
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
     if isinstance(x, int):
+        if isinstance(values, (tuple, list)):
+            values = [y for y in values if y is not None]  # None (e.g., a hole of an array) is discarded
         assert is_1d_list(values, Variable)
-        return disjunction(y == x for y in values if y)
+        return disjunction(y == x for y in values)
     assert isinstance(x, Variable)
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
@@ -1516,8 +1518,10 @@ def not_belong(x, values):
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
     if isinstance(x, int):
+        if isinstance(values, (tuple, list)):
+            values = [y for y in values if y is not None]  # None (e.g., a hole of an array) is discarded
         assert is_1d_list(values, Variable)
-        return conjunction(y != x for y in values if y)
+        return conjunction(y != x for y in values)
     assert isinstance(x, Variable)
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:

@@ -19,7 +19,6 @@ ACE_NEGATIVE = "xcsp3team/ACE#12: ACE fails on abs, dist, mul, div and mod with 
 SKIPPED = {"x ** z == y": {"ACE": "ACE does not implement pow with a variable exponent (not implemented)"}}
 CHOCO_POW = "chocoteam/choco-solver#1248: CHOCO does not support pow in some intensional constraints"
 XOR_IFF = "#98: the test on Boolean arguments of xor() and iff() is wrong (IndexError, arguments silently discarded)"
-BELONG_NONE = "#100: None in the list of variables of belong() and not_belong() makes the call fail"
 INVALID = "#101: invalid arguments of the intension functions are reported without explicit message"
 
 # For each constraint (as written in the tests), the known bugs: pairs (solvers, reason)
@@ -45,8 +44,6 @@ KNOWN = {
     "iff(x > 0, False, y > 0)": [(ALL, XOR_IFF)],
     "iff(x > 0, y > 0, b)": [("CHOCO", "#102: the semantics of iff with more than two arguments is to be confirmed (CHOCO uses associativity)"),
                              ("COSOCO", "xcsp3team/cosoco#74: cosoco ignores the arguments of iff after the second one")],
-    "belong(-3, [x, None, y])": [(ALL, BELONG_NONE)],
-    "not_belong(-3, [x, None, y])": [(ALL, BELONG_NONE)],
     'expr("eq", y, expr("abs", x))': [("ACE", ACE_NEGATIVE)],
     'expr("eq", y, expr("dist", x, 1))': [("ACE", ACE_NEGATIVE)],
     'expr("eq", y, expr("div", x, 2))': [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
