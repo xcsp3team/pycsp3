@@ -1048,7 +1048,9 @@ def _Extension(*, scope, table, positive=True):
         table = new_table
     if len(scope) == 1:
         table = [v[0] if isinstance(v, tuple) and len(v) == 1 else v for v in table]
-        assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
+        if not all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table):
+            error("The values of a unary table must be " + ("integers" if isinstance(scope[0], VariableInteger) else "symbols") + " for the variable "
+                  + str(scope[0]) + ", which is not the case of " + str(table))
     else:  # if all(isinstance(x, VariableInteger) for x in scope):
         if not options.safe_tables:
             for i, t in enumerate(table):

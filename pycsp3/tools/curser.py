@@ -52,9 +52,12 @@ def cursing():
             else:
                 queue_in.append((list(self), auxiliary().replace_partial_constraint(other)))
             return True
-        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
+        # note that Python changes into a tuple a list given literally on the right of 'in', as in x in [[0, 1], [1, 0]] or x in ['a', 'b']
+        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, list, int, str)):
             queue_in.append((list(self), other))
             return True
+        if is_containing(other, Variable) and len(self) == 0:  # as for an empty set (e.g., x not in [], where [] is changed into ())
+            return other in set(self)
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
             queue_in.append((self, other))
             return True
@@ -81,7 +84,7 @@ def cursing():
             other = list(other)
         if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
             other = flatten(other)  # [v for v in other if v]
-        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
+        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int, str)):
             queue_in.append((self, other))
             return True
         if is_containing(other, Variable) and len(self) == 0:

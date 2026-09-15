@@ -22,7 +22,6 @@ D6 = [range(6)] * 3
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-LISTS = "#104: in and not in: some tables given as lists are reported as badly formed arguments"
 CYCLE = "#105: hybrid tables with restrictions referring to columns in a cycle make the conversion fail"
 INVALID = "#106: invalid tables are reported without explicit message, or accepted"
 ACE_CONFLICTS = "xcsp3team/ACE#14: ACE fails on a table of conflicts with the symbol *"
@@ -31,9 +30,6 @@ COSOCO_HYBRID = "xcsp3team/cosoco#76: cosoco finds wrong solutions or fails on h
 
 # For each group of tests and each constraint (as written in the tests), the known bugs: pairs (solvers, reason)
 KNOWN = {
-    ("ordinary", "x in [[0, 1, 2], [0, 2, 3], [1, 1, 3], [2, 3, 0]]"): [(ALL, LISTS)],
-    ("ordinary", "x not in [[0, 1, 2], [3, 3, 3]]"): [(ALL, LISTS)],
-    ("empty", "x not in []"): [(ALL, LISTS)],
     ("starred", "x not in {(0, ANY, 2), (ANY, 3, ANY)}"): [("ACE", ACE_CONFLICTS)],
     ("starred", "Table(scope=x, conflicts=[(ANY, 1, ANY)])"): [("ACE", ACE_CONFLICTS)],
     ("hybrid", "x in [(ne(col(1)), ne(col(2)), ne(col(0)))]"): [(ALL, CYCLE)],
@@ -41,8 +37,6 @@ KNOWN = {
     ("kept", "x in [(0, 0, 0), (gt(4), ANY, ANY), (ANY, range(1, 3), le(col(1)))]"): [("ACE", ACE_HYBRID)],
     ("kept", "x in [(eq(col(1) + 1), ANY, lt(col(1) + 3))]"): [("ACE", ACE_HYBRID)],
     ("kept", "x in [(ne(col(1)), ne(col(2)), ne(col(0)))]"): [("ACE", ACE_HYBRID)],
-    ("symbolic", "s[0] in ['a', 'c']"): [(("ACE", "CHOCO"), LISTS)],
-    ("symbolic", "s[1] not in ['a']"): [(("ACE", "CHOCO"), LISTS)],
 }
 
 # The cases that a solver says it does not handle (not reported): for each group of tests and each constraint, the solvers and the reasons
