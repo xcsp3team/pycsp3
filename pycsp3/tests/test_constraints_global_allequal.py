@@ -14,7 +14,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 ALL = ("ACE", "CHOCO", "COSOCO")
 MIXED = "#123: AllEqual() refuses terms mixing variables and expressions"
 SINGLE = "#124: AllEqual() with a single term generates an element <allEqual> with a single variable"
-EXCEPTING = "#117: excepting=[] generates an empty element <except>, and excepting cannot be a range"
 INVALID = "#118: invalid arguments of AllEqual() are accepted, or reported without explicit message"
 COSOCO_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions or fails with except (here, allEqual with except, or a group of them)"
 COSOCO_REPEATED = "xcsp3team/cosoco#80: cosoco loses solutions of allEqual with a variable given twice"
@@ -158,11 +157,7 @@ def test_allequal_on_expressions_with_option_mini(run, solver, constraint, predi
     ("None", set()),
 ])
 def test_allequal_excepting(run, solver, request, excepting, values):
-    if excepting == "[]":
-        bug_for(request, ("ACE", "CHOCO"), EXCEPTING)
-    elif excepting == "range(2)":
-        bug_for(request, ALL, EXCEPTING)
-    elif excepting != "None":
+    if excepting not in ("None", "[]"):  # an empty collection is as None (no element <except>)
         if solver == "CHOCO":
             pytest.skip(CHOCO_EXCEPT)
         if excepting != "9":

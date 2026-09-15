@@ -1815,6 +1815,17 @@ def Mdd(*, scope, mdd):
 ''' Comparison-based Constraints '''
 
 
+def _excepting_values(excepting):
+    """
+    Returns the list of values given by the parameter excepting of AllDifferent() and AllEqual(): an integer, or a collection (list,
+    tuple, set, range) of integers; None is returned when there is no value (excepting=None or an empty collection), so that no
+    element <except> is generated
+    """
+    excepting = list(excepting) if isinstance(excepting, (tuple, set, frozenset, range)) else [excepting] if isinstance(excepting, int) else excepting
+    checkType(excepting, ([int], type(None)))
+    return None if excepting is not None and len(excepting) == 0 else excepting
+
+
 def AllDifferent(term, *others, excepting=None, matrix=False):
     """
     Builds and returns a constraint AllDifferent.
@@ -1865,8 +1876,7 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         if solve() is SAT:
            print(values(x))
     """
-    excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
-    checkType(excepting, ([int], type(None)))
+    excepting = _excepting_values(excepting)
     if matrix:
         assert len(others) == 0
         term = list(term) if isinstance(term, types.GeneratorType) else term
@@ -1968,8 +1978,7 @@ def AllEqual(term, *others, excepting=None):
         if solve() is SAT:
            print(values(x))
     """
-    excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
-    checkType(excepting, ([int], type(None)))
+    excepting = _excepting_values(excepting)
     terms = flatten(term, others)
     if len(terms) == 0:
         return ConstraintDummyConstant(1)

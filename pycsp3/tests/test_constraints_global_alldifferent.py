@@ -14,7 +14,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 COSOCO_HOLES = "xcsp3team/cosoco#72: cosoco gives individually the values of the variables involved in no constraint, and pycsp3 fails when recording those of holes"
-EXCEPTING = "#117: excepting=[] generates an empty element <except>, and excepting cannot be a range"
 INVALID = "#118: invalid arguments of AllDifferent() are accepted, or reported without explicit message"
 REPEATED = "#119: a variable given several times to AllDifferent() is not reported"
 ACE_NON_SQUARE = "xcsp3team/ACE#16: ACE fails on allDifferent-matrix with a non-square matrix"
@@ -158,11 +157,7 @@ def test_alldifferent_on_expressions_with_option_mini(run, solver, constraint, p
     ("[]", set()),
     ("None", set()),
 ])
-def test_alldifferent_excepting(run, solver, request, excepting, values):
-    if excepting == "[]":
-        bug_for(request, ("ACE", "CHOCO"), EXCEPTING)
-    if excepting == "range(2)":
-        bug_for(request, ("ACE", "CHOCO", "COSOCO"), EXCEPTING)
+def test_alldifferent_excepting(run, solver, excepting, values):
     check(run, solver, X4 + f"satisfy(AllDifferent(x, excepting={excepting}))", [range(4)] * 4, lambda *t: different(t, values))
 
 
