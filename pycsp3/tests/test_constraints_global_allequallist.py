@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-SEVERAL_TUPLES = "#126: excepting with several tuples generates an invalid element <except>, or is refused without explicit message"
 
 # The symbolic lists (not reported)
 SYMBOLIC = "allEqual-list on symbolic variables is not part of XCSP3-core (ACE and CHOCO fail, cosoco has no symbolic variables)"
@@ -128,9 +127,7 @@ EXCEPTING = [
 
 
 @pytest.mark.parametrize("excepting, tuples", EXCEPTING, ids=[e for e, _ in EXCEPTING])
-def test_allequallist_excepting(run, solver, request, excepting, tuples):
-    if excepting == "[]" or excepting.startswith(("[(", "((")):
-        bug_for(request, ALL, SEVERAL_TUPLES)
+def test_allequallist_excepting(run, solver, excepting, tuples):
     check(run, solver, X32 + f"satisfy(AllEqualList(x, excepting={excepting}))", D32, lambda *t: equal_lists(rows(t, 2), tuples))
 
 
@@ -176,6 +173,8 @@ def test_allequallist_with_a_repeated_list(run, solver, constraint, predicate):
     pytest.param("AllEqualList(x)", 4, id="AllEqualList(x)"),  # x[0][j] == x[i][j] for i in 1..2 and j in 0..1
     pytest.param("AllEqualList(x[0], x[2], excepting=(0, 0))", 1, id="AllEqualList(x[0], x[2], excepting=(0, 0))"),  # one pair of lists
     pytest.param("AllEqualList(x, excepting=(1, 2))", 3, id="AllEqualList(x, excepting=(1, 2))"),  # three pairs of lists
+    pytest.param("AllEqualList(x, excepting=[(0, 0), (1, 2)])", 3, id="AllEqualList(x, excepting=[(0, 0), (1, 2)])"),  # several tuples
+    pytest.param("AllEqualList(x, excepting=[])", 4, id="AllEqualList(x, excepting=[])"),  # as without excepting
 ])
 def test_xcsp3_allequallist(run, constraint, n_constraints):
     # allEqual-list is not part of XCSP3-core: a decomposition into intensional constraints is posted
@@ -231,6 +230,9 @@ def test_allequallist_on_an_array_with_holes(run):
     ("AllEqualList(x, excepting=(0,))", "The tuples of excepting given to AllEqualList() must have the length of the lists (2), which is not the case of (0,)"),
     ("AllEqualList(x, excepting=(0, 0, 0))", "The tuples of excepting given to AllEqualList() must have the length of the lists (2), which is not the case of (0, 0, 0)"),
     ("AllEqualList(x, excepting=[(0, 0), (1,)])", "The tuples of excepting given to AllEqualList() must have the length of the lists (2), which is not the case of (1,)"),
+    ("AllEqualList(x, excepting=((0, 0), (1,)))", "The tuples of excepting given to AllEqualList() must have the length of the lists (2), which is not the case of (1,)"),
+    ("AllEqualList(x, excepting=0)", "excepting given to AllEqualList() must be a tuple of integers, or a collection of such tuples, which is not the case of 0"),
+    ("AllEqualList(x, excepting=('a', 'b'))", "The values of excepting given to AllEqualList() must be integers, which is not the case of ('a', 'b')"),
 ])
 def test_invalid_allequallist_messages(run, constraint, message):
     r = run(X32 + f"satisfy({constraint})")

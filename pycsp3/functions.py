@@ -1922,7 +1922,7 @@ def _check_lists_of_list_constraint(name, term, others, excepting):
     for t in lists:
         if len(t) != len(lists[0]):
             error("The lists given to " + name + "() must have the same length, which is not the case of " + str(lists[0]) + " and " + str(t))
-    several = isinstance(excepting, (list, set, frozenset)) and len(excepting) > 0 and all(isinstance(e, (tuple, list)) for e in excepting)
+    several = isinstance(excepting, (tuple, list, set, frozenset)) and len(excepting) > 0 and all(isinstance(e, (tuple, list)) for e in excepting)
     tuples = excepting if several else [excepting] if isinstance(excepting, (tuple, list, range)) and len(excepting) > 0 else []
     for e in tuples:
         if len(e) != len(lists[0]):
@@ -2045,20 +2045,27 @@ def AllEqualList(term, *others, excepting=None):
         )
     """
     lists = _check_lists_of_list_constraint("AllEqualList", term, others, excepting)
-    excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
-    checkType(excepting, ([int], type(None)))
+    if excepting is not None:  # excepting is changed into a list of tuples (None if empty)
+        values = list(excepting) if isinstance(excepting, (tuple, list, set, frozenset, range)) else None
+        error_if(values is None, "excepting given to AllEqualList() must be a tuple of integers, or a collection of such tuples, which is not the case of "
+                 + str(excepting))
+        several = len(values) > 0 and all(isinstance(e, (tuple, list)) for e in values)
+        tuples = [tuple(e) for e in values] if several else [tuple(values)] if len(values) > 0 else []
+        error_if(any(not isinstance(v, int) for e in tuples for v in e),
+                 "The values of excepting given to AllEqualList() must be integers, which is not the case of " + str(excepting))
+        excepting = (sorted(tuples) if isinstance(excepting, (set, frozenset)) else tuples) if len(tuples) > 0 else None
     if len(lists) == 1:
         return None  # a single list is always equal to the other ones (as for AllEqual() with a single variable)
     if len(lists) == 2 and excepting is None:
         return [lists[0][i] == lists[1][i] for i in range(len(lists[0]))]
     if len(lists) > 0 and len(lists[0]) == 1:  # allEqual-list requires lists of at least two variables: AllEqual is posted on the variables
-        return AllEqual([t[0] for t in lists], excepting=excepting)
+        return AllEqual([t[0] for t in lists], excepting=None if excepting is None else [e[0] for e in excepting])
     # allEqual-list is not part of XCSP3-core (and is handled by no solver): a decomposition into intensional constraints is posted
     if excepting is None:  # each list is equal to the first one
         return [lists[0][j] == t[j] for t in lists[1:] for j in range(len(t))]
-    # with excepting (a tuple e): for each pair of lists (s, t), s = t or s = e or t = e
-    return [disjunction(conjunction(s[j] == t[j] for j in range(len(s))), conjunction(s[j] == excepting[j] for j in range(len(s))),
-                        conjunction(t[j] == excepting[j] for j in range(len(t))))
+    # with excepting (a set E of tuples): for each pair of lists (s, t), s = t or s in E or t in E
+    return [disjunction(conjunction(s[j] == t[j] for j in range(len(s))), *(conjunction(s[j] == e[j] for j in range(len(s))) for e in excepting),
+                        *(conjunction(t[j] == e[j] for j in range(len(t))) for e in excepting))
             for i, s in enumerate(lists) for t in lists[i + 1:]]
 
 
