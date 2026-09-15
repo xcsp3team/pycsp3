@@ -106,6 +106,10 @@ def _load_model():
         raise
 
 
+def _single_value(data):  # the value of data of size 1, data being a named tuple, or a dictionary when its keys cannot be field names of named tuples
+    return next(iter(data.values())) if isinstance(data, dict) else data[0]
+
+
 def _load_data():
     def _arg_value(s):
         if len(s) > 0 and s[0] == '[' and s[-1] == ']':
@@ -241,7 +245,7 @@ def _load(*, console=False):
         if len(Compilation.data) == 0:
             Compilation.data = None
         elif len(Compilation.data) == 1:
-            Compilation.data = Compilation.data[0]  # the value instead of a tuple of size 1
+            Compilation.data = _single_value(Compilation.data)  # the value instead of a tuple of size 1
     else:
         Compilation.string_model = "Console"
         Compilation.string_data = ""
@@ -300,7 +304,7 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
     if len(data) == 0:
         data = None
     elif len(data) == 1:
-        data = data[0]  # the value instead of a tuple of size 1
+        data = _single_value(data)  # the value instead of a tuple of size 1
     if storing:
         Compilation.data = data
         if record_string_data:
