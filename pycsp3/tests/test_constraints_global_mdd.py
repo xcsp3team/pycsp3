@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-STRUCTURE = "#112: the structure of an MDD is not checked (roots, terminal nodes, cycles, length of the paths)"
 SET = "#113: the transitions of an MDD cannot be given by a set"
 WRITING = "#114: the transitions of an MDD are not written from the root, and labels outside the domains are kept, which makes the solvers fail"
 EXPORT = "#115: Mdd() is not brought by from pycsp3 import *"
@@ -161,10 +160,25 @@ def test_mdd_with_ranges_on_different_domains_xcsp3(run):
     ([("r", 0, "a"), ("a", 1, "b"), ("b", 0, "a"), ("a", 0, "t")], 2),  # a cycle
     ([("r", 0, "a"), ("r", 1, "b"), ("a", 1, "t"), ("b", 1, "b2"), ("b2", 0, "t")], 2),  # paths of different lengths
 ], ids=["paths shorter than the scope", "paths longer than the scope", "two terminal nodes", "two roots", "cycle", "paths of different lengths"])
-@bug(STRUCTURE)
 def test_invalid_mdds(run, transitions, n):
     # the specification requires a directed acyclic graph with a single root and a single terminal node, whose paths have the length of the scope
     assert_fails(run(f"M = MDD({transitions!r})\nx = VarArray(size={n}, dom={{0, 1}})\nsatisfy(x in M)"))
+
+
+@pytest.mark.parametrize("transitions, n, message", [
+    ([("r", 0, "a"), ("a", 1, "t")], 3, "The paths of the MDD must have the length of the scope (3), which is not the case (2)"),
+    ([("r", 0, "a"), ("a", 1, "b"), ("b", 0, "c"), ("c", 1, "t")], 3, "The paths of the MDD must have the length of the scope (3), which is not the case (4)"),
+    ([("r", 0, "a"), ("r", 1, "b"), ("a", 1, "t")], 2, "An MDD must have exactly one terminal node (node without outgoing transition), which is not the case: ['b', 't']"),
+    ([("r", 0, "a"), ("s", 1, "a"), ("a", 1, "t")], 2, "An MDD must have exactly one root (node without incoming transition), which is not the case: ['r', 's']"),
+    ([("r", 0, "a"), ("a", 1, "b"), ("b", 0, "a"), ("a", 0, "t")], 2,
+     "An MDD must be acyclic, which is not the case (some of the nodes ['a', 'b', 't'] are in a cycle, or can only be reached from a cycle)"),
+    ([("r", 0, "a"), ("r", 1, "b"), ("a", 1, "t"), ("b", 1, "b2"), ("b2", 0, "t")], 2,
+     "The paths of an MDD must have all the same length, which is not the case of the paths reaching 't'"),
+    ([("r", 0, "a"), ("a", 1, "r")], 2, "An MDD must have exactly one root (node without incoming transition), which is not the case: []"),
+], ids=["paths shorter than the scope", "paths longer than the scope", "two terminal nodes", "two roots", "cycle", "paths of different lengths", "no root"])
+def test_invalid_mdds_messages(run, transitions, n, message):
+    r = run(f"M = MDD({transitions!r})\nx = VarArray(size={n}, dom={{0, 1}})\nsatisfy(x in M)")
+    assert not r.ok and message in r.stdout, r.report()
 
 
 # ------------------------------------------------------------------------------------------------------- display

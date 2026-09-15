@@ -1804,6 +1804,8 @@ def Mdd(*, scope, mdd):
     checkType(scope, [Variable])
     checkType(mdd, MDD)
     _check_scope_and_labels_of_diagram(scope, mdd, "Mdd")
+    error_if(mdd.depth() != len(scope), "The paths of the MDD must have the length of the scope (" + str(len(scope)) + "), which is not the case ("
+             + str(mdd.depth()) + ")")
     return ECtr(ConstraintMdd(scope, mdd))
 
 

@@ -231,27 +231,46 @@ class MDD(Diagram):
         if not isinstance(transitions, list):  # currently, a list is wanted for an MDD (and not a set); to be changed?
             error("The transitions of an MDD must be given by a list of 3-tuples, which is not the case of " + repr(transitions))
         super().__init__(transitions)
+        self.root, self.terminal, self.levels = None, None, None
+        self._check_structure()
+
+    def _check_structure(self):
+        """
+        Checks that the graph of the MDD is acyclic, with a single root and a single terminal node, and that all the paths from the
+        root to the terminal node have the same length (section 4.1.2.2 of XCSP3-Core); the level of each node is recorded.
+        """
+        sources, targets = {q1 for (q1, _, _) in self.transitions}, {q2 for (_, _, q2) in self.transitions}
+        roots, terminals = [q for q in self.states if q not in targets], [q for q in self.states if q not in sources]
+        error_if(len(roots) != 1, "An MDD must have exactly one root (node without incoming transition), which is not the case: " + str(roots))
+        error_if(len(terminals) != 1, "An MDD must have exactly one terminal node (node without outgoing transition), which is not the case: " + str(terminals))
+        successors, in_degrees = {}, {q: 0 for q in self.states}
+        for (q1, _, q2) in self.transitions:
+            successors.setdefault(q1, []).append(q2)
+            in_degrees[q2] += 1
+        self.root, self.terminal = roots[0], terminals[0]
+        self.levels = {self.root: 0}
+        order = [self.root]
+        for q1 in order:  # topological order (Kahn's algorithm), the list being extended while being traversed
+            for q2 in successors.get(q1, []):
+                if q2 in self.levels and self.levels[q2] != self.levels[q1] + 1:
+                    error("The paths of an MDD must have all the same length, which is not the case of the paths reaching " + repr(q2))
+                self.levels[q2] = self.levels[q1] + 1
+                in_degrees[q2] -= 1
+                if in_degrees[q2] == 0:
+                    order.append(q2)
+        if len(order) != len(self.states):
+            error("An MDD must be acyclic, which is not the case (some of the nodes " + str([q for q in self.states if q not in set(order)])
+                  + " are in a cycle, or can only be reached from a cycle)")
+
+    def depth(self):  # the length of the paths from the root to the terminal node
+        return self.levels[self.terminal]
 
     def _label_values(self, scp):
         """
         For an MDD, the labels given by ranges (conditions) of the transitions leaving a node are developed with the domain of the
-        variable of its level, the level of a node being its distance from a root (a node without incoming transition).
-        The union of the domains is used for a node whose level is not an index of the scope (MDD whose structure is not valid).
+        variable of its level (its distance from the root), the length of the paths being the one of the scope.
         """
-        union = Diagram._label_values(self, scp)
-        successors = {}
-        for (q1, _, q2) in self.transitions:
-            successors.setdefault(q1, []).append(q2)
-        targets = {q2 for (_, _, q2) in self.transitions}
-        levels, frontier, level = {}, [q for q in self.states if q not in targets], 0
-        while len(frontier) > 0:
-            following = []
-            for q in frontier:
-                if q not in levels:
-                    levels[q] = level
-                    following.extend(successors.get(q, []))
-            frontier, level = following, level + 1
-        return lambda state: scp[levels[state]].dom.all_values() if levels.get(state, len(scp)) < len(scp) else union(state)
+        return lambda state: scp[self.levels[state]].dom.all_values()
 
     def __str__(self):
         return "MDD(" + Diagram.__str__(self) + ")"
