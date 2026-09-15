@@ -12,7 +12,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-MIXED = "#123: AllEqual() refuses terms mixing variables and expressions"
 SINGLE = "#124: AllEqual() with a single term generates an element <allEqual> with a single variable"
 COSOCO_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions or fails with except (here, allEqual with except, or a group of them)"
 COSOCO_REPEATED = "xcsp3team/cosoco#80: cosoco loses solutions of allEqual with a variable given twice"
@@ -124,16 +123,22 @@ EXPRESSIONS = [
 ]
 
 
-MIXED_TERMS = ["AllEqual(x[0] + 1, x[1], x[2] - 1)", "AllEqual(x[0], x[1] + x[2], x[3])", "AllEqual(Sum(x[0], x[1]), x[2] + x[3])", "AllEqual([x[i] + i for i in range(4)])"]
-
-
 @pytest.mark.parametrize("constraint, predicate", EXPRESSIONS)
-def test_allequal_on_expressions(run, solver, request, constraint, predicate):
-    if constraint in MIXED_TERMS:
-        bug_for(request, ALL, MIXED)
-    elif solver == "COSOCO":
+def test_allequal_on_expressions(run, solver, constraint, predicate):
+    if solver == "COSOCO":
         pytest.skip(COSOCO_EXPRESSIONS)
     check(run, solver, X4 + f"satisfy({constraint})", [range(3)] * 4, predicate)
+
+
+@pytest.mark.parametrize("constraint, text", [
+    ("AllEqual(x[0] + 1, x[1], x[2] - 1)", "add(x[0],1) x[1] sub(x[2],1)"),
+    ("AllEqual(x[0], x[1] + x[2], x[3])", "x[0] add(x[1],x[2]) x[3]"),
+])
+def test_xcsp3_allequal_on_variables_and_expressions(run, constraint, text):
+    # variables and expressions may be mixed, as for AllDifferent() (the order of the terms does not matter)
+    r = run(X4 + f"satisfy({constraint})")
+    assert r.ok, r.report()
+    assert sorted(r.xml.find("constraints/allEqual").text.split()) == sorted(text.split()), r.report()
 
 
 @pytest.mark.parametrize("constraint, predicate", EXPRESSIONS)

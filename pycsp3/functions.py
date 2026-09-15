@@ -2021,7 +2021,7 @@ def AllEqual(term, *others, excepting=None):
     if len(terms) == 0:
         return ConstraintDummyConstant(1)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
-    checkType(terms, ([Variable], [Node]))
+    checkType(terms, ([Variable, Node]))  # variables and expressions may be mixed (as for AllDifferent())
     return ECtr(ConstraintAllEqual(terms, excepting))
 
 
