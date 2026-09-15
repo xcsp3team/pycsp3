@@ -1951,6 +1951,8 @@ def AllDifferentList(term, *others, excepting=None):
         key = tuple(id(x) for x in t)
         error_if(key in seen, "A list cannot be given several times to AllDifferentList(), which is the case of " + str(t))
         seen.add(key)
+    if len(lists) == 1:
+        return None  # a single list is always different from the other ones (as for AllDifferent() with a single variable)
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 
@@ -2025,6 +2027,8 @@ def AllEqualList(term, *others, excepting=None):
     excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
     assert all(len(t) == len(lists[0]) for t in lists) and (excepting is None or len(excepting) == len(lists[0]))
+    if len(lists) == 1:
+        return None  # a single list is always equal to the other ones (as for AllEqual() with a single variable)
     if len(lists) == 2 and excepting is None:
         return [lists[0][i] == lists[1][i] for i in range(len(lists[0]))]
     return ECtr(ConstraintAllEqualList(lists, excepting))

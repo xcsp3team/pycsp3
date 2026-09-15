@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-SINGLE_LIST = "#120: AllDifferentList() with a single list posts AllDifferent on the variables of this list"
 LISTS_OF_ONE = "#121: AllDifferentList() on lists of one variable generates lists that are not allowed in XCSP3"
 INVALID = "#122: invalid arguments of AllDifferentList() are accepted, or reported without explicit message"
 COSOCO_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions or fails with except (here, allDifferent-list with except)"
@@ -134,9 +133,8 @@ def test_alldifferentlist_excepting_with_other_constraints(run, solver):
 # ----------------------------------------------------------------------------------------------- degenerated cases
 
 @pytest.mark.parametrize("constraint", ["AllDifferentList([x[0]])", "AllDifferentList(x[0:1])"])
-def test_alldifferentlist_with_a_single_list(run, solver, request, constraint):
-    bug_for(request, ALL, SINGLE_LIST)
-    # with a single list, the constraint always holds (or an error is reported)
+def test_alldifferentlist_with_a_single_list(run, solver, constraint):
+    # with a single list, the constraint always holds (no constraint is posted)
     r = run(X32 + f"satisfy({constraint}, x[1][0] == 1, x[2][0] == 2)", solver=solver)
     if r.ok:
         assert_solutions(r, brute_force(D32, lambda *t: t[2] == 1 and t[4] == 2))

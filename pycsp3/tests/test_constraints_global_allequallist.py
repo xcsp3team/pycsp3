@@ -14,7 +14,6 @@ ALL = ("ACE", "CHOCO", "COSOCO")
 NOT_CORE = ("#125: AllEqualList() generates allEqual-list, which is not part of XCSP3-core and is handled by no solver "
             "(ACE and CHOCO: Missing Implementation, or xcsp3team/XCSP3-Java-Tools#21 with except; cosoco: wrong solutions, xcsp3team/cosoco#81)")
 SEVERAL_TUPLES = "#126: excepting with several tuples generates an invalid element <except>, or is refused without explicit message"
-SINGLE_LIST = "#120: AllEqualList() with a single list posts AllEqual on the variables of this list"
 LISTS_OF_ONE = "#121: AllEqualList() on lists of one variable generates lists that are not allowed in XCSP3"
 INVALID = "#122: invalid arguments of AllEqualList() are accepted, or reported without explicit message"
 
@@ -153,9 +152,8 @@ def test_allequallist_excepting_with_other_constraints(run, solver, request):
 # ----------------------------------------------------------------------------------------------- degenerated cases
 
 @pytest.mark.parametrize("constraint", ["AllEqualList([x[0]])", "AllEqualList(x[0:1])"])
-def test_allequallist_with_a_single_list(run, solver, request, constraint):
-    bug_for(request, ALL, SINGLE_LIST)
-    # with a single list, the constraint always holds (or an error is reported)
+def test_allequallist_with_a_single_list(run, solver, constraint):
+    # with a single list, the constraint always holds (no constraint is posted)
     r = run(X32 + f"satisfy({constraint}, x[1][0] == 1, x[2][0] == 2)", solver=solver)
     if r.ok:
         assert_solutions(r, brute_force(D32, lambda *t: t[2] == 1 and t[4] == 2))
