@@ -1738,6 +1738,9 @@ def _check_scope_and_labels_of_diagram(scope, diagram, name):  # name is the nam
         expected = str
     else:
         return
+    label_types = diagram.label_types()  # computed once for the diagram
+    if not (label_types & ({str} if expected is int else {int, bool})) and not (label_types & {set, frozenset}):
+        return  # no label of the other type (the labels given by ranges are conditions on integers)
     for (q1, label, q2) in diagram.transitions:
         for v in [label] if isinstance(label, (int, str)) else label if isinstance(label, (set, frozenset)) else []:  # ranges (conditions) are integers
             if not isinstance(v, expected):
