@@ -414,10 +414,7 @@ class ConstraintMdd(Constraint):
     def __init__(self, lst, mdd):
         super().__init__(TypeCtr.MDD)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
-        # TODO reordering transitions in order to guarantee to have:
-        # - the root as the src of the first transition
-        # - the terminal as the dst of the last transition
-        # - no transition with a src occurring before it was reached
+        # the transitions are written from the root, without transition leaving a node before it is reached (see MDD)
         self.arg(TypeCtrArg.TRANSITIONS, mdd.transitions_to_string(lst))
 
 

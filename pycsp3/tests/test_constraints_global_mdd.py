@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-WRITING = "#114: the transitions of an MDD are not written from the root, and labels outside the domains are kept, which makes the solvers fail"
 EXPORT = "#115: Mdd() is not brought by from pycsp3 import *"
 
 SYMBOLIC = "symbolic values are not allowed in the transitions of mdd in XCSP3-core"
@@ -107,11 +106,7 @@ MDDS = {
 
 
 @pytest.mark.parametrize("name", MDDS)
-def test_mdds(run, solver, request, name):
-    if name == "transitions in another order":
-        bug_for(request, ("ACE", "COSOCO"), WRITING)
-    if name == "values outside the domains":
-        bug_for(request, ALL, WRITING)
+def test_mdds(run, solver, name):
     transitions, n, dom = MDDS[name]
     if isinstance(transitions, str):  # a generator
         r = run(f"M = MDD({transitions})\nx = VarArray(size={n}, dom={dom!r})\nsatisfy(x in M)", solver=solver)
@@ -204,6 +199,25 @@ def test_xcsp3_mdd(run, transitions, dom, text):
     mdd = r.xml.find("constraints/mdd")
     assert mdd is not None, r.report()
     assert mdd.find("list").text.strip() in ("x[]", " ".join(f"x[{i}]" for i in range(3 if "n1" in text else 2))) and mdd.find("transitions").text.strip() == text
+
+
+@pytest.mark.parametrize("transitions, n, dom, text", [
+    (MDDS["transitions in another order"][0], 3, "range(3)", "(r,0,n1)(r,2,n3)(r,1,n2)(n1,2,n4)(n3,0,n5)(n2,2,n4)(n4,0,t)(n5,0,t)"),
+    ([("r", 0, "a"), ("a", 1, "t"), ("r", 1, "b"), ("b", 0, "t")], 2, "range(2)", "(r,0,a)(a,1,t)(r,1,b)(b,0,t)"),
+    (MDDS["values outside the domains"][0], 2, "range(2)", "(r,0,a)(a,1,t)"),
+    ([("r", range(0, 5), "a"), ("a", {1, 7}, "t")], 2, "range(3)", "(r,0,a)(r,1,a)(r,2,a)(a,1,t)"),
+], ids=["transitions in another order", "depth-first order kept", "values outside the domains", "ranges and sets outside the domains"])
+def test_xcsp3_mdd_written_transitions(run, transitions, n, dom, text):
+    # the transitions are written from the root (a valid order being kept), the labels outside the domains being discarded,
+    # as well as the transitions that are no longer on a path from the root to the terminal node
+    r = run(f"M = MDD({transitions!r})\nx = VarArray(size={n}, dom={dom})\nsatisfy(x in M)")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/mdd/transitions").text.strip() == text, r.report()
+
+
+def test_mdd_without_path_compatible_with_the_domains(run):
+    r = run("M = MDD([('r', 5, 'a'), ('a', 0, 't')])\nx = VarArray(size=2, dom=range(2))\nsatisfy(x in M)")
+    assert not r.ok and "No path of the MDD is compatible with the domains of the variables of the scope" in r.stdout, r.report()
 
 
 # --------------------------------------------------------------------------------------------------- invalid cases
