@@ -12,7 +12,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-SINGLE = "#124: AllEqual() with a single term generates an element <allEqual> with a single variable"
 COSOCO_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions or fails with except (here, allEqual with except, or a group of them)"
 COSOCO_REPEATED = "xcsp3team/cosoco#80: cosoco loses solutions of allEqual with a variable given twice"
 
@@ -102,11 +101,17 @@ def test_allequal_with_a_repeated_variable(run, solver, request):
 # ----------------------------------------------------------------------------------------------- degenerated cases
 
 @pytest.mark.parametrize("constraint", ["AllEqual(x[0])", "AllEqual([x[0]])", "AllEqual([])", "AllEqual(x[0], [])"])
-def test_allequal_trivially_true(run, solver, request, constraint):
-    if constraint != "AllEqual([])":
-        bug_for(request, "ACE", SINGLE)
+def test_allequal_trivially_true(run, solver, constraint):
     # with less than two terms, the constraint always holds
     check(run, solver, X3 + f"satisfy({constraint}, x[1] == 1, x[2] == 2)", [range(3)] * 3, lambda a, b, c: (b, c) == (1, 2))
+
+
+@pytest.mark.parametrize("constraint", ["AllEqual(x[0])", "AllEqual([x[0]])", "AllEqual(x[0], [])", "AllEqual(x[0] + 1)", "AllEqual(Sum(x[0], x[1]))"])
+def test_xcsp3_allequal_with_a_single_term(run, constraint):
+    # with a single term, no element <allEqual> is generated (the syntax requires at least two variables), and no auxiliary variable
+    r = run(X3 + f"satisfy({constraint}, x[1] == 1, x[2] == 2)")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/allEqual") is None and r.xml.find("variables/var[@id='aux_gb[0]']") is None, r.report()
 
 
 # ----------------------------------------------------------------------------------------------------- expressions

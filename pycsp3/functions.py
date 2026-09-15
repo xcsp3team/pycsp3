@@ -2020,6 +2020,8 @@ def AllEqual(term, *others, excepting=None):
     terms = flatten(term, others)
     if len(terms) == 0:
         return ConstraintDummyConstant(1)
+    if len(terms) == 1 and isinstance(terms[0], (Variable, Node, PartialConstraint)):
+        return None  # a single term is always equal to itself (as for AllDifferent()); an integer is reported below by checkType()
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
     checkType(terms, ([Variable, Node]))  # variables and expressions may be mixed (as for AllDifferent())
     return ECtr(ConstraintAllEqual(terms, excepting))
