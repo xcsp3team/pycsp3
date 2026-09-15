@@ -3356,6 +3356,13 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     if tasks is not None:
         assert origins is None and lengths is None and ends is None and heights is None
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
+        for task in tasks:
+            if not isinstance(task, (tuple, list)) or len(task) not in (3, 4):
+                error("A task of Cumulative() must be (origin, length, height) or (origin, length, end, height), which is not the case of " + str(task))
+            if len(task) != len(tasks[0]):
+                error("The tasks of Cumulative() must all have the same size, which is not the case of " + str(tasks[0]) + " and " + str(task))
+            if task[-1] is None:
+                error("The height of a task must be given in Cumulative(), which is not the case of " + str(task))
         if len(tasks) == 0:
             warning("A constraint Cumulative transformed because defined with 0 task", "cumulative_0_task")
             return ConstraintDummyConstant(0)  # auxiliary().replace_int(0)
@@ -3372,6 +3379,9 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
             origins, lengths, heights = zip(*tasks)
         else:
             origins, lengths, ends, heights = zip(*tasks)
+    for name, values in (("origins", origins), ("lengths", lengths), ("heights", heights)):  # checked before flatten(), which discards None
+        if values is None or (isinstance(values, (tuple, list)) and any(v is None for v in flatten(values, keep_none=True))):
+            error("The " + name + " of Cumulative() must be given, and cannot be None")
     origins = flatten(origins)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(origins, nodes_too=True, int_too=False)
     if _is_mixed_list(origins):
@@ -3395,6 +3405,9 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     checkType(heights, ([Variable], [int]))
     ends = flatten(ends) if ends is not None else ends  # ends is optional
     checkType(ends, ([Variable], type(None)))
+    for name, values in (("lengths", lengths), ("heights", heights), ("ends", ends)):
+        if values is not None and len(values) != len(origins):
+            error("In Cumulative(), the number of " + name + " (" + str(len(values)) + ") must be the number of origins (" + str(len(origins)) + ")")
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
 
 

@@ -413,17 +413,52 @@ def test_task_cumulative_with_variable_lengths_solutions(run, solver):
     assert_solutions(r, brute_force([range(3)] * 2 + [range(1, 3)] * 2, lambda s0, s1, d0, d1: _cumulative([s0, s1], [d0, d1], [1, 2], 2)))
 
 
-@bug("#90: Cumulative() accepts tasks without height, and generates an invalid XCSP3 file")
-@pytest.mark.parametrize("tasks", [
-    "[Task(origin=s[i], length=2) for i in range(3)]",
-    "[Task(s[0], 2, 1), Task(s[1], 2), Task(s[2], 2, 1)]",
+@pytest.mark.parametrize("tasks, message", [
+    ("[Task(origin=s[i], length=2) for i in range(3)]", "The height of a task must be given in Cumulative()"),
+    ("[Task(s[0], 2, 1), Task(s[1], 2), Task(s[2], 2, 1)]", "The height of a task must be given in Cumulative()"),
+    ("[Task(s[0], 2)]", "The height of a task must be given in Cumulative()"),
+    ("[(s[0], 2, None), (s[1], 2, 1), (s[2], 2, 1)]", "The height of a task must be given in Cumulative()"),
+    ("[(s[0], None, 1), (s[1], 2, 1), (s[2], 2, 1)]", "The lengths of Cumulative() must be given, and cannot be None"),
+    ("[(s[0], 2), (s[1], 2), (s[2], 2)]", "A task of Cumulative() must be (origin, length, height) or (origin, length, end, height)"),
+    ("[(s[0], 2, 1), (s[1], 2, s[2], 1), (s[2], 2, 1)]", "The tasks of Cumulative() must all have the same size"),
 ])
-def test_task_cumulative_without_height(run, tasks):
+def test_task_cumulative_without_height(run, tasks, message):
     # the height of a task is None by default, which is not possible in a constraint Cumulative
-    assert_fails(run(f"""
+    r = run(f"""
         s = VarArray(size=3, dom=range(3))
         satisfy(Cumulative({tasks}) <= 2)
-    """))
+    """)
+    assert_fails(r)
+    assert message in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("parameters, message", [
+    ("origins=s, lengths=[2, 2, 2]", "The heights of Cumulative() must be given, and cannot be None"),
+    ("origins=s, lengths=[2, 2, 2], heights=[1, None, 1]", "The heights of Cumulative() must be given, and cannot be None"),
+    ("origins=s, heights=[1, 1, 1]", "The lengths of Cumulative() must be given, and cannot be None"),
+    ("origins=s, lengths=[2, None, 2], heights=[1, 1, 1]", "The lengths of Cumulative() must be given, and cannot be None"),
+    ("origins=[s[0], None, s[2]], lengths=[2, 2, 2], heights=[1, 1, 1]", "The origins of Cumulative() must be given, and cannot be None"),
+    ("origins=s, lengths=[2, 2, 2], heights=[1, 1]", "In Cumulative(), the number of heights (2) must be the number of origins (3)"),
+    ("origins=s, lengths=[2, 2], heights=[1, 1, 1]", "In Cumulative(), the number of lengths (2) must be the number of origins (3)"),
+    ("origins=s, lengths=[2, 2, 2], heights=[1, 1, 1], ends=s[:2]", "In Cumulative(), the number of ends (2) must be the number of origins (3)"),
+])
+def test_cumulative_invalid_heights_and_sizes(run, parameters, message):
+    # found with #90 (tasks without height); to be moved into the tests of the constraint Cumulative
+    r = run(f"""
+        s = VarArray(size=3, dom=range(3))
+        satisfy(Cumulative({parameters}) <= 2)
+    """)
+    assert_fails(r)
+    assert message in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("parameters", ["origins=s, lengths=2, heights=1", "origins=s, lengths=[2, 2, 2], heights=[1, 1, 1], ends=s"])
+def test_cumulative_valid_parameters(run, parameters):
+    r = run(f"""
+        s = VarArray(size=3, dom=range(3))
+        satisfy(Cumulative({parameters}) <= 2)
+    """)
+    assert r.ok and r.xml.find("constraints/cumulative") is not None, r.report()
 
 
 def test_task_nooverlap_solutions(run, solver, request):
