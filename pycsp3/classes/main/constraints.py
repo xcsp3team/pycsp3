@@ -275,6 +275,20 @@ class ConstraintExtension(Constraint):
             table = tbl
         return table
 
+    @staticmethod
+    def restrictions_in_cycle(t):  # returns True if some restrictions of the tuple t refer to columns in a cycle (e.g., (ne(col(1)), ne(col(2)), ne(col(0))))
+        successors = {i: v.columns() for i, v in enumerate(t) if isinstance(v, ConditionNode)}
+        state = dict()  # 1 for a column being visited, 2 for a column from which no cycle is reachable
+
+        def cycle_from(i):
+            state[i] = 1
+            if any(state.get(j) == 1 or (j not in state and cycle_from(j)) for j in successors.get(i, [])):
+                return True
+            state[i] = 2
+            return False
+
+        return any(i not in state and cycle_from(i) for i in successors)
+
     def process_table(self, scope, table):
         if len(table) == 0:
             return None
@@ -356,6 +370,10 @@ class ConstraintExtension(Constraint):
             if self.keep_hybrid:  # currently, no restriction of tables (wrt domains) in that case
                 self.attributes.append((TypeXML.TYPE, "hybrid-" + str(hybrid)))
                 if h not in ConstraintExtension.cache:
+                    t = next((t for t in table if ConstraintExtension.restrictions_in_cycle(t)), None) if hybrid == 2 else None
+                    if t is not None:
+                        warning("The restrictions of the tuple " + table_to_string([t]) + " of a hybrid table refer to columns in a cycle, which is not handled"
+                                + " by the solvers (without the option -keep_hybrid, the table is converted into an ordinary table)", "hybrid_table_cycle")
                     table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=possible_parallelism)
                 return ConstraintExtension.cache[h]

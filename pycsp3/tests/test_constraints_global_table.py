@@ -325,6 +325,36 @@ def test_xcsp3_hybrid_table_kept(run):
     assert extension.get("type") == "hybrid-2", r.report()
 
 
+CYCLE_WARNING = "of a hybrid table refer to columns in a cycle, which is not handled by the solvers"
+
+
+@pytest.mark.parametrize("constraint, cycle", [
+    ("x in [(ne(col(1)), ne(col(2)), ne(col(0)))]", True),
+    ("x in [(0, 0, 0), (lt(col(1)), lt(col(2)), gt(col(0) + 2))]", True),
+    ("x in [(eq(col(1) + col(2)), gt(col(0) - 4), ANY)]", True),
+    ("x in [(ne(col(1)), ne(col(2)), 3)]", False),  # a chain
+    ("x in [(eq(col(1) + 1), ANY, lt(col(1) + 3))]", False),
+    ("x in [(ANY, ANY, eq(col(0) + col(1)))]", False),
+])
+def test_xcsp3_hybrid_table_kept_with_a_cycle(run, constraint, cycle):
+    # the solvers do not handle restrictions referring to columns in a cycle: a warning is displayed when the table is kept
+    r = run(X6 + f"satisfy({constraint})", args=["-keep_hybrid"])
+    assert r.ok, r.report()
+    assert (CYCLE_WARNING in r.stdout) == cycle, r.report()
+
+
+def test_xcsp3_hybrid_table_kept_with_a_cycle_message(run):
+    r = run(X6 + "satisfy(x in [(ne(col(1)), ne(col(2)), ne(col(0)))], x in [(lt(col(1)), lt(col(2)), gt(col(0)))])", args=["-keep_hybrid"])
+    assert r.ok, r.report()
+    assert "Warning: The restrictions of the tuple (≠c1,≠c2,≠c0) " + CYCLE_WARNING in r.stdout, r.report()
+    assert r.stdout.count(CYCLE_WARNING) == 1, r.report()  # other similar cases are not displayed
+
+
+def test_hybrid_table_with_a_cycle_converted_without_warning(run):
+    r = run(X6 + "satisfy(x in [(ne(col(1)), ne(col(2)), ne(col(0)))])")
+    assert r.ok and CYCLE_WARNING not in r.stdout, r.report()
+
+
 # ---------------------------------------------------------------------------------------------------- invalid tables
 
 @pytest.mark.parametrize("constraint", [
