@@ -168,6 +168,10 @@ class TypeNode(Enum):
 
 VAR, INT, SYMBOL, COL, PAR = TypeNode.VAR, TypeNode.INT, TypeNode.SYMBOL, TypeNode.COL, TypeNode.PAR
 NEG, ABS, NOT, SUB, DIV, MOD, DIST, IMP = TypeNode.NEG, TypeNode.ABS, TypeNode.NOT, TypeNode.SUB, TypeNode.DIV, TypeNode.MOD, TypeNode.DIST, TypeNode.IMP
+
+
+def xcsp3_div(a, b):  # the integer division of XCSP3 (operator div), which rounds towards 0 (whereas // rounds towards negative infinity in Python)
+    return abs(a) // abs(b) * (1 if (a >= 0) == (b > 0) else -1)
 LT, LE, GE, GT, IN, NOTIN = TypeNode.LT, TypeNode.LE, TypeNode.GE, TypeNode.GT, TypeNode.IN, TypeNode.NOTIN
 ADD, MUL, MIN, MAX, NE, EQ = TypeNode.ADD, TypeNode.MUL, TypeNode.MIN, TypeNode.MAX, TypeNode.NE, TypeNode.EQ
 AND, OR, XOR, IFF = TypeNode.AND, TypeNode.OR, TypeNode.XOR, TypeNode.IFF
@@ -293,10 +297,10 @@ class Node(Entity):
             all_ranges = isinstance(pv1, range) and isinstance(pv2, range)
             if self.type == SUB:
                 return add_range(pv1, neg_range(pv2)) if all_ranges else possible_range({v1 - v2 for v1 in pv1 for v2 in pv2})
-            if self.type == DIV:
-                return possible_range({v1 // v2 for v1 in pv1 for v2 in pv2 if v2 != 0})
-            if self.type == MOD:
-                return possible_range({v1 % v2 for v1 in pv1 for v2 in pv2 if v2 != 0})
+            if self.type == DIV:  # rounding towards 0, as in XCSP3 (and not towards negative infinity, as // in Python)
+                return possible_range({xcsp3_div(v1, v2) for v1 in pv1 for v2 in pv2 if v2 != 0})
+            if self.type == MOD:  # with the sign of the dividend, as in XCSP3
+                return possible_range({v1 - v2 * xcsp3_div(v1, v2) for v1 in pv1 for v2 in pv2 if v2 != 0})
             if self.type == TypeNode.POW:
                 return possible_range({v1 ** v2 for v1 in pv1 for v2 in pv2}, control_int=True)
             if self.type == DIST:
@@ -547,6 +551,42 @@ class Node(Entity):
             else:
                 raise ValueError("Problem: bad form of predicate " + str(arg))
         return t
+
+    @staticmethod
+    def _smallest_value(t):  # the smallest value that t can take, or None if it is not known
+        if isinstance(t, int):
+            return t
+        if isinstance(t, Variable):
+            return t.dom.smallest_value()
+        if isinstance(t, Node):
+            pv = t.possible_values()
+            return pv[0] if len(pv) > 0 else None
+        return None
+
+    @staticmethod
+    def _non_negative_operands(a, b):  # if True, the operators of Python and XCSP3 have the same semantics (0 being removed from the domain of b)
+        sa, sb = Node._smallest_value(a), Node._smallest_value(b)
+        return sa is not None and sb is not None and sa >= 0 and sb >= 0
+
+    @staticmethod
+    def floor_mod(a, b):
+        """
+        Returns a node for a % b, with the semantics of Python (the result has the sign of b), whereas mod has the sign of a in XCSP3.
+        When a and b cannot be negative, the two semantics are the same; otherwise, a % b is mod(add(mod(a,b),b),b).
+        """
+        if Node._non_negative_operands(a, b):
+            return Node.build(MOD, a, b)
+        return Node.build(MOD, Node.build(ADD, Node.build(MOD, a, b), b), b)
+
+    @staticmethod
+    def floor_div(a, b):
+        """
+        Returns a node for a // b, with the semantics of Python (rounding towards negative infinity), whereas div rounds towards 0 in XCSP3.
+        When a and b cannot be negative, the two semantics are the same; otherwise, a // b is the exact division div(sub(a,a % b),b).
+        """
+        if Node._non_negative_operands(a, b):
+            return Node.build(DIV, a, b)
+        return Node.build(DIV, Node.build(SUB, a, Node.floor_mod(a, b)), b)
 
     @staticmethod
     def build(node_type, *args):

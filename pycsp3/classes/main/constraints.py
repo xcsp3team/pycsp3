@@ -1,3 +1,5 @@
+import hashlib
+import marshal
 from collections import OrderedDict
 from itertools import permutations, combinations
 
@@ -211,6 +213,22 @@ class ConstraintIntension(Constraint):
         return Diffs() if self.abstract_tree() == other.abstract_tree() else False
 
 
+def _table_key(table):
+    """
+    Returns the key of the specified table (a tuple) in the caches of ConstraintExtension. The hash code of the table is not used,
+    because two different tables may have the same hash code (in Python, hash(-1) == hash(-2)), and the table itself is not used either,
+    because the caches would then keep all tables (which is costly with many large tables). So, the key is a digest (blake2b, 128 bits)
+    of the serialization of the table, for which a collision is practically impossible. If the table cannot be serialized
+    (e.g., it contains ranges or conditions), the table itself is the key.
+    A TypeError is raised if the table is not hashable (e.g., one of its tuples contains a list).
+    """
+    hash(table)  # raises TypeError if the table is not hashable
+    try:
+        return hashlib.blake2b(marshal.dumps(table, 2), digest_size=16).digest()  # version 2 of marshal: no references, so the same bytes for the same table
+    except ValueError:  # an element of the table cannot be serialized
+        return table
+
+
 class ConstraintExtension(Constraint):
     cache = dict()
     cache_for_knowing_if_hybrid = dict()
@@ -257,17 +275,31 @@ class ConstraintExtension(Constraint):
             table = tbl
         return table
 
+    @staticmethod
+    def restrictions_in_cycle(t):  # returns True if some restrictions of the tuple t refer to columns in a cycle (e.g., (ne(col(1)), ne(col(2)), ne(col(0))))
+        successors = {i: v.columns() for i, v in enumerate(t) if isinstance(v, ConditionNode)}
+        state = dict()  # 1 for a column being visited, 2 for a column from which no cycle is reachable
+
+        def cycle_from(i):
+            state[i] = 1
+            if any(state.get(j) == 1 or (j not in state and cycle_from(j)) for j in successors.get(i, [])):
+                return True
+            state[i] = 2
+            return False
+
+        return any(i not in state and cycle_from(i) for i in successors)
+
     def process_table(self, scope, table):
         if len(table) == 0:
             return None
-        # we compute the hash code of the table
+        # we compute the key of the table in the caches (a digest of the table, and not its hash code, which may be shared by different tables)
         try:
-            h = hash(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
+            h = _table_key(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
         except TypeError:
             for i, t in enumerate(table):
                 if any(isinstance(v, (list, set, frozenset)) for v in t):
                     table[i] = tuple(tuple(v) if isinstance(v, (list, set, frozenset)) else v for v in t)
-            h = hash(tuple(table))
+            h = _table_key(tuple(table) + (self.keep_hybrid,))
         if len(scope) == 1:  # if arity 1
             if h not in ConstraintExtension.cache:
                 table.sort()
@@ -282,13 +314,15 @@ class ConstraintExtension(Constraint):
         if options.safe_tables:
             hybrid = 0  # we assume that the tables are ordinary/starred
         else:
-            if h in ConstraintExtension.cache_for_knowing_if_hybrid:
-                hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[h]
+            integer = tuple(isinstance(x, VariableInteger) for x in scope)
+            key = (h, integer)  # the types of the values are checked with respect to the types of the variables, while looking for hybrid restrictions
+            if key in ConstraintExtension.cache_for_knowing_if_hybrid:
+                hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[key]
             else:
                 check_hybrid2 = True
                 hybrid = 0
                 for t in table:
-                    for v in t:
+                    for j, v in enumerate(t):
                         error_if(isinstance(v, Node), "Bad form")
                         if isinstance(v, ConditionNode):
                             hybrid = 2
@@ -296,13 +330,17 @@ class ConstraintExtension(Constraint):
                                 break
                             else:
                                 assert True  # TODO test to be written
-                        elif hybrid == 0 and not (isinstance(v, (int, str)) or v is ANY):
+                        elif isinstance(v, (int, str)):
+                            if isinstance(v, str) == integer[j]:
+                                error("The value " + repr(v) + " of the tuple " + str(t) + " is " + ("a symbol" if integer[j] else "an integer")
+                                      + ", which is not possible for the " + ("integer" if integer[j] else "symbolic") + " variable " + str(scope[j]))
+                        elif hybrid == 0 and v is not ANY:
                             hybrid = 1
                     if hybrid == 2:
                         if not check_hybrid2:
                             break
                 # hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelization attempt showed no gain.
-                ConstraintExtension.cache_for_knowing_if_hybrid[h] = hybrid
+                ConstraintExtension.cache_for_knowing_if_hybrid[key] = hybrid
 
         if hybrid == 0:  # if not hybrid
             if not self.restrict_table_wrt_domains:
@@ -332,6 +370,10 @@ class ConstraintExtension(Constraint):
             if self.keep_hybrid:  # currently, no restriction of tables (wrt domains) in that case
                 self.attributes.append((TypeXML.TYPE, "hybrid-" + str(hybrid)))
                 if h not in ConstraintExtension.cache:
+                    t = next((t for t in table if ConstraintExtension.restrictions_in_cycle(t)), None) if hybrid == 2 else None
+                    if t is not None:
+                        warning("The restrictions of the tuple " + table_to_string([t]) + " of a hybrid table refer to columns in a cycle, which is not handled"
+                                + " by the solvers (without the option -keep_hybrid, the table is converted into an ordinary table)", "hybrid_table_cycle")
                     table = ConstraintExtension.remove_redundant_tuples(table)
                     ConstraintExtension.cache[h] = table_to_string(table, parallel=possible_parallelism)
                 return ConstraintExtension.cache[h]
@@ -389,10 +431,7 @@ class ConstraintMdd(Constraint):
     def __init__(self, lst, mdd):
         super().__init__(TypeCtr.MDD)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True)
-        # TODO reordering transitions in order to guarantee to have:
-        # - the root as the src of the first transition
-        # - the terminal as the dst of the last transition
-        # - no transition with a src occurring before it was reached
+        # the transitions are written from the root, without transition leaving a node before it is reached (see MDD)
         self.arg(TypeCtrArg.TRANSITIONS, mdd.transitions_to_string(lst))
 
 
@@ -418,10 +457,23 @@ class ConstraintAllDifferentList(ConstraintUnmergeable):
             self.arg(TypeCtrArg.EXCEPT, s)  # if excepting else excepting)
 
 
+def _is_compressible_matrix(m):
+    """
+    Returns True if the specified matrix (a list of rows of variables) may be written in a compact form (such as x[][]): its variables
+    must belong to the same two-dimensional array, each row (or each column) corresponding to a distinct value of one of the two indexes
+    (the order of rows and columns does not matter for allDifferent-matrix). Otherwise, for example for a matrix built from the variables
+    of a one-dimensional array, the compact form of the variables would not be a matrix.
+    """
+    variables = [x for row in m for x in row]
+    if any(x.indexes is None or len(x.indexes) != 2 or x.prefix != variables[0].prefix for x in variables):
+        return False
+    return any(all(len({x.indexes[d] for x in row}) == 1 for row in m) and len({row[0].indexes[d] for row in m}) == len(m) for d in (0, 1))
+
+
 class ConstraintAllDifferentMatrix(ConstraintUnmergeable):
     def __init__(self, lst, excepting):
         super().__init__(TypeCtr.ALL_DIFFERENT)
-        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst)
+        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst if _is_compressible_matrix(lst) else False)
         self.arg(TypeCtrArg.EXCEPT, excepting)
 
 
@@ -1180,17 +1232,19 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     __rmul__ = __mul__
 
+    # for // and %, with the semantics of Python, self is replaced once by an auxiliary variable, since it may occur twice in the node
+
     def __floordiv__(self, other):  # self // other
-        return Node.build(TypeNode.DIV, self, other)
+        return Node.floor_div(auxiliary().replace_partial_constraint(self), other)
 
     def __rfloordiv__(self, other):  # other // self
-        return Node.build(TypeNode.DIV, other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+        return Node.floor_div(other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def __mod__(self, other):  # self % other
-        return Node.build(TypeNode.MOD, self, other)
+        return Node.floor_mod(auxiliary().replace_partial_constraint(self), other)
 
-    def __rmod__(self, other):  # other // self
-        return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+    def __rmod__(self, other):  # other % self
+        return Node.floor_mod(other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def __getitem__(self, i):
         assert isinstance(self.constraint, ConstraintElement), (
@@ -1357,17 +1411,19 @@ class ScalarProduct:
 
     __rmul__ = __mul__
 
+    # for // and %, with the semantics of Python, self is replaced once by an auxiliary variable, since it may occur twice in the node
+
     def __floordiv__(self, other):
-        return Node.build(TypeNode.DIV, self, other)
+        return Node.floor_div(auxiliary().replace_scalar_product(self), other)
 
     def __rfloordiv__(self, other):
-        return Node.build(TypeNode.DIV, other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+        return Node.floor_div(other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def __mod__(self, other):
-        return Node.build(TypeNode.MOD, self, other)
+        return Node.floor_mod(auxiliary().replace_scalar_product(self), other)
 
     def __rmod__(self, other):
-        return Node.build(TypeNode.MOD, other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+        return Node.floor_mod(other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def to_terms(self):
         return [self.variables[i] * self.coeffs[i] for i in range(len(self.variables))]

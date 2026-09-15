@@ -6,11 +6,20 @@ from pycsp3.tools.utilities import ANY
 
 
 def _remove_condition_nodes_of_table(table, doms):  # convert hybrid binary and ternary conditions into ordinary tuples
+    def _develop_restricted_columns():
+        # the columns with a restriction and the columns they refer to are enumerated together, and only the tuples satisfying all restrictions are kept
+        nodes = [i for i in range(len(t)) if isinstance(t[i], conditions.ConditionNode)]
+        involved = set(nodes) | {j for i in nodes for j in t[i].columns()}
+        choices = [doms[i] if i in involved and (t[i] is ANY or i in nodes) else [t[i]] for i in range(len(t))]
+        return (u for u in itertools.product(*choices) if all(t[i].operator.check(u[i], t[i].value(u)) for i in nodes))
+
     def _remove_condition_nodes_of_tuple():
         r = len(t)
         pos = next((i for i in range(r) if isinstance(t[i], conditions.ConditionNode)), -1)
         if pos == -1:
             return t
+        if any(isinstance(t[j], conditions.ConditionNode) for j in t[pos].columns()):  # e.g., restrictions referring to the columns in a cycle
+            return _develop_restricted_columns()
         ind, res = t[pos].evaluate(t, doms)
         assert len(ind) in (1, 2)
         return (tuple(v if i == pos else st[0] if i == ind[0] else st[1] if len(ind) == 2 and i == ind[1] else t[i] for i in range(r))
