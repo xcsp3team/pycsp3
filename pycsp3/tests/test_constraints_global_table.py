@@ -145,6 +145,7 @@ def test_tables_with_the_same_hash(run, solver, request, constraints, predicate)
     ("(x[0], x[1]) in {(0, -1), (1, 1)}, (x[2], x[3]) in {(0, -2), (1, 1)}", ["(0,-1)(1,1)", "(0,-2)(1,1)"]),
     ("x[0] in [-1, 2], x[1] in [-2, 2]", ["-1 2", "-2 2"]),
     ("(x[0], x[1]) not in {(0, -1)}, (x[2], x[3]) not in {(0, -2)}", ["(0,-1)", "(0,-2)"]),
+    ("(x[0], x[1]) in {(0, -1), (range(1, 2), 1)}, (x[2], x[3]) in {(0, -2), (range(1, 2), 1)}", ["(0,-1)(1,1)", "(0,-2)(1,1)"]),
 ])
 def test_tables_with_the_same_hash_xcsp3(run, constraints, texts):
     r = run(f"x = VarArray(size=4, dom=range(-3, 4))\nsatisfy({constraints})")

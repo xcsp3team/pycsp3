@@ -1,3 +1,5 @@
+import hashlib
+import marshal
 from collections import OrderedDict
 from itertools import permutations, combinations
 
@@ -211,23 +213,20 @@ class ConstraintIntension(Constraint):
         return Diffs() if self.abstract_tree() == other.abstract_tree() else False
 
 
-class _TableKey:
+def _table_key(table):
     """
-    The key of a table in the caches of ConstraintExtension. Two different tables may have the same hash code (in Python,
-    hash(-1) == hash(-2)): so, the table itself is kept, and compared when the hash codes are the same.
-    The hash code is computed only once (possibly raising TypeError if the table is not hashable).
+    Returns the key of the specified table (a tuple) in the caches of ConstraintExtension. The hash code of the table is not used,
+    because two different tables may have the same hash code (in Python, hash(-1) == hash(-2)), and the table itself is not used either,
+    because the caches would then keep all tables (which is costly with many large tables). So, the key is a digest (blake2b, 128 bits)
+    of the serialization of the table, for which a collision is practically impossible. If the table cannot be serialized
+    (e.g., it contains ranges or conditions), the table itself is the key.
+    A TypeError is raised if the table is not hashable (e.g., one of its tuples contains a list).
     """
-    __slots__ = ("table", "h")
-
-    def __init__(self, table):
-        self.table = table
-        self.h = hash(table)
-
-    def __hash__(self):
-        return self.h
-
-    def __eq__(self, other):
-        return isinstance(other, _TableKey) and self.h == other.h and self.table == other.table
+    hash(table)  # raises TypeError if the table is not hashable
+    try:
+        return hashlib.blake2b(marshal.dumps(table, 2), digest_size=16).digest()  # version 2 of marshal: no references, so the same bytes for the same table
+    except ValueError:  # an element of the table cannot be serialized
+        return table
 
 
 class ConstraintExtension(Constraint):
@@ -279,14 +278,14 @@ class ConstraintExtension(Constraint):
     def process_table(self, scope, table):
         if len(table) == 0:
             return None
-        # we compute the key of the table in the caches (the table itself, and not only its hash code, which may be shared by different tables)
+        # we compute the key of the table in the caches (a digest of the table, and not its hash code, which may be shared by different tables)
         try:
-            h = _TableKey(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
+            h = _table_key(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
         except TypeError:
             for i, t in enumerate(table):
                 if any(isinstance(v, (list, set, frozenset)) for v in t):
                     table[i] = tuple(tuple(v) if isinstance(v, (list, set, frozenset)) else v for v in t)
-            h = _TableKey(tuple(table) + (self.keep_hybrid,))
+            h = _table_key(tuple(table) + (self.keep_hybrid,))
         if len(scope) == 1:  # if arity 1
             if h not in ConstraintExtension.cache:
                 table.sort()
