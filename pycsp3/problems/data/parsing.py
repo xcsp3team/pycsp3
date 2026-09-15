@@ -3,7 +3,7 @@ import re
 from collections import OrderedDict
 
 from pycsp3.dashboard import options
-from pycsp3.tools.utilities import decrement, error_if
+from pycsp3.tools.utilities import decrement, error, error_if
 
 data = None
 _dataParser = None
@@ -117,12 +117,17 @@ def next_lines(skip_curr=False, *, prefix_stop):
 
 
 def number_in(ln, offset=0):
-    assert ln is not None
-    return int(re.search(r'[-]?\d+', ln).group(0)) + offset
+    if not isinstance(ln, str):
+        error("number_in() expects a line (a string), not " + repr(ln))
+    match = re.search(r'[-]?\d+', ln)
+    if match is None:
+        error("number_in(): no integer in the line " + repr(ln))
+    return int(match.group(0)) + offset
 
 
 def numbers_in(ln, offset=0):
-    assert ln is not None
+    if not isinstance(ln, str):
+        error("numbers_in() expects a line (a string), not " + repr(ln))
     return [int(v) + offset for v in re.findall(r'[-]?\d+', ln)]  # [int(v) for v in ln().split() if v.isdigit()]
 
 
@@ -136,10 +141,23 @@ def numbers_in_lines_until(stop):
         lines.append(ln)
 
 
+def _is_strictly_positive_integer(v):
+    return isinstance(v, int) and not isinstance(v, bool) and v > 0
+
+
 def split_with_structure(t, *k):
-    assert isinstance(t, list) and all(isinstance(v, int) for v in k) and len(t) % k[0] == 0
+    if not isinstance(t, list):
+        error("split_with_structure() expects a list, not a " + type(t).__name__)
+    if not all(_is_strictly_positive_integer(v) for v in k):
+        error("split_with_structure(): the sizes must be strictly positive integers, which is not the case of " + str(k))
     if len(k) == 0:
         return t
+    product = 1
+    for v in k:
+        product *= v
+    if len(t) % product != 0:  # checked once for all the sizes, instead of for the intermediate lists of the recursive calls
+        error("split_with_structure(): the length of the list (" + str(len(t)) + ") must be a multiple of "
+              + (str(product) if len(k) == 1 else " × ".join(str(v) for v in k) + " = " + str(product)))
     width = len(t) // k[0]
     m = [[t[i * width + j] for j in range(width)] for i in range(k[0])]
     if len(k) > 1:
@@ -149,7 +167,12 @@ def split_with_structure(t, *k):
 
 
 def split_with_rows_of_size(t, k1):
-    assert isinstance(t, list) and len(t) % k1 == 0, str(type(list)) + " " + str(len(t)) + " " + str(k1)
+    if not isinstance(t, list):
+        error("split_with_rows_of_size() expects a list, not a " + type(t).__name__)
+    if not _is_strictly_positive_integer(k1):
+        error("split_with_rows_of_size(): the size of the rows must be a strictly positive integer, not " + repr(k1))
+    if len(t) % k1 != 0:
+        error("split_with_rows_of_size(): the length of the list (" + str(len(t)) + ") must be a multiple of the size of the rows (" + str(k1) + ")")
     if len(t) == 0:
         return t
     return split_with_structure(t, len(t) // k1)

@@ -9,10 +9,9 @@ import textwrap
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
-PARSING_INVALID = "#94: invalid arguments of the data parsing functions are reported without explicit message"
 # Displays the variable data, the named tuples built from data (nt0, nt1, ...) being displayed without their names
 SHOW = r'print("data", __import__("re").sub(r"\bnt\d+\(", "(", repr(data)))'
 
@@ -734,6 +733,7 @@ print("fields", dict(data))
     ('split_with_rows_of_size([1, 2, 3, 4, 5, 6], 1)', [[1], [2], [3], [4], [5], [6]]),
     ('split_with_rows_of_size([1, 2, 3, 4, 5, 6], 6)', [[1, 2, 3, 4, 5, 6]]),
     ('split_with_rows_of_size([], 3)', []),
+    ('split_with_structure([1, 2])', [1, 2]),  # without size, the list is returned
 ])
 def test_parsing_functions(run, expression, value):
     r = run(PARSING + f'print("value", {expression})')
@@ -741,21 +741,39 @@ def test_parsing_functions(run, expression, value):
 
 
 @pytest.mark.parametrize("expression", [
-    pytest.param('number_in("no number")', marks=bug(PARSING_INVALID)),
-    pytest.param('number_in(None)', marks=bug(PARSING_INVALID)),
-    pytest.param('numbers_in(None)', marks=bug(PARSING_INVALID)),
-    pytest.param('split_with_structure(list(range(12)), 5)', marks=bug(PARSING_INVALID)),
-    pytest.param('split_with_structure(list(range(12)), 2, 4)', marks=bug(PARSING_INVALID)),
-    pytest.param('split_with_structure(list(range(12)), 0)', marks=bug(PARSING_INVALID)),
-    pytest.param('split_with_structure(list(range(12)), -2)', marks=bug(PARSING_INVALID)),
-    pytest.param('split_with_structure(tuple(range(12)), 2)', marks=bug(PARSING_INVALID)),
-    pytest.param('split_with_structure(list(range(12)), 2.0)', marks=bug(PARSING_INVALID)),
+    'number_in("no number")',
+    'number_in(None)',
+    'numbers_in(None)',
+    'split_with_structure(list(range(12)), 5)',
+    'split_with_structure(list(range(12)), 2, 4)',
+    'split_with_structure(list(range(12)), 0)',
+    'split_with_structure(list(range(12)), -2)',
+    'split_with_structure(tuple(range(12)), 2)',
+    'split_with_structure(list(range(12)), 2.0)',
+    'split_with_structure(list(range(12)), True)',
     'split_with_rows_of_size([1, 2, 3, 4, 5, 6, 7], 3)',
-    pytest.param('split_with_rows_of_size([1, 2, 3], 0)', marks=bug(PARSING_INVALID)),
-    pytest.param('split_with_rows_of_size([1, 2, 3], -3)', marks=bug(PARSING_INVALID)),
+    'split_with_rows_of_size([1, 2, 3], 0)',
+    'split_with_rows_of_size([1, 2, 3], -3)',
+    'split_with_rows_of_size((1, 2, 3), 3)',
 ])
 def test_parsing_functions_invalid(run, expression):
     assert_fails(run(PARSING + f"print({expression})"))
+
+
+@pytest.mark.parametrize("expression, message", [
+    ('number_in("no number")', "number_in(): no integer in the line 'no number'"),
+    ('number_in(None)', "number_in() expects a line (a string), not None"),
+    ('numbers_in(None)', "numbers_in() expects a line (a string), not None"),
+    ('split_with_structure(tuple(range(12)), 2)', "split_with_structure() expects a list, not a tuple"),
+    ('split_with_structure(list(range(12)), 2.0)', "split_with_structure(): the sizes must be strictly positive integers, which is not the case of (2.0,)"),
+    ('split_with_structure(list(range(12)), 5)', "split_with_structure(): the length of the list (12) must be a multiple of 5"),
+    ('split_with_structure(list(range(12)), 2, 4)', "split_with_structure(): the length of the list (12) must be a multiple of 2 × 4 = 8"),
+    ('split_with_rows_of_size([1, 2, 3], 0)', "split_with_rows_of_size(): the size of the rows must be a strictly positive integer, not 0"),
+    ('split_with_rows_of_size([1, 2, 3, 4, 5, 6, 7], 3)', "split_with_rows_of_size(): the length of the list (7) must be a multiple of the size of the rows (3)"),
+])
+def test_parsing_functions_invalid_messages(run, expression, message):
+    r = run(PARSING + f"print({expression})")
+    assert not r.ok and message in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("args, shown", [
