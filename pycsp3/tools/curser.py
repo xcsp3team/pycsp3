@@ -308,8 +308,9 @@ class OpOverrider:
             if other == 0:
                 return self
             if isinstance(self, Node) and self.type in (TypeNode.ADD, TypeNode.SUB) and self[-1].type == TypeNode.INT:
-                self[-1].cnt += (other if self.type == TypeNode.ADD else -other)
-                return self[0] if self.arity() == 2 and self[-1].cnt == 0 else self
+                # a new node is built, since self may be used in other expressions
+                value = self[-1].cnt + (other if self.type == TypeNode.ADD else -other)
+                return self[0] if self.arity() == 2 and value == 0 else Node.build(self.type, *self.cnt[:-1], value)
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))
         if isinstance(other, PartialConstraint):
@@ -334,8 +335,9 @@ class OpOverrider:
             if other == 0:
                 return self
             if isinstance(self, Node) and self.type in (TypeNode.ADD, TypeNode.SUB) and self[-1].type == TypeNode.INT:
-                self[-1].cnt += (-other if self.type == TypeNode.ADD else other)
-                return self[0] if self.arity() == 2 and self[-1].cnt == 0 else self
+                # a new node is built, since self may be used in other expressions
+                value = self[-1].cnt + (-other if self.type == TypeNode.ADD else other)
+                return self[0] if self.arity() == 2 and value == 0 else Node.build(self.type, *self.cnt[:-1], value)
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))
         if isinstance(other, PartialConstraint):

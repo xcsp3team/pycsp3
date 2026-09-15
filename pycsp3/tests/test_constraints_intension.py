@@ -126,7 +126,6 @@ def test_arithmetic_operators_with_small_domains(run, solver, request, constrain
 
 def test_operators_on_shared_nodes(run, solver, request):
     # a node used in several expressions must not be modified by them
-    bug_for(request, ALL, "#97: + and - with an integer modify a node shared by other expressions")
     r = run("""
         x = Var(dom=range(-3, 4))
         y = Var(dom=range(-3, 4))
@@ -140,6 +139,28 @@ def test_operators_on_shared_nodes(run, solver, request):
         )
     """, solver=solver)
     assert_solutions(r, brute_force([range(-3, 4)] * 2, lambda x, y: x + 3 == y and x - 2 < y and x + 1 >= 0 and x - 1 <= 0))
+
+
+def test_operators_on_shared_nodes_xcsp3(run):
+    r = run("""
+        x = Var(dom=range(-3, 4))
+        y = Var(dom=range(-3, 4))
+        e = x + 1
+        d = x - 1
+        f = x + y + 1
+        satisfy(
+            e + 2 == y,
+            e >= 0,
+            d - 1 < y,
+            d <= 0,
+            e - 1 == y,
+            f + 1 == 0,
+            f <= 3
+        )
+    """)
+    assert r.ok, r.report()
+    assert [c.text.strip() for c in r.xml.iter("intension")] == [
+        "eq(add(x,3),y)", "ge(add(x,1),0)", "lt(sub(x,2),y)", "le(sub(x,1),0)", "eq(x,y)", "eq(add(x,y,2),0)", "le(add(x,y,1),3)"], r.report()
 
 
 # -------------------------------------------------------------------------------------------------- relational operators
