@@ -1,12 +1,15 @@
 name: Linux tests
 
+# the tests are run when a pull request is merged and when a tag is pushed, not for each commit
 on:
-  push:
-    branches: [master]
   pull_request:
+    types: [closed]
+  push:
+    tags: ['**']
 
 jobs:
   tests:
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
     uses: ./.github/workflows/reusable-tests.yml
     with:
       os: ubuntu-latest

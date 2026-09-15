@@ -111,12 +111,13 @@ thus a commit that corrects the bug, removes the mark, and closes the issue with
 
 ## Continuous integration
 
-The workflows of `.github/workflows` run for each pull request and each push on master (their status is
-displayed by the badges of the main README):
+The workflows of `.github/workflows` are the following (their status is displayed by the badges of the main README):
 
-- `tests-linux.yml` and `tests-macos.yml` run the tests on Linux and macOS; when a test fails, the files of
-  the tests are kept as an artifact of the run (`files-of-the-tests-<os>`);
-- `build-linux.yml` and `build-macos.yml` build the package, install it in a new environment and solve a model with it.
+- `tests-linux.yml` and `tests-macos.yml` run the tests on Linux and macOS, only when a pull request is merged
+  and when a tag is pushed (not for each commit); when a test fails, the files of the tests are kept as an
+  artifact of the run (`files-of-the-tests-<os>`);
+- `build-linux.yml` and `build-macos.yml`, run for each pull request and each push on master, build the package,
+  install it in a new environment and solve a model with it.
 
 Both kinds of workflows are defined once, in `reusable-tests.yml` and `reusable-build.yml`.
 
