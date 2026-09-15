@@ -13,7 +13,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-DETERMINISTIC_COPY = "#108: Automaton.deterministic_copy() does not terminate, or loses all the transitions"
 STATES = "#109: the start and final states of an automaton are not checked"
 RANGES = "#110: labels given by ranges cannot be used with variables of different domains"
 INVALID = "#111: invalid automata are reported without explicit message, or accepted"
@@ -222,19 +221,31 @@ NFA = {
     "suffix 101": dict(start="s", transitions=[("s", 0, "s"), ("s", 1, "s"), ("s", 1, "t"), ("t", 0, "u"), ("u", 1, "v")], final="v"),
     "states with underscores": dict(start="q_0", transitions=[("q_0", 0, "q_0"), ("q_0", 1, "q_0"), ("q_0", 1, "q_1"), ("q_1", 1, "q_2")], final="q_2"),
     "final state reached by one path only": dict(start="a", transitions=[("a", 0, "b"), ("a", 0, "c"), ("b", 1, "d"), ("c", 0, "d"), ("d", 0, "d")], final=["d"]),
+    "name already used": dict(start="a", transitions=[("a", 0, "a"), ("a", 0, "b"), ("b", 1, "a_b"), ("a_b", 1, "a_b")], final=["a_b"]),
 }
 
 
 @pytest.mark.parametrize("name", NFA)
-def test_automaton_deterministic_copy(run, solver, request, name):
-    if name in ("several paths", "states with underscores"):
-        bug_for(request, ALL, DETERMINISTIC_COPY)
+def test_automaton_deterministic_copy(run, solver, name):
     spec = NFA[name]
     r = run(automaton(spec) + "x = VarArray(size=5, dom={0, 1})\nD = A.deterministic_copy(x)\nsatisfy(x in D)\n"
                               "print('deterministic', all(len({q2 for (q1, v, q2) in D.transitions if (q1, v) == (p, w)}) == 1 for (p, w, _) in D.transitions))",
             solver=solver, timeout=20)  # the copy may not terminate
     assert "deterministic True" in r.lines, r.report()
     assert_solutions(r, brute_force([[0, 1]] * 5, lambda *t: accepts(t, spec["start"], spec["transitions"], spec["final"])))
+
+
+@pytest.mark.parametrize("name, text", [
+    ("documentation", "Automaton(start=a, transitions={(a,0,a_b),(a_b,0,a_b),(a_b,1,c)}, final=[c])"),
+    ("several paths", "Automaton(start=p, transitions={(p,0,p_q),(p,1,r),(p_q,0,p_q),(p_q,1,r),(r,1,r)}, final=[r])"),
+    ("states with underscores", "Automaton(start=q_0, transitions={(q_0,0,q_0),(q_0,1,q_0_q_1),(q_0_q_1,0,q_0),(q_0_q_1,1,q_0_q_1_q_2),"
+                                "(q_0_q_1_q_2,0,q_0),(q_0_q_1_q_2,1,q_0_q_1_q_2)}, final=[q_0_q_1_q_2])"),
+    ("name already used", "Automaton(start=a, transitions={(a,0,a_b_1),(a_b_1,0,a_b_1),(a_b_1,1,a_b),(a_b,1,a_b)}, final=[a_b])"),
+])
+def test_automaton_deterministic_copy_states(run, name, text):
+    # the states of the copy are named after the sets of states (with a suffix when the name is already used)
+    r = run(automaton(NFA[name]) + "x = VarArray(size=5, dom={0, 1})\nprint('copy', A.deterministic_copy(x))")
+    assert "copy " + text in r.lines, r.report()
 
 
 # --------------------------------------------------------------------------------------------------- XCSP3 files

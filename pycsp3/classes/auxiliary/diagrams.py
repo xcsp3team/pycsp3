@@ -117,35 +117,46 @@ class Automaton(Diagram):
         self.access = None
         assert isinstance(self.start, str) and all(isinstance(f, str) for f in self.final), Diagram.MSG_STATE
 
-    # TODO: it seems that there is a problem with this function: to be fixed!
     def deterministic_copy(self, scp):
-        nfa = {}
-        symbols = set()
+        """
+        Returns a deterministic automaton recognizing the same words (subset construction), the labels being the values of the
+        domains of the variables of the specified scope. Each state of the copy corresponds to a set of states of this automaton:
+        it is named after its state for a singleton, and after its sorted states joined by '_' otherwise (with a suffix if needed,
+        so that two states never have the same name).
+        """
+        nfa = {}  # for each pair (state, symbol), the set of reached states
         for state1, symbol, state2 in self.flat_transitions(flatten(scp)):
-            symbols.add(symbol)
-            if state1 not in nfa:
-                nfa[state1] = {}
-            if symbol not in nfa[state1]:
-                nfa[state1][symbol] = []
-            nfa[state1][symbol].append(state2)
-        symbols = sorted(list(symbols))
-        dfa = {}
-        states = [self.start]
-        queue = [self.start]
-        while len(queue) != 0:
-            state1 = queue.pop(0)
-            dfa[state1] = {}
-            tokens = [v for v in state1.split('_')]
+            nfa.setdefault((state1, symbol), set()).add(state2)
+        symbols = sorted({symbol for (_, symbol) in nfa})
+        names = {}  # for each set of states (frozenset), the name of the corresponding state of the copy
+        used = set(self.states)  # the names that cannot be given to a set of several states
+
+        def _name(states):
+            if len(states) == 1:
+                name = next(iter(states))
+            else:
+                name = base = "_".join(sorted(states))
+                k = 1
+                while name in used:
+                    name, k = base + "_" + str(k), k + 1
+            used.add(name)
+            names[states] = name
+            return name
+
+        start = frozenset([self.start])
+        queue, final, transitions = [start], [], []
+        _name(start)
+        for states in queue:  # the queue is extended while being traversed
+            if any(q in self.final for q in states):
+                final.append(names[states])
             for symbol in symbols:
-                state2 = "_".join(v for tok in tokens if tok in nfa and symbol in nfa[tok] for v in nfa[tok][symbol])
-                if len(state2) > 0:
-                    dfa[state1][symbol] = state2
-                    if state2 not in states:
-                        queue.append(state2)
-                        states.append(state2)
-        final = [state for state in dfa if any(tok in self.final for tok in state.split('_'))]
-        transitions = [(state, symbol, dfa[state][symbol]) for state in dfa for symbol in symbols if symbol in dfa[state]]
-        return Automaton(start=self.start, final=final, transitions=transitions)
+                targets = frozenset(q2 for q1 in states for q2 in nfa.get((q1, symbol), ()))
+                if len(targets) > 0:
+                    if targets not in names:
+                        _name(targets)
+                        queue.append(targets)
+                    transitions.append((names[states], symbol, names[targets]))
+        return Automaton(start=names[start], final=final, transitions=transitions)
 
     def contains(self, t):  # currently can only be used if deterministic automaton
         if self.access is None:
