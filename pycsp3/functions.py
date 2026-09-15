@@ -1319,7 +1319,10 @@ def iff(*args):
     if res is None:
         return Iff(*args, meta=True)
     res = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in res]
-    return res[0] == res[1] if len(res) == 2 else Node.build(TypeNode.IFF, *res)
+    if len(res) == 2:
+        return res[0] == res[1]
+    # all the arguments must be equivalent: a conjunction of binary equivalences avoids the ambiguity of iff with more than two arguments
+    return Node.build(TypeNode.AND, *(Node.build(TypeNode.IFF, res[i], res[i + 1]) for i in range(len(res) - 1)))
 
 
 def imply(*args):
