@@ -207,6 +207,7 @@ class OpOverrider:
         Variable.__mod__ = Node.__mod__ = OpOverrider.__mod__
         Variable.__rmod__ = Node.__rmod__ = OpOverrider.__rmod__
         Variable.__pow__ = Node.__pow__ = OpOverrider.__pow__
+        Variable.__rpow__ = Node.__rpow__ = OpOverrider.__rpow__
 
         ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = OpOverrider.__and__
         ECtr.__rand__ = EMetaCtr.__rand__ = Variable.__rand__ = Node.__rand__ = OpOverrider.__rand__
@@ -246,6 +247,7 @@ class OpOverrider:
         Variable.__mod__ = Node.__mod__ = None
         Variable.__rmod__ = Node.__rmod__ = None
         Variable.__pow__ = Node.__pow__ = None
+        Variable.__rpow__ = Node.__rpow__ = None
 
         ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = None
         ECtr.__rand__ = EMetaCtr.__rand__ = Variable.__rand__ = Node.__rand__ = None
@@ -403,6 +405,11 @@ class OpOverrider:
         if isinstance(other, ConstraintDummyConstant):
             other = other.val
         return Node.build(TypeNode.POW, self, other)
+
+    def __rpow__(self, other):  # other ** self
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
+        return Node.build(TypeNode.POW, other, self)
 
     @staticmethod
     def _replace(arg1, arg2):

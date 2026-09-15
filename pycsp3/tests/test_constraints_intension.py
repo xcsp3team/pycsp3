@@ -36,7 +36,6 @@ KNOWN = {
     "x ** 3 == y": [("CHOCO", CHOCO_POW)],
     "x % 3 == z": [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
     "x ** z == y": [("CHOCO", CHOCO_POW)],
-    "2 ** z == y": [(ALL, "#96: the operator ** cannot be used with an integer base and a variable exponent (no __rpow__)")],
     "abs(x) == y": [("ACE", ACE_NEGATIVE)],
     "xor([x > 0, y > 0])": [(ALL, XOR_IFF)],
     "xor(v > 0 for v in [x, y])": [(ALL, XOR_IFF)],
