@@ -14,12 +14,13 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 COSOCO_HOLES = "xcsp3team/cosoco#72: cosoco gives individually the values of the variables involved in no constraint, and pycsp3 fails when recording those of holes"
-MATRIX_LISTS = "#116: a matrix given by lists (or a one-dimensional list) is written as a one-dimensional array in the XCSP3 file"
 EXCEPTING = "#117: excepting=[] generates an empty element <except>, and excepting cannot be a range"
 INVALID = "#118: invalid arguments of AllDifferent() are accepted, or reported without explicit message"
 REPEATED = "#119: a variable given several times to AllDifferent() is not reported"
 ACE_NON_SQUARE = "xcsp3team/ACE#16: ACE fails on allDifferent-matrix with a non-square matrix"
 COSOCO_MATRIX_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions of allDifferent-matrix with except"
+COSOCO_MATRIX_ROWS = ("cosoco fails on allDifferent-matrix whose matrix is given by explicit rows (Matrix variable (x does not exist), "
+                      "to be reported to xcsp3team/cosoco")
 COSOCO_EXCEPT_EXPRESSIONS = "xcsp3team/cosoco#78: cosoco stops with a segmentation fault on allDifferent with expressions and except"
 CHOCO_MATRIX_EXCEPT = "chocoteam/choco-solver#1248: CHOCO loses solutions of allDifferent-matrix with except"
 CHOCO_EXCEPT_EXPRESSIONS = "CHOCO does not handle allDifferent with expressions and except (Other forms not implemented)"
@@ -208,9 +209,28 @@ def test_alldifferent_matrix(run, solver, request, size, dom, excepting):
 
 
 def test_alldifferent_matrix_given_as_lists(run, solver, request):
-    bug_for(request, ("ACE", "CHOCO", "COSOCO"), MATRIX_LISTS)
+    bug_for(request, "COSOCO", COSOCO_MATRIX_ROWS)
     check(run, solver, "x = VarArray(size=4, dom=range(2))\nsatisfy(AllDifferent([[x[0], x[1]], [x[2], x[3]]], matrix=True))", [range(2)] * 4,
           lambda a, b, c, d: _matrix_different([(a, b), (c, d)]))
+
+
+@pytest.mark.parametrize("code, text", [
+    ("x = VarArray(size=4, dom=range(2))\nsatisfy(AllDifferent([[x[0], x[1]], [x[2], x[3]]], matrix=True))", "(x[0],x[1])(x[2],x[3])"),
+    ("x = VarArray(size=[1, 4], dom=range(2))\nsatisfy(AllDifferent([x[0][:2], x[0][2:]], matrix=True))", "(x[0][0],x[0][1])(x[0][2],x[0][3])"),
+    ("x = VarArray(size=[2, 2], dom=range(2))\nsatisfy(AllDifferent(x, matrix=True))", "x[][]"),
+    ("x = VarArray(size=[2, 3], dom=range(3))\nsatisfy(AllDifferent(columns(x), matrix=True))", "x[][]"),
+    ("x = VarArray(size=[3, 3], dom=range(3))\nsatisfy(AllDifferent(x[1:], matrix=True))", "x[1..2][]"),
+], ids=["lists of a 1D array", "1x4 array regrouped as 2x2", "2D array", "columns of a 2D array", "rows of a 2D array"])
+def test_xcsp3_alldifferent_matrix_forms(run, code, text):
+    # the compact form of the matrix is written only for the rows (or the columns) of a two-dimensional array
+    r = run(code)
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/allDifferent/matrix").text.strip() == text, r.report()
+
+
+def test_alldifferent_matrix_with_one_dimensional_list(run):
+    r = run(X3 + "satisfy(AllDifferent(x, matrix=True))")
+    assert not r.ok and "With matrix=True, AllDifferent() requires a two-dimensional list of variables (a list of rows)" in r.stdout, r.report()
 
 
 def test_alldifferent_matrix_with_option_mini(run, solver):
@@ -278,7 +298,7 @@ def test_xcsp3_alldifferent_matrix(run):
     "AllDifferent(x, excepting=[0, 'a'])",
     "AllDifferent(x, excepting=x[0])",
     pytest.param("AllDifferent(x, x, matrix=True)", marks=bug(INVALID)),
-    pytest.param("AllDifferent(x, matrix=True)", marks=bug(MATRIX_LISTS)),
+    "AllDifferent(x, matrix=True)",
     "AllDifferent([[x[0], x[1]], [x[2]]], matrix=True)",
     "AllDifferent([[x[0] + 1, x[1]], [x[2], x[0]]], matrix=True)",
 ])

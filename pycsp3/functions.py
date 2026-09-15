@@ -1869,6 +1869,9 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     checkType(excepting, ([int], type(None)))
     if matrix:
         assert len(others) == 0
+        term = list(term) if isinstance(term, types.GeneratorType) else term
+        if not isinstance(term, (list, tuple)) or any(not isinstance(row, (list, tuple)) for row in term):
+            error("With matrix=True, AllDifferent() requires a two-dimensional list of variables (a list of rows), which is not the case of " + str(term))
         matrix = [flatten(row) for row in term]
         assert all(len(row) == len(matrix[0]) for row in matrix), "The matrix id badly formed"
         assert all(checkType(t, [Variable]) for t in matrix)

@@ -440,10 +440,23 @@ class ConstraintAllDifferentList(ConstraintUnmergeable):
             self.arg(TypeCtrArg.EXCEPT, s)  # if excepting else excepting)
 
 
+def _is_compressible_matrix(m):
+    """
+    Returns True if the specified matrix (a list of rows of variables) may be written in a compact form (such as x[][]): its variables
+    must belong to the same two-dimensional array, each row (or each column) corresponding to a distinct value of one of the two indexes
+    (the order of rows and columns does not matter for allDifferent-matrix). Otherwise, for example for a matrix built from the variables
+    of a one-dimensional array, the compact form of the variables would not be a matrix.
+    """
+    variables = [x for row in m for x in row]
+    if any(x.indexes is None or len(x.indexes) != 2 or x.prefix != variables[0].prefix for x in variables):
+        return False
+    return any(all(len({x.indexes[d] for x in row}) == 1 for row in m) and len({row[0].indexes[d] for row in m}) == len(m) for d in (0, 1))
+
+
 class ConstraintAllDifferentMatrix(ConstraintUnmergeable):
     def __init__(self, lst, excepting):
         super().__init__(TypeCtr.ALL_DIFFERENT)
-        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst)
+        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst if _is_compressible_matrix(lst) else False)
         self.arg(TypeCtrArg.EXCEPT, excepting)
 
 
