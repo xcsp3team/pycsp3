@@ -10,11 +10,10 @@ from itertools import product
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 COSOCO_HOLES = "xcsp3team/cosoco#72: cosoco gives individually the values of the variables involved in no constraint, and pycsp3 fails when recording those of holes"
-INVALID = "#118: invalid arguments of AllDifferent() are accepted, or reported without explicit message"
 REPEATED = "#119: a variable given several times to AllDifferent() is not reported"
 ACE_NON_SQUARE = "xcsp3team/ACE#16: ACE fails on allDifferent-matrix with a non-square matrix"
 COSOCO_MATRIX_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions of allDifferent-matrix with except"
@@ -286,16 +285,27 @@ def test_xcsp3_alldifferent_matrix(run):
 @pytest.mark.parametrize("constraint", [
     "AllDifferent(x, 2)",
     "AllDifferent(x[0], 'a')",
-    pytest.param("AllDifferent(None)", marks=bug(INVALID)),
-    pytest.param("AllDifferent(5)", marks=bug(INVALID)),
+    "AllDifferent(None)",
+    "AllDifferent(5)",
     "AllDifferent(x, excepting='a')",
     "AllDifferent(x, excepting=2.5)",
     "AllDifferent(x, excepting=[0, 'a'])",
     "AllDifferent(x, excepting=x[0])",
-    pytest.param("AllDifferent(x, x, matrix=True)", marks=bug(INVALID)),
+    "AllDifferent(x, x, matrix=True)",
     "AllDifferent(x, matrix=True)",
     "AllDifferent([[x[0], x[1]], [x[2]]], matrix=True)",
     "AllDifferent([[x[0] + 1, x[1]], [x[2], x[0]]], matrix=True)",
 ])
 def test_invalid_alldifferent(run, constraint):
     assert_fails(run(X3 + f"satisfy({constraint})"))
+
+
+@pytest.mark.parametrize("constraint, message", [
+    ("AllDifferent(None)", "AllDifferent() requires variables (or expressions), which is not the case of None"),
+    ("AllDifferent(5)", "Wrong type for [5]"),
+    ("AllDifferent([[x[0], x[1]], [x[2], x[0]]], [[x[1]]], matrix=True)",
+     "With matrix=True, AllDifferent() requires a single argument (the matrix), which is not the case of 2 arguments"),
+])
+def test_invalid_alldifferent_messages(run, constraint, message):
+    r = run(X3 + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout + r.stderr, r.report()

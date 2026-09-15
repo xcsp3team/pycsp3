@@ -1876,9 +1876,10 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         if solve() is SAT:
            print(values(x))
     """
+    error_if(term is None, "AllDifferent() requires variables (or expressions), which is not the case of None")
     excepting = _excepting_values(excepting)
     if matrix:
-        assert len(others) == 0
+        error_if(len(others) > 0, "With matrix=True, AllDifferent() requires a single argument (the matrix), which is not the case of " + str(1 + len(others)) + " arguments")
         term = list(term) if isinstance(term, types.GeneratorType) else term
         if not isinstance(term, (list, tuple)) or any(not isinstance(row, (list, tuple)) for row in term):
             error("With matrix=True, AllDifferent() requires a two-dimensional list of variables (a list of rows), which is not the case of " + str(term))
@@ -1890,7 +1891,7 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         else:
             return [AllDifferent(row) for row in matrix] + [AllDifferent(col) for col in columns(matrix)]
     terms = flatten(term, others)
-    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (int, Variable, Node))):
+    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # an integer is reported below by checkType()
         return None
     checkType(terms, ([Variable, Node]))
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)  # only if mini
@@ -1978,6 +1979,7 @@ def AllEqual(term, *others, excepting=None):
         if solve() is SAT:
            print(values(x))
     """
+    error_if(term is None, "AllEqual() requires variables (or expressions), which is not the case of None")
     excepting = _excepting_values(excepting)
     terms = flatten(term, others)
     if len(terms) == 0:

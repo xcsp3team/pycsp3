@@ -8,13 +8,12 @@ Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being co
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
 MIXED = "#123: AllEqual() refuses terms mixing variables and expressions"
 SINGLE = "#124: AllEqual() with a single term generates an element <allEqual> with a single variable"
-INVALID = "#118: invalid arguments of AllEqual() are accepted, or reported without explicit message"
 COSOCO_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions or fails with except (here, allEqual with except, or a group of them)"
 COSOCO_REPEATED = "xcsp3team/cosoco#80: cosoco loses solutions of allEqual with a variable given twice"
 
@@ -219,7 +218,7 @@ def test_xcsp3_allequal(run, constraint, expected):
 
 @pytest.mark.parametrize("constraint", [
     "AllEqual(x[0], 'a')",
-    pytest.param("AllEqual(None)", marks=bug(INVALID)),
+    "AllEqual(None)",
     "AllEqual(5)",
     "AllEqual(x, excepting='a')",
     "AllEqual(x, excepting=2.5)",
@@ -228,6 +227,11 @@ def test_xcsp3_allequal(run, constraint, expected):
 ])
 def test_invalid_allequal(run, constraint):
     assert_fails(run(X3 + f"satisfy({constraint})"))
+
+
+def test_invalid_allequal_message(run):
+    r = run(X3 + "satisfy(AllEqual(None))")
+    assert not r.ok and "AllEqual() requires variables (or expressions), which is not the case of None" in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("constraint, predicate", [("AllEqual(x, 1)", lambda a, b, c: a == b == c == 1), ("AllEqual(2, x[0], x[1])", lambda a, b, c: a == b == 2)])
