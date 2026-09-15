@@ -9,7 +9,7 @@ Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being co
 
 import pytest
 
-from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
@@ -18,7 +18,6 @@ ACE_NEGATIVE = "xcsp3team/ACE#12: ACE fails on abs, dist, mul, div and mod with 
 # The cases that a solver says it does not handle (not reported): for each constraint, the solvers and the reasons
 SKIPPED = {"x ** z == y": {"ACE": "ACE does not implement pow with a variable exponent (not implemented)"}}
 CHOCO_POW = "chocoteam/choco-solver#1248: CHOCO does not support pow in some intensional constraints"
-INVALID = "#101: invalid arguments of the intension functions are reported without explicit message"
 
 # For each constraint (as written in the tests), the known bugs: pairs (solvers, reason)
 KNOWN = {
@@ -338,7 +337,7 @@ def test_xor_iff_imply(run, solver, request, constraint, predicate):
     check(request, run, solver,[constraint, "b | (x != 2)"], XYB, lambda x, y, b: predicate(x, y, b) and (b == 1 or x != 2))
 
 
-@pytest.mark.parametrize("call", [pytest.param(c, marks=bug(INVALID)) for c in ["iff(x > 0)", "iff()", "imply(x > 0)", "imply(x > 0, y > 0, x == y)"]] + ["xor()"])
+@pytest.mark.parametrize("call", ["iff(x > 0)", "iff()", "iff([x > 0])", "imply(x > 0)", "imply()", "imply(x > 0, y > 0, x == y)", "xor()"])
 def test_xor_iff_imply_invalid(run, call):
     assert_fails(run(f"x = Var(dom=range(3))\ny = Var(dom=range(3))\nsatisfy({call})"))
 
@@ -443,15 +442,17 @@ def test_belong_binary_variables(run, solver, request, constraint, predicate):
     check(request, run, solver,[constraint, "c != 1"], [("b", "{0, 1}"), ("c", "range(3)")], lambda b, c: predicate(b, c) and c != 1)
 
 
-@bug(INVALID)
 @pytest.mark.parametrize("call", [
     "belong(x + 1, [1, 2])",
     "belong(x, ['a'])",
     "belong(2, [1, 2])",
     "belong(x, None)",
     "belong(x, [1.5])",
+    "belong(x, 'ab')",
+    "belong(2, None)",
     "not_belong(x + 1, [1, 2])",
     "not_belong(2, [1, 2])",
+    "not_belong(x, {1.5})",
 ])
 def test_belong_invalid(run, call):
     assert_fails(run(f"x = Var(dom=range(3))\ny = Var(dom=range(3))\nsatisfy({call}, y != 0)"))
@@ -503,10 +504,23 @@ def test_expr(run, solver, request, constraint, predicate):
           prefix="from pycsp3.classes.nodes import TypeNode\nfrom pycsp3.classes.auxiliary.enums import TypeConditionOperator\n")
 
 
-@pytest.mark.parametrize("call", ['expr("foo", x, y)', 'expr("lt", x)', 'expr("lt", x, y, x)', 'expr("not", x, y)',
-                                  pytest.param('expr(None, x, y)', marks=bug(INVALID)), pytest.param('expr(3, x, y)', marks=bug(INVALID))])
+@pytest.mark.parametrize("call", ['expr("foo", x, y)', 'expr("lt", x)', 'expr("lt", x, y, x)', 'expr("not", x, y)', 'expr(None, x, y)', 'expr(3, x, y)'])
 def test_expr_invalid(run, call):
     assert_fails(run(f"x = Var(dom=range(3))\ny = Var(dom=range(3))\nsatisfy({call})"))
+
+
+@pytest.mark.parametrize("call, message", [
+    ("belong(x + 1, [1, 2])", "The first argument of belong() must be a variable or an integer, which is not the case of add(x,1) (for an expression, the operator in can be used)"),
+    ("not_belong(2, [1, 2])", "When the first argument of not_belong() is an integer, the second argument must be a list of variables, which is not the case of [1, 2]"),
+    ("belong(x, ['a'])", "The second argument of belong() must be an integer, a range or a collection of integers, which is not the case of ['a']"),
+    ("iff(x > 0)", "iff() must have at least two arguments (possibly given in a list), which is not the case of 1"),
+    ("imply(x > 0)", "imply() must have two arguments (a condition and a consequence), which is not the case of 1"),
+    ("expr(None, x, y)", "The first argument of expr() must be an operator (a string such as \"lt\" or \"add\", or a TypeNode), which is not the case of None"),
+    ('expr("foo", x, y)', "which is not the case of 'foo'"),
+])
+def test_intension_functions_invalid_messages(run, call, message):
+    r = run(f"x = Var(dom=range(3))\ny = Var(dom=range(3))\nsatisfy({call})")
+    assert not r.ok and message in r.stdout, r.report()
 
 
 # ------------------------------------------------------------------------------------------------------------ XCSP3 files

@@ -1302,7 +1302,7 @@ def iff(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
-    assert len(args) >= 2
+    error_if(len(args) < 2, "iff() must have at least two arguments (possibly given in a list), which is not the case of " + str(len(args)))
 
     if any(isinstance(v, bool) for v in args):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
@@ -1344,7 +1344,7 @@ def imply(*args):
         if solve() is SAT:
            print(values(b), values(s))
     """
-    assert len(args) == 2
+    error_if(len(args) != 2, "imply() must have two arguments (a condition and a consequence), which is not the case of " + str(len(args)))
     cnd, tp = args  # condition and then part
     if isinstance(cnd, bool) or isinstance(tp, bool):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
@@ -1441,6 +1441,20 @@ def ift(test, Then, Else):
     return Node.build(TypeNode.IF, *res)
 
 
+def _check_belong_arguments(function, x, values):  # function is the name of the calling function: belong or not_belong
+    if isinstance(x, int):
+        if not isinstance(values, (tuple, list)) or any(not isinstance(y, Variable) for y in values if y is not None):
+            error("When the first argument of " + function + "() is an integer, the second argument must be a list of variables, which is not the case of "
+                  + str(values))
+    else:
+        if not isinstance(x, Variable):
+            error("The first argument of " + function + "() must be a variable or an integer, which is not the case of " + str(x)
+                  + " (for an expression, the operator " + ("in" if function == "belong" else "not in") + " can be used)")
+        if not isinstance(values, (int, range, tuple, list, set, frozenset)) or (
+                isinstance(values, (tuple, list, set, frozenset)) and any(not isinstance(v, int) for v in values)):
+            error("The second argument of " + function + "() must be an integer, a range or a collection of integers, which is not the case of " + str(values))
+
+
 def belong(x, values):
     """
     Builds and returns a Boolean expression that holds iff the specified term belongs to the specified values.
@@ -1467,12 +1481,9 @@ def belong(x, values):
     """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
+    _check_belong_arguments("belong", x, values)
     if isinstance(x, int):
-        if isinstance(values, (tuple, list)):
-            values = [y for y in values if y is not None]  # None (e.g., a hole of an array) is discarded
-        assert is_1d_list(values, Variable)
-        return disjunction(y == x for y in values)
-    assert isinstance(x, Variable)
+        return disjunction(y == x for y in values if y is not None)  # None (e.g., a hole of an array) is discarded
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
@@ -1480,7 +1491,6 @@ def belong(x, values):
             return Node.in_range(x, values)
     elif isinstance(values, int):
         values = [values]
-    assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
     values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded
     if len(values) == 0:
         return ConstraintDummyConstant(0)
@@ -1519,12 +1529,9 @@ def not_belong(x, values):
     """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
+    _check_belong_arguments("not_belong", x, values)
     if isinstance(x, int):
-        if isinstance(values, (tuple, list)):
-            values = [y for y in values if y is not None]  # None (e.g., a hole of an array) is discarded
-        assert is_1d_list(values, Variable)
-        return conjunction(y != x for y in values)
-    assert isinstance(x, Variable)
+        return conjunction(y != x for y in values if y is not None)  # None (e.g., a hole of an array) is discarded
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
@@ -1532,7 +1539,6 @@ def not_belong(x, values):
             return Node.not_in_range(x, values)
     elif isinstance(values, int):
         values = [values]
-    assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
     values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded
     if len(values) == 0:
         return ConstraintDummyConstant(1)
@@ -1568,6 +1574,14 @@ def expr(operator, *args):
         if solve() is SAT:
            print(values(x))
     """
+    tn = None
+    if isinstance(operator, (str, TypeNode, TypeOrderedOperator, TypeConditionOperator)):
+        try:
+            tn = TypeNode.value_of(operator)
+        except KeyError:  # an unknown name
+            pass
+    error_if(tn is None, "The first argument of expr() must be an operator (a string such as \"lt\" or \"add\", or a TypeNode), which is not the case of "
+             + repr(operator))
     return Node.build(operator, *args)
 
 
