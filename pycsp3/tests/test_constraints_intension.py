@@ -45,7 +45,6 @@ KNOWN = {
     "iff(x > 0, False, y > 0)": [(ALL, XOR_IFF)],
     "iff(x > 0, y > 0, b)": [("CHOCO", "#102: the semantics of iff with more than two arguments is to be confirmed (CHOCO uses associativity)"),
                              ("COSOCO", "xcsp3team/cosoco#74: cosoco ignores the arguments of iff after the second one")],
-    "imply(x > 0, False)": [(ALL, "#99: imply() with False as second argument gives -1 instead of the negation of the condition")],
     "belong(-3, [x, None, y])": [(ALL, BELONG_NONE)],
     "not_belong(-3, [x, None, y])": [(ALL, BELONG_NONE)],
     'expr("eq", y, expr("abs", x))': [("ACE", ACE_NEGATIVE)],
@@ -312,6 +311,8 @@ def test_min_max_objective(run, solver):
     ("imply(False, x > 0)", lambda x, y, b: True),
     ("imply(True, x > 0)", lambda x, y, b: x > 0),
     ("imply(x > 0, False)", lambda x, y, b: x <= 0),
+    ("imply(b, False)", lambda x, y, b: b == 0),
+    ("imply((x > 0) & (y > 0), False)", lambda x, y, b: not (x > 0 and y > 0)),
     ("imply(x > y, imply(y > 0, b))", lambda x, y, b: x <= y or y <= 0 or b == 1),
 ])
 def test_xor_iff_imply(run, solver, request, constraint, predicate):

@@ -1351,7 +1351,7 @@ def imply(*args):
         if cnd is True:
             return ConstraintDummyConstant(0) if tp is False else tp
         assert tp is False
-        return ~tp
+        return ~cnd  # cnd -> False is the negation of cnd
     if isinstance(tp, (tuple, list, set, frozenset)):
         tp = list(tp)  # to transform sets into lists
         assert len(tp) >= 1
