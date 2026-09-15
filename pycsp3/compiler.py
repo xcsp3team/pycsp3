@@ -4,6 +4,7 @@ import lzma
 import os
 import os.path
 import platform
+import re
 import sys  # for DataVisitor import ast, inspect
 from collections import OrderedDict
 from importlib import util
@@ -22,6 +23,10 @@ from pycsp3.tools.utilities import Stopwatch, GREEN, WHITE, Error, error
 from pycsp3.tools.xcsp import build_document
 
 None_Values = ['None', '', 'null']  # adding 'none'?
+True_Values, False_Values = ['True', 'true'], ['False', 'false']
+# regular expressions rather than int() and float(), which also accept '+3', ' 3', '1_000', 'nan', 'inf', ...
+Int_Pattern = re.compile(r"-?[0-9]+")
+Real_Pattern = re.compile(r"-?[0-9]+\.[0-9]*([eE][-+]?[0-9]+)?|-?[0-9]+[eE][-+]?[0-9]+")
 
 
 class Compilation:
@@ -105,7 +110,15 @@ def _load_data():
     def _arg_value(s):
         if len(s) > 0 and s[0] == '[' and s[-1] == ']':
             return [_arg_value(tok) for tok in s[1:-1].split(",")]
-        return None if s in None_Values else int(s) if s.isdigit() else s
+        if s in None_Values:
+            return None
+        if s in True_Values or s in False_Values:
+            return s in True_Values
+        if Int_Pattern.fullmatch(s):
+            return int(s)
+        if Real_Pattern.fullmatch(s):
+            return float(s)
+        return s
 
     def _load_data_sequence(raw_data):
         if options.dataformat is None and all(v.isdigit() for v in raw_data) and any(v[0] == '0' for v in raw_data):

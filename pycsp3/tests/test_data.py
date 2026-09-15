@@ -53,16 +53,23 @@ def test_data_without_option(run):
     assert "data None" in run(SHOW).lines
 
 
-@bug("#85: negative integers, reals and Booleans given with -data are loaded as strings")
 @pytest.mark.parametrize("value, shown", [
     ("-3", "-3"),
     ("2.5", "2.5"),
+    ("-2.5e-2", "-0.025"),
     ("True", "True"),
     ("False", "False"),
+    ("true", "True"),
+    ("false", "False"),
     ("[-3,4]", "(f0=-3, f1=4)"),
     ("[2.5,True]", "(f0=2.5, f1=True)"),
     ("[a=-3,b=2.5,c=False]", "(a=-3, b=2.5, c=False)"),
+    ("[a=true,t=[-1,0.5,false]]", "(a=True, t=[-1, 0.5, False])"),
     ("[data.json,c=-5]", "(n=3, c=-5)"),
+    ("[data.json,c=true]", "(n=3, c=True)"),
+    ("nan", "'nan'"),
+    ("inf", "'inf'"),
+    ("[+3,1_000]", "(f0='+3', f1='1_000')"),
 ])
 def test_data_command_line_elementary_values(run, value, shown):
     # an elementary value is an integer, a real, a string or a Boolean (https://pycsp.org/documentation/interface/Data/)
