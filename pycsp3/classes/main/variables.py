@@ -4,7 +4,12 @@ import re
 from pycsp3 import functions
 from pycsp3.classes import main
 from pycsp3.classes.auxiliary.enums import TypeVar
-from pycsp3.tools.utilities import error_if, flatten
+from pycsp3.tools.utilities import error, error_if, flatten
+
+
+def check_no_boolean(dom):  # a Boolean is an integer in Python, but it cannot be a value of a domain (it is not converted into 0 or 1)
+    if isinstance(dom, bool) or (isinstance(dom, (tuple, list, set, frozenset)) and any(isinstance(v, bool) for v in flatten(dom))):
+        error("A Boolean cannot be a value of a domain (only integers and strings can be): " + str(dom))
 
 
 class Domain:
@@ -16,8 +21,6 @@ class Domain:
 
         def _add_value(arg):
             assert isinstance(arg, (tuple, list, set, frozenset, range, int, str)), "Bad type for the domain " + str(arg) + " of type " + str(type(arg))
-            if isinstance(arg, bool):  # a Boolean is an integer in Python, but must be written as 0 or 1 in XCSP3
-                arg = int(arg)
             if isinstance(arg, (tuple, list, set, frozenset)):
                 arg = list(arg)
                 if len(arg) > 2 and all(isinstance(arg, int) for arg in args) and all(arg[i] + 1 == arg[i + 1] for i in range(len(arg) - 1)):
@@ -32,6 +35,7 @@ class Domain:
                 else:
                     _add_value(set(arg))
             elif isinstance(arg, int):
+                check_no_boolean(arg)
                 self.original_values.append(arg)
                 set_type(TypeVar.INTEGER)
             elif isinstance(arg, str):
@@ -176,6 +180,7 @@ class Variable:
             domain = domain(*indexes)
             if domain is None:
                 return None
+            check_no_boolean(domain)
             error_if(isinstance(domain, (tuple, list, set, frozenset, range)) and len(domain) == 0, "The domain of the variable " + name + " is empty")
             if not isinstance(domain, range):
                 domain = flatten(domain)

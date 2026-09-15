@@ -20,7 +20,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
     ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
-from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic
+from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic, check_no_boolean
 from pycsp3.classes.nodes import TypeNode, Node, neg_var
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
@@ -158,6 +158,7 @@ def Var(term=None, *others, dom=None, id=None):
     error_if(term is not None and dom is not None, "The domain of a variable must be given either by terms or by the parameter dom, but not both")
     if term is not None:
         dom = flatten(term, others)
+    check_no_boolean(dom)
     if not isinstance(dom, Domain):
         if isinstance(dom, (set, frozenset)):
             dom = list(dom)
@@ -269,6 +270,7 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         comment, tags = comment_and_tags_of(function_name="VarArray")
 
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
+    check_no_boolean(dom)
     if isinstance(dom, int):  # TODO: should we print a warning?
         dom = range(dom)
     if isinstance(dom, type(lambda: 0)):

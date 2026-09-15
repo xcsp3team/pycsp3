@@ -35,14 +35,12 @@ COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variable
     ("x = Var(dom=[[0, 1], [5, 6]])", [0, 1, 5, 6]),
     ("x = Var(dom=5)", [5]),
     ("x = Var(dom=lambda: range(4))", [0, 1, 2, 3]),
-    ("x = Var(dom=[True, False])", [0, 1]),
     ("x = Var('red', 'green')", ["green", "red"]),
     ("x = Var(dom={'red', 'green', 'blue'})", ["blue", "green", "red"]),
     ("x = Var(dom=['b', 'a'])", ["a", "b"]),
     ("x = Var(dom=[0, 0, 1])", [0, 1]),
     ("x = Var(2, 5, 2)", [2, 5]),
     ("x = Var('a', 'b', 'a')", ["a", "b"]),
-    ("x = Var(dom=True)", [1]),
 ])
 def test_var_domain(run, declaration, values):
     assert declared_variables(run(declaration)) == {"x": values}
@@ -76,6 +74,14 @@ def test_var_large_domain(run):
     "x = Var(dom=lambda: None)",
     "x = Var(1, 2, dom=range(3))",
     "x = Var(0, 1, dom=range(3))",
+    "x = Var(dom=True)",
+    "x = Var(dom=False)",
+    "x = Var(True)",
+    "x = Var(True, False)",
+    "x = Var(dom=[True, False])",
+    "x = Var(dom=[0, 1, 2, True])",
+    "x = Var(dom={True})",
+    "x = Var(dom=lambda: True)",
 ])
 def test_var_invalid_domain(run, declaration):
     assert_fails(run(declaration))
@@ -221,6 +227,12 @@ def test_vararray_domain(run, dom, values):
     "x = VarArray(size=[2, 3], dom=lambda i, j, k: range(2))",
     "x = VarArray(size=3)",
     "x = VarArray(size=3, dom=None)",
+    "x = VarArray(size=2, dom=True)",
+    "x = VarArray(size=2, dom=False)",
+    "x = VarArray(size=2, dom={False, True})",
+    "x = VarArray(size=2, dom=[0, 1, 2, True])",
+    "x = VarArray(size=2, dom=lambda i: True)",
+    "x = VarArray(size=2, dom=lambda i: {False, True})",
 ])
 def test_vararray_invalid_domain(run, declaration):
     assert_fails(run(declaration))
@@ -673,7 +685,8 @@ def test_domain_overlapping_intervals(run):
     assert "values [0, 1, 2, 3, 4, 5, 6, 7] 0 7" in r.lines, r.report()
 
 
-@pytest.mark.parametrize("domain", ["Domain()", "Domain(2.5)", "Domain(None)", "Domain(0, 'a')", "Domain(set())", "Domain(range(3))[5]"])
+@pytest.mark.parametrize("domain", ["Domain()", "Domain(2.5)", "Domain(None)", "Domain(0, 'a')", "Domain(set())", "Domain(range(3))[5]",
+                                    "Domain(True)", "Domain(0, [1, False])"])
 def test_domain_invalid(run, domain):
     assert_fails(run("from pycsp3.classes.main.variables import Domain\nd = " + domain))
 
