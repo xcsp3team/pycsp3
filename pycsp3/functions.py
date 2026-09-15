@@ -1265,17 +1265,17 @@ def xor(*args):
         if solve() is SAT:
            print(values(b))
     """
-    if len(args) == 2 and isinstance(args[0], bool) or isinstance(args[1], bool):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
-        if isinstance(args[0], bool) and isinstance(args[1], bool):
-            return ConstraintDummyConstant(1 if args[0] is not args[1] else 0)
-        if isinstance(args[0], bool):
-            return ~args[1] if args[0] else args[1]
-        if isinstance(args[1], bool):
-            return ~args[0] if args[1] else args[0]
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
     args = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args]
+    if any(isinstance(v, bool) for v in args):
+        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        inverted = sum(1 for v in args if v is True) % 2 == 1  # each True inverts the result, while False has no effect
+        args = [v for v in args if not isinstance(v, bool)]
+        if len(args) == 0:
+            return ConstraintDummyConstant(1 if inverted else 0)
+        res = xor(*args) if len(args) > 1 else args[0]
+        return ~res if inverted else res
     return args[0] ^ args[1] if len(args) == 2 else Node.build(TypeNode.XOR, *args) if len(args) > 1 else args[0]
 
 
@@ -1304,14 +1304,16 @@ def iff(*args):
         args = tuple(args[0])
     assert len(args) >= 2
 
-    if len(args) == 2 and isinstance(args[0], bool) or isinstance(args[1], bool):
+    if any(isinstance(v, bool) for v in args):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
-        if isinstance(args[0], bool) and isinstance(args[1], bool):
-            return ConstraintDummyConstant(1 if args[0] is args[1] else 0)
-        if isinstance(args[0], bool):
-            return args[1] if args[0] else ~args[1]
-        if isinstance(args[1], bool):
-            return args[0] if args[1] else ~args[0]
+        booleans = {v for v in args if isinstance(v, bool)}
+        others = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args if not isinstance(v, bool)]
+        if len(booleans) == 2:  # True and False cannot be equivalent
+            return ConstraintDummyConstant(0)
+        if len(others) == 0:
+            return ConstraintDummyConstant(1)
+        # all the arguments being equivalent, the other arguments must have the value of the Boolean
+        return conjunction(others) if True in booleans else conjunction(~v for v in others)
 
     res = manage_global_indirection(*args)
     if res is None:

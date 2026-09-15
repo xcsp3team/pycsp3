@@ -18,7 +18,6 @@ ACE_NEGATIVE = "xcsp3team/ACE#12: ACE fails on abs, dist, mul, div and mod with 
 # The cases that a solver says it does not handle (not reported): for each constraint, the solvers and the reasons
 SKIPPED = {"x ** z == y": {"ACE": "ACE does not implement pow with a variable exponent (not implemented)"}}
 CHOCO_POW = "chocoteam/choco-solver#1248: CHOCO does not support pow in some intensional constraints"
-XOR_IFF = "#98: the test on Boolean arguments of xor() and iff() is wrong (IndexError, arguments silently discarded)"
 INVALID = "#101: invalid arguments of the intension functions are reported without explicit message"
 
 # For each constraint (as written in the tests), the known bugs: pairs (solvers, reason)
@@ -36,12 +35,6 @@ KNOWN = {
     "x % 3 == z": [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
     "x ** z == y": [("CHOCO", CHOCO_POW)],
     "abs(x) == y": [("ACE", ACE_NEGATIVE)],
-    "xor([x > 0, y > 0])": [(ALL, XOR_IFF)],
-    "xor(v > 0 for v in [x, y])": [(ALL, XOR_IFF)],
-    "xor(x > 0)": [(ALL, XOR_IFF)],
-    "xor(x > 0, True, y > 0)": [(ALL, XOR_IFF)],
-    "xor(x > 0, False, y > 0)": [(ALL, XOR_IFF)],
-    "iff(x > 0, False, y > 0)": [(ALL, XOR_IFF)],
     "iff(x > 0, y > 0, b)": [("CHOCO", "#102: the semantics of iff with more than two arguments is to be confirmed (CHOCO uses associativity)"),
                              ("COSOCO", "xcsp3team/cosoco#74: cosoco ignores the arguments of iff after the second one")],
     'expr("eq", y, expr("abs", x))': [("ACE", ACE_NEGATIVE)],
@@ -292,6 +285,9 @@ def test_min_max_objective(run, solver):
     ("xor(False, x > 0)", lambda x, y, b: x > 0),
     ("xor(x > 0, True, y > 0)", lambda x, y, b: (x > 0) == (y > 0)),
     ("xor(x > 0, False, y > 0)", lambda x, y, b: (x > 0) != (y > 0)),
+    ("xor(True, x > 0, True)", lambda x, y, b: x > 0),
+    ("xor(x > 0, True, y > 0, True, b)", lambda x, y, b: ((x > 0) + (y > 0) + b) % 2 == 1),
+    ("xor([x > 0, y > 0], True)", lambda x, y, b: not (x > 0 and y > 0)),
     ("iff(x > 0, y > 0)", lambda x, y, b: (x > 0) == (y > 0)),
     ("iff(x > 0, y > 0, b)", lambda x, y, b: (x > 0) == (y > 0) == (b == 1)),
     ("iff([x >= 0, y >= 0])", lambda x, y, b: (x >= 0) == (y >= 0)),
@@ -300,6 +296,10 @@ def test_min_max_objective(run, solver):
     ("iff(x > 0, False)", lambda x, y, b: x <= 0),
     ("iff(True, x > 0)", lambda x, y, b: x > 0),
     ("iff(x > 0, False, y > 0)", lambda x, y, b: (x > 0) == False == (y > 0)),  # noqa: E712
+    ("iff(x > 0, True, y > 0)", lambda x, y, b: x > 0 and y > 0),
+    ("iff(True, x > 0, True, b)", lambda x, y, b: x > 0 and b == 1),
+    ("iff(x > 0, True, False)", lambda x, y, b: False),
+    ("iff([x > 0, y > 0], False)", lambda x, y, b: not (x > 0 and y > 0)),
     ("iff(b, x == y)", lambda x, y, b: (b == 1) == (x == y)),
     ("imply(x > 0, y > 0)", lambda x, y, b: x <= 0 or y > 0),
     ("imply(b, x == y)", lambda x, y, b: b == 0 or x == y),
