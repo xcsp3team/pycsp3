@@ -241,11 +241,16 @@ class MDD(Diagram):
         """
         if isinstance(transitions, types.GeneratorType):
             transitions = [t for t in transitions]
-        if not isinstance(transitions, list):  # currently, a list is wanted for an MDD (and not a set); to be changed?
-            error("The transitions of an MDD must be given by a list of 3-tuples, which is not the case of " + repr(transitions))
+        unordered = isinstance(transitions, (set, frozenset))
+        if unordered:
+            transitions = list(transitions)
+        if not isinstance(transitions, list):
+            error("The transitions of an MDD must be given by a list or a set of 3-tuples, which is not the case of " + repr(transitions))
         super().__init__(transitions)
         self.root, self.terminal, self.levels = None, None, None
         self._check_structure()
+        if unordered:  # a deterministic order, level by level from the root (the order of iteration of a set may change from one execution to another)
+            self.transitions.sort(key=lambda t: (self.levels[t[0]], t[0], str(t[1]), t[2]))
 
     def _check_structure(self):
         """

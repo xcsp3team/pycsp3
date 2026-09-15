@@ -11,7 +11,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-SET = "#113: the transitions of an MDD cannot be given by a set"
 WRITING = "#114: the transitions of an MDD are not written from the root, and labels outside the domains are kept, which makes the solvers fail"
 EXPORT = "#115: Mdd() is not brought by from pycsp3 import *"
 
@@ -121,10 +120,17 @@ def test_mdds(run, solver, request, name):
         check(run, solver, transitions, n, dom, "x in M")
 
 
-def test_mdd_given_by_a_set(run, solver, request):
-    bug_for(request, ALL, SET)
+def test_mdd_given_by_a_set(run, solver):
     # the documentation says that the transitions are given by a set (or a list)
     check(run, solver, set(DOC), 3, range(3), "x in M")
+
+
+@pytest.mark.parametrize("collection", ["set", "frozenset"])
+def test_mdd_given_by_a_set_xcsp3(run, collection):
+    # the transitions of a set are written in a deterministic order, level by level from the root
+    r = run(f"M = MDD({collection}({DOC!r}))\nx = VarArray(size=3, dom=range(3))\nsatisfy(x in M)")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/mdd/transitions").text.strip() == "(r,0,n1)(r,1,n2)(r,2,n3)(n1,2,n4)(n2,2,n4)(n3,0,n5)(n4,0,t)(n5,0,t)", r.report()
 
 
 @bug(EXPORT)
@@ -222,8 +228,8 @@ def test_invalid_mdd_arguments(run, code):
 
 
 @pytest.mark.parametrize("code, message", [
-    ("M = MDD(5)", "The transitions of an MDD must be given by a list of 3-tuples, which is not the case of 5"),
-    ("M = MDD('abc')", "The transitions of an MDD must be given by a list of 3-tuples, which is not the case of 'abc'"),
+    ("M = MDD(5)", "The transitions of an MDD must be given by a list or a set of 3-tuples, which is not the case of 5"),
+    ("M = MDD('abc')", "The transitions of an MDD must be given by a list or a set of 3-tuples, which is not the case of 'abc'"),
     ("M = MDD([('r', 2.5, 't')])",
      "The label of a transition must be an integer, a symbol, a range or a collection of integers (or symbols), which is not the case of 2.5 in ('r', 2.5, 't')"),
     ("M = MDD([('r', 'z', 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(x in M)",
