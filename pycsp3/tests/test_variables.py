@@ -261,7 +261,7 @@ def test_vararray_domain_depending_on_indexes_solutions(run, solver, dom):
     assert_solutions(r, brute_force([range(1), range(2), range(2), range(3)], lambda *t: sum(t) == 2))
 
 
-COSOCO_HOLES = "xcsp3team/cosoco#72: cosoco gives individually the values of the variables involved in no constraint, and pycsp3 fails when recording those of holes"
+COSOCO_HOLES = "#127: pycsp3 fails when recording the values given by cosoco (individually) for the holes of an array"
 
 
 def test_vararray_hole_solutions(run, solver, request):

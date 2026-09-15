@@ -19,7 +19,7 @@ COSOCO_REPEATED = "xcsp3team/cosoco#80: cosoco loses solutions of allEqual with 
 CHOCO_EXCEPT = "CHOCO does not handle allEqual with except (RuntimeException: UNSUPPORTED)"
 COSOCO_EXPRESSIONS = "cosoco does not handle allEqual on expressions (AllEqual constraint with expression is not yet supported)"
 SYMBOLIC = "allEqual on symbolic variables is not part of XCSP3-core (ACE and CHOCO fail, cosoco has no symbolic variables)"
-COSOCO_HOLES = "xcsp3team/cosoco#72: cosoco gives individually the values of the variables involved in no constraint, and pycsp3 fails when recording those of holes"
+COSOCO_HOLES = "#127: pycsp3 fails when recording the values given by cosoco (individually) for the holes of an array"
 
 
 def equal(values, excepting=()):

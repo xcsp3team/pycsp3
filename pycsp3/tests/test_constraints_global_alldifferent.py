@@ -13,7 +13,7 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
-COSOCO_HOLES = "xcsp3team/cosoco#72: cosoco gives individually the values of the variables involved in no constraint, and pycsp3 fails when recording those of holes"
+COSOCO_HOLES = "#127: pycsp3 fails when recording the values given by cosoco (individually) for the holes of an array"
 ACE_NON_SQUARE = "xcsp3team/ACE#16: ACE fails on allDifferent-matrix with a non-square matrix"
 COSOCO_MATRIX_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions of allDifferent-matrix with except"
 COSOCO_MATRIX_ROWS = ("cosoco fails on allDifferent-matrix whose matrix is given by explicit rows (Matrix variable (x does not exist), "
