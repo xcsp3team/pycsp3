@@ -126,10 +126,13 @@ def numbers_in(ln, offset=0):
 
 
 def numbers_in_lines_until(stop):
-    s = ""
-    while not next_line().endswith(stop):
-        s += line()
-    return numbers_in(s + line())
+    lines = []
+    while True:
+        error_if(_dataParser.curr_line_index + 1 >= len(_dataParser.lines), "numbers_in_lines_until(): no line ends with " + repr(stop))
+        ln = next_line()
+        if ln.endswith(stop):  # the lines are joined with a space, so that the numbers at the end of a line and the start of the next one are not merged
+            return numbers_in(" ".join(lines + [ln]))
+        lines.append(ln)
 
 
 def split_with_structure(t, *k):

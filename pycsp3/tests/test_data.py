@@ -12,7 +12,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
-UNTIL = "#92: numbers_in_lines_until() concatenates the lines without separator, which merges numbers"
 PARSING_INVALID = "#94: invalid arguments of the data parsing functions are reported without explicit message"
 # Displays the variable data, the named tuples built from data (nt0, nt1, ...) being displayed without their names
 SHOW = r'print("data", __import__("re").sub(r"\bnt\d+\(", "(", repr(data)))'
@@ -594,12 +593,21 @@ def test_parser_next_lines_without_stop(run):
     ("costs = [\n1, 2];\n", [1, 2], "1, 2];"),
     ("costs = [1, 2];\n[3, 4];\n", [3, 4], "[3, 4];"),
     ("costs = [\n-4, 2,\n3];\n", [-4, 2, 3], "3];"),
-    pytest.param("costs = [\n4 2 7\n3 5];\nn = 5;\n", [4, 2, 7, 3, 5], "3 5];", marks=bug(UNTIL)),
-    pytest.param("costs = [\n4\n7\n5];\n", [4, 7, 5], "5];", marks=bug(UNTIL)),
+    ("costs = [\n4 2 7\n3 5];\nn = 5;\n", [4, 2, 7, 3, 5], "3 5];"),
+    ("costs = [\n4\n7\n5];\n", [4, 7, 5], "5];"),
+    ("costs = [\n-4\n-2 1];\n", [-4, -2, 1], "-2 1];"),
 ])
 def test_parser_numbers_in_lines_until(run, text, costs, current):
     r = run_parser(run, 'data["costs"] = numbers_in_lines_until(";")\ndata["l"] = line()', text)
     assert "data (costs=" + str(costs) + ", l=" + repr(current) + ")" in r.lines, r.report()
+
+
+@pytest.mark.parametrize("text", ["costs = [\n1 2\n3\n", "costs = [1, 2];\n"])
+def test_parser_numbers_in_lines_until_without_stop(run, text):
+    # the line ending with the stop must exist (after the current line)
+    r = run_parser(run, 'data["costs"] = numbers_in_lines_until(";")\ndata["l"] = line()', text)
+    assert_fails(r)
+    assert "numbers_in_lines_until(): no line ends with ';'" in r.stdout and "Warning: no more line" not in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("parser, text", [
