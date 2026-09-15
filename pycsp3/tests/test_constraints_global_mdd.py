@@ -7,15 +7,9 @@ Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being co
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
-
-# Known bugs (each bug is reported in the issue given at the start of its reason)
-ALL = ("ACE", "CHOCO", "COSOCO")
-EXPORT = "#115: Mdd() is not brought by from pycsp3 import *"
+from harness import assert_fails, assert_solutions, brute_force
 
 SYMBOLIC = "symbolic values are not allowed in the transitions of mdd in XCSP3-core"
-
-IMPORT = "from pycsp3.functions import Mdd  # not brought by from pycsp3 import *\n"
 
 
 def accepts(word, transitions):
@@ -51,7 +45,7 @@ def check(run, solver, transitions, n, dom, constraint, predicate=None, prefix="
     ("Mdd(scope=[x[2], x[1], x[0]], mdd=M)", lambda *t: accepts(t[::-1], DOC)),
 ])
 def test_mdd_forms(run, solver, constraint, predicate):
-    check(run, solver, DOC, 3, range(3), constraint, predicate, prefix=IMPORT)
+    check(run, solver, DOC, 3, range(3), constraint, predicate)
 
 
 def test_mdd_stand_alone_variables(run, solver):
@@ -68,7 +62,7 @@ def test_mdd_not_in(run):
 
 
 def test_mdd_on_rows(run, solver):
-    r = run(IMPORT + f"""
+    r = run(f"""
 M = MDD({[("r", 0, "a"), ("r", 1, "b"), ("a", 1, "t"), ("b", 0, "t"), ("b", 1, "t")]!r})
 x = VarArray(size=[3, 2], dom={{0, 1}})
 satisfy(
@@ -128,11 +122,10 @@ def test_mdd_given_by_a_set_xcsp3(run, collection):
     assert r.xml.find("constraints/mdd/transitions").text.strip() == "(r,0,n1)(r,1,n2)(r,2,n3)(n1,2,n4)(n2,2,n4)(n3,0,n5)(n4,0,t)(n5,0,t)", r.report()
 
 
-@bug(EXPORT)
-def test_mdd_exported(run):
-    # Mdd() is brought by 'from pycsp3 import *', as Regular()
-    r = run("x = VarArray(size=3, dom={0, 1})\nM = MDD([('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(Mdd(scope=x, mdd=M))")
-    assert r.ok, r.report()
+def test_mdd_exported(run, solver):
+    # Mdd() is brought by 'from pycsp3 import *', as Regular() (the tests of this file do not import it otherwise)
+    r = run("x = VarArray(size=3, dom={0, 1})\nM = MDD([('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(Mdd(scope=x, mdd=M))", solver=solver)
+    assert_solutions(r, {(0, 0, 1)})
 
 
 def test_mdd_on_symbolic_variables(run, solver):
@@ -238,7 +231,7 @@ def test_mdd_without_path_compatible_with_the_domains(run):
     "M = MDD([('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(Mdd(mdd=M))",
 ])
 def test_invalid_mdd_arguments(run, code):
-    assert_fails(run(IMPORT + "x = VarArray(size=3, dom={0, 1})\n" + code))
+    assert_fails(run("x = VarArray(size=3, dom={0, 1})\n" + code))
 
 
 @pytest.mark.parametrize("code, message", [
@@ -253,5 +246,5 @@ def test_invalid_mdd_arguments(run, code):
     ("M = MDD([('r', 0, 'a'), ('a', 0, 'b'), ('b', 1, 't')])\nsatisfy(Mdd(scope=[], mdd=M))", "The scope of the constraint Mdd must not be empty"),
 ])
 def test_invalid_mdd_arguments_messages(run, code, message):
-    r = run(IMPORT + "x = VarArray(size=3, dom={0, 1})\n" + code)
+    r = run("x = VarArray(size=3, dom={0, 1})\n" + code)
     assert not r.ok and message in r.stdout, r.report()
