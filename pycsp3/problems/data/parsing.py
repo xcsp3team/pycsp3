@@ -56,17 +56,22 @@ class DataParser:
         self.curr_line_tokens = None
         return self.curr_line()
 
+    def _skip_empty_lines(self):  # silently, contrary to curr_line() and next_line(), which display a warning beyond the last line
+        while self.curr_line_index < len(self.lines) and len(self.lines[self.curr_line_index].split()) == 0:
+            self.curr_line_index += 1
+
     def next(self, to_int=True):
         if self.curr_line_tokens is None:
-            if self.curr_line() is not None:
-                self.curr_line_tokens = self.curr_line().split()
-                self.curr_line_tokens_index = 0
+            self._skip_empty_lines()
+            error_if(self.curr_line_index >= len(self.lines), "No more token to read with next_int() or next_str(): all the lines of the data have been read")
+            self.curr_line_tokens = self.lines[self.curr_line_index].split()
+            self.curr_line_tokens_index = 0
         res = int(self.curr_line_tokens[self.curr_line_tokens_index]) if to_int else self.curr_line_tokens[self.curr_line_tokens_index]
         self.curr_line_tokens_index += 1
-        if self.curr_line_tokens_index >= len(self.curr_line_tokens):
-            next_line()
-            while self.curr_line() is not None and len(self.curr_line().strip()) == 0:
-                self.next_line()
+        if self.curr_line_tokens_index >= len(self.curr_line_tokens):  # moving to the next non-empty line, without warning when there is none
+            self.curr_line_index += 1
+            self.curr_line_tokens = None
+            self._skip_empty_lines()
         return res
 
 

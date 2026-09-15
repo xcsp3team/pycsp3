@@ -548,7 +548,6 @@ def test_parser_tokens_and_lines(run, parser, text, shown):
     assert "data " + shown in run_parser(run, parser, text).lines
 
 
-@bug("#91: next_int() and next_str() display 'Warning: no more line' when the last token is read")
 @pytest.mark.parametrize("parser, text", [
     ('data["a"] = next_int()\ndata["b"] = next_int()', "1\n2\n"),
     ('data["a"] = next_int()\ndata["b"] = next_int()', "1 2\n"),
@@ -612,6 +611,18 @@ def test_parser_numbers_in_lines_until(run, text, costs, current):
 ])
 def test_parser_invalid_data(run, parser, text):
     assert_fails(run_parser(run, parser, text))
+
+
+@pytest.mark.parametrize("parser, text", [
+    ('data["a"] = next_int()\ndata["b"] = next_int()', "1\n"),
+    ('data["a"] = next_str()\ndata["b"] = next_int()\ndata["c"] = next_str()', "x 2\n"),
+    ('data["a"] = line()\nnext_line()\ndata["b"] = next_int()', "1\n"),
+])
+def test_parser_no_more_token(run, parser, text):
+    # reading a token beyond the data is reported by an explicit error
+    r = run_parser(run, parser, text)
+    assert_fails(r)
+    assert "No more token to read with next_int() or next_str()" in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("args", [
