@@ -14,8 +14,8 @@ from harness import assert_fails, assert_solutions, brute_force, bug_for
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
 COSOCO_NFA = "xcsp3team/cosoco#77: cosoco loses solutions with a non-deterministic automaton"
-ACE_DOMAINS = ("ACE fails on regular when the variables have different domains (java.lang.Exception in MDD$Node.buildRootFromAutomaton), "
-               "to be reported to xcsp3team/ACE")
+ACE_DOMAINS = ("xcsp3team/ACE#17: ACE fails on regular when the variables have different domains "
+               "(java.lang.Exception in MDD$Node.buildRootFromAutomaton)")
 
 # The cases that a solver says it does not handle (not reported)
 ACE_NFA = "ACE does not handle non-deterministic automata (unimplemented case for non deterministic automaton)"

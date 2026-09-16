@@ -16,8 +16,8 @@ COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variable
 COSOCO_HOLES = "#127: pycsp3 fails when recording the values given by cosoco (individually) for the holes of an array"
 ACE_NON_SQUARE = "xcsp3team/ACE#16: ACE fails on allDifferent-matrix with a non-square matrix"
 COSOCO_MATRIX_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions of allDifferent-matrix with except"
-COSOCO_MATRIX_ROWS = ("cosoco fails on allDifferent-matrix whose matrix is given by explicit rows (Matrix variable (x does not exist), "
-                      "to be reported to xcsp3team/cosoco")
+COSOCO_MATRIX_ROWS = ("xcsp3team/cosoco#82: cosoco fails on allDifferent-matrix whose matrix is given by explicit rows "
+                      "(c Matrix variable (x does not exist)")
 COSOCO_EXCEPT_EXPRESSIONS = "xcsp3team/cosoco#78: cosoco stops with a segmentation fault on allDifferent with expressions and except"
 CHOCO_MATRIX_EXCEPT = "chocoteam/choco-solver#1248: CHOCO loses solutions of allDifferent-matrix with except"
 CHOCO_EXCEPT_EXPRESSIONS = "CHOCO does not handle allDifferent with expressions and except (Other forms not implemented)"
