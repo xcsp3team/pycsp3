@@ -185,6 +185,22 @@ def test_empty_supports(run, solver, constraint):
         assert_fails(r)
 
 
+@pytest.mark.parametrize("constraint", ["x[0] in []", "x[0] in set()", "x[0] in range(0)"])
+def test_empty_supports_on_a_single_variable(run, solver, request, constraint):
+    # no value is a support of x[0]: either the model is unsatisfiable, or an error is reported
+    bug_for(request, ALL, "#128: an empty table of supports is silently ignored for a single variable")
+    r = run(X3 + f"satisfy({constraint}, x[1] != 1)", solver=solver)
+    if r.ok:
+        assert_solutions(r, set())
+    else:
+        assert_fails(r)
+
+
+def test_empty_supports_on_a_single_variable_given_to_table(run):
+    # an explicit error is reported, as for several variables
+    assert_fails(run(X3 + "satisfy(Table(scope=x[0], supports=[]))"))
+
+
 @pytest.mark.parametrize("constraint", ["x not in []", "x not in set()", "Table(scope=x, conflicts=[])"])
 def test_empty_conflicts(run, solver, request, constraint):
     # no tuple is a conflict: the constraint always holds
