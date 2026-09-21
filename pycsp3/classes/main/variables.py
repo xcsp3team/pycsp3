@@ -7,8 +7,17 @@ from pycsp3.classes.auxiliary.enums import TypeVar
 from pycsp3.tools.utilities import error, error_if, flatten
 
 
+def _contains_boolean(dom):
+    if isinstance(dom, bool):
+        return True
+    if not isinstance(dom, (tuple, list, set, frozenset)):
+        return False
+    types = {type(v) for v in dom}  # a single pass on a flat collection (the usual case), the nested collections being checked recursively
+    return bool in types or (any(issubclass(tp, (tuple, list, set, frozenset)) for tp in types) and any(_contains_boolean(v) for v in dom))
+
+
 def check_no_boolean(dom):  # a Boolean is an integer in Python, but it cannot be a value of a domain (it is not converted into 0 or 1)
-    if isinstance(dom, bool) or (isinstance(dom, (tuple, list, set, frozenset)) and any(isinstance(v, bool) for v in flatten(dom))):
+    if _contains_boolean(dom):
         error("A Boolean cannot be a value of a domain (only integers and strings can be): " + str(dom))
 
 
@@ -35,7 +44,8 @@ class Domain:
                 else:
                     _add_value(set(arg))
             elif isinstance(arg, int):
-                check_no_boolean(arg)
+                if type(arg) is bool:
+                    check_no_boolean(arg)  # reports the error
                 self.original_values.append(arg)
                 set_type(TypeVar.INTEGER)
             elif isinstance(arg, str):

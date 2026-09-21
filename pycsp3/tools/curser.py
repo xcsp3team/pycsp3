@@ -56,7 +56,7 @@ def cursing():
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, list, int, str)):
             queue_in.append((list(self), other))
             return True
-        if is_containing(other, Variable) and len(self) == 0:  # as for an empty set (e.g., x not in [], where [] is changed into ())
+        if len(self) == 0 and is_containing(other, Variable):  # as for an empty set (e.g., x not in [], where [] is changed into ())
             return other in set(self)
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
             queue_in.append((self, other))
@@ -87,7 +87,7 @@ def cursing():
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int, str)):
             queue_in.append((self, other))
             return True
-        if is_containing(other, Variable) and len(self) == 0:
+        if len(self) == 0 and is_containing(other, Variable):
             return other in set(self)
         if isinstance(other, Variable) and isinstance(self, list):
             for i, v in enumerate(self):

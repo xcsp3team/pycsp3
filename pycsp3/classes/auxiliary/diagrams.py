@@ -16,9 +16,11 @@ class Diagram:
 
     def __init__(self, transitions):
         self.transitions = Diagram._add_transitions(transitions)
-        self.states = sorted({q for (q, _, _) in self.transitions} | {q for (_, _, q) in self.transitions})
-        # the names of the states are checked once (a single search over all of them, since diagrams may have many states)
-        if "" in self.states or Diagram._INVALID_CHARACTERS_OF_STATES.search("\x00".join(self.states)):
+        self._state_set = {q for (q, _, _) in self.transitions} | {q for (_, _, q) in self.transitions}  # for membership tests (set, and not list)
+        self.states = sorted(self._state_set)
+        # the names of the states are checked once (a single search over all of them, since diagrams may have many states);
+        # the states being sorted, an empty name would be the first one
+        if self.states[0] == "" or Diagram._INVALID_CHARACTERS_OF_STATES.search("\x00".join(self.states)):
             state = next(q for q in self.states if q == "" or Diagram._INVALID_CHARACTERS_OF_STATES.search(q))
             error("The name of a state must be a non-empty string without space, comma or parenthesis, which is not the case of " + repr(state))
         self._label_types = None
@@ -143,15 +145,19 @@ class Automaton(Diagram):
             satisfy(Regular(scope=x, automaton=a))
         """
         super().__init__(transitions)
-        error_if(not isinstance(start, str), "The start state of an automaton must be a string, which is not the case of " + repr(start))
-        error_if(start not in self.states, "The start state " + repr(start) + " of an automaton must be a state of its transitions")
+        # the messages are only built in case of error (automata may be numerous)
+        if not isinstance(start, str):
+            error("The start state of an automaton must be a string, which is not the case of " + repr(start))
+        if start not in self._state_set:
+            error("The start state " + repr(start) + " of an automaton must be a state of its transitions")
         self.start = start
         finals = [final] if isinstance(final, str) else list(final) if isinstance(final, (list, tuple, set, frozenset)) else None
-        error_if(finals is None or any(not isinstance(q, str) for q in finals),
-                 "The final states of an automaton must be given by a string or a collection of strings, which is not the case of " + repr(final))
+        if finals is None or any(not isinstance(q, str) for q in finals):
+            error("The final states of an automaton must be given by a string or a collection of strings, which is not the case of " + repr(final))
         # the final states that do not appear in the transitions are discarded, since they cannot be reached
-        self.final = sorted(q for q in set(finals) if q in self.states)
-        error_if(len(self.final) == 0, "An automaton must have at least one final state appearing in its transitions, which is not the case of " + repr(final))
+        self.final = sorted(self._state_set.intersection(finals))
+        if len(self.final) == 0:
+            error("An automaton must have at least one final state appearing in its transitions, which is not the case of " + repr(final))
         self.access = None
 
     def deterministic_copy(self, scp):
