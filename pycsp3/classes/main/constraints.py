@@ -289,17 +289,32 @@ class ConstraintExtension(Constraint):
 
         return any(i not in state and cycle_from(i) for i in successors)
 
+    _last_key = None  # the last table object whose key was computed, with its hash code and its key
+
+    @staticmethod
+    def _key_of(table, keep_hybrid):
+        # the digest (costly) is computed once for a table object given again (e.g., the same list T for several constraints x in T),
+        # the hash code (cheap) checking that the table has not been modified in the meantime; only this table object is kept
+        t = tuple(table) + (keep_hybrid,)  # if ever we change the value of keep_hybrid
+        hc = hash(t)  # raises TypeError if the table is not hashable
+        last = ConstraintExtension._last_key
+        if last is not None and last[0] is table and last[1] == hc:
+            return last[2]
+        key = _table_key(t)
+        ConstraintExtension._last_key = (table, hc, key)
+        return key
+
     def process_table(self, scope, table):
         if len(table) == 0:
             return ""  # an empty table (the element is written, with no tuple)
         # we compute the key of the table in the caches (a digest of the table, and not its hash code, which may be shared by different tables)
         try:
-            h = _table_key(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
+            h = ConstraintExtension._key_of(table, self.keep_hybrid)
         except TypeError:
             for i, t in enumerate(table):
                 if any(isinstance(v, (list, set, frozenset)) for v in t):
                     table[i] = tuple(tuple(v) if isinstance(v, (list, set, frozenset)) else v for v in t)
-            h = _table_key(tuple(table) + (self.keep_hybrid,))
+            h = ConstraintExtension._key_of(table, self.keep_hybrid)
         if len(scope) == 1:  # if arity 1
             if h not in ConstraintExtension.cache:
                 table.sort()
@@ -319,27 +334,19 @@ class ConstraintExtension(Constraint):
             if key in ConstraintExtension.cache_for_knowing_if_hybrid:
                 hybrid = ConstraintExtension.cache_for_knowing_if_hybrid[key]
             else:
-                check_hybrid2 = True
-                hybrid = 0
-                for t in table:
-                    for j, v in enumerate(t):
-                        error_if(isinstance(v, Node), "Bad form")
-                        if isinstance(v, ConditionNode):
-                            hybrid = 2
-                            if not check_hybrid2:
-                                break
-                            else:
-                                assert True  # TODO test to be written
-                        elif isinstance(v, (int, str)):
-                            if isinstance(v, str) == integer[j]:
+                # the kind of table and the types of the values are determined from the set of the types of the values (a single pass),
+                # the values being traversed again only for reporting a value whose type is not the one of its variable
+                types = {type(v) for t in table for v in t}
+                error_if(any(issubclass(tp, Node) for tp in types), "Bad form")
+                hybrid = 2 if any(issubclass(tp, ConditionNode) for tp in types) \
+                    else 1 if any(not issubclass(tp, (int, str)) and tp is not type(ANY) for tp in types) else 0
+                has_str, has_int = any(issubclass(tp, str) for tp in types), any(issubclass(tp, int) for tp in types)
+                if (has_str and any(integer)) or (has_int and not all(integer)):  # a value may be of a type that is not the one of its variable
+                    for t in table:
+                        for j, v in enumerate(t):
+                            if isinstance(v, (int, str)) and isinstance(v, str) == integer[j]:
                                 error("The value " + repr(v) + " of the tuple " + str(t) + " is " + ("a symbol" if integer[j] else "an integer")
                                       + ", which is not possible for the " + ("integer" if integer[j] else "symbolic") + " variable " + str(scope[j]))
-                        elif hybrid == 0 and v is not ANY:
-                            hybrid = 1
-                    if hybrid == 2:
-                        if not check_hybrid2:
-                            break
-                # hybrid = any(not (isinstance(v, (int, str)) or v == ANY) for t in table for v in t)  # A parallelization attempt showed no gain.
                 ConstraintExtension.cache_for_knowing_if_hybrid[key] = hybrid
 
         if hybrid == 0:  # if not hybrid
