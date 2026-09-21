@@ -1984,6 +1984,7 @@ def AllDifferentList(term, *others, excepting=None):
         error_if(key in seen, "A list cannot be given several times to AllDifferentList(), which is the case of " + str(t))
         seen.add(key)
     if len(lists) == 1:
+        warning("A constraint AllDifferentList discarded because defined with 1 list", "alldifferentlist_1_list")
         return None  # a single list is always different from the other ones (as for AllDifferent() with a single variable)
     if len(lists) > 0 and len(lists[0]) == 1:  # allDifferent-list requires lists of at least two variables: AllDifferent is posted on the variables
         return AllDifferent([t[0] for t in lists], excepting=excepting)
@@ -2065,6 +2066,7 @@ def AllEqualList(term, *others, excepting=None):
                  "The values of excepting given to AllEqualList() must be integers, which is not the case of " + str(excepting))
         excepting = (sorted(tuples) if isinstance(excepting, (set, frozenset)) else tuples) if len(tuples) > 0 else None
     if len(lists) == 1:
+        warning("A constraint AllEqualList discarded because defined with 1 list", "allequallist_1_list")
         return None  # a single list is always equal to the other ones (as for AllEqual() with a single variable)
     if len(lists) == 2 and excepting is None:
         return [lists[0][i] == lists[1][i] for i in range(len(lists[0]))]

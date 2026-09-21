@@ -141,9 +141,10 @@ def test_alldifferentlist_excepting_with_other_constraints(run, solver):
 
 @pytest.mark.parametrize("constraint", ["AllDifferentList([x[0]])", "AllDifferentList(x[0:1])"])
 def test_alldifferentlist_with_a_single_list(run, solver, constraint):
-    # with a single list, the constraint always holds (no constraint is posted)
+    # with a single list, the constraint always holds (no constraint is posted, and a warning is displayed)
     r = run(X32 + f"satisfy({constraint}, x[1][0] == 1, x[2][0] == 2)", solver=solver)
     if r.ok:
+        assert "A constraint AllDifferentList discarded because defined with 1 list" in r.stdout, r.report()
         assert_solutions(r, brute_force(D32, lambda *t: t[2] == 1 and t[4] == 2))
     else:
         assert_fails(r)
