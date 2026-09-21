@@ -25,6 +25,8 @@ ALL = ("ACE", "CHOCO", "COSOCO")
 ACE_CONFLICTS = "xcsp3team/ACE#14: ACE fails on a table of conflicts with the symbol *"
 ACE_HYBRID = "xcsp3team/ACE#15: ACE finds wrong solutions with some hybrid tables of level 2"
 COSOCO_HYBRID = "xcsp3team/cosoco#76: cosoco finds wrong solutions or fails on hybrid tables"
+EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
+                  "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
 # For each group of tests and each constraint (as written in the tests), the known bugs: pairs (solvers, reason)
 KNOWN = {
@@ -187,13 +189,21 @@ def test_empty_supports(run, solver, constraint):
 
 @pytest.mark.parametrize("constraint", ["x[0] in []", "x[0] in set()", "x[0] in range(0)"])
 def test_empty_supports_on_a_single_variable(run, solver, request, constraint):
-    # no value is a support of x[0]: either the model is unsatisfiable, or an error is reported
-    bug_for(request, ALL, "#128: an empty table of supports is silently ignored for a single variable")
+    # no value is a support of x[0]: a table with an empty set of supports is posted, and the model is unsatisfiable
+    bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     r = run(X3 + f"satisfy({constraint}, x[1] != 1)", solver=solver)
-    if r.ok:
-        assert_solutions(r, set())
-    else:
-        assert_fails(r)
+    assert_solutions(r, set())
+
+
+@pytest.mark.parametrize("constraint", ["x[0] in []", "x[0] in set()", "x[0] in range(0)"])
+def test_xcsp3_empty_supports_on_a_single_variable(run, constraint):
+    # a table with an empty set of supports is posted for x[0], and a warning is displayed
+    r = run(X3 + f"satisfy({constraint}, x[1] != 1)")
+    assert r.ok, r.report()
+    assert "A table constraint with an empty set of supports is posted for x[0]: the model is unsatisfiable" in r.stdout, r.report()
+    c = r.xml.find("constraints/extension")
+    assert c is not None and c.find("list").text.strip() == "x[0]", r.report()
+    assert c.find("supports") is not None and c.find("supports").text.strip() == "", r.report()
 
 
 def test_empty_supports_on_a_single_variable_given_to_table(run):

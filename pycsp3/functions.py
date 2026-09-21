@@ -398,7 +398,11 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     assert type(bool_value) is bool
     if isinstance(left_operand, Variable):
         if isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
-            return None
+            if not bool_value:
+                return None  # no value is forbidden: the constraint always holds
+            # no value is allowed: a table constraint with an empty set of supports is posted (the model is unsatisfiable)
+            warning("A table constraint with an empty set of supports is posted for " + str(left_operand) + ": the model is unsatisfiable", "empty_supports")
+            return ECtr(ConstraintExtension([left_operand], [], True, options.keep_hybrid, options.restrict_tables_wrt_domains))
         if isinstance(right_operand, (tuple, list, set, frozenset)) and is_containing(right_operand, Variable):
             if len(right_operand) < 4:  # TODO hard coding (introducing an option to adjust that?)
                 st = Node.build(SET, right_operand)

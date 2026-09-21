@@ -291,7 +291,7 @@ class ConstraintExtension(Constraint):
 
     def process_table(self, scope, table):
         if len(table) == 0:
-            return None
+            return ""  # an empty table (the element is written, with no tuple)
         # we compute the key of the table in the caches (a digest of the table, and not its hash code, which may be shared by different tables)
         try:
             h = _table_key(tuple(table) + (self.keep_hybrid,))  # if ever we change the value of keep_hybrid
