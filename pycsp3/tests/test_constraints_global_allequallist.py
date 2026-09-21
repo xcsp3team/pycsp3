@@ -11,6 +11,12 @@ from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
+PARSER_EXCEPT = ("xcsp3team/XCSP3-Java-Tools#21: the parser of ACE and CHOCO fails on allEqual-list with except "
+                 "(No enum constant TypeConditionOperator.0), instead of reporting Missing Implementation")
+COSOCO_LIST = "xcsp3team/cosoco#81: cosoco displays wrong solutions on allEqual-list, instead of saying that it does not handle it"
+
+# The cases not handled by the solvers (not reported)
+NOT_IMPLEMENTED = "allEqual-list (not part of XCSP3-core) is not implemented yet by ACE and CHOCO (Missing Implementation)"
 
 # The symbolic lists (not reported)
 SYMBOLIC = "allEqual-list on symbolic variables is not part of XCSP3-core (ACE and CHOCO fail, cosoco has no symbolic variables)"
@@ -24,6 +30,19 @@ def equal_lists(lists, excepting=()):
 
 def rows(t, m):
     return [t[i:i + m] for i in range(0, len(t), m)]
+
+
+def not_handled(request, solver, excepting=False):
+    """
+    For a test posting allEqual-list (with an element <except> when excepting is True), which is not handled yet by the solvers:
+    skipped with ACE and CHOCO (not implemented), unless their parser fails on <except> (bug), and marked for cosoco (wrong solutions).
+    """
+    if solver == "COSOCO":
+        bug_for(request, "COSOCO", COSOCO_LIST)
+    elif excepting:
+        bug_for(request, ("ACE", "CHOCO"), PARSER_EXCEPT)
+    else:
+        pytest.skip(NOT_IMPLEMENTED)
 
 
 def check(run, solver, code, domains, predicate, args=()):
@@ -48,15 +67,18 @@ D32 = [range(3)] * 6
     "AllEqualList(tuple(x[i]) for i in range(3))",
     "AllEqualList(x[::-1])",
 ])
-def test_allequallist_forms(run, solver, constraint):
+def test_allequallist_forms(run, solver, request, constraint):
+    not_handled(request, solver)
     check(run, solver, X32 + f"satisfy({constraint})", D32, lambda *t: equal_lists(rows(t, 2)))
 
 
 @pytest.mark.parametrize("n, m, d", [(2, 2, 3), (3, 2, 2), (4, 2, 2), (2, 3, 2), (3, 3, 2), (2, 1, 3), (3, 1, 3)],
                          ids=["2 lists", "3 lists", "4 lists", "2 lists of 3 variables", "3 lists of 3 variables", "2 lists of 1 variable",
                               "3 lists of 1 variable"])
-def test_allequallist_sizes(run, solver, n, m, d):
-    # PyCSP3 posts x[0][j] == x[i][j] for each list i > 0 and each index j
+def test_allequallist_sizes(run, solver, request, n, m, d):
+    # with two lists, PyCSP3 posts x[0][j] == x[1][j] for each index j
+    if n > 2 and m > 1:
+        not_handled(request, solver)
     check(run, solver, f"x = VarArray(size=[{n}, {m}], dom=range({d}))\nsatisfy(AllEqualList(x))", [range(d)] * (n * m), lambda *t: equal_lists(rows(t, m)))
 
 
@@ -72,22 +94,27 @@ def test_xcsp3_allequallist_on_lists_of_one_variable(run, constraint, text):
 
 
 @pytest.mark.parametrize("size", ["[3, 2]", "[2, 3]"], ids=["2 columns", "3 columns"])
-def test_allequallist_on_columns(run, solver, size):
+def test_allequallist_on_columns(run, solver, request, size):
     n, m = eval(size)
+    if m > 2:
+        not_handled(request, solver)
     check(run, solver, f"x = VarArray(size={size}, dom=range(2))\nsatisfy(AllEqualList(columns(x)))", [range(2)] * (n * m),
           lambda *t: equal_lists(list(zip(*rows(t, m)))))
 
 
-def test_allequallist_on_different_domains(run, solver):
+def test_allequallist_on_different_domains(run, solver, request):
+    not_handled(request, solver)
     check(run, solver, "x = VarArray(size=[3, 2], dom=lambda i, j: range(i + j, 4))\nsatisfy(AllEqualList(x))",
           [range(i + j, 4) for i in range(3) for j in range(2)], lambda *t: equal_lists(rows(t, 2)))
 
 
-def test_allequallist_on_negative_values(run, solver):
+def test_allequallist_on_negative_values(run, solver, request):
+    not_handled(request, solver)
     check(run, solver, "x = VarArray(size=[3, 2], dom=range(-2, 1))\nsatisfy(AllEqualList(x))", [range(-2, 1)] * 6, lambda *t: equal_lists(rows(t, 2)))
 
 
-def test_allequallist_with_shared_variables(run, solver):
+def test_allequallist_with_shared_variables(run, solver, request):
+    not_handled(request, solver)
     # a variable can occur in several lists: (x0, x1) = (x1, x0) = (x2, x2) iff x0 = x1 = x2
     check(run, solver, "x = VarArray(size=3, dom=range(3))\nsatisfy(AllEqualList([x[0], x[1]], [x[1], x[0]], [x[2], x[2]]))", [range(3)] * 3,
           lambda a, b, c: equal_lists([(a, b), (b, a), (c, c)]))
@@ -98,14 +125,17 @@ def test_allequallist_on_symbolic_variables(run, solver):
     check(run, solver, "x = VarArray(size=[3, 2], dom={'a', 'b'})\nsatisfy(AllEqualList(x))", [["a", "b"]] * 6, lambda *t: equal_lists(rows(t, 2)))
 
 
-def test_allequallist_with_other_constraints(run, solver):
+def test_allequallist_with_other_constraints(run, solver, request):
+    not_handled(request, solver)
     # the example of the documentation (with fewer roles)
     check(run, solver, X32 + "satisfy(AllEqualList(x), x[0][0] != x[0][1], Sum(x[2]) == 3)", D32,
           lambda *t: equal_lists(rows(t, 2)) and t[0] != t[1] and t[4] + t[5] == 3)
 
 
 @pytest.mark.parametrize("k", [2, 3], ids=["windows of 2 lists", "windows of 3 lists"])
-def test_allequallist_in_a_group(run, solver, k):
+def test_allequallist_in_a_group(run, solver, request, k):
+    if k > 2:
+        not_handled(request, solver)
     check(run, solver, f"x = VarArray(size=[4, 2], dom=range(2))\nsatisfy([AllEqualList(x[i:i + {k}]) for i in range({5 - k})])", [range(2)] * 8,
           lambda *t: all(equal_lists(rows(t, 2)[i:i + k]) for i in range(5 - k)))
 
@@ -127,15 +157,18 @@ EXCEPTING = [
 
 
 @pytest.mark.parametrize("excepting, tuples", EXCEPTING, ids=[e for e, _ in EXCEPTING])
-def test_allequallist_excepting(run, solver, excepting, tuples):
+def test_allequallist_excepting(run, solver, request, excepting, tuples):
+    not_handled(request, solver, excepting=excepting not in ("[]", "None"))
     check(run, solver, X32 + f"satisfy(AllEqualList(x, excepting={excepting}))", D32, lambda *t: equal_lists(rows(t, 2), tuples))
 
 
-def test_allequallist_excepting_on_two_lists(run, solver):
+def test_allequallist_excepting_on_two_lists(run, solver, request):
+    not_handled(request, solver, excepting=True)
     check(run, solver, X32 + "satisfy(AllEqualList(x[0], x[1], excepting=(0, 0)))", D32, lambda *t: equal_lists(rows(t, 2)[:2], {(0, 0)}))
 
 
-def test_allequallist_excepting_with_other_constraints(run, solver):
+def test_allequallist_excepting_with_other_constraints(run, solver, request):
+    not_handled(request, solver, excepting=True)
     # the pair (0, 0) means that the team does not play
     check(run, solver, "x = VarArray(size=[3, 2], dom=range(3))\nsatisfy(AllEqualList(x, excepting=(0, 0)), Sum(x[0]) > 0, x[1][0] == 1)",
           D32, lambda *t: equal_lists(rows(t, 2), {(0, 0)}) and t[0] + t[1] > 0 and t[2] == 1)
@@ -159,7 +192,9 @@ def test_allequallist_with_a_single_list(run, solver, constraint):
     ("AllEqualList(x[0], x[1], x[0])", lambda *t: t[0:2] == t[2:4]),
     ("AllEqualList(x[0], x[0], excepting=(0, 0))", lambda *t: True),
 ], ids=["twice", "twice among three", "twice with excepting"])
-def test_allequallist_with_a_repeated_list(run, solver, constraint, predicate):
+def test_allequallist_with_a_repeated_list(run, solver, request, constraint, predicate):
+    if "x[1]" in constraint or "excepting" in constraint:
+        not_handled(request, solver, excepting="excepting" in constraint)
     # a list is always equal to itself: the constraint holds on the other lists (or an error is reported)
     r = run(X32 + f"satisfy({constraint})", solver=solver)
     if r.ok:
@@ -170,20 +205,24 @@ def test_allequallist_with_a_repeated_list(run, solver, constraint, predicate):
 
 # ----------------------------------------------------------------------------------------------------- XCSP3 files
 
-@pytest.mark.parametrize("constraint, n_constraints", [
-    pytest.param("AllEqualList(x)", 4, id="AllEqualList(x)"),  # x[0][j] == x[i][j] for i in 1..2 and j in 0..1
-    pytest.param("AllEqualList(x[0], x[2], excepting=(0, 0))", 1, id="AllEqualList(x[0], x[2], excepting=(0, 0))"),  # one pair of lists
-    pytest.param("AllEqualList(x, excepting=(1, 2))", 3, id="AllEqualList(x, excepting=(1, 2))"),  # three pairs of lists
-    pytest.param("AllEqualList(x, excepting=[(0, 0), (1, 2)])", 3, id="AllEqualList(x, excepting=[(0, 0), (1, 2)])"),  # several tuples
-    pytest.param("AllEqualList(x, excepting=[])", 4, id="AllEqualList(x, excepting=[])"),  # as without excepting
+L3 = ["x[0][0] x[0][1]", "x[1][0] x[1][1]", "x[2][0] x[2][1]"]
+
+
+@pytest.mark.parametrize("constraint, lists, excepting", [
+    pytest.param("AllEqualList(x)", L3, None, id="AllEqualList(x)"),
+    pytest.param("AllEqualList(x[0], x[2], excepting=(0, 0))", ["x[0][0] x[0][1]", "x[2][0] x[2][1]"], "(0,0)", id="AllEqualList(x[0], x[2], excepting=(0, 0))"),
+    pytest.param("AllEqualList(x, excepting=(1, 2))", L3, "(1,2)", id="AllEqualList(x, excepting=(1, 2))"),
+    pytest.param("AllEqualList(x, excepting=[(0, 0), (1, 2)])", L3, "(0,0)(1,2)", id="AllEqualList(x, excepting=[(0, 0), (1, 2)])"),  # several tuples
+    pytest.param("AllEqualList(x, excepting=[])", L3, None, id="AllEqualList(x, excepting=[])"),  # as without excepting
 ])
-def test_xcsp3_allequallist(run, constraint, n_constraints):
-    # allEqual-list is not part of XCSP3-core: a decomposition into intensional constraints is posted
+def test_xcsp3_allequallist(run, constraint, lists, excepting):
     r = run(X32 + f"satisfy({constraint})")
     assert r.ok, r.report()
-    assert next(r.xml.iter("allEqual"), None) is None, r.report()
-    n = sum(len(g.findall("args")) for g in r.xml.iter("group")) + len(r.xml.findall("constraints/intension"))
-    assert n == n_constraints, r.report()
+    c = r.xml.find("constraints/allEqual")
+    assert c is not None, r.report()
+    assert [" ".join(e.text.split()) for e in c.findall("list")] == lists, r.report()
+    exc = c.find("except")
+    assert (None if exc is None else "".join(exc.text.split())) == excepting, r.report()
 
 
 def test_xcsp3_allequallist_on_two_lists(run):

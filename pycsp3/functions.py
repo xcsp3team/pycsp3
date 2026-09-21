@@ -2073,13 +2073,7 @@ def AllEqualList(term, *others, excepting=None):
         return [lists[0][i] == lists[1][i] for i in range(len(lists[0]))]
     if len(lists) > 0 and len(lists[0]) == 1:  # allEqual-list requires lists of at least two variables: AllEqual is posted on the variables
         return AllEqual([t[0] for t in lists], excepting=None if excepting is None else [e[0] for e in excepting])
-    # allEqual-list is not part of XCSP3-core (and is handled by no solver): a decomposition into intensional constraints is posted
-    if excepting is None:  # each list is equal to the first one
-        return [lists[0][j] == t[j] for t in lists[1:] for j in range(len(t))]
-    # with excepting (a set E of tuples): for each pair of lists (s, t), s = t or s in E or t in E
-    return [disjunction(conjunction(s[j] == t[j] for j in range(len(s))), *(conjunction(s[j] == e[j] for j in range(len(s))) for e in excepting),
-                        *(conjunction(t[j] == e[j] for j in range(len(t))) for e in excepting))
-            for i, s in enumerate(lists) for t in lists[i + 1:]]
+    return ECtr(ConstraintAllEqualList(lists, excepting))
 
 
 def _ordered(term, others, operator, lengths):

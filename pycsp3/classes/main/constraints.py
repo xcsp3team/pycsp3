@@ -488,7 +488,8 @@ class ConstraintAllEqualList(ConstraintUnmergeable):
     def __init__(self, lst, excepting):
         super().__init__(TypeCtr.ALL_EQUAL)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True, lifted=True)
-        self.arg(TypeCtrArg.EXCEPT, "(" + ",".join(str(v) for v in excepting) + ")" if excepting else excepting)
+        # excepting is None, or a list of tuples
+        self.arg(TypeCtrArg.EXCEPT, "".join("(" + ",".join(str(v) for v in t) + ")" for t in excepting) if excepting else excepting)
 
 
 class ConstraintOrdered(Constraint):
