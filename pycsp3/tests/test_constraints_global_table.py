@@ -13,7 +13,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
-COSOCO_HOLES = "#127: pycsp3 fails when recording the values given by cosoco (individually) for the holes of an array"
 
 X3 = "x = VarArray(size=3, dom=range(4))\n"
 D3 = [range(4)] * 3
@@ -302,8 +301,7 @@ def test_symbolic_tables(run, solver, request, constraint, predicate):
 
 # ---------------------------------------------------------------------------------------------------- other cases
 
-def test_table_on_array_with_holes(run, solver, request):
-    bug_for(request, "COSOCO", COSOCO_HOLES)
+def test_table_on_array_with_holes(run, solver):
     r = run("""
         y = VarArray(size=3, dom=lambda i: None if i == 1 else range(3))
         satisfy(

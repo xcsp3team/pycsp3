@@ -261,11 +261,7 @@ def test_vararray_domain_depending_on_indexes_solutions(run, solver, dom):
     assert_solutions(r, brute_force([range(1), range(2), range(2), range(3)], lambda *t: sum(t) == 2))
 
 
-COSOCO_HOLES = "#127: pycsp3 fails when recording the values given by cosoco (individually) for the holes of an array"
-
-
-def test_vararray_hole_solutions(run, solver, request):
-    bug_for(request, "COSOCO", COSOCO_HOLES)
+def test_vararray_hole_solutions(run, solver):
     r = run("""
         x = VarArray(size=3, dom=lambda i: None if i == 1 else range(2))
         satisfy(x[0] != x[2])
@@ -337,8 +333,7 @@ def test_vararray_variable_length(run, size, dom, n_variables):
     assert "variables " + str(n_variables) in r.lines, r.report()
 
 
-def test_vararray_variable_length_solutions(run, solver, request):
-    bug_for(request, "COSOCO", COSOCO_HOLES)
+def test_vararray_variable_length_solutions(run, solver):
     r = run("""
         x = VarArray(size=[2, [1, 3]], dom=range(2))
         satisfy(Sum(x[1]) == x[0][0] + 1)

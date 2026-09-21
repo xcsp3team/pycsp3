@@ -206,7 +206,10 @@ class SolverProcess:
             variables = []
             for token in roots[i][0].text.split():
                 r = VarEntities.get_item_with_name(token)
-                if isinstance(r, EVar):
+                if r is None:  # a hole of an array (declared in the XCSP3 file when the array has a single domain): its value is ignored
+                    assert "[" in token, "The variable " + token + " given by the solver is unknown"
+                    variables.append(None)
+                elif isinstance(r, EVar):
                     variables.append(r.variable)
                 elif isinstance(r, Variable):
                     variables.append(r)

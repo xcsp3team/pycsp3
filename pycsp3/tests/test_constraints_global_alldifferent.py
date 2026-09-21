@@ -13,7 +13,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
-COSOCO_HOLES = "#127: pycsp3 fails when recording the values given by cosoco (individually) for the holes of an array"
 ACE_NON_SQUARE = "xcsp3team/ACE#16: ACE fails on allDifferent-matrix with a non-square matrix"
 COSOCO_MATRIX_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions of allDifferent-matrix with except"
 COSOCO_MATRIX_ROWS = ("xcsp3team/cosoco#82: cosoco fails on allDifferent-matrix whose matrix is given by explicit rows "
@@ -79,8 +78,7 @@ def test_alldifferent_on_negative_values(run, solver):
     check(run, solver, "x = VarArray(size=3, dom=range(-2, 1))\nsatisfy(AllDifferent(x))", [range(-2, 1)] * 3, lambda *t: different(t))
 
 
-def test_alldifferent_on_an_array_with_holes(run, solver, request):
-    bug_for(request, "COSOCO", COSOCO_HOLES)
+def test_alldifferent_on_an_array_with_holes(run, solver):
     r = run("x = VarArray(size=4, dom=lambda i: None if i == 1 else range(3))\nsatisfy(AllDifferent(x))", solver=solver)
     assert r.variables == ["x[0]", "x[2]", "x[3]"]
     assert_solutions(r, brute_force([range(3)] * 3, lambda *t: different(t)))
