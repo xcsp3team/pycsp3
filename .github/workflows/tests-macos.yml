@@ -1,15 +1,19 @@
 name: MacOS tests
 
-# the tests are run when a pull request is merged and when a tag is pushed, not for each commit
+# the tests are run when a pull request is merged and when a tag is pushed, not for each commit; they can also be run
+# on a pull request by adding the label run-tests to it, and on demand from the tab Actions (workflow_dispatch)
 on:
   pull_request:
-    types: [closed]
+    types: [closed, labeled]
   push:
     tags: ['**']
+  workflow_dispatch:
 
 jobs:
   tests:
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    if: >-
+      github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+      || (github.event.action == 'labeled' && github.event.label.name == 'run-tests')
     uses: ./.github/workflows/reusable-tests.yml
     with:
       os: macos-latest
