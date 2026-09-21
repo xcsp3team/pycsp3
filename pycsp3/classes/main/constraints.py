@@ -220,9 +220,8 @@ def _table_key(table):
     because the caches would then keep all tables (which is costly with many large tables). So, the key is a digest (blake2b, 128 bits)
     of the serialization of the table, for which a collision is practically impossible. If the table cannot be serialized
     (e.g., it contains ranges or conditions), the table itself is the key.
-    A TypeError is raised if the table is not hashable (e.g., one of its tuples contains a list).
+    The table must be hashable (its hash code is computed before, see _key_of()).
     """
-    hash(table)  # raises TypeError if the table is not hashable
     try:
         return hashlib.blake2b(marshal.dumps(table, 2), digest_size=16).digest()  # version 2 of marshal: no references, so the same bytes for the same table
     except ValueError:  # an element of the table cannot be serialized
