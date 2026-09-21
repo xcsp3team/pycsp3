@@ -1233,19 +1233,17 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     __rmul__ = __mul__
 
-    # for // and %, with the semantics of Python, self is replaced once by an auxiliary variable, since it may occur twice in the node
-
     def __floordiv__(self, other):  # self // other
-        return Node.floor_div(auxiliary().replace_partial_constraint(self), other)
+        return Node.build(TypeNode.DIV, self, other)
 
     def __rfloordiv__(self, other):  # other // self
-        return Node.floor_div(other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+        return Node.build(TypeNode.DIV, other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def __mod__(self, other):  # self % other
-        return Node.floor_mod(auxiliary().replace_partial_constraint(self), other)
+        return Node.build(TypeNode.MOD, self, other)
 
-    def __rmod__(self, other):  # other % self
-        return Node.floor_mod(other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+    def __rmod__(self, other):  # other // self
+        return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def __getitem__(self, i):
         assert isinstance(self.constraint, ConstraintElement), (
@@ -1412,19 +1410,17 @@ class ScalarProduct:
 
     __rmul__ = __mul__
 
-    # for // and %, with the semantics of Python, self is replaced once by an auxiliary variable, since it may occur twice in the node
-
     def __floordiv__(self, other):
-        return Node.floor_div(auxiliary().replace_scalar_product(self), other)
+        return Node.build(TypeNode.DIV, self, other)
 
     def __rfloordiv__(self, other):
-        return Node.floor_div(other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+        return Node.build(TypeNode.DIV, other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def __mod__(self, other):
-        return Node.floor_mod(auxiliary().replace_scalar_product(self), other)
+        return Node.build(TypeNode.MOD, self, other)
 
     def __rmod__(self, other):
-        return Node.floor_mod(other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+        return Node.build(TypeNode.MOD, other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
     def to_terms(self):
         return [self.variables[i] * self.coeffs[i] for i in range(len(self.variables))]
