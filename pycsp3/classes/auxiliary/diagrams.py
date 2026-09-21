@@ -309,18 +309,36 @@ class MDD(Diagram):
         (the usual case), the string is the one of the transitions (cached). Otherwise, the labels are developed with the domain of the
         variable of the level of their source, the values outside it being discarded (they make the solvers fail), as well as the
         transitions that are no longer on a path from the root to the terminal node; the transitions are then written level by level.
+        The transitions are filtered, and the paths computed, before developing the labels (there may be many values for a label).
         """
         if options.keep_smart_transitions:
             return Diagram.transitions_to_string(self, scp)
         domains = [x.dom.all_values() for x in scp]
+        # membership tests are immediate in a range, but not in a list (a domain that is not an interval), replaced by a set (once per domain)
+        sets, members = {}, []
+        for d in domains:
+            if not isinstance(d, range) and id(d) not in sets:
+                sets[id(d)] = set(d)
+            members.append(d if isinstance(d, range) else sets[id(d)])
         if self.label_types() <= {int, bool, str}:
             if self._label_set is None:
                 self._label_set = {label for (_, label, _) in self.transitions}
-            if all(v in values for values in domains for v in self._label_set):
+            distinct = {d if isinstance(d, range) else id(d): m for d, m in zip(domains, members)}.values()  # checked once per domain
+            if all(all(v in m for v in self._label_set) for m in distinct):
                 return Diagram.transitions_to_string(self, scp)
-        trs = [(q1, v, q2) for (q1, v, q2) in self.flat_transitions(scp) if v in domains[self.levels[q1]]]
+        kept = []  # the transitions with the (non-empty) list of their labels in the domain of the variable of the level of their source
+        for (q1, l, q2) in self.transitions:
+            level = self.levels[q1]
+            if isinstance(l, (int, str)):
+                labels = [l] if l in members[level] else []
+            elif isinstance(l, Condition):
+                labels = list(l.filtering(domains[level]))  # values of the domain
+            else:
+                labels = [v for v in l if v in members[level]]
+            if len(labels) > 0:
+                kept.append((q1, labels, q2))
         successors, predecessors = defaultdict(set), defaultdict(set)
-        for (q1, _, q2) in trs:
+        for (q1, _, q2) in kept:
             successors[q1].add(q2)
             predecessors[q2].add(q1)
 
@@ -336,8 +354,9 @@ class MDD(Diagram):
         forward, backward = _reachable(self.root, successors), _reachable(self.terminal, predecessors)
         if self.terminal not in forward:
             error("No path of the MDD is compatible with the domains of the variables of the scope " + str(scp))
-        trs = sorted((t for t in trs if t[0] in forward and t[2] in backward), key=lambda t: self.levels[t[0]])
-        return "".join("(" + q1 + "," + str(v) + "," + q2 + ")" for (q1, v, q2) in trs)
+        kept = sorted((t for t in kept if t[0] in forward and t[2] in backward), key=lambda t: self.levels[t[0]])
+        # for a transition (q1, labels, q2), the string is (q1,v1,q2)(q1,v2,q2)... built by a single join
+        return "".join("(" + q1 + "," + ("," + q2 + ")(" + q1 + ",").join(map(str, labels)) + "," + q2 + ")" for (q1, labels, q2) in kept)
 
     def __str__(self):
         return "MDD(" + Diagram.__str__(self) + ")"
