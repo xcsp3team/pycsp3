@@ -108,9 +108,11 @@ def test_allequal_trivially_true(run, solver, constraint):
 
 @pytest.mark.parametrize("constraint", ["AllEqual(x[0])", "AllEqual([x[0]])", "AllEqual(x[0], [])", "AllEqual(x[0] + 1)", "AllEqual(Sum(x[0], x[1]))"])
 def test_xcsp3_allequal_with_a_single_term(run, constraint):
-    # with a single term, no element <allEqual> is generated (the syntax requires at least two variables), and no auxiliary variable
+    # with a single term, no element <allEqual> is generated (the syntax requires at least two variables), and no auxiliary variable;
+    # a warning is displayed
     r = run(X3 + f"satisfy({constraint}, x[1] == 1, x[2] == 2)")
     assert r.ok, r.report()
+    assert "A constraint AllEqual discarded because defined with 1 term" in r.stdout, r.report()
     assert r.xml.find("constraints/allEqual") is None and r.xml.find("variables/var[@id='aux_gb[0]']") is None, r.report()
 
 
