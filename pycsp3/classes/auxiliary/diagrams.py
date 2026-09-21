@@ -231,9 +231,9 @@ class Automaton(Diagram):
 class MDD(Diagram):
     def __init__(self, transitions):
         """
-        Builds an MDD from the specified set of transitions
+        Builds an MDD from the specified list of transitions
 
-        :param transitions: a set of transitions
+        :param transitions: a list of transitions
         :example:
             x = VarArray(size=3, dom=range(2))
             m = MDD([("r", 0, "n1"), ("r", 1, "n2"), ("n1", 1, "t"), ("n2", 0, "t")])
@@ -241,17 +241,13 @@ class MDD(Diagram):
         """
         if isinstance(transitions, types.GeneratorType):
             transitions = [t for t in transitions]
-        unordered = isinstance(transitions, (set, frozenset))
-        if unordered:
-            transitions = list(transitions)
+        error_if(isinstance(transitions, (set, frozenset)), "The transitions of an MDD must be given by a list of 3-tuples, and not by a set")
         if not isinstance(transitions, list):
-            error("The transitions of an MDD must be given by a list or a set of 3-tuples, which is not the case of " + repr(transitions))
+            error("The transitions of an MDD must be given by a list of 3-tuples, which is not the case of " + repr(transitions))
         super().__init__(transitions)
         self.root, self.terminal, self.levels, self._label_set = None, None, None, None
         self._check_structure()
-        if unordered:  # a deterministic order, level by level from the root (the order of iteration of a set may change from one execution to another)
-            self.transitions.sort(key=lambda t: (self.levels[t[0]], t[0], str(t[1]), t[2]))
-        elif not self._ordered_from_root():  # written level by level from the root, as required by some solvers (the given order being kept in each level)
+        if not self._ordered_from_root():  # written level by level from the root, as required by some solvers (the given order being kept in each level)
             self.transitions.sort(key=lambda t: self.levels[t[0]])
 
     def _ordered_from_root(self):  # True if each transition leaves the root or a node reached by a previous transition
