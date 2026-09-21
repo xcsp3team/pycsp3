@@ -65,7 +65,9 @@ class Diagram:
         Returns a function giving, for a source state, the values with which the labels given by ranges (conditions) are developed:
         by default, the union of the domains of the variables of the scope (the variables may have different domains).
         """
-        values = sorted({v for x in scp for v in x.dom.all_values()})
+        values = scp[0].dom.all_values()
+        if any(x.dom.all_values() != values for x in scp):  # the union is only computed when needed (it is costly with long scopes)
+            values = sorted({v for x in scp for v in x.dom.all_values()})
         return lambda state: values
 
     def label_types(self):  # the set of the types of the labels of the transitions (computed once)
