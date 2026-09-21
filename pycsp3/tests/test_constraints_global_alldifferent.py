@@ -112,12 +112,28 @@ def test_alldifferent_with_a_repeated_variable(run, constraint):
     assert "A variable cannot be given several times to AllDifferent(), which is the case of x[" in r.stdout, r.report()
 
 
+@pytest.mark.parametrize("code, expression", [
+    ("e = x[0] + x[1]\nsatisfy(AllDifferent(e, x[2], e))", "add(x[0],x[1])"),
+    ("satisfy(AllDifferent(x[0] + 1, x[1], x[0] + 1))", "add(x[0],1)"),
+    ("satisfy(AllDifferent(x[0] + x[1], x[2], x[1] + x[0]))", "add(x[1],x[0])"),
+    ("satisfy(AllDifferent(x[0] + 1, x[0] + 1))", "add(x[0],1)"),
+    ("satisfy(AllDifferent(x[0], -(-x[0])))", "x[0]"),
+], ids=["the same object", "the same structure", "operands in another order", "two terms", "an expression equal to a variable"])
+def test_alldifferent_with_a_repeated_expression(run, code, expression):
+    # an expression cannot be different from itself (compared through its canonical form): an explicit error is reported (cosoco refuses such constraints)
+    r = run(X3 + code)
+    assert_fails(r)
+    assert ("An expression cannot be given several times to AllDifferent() (possibly with its operands in another order), which is the case of "
+            + expression) in r.stdout, r.report()
+
+
 # ----------------------------------------------------------------------------------------------------- expressions
 
 EXPRESSIONS = [
     ("AllDifferent(x[0] + 1, x[1], x[2] - 1)", lambda a, b, c, *_: different((a + 1, b, c - 1))),
     ("AllDifferent(abs(x[0] - x[1]), abs(x[1] - x[2]), abs(x[2] - x[3]))", lambda a, b, c, d: different((abs(a - b), abs(b - c), abs(c - d)))),
     ("AllDifferent(x[0] + x[1], x[1] + x[2], x[0] + x[2])", lambda a, b, c, *_: different((a + b, b + c, a + c))),
+    ("AllDifferent(x[0] - x[1], x[1] - x[0], x[2])", lambda a, b, c, *_: different((a - b, b - a, c))),  # not repeated (sub is not symmetric)
     ("AllDifferent(x[0] * 2, x[1], x[2] % 2)", lambda a, b, c, *_: different((a * 2, b, c % 2))),
     ("AllDifferent(x[0], x[1] + 0, x[2] * 1)", lambda a, b, c, *_: different((a, b, c))),
     ("AllDifferent([x[i] + i for i in range(4)])", lambda *t: different([v + i for i, v in enumerate(t)])),

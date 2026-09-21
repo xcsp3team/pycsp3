@@ -1894,11 +1894,21 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # an integer is reported below by checkType()
         return None
     checkType(terms, ([Variable, Node]))
-    seen = set()  # identities of the variables (== being redefined for building expressions)
+    # a term given several times is reported: the terms are compared through their canonical forms (sorting the operands of symmetric operators),
+    # which are costly to compute, and so, only computed for the terms involving the same variables (== being redefined for building expressions)
+    groups = {}
     for t in terms:
-        if isinstance(t, Variable):
-            error_if(id(t) in seen, "A variable cannot be given several times to AllDifferent(), which is the case of " + str(t))
-            seen.add(id(t))
+        groups.setdefault(frozenset((id(t),)) if isinstance(t, Variable) else frozenset(id(x) for x in t.list_of_vars()), []).append(t)
+    for group in (g for g in groups.values() if len(g) > 1):
+        seen = set()
+        for t in group:
+            key = str(t) if isinstance(t, Variable) else str(t.canonization())
+            if key in seen:
+                if isinstance(t, Variable):
+                    error("A variable cannot be given several times to AllDifferent(), which is the case of " + str(t))
+                else:
+                    error("An expression cannot be given several times to AllDifferent() (possibly with its operands in another order), which is the case of " + str(t))
+            seen.add(key)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)  # only if mini
     return ECtr(ConstraintAllDifferent(terms, excepting))
 
