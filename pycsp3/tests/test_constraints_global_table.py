@@ -408,7 +408,10 @@ def test_invalid_tables(run, constraint):
     ("(x[0], x[0]) in {(0, 0), (1, 1)}", "The variables of the scope of a table constraint must be distinct, which is not the case of [x[0], x[0]]"),
     ("Table(scope=x)", "Table() requires exactly one of the parameters supports and conflicts"),
     ("Table(scope=x, supports=[(0, 1, 2)], conflicts=[(1, 1, 1)])", "Table() requires exactly one of the parameters supports and conflicts"),
-    ("Table(scope=x, supports=5)", "The supports of Table() must be given by a list, a tuple, a set or a range (of tuples, or of values for a unary table), which is not the case of 5"),
+    ("Table(scope=x, supports=5)",
+     "The supports of Table() must be given by an iterable, such as a list, a tuple, a set, a range or enumerate() (of tuples, or of values for a unary table), which is not the case of 5"),
+    ("Table(scope=x, supports='abc')",
+     "The supports of Table() must be given by an iterable, such as a list, a tuple, a set, a range or enumerate() (of tuples, or of values for a unary table), which is not the case of 'abc'"),
     ("x in {(0, 1, 'a')}", "The value 'a' of the tuple (0, 1, 'a') is a symbol, which is not possible for the integer variable x[2]"),
     ("s in {('a', 'b'), ('a', 1)}", "The value 1 of the tuple ('a', 1) is an integer, which is not possible for the symbolic variable s[1]"),
     ("(x[0], s[0]) in {(0, 'a'), ('b', 'a')}", "The value 'b' of the tuple ('b', 'a') is a symbol, which is not possible for the integer variable x[0]"),
@@ -420,3 +423,9 @@ def test_invalid_tables_messages(run, constraint, message):
 
 def test_table_of_conflicts_given_by_a_generator(run, solver):
     check(run, solver, X3 + "satisfy(Table(scope=x, conflicts=((i, i, i) for i in range(4))))", [range(4)] * 3, lambda a, b, c: not (a == b == c))
+
+
+def test_table_of_supports_given_by_enumerate(run, solver):
+    # any iterable can give the tuples, e.g., enumerate() as in the models CarSequencing, SchedulingOS and SteelMillSlab
+    check(run, solver, X3 + "satisfy(Table(scope=[x[0], x[1]], supports=enumerate([2, 0, 3, 1])))", [range(4)] * 3,
+          lambda a, b, c: (a, b) in {(0, 2), (1, 0), (2, 3), (3, 1)})

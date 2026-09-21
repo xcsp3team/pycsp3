@@ -1125,9 +1125,9 @@ def Table(*, scope, supports=None, conflicts=None):
     error_if((supports is None) == (conflicts is None), "Table() requires exactly one of the parameters supports and conflicts")
     positive = supports is not None
     table = supports if positive else conflicts
-    if not isinstance(table, (list, tuple, set, frozenset, range, types.GeneratorType)):
-        error("The " + ("supports" if positive else "conflicts") + " of Table() must be given by a list, a tuple, a set or a range "
-              + "(of tuples, or of values for a unary table), which is not the case of " + str(table))
+    if isinstance(table, (str, bytes)) or not hasattr(table, "__iter__"):  # any iterable is accepted (e.g., enumerate(...)), except a string
+        error("The " + ("supports" if positive else "conflicts") + " of Table() must be given by an iterable, such as a list, a tuple, a set, a range "
+              + "or enumerate() (of tuples, or of values for a unary table), which is not the case of " + repr(table))
     table = list(table)  # if isinstance(table, (tuple, set, frozenset, types.GeneratorType)) else table
     if not positive and len(table) == 0:
         return None
