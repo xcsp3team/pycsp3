@@ -206,7 +206,10 @@ class SolverProcess:
             variables = []
             for token in roots[i][0].text.split():
                 r = VarEntities.get_item_with_name(token)
-                if isinstance(r, EVar):
+                if r is None:  # a hole of an array (declared in the XCSP3 file when the array has a single domain): its value is ignored
+                    assert "[" in token, "The variable " + token + " given by the solver is unknown"
+                    variables.append(None)
+                elif isinstance(r, EVar):
                     variables.append(r.variable)
                 elif isinstance(r, Variable):
                     variables.append(r)
@@ -248,13 +251,17 @@ class SolverProcess:
             if stdout.find("<unsatisfiable") != -1 or stdout.find("s UNSATISFIABLE") != -1:
                 return TypeStatus.UNSAT
             if stdout.find("<instantiation") == -1 or stdout.find("</instantiation>") == -1:
-                print("  Actually, the instance was not solved")
+                print("  Actually, the instance was not solved; the last lines displayed by " + self.name + " are:")
+                for line in [line for line in stdout.splitlines() if line.strip() not in ("", "c")][-10:]:  # so that an error of the solver is visible
+                    print("    " + line)
                 return TypeStatus.UNKNOWN
 
             if "limit=no" in string_options or ("limit_sols" in dict_simplified_options and int(dict_simplified_options["limit_sols"]) > 1):
                 # re.DOTALL because some solvers (e.g., cosoco) spread an instantiation over several lines
                 roots = [etree.fromstring(("<instantiation" + tok + "</instantiation>").replace("\nv", ""), etree.XMLParser(remove_blank_text=True))
                          for tok in re.findall(r"<instantiation(.*?)</instantiation>", stdout, re.DOTALL)]
+                # choco displays the last solution a second time (after the line s SATISFIABLE), with the same id
+                roots = [root for i, root in enumerate(roots) if i == 0 or root.get("id") is None or root.get("id") != roots[i - 1].get("id")]
             else:
                 left, right = stdout.rfind("<instantiation"), stdout.rfind("</instantiation>")
                 roots = [etree.fromstring(stdout[left:right + len("</instantiation>")].replace("\nv", ""), etree.XMLParser(remove_blank_text=True))]
@@ -293,10 +300,11 @@ class SolverProcess:
             return TypeStatus.OPTIMUM if optimal else TypeStatus.SAT
 
         def execute(cmd):
+            # the error output is recorded with the standard output (otherwise, it would be lost, the pipe being never read)
             if not is_windows():
-                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, preexec_fn=os.setsid)
+                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True, preexec_fn=os.setsid)
             else:
-                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
             stopped = False
             handler = signal.getsignal(signal.SIGINT)
 
@@ -323,6 +331,9 @@ class SolverProcess:
             print("\n The instance has no variable, so the solver is not run.")
             print("Did you forget to indicate the variant of the model?")
             return None
+
+        # the solvers do not handle instances without constraints (ace fails, choco and cosoco give no values)
+        assert model is None or not Compilation.without_constraints, "The instance has no constraint, so the solver is not run"
 
         if automatic is False and SolverProcess.automatic_call:
             print("\n You attempt to solve the instance with both -solve and the function solve().")

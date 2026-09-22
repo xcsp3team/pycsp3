@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  tests:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}  # for a merged pull request, the commit of the merge
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install the dependencies
+        run: pip install lxml "cosoco>=2.6.1" pytest pytest-xdist pytest-timeout
+
+      - name: Run the unit tests
+        run: python -m pytest pycsp3/tests -n auto
+
+      - name: Keep the files of the tests (models, XCSP3 files, solver logs)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: files-of-the-tests-${{ inputs.os }}
+          path: pycsp3/tests/output/

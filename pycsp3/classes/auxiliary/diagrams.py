@@ -1,18 +1,37 @@
+import re
 import types
+from collections import Counter, defaultdict
 
 from pycsp3.classes.auxiliary.conditions import Condition, inside
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in
-from pycsp3.tools.utilities import flatten
+from pycsp3.tools.utilities import error, error_if, flatten
 
 
 class Diagram:
     _cnt = 0
     _cache = {}
 
+    _INVALID_CHARACTERS_OF_STATES = re.compile(r"[\s(),]")  # such characters would break the syntax of transitions
+
     def __init__(self, transitions):
         self.transitions = Diagram._add_transitions(transitions)
-        self.states = sorted({q for (q, _, _) in self.transitions} | {q for (_, _, q) in self.transitions})
+        self._state_set = {q for (q, _, _) in self.transitions} | {q for (_, _, q) in self.transitions}  # for membership tests (set, and not list)
+        self.states = sorted(self._state_set)
+        # the names of the states are checked once (a single search over all of them, since diagrams may have many states);
+        # the states being sorted, an empty name would be the first one
+        if self.states[0] == "" or Diagram._INVALID_CHARACTERS_OF_STATES.search("\x00".join(self.states)):
+            state = next(q for q in self.states if q == "" or Diagram._INVALID_CHARACTERS_OF_STATES.search(q))
+            error("The name of a state must be a non-empty string without space, comma or parenthesis, which is not the case of " + repr(state))
+        self._label_types = None
+        # the labels are checked from the set of their types (computed once), the transitions being traversed only when a type is unexpected
+        # (at this point, ranges have been changed into conditions, and tuples and lists into sets)
+        label_types = self.label_types()
+        if any(not issubclass(tp, (int, str, set, frozenset, Condition)) for tp in label_types) or label_types & {set, frozenset}:
+            for (q1, label, q2) in self.transitions:
+                if not (isinstance(label, (int, str, Condition)) or (isinstance(label, (set, frozenset)) and all(isinstance(v, (int, str)) for v in label))):
+                    error("The label of a transition must be an integer, a symbol, a range or a collection of integers (or symbols), which is not the case of "
+                          + repr(label) + " in " + repr((q1, label, q2)))
         self.num = Diagram._cnt
         Diagram._cnt += 1
 
@@ -27,8 +46,8 @@ class Diagram:
 
     @staticmethod
     def _add_transitions(transitions):
-        assert len(transitions) > 0, "at least one transition must be present"
-        assert isinstance(transitions, (list, set))
+        if not isinstance(transitions, (list, set)) or len(transitions) == 0:
+            error("The transitions must be given by a non-empty list or set of 3-tuples, which is not the case of " + repr(transitions))
         t = []
         for transition in transitions:
             if isinstance(transition, list):
@@ -43,12 +62,26 @@ class Diagram:
                 t.append((state1, label, state2))
         return t
 
-    def flat_transitions(self, scp):
+    def _label_values(self, scp):
+        """
+        Returns a function giving, for a source state, the values with which the labels given by ranges (conditions) are developed:
+        by default, the union of the domains of the variables of the scope (the variables may have different domains).
+        """
         values = scp[0].dom.all_values()
-        assert all(values == scp[i].dom.all_values() for i in range(1, len(scp)))
+        if any(x.dom.all_values() != values for x in scp):  # the union is only computed when needed (it is costly with long scopes)
+            values = sorted({v for x in scp for v in x.dom.all_values()})
+        return lambda state: values
+
+    def label_types(self):  # the set of the types of the labels of the transitions (computed once)
+        if self._label_types is None:
+            self._label_types = {type(label) for (_, label, _) in self.transitions}
+        return self._label_types
+
+    def flat_transitions(self, scp):
+        values_for = self._label_values(scp)
         trs = []
         for (q1, l, q2) in self.transitions:
-            labels = [l] if isinstance(l, (int, str)) else l if isinstance(l, (list, tuple, set, frozenset)) else list(l.filtering(values))
+            labels = [l] if isinstance(l, (int, str)) else l if isinstance(l, (list, tuple, set, frozenset)) else list(l.filtering(values_for(q1)))
             for label in labels:
                 assert isinstance(label, (int, str)), "currently, the label of a transition is necessarily an integer or a symbol"
                 trs.append((q1, label, q2))
@@ -80,7 +113,7 @@ class Automaton(Diagram):
         :param k: a third index
         :return: the name of a state from the specified argument(s)
         """
-        assert j is not None or k is None
+        error_if(j is None and k is not None, "Automaton.q(): a third index k cannot be given without a second index j")
         suffix = ("x" + str(j) if j is not None else "") + ("x" + str(k) if k is not None else "")
         return "q" + str(i) + suffix
 
@@ -112,40 +145,61 @@ class Automaton(Diagram):
             satisfy(Regular(scope=x, automaton=a))
         """
         super().__init__(transitions)
+        # the messages are only built in case of error (automata may be numerous)
+        if not isinstance(start, str):
+            error("The start state of an automaton must be a string, which is not the case of " + repr(start))
+        if start not in self._state_set:
+            error("The start state " + repr(start) + " of an automaton must be a state of its transitions")
         self.start = start
-        self.final = [final] if isinstance(final, str) else sorted(q for q in set(final) if q in self.states)
+        finals = [final] if isinstance(final, str) else list(final) if isinstance(final, (list, tuple, set, frozenset)) else None
+        if finals is None or any(not isinstance(q, str) for q in finals):
+            error("The final states of an automaton must be given by a string or a collection of strings, which is not the case of " + repr(final))
+        # the final states that do not appear in the transitions are discarded, since they cannot be reached
+        self.final = sorted(self._state_set.intersection(finals))
+        if len(self.final) == 0:
+            error("An automaton must have at least one final state appearing in its transitions, which is not the case of " + repr(final))
         self.access = None
-        assert isinstance(self.start, str) and all(isinstance(f, str) for f in self.final), Diagram.MSG_STATE
 
-    # TODO: it seems that there is a problem with this function: to be fixed!
     def deterministic_copy(self, scp):
-        nfa = {}
-        symbols = set()
+        """
+        Returns a deterministic automaton recognizing the same words (subset construction), the labels being the values of the
+        domains of the variables of the specified scope. Each state of the copy corresponds to a set of states of this automaton:
+        it is named after its state for a singleton, and after its sorted states joined by '_' otherwise (with a suffix if needed,
+        so that two states never have the same name).
+        """
+        nfa = {}  # for each pair (state, symbol), the set of reached states
         for state1, symbol, state2 in self.flat_transitions(flatten(scp)):
-            symbols.add(symbol)
-            if state1 not in nfa:
-                nfa[state1] = {}
-            if symbol not in nfa[state1]:
-                nfa[state1][symbol] = []
-            nfa[state1][symbol].append(state2)
-        symbols = sorted(list(symbols))
-        dfa = {}
-        states = [self.start]
-        queue = [self.start]
-        while len(queue) != 0:
-            state1 = queue.pop(0)
-            dfa[state1] = {}
-            tokens = [v for v in state1.split('_')]
+            nfa.setdefault((state1, symbol), set()).add(state2)
+        symbols = sorted({symbol for (_, symbol) in nfa})
+        names = {}  # for each set of states (frozenset), the name of the corresponding state of the copy
+        used = set(self.states)  # the names that cannot be given to a set of several states
+
+        def _name(states):
+            if len(states) == 1:
+                name = next(iter(states))
+            else:
+                name = base = "_".join(sorted(states))
+                k = 1
+                while name in used:
+                    name, k = base + "_" + str(k), k + 1
+            used.add(name)
+            names[states] = name
+            return name
+
+        start = frozenset([self.start])
+        queue, final, transitions = [start], [], []
+        _name(start)
+        for states in queue:  # the queue is extended while being traversed
+            if any(q in self.final for q in states):
+                final.append(names[states])
             for symbol in symbols:
-                state2 = "_".join(v for tok in tokens if tok in nfa and symbol in nfa[tok] for v in nfa[tok][symbol])
-                if len(state2) > 0:
-                    dfa[state1][symbol] = state2
-                    if state2 not in states:
-                        queue.append(state2)
-                        states.append(state2)
-        final = [state for state in dfa if any(tok in self.final for tok in state.split('_'))]
-        transitions = [(state, symbol, dfa[state][symbol]) for state in dfa for symbol in symbols if symbol in dfa[state]]
-        return Automaton(start=self.start, final=final, transitions=transitions)
+                targets = frozenset(q2 for q1 in states for q2 in nfa.get((q1, symbol), ()))
+                if len(targets) > 0:
+                    if targets not in names:
+                        _name(targets)
+                        queue.append(targets)
+                    transitions.append((names[states], symbol, names[targets]))
+        return Automaton(start=names[start], final=final, transitions=transitions)
 
     def contains(self, t):  # currently can only be used if deterministic automaton
         if self.access is None:
@@ -185,9 +239,9 @@ class Automaton(Diagram):
 class MDD(Diagram):
     def __init__(self, transitions):
         """
-        Builds an MDD from the specified set of transitions
+        Builds an MDD from the specified list of transitions
 
-        :param transitions: a set of transitions
+        :param transitions: a list of transitions
         :example:
             x = VarArray(size=3, dom=range(2))
             m = MDD([("r", 0, "n1"), ("r", 1, "n2"), ("n1", 1, "t"), ("n2", 0, "t")])
@@ -195,8 +249,120 @@ class MDD(Diagram):
         """
         if isinstance(transitions, types.GeneratorType):
             transitions = [t for t in transitions]
-        assert isinstance(transitions, list)  # currently, a list is wanted for an MDD (and not a set); to be changed?
+        error_if(isinstance(transitions, (set, frozenset)), "The transitions of an MDD must be given by a list of 3-tuples, and not by a set")
+        if not isinstance(transitions, list):
+            error("The transitions of an MDD must be given by a list of 3-tuples, which is not the case of " + repr(transitions))
         super().__init__(transitions)
+        self.root, self.terminal, self.levels, self._label_set = None, None, None, None
+        self._check_structure()
+        if not self._ordered_from_root():  # written level by level from the root, as required by some solvers (the given order being kept in each level)
+            self.transitions.sort(key=lambda t: self.levels[t[0]])
+
+    def _ordered_from_root(self):  # True if each transition leaves the root or a node reached by a previous transition
+        reached = {self.root}
+        add = reached.add
+        for (q1, _, q2) in self.transitions:
+            if q1 not in reached:
+                return False
+            add(q2)
+        return True
+
+    def _check_structure(self):
+        """
+        Checks that the graph of the MDD is acyclic, with a single root and a single terminal node, and that all the paths from the
+        root to the terminal node have the same length (section 4.1.2.2 of XCSP3-Core); the level of each node is recorded.
+        """
+        in_degrees = Counter(q2 for (_, _, q2) in self.transitions)
+        successors = defaultdict(list)
+        for (q1, _, q2) in self.transitions:
+            successors[q1].append(q2)
+        roots, terminals = [q for q in self.states if q not in in_degrees], [q for q in self.states if q not in successors]
+        error_if(len(roots) != 1, "An MDD must have exactly one root (node without incoming transition), which is not the case: " + str(roots))
+        error_if(len(terminals) != 1, "An MDD must have exactly one terminal node (node without outgoing transition), which is not the case: " + str(terminals))
+        self.root, self.terminal = roots[0], terminals[0]
+        levels = {self.root: 0}
+        order = [self.root]
+        append = order.append
+        for q1 in order:  # topological order (Kahn's algorithm), the list being extended while being traversed
+            level = levels[q1] + 1
+            for q2 in successors.get(q1, ()):
+                current = levels.get(q2)
+                if current is None:
+                    levels[q2] = level
+                elif current != level:
+                    error("The paths of an MDD must have all the same length, which is not the case of the paths reaching " + repr(q2))
+                in_degrees[q2] -= 1
+                if in_degrees[q2] == 0:
+                    append(q2)
+        self.levels = levels
+        if len(order) != len(self.states):
+            error("An MDD must be acyclic, which is not the case (some of the nodes " + str([q for q in self.states if q not in set(order)])
+                  + " are in a cycle, or can only be reached from a cycle)")
+
+    def depth(self):  # the length of the paths from the root to the terminal node
+        return self.levels[self.terminal]
+
+    def _label_values(self, scp):
+        """
+        For an MDD, the labels given by ranges (conditions) of the transitions leaving a node are developed with the domain of the
+        variable of its level (its distance from the root), the length of the paths being the one of the scope.
+        """
+        return lambda state: scp[self.levels[state]].dom.all_values()
+
+    def transitions_to_string(self, scp):
+        """
+        Returns the string of the transitions for the specified scope. When all the labels are values of the domains of the variables
+        (the usual case), the string is the one of the transitions (cached). Otherwise, the labels are developed with the domain of the
+        variable of the level of their source, the values outside it being discarded (they make the solvers fail), as well as the
+        transitions that are no longer on a path from the root to the terminal node; the transitions are then written level by level.
+        The transitions are filtered, and the paths computed, before developing the labels (there may be many values for a label).
+        """
+        if options.keep_smart_transitions:
+            return Diagram.transitions_to_string(self, scp)
+        domains = [x.dom.all_values() for x in scp]
+        # membership tests are immediate in a range, but not in a list (a domain that is not an interval), replaced by a set (once per domain)
+        sets, members = {}, []
+        for d in domains:
+            if not isinstance(d, range) and id(d) not in sets:
+                sets[id(d)] = set(d)
+            members.append(d if isinstance(d, range) else sets[id(d)])
+        if self.label_types() <= {int, bool, str}:
+            if self._label_set is None:
+                self._label_set = {label for (_, label, _) in self.transitions}
+            distinct = {d if isinstance(d, range) else id(d): m for d, m in zip(domains, members)}.values()  # checked once per domain
+            if all(all(v in m for v in self._label_set) for m in distinct):
+                return Diagram.transitions_to_string(self, scp)
+        kept = []  # the transitions with the (non-empty) list of their labels in the domain of the variable of the level of their source
+        for (q1, l, q2) in self.transitions:
+            level = self.levels[q1]
+            if isinstance(l, (int, str)):
+                labels = [l] if l in members[level] else []
+            elif isinstance(l, Condition):
+                labels = list(l.filtering(domains[level]))  # values of the domain
+            else:
+                labels = [v for v in l if v in members[level]]
+            if len(labels) > 0:
+                kept.append((q1, labels, q2))
+        successors, predecessors = defaultdict(set), defaultdict(set)
+        for (q1, _, q2) in kept:
+            successors[q1].add(q2)
+            predecessors[q2].add(q1)
+
+        def _reachable(start, neighbors):
+            seen, stack = {start}, [start]
+            while len(stack) > 0:
+                for q in neighbors.get(stack.pop(), ()):
+                    if q not in seen:
+                        seen.add(q)
+                        stack.append(q)
+            return seen
+
+        forward, backward = _reachable(self.root, successors), _reachable(self.terminal, predecessors)
+        if self.terminal not in forward:
+            error("No path of the MDD is compatible with the domains of the variables of the scope " + str(scp))
+        kept = sorted((t for t in kept if t[0] in forward and t[2] in backward), key=lambda t: self.levels[t[0]])
+        # for a transition (q1, labels, q2), the string is (q1,v1,q2)(q1,v2,q2)... built by a single join
+        return "".join("(" + q1 + "," + ("," + q2 + ")(" + q1 + ",").join(map(str, labels)) + "," + q2 + ")" for (q1, labels, q2) in kept)
 
     def __str__(self):
         return "MDD(" + Diagram.__str__(self) + ")"

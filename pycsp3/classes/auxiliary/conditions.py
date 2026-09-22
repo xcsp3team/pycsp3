@@ -259,6 +259,21 @@ class ConditionNode(Condition):
             return [i, j], [(v0, v1, v0 + v1 if self.node.type is TypeNode.ADD else v0 - v1) for v0 in values0 for v1 in values1]
         assert False
 
+    def columns(self):  # the indexes of the columns referred to by the node (the same forms as in evaluate())
+        if self.node.type is TypeNode.COL:
+            return [self.node.cnt]
+        assert self.node.type in (TypeNode.ADD, TypeNode.SUB)
+        sons = self.node.cnt
+        assert sons[0].type is TypeNode.COL and sons[1].type in (TypeNode.COL, TypeNode.INT)
+        return [sons[0].cnt] + ([sons[1].cnt] if sons[1].type is TypeNode.COL else [])
+
+    def value(self, t):  # the value of the node for the tuple t, whose columns referred to by the node are integers
+        if self.node.type is TypeNode.COL:
+            return t[self.node.cnt]
+        sons = self.node.cnt
+        v0, v1 = t[sons[0].cnt], sons[1].cnt if sons[1].type is TypeNode.INT else t[sons[1].cnt]
+        return v0 + v1 if self.node.type is TypeNode.ADD else v0 - v1
+
 
 def _build_condition(operator, v):
     if isinstance(v, int):

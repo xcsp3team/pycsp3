@@ -4,7 +4,21 @@ import re
 from pycsp3 import functions
 from pycsp3.classes import main
 from pycsp3.classes.auxiliary.enums import TypeVar
-from pycsp3.tools.utilities import error_if, flatten
+from pycsp3.tools.utilities import error, error_if, flatten
+
+
+def _contains_boolean(dom):
+    if isinstance(dom, bool):
+        return True
+    if not isinstance(dom, (tuple, list, set, frozenset)):
+        return False
+    types = {type(v) for v in dom}  # a single pass on a flat collection (the usual case), the nested collections being checked recursively
+    return bool in types or (any(issubclass(tp, (tuple, list, set, frozenset)) for tp in types) and any(_contains_boolean(v) for v in dom))
+
+
+def check_no_boolean(dom):  # a Boolean is an integer in Python, but it cannot be a value of a domain (it is not converted into 0 or 1)
+    if _contains_boolean(dom):
+        error("A Boolean cannot be a value of a domain (only integers and strings can be): " + str(dom))
 
 
 class Domain:
@@ -30,6 +44,8 @@ class Domain:
                 else:
                     _add_value(set(arg))
             elif isinstance(arg, int):
+                if type(arg) is bool:
+                    check_no_boolean(arg)  # reports the error
                 self.original_values.append(arg)
                 set_type(TypeVar.INTEGER)
             elif isinstance(arg, str):
@@ -45,20 +61,20 @@ class Domain:
             self.original_values = []
             _add_value(args)
             assert self.type, "You have defined a variable with an empty domain; fix this"
-            self.original_values.sort(key=lambda v: v.start if isinstance(v, range) else v)
-            discard = [False] * len(self.original_values)
-            for i in range(len(self.original_values) - 1):
-                v, w = self.original_values[i], self.original_values[i + 1]
-                if isinstance(v, range) and isinstance(w, range):
-                    assert v.stop <= w.start
-                elif isinstance(v, range):
-                    if v.stop > w:
-                        discard[i + 1] = True
-                elif isinstance(w, range):
-                    assert v < w.start
+            # a set discards the values (and intervals) given several times; then, the sorted values are merged (overlapping intervals, a value in an interval)
+            self.original_values = sorted(set(self.original_values), key=lambda v: v.start if isinstance(v, range) else v)
+            values = []
+            for v in self.original_values:
+                last = values[-1] if len(values) > 0 else None
+                if isinstance(last, range) and isinstance(v, range) and v.start < last.stop:
+                    values[-1] = range(last.start, max(last.stop, v.stop))
+                elif isinstance(last, range) and not isinstance(v, range) and v < last.stop:
+                    continue  # v is in the interval
+                elif isinstance(v, range) and last is not None and not isinstance(last, range) and last >= v.start:
+                    values[-1] = v  # last is in the interval (being sorted, last == v.start)
                 else:
-                    assert v < w
-            self.original_values = [v for i, v in enumerate(self.original_values) if not discard[i]]
+                    values.append(v)
+            self.original_values = values
             self.values = None  # will be defined later if necessary as either a range, or a list of int or a list of str
 
     def remove(self, v):
@@ -174,6 +190,8 @@ class Variable:
             domain = domain(*indexes)
             if domain is None:
                 return None
+            check_no_boolean(domain)
+            error_if(isinstance(domain, (tuple, list, set, frozenset, range)) and len(domain) == 0, "The domain of the variable " + name + " is empty")
             if not isinstance(domain, range):
                 domain = flatten(domain)
                 if isinstance(domain, list) and all(domain[i] + 1 == domain[i + 1] for i in range(len(domain) - 1)):
@@ -236,10 +254,7 @@ class Variable:
         self.values = []  # values of the successive found solutions
 
     def name(self, name):
-        def _valid_identifier(s):
-            return isinstance(s, str) and all(c.isalnum() or c == '_' for c in s)  # other characters to be allowed?
-
-        error_if(not _valid_identifier(name), "The identifier " + str(name) + " is not valid")
+        error_if(not functions._valid_identifier(name), "The identifier " + str(name) + " is not valid")
         error_if(name in Variable.name2obj, "The identifier " + str(name) + " is used twice. This is not possible")
         Variable.name2obj[name] = self
 
@@ -268,6 +283,7 @@ class VariableInteger(Variable):
 
     def among(self, *values):
         values = flatten(values)
+        error_if(any(isinstance(v, Variable) for v in values), "The values given to among() must be integers (belong() can be used with variables)")
         if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
             values = list(values[0])
         values = [v for v in values if v in self.dom]
@@ -278,6 +294,7 @@ class VariableInteger(Variable):
 
     def not_among(self, *values):
         values = flatten(values)
+        error_if(any(isinstance(v, Variable) for v in values), "The values given to not_among() must be integers (not_belong() can be used with variables)")
         if isinstance(values, list) and len(values) == 1 and isinstance(values[0], range):
             values = list(values[0])
         values = [v for v in values if v in self.dom]
