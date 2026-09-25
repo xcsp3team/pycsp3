@@ -2360,9 +2360,12 @@ def Precedence(within, *, values=None, covered=False):
         if solve() is SAT:
            print(values(y))
     """
-    assert len(within) > 2
+    within = flatten(within)
+    if len(within) < 2:
+        warning("A constraint Precedence discarded because defined with " + str(len(within)) + " variables")
+        return None
     if values is None:
-        return ECtr(ConstraintPrecedence(flatten(within)))
+        return ECtr(ConstraintPrecedence(within))
         # assert all(scope[i].dom == scope[0].dom for i in range(1, len(scope)))
         # values = scope[0].dom.all_values()
     if isinstance(values, types.GeneratorType):
@@ -2370,7 +2373,7 @@ def Precedence(within, *, values=None, covered=False):
     assert isinstance(values, (range, tuple, list)) and all(isinstance(v, int) for v in values)
     values = list(values)
     if len(values) > 1:
-        return ECtr(ConstraintPrecedence(flatten(within), values=values, covered=covered))
+        return ECtr(ConstraintPrecedence(within, values=values, covered=covered))
     else:
         warning("A constraint Precedence discarded because defined with " + str(len(values)) + " values", "precedence_" + str(len(values)) + "_value")
         return None
