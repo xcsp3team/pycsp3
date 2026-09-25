@@ -215,7 +215,7 @@ class ConditionParameter(Condition):
         return self.parameter
 
 
-class ConditionNode(Condition):
+class ConditionNode(Condition): # used for tables
     def __init__(self, operator, node):
         super().__init__(operator)
         self.node = node

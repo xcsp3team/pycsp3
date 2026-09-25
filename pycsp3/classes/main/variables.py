@@ -44,13 +44,13 @@ class Domain:
                 else:
                     _add_value(set(arg))
             elif isinstance(arg, int):
-                if type(arg) is bool:
-                    check_no_boolean(arg)  # reports the error
                 self.original_values.append(arg)
                 set_type(TypeVar.INTEGER)
             elif isinstance(arg, str):
                 self.original_values.append(arg)
                 set_type(TypeVar.SYMBOLIC)
+            else:
+                error("Only integers and strings can be part of a variable domain. Here, we have: " + str(arg))
 
         if len(args) == 1 and args[0] == math.inf:  # special integer variable with an infinite domain
             self.type = TypeVar.INTEGER
@@ -193,8 +193,8 @@ class Variable:
             check_no_boolean(domain)
             error_if(isinstance(domain, (tuple, list, set, frozenset, range)) and len(domain) == 0, "The domain of the variable " + name + " is empty")
             if not isinstance(domain, range):
-                domain = flatten(domain)
-                if isinstance(domain, list) and all(domain[i] + 1 == domain[i + 1] for i in range(len(domain) - 1)):
+                domain = sorted(set(flatten(domain)))
+                if all(domain[i] + 1 == domain[i + 1] for i in range(len(domain) - 1)):
                     domain = range(domain[0], domain[-1] + 1)
         if isinstance(domain, (tuple, list)):
             domain = flatten(domain)
