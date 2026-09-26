@@ -3442,6 +3442,9 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
                         continue
                     t.append((xi, xj, yi, yj) in to_starred_table_for_no_overlap2(xi, xj, yi, yj, wi, wj, hi, hj))
         return t
+    all_unit = all(isinstance(v, (int, Variable)) and (v == 1 if isinstance(v, int) else v.dom.smallest_value() == v.dom.greatest_value() == 1) for v in lengths)
+    if all_unit:
+        return AllDifferent(origins)
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
 
