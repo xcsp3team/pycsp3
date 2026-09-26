@@ -794,7 +794,7 @@ class OpOverrider:
             if isinstance(array, ListInt):
                 if is_1d_list(array, int):
                     if all(array[0] == v for v in array):
-                        return ConstraintDummyConstant(array[0])
+                        return array[0] #ConstraintDummyConstant(array[0])
                 elif is_2d_list(array, int):
                     if all(array[0] == t for t in array):  # all rows are identical
                         return array[0]
