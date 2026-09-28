@@ -184,6 +184,7 @@ def Var(term=None, *others, dom=None, id=None):
     error_if(term is not None and dom is not None, "The domain of a variable must be given either by terms or by the parameter dom, but not both")
     if term is not None:
         dom = flatten(term, others)
+    check_no_boolean(dom)
     if not isinstance(dom, Domain):
         if isinstance(dom, (set, frozenset)):
             dom = list(dom)
@@ -1959,10 +1960,8 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     terms = flatten(term, others)
     if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # an integer is reported below by checkType()
         return None
-    V = sorted(term for term in terms if isinstance(term, int))
+    V = sorted({term for term in terms if isinstance(term, int)})
     if len(V) > 0:
-        if len(V) != len(set(V)):
-            return _false_constraint() # at least two identical values
         terms = [term for term in terms if not isinstance(term, int)]
         satisfy(not_belong(term, V) for term in terms)
     checkType(terms, ([Variable, Node]))

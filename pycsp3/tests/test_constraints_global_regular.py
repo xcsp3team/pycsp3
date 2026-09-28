@@ -67,7 +67,7 @@ def test_regular_not_in(run):
     # 'not in' cannot be used with an automaton: an explicit error is reported (instead of posting x in A)
     r = run(automaton(DOC) + "x = VarArray(size=5, dom={0, 1})\nsatisfy(x not in A)")
     assert_fails(r)
-    assert "The operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)" in r.stdout, r.report()
+    assert "operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)" in r.stdout, r.report()
 
 
 def test_regular_on_rows_and_columns(run, solver):
