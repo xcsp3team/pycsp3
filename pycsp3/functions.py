@@ -307,7 +307,7 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         comment, tags = comment_and_tags_of(function_name="VarArray")
 
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
-    # check_no_boolean(dom)
+    check_no_boolean(dom)
     if isinstance(dom, int):  # TODO: should we print a warning?
         dom = range(dom)
     if isinstance(dom, type(lambda: 0)):
