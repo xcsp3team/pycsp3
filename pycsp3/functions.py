@@ -956,7 +956,7 @@ def _false_constraint():
     x = next((v for e in VarEntities.items for v in ([e.variable] if isinstance(e, EVar) else e.flatVars)), None)
     error_if(x is None, "A constraint is trivially false (constant 0), but the model has no variable")
     warning("A constraint is trivially false (constant 0): the model is unsatisfiable")
-    return _Extension(scope=[x], table=[], positive=True)
+    return ECtr(ConstraintExtension([x], [], True, options.keep_hybrid, options.restrict_tables_wrt_domains))  # not _Extension(), which refuses an empty table
 
 
 def _group(*_args, block=False):
@@ -1958,10 +1958,12 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         else:
             return [AllDifferent(row) for row in matrix] + [AllDifferent(col) for col in columns(matrix)]
     terms = flatten(term, others)
-    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # an integer is reported below by checkType()
+    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # integers alone are reported just below
         return None
     V = sorted(term for term in terms if isinstance(term, int))
     if len(V) > 0:
+        error_if(len(V) == len(terms),
+                 "AllDifferent() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
         if len(V) != len(set(V)):
             return _false_constraint()  # at least two identical values
         terms = [term for term in terms if not isinstance(term, int)]
@@ -2103,9 +2105,11 @@ def AllEqual(term, *others, excepting=None):
     if len(terms) == 1 and isinstance(terms[0], (Variable, Node, PartialConstraint)):
         warning("A constraint AllEqual discarded because defined with 1 term", "allequal_1_term")
         return None  # a single term is always equal to itself (as for AllDifferent()); an integer is reported below by checkType()
-    V = sorted({term for term in terms if isinstance(term, int)})
+    V = sorted(term for term in terms if isinstance(term, int))
     if len(V) > 0:
-        error_if(len(V) != 1, "AllEqual with two specified different integer constants")
+        error_if(len(V) == len(terms),
+                 "AllEqual() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
+        error_if(len(set(V)) != 1, "AllEqual with two specified different integer constants")
         return [term == V[0] for term in terms if not isinstance(term, int)]
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
     checkType(terms, ([Variable, Node]))  # variables and expressions may be mixed (as for AllDifferent())
@@ -3443,7 +3447,8 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
                         continue
                     t.append((xi, xj, yi, yj) in to_starred_table_for_no_overlap2(xi, xj, yi, yj, wi, wj, hi, hj))
         return t
-    all_unit = all(isinstance(v, (int, Variable)) and (v == 1 if isinstance(v, int) else v.dom.smallest_value() == v.dom.greatest_value() == 1) for v in lengths)
+    all_unit = all(
+        isinstance(v, (int, Variable)) and (v == 1 if isinstance(v, int) else v.dom.smallest_value() == v.dom.greatest_value() == 1) for v in lengths)
     if all_unit:
         return AllDifferent(origins)
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
