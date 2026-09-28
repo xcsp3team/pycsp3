@@ -11,12 +11,12 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-INVALID_TERM = "(to be reported) NotAllEqual() with a single invalid term (None, a string, a range, ...) posts false instead of reporting an error"
-INTEGERS_ONLY = "(to be reported) NotAllEqual() given only integers is accepted, while AllDifferent() and AllEqual() report an error"
-MINI = "(to be reported) with the option -mini, NValues() keeps the expressions in the list instead of replacing them by auxiliary variables"
-ACE_TWO = "(to be reported) ACE fails on notAllEqual (nValues with the condition (gt,1)) on two variables (control(scp.length > 2) in NotAllEqual)"
-ACE_REPEATED = "(to be reported) ACE fails on nValues with a variable given twice (control(Variable.areAllDistinct(scp)) in NValuesCst.buildFrom)"
-CHOCO_DUPLICATES = "(to be reported) CHOCO finds solutions several times with nValues on expressions and the condition (gt,1)"
+INVALID_TERM = "#131: NotAllEqual() with a single invalid term (None, a string, a range, ...) posts false instead of reporting an error"
+INTEGERS_ONLY = "#132: NotAllEqual() given only integers is accepted, while AllDifferent() and AllEqual() report an error"
+MINI = "#133: with the option -mini, NValues() keeps the expressions in the list instead of replacing them by auxiliary variables"
+ACE_TWO = "xcsp3team/ACE#18: ACE fails on notAllEqual (nValues with the condition (gt,1)) on two variables (control(scp.length > 2) in NotAllEqual)"
+ACE_REPEATED = "xcsp3team/ACE#19: ACE fails on nValues with a variable given twice (control(Variable.areAllDistinct(scp)) in NValuesCst.buildFrom)"
+CHOCO_DUPLICATES = "chocoteam/choco-solver#1248: CHOCO finds solutions several times with nValues on expressions and the condition (gt,1)"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
