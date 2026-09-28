@@ -8,7 +8,7 @@ from pycsp3.classes.auxiliary.enums import TypeOrderedOperator, TypeConditionOpe
 from pycsp3.classes.auxiliary.diagrams import Automaton, MDD
 from pycsp3.classes.entities import (
     EVar, EVarArray, ECtr, EMetaCtr, ECtrs, EToGather, EToSatisfy, EBlock, ESlide, EAnd, EOr, ENot, EXor, EIfThen, EIfThenElse, EIff, EObjective, EAnnotation,
-    AnnEntities, CtrEntities, ObjEntities)
+    AnnEntities, CtrEntities, ObjEntities, VarEntities)
 from pycsp3.classes.main.annotations import (
     AnnotationDecision, AnnotationOutput, AnnotationVarHeuristic, AnnotationValHeuristic, AnnotationFiltering, AnnotationPrepro, AnnotationSearch,
     AnnotationRestarts)
@@ -20,7 +20,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
     ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
-from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic
+from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic, check_no_boolean
 from pycsp3.classes.nodes import TypeNode, Node, neg_var
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
@@ -130,8 +130,8 @@ def subvariant(name=None):
 ''' Declaring stand-alone variables and arrays '''
 
 
-def _valid_identifier(s):
-    return isinstance(s, str) and all(c.isalnum() or c == '_' for c in s)  # other characters to be allowed?
+def _valid_identifier(s):  # as in XCSP3: a letter followed by letters, digits and underscores
+    return isinstance(s, str) and len(s) > 0 and s[0].isascii() and s[0].isalpha() and all(c.isascii() and (c.isalnum() or c == '_') for c in s)
 
 
 def Var(term=None, *others, dom=None, id=None):
@@ -181,7 +181,7 @@ def Var(term=None, *others, dom=None, id=None):
         return auxiliary().new_var(math.inf)  # TODO printing a warning?
     if term is None and dom is None:
         dom = Domain(math.inf)
-    assert not (term and dom)
+    error_if(term is not None and dom is not None, "The domain of a variable must be given either by terms or by the parameter dom, but not both")
     if term is not None:
         dom = flatten(term, others)
     if not isinstance(dom, Domain):
@@ -189,13 +189,13 @@ def Var(term=None, *others, dom=None, id=None):
             dom = list(dom)
         if is_2d_list(dom, int):
             dom = list(set(flatten(dom)))
-        if isinstance(dom, (tuple, list)) and len(dom) > 1 and isinstance(dom[0], int):
-            dom = sorted(dom)
+        if isinstance(dom, (tuple, list)) and len(dom) > 1 and all(isinstance(v, int) for v in dom):
+            dom = sorted(set(dom))  # a set discards the values given several times (as in VarArray())
             if dom[-1] - dom[0] + 1 == len(dom):
                 dom = range(dom[0], dom[-1] + 1)
         if hasattr(dom, '__call__'):  # if it is a function
             from inspect import signature
-            assert len(signature(dom).parameters) == 0
+            error_if(len(signature(dom).parameters) != 0, "The function given for the domain of a stand-alone variable must have no parameter")
             dom = dom.__call__()
         dom = Domain(dom)
     error_if(dom.type not in {TypeVar.INTEGER, TypeVar.SYMBOLIC},
@@ -255,20 +255,27 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         cursing()
         started_modeling = True
 
+    error_if(doms is None and dom is None, "The domain of the variables of an array must be given (parameter dom)")
     if doms is not None:
-        assert isinstance(doms, list) and size is None and dom is None and dom_border is None and comment is None
-        assert all(isinstance(dom, Domain) or dom is None for dom in doms)
+        error_if(not isinstance(doms, list), "The domains given as first parameter of VarArray() must be in a list (of objects Domain or None)")
+        error_if(size is not None or dom is not None or dom_border is not None or comment is not None,
+                 "When the domains are given as first parameter of VarArray(), the parameters size, dom, dom_border and comment cannot be used")
+        error_if(any(not isinstance(d, Domain) and d is not None for d in doms),
+                 "The domains given as first parameter of VarArray() must be objects Domain or None")
         return VarArray(size=len(doms), dom=lambda i: doms[i])
 
     if isinstance(size, range):
-        assert size.start == 0 and len(size) > 0
+        error_if(size.start != 0 or len(size) == 0, "A range given for the size of an array must start at 0 and be non-empty")
         size = size.stop
     if isinstance(size, (tuple, list)) and any(isinstance(s, range) for s in size):
-        assert all(s.start == 0 and len(s) > 0 for s in size if isinstance(s, range))
+        error_if(any(s.start != 0 or len(s) == 0 for s in size if isinstance(s, range)),
+                 "A range given for the size of an array must start at 0 and be non-empty")
         size = [s.stop if isinstance(s, range) else s for s in size]
+    error_if(not isinstance(size, (int, tuple, list)) or isinstance(size, (tuple, list)) and len(size) == 0,
+             "The size of an array must be an integer or a non-empty list of integers (size=" + str(size) + ")")
 
     if dom_border is not None:
-        assert len(size) == 2 and dom is not None
+        error_if(isinstance(size, int) or len(size) != 2, "The parameter dom_border can only be used with a two-dimensional array")
         if isinstance(dom, type(lambda: 0)):
             return VarArray(size=size, dom=lambda i, j: dom_border if i in (0, size[0] - 1) or j in (0, size[1] - 1) else dom(i, j))
         return VarArray(size=size, dom=lambda i, j: dom_border if i in (0, size[0] - 1) or j in (0, size[1] - 1) else dom)
@@ -276,19 +283,22 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
     size = [size] if isinstance(size, int) else size
     if len(size) > 1 and isinstance(size[-1], (tuple, list)):  # it means that the last dimension is of variable length
         if isinstance(dom, type(lambda: 0)):
-            return VarArray(size=size[:-1] + [max(size[-1])], dom=dom)
+            return VarArray(size=size[:-1] + [max(size[-1])], dom=lambda *ids: dom(*ids) if ids[-1] < size[-1][ids[-2]] else None)
         return VarArray(size=size[:-1] + [max(size[-1])], dom=lambda *ids: dom if ids[-1] < size[-1][ids[-2]] else None)
 
-    error_if(any(dimension == 0 for dimension in size), "No dimension must not be equal to 0")
     checkType(size, [int])
+    error_if(any(dimension <= 0 for dimension in size), "Each dimension of an array must be strictly positive (size=" + str(size) + ")")
 
     # checkType(dom, (range, Domain, [int, range, str, Domain, type(None)], type(lambda: 0)))  # TODO a problem with large sets
     ext_name = extract_declaration_for("VarArray")
     if isinstance(ext_name, list):
         array_name = ext_name
         error_if(id, "The parameter 'id' is not compatible with the specification of a list of individual names")
+        error_if(len(size) != 1 or size[0] != len(ext_name),
+                 "The size " + str(size) + " must be the number of individual names " + str(ext_name) + " (a one-dimensional array being expected)")
         error_if(any(not _valid_identifier(v) for v in ext_name), "Some identifiers in " + str(ext_name) + " are not valid")
         error_if(any(v in Variable.name2obj for v in ext_name), "Some identifiers in " + str(ext_name) + " are used twice.")
+        error_if(len(set(ext_name)) != len(ext_name), "Some identifiers in " + str(ext_name) + " are given several times.")
     else:
         array_name = id if id else ext_name  # the specified name, if present, has priority
         error_if(not _valid_identifier(array_name), "The variable identifier " + str(array_name) + " is not valid")
@@ -297,15 +307,17 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
         comment, tags = comment_and_tags_of(function_name="VarArray")
 
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
+    # check_no_boolean(dom)
     if isinstance(dom, int):  # TODO: should we print a warning?
         dom = range(dom)
     if isinstance(dom, type(lambda: 0)):
-        r = len(inspect.signature(dom).parameters)  # r=1 means that it must be a lambda *args:
-        assert len(size) == r or r == 1, "The number of arguments of the lambda must be equal to the number of dimensions of the multidimensional array "
+        parameters = inspect.signature(dom).parameters.values()
+        error_if(not any(p.kind == p.VAR_POSITIONAL for p in parameters) and len(parameters) != len(size),  # a function with *args is always accepted
+                 "The number of parameters of the function given for dom must be the number of dimensions of the array (" + str(len(size)) + ")")
     assert isinstance(comment, (str, type(None))), "A comment must be a string (or None). Usually, they are given on plain lines preceding the declaration"
     if isinstance(dom, (tuple, list, set, frozenset)):
         vals = set(flatten(dom))
-        assert len(vals) > 0
+        error_if(len(vals) == 0, "The domain of the variables of an array must not be empty")
         if all(isinstance(v, int) for v in vals):
             min_value, max_value = min(vals), max(vals)
             dom = range(min_value, max_value + 1) if 3 < len(vals) == (max_value - min_value + 1) else Domain(vals)
@@ -327,8 +339,8 @@ def VarArray(doms=None, *, size=None, dom=None, dom_border=None, id=None, commen
             assert isinstance(t, list)
             return ListVar(_to_ListVar(x) for x in t)
 
-        Variable.name2obj[array_name] = var_objects
         lv = _to_ListVar(var_objects)
+        Variable.name2obj[array_name] = lv  # so that var() returns the same ListVar as VarArray()
         EVarArray(lv, array_name, comment, tags)  # object wrapping the array of variables
         Variable.arrays.append(lv)
         return lv
@@ -354,7 +366,9 @@ def VarArrayMultiple(*, size, fields):
 
         # a solution: [0, 0]
     """
-    assert isinstance(fields, dict) and all(isinstance(k, str) for k in fields)
+    error_if(not isinstance(fields, dict) or any(not isinstance(k, str) for k in fields),
+             "The fields of VarArrayMultiple() must be given by a dictionary mapping names (strings) to domains")
+    error_if(len(fields) == 0, "At least one field must be given to VarArrayMultiple()")
     size = [size] if isinstance(size, int) else size
     checkType(size, [int])
 
@@ -404,7 +418,7 @@ def var(name):
 
         # a solution: 3
     """
-    assert isinstance(name, str)
+    error_if(not isinstance(name, str), "The name given to var() must be a string, and not " + str(name))
     error_if(name not in Variable.name2obj,
              "the variable, or variable array, specified when calling the function 'var()' with the name " + name + " has not been declared")
     return Variable.name2obj[name]
@@ -417,7 +431,11 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     assert type(bool_value) is bool
     if isinstance(left_operand, Variable):
         if isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
-            return None
+            if not bool_value:
+                return None  # no value is forbidden: the constraint always holds
+            # no value is allowed: a table constraint with an empty set of supports is posted (the model is unsatisfiable)
+            warning("A table constraint with an empty set of supports is posted for " + str(left_operand) + ": the model is unsatisfiable", "empty_supports")
+            return ECtr(ConstraintExtension([left_operand], [], True, options.keep_hybrid, options.restrict_tables_wrt_domains))
         if isinstance(right_operand, (tuple, list, set, frozenset)) and is_containing(right_operand, Variable):
             if len(right_operand) < 4:  # TODO hard coding (introducing an option to adjust that?)
                 st = Node.build(SET, right_operand)
@@ -443,8 +461,10 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
         ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
+        error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)")
         ctr = Regular(scope=left_operand, automaton=right_operand)
     elif isinstance(right_operand, MDD):  # it is an MDD constraint
+        error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an MDD: only 'x in M' is possible (constraint MDD)")
         ctr = Mdd(scope=left_operand, mdd=right_operand)
     elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
         ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1))  # atLeast1 TODO to be replaced by a member/element constraint ?
@@ -930,11 +950,20 @@ def _01_to_node(arg):
     return arg
 
 
+def _false_constraint():
+    # a constraint that cannot be satisfied (posted for the constant 0): the first variable of the model takes no value of its domain
+    x = next((v for e in VarEntities.items for v in ([e.variable] if isinstance(e, EVar) else e.flatVars)), None)
+    error_if(x is None, "A constraint is trivially false (constant 0), but the model has no variable")
+    warning("A constraint is trivially false (constant 0): the model is unsatisfiable")
+    return _Extension(scope=[x], table=[], positive=True)
+
+
 def _group(*_args, block=False):
     def _remove_dummy_constraints(tab):
         if any(isinstance(v, ConstraintDummyConstant) for v in tab):
-            warning_if(any(isinstance(v, ConstraintDummyConstant) and v.val != 1 for v in tab), "It seems that there is a bad expression in the model")
-            return [v for v in tab if not isinstance(v, ConstraintDummyConstant)]
+            warning_if(any(isinstance(v, ConstraintDummyConstant) and v.val not in (0, 1) for v in tab), "It seems that there is a bad expression in the model")
+            return [_false_constraint() if isinstance(v, ConstraintDummyConstant) and v.val == 0 else v for v in tab if
+                    not isinstance(v, ConstraintDummyConstant) or v.val == 0]
         return tab
 
     def _block_reorder(_entities):
@@ -1018,8 +1047,10 @@ def satisfy(*args, no_comment_tags_extraction=False):
         if arg is None:
             continue
         if isinstance(arg, ConstraintDummyConstant):
-            warning_if(arg.val != 1, "It seems that there is a bad expression in the model " + str(arg))
-            continue
+            if arg.val != 0:  # the constant 1 (true) is discarded
+                warning_if(arg.val != 1, "It seems that there is a bad expression in the model " + str(arg))
+                continue
+            arg = _false_constraint()
         if isinstance(arg, (tuple, set, frozenset, types.GeneratorType)):
             arg = list(arg)
         if isinstance(arg, list) and any(v is None for v in arg):
@@ -1101,7 +1132,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
 
 def _Extension(*, scope, table, positive=True):
     scope = flatten(scope)
-    assert len(scope) == len(set(scope))
+    error_if(len(scope) != len(set(scope)), "The variables of the scope of a table constraint must be distinct, which is not the case of " + str(scope))
     checkType(scope, [Variable])
     assert isinstance(table, list)
     assert len(table) > 0, "A table must be a non-empty list of tuples or integers (or symbols)"
@@ -1119,7 +1150,9 @@ def _Extension(*, scope, table, positive=True):
         table = new_table
     if len(scope) == 1:
         table = [v[0] if isinstance(v, tuple) and len(v) == 1 else v for v in table]
-        assert all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table)
+        if not all(isinstance(v, int) if isinstance(scope[0], VariableInteger) else isinstance(v, str) for v in table):
+            error("The values of a unary table must be " + ("integers" if isinstance(scope[0], VariableInteger) else "symbols") + " for the variable "
+                  + str(scope[0]) + ", which is not the case of " + str(table))
     else:  # if all(isinstance(x, VariableInteger) for x in scope):
         if not options.safe_tables:
             for i, t in enumerate(table):
@@ -1180,11 +1213,15 @@ def Table(*, scope, supports=None, conflicts=None):
         # a solution: [0, 1, 2]
     """
     scope = flatten(scope)
-    assert scope is not None and (supports is None) != (conflicts is None)
+    error_if(scope is None or len(scope) == 0, "Empty scope")
+    error_if((supports is None) == (conflicts is None), "Table() requires exactly one of the parameters supports and conflicts")
     positive = supports is not None
     table = supports if positive else conflicts
+    if isinstance(table, (str, bytes)) or not hasattr(table, "__iter__"):  # any iterable is accepted (e.g., enumerate(...)), except a string
+        error("The " + ("supports" if positive else "conflicts") + " of Table() must be given by an iterable, such as a list, a tuple, a set, a range "
+              + "or enumerate() (of tuples, or of values for a unary table), which is not the case of " + repr(table))
     table = list(table)  # if isinstance(table, (tuple, set, frozenset, types.GeneratorType)) else table
-    if not positive and len(conflicts) == 0:
+    if not positive and len(table) == 0:
         return None
     return _Extension(scope=scope, table=table, positive=positive)
 
@@ -1319,17 +1356,17 @@ def xor(*args):
 
         # a solution: [0, 1, 0, 1, 0, 1, 0, 1]
     """
-    if len(args) == 2 and isinstance(args[0], bool) or isinstance(args[1], bool):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
-        if isinstance(args[0], bool) and isinstance(args[1], bool):
-            return ConstraintDummyConstant(1 if args[0] is not args[1] else 0)
-        if isinstance(args[0], bool):
-            return ~args[1] if args[0] else args[1]
-        if isinstance(args[1], bool):
-            return ~args[0] if args[1] else args[0]
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
     args = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args]
+    if any(isinstance(v, bool) for v in args):
+        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        inverted = sum(1 for v in args if v is True) % 2 == 1  # each True inverts the result, while False has no effect
+        args = [v for v in args if not isinstance(v, bool)]
+        if len(args) == 0:
+            return ConstraintDummyConstant(1 if inverted else 0)
+        res = xor(*args) if len(args) > 1 else args[0]
+        return ~res if inverted else res
     return args[0] ^ args[1] if len(args) == 2 else Node.build(TypeNode.XOR, *args) if len(args) > 1 else args[0]
 
 
@@ -1355,16 +1392,18 @@ def iff(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
-    assert len(args) >= 2
+    error_if(len(args) < 2, "iff() must have at least two arguments (possibly given in a list), which is not the case of " + str(len(args)))
 
-    if len(args) == 2 and isinstance(args[0], bool) or isinstance(args[1], bool):
+    if any(isinstance(v, bool) for v in args):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
-        if isinstance(args[0], bool) and isinstance(args[1], bool):
-            return ConstraintDummyConstant(1 if args[0] is args[1] else 0)
-        if isinstance(args[0], bool):
-            return args[1] if args[0] else ~args[1]
-        if isinstance(args[1], bool):
-            return args[0] if args[1] else ~args[0]
+        booleans = {v for v in args if isinstance(v, bool)}
+        others = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args if not isinstance(v, bool)]
+        if len(booleans) == 2:  # True and False cannot be equivalent
+            return ConstraintDummyConstant(0)
+        if len(others) == 0:
+            return ConstraintDummyConstant(1)
+        # all the arguments being equivalent, the other arguments must have the value of the Boolean
+        return conjunction(others) if True in booleans else conjunction(~v for v in others)
 
     res = manage_global_indirection(*args)
     if res is None:
@@ -1394,7 +1433,7 @@ def imply(*args):
 
         # a solution: [0, 0, 1, 1] [0, 0, 1, 1]
     """
-    assert len(args) == 2
+    error_if(len(args) != 2, "imply() must have two arguments (a condition and a consequence), which is not the case of " + str(len(args)))
     cnd, tp = args  # condition and then part
     if isinstance(cnd, bool) or isinstance(tp, bool):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
@@ -1403,7 +1442,7 @@ def imply(*args):
         if cnd is True:
             return ConstraintDummyConstant(0) if tp is False else tp
         assert tp is False
-        return ~tp
+        return ~cnd  # cnd -> False is the negation of cnd
     if isinstance(tp, (tuple, list, set, frozenset)):
         tp = list(tp)  # to transform sets into lists
         assert len(tp) >= 1
@@ -1490,6 +1529,20 @@ def ift(test, Then, Else):
     return Node.build(TypeNode.IF, *res)
 
 
+def _check_belong_arguments(function, x, values):  # function is the name of the calling function: belong or not_belong
+    if isinstance(x, int):
+        if not isinstance(values, (tuple, list)) or any(not isinstance(y, Variable) for y in values if y is not None):
+            error("When the first argument of " + function + "() is an integer, the second argument must be a list of variables, which is not the case of "
+                  + str(values))
+    else:
+        if not isinstance(x, Variable):
+            error("The first argument of " + function + "() must be a variable or an integer, which is not the case of " + str(x)
+                  + " (for an expression, the operator " + ("in" if function == "belong" else "not in") + " can be used)")
+        if not isinstance(values, (int, range, tuple, list, set, frozenset)) or (
+                isinstance(values, (tuple, list, set, frozenset)) and any(not isinstance(v, int) for v in values)):
+            error("The second argument of " + function + "() must be an integer, a range or a collection of integers, which is not the case of " + str(values))
+
+
 def belong(x, values):
     """
     Builds and returns a Boolean expression that holds iff the specified term belongs to the specified values.
@@ -1514,10 +1567,9 @@ def belong(x, values):
     """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
+    _check_belong_arguments("belong", x, values)
     if isinstance(x, int):
-        assert is_1d_list(values, Variable)
-        return disjunction(y == x for y in values if y)
-    assert isinstance(x, Variable)
+        return disjunction(y == x for y in values if y is not None)  # None (e.g., a hole of an array) is discarded
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
@@ -1525,7 +1577,6 @@ def belong(x, values):
             return Node.in_range(x, values)
     elif isinstance(values, int):
         values = [values]
-    assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
     values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded
     if len(values) == 0:
         return ConstraintDummyConstant(0)
@@ -1562,10 +1613,9 @@ def not_belong(x, values):
     """
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
+    _check_belong_arguments("not_belong", x, values)
     if isinstance(x, int):
-        assert is_1d_list(values, Variable)
-        return conjunction(y != x for y in values if y)
-    assert isinstance(x, Variable)
+        return conjunction(y != x for y in values if y is not None)  # None (e.g., a hole of an array) is discarded
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
@@ -1573,7 +1623,6 @@ def not_belong(x, values):
             return Node.not_in_range(x, values)
     elif isinstance(values, int):
         values = [values]
-    assert isinstance(values, (tuple, list, set, frozenset)) and all(isinstance(v, int) for v in values)
     values = sorted(set(v for v in values if v in x.dom))  # values outside the domain of x are discarded
     if len(values) == 0:
         return ConstraintDummyConstant(1)
@@ -1607,6 +1656,12 @@ def expr(operator, *args):
 
         # a solution: [0, 1, 1]
     """
+    try:
+        tn = TypeNode.value_of(operator)  # None when operator is not of a type that can be converted into a TypeNode
+    except KeyError:  # an unknown name
+        tn = None
+    error_if(tn is None, "The first argument of expr() must be an operator (a string such as \"lt\" or \"add\", or a TypeNode), which is not the case of "
+             + repr(operator))
     return Node.build(operator, *args)
 
 
@@ -1745,6 +1800,25 @@ def either(this, Or):
 ''' Language-based Constraints '''
 
 
+def _check_scope_and_labels_of_diagram(scope, diagram, name):  # name is the name of the constraint (Regular or Mdd)
+    error_if(len(scope) == 0, "The scope of the constraint " + name + " must not be empty")
+    if all(isinstance(x, VariableInteger) for x in scope):
+        expected = int
+    elif all(isinstance(x, VariableSymbolic) for x in scope):
+        expected = str
+    else:
+        return
+    label_types = diagram.label_types()  # computed once for the diagram
+    if not (label_types & ({str} if expected is int else {int, bool})) and not (label_types & {set, frozenset}):
+        return  # no label of the other type (the labels given by ranges are conditions on integers)
+    for (q1, label, q2) in diagram.transitions:
+        for v in [label] if isinstance(label, (int, str)) else label if isinstance(label, (set, frozenset)) else []:  # ranges (conditions) are integers
+            if not isinstance(v, expected):
+                error("The label " + repr(v) + " of the transition " + repr((q1, label, q2)) + " is " + ("a symbol" if expected is int else "an integer")
+                      + ", which is not possible for the " + (
+                          "integer" if expected is int else "symbolic") + " variables of the scope of the constraint " + name)
+
+
 def Regular(*, scope, automaton):
     """
     Builds and returns a constraint Regular.
@@ -1773,6 +1847,7 @@ def Regular(*, scope, automaton):
     scope = flatten(scope)
     checkType(scope, [Variable])
     checkType(automaton, Automaton)
+    _check_scope_and_labels_of_diagram(scope, automaton, "Regular")
     return ECtr(ConstraintRegular(scope, automaton))
 
 
@@ -1799,10 +1874,24 @@ def Mdd(*, scope, mdd):
     scope = flatten(scope)
     checkType(scope, [Variable])
     checkType(mdd, MDD)
+    _check_scope_and_labels_of_diagram(scope, mdd, "Mdd")
+    error_if(mdd.depth() != len(scope), "The paths of the MDD must have the length of the scope (" + str(len(scope)) + "), which is not the case ("
+             + str(mdd.depth()) + ")")
     return ECtr(ConstraintMdd(scope, mdd))
 
 
 ''' Comparison-based Constraints '''
+
+
+def _excepting_values(excepting):
+    """
+    Returns the list of values given by the parameter excepting of AllDifferent() and AllEqual(): an integer, or a collection (list,
+    tuple, set, range) of integers; None is returned when there is no value (excepting=None or an empty collection), so that no
+    element <except> is generated
+    """
+    excepting = list(excepting) if isinstance(excepting, (tuple, set, frozenset, range)) else [excepting] if isinstance(excepting, int) else excepting
+    checkType(excepting, ([int], type(None)))
+    return None if excepting is not None and len(excepting) == 0 else excepting
 
 
 def AllDifferent(term, *others, excepting=None, matrix=False):
@@ -1850,10 +1939,14 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
 
         # a solution: [0, 1, 2, 3, 1, 0, 3, 2, 2, 3, 0, 1, 3, 2, 1, 0]
     """
-    excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
-    checkType(excepting, ([int], type(None)))
+    error_if(term is None, "AllDifferent() requires variables (or expressions), which is not the case of None")
+    excepting = _excepting_values(excepting)
     if matrix:
-        assert len(others) == 0
+        error_if(len(others) > 0,
+                 "With matrix=True, AllDifferent() requires a single argument (the matrix), which is not the case of " + str(1 + len(others)) + " arguments")
+        term = list(term) if isinstance(term, types.GeneratorType) else term
+        if not isinstance(term, (list, tuple)) or any(not isinstance(row, (list, tuple)) for row in term):
+            error("With matrix=True, AllDifferent() requires a two-dimensional list of variables (a list of rows), which is not the case of " + str(term))
         matrix = [flatten(row) for row in term]
         assert all(len(row) == len(matrix[0]) for row in matrix), "The matrix id badly formed"
         assert all(checkType(t, [Variable]) for t in matrix)
@@ -1862,11 +1955,60 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         else:
             return [AllDifferent(row) for row in matrix] + [AllDifferent(col) for col in columns(matrix)]
     terms = flatten(term, others)
-    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (int, Variable, Node))):
+    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # an integer is reported below by checkType()
         return None
+    V = sorted({term for term in terms if isinstance(term, int)})
+    if len(V) > 0:
+        terms = [term for term in terms if not isinstance(term, int)]
+        satisfy(not_belong(term, V) for term in terms)
     checkType(terms, ([Variable, Node]))
+    # a term given several times is reported: the terms are compared through their canonical forms (sorting the operands of symmetric operators),
+    # which are costly to compute, and so, only computed for the terms involving the same variables (== being redefined for building expressions)
+    groups = {}
+    for t in terms:
+        groups.setdefault(frozenset((id(t),)) if isinstance(t, Variable) else frozenset(id(x) for x in t.list_of_vars()), []).append(t)
+    for group in (g for g in groups.values() if len(g) > 1):
+        seen = set()
+        for t in group:
+            key = str(t) if isinstance(t, Variable) else str(t.canonization())
+            if key in seen:
+                if isinstance(t, Variable):
+                    error("A variable cannot be given several times to AllDifferent(), which is the case of " + str(t))
+                else:
+                    error(
+                        "An expression cannot be given several times to AllDifferent() (possibly with its operands in another order), which is the case of " + str(
+                            t))
+            seen.add(key)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)  # only if mini
     return ECtr(ConstraintAllDifferent(terms, excepting))
+
+
+def _check_lists_of_list_constraint(name, term, others, excepting):
+    """
+    Returns the lists of variables given to AllDifferentList() or AllEqualList() (whose name is specified), after checking them:
+    at least one list, no hole, lists of the same length, and tuples of excepting of the same length as the lists
+    """
+    error_if(term is None, name + "() requires lists of variables, which is not the case of None")
+    if isinstance(term, types.GeneratorType):
+        term = [v for v in term]
+    elif len(others) > 0:
+        term = list((term,) + others)
+    lists = [flatten(v, keep_none=True) for v in term]
+    error_if(len(lists) == 0, name + "() requires lists of variables, which is not the case of " + str(term))
+    for t in lists:
+        if any(v is None for v in t):
+            error("The lists given to " + name + "() cannot contain None (e.g., a hole of an array), which is the case of " + str(t))
+    assert all(checkType(t, [Variable]) for t in lists)
+    for t in lists:
+        if len(t) != len(lists[0]):
+            error("The lists given to " + name + "() must have the same length, which is not the case of " + str(lists[0]) + " and " + str(t))
+    several = isinstance(excepting, (tuple, list, set, frozenset)) and len(excepting) > 0 and all(isinstance(e, (tuple, list)) for e in excepting)
+    tuples = excepting if several else [excepting] if isinstance(excepting, (tuple, list, range)) and len(excepting) > 0 else []
+    for e in tuples:
+        if len(e) != len(lists[0]):
+            error("The tuples of excepting given to " + name + "() must have the length of the lists (" + str(len(lists[0])) + "), which is not the case of "
+                  + str(tuple(e)))
+    return lists
 
 
 def AllDifferentList(term, *others, excepting=None):
@@ -1900,15 +2042,19 @@ def AllDifferentList(term, *others, excepting=None):
 
         # a solution: [0, 1, 0, 2, 0, 0, 0, 0]
     """
-    if isinstance(term, types.GeneratorType):
-        term = [v for v in term]
-    elif len(others) > 0:
-        term = list((term,) + others)
-    lists = [flatten(v) for v in term]
-    assert all(checkType(t, [Variable]) for t in lists)
+    lists = _check_lists_of_list_constraint("AllDifferentList", term, others, excepting)
     excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
     checkType(excepting, ([int], type(None)))
-    assert all(len(t) == len(lists[0]) for t in lists)  # and (excepting is None or len(excepting) == len(lists[0]))
+    seen = set()  # identities of the variables of the lists (== being redefined for building expressions)
+    for t in lists:
+        key = tuple(id(x) for x in t)
+        error_if(key in seen, "A list cannot be given several times to AllDifferentList(), which is the case of " + str(t))
+        seen.add(key)
+    if len(lists) == 1:
+        warning("A constraint AllDifferentList discarded because defined with 1 list", "alldifferentlist_1_list")
+        return None  # a single list is always different from the other ones (as for AllDifferent() with a single variable)
+    if len(lists) > 0 and len(lists[0]) == 1:  # allDifferent-list requires lists of at least two variables: AllDifferent is posted on the variables
+        return AllDifferent([t[0] for t in lists], excepting=excepting)
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 
@@ -1944,13 +2090,20 @@ def AllEqual(term, *others, excepting=None):
 
         # a solution: [0, 1, 1, 1]
     """
-    excepting = list(excepting) if isinstance(excepting, (tuple, set)) else [excepting] if isinstance(excepting, int) else excepting
-    checkType(excepting, ([int], type(None)))
+    error_if(term is None, "AllEqual() requires variables (or expressions), which is not the case of None")
+    excepting = _excepting_values(excepting)
     terms = flatten(term, others)
     if len(terms) == 0:
         return ConstraintDummyConstant(1)
+    if len(terms) == 1 and isinstance(terms[0], (Variable, Node, PartialConstraint)):
+        warning("A constraint AllEqual discarded because defined with 1 term", "allequal_1_term")
+        return None  # a single term is always equal to itself (as for AllDifferent()); an integer is reported below by checkType()
+    V = sorted({term for term in terms if isinstance(term, int)})
+    if len(V) > 0:
+        error_if(len(V) != 1, "AllEqual with two specified different integer constants")
+        return [term == V[0] for term in terms if not isinstance(term, int)]
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini)
-    checkType(terms, ([Variable], [Node]))
+    checkType(terms, ([Variable, Node]))  # variables and expressions may be mixed (as for AllDifferent())
     return ECtr(ConstraintAllEqual(terms, excepting))
 
 
@@ -1973,17 +2126,23 @@ def AllEqualList(term, *others, excepting=None):
            AllEqualList(x)
         )
     """
-    if isinstance(term, types.GeneratorType):
-        term = [v for v in term]
-    elif len(others) > 0:
-        term = list((term,) + others)
-    lists = [flatten(v) for v in term]
-    assert all(checkType(t, [Variable]) for t in lists)
-    excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
-    checkType(excepting, ([int], type(None)))
-    assert all(len(t) == len(lists[0]) for t in lists) and (excepting is None or len(excepting) == len(lists[0]))
+    lists = _check_lists_of_list_constraint("AllEqualList", term, others, excepting)
+    if excepting is not None:  # excepting is changed into a list of tuples (None if empty)
+        values = list(excepting) if isinstance(excepting, (tuple, list, set, frozenset, range)) else None
+        error_if(values is None, "excepting given to AllEqualList() must be a tuple of integers, or a collection of such tuples, which is not the case of "
+                 + str(excepting))
+        several = len(values) > 0 and all(isinstance(e, (tuple, list)) for e in values)
+        tuples = [tuple(e) for e in values] if several else [tuple(values)] if len(values) > 0 else []
+        error_if(any(not isinstance(v, int) for e in tuples for v in e),
+                 "The values of excepting given to AllEqualList() must be integers, which is not the case of " + str(excepting))
+        excepting = (sorted(tuples) if isinstance(excepting, (set, frozenset)) else tuples) if len(tuples) > 0 else None
+    if len(lists) == 1:
+        warning("A constraint AllEqualList discarded because defined with 1 list", "allequallist_1_list")
+        return None  # a single list is always equal to the other ones (as for AllEqual() with a single variable)
     if len(lists) == 2 and excepting is None:
         return [lists[0][i] == lists[1][i] for i in range(len(lists[0]))]
+    if len(lists) > 0 and len(lists[0]) == 1:  # allEqual-list requires lists of at least two variables: AllEqual is posted on the variables
+        return AllEqual([t[0] for t in lists], excepting=None if excepting is None else [e[0] for e in excepting])
     return ECtr(ConstraintAllEqualList(lists, excepting))
 
 
@@ -2242,9 +2401,12 @@ def Precedence(within, *, values=None, covered=False):
 
         # a solution: [0, 0, 0, 0, 0, 1, 2]
     """
-    assert len(within) > 2
+    within = flatten(within)
+    if len(within) < 2:
+        warning("A constraint Precedence discarded because defined with " + str(len(within)) + " variables")
+        return None
     if values is None:
-        return ECtr(ConstraintPrecedence(flatten(within)))
+        return ECtr(ConstraintPrecedence(within))
         # assert all(scope[i].dom == scope[0].dom for i in range(1, len(scope)))
         # values = scope[0].dom.all_values()
     if isinstance(values, types.GeneratorType):
@@ -2252,7 +2414,7 @@ def Precedence(within, *, values=None, covered=False):
     assert isinstance(values, (range, tuple, list)) and all(isinstance(v, int) for v in values)
     values = list(values)
     if len(values) > 1:
-        return ECtr(ConstraintPrecedence(flatten(within), values=values, covered=covered))
+        return ECtr(ConstraintPrecedence(within, values=values, covered=covered))
     else:
         warning("A constraint Precedence discarded because defined with " + str(len(values)) + " values", "precedence_" + str(len(values)) + "_value")
         return None
@@ -3150,6 +3312,13 @@ def _is_mixed_list(t, index=-1):
     return False
 
 
+def _avoid_mixed_list(t):  # TODO for simple lists here, and for tuples?
+    if _is_mixed_list(t):
+        for i, v in enumerate(t):  # replacing integers
+            if isinstance(v, int):
+                t[i] = auxiliary().replace_int(v)
+
+
 def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
     """
     Builds and returns a constraint NoOverlap.
@@ -3218,8 +3387,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         lengths = [(lengths[0][i], lengths[1][i]) for i in range(len(lengths[0]))]
     if any(isinstance(v, Node) for v in origins):
         origins = [auxiliary().replace_node(v) if isinstance(v, Node) else v for v in origins]
-    # if _is_mixed_list(origins):  TODO a voir
-    #     origins = [auxiliary().replace_int(v) if isinstance(v, int) else v for v in origins]
+    _avoid_mixed_list(origins)
     checkType(origins, [int, Variable])
     if not isinstance(origins[0], (int, Variable)) and not isinstance(origins[0], tuple):  # if 2D but not tuples
         origins = [tuple(origin) for origin in origins]
@@ -3228,6 +3396,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         lengths = [auxiliary().replace_node(v) if isinstance(v, Node) else v for v in lengths]
     if not isinstance(lengths[0], (int, Variable)) and not isinstance(lengths[0], tuple):  # if 2D but not tuples
         lengths = [tuple(length) for length in lengths]
+    _avoid_mixed_list(lengths)
     checkType(lengths, ([int, Variable, Node]))
     if isinstance(origins, list) and len(origins) > 0 and isinstance(origins[0], tuple) and len(origins[0]) == 2:  # if 2D
         # currently, only variables are authorized in origins
@@ -3269,6 +3438,9 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
                         continue
                     t.append((xi, xj, yi, yj) in to_starred_table_for_no_overlap2(xi, xj, yi, yj, wi, wj, hi, hj))
         return t
+    all_unit = all(isinstance(v, (int, Variable)) and (v == 1 if isinstance(v, int) else v.dom.smallest_value() == v.dom.greatest_value() == 1) for v in lengths)
+    if all_unit:
+        return AllDifferent(origins)
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
 
@@ -3325,6 +3497,13 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     if tasks is not None:
         assert origins is None and lengths is None and ends is None and heights is None
         tasks = list(tasks) if isinstance(tasks, (tuple, set, frozenset, types.GeneratorType)) else tasks
+        for task in tasks:
+            if not isinstance(task, (tuple, list)) or len(task) not in (3, 4):
+                error("A task of Cumulative() must be (origin, length, height) or (origin, length, end, height), which is not the case of " + str(task))
+            if len(task) != len(tasks[0]):
+                error("The tasks of Cumulative() must all have the same size, which is not the case of " + str(tasks[0]) + " and " + str(task))
+            if task[-1] is None:
+                error("The height of a task must be given in Cumulative(), which is not the case of " + str(task))
         if len(tasks) == 0:
             warning("A constraint Cumulative transformed because defined with 0 task", "cumulative_0_task")
             return ConstraintDummyConstant(0)  # auxiliary().replace_int(0)
@@ -3341,29 +3520,32 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
             origins, lengths, heights = zip(*tasks)
         else:
             origins, lengths, ends, heights = zip(*tasks)
+    for name, values in (("origins", origins), ("lengths", lengths), ("heights", heights)):  # checked before flatten(), which discards None
+        if values is None or (isinstance(values, (tuple, list)) and any(v is None for v in flatten(values, keep_none=True, call_cp_array=False))):
+            error("The " + name + " of Cumulative() must be given, and cannot be None")
     origins = flatten(origins)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(origins, nodes_too=True, int_too=False)
-    if _is_mixed_list(origins):
-        origins = auxiliary().replace_ints(origins)
+    _avoid_mixed_list(origins)
     checkType(origins, [Variable])
     lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else flatten(lengths)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(lengths, nodes_too=True)
-    if _is_mixed_list(lengths):
-        lengths = auxiliary().replace_ints(lengths)
+    _avoid_mixed_list(lengths)
     checkType(lengths, ([Variable], [int]))
     heights = [heights for _ in range(len(origins))] if isinstance(heights, int) else flatten(heights)
-    if _is_mixed_list(heights):
-        heights = auxiliary().replace_ints(heights)
+    _avoid_mixed_list(heights)
     for i, h in enumerate(heights):
         if isinstance(h, PartialConstraint):
             heights[i] = auxiliary().replace_partial_constraint(h)
         elif isinstance(h, Node):
             heights[i] = auxiliary().replace_node(h)
         elif isinstance(h, ConstraintDummyConstant):
-                heights[i] = auxiliary().replace_int(h.val)
+            heights[i] = auxiliary().replace_int(h.val)
     checkType(heights, ([Variable], [int]))
     ends = flatten(ends) if ends is not None else ends  # ends is optional
     checkType(ends, ([Variable], type(None)))
+    for name, values in (("lengths", lengths), ("heights", heights), ("ends", ends)):
+        if values is not None and len(values) != len(origins):
+            error("In Cumulative(), the number of " + name + " (" + str(len(values)) + ") must be the number of origins (" + str(len(origins)) + ")")
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
 
 

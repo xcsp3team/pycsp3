@@ -1,3 +1,4 @@
+import keyword
 import types
 from collections import deque, namedtuple, abc
 
@@ -11,7 +12,7 @@ from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
 from pycsp3.libs.forbiddenfruit import curse
 from pycsp3.tools.utilities import (flatten, is_containing, unique_type_in, is_1d_tuple, is_1d_list, is_1d_tuple, is_2d_list, is_matrix, is_square_matrix,
-                                    is_cube, ANY, structured_list, warning, error_if, AttributeDict)
+                                    is_cube, ANY, structured_list, warning, error, error_if, AttributeDict)
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
@@ -51,9 +52,12 @@ def cursing():
             else:
                 queue_in.append((list(self), auxiliary().replace_partial_constraint(other)))
             return True
-        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, int)):
+        # note that Python changes into a tuple a list given literally on the right of 'in', as in x in [[0, 1], [1, 0]] or x in ['a', 'b']
+        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, list, int, str)):
             queue_in.append((list(self), other))
             return True
+        if len(self) == 0 and is_containing(other, Variable):  # as for an empty set (e.g., x not in [], where [] is changed into ())
+            return other in set(self)
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
             queue_in.append((self, other))
             return True
@@ -80,10 +84,10 @@ def cursing():
             other = list(other)
         if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
             other = flatten(other)  # [v for v in other if v]
-        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int)):
+        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int, str)):
             queue_in.append((self, other))
             return True
-        if is_containing(other, Variable) and len(self) == 0:
+        if len(self) == 0 and is_containing(other, Variable):
             return other in set(self)
         if isinstance(other, Variable) and isinstance(self, list):
             for i, v in enumerate(self):
@@ -216,6 +220,7 @@ class OpOverrider:
         Variable.__mod__ = Node.__mod__ = OpOverrider.__mod__
         Variable.__rmod__ = Node.__rmod__ = OpOverrider.__rmod__
         Variable.__pow__ = Node.__pow__ = OpOverrider.__pow__
+        Variable.__rpow__ = Node.__rpow__ = OpOverrider.__rpow__
 
         ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = OpOverrider.__and__
         ECtr.__rand__ = EMetaCtr.__rand__ = Variable.__rand__ = Node.__rand__ = OpOverrider.__rand__
@@ -255,6 +260,7 @@ class OpOverrider:
         Variable.__mod__ = Node.__mod__ = None
         Variable.__rmod__ = Node.__rmod__ = None
         Variable.__pow__ = Node.__pow__ = None
+        Variable.__rpow__ = Node.__rpow__ = None
 
         ECtr.__and__ = EMetaCtr.__and__ = Variable.__and__ = Node.__and__ = None
         ECtr.__rand__ = EMetaCtr.__rand__ = Variable.__rand__ = Node.__rand__ = None
@@ -330,8 +336,9 @@ class OpOverrider:
             if other == 0:
                 return self
             if isinstance(self, Node) and self.type in (TypeNode.ADD, TypeNode.SUB) and self[-1].type == TypeNode.INT:
-                self[-1].cnt += (other if self.type == TypeNode.ADD else -other)
-                return self[0] if self.arity() == 2 and self[-1].cnt == 0 else self
+                # a new node is built, since self may be used in other expressions
+                value = self[-1].cnt + (other if self.type == TypeNode.ADD else -other)
+                return self[0] if self.arity() == 2 and value == 0 else Node.build(self.type, *self.cnt[:-1], value)
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))
         if isinstance(other, PartialConstraint):
@@ -356,8 +363,9 @@ class OpOverrider:
             if other == 0:
                 return self
             if isinstance(self, Node) and self.type in (TypeNode.ADD, TypeNode.SUB) and self[-1].type == TypeNode.INT:
-                self[-1].cnt += (-other if self.type == TypeNode.ADD else other)
-                return self[0] if self.arity() == 2 and self[-1].cnt == 0 else self
+                # a new node is built, since self may be used in other expressions
+                value = self[-1].cnt + (-other if self.type == TypeNode.ADD else other)
+                return self[0] if self.arity() == 2 and value == 0 else Node.build(self.type, *self.cnt[:-1], value)
         if isinstance(other, ScalarProduct):
             other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))
         if isinstance(other, PartialConstraint):
@@ -427,6 +435,11 @@ class OpOverrider:
         if isinstance(other, ConstraintDummyConstant):
             other = other.val
         return Node.build(TypeNode.POW, self, other)
+
+    def __rpow__(self, other):  # other ** self
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
+        return Node.build(TypeNode.POW, other, self)
 
     @staticmethod
     def _replace(arg1, arg2):
@@ -504,6 +517,8 @@ class OpOverrider:
 
         if isinstance(other, ConstraintDummyConstant):
             other = other.val
+        if isinstance(self, Node) and self.type.is_predicate_operator() and isinstance(other,int) and other == 1:
+            return self
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Iff(self, other, meta=True)
@@ -534,6 +549,8 @@ class OpOverrider:
 
         if isinstance(other, ConstraintDummyConstant):
             other = other.val
+        if isinstance(self, Node) and self.type.is_predicate_operator() and isinstance(other,int) and other == 0:
+            return self
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Xor(self, other, meta=True)  # TODO: is it always appropriate?
@@ -806,7 +823,7 @@ class OpOverrider:
             if isinstance(array, ListInt):
                 if is_1d_list(array, int):
                     if all(array[0] == v for v in array):
-                        return ConstraintDummyConstant(array[0])
+                        return array[0] #ConstraintDummyConstant(array[0])
                 elif is_2d_list(array, int):
                     if all(array[0] == t for t in array):  # all rows are identical
                         return array[0]
@@ -998,6 +1015,14 @@ class ListVar(list):
     def __gt__(self, other):
         return self._post_lex(other, functions.LexDecreasing, True)
 
+    def _dimensions(self, i, j):  # returns the numbers of rows and columns, after having checked that (i, j) is a cell
+        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
+        n = len(self)
+        error_if(not isinstance(i, int) or not 0 <= i < n, "The index " + str(i) + " is not the index of a row of the array (of size " + str(n) + ")")
+        m = len(list.__getitem__(self, i))  # the list is directly accessed (no auto-adjustment of indexing)
+        error_if(not isinstance(j, int) or not 0 <= j < m, "The index " + str(j) + " is not the index of a column of the array (of size " + str(m) + ")")
+        return n, m
+
     def at_border(self, i, j):
         """
         Returns True if the cell at the specified indexes is on the border of this two-dimensional list, i.e., in its first or last row or column.
@@ -1013,9 +1038,7 @@ class ListVar(list):
                x[i][j] == 0 for i in range(4) for j in range(4) if x.at_border(i, j)
             )
         """
-        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
-        n, m = len(self), len(self[i])
-        assert 0 <= i < n and 0 <= j < m
+        n, m = self._dimensions(i, j)
         return i in {0, n - 1} or j in {0, m - 1}
 
     def around(self, i, j):
@@ -1034,9 +1057,7 @@ class ListVar(list):
                Sum(x.around(1, 1)) == 3
             )
         """
-        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
-        n, m = len(self), len(self[i])
-        assert 0 <= i < n and 0 <= j < m
+        n, m = self._dimensions(i, j)
         return ListVar([self[i + k][j + p] for k in [-1, 0, 1] for p in [-1, 0, 1] if 0 <= i + k < n and 0 <= j + p < m and (k, p) != (0, 0)])
 
     def beside(self, i, j):
@@ -1055,9 +1076,7 @@ class ListVar(list):
                ExactlyOne(x.beside(1, 1), value=1)
             )
         """
-        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
-        n, m = len(self), len(self[i])
-        assert 0 <= i < n and 0 <= j < m
+        n, m = self._dimensions(i, j)
         return ListVar([self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
 
     def cross(self, i, j):
@@ -1077,9 +1096,7 @@ class ListVar(list):
                Sum(x.cross(1, 1)) <= 4
             )
         """
-        assert is_matrix(self), "calling this function should be made on a 2-dimensional array"
-        n, m = len(self), len(self[i])
-        assert 0 <= i < n and 0 <= j < m
+        n, m = self._dimensions(i, j)
         return ListVar([self[i][j]] + [self[k][l] for k, l in [(i, j - 1), (i, j + 1), (i - 1, j), (i + 1, j)] if 0 <= k < n and 0 <= l < m])
 
     def __str__(self):
@@ -1143,11 +1160,14 @@ test = False
 
 
 def convert_to_namedtuples(obj):
-    def with_only_alphanumeric_keys(obj):  # alphanum or '_'
+    def valid_field_name(k):  # as required by namedtuple(): an identifier, not a keyword, not starting with '_'
+        return isinstance(k, str) and k.isidentifier() and not keyword.iskeyword(k) and not k.startswith('_')
+
+    def with_only_valid_field_names(obj):
         if isinstance(obj, dict):
-            if any(not k.isidentifier() for k in obj.keys()):
+            if any(not valid_field_name(k) for k in obj.keys()):
                 return False
-            return all(with_only_alphanumeric_keys(v) for v in obj.values())
+            return all(with_only_valid_field_names(v) for v in obj.values())
         if isinstance(obj, (int, str)):
             return True
         try:
@@ -1155,7 +1175,7 @@ def convert_to_namedtuples(obj):
         except TypeError:  # not iterable
             return True
         else:  # iterable
-            return all(with_only_alphanumeric_keys(v) for v in obj)
+            return all(with_only_valid_field_names(v) for v in obj)
 
     def recursive_convert_to_namedtuples(obj):
         if not hasattr(recursive_convert_to_namedtuples, "cnt"):
@@ -1172,9 +1192,15 @@ def convert_to_namedtuples(obj):
             if is_1d_list(obj, dict):
                 if test:
                     return [AttributeDict(recursive_convert_to_namedtuples(v)) for v in obj]
-                nt = namedtuple("nt" + str(recursive_convert_to_namedtuples.cnt), obj[0].keys())
+                keys = list(obj[0].keys())
+                other = next((d for d in obj if set(d.keys()) != set(keys)), None)
+                if other is not None:
+                    error("The objects of a list must have the same keys, which is not the case of an object with keys " + str(keys)
+                          + " and an object with keys " + str(list(other.keys())))
+                nt = namedtuple("nt" + str(recursive_convert_to_namedtuples.cnt), keys)
                 recursive_convert_to_namedtuples.cnt += 1
-                return [nt(*(recursive_convert_to_namedtuples(v) for (k, v) in d.items())) for d in obj]
+                # values given by name, the keys of an object being possibly in another order than those of the first object
+                return [nt(**{k: recursive_convert_to_namedtuples(v) for (k, v) in d.items()}) for d in obj]
             t = [recursive_convert_to_namedtuples(v) for v in obj]
             return ListInt(t) if isinstance(t[0], ListInt) else ListVar(t) if isinstance(t[0], ListVar) else t
         if isinstance(obj, dict):
@@ -1187,8 +1213,9 @@ def convert_to_namedtuples(obj):
 
     if options.data_sober:
         return obj
-    if not with_only_alphanumeric_keys(obj):
-        warning("some key of some dictionary involved in the data is not alphanumeric, so no conversion to named tuples is performed\n")
+    if not with_only_valid_field_names(obj):
+        warning("some key of some dictionary involved in the data cannot be a field name of a named tuple (not an identifier, a Python keyword, "
+                + "or starting with '_'), so no conversion to named tuples is performed\n")
         return obj  # not possible to make the conversion in that case
     return recursive_convert_to_namedtuples(obj)
 

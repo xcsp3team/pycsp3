@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Build the package
+        run: |
+          pip install build
+          python -m build
+
+      - name: Install the package in a new environment
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install dist/*.whl
+
+      - name: Solve a model with the installed package
+        working-directory: ${{ runner.temp }}
+        run: |
+          printf 'from pycsp3 import *\n\nx = VarArray(size=3, dom=range(3))\n\nsatisfy(\n    AllDifferent(x)\n)\n\nassert solve() is SAT, status()\nprint(values(x))\n' > model.py
+          "$RUNNER_TEMP/venv/bin/python" model.py
