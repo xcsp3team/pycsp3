@@ -58,7 +58,7 @@ def test_mdd_not_in(run):
     # 'not in' cannot be used with an MDD: an explicit error is reported (instead of posting x in M)
     r = run(f"M = MDD({DOC!r})\nx = VarArray(size=3, dom=range(3))\nsatisfy(x not in M)")
     assert_fails(r)
-    assert "The operator 'not in' cannot be used with an MDD: only 'x in M' is possible (constraint MDD)" in r.stdout, r.report()
+    assert "operator 'not in' cannot be used with an MDD: only 'x in M' is possible (constraint MDD)" in r.stdout, r.report()
 
 
 def test_mdd_on_rows(run, solver):

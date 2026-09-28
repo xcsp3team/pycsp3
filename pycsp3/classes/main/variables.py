@@ -55,6 +55,8 @@ class Domain:
                 else:
                     _add_value(set(arg))
             elif isinstance(arg, int):
+                if type(arg) is bool:
+                    check_no_boolean(arg)  # reports the error
                 self.original_values.append(arg)
                 set_type(TypeVar.INTEGER)
             elif isinstance(arg, str):

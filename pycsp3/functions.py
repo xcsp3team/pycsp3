@@ -184,6 +184,7 @@ def Var(term=None, *others, dom=None, id=None):
     error_if(term is not None and dom is not None, "The domain of a variable must be given either by terms or by the parameter dom, but not both")
     if term is not None:
         dom = flatten(term, others)
+    check_no_boolean(dom)
     if not isinstance(dom, Domain):
         if isinstance(dom, (set, frozenset)):
             dom = list(dom)
@@ -955,7 +956,7 @@ def _false_constraint():
     x = next((v for e in VarEntities.items for v in ([e.variable] if isinstance(e, EVar) else e.flatVars)), None)
     error_if(x is None, "A constraint is trivially false (constant 0), but the model has no variable")
     warning("A constraint is trivially false (constant 0): the model is unsatisfiable")
-    return _Extension(scope=[x], table=[], positive=True)
+    return ECtr(ConstraintExtension([x], [], True, options.keep_hybrid, options.restrict_tables_wrt_domains))  # not _Extension(), which refuses an empty table
 
 
 def _group(*_args, block=False):
@@ -1957,8 +1958,10 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         else:
             return [AllDifferent(row) for row in matrix] + [AllDifferent(col) for col in columns(matrix)]
     terms = flatten(term, others)
-    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # an integer is reported below by checkType()
+    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # integers alone are reported just below
         return None
+    error_if(all(isinstance(t, int) for t in terms),
+             "AllDifferent() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
     V = sorted({term for term in terms if isinstance(term, int)})
     if len(V) > 0:
         terms = [term for term in terms if not isinstance(term, int)]
@@ -2099,7 +2102,9 @@ def AllEqual(term, *others, excepting=None):
         return ConstraintDummyConstant(1)
     if len(terms) == 1 and isinstance(terms[0], (Variable, Node, PartialConstraint)):
         warning("A constraint AllEqual discarded because defined with 1 term", "allequal_1_term")
-        return None  # a single term is always equal to itself (as for AllDifferent()); an integer is reported below by checkType()
+        return None  # a single term is always equal to itself (as for AllDifferent()); integers alone are reported just below
+    error_if(all(isinstance(t, int) for t in terms),
+             "AllEqual() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
     V = sorted({term for term in terms if isinstance(term, int)})
     if len(V) > 0:
         error_if(len(V) != 1, "AllEqual with two specified different integer constants")

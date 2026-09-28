@@ -230,6 +230,7 @@ def test_xcsp3_allequal(run, constraint, expected):
     "AllEqual(x[0], 'a')",
     "AllEqual(None)",
     "AllEqual(5)",
+    "AllEqual(5, 5)",
     "AllEqual(x, excepting='a')",
     "AllEqual(x, excepting=2.5)",
     "AllEqual(x, excepting=[0, 'a'])",
@@ -239,9 +240,13 @@ def test_invalid_allequal(run, constraint):
     assert_fails(run(X3 + f"satisfy({constraint})"))
 
 
-def test_invalid_allequal_message(run):
-    r = run(X3 + "satisfy(AllEqual(None))")
-    assert not r.ok and "AllEqual() requires variables (or expressions), which is not the case of None" in r.stdout, r.report()
+@pytest.mark.parametrize("constraint, message", [
+    ("AllEqual(None)", "AllEqual() requires variables (or expressions), which is not the case of None"),
+    ("AllEqual(5)", "AllEqual() requires at least one variable (or expression), and not only integers, which is not the case of [5]"),
+])
+def test_invalid_allequal_message(run, constraint, message):
+    r = run(X3 + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("constraint, predicate", [("AllEqual(x, 1)", lambda a, b, c: a == b == c == 1), ("AllEqual(2, x[0], x[1])", lambda a, b, c: a == b == 2)])
