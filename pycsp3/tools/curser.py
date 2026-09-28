@@ -524,6 +524,8 @@ class OpOverrider:
 
         if isinstance(other, ConstraintDummyConstant):
             other = other.val
+        if isinstance(self, Node) and self.type.is_predicate_operator() and isinstance(other,int) and other == 0:
+            return self
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Xor(self, other, meta=True)  # TODO: is it always appropriate?
