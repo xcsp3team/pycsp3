@@ -134,11 +134,11 @@ class Automaton(Diagram):
 
     def __init__(self, *, start, transitions, final):
         """
-        Builds an automaton from the specified arguments: a starting state, a set of transitions and a set of final states.
+        Builds an automaton from the specified arguments: a starting state, a collection of transitions and one or several final states.
         An automaton recognizes words (sequences of values); it is typically used with the constraint Regular, as in x in automaton.
 
         :param start: the starting state
-        :param transitions: a list of transitions
+        :param transitions: the transitions, given by a list or a set (contrary to an MDD, which requires a list)
         :param final: the final state(s)
         :example:
             x = VarArray(size=4, dom=range(2))
@@ -289,9 +289,15 @@ class MDD(Diagram):
 
         :param transitions: a list of transitions
         :example:
-            x = VarArray(size=3, dom=range(2))
+            # the two paths from the root r to the terminal node t are the tuples (0, 1) and (1, 0)
+            x = VarArray(size=2, dom=range(2))
             m = MDD([("r", 0, "n1"), ("r", 1, "n2"), ("n1", 1, "t"), ("n2", 0, "t")])
-            satisfy(x in m)
+
+            satisfy(
+               x in m
+            )
+
+            # a solution: [0, 1]
         """
         if isinstance(transitions, types.GeneratorType):
             transitions = [t for t in transitions]

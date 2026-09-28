@@ -1179,8 +1179,8 @@ def Table(*, scope, supports=None, conflicts=None):
     It is usually posted with the operators 'in' and 'not in', as in (x[0], x[1]) in {(0, 1), (1, 2)}.
 
     :param scope: the sequence of (distinct) involved variables
-    :param supports: the set/list of tuples, seen as supports (positive table)
-    :param conflicts: the set/list of tuples, seen as conflicts (negative table)
+    :param supports: the tuples seen as supports (positive table), given by any iterable (e.g., a set, a list or a generator)
+    :param conflicts: the tuples seen as conflicts (negative table), given by any iterable (e.g., a set, a list or a generator)
 
     :return: a constraint Table (Extension)
     :example:
@@ -1639,7 +1639,9 @@ def expr(operator, *args):
     """
     Builds and returns a node, root of a tree expression where specified arguments are children.
     The type of the new node is given by the specified operator.
-    When it is a string, it can be among {"<", "lt", "<=", "le", ">=", "ge", ">", "gt", "=", "==", "eq", "!=", "<>", "ne"}
+    When it is a string, it is the name of an operator of XCSP3, as in "add", "mul", "abs", "and" or "or"; the comparison
+    operators are also accepted in their symbolic form: "<" for "lt", "<=" for "le", ">=" for "ge", ">" for "gt",
+    "=" or "==" for "eq", and "!=" or "<>" for "ne".
     Without any parent, it becomes a constraint.
 
     :param operator: a string, or a constant from TypeNode or a constant from TypeConditionOperator or TypeOrderedOperator
