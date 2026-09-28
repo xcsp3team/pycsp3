@@ -956,7 +956,7 @@ def _false_constraint():
     x = next((v for e in VarEntities.items for v in ([e.variable] if isinstance(e, EVar) else e.flatVars)), None)
     error_if(x is None, "A constraint is trivially false (constant 0), but the model has no variable")
     warning("A constraint is trivially false (constant 0): the model is unsatisfiable")
-    return _Extension(scope=[x], table=[], positive=True)
+    return ECtr(ConstraintExtension([x], [], True, options.keep_hybrid, options.restrict_tables_wrt_domains))  # not _Extension(), which refuses an empty table
 
 
 def _group(*_args, block=False):

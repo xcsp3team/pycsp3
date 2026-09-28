@@ -11,6 +11,8 @@ from harness import assert_fails, assert_solutions, brute_force, bug_for, declar
 
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
+EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
+                  "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
 
 # ------------------------------------------------------------------------------------------------------------ Var()
@@ -602,7 +604,9 @@ def test_variable_name_in_constraints(run, solver):
     pytest.param("x.not_among(7, 8)", {0, 1, 2, 3, 4}, id="not_among(7, 8)"),
     pytest.param("x.not_among()", {0, 1, 2, 3, 4}, id="not_among()"),
 ])
-def test_among(run, solver, expression, allowed):
+def test_among(run, solver, request, expression, allowed):
+    if not allowed:  # the expression is simplified into false, which is posted as a table with an empty set of supports
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     r = run(f"""
         x = Var(dom=range(5))
         y = Var(dom=range(2))

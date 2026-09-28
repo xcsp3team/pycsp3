@@ -18,6 +18,8 @@ ACE_NEGATIVE = "xcsp3team/ACE#12: ACE fails on abs, dist, mul, div and mod with 
 # The cases that a solver says it does not handle (not reported): for each constraint, the solvers and the reasons
 SKIPPED = {"x ** z == y": {"ACE": "ACE does not implement pow with a variable exponent (not implemented)"}}
 CHOCO_POW = "chocoteam/choco-solver#1248: CHOCO does not support pow in some intensional constraints"
+EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
+                  "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
 # For each constraint (as written in the tests), the known bugs: pairs (solvers, reason)
 KNOWN = {
@@ -41,6 +43,14 @@ KNOWN = {
     'expr("eq", y, expr("div", x, 2))': [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
     'expr("eq", y, expr("mod", x, 2))': [("ACE", ACE_NEGATIVE), (("CHOCO", "COSOCO"), PYTHON_DIVISION)],
     'expr("eq", y, expr("pow", x, 2))': [("CHOCO", CHOCO_POW)],
+    # the constraints simplified into false, which is posted as a table with an empty set of supports
+    "belong(x, [10, 11])": [(("ACE", "CHOCO"), EMPTY_SUPPORTS)],
+    "belong(x, [])": [(("ACE", "CHOCO"), EMPTY_SUPPORTS)],
+    "not_belong(x, range(-3, 4))": [(("ACE", "CHOCO"), EMPTY_SUPPORTS)],
+    "both(x > 0, False)": [(("ACE", "CHOCO"), EMPTY_SUPPORTS)],
+    "conjunction(x > 0, False)": [(("ACE", "CHOCO"), EMPTY_SUPPORTS)],
+    "disjunction()": [(("ACE", "CHOCO"), EMPTY_SUPPORTS)],
+    "iff(x > 0, True, False)": [(("ACE", "CHOCO"), EMPTY_SUPPORTS)],
 }
 
 X = [("x", "range(-3, 4)")]
