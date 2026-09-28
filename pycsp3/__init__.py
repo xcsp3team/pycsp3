@@ -61,23 +61,31 @@ Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
 """ Task is a predefined named tuple, as involved in the constraint Cumulative: its origin (starting time), its length (duration) and its height (amount of consumed resource)
 
 :example:
-    s = VarArray(size=3, dom=range(10))
-    
+    # three tasks of length 2, each consuming one unit of resource, must be scheduled with a capacity of 2
+    s = VarArray(size=3, dom=range(10))  # s[i] is the starting time of the ith task
+
+    # a task is given by its origin (here, a variable), its length and its height (None by default, when omitted)
     tasks = [Task(origin=s[i], length=2, height=1) for i in range(3)]
-    
+
     satisfy(
+       # at any time, the tasks in progress cannot consume more than 2 units of resource
        Cumulative(tasks) <= 2
     )
+
+    # a solution: [0, 0, 2]
 """
 
 Item = namedtuple("Item", ("bin", "size"))
 """ Item is a predefined named tuple, as involved in bin-packing problems: the bin it is put in, and its size
 
 :example:
-    b = VarArray(size=3, dom=range(2))
-    
+    # three items, of sizes 1, 2 and 3, can be put in two bins
+    b = VarArray(size=3, dom=range(2))  # b[i] is the bin in which the ith item is put
+
+    # an item is given by its bin (here, a variable) and its size
     items = [Item(bin=b[i], size=i + 1) for i in range(3)]
-    
+
+    # the fields of a named tuple are accessed by their names: this displays 1
     print(items[0].size)
 """
 
@@ -147,7 +155,7 @@ def solver(name=None):
 
 def compile(filename=None, *, verbose=0):
     """
-    Compiles the current model
+    Compiles the current model into an XCSP3 file (XML), which can then be given to a solver.
 
     :param filename: the filename of the compiled problem instance
     :param verbose: verbosity level from -1 to 2
@@ -214,7 +222,9 @@ def bound():
 
 def core():
     """
-    Returns the core identified by the last extraction operation, or None
+    Returns the core identified by the last extraction operation, or None.
+    A core is a subset of constraints that cannot be satisfied together; it is sought when solving with extraction=True.
+
     :example:
         x = VarArray(size=2, dom=range(2))
         satisfy(x[0] == 0, x[0] == 1)

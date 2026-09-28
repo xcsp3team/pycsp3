@@ -380,29 +380,74 @@ class TypeStatus(Enum):
 
 @unique
 class TypeSquareSymmetry(Enum):
+    """
+    The symmetries of a square grid, identity excluded: the rotations of 90, 180 and 270 degrees (R090, R180, R270),
+    and the reflections across the horizontal axis (FX), the vertical axis (FY), the main diagonal (FD1) and the anti-diagonal (FD2).
+    This is useful for breaking symmetries, or for computing the variants of polyominoes.
+
+    :example:
+        from pycsp3.classes.auxiliary.enums import TypeSquareSymmetry
+
+        n = 3
+        x = VarArray(size=[n, n], dom=range(2))
+
+        satisfy(
+           # exactly two cells are set to 1
+           Sum(x) == 2,
+
+           # the grid is lexicographically less than or equal to its images by the symmetries
+           [LexIncreasing(flatten(x), [x[k][l] for row in sym.apply_on(n) for k, l in row]) for sym in TypeSquareSymmetry]
+        )
+    """
     R090, R180, R270, FX, FY, FD1, FD2 = auto(7)  # R0 not indicated
 
     @staticmethod
     def rotations():
+        """
+        Returns the symmetries that are rotations: R090, R180 and R270.
+
+        :return: a tuple with the symmetries that are rotations
+        """
         return TypeSquareSymmetry.R090, TypeSquareSymmetry.R180, TypeSquareSymmetry.R270
 
     @staticmethod
     def reflections():  # 4 lines of symmetry (reflection)
+        """
+        Returns the symmetries that are reflections: FX, FY, FD1 and FD2.
+
+        :return: a tuple with the symmetries that are reflections
+        """
         return TypeSquareSymmetry.FX, TypeSquareSymmetry.FY, TypeSquareSymmetry.FD1, TypeSquareSymmetry.FD2
 
     def is_rotation(self):
+        """
+        Returns True if this symmetry is a rotation.
+
+        :return: True if this symmetry is a rotation
+        """
         return self in TypeSquareSymmetry.rotations()
 
     def is_reflection(self):
+        """
+        Returns True if this symmetry is a reflection.
+
+        :return: True if this symmetry is a reflection
+        """
         return self in TypeSquareSymmetry.reflections()
 
     @staticmethod
     def symmetric_patterns(pattern):
         """
-        Returns all symmetric patterns (including identity) of the specified one (can be useful for computing symmetric variants of polyominoes)
+        Returns all distinct patterns obtained from the specified one by the symmetries of the square (identity included).
+        This is useful for computing the variants (orientations) of polyominoes.
 
         :param pattern: a pattern given as a set of relative coordinates
         :return: all symmetric patterns of the specified one
+        :example:
+            from pycsp3.classes.auxiliary.enums import TypeSquareSymmetry
+
+            # the 4 orientations of the L-tromino
+            print(len(TypeSquareSymmetry.symmetric_patterns([(0, 0), (1, 0), (1, 1)])))  # 4
         """
 
         def _normalize(p):
@@ -423,6 +468,17 @@ class TypeSquareSymmetry(Enum):
         return s3  # [tuple(i * n + j for i, j in t) for t in s3]
 
     def apply_on(self, n):
+        """
+        Returns a matrix giving, for each cell (i, j) of a square grid of size n, the cell associated with it by this symmetry.
+
+        :param n: the size of the square grid
+        :return: a two-dimensional list of pairs of indexes
+        :example:
+            from pycsp3.classes.auxiliary.enums import TypeSquareSymmetry
+
+            # the reflection across the main diagonal associates the cell (j, i) with the cell (i, j)
+            print(TypeSquareSymmetry.FD1.apply_on(2))  # [[(0, 0), (1, 0)], [(0, 1), (1, 1)]]
+        """
         if not hasattr(TypeSquareSymmetry, '_cache'):
             TypeSquareSymmetry._cache = {}
         key = (self, n)
@@ -452,23 +508,60 @@ class TypeSquareSymmetry(Enum):
 
 @unique
 class TypeRectangleSymmetry(Enum):
+    """
+    The symmetries of a rectangular grid, identity excluded: the rotation of 180 degrees (R180),
+    and the reflections across the horizontal axis (FX) and the vertical axis (FY).
+    For a square grid, TypeSquareSymmetry gives all symmetries.
+    """
     R180, FX, FY = auto(3)  # R0 not indicated
 
     @staticmethod
     def rotations():
+        """
+        Returns the symmetries that are rotations: R180.
+
+        :return: a tuple with the symmetries that are rotations
+        """
         return (TypeRectangleSymmetry.R180,)
 
     @staticmethod
     def reflections():  # 2 lines of symmetry (reflection)
+        """
+        Returns the symmetries that are reflections: FX and FY.
+
+        :return: a tuple with the symmetries that are reflections
+        """
         return TypeRectangleSymmetry.FX, TypeRectangleSymmetry.FY
 
     def is_rotation(self):
+        """
+        Returns True if this symmetry is a rotation.
+
+        :return: True if this symmetry is a rotation
+        """
         return self in TypeRectangleSymmetry.rotations()
 
     def is_reflection(self):
+        """
+        Returns True if this symmetry is a reflection.
+
+        :return: True if this symmetry is a reflection
+        """
         return self in TypeRectangleSymmetry.reflections()
 
     def apply_on(self, n, m):
+        """
+        Returns a matrix giving, for each cell (i, j) of a rectangular grid with n rows and m columns, the cell associated with it by this symmetry.
+
+        :param n: the number of rows of the grid
+        :param m: the number of columns of the grid
+        :return: a two-dimensional list of pairs of indexes
+        :example:
+            from pycsp3.classes.auxiliary.enums import TypeRectangleSymmetry
+
+            # the reflection across the horizontal axis exchanges the two rows
+            print(TypeRectangleSymmetry.FX.apply_on(2, 3))  # [[(1, 0), (1, 1), (1, 2)], [(0, 0), (0, 1), (0, 2)]]
+        """
         if not hasattr(TypeRectangleSymmetry, '_cache'):
             TypeRectangleSymmetry._cache = {}
         key = (self, n)
@@ -490,28 +583,63 @@ class TypeRectangleSymmetry(Enum):
 
 @unique
 class TypeHexagonSymmetry(Enum):
+    """
+    The symmetries of a hexagonal grid, identity excluded: the rotations of 60, 120, 180, 240 and 300 degrees (R060, R120, R180, R240, R300),
+    and the reflections across its 6 lines of symmetry (L1, L2, L3, L4, L5, L6).
+    A hexagonal grid of side n is composed of 2n-1 rows, whose widths are n, n+1, ..., 2n-1, ..., n+1, n.
+    """
     R060, R120, R180, R240, R300, L1, L2, L3, L4, L5, L6 = auto(11)  # R0 not included
 
     # _cache = {}  # not possible with enum (so, it is built dynamically in Method apply_on)
 
     @staticmethod
     def rotations():
+        """
+        Returns the symmetries that are rotations: R060, R120, R180, R240 and R300.
+
+        :return: a tuple with the symmetries that are rotations
+        """
         return (TypeHexagonSymmetry.R060, TypeHexagonSymmetry.R120,
                 TypeHexagonSymmetry.R180, TypeHexagonSymmetry.R240, TypeHexagonSymmetry.R300)
 
     @staticmethod
     def reflections():  # 6 lines of symmetry (reflection)
+        """
+        Returns the symmetries that are reflections: L1, L2, L3, L4, L5 and L6.
+
+        :return: a tuple with the symmetries that are reflections
+        """
         return (TypeHexagonSymmetry.L1, TypeHexagonSymmetry.L2, TypeHexagonSymmetry.L3,
                 TypeHexagonSymmetry.L4, TypeHexagonSymmetry.L5, TypeHexagonSymmetry.L6)
 
     def is_rotation(self):
+        """
+        Returns True if this symmetry is a rotation.
+
+        :return: True if this symmetry is a rotation
+        """
         return self in TypeHexagonSymmetry.rotations()
 
     def is_reflection(self):
+        """
+        Returns True if this symmetry is a reflection.
+
+        :return: True if this symmetry is a reflection
+        """
         return self in TypeHexagonSymmetry.reflections()
 
     @staticmethod
     def ring_cells(ring):
+        """
+        Returns the cells on the border (outer ring) of a hexagonal grid of the specified side, in circular order, starting from the cell (0, 0).
+
+        :param ring: the side of the hexagonal grid (at least 2)
+        :return: the list of cells of the outer ring
+        :example:
+            from pycsp3.classes.auxiliary.enums import TypeHexagonSymmetry
+
+            print(TypeHexagonSymmetry.ring_cells(2))  # [(0, 0), (0, 1), (1, 2), (2, 1), (2, 0), (1, 0)]
+        """
         assert ring >= 2
         base = 2 * ring - 2
         return ([(0, j) for j in range(ring)]

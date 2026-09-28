@@ -153,6 +153,23 @@ class Restarts:
 
 
 class VHeuristic:
+    """
+    The base class of the annotations about heuristics, VarHeuristic and ValHeuristic.
+    Its methods random(), min() and max() are shared by both, and return the heuristic itself, so that calls can be chained.
+
+    :example:
+        from pycsp3.classes.main.annotations import VarHeuristic
+
+        x = VarArray(size=5, dom=range(5))
+
+        satisfy(
+           AllDifferent(x)
+        )
+
+        # x[0] is selected first, and then the other variables are selected randomly
+        annotate(varHeuristic=VarHeuristic().static(x[0]).random(x[1:]))
+    """
+
     def __init__(self):
         self.staticParts = []
         self.randomPart = None
@@ -160,6 +177,24 @@ class VHeuristic:
         self.maxPart = None
 
     def random(self, variables=None):
+        """
+        Specifies that choices are made randomly for the specified variables (or for all variables if None):
+        the next variable is selected randomly (VarHeuristic), or the next value to be assigned is selected randomly (ValHeuristic).
+
+        :param variables: a list of variables, or None
+        :return: this heuristic, so that calls can be chained
+        :example:
+            from pycsp3.classes.main.annotations import VarHeuristic
+
+            x = VarArray(size=5, dom=range(5))
+
+            satisfy(
+               AllDifferent(x)
+            )
+
+            # the variables of x are selected randomly
+            annotate(varHeuristic=VarHeuristic().random(x))
+        """
         variables = flatten(variables)
         checkType(variables, ([Variable], type(None)))
         self.randomPart = (variables,)
@@ -174,20 +209,101 @@ class VHeuristic:
         return variables, h_type
 
     def min(self, variables=None, *, h_type):
+        """
+        Specifies that the choice minimizing the specified criterion is made, for the specified variables (or for all variables if None).
+        Criteria are named after TypeVarHeuristic (LEXICO, DOM, DEG, DDEG, WDEG, IMPACT, ACTIVITY) for a VarHeuristic,
+        and after TypeValHeuristic (CONFLICTS, VALUE) for a ValHeuristic; they can be combined with the symbols / and +, as in "DOM/WDEG".
+
+        :param variables: a list of variables, or None
+        :param h_type: the criterion to be minimized
+        :return: this heuristic, so that calls can be chained
+        :example:
+            from pycsp3.classes.main.annotations import VarHeuristic
+
+            x = VarArray(size=5, dom=range(5))
+
+            satisfy(
+               AllDifferent(x)
+            )
+
+            # the variable with the smallest ratio of its domain size to its weighted degree is selected
+            annotate(varHeuristic=VarHeuristic().min(x, h_type="DOM/WDEG"))
+        """
         self.minPart = self._opt(variables, h_type)
         return self
 
     def max(self, variables=None, *, h_type):
+        """
+        Specifies that the choice maximizing the specified criterion is made, for the specified variables (or for all variables if None).
+        Criteria are named after TypeVarHeuristic (LEXICO, DOM, DEG, DDEG, WDEG, IMPACT, ACTIVITY) for a VarHeuristic,
+        and after TypeValHeuristic (CONFLICTS, VALUE) for a ValHeuristic; they can be combined with the symbols / and +, as in "DOM/WDEG".
+
+        :param variables: a list of variables, or None
+        :param h_type: the criterion to be maximized
+        :return: this heuristic, so that calls can be chained
+        :example:
+            from pycsp3.classes.main.annotations import VarHeuristic
+
+            x = VarArray(size=5, dom=range(5))
+
+            satisfy(
+               AllDifferent(x)
+            )
+
+            # the variable with the greatest degree is selected
+            annotate(varHeuristic=VarHeuristic().max(x, h_type="DEG"))
+        """
         self.maxPart = self._opt(variables, h_type)
         return self
 
 
 class VarHeuristic(VHeuristic):
+    """
+    An annotation about the variable ordering heuristic, to be given to annotate() with the parameter varHeuristic.
+    The heuristic is specified by chaining calls to static(), random(), min() and max().
+
+    :example:
+        from pycsp3.classes.main.annotations import VarHeuristic
+
+        x = VarArray(size=5, dom=range(5))
+        y = VarArray(size=5, dom=range(5))
+
+        satisfy(
+           AllDifferent(x),
+           AllDifferent(y)
+        )
+
+        # the variables of x are selected first; then, the variable of y with the smallest ratio dom/wdeg is selected
+        annotate(varHeuristic=VarHeuristic().static(x).min(y, h_type="DOM/WDEG"))
+    """
+
     def __init__(self, *, lc=None):
+        """
+        Builds an annotation about the variable ordering heuristic.
+
+        :param lc: the level of last-conflict reasoning, or None
+        """
         super().__init__()
         self.lc = lc
 
     def static(self, variables):
+        """
+        Specifies that the specified variables are selected first, in the order they are given.
+
+        :param variables: a list of variables
+        :return: this heuristic, so that calls can be chained
+        :example:
+            from pycsp3.classes.main.annotations import VarHeuristic
+
+            x = VarArray(size=5, dom=range(5))
+
+            satisfy(
+               AllDifferent(x)
+            )
+
+            # the variables of x are selected from the last one to the first one
+            annotate(varHeuristic=VarHeuristic().static(reversed(x)))
+        """
         variables = flatten(variables)
         checkType(variables, [Variable])
         self.staticParts.append(variables)
@@ -195,10 +311,45 @@ class VarHeuristic(VHeuristic):
 
 
 class ValHeuristic(VHeuristic):
+    """
+    An annotation about the value ordering heuristic, to be given to annotate() with the parameter valHeuristic.
+    The heuristic is specified by chaining calls to static(), random(), min() and max().
+
+    :example:
+        from pycsp3.classes.main.annotations import ValHeuristic
+
+        x = VarArray(size=5, dom=range(5))
+
+        satisfy(
+           AllDifferent(x)
+        )
+
+        # the values of the variables of x are tried from the greatest one to the smallest one
+        annotate(valHeuristic=ValHeuristic().static(x, order=[4, 3, 2, 1, 0]))
+    """
+
     def __init__(self):
         super().__init__()
 
     def static(self, variables, *, order):
+        """
+        Specifies that the values of the specified variables are tried in the specified order.
+
+        :param variables: a list of variables
+        :param order: the list of values, in the order they must be tried
+        :return: this heuristic, so that calls can be chained
+        :example:
+            from pycsp3.classes.main.annotations import ValHeuristic
+
+            x = VarArray(size=5, dom=range(5))
+
+            satisfy(
+               AllDifferent(x)
+            )
+
+            # for the variables of x, the value 0 is tried last
+            annotate(valHeuristic=ValHeuristic().static(x, order=[1, 2, 3, 4, 0]))
+        """
         variables = flatten(variables)
         checkType(variables, [Variable])
         order = flatten(order)

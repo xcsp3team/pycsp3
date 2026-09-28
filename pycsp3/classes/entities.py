@@ -196,6 +196,21 @@ class EToGather(ECtrs):
 
 
 class EToSatisfy(ECtrs):
+    """
+    The object returned by satisfy(), wrapping the constraints posted by this call.
+    Keeping it allows us to remove these constraints later, with the method delete().
+
+    :example:
+        x = VarArray(size=3, dom=range(3))
+
+        c = satisfy(
+           x[0] < x[1],
+           x[1] < x[2]
+        )
+
+        c.delete(0)
+        print(posted())  # only the constraint x[1] < x[2] remains
+    """
     # Constraints possibly stored in several groups or several blocks (block built when a group is not possible) or stand-alone constraints
 
     def __init__(self, constraints):
@@ -206,6 +221,26 @@ class EToSatisfy(ECtrs):
             super().__init__(constraints)
 
     def delete(self, i=None):
+        """
+        Removes the constraints posted by the call to satisfy() that returned this object: all of them, or only the one at the specified index.
+        This is useful when solving incrementally, for discarding constraints that are no longer relevant.
+
+        :param i: the index of the constraint to be removed, in the order of the arguments of satisfy(), or None (by default) for removing all of them
+        :example:
+            x = Var(range(10))
+
+            satisfy(
+               x % 2 == 1
+            )
+
+            # the odd values of x are successively found, the constraint posted at the previous iteration being removed each time
+            previous = None
+            while solve() is SAT:
+                print(value(x))  # 1, then 3, 5, 7 and 9
+                if previous is not None:
+                    previous.delete()
+                previous = satisfy(x > value(x))
+        """
         if i is None:
             self.entities = []
         elif len(self.entities) == 1 and isinstance(self.entities[0], ECtrs):
