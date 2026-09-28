@@ -184,6 +184,7 @@ def Var(term=None, *others, dom=None, id=None):
     error_if(term is not None and dom is not None, "The domain of a variable must be given either by terms or by the parameter dom, but not both")
     if term is not None:
         dom = flatten(term, others)
+    check_no_boolean(dom)
     if not isinstance(dom, Domain):
         if isinstance(dom, (set, frozenset)):
             dom = list(dom)
