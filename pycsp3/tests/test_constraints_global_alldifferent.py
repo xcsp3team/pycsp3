@@ -293,10 +293,10 @@ def test_xcsp3_alldifferent_matrix(run):
 # --------------------------------------------------------------------------------------------------- invalid cases
 
 @pytest.mark.parametrize("constraint", [
-    "AllDifferent(x, 2)",
     "AllDifferent(x[0], 'a')",
     "AllDifferent(None)",
     "AllDifferent(5)",
+    "AllDifferent(5, 6)",
     "AllDifferent(x, excepting='a')",
     "AllDifferent(x, excepting=2.5)",
     "AllDifferent(x, excepting=[0, 'a'])",
@@ -312,10 +312,20 @@ def test_invalid_alldifferent(run, constraint):
 
 @pytest.mark.parametrize("constraint, message", [
     ("AllDifferent(None)", "AllDifferent() requires variables (or expressions), which is not the case of None"),
-    ("AllDifferent(5)", "Wrong type for [5]"),
+    ("AllDifferent(5)", "AllDifferent() requires at least one variable (or expression), and not only integers, which is not the case of [5]"),
     ("AllDifferent([[x[0], x[1]], [x[2], x[0]]], [[x[1]]], matrix=True)",
      "With matrix=True, AllDifferent() requires a single argument (the matrix), which is not the case of 2 arguments"),
 ])
 def test_invalid_alldifferent_messages(run, constraint, message):
     r = run(X3 + f"satisfy({constraint})")
     assert not r.ok and message in r.stdout + r.stderr, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("AllDifferent(x, 2)", lambda *t: different(t) and 2 not in t),
+    ("AllDifferent(2, x)", lambda *t: different(t) and 2 not in t),
+    ("AllDifferent(x[0], 0, x[1], x[2])", lambda *t: different(t) and 0 not in t),
+])
+def test_alldifferent_with_integers(run, solver, constraint, predicate):
+    # integers among the terms (with at least one variable): the other terms must be different from them
+    check(run, solver, "x = VarArray(size=3, dom=range(4))\n" + f"satisfy({constraint})", [range(4)] * 3, predicate)

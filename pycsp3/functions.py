@@ -1958,8 +1958,10 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         else:
             return [AllDifferent(row) for row in matrix] + [AllDifferent(col) for col in columns(matrix)]
     terms = flatten(term, others)
-    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # an integer is reported below by checkType()
+    if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # integers alone are reported just below
         return None
+    error_if(all(isinstance(t, int) for t in terms),
+             "AllDifferent() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
     V = sorted({term for term in terms if isinstance(term, int)})
     if len(V) > 0:
         terms = [term for term in terms if not isinstance(term, int)]
@@ -2100,7 +2102,9 @@ def AllEqual(term, *others, excepting=None):
         return ConstraintDummyConstant(1)
     if len(terms) == 1 and isinstance(terms[0], (Variable, Node, PartialConstraint)):
         warning("A constraint AllEqual discarded because defined with 1 term", "allequal_1_term")
-        return None  # a single term is always equal to itself (as for AllDifferent()); an integer is reported below by checkType()
+        return None  # a single term is always equal to itself (as for AllDifferent()); integers alone are reported just below
+    error_if(all(isinstance(t, int) for t in terms),
+             "AllEqual() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
     V = sorted({term for term in terms if isinstance(term, int)})
     if len(V) > 0:
         error_if(len(V) != 1, "AllEqual with two specified different integer constants")
