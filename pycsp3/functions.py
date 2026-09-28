@@ -1959,8 +1959,10 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
     terms = flatten(term, others)
     if len(terms) == 0 or (len(terms) == 1 and isinstance(terms[0], (Variable, Node))):  # an integer is reported below by checkType()
         return None
-    V = sorted({term for term in terms if isinstance(term, int)})
+    V = sorted(term for term in terms if isinstance(term, int))
     if len(V) > 0:
+        if len(V) != len(set(V)):
+            return _false_constraint() # at least two identical values
         terms = [term for term in terms if not isinstance(term, int)]
         satisfy(not_belong(term, V) for term in terms)
     checkType(terms, ([Variable, Node]))
