@@ -2157,7 +2157,9 @@ def AllEqualList(term, *others, excepting=None):
 
 def _ordered(term, others, operator, lengths):
     name = ("Increasing" if operator in (TypeOrderedOperator.INCREASING, TypeOrderedOperator.STRICTLY_INCREASING) else "Decreasing") + "()"
-    error_if(term is None, name + " requires variables (or expressions), which is not the case of None")
+    # the messages are only built in case of error
+    if term is None:
+        error(name + " requires variables (or expressions), which is not the case of None")
     terms = flatten(term, others)
     if len(terms) < 2:
         return ConstraintDummyConstant(1)  # less than two terms are always ordered
@@ -2165,8 +2167,8 @@ def _ordered(term, others, operator, lengths):
     seen = set()
     for t in terms:
         key = id(t) if isinstance(t, Variable) else str(t)
-        error_if(key in seen, ("A variable" if isinstance(t, Variable) else "An expression") + " cannot be given several times to " + name
-                 + ", which is the case of " + str(t))
+        if key in seen:
+            error(("A variable" if isinstance(t, Variable) else "An expression") + " cannot be given several times to " + name + ", which is the case of " + str(t))
         seen.add(key)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
     checkType(terms, [Variable])
@@ -2177,12 +2179,13 @@ def _ordered(term, others, operator, lengths):
         lengths = [lengths] * (len(terms) - 1)
     checkType(lengths, ([int, Variable], type(None)))
     if lengths is not None:
-        error_if(any(isinstance(v, int) for v in lengths) and any(isinstance(v, Variable) for v in lengths),
-                 "The lengths of " + name + " must be either all integers or all variables, which is not the case of " + str(lengths))
+        if any(isinstance(v, int) for v in lengths) and any(isinstance(v, Variable) for v in lengths):
+            error("The lengths of " + name + " must be either all integers or all variables, which is not the case of " + str(lengths))
         if len(terms) == len(lengths):
             lengths = lengths[:-1]  # we assume that the last value is useless
-        error_if(len(terms) != len(lengths) + 1, name + " requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one "
-                 + "being ignored), which is not the case of " + str(lengths) + " for " + str(len(terms)) + " terms")
+        if len(terms) != len(lengths) + 1:
+            error(name + " requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one being ignored), which is not the case of "
+                  + str(lengths) + " for " + str(len(terms)) + " terms")
     if options.mini:
         return [expr(operator, terms[i] if lengths is None else terms[i] + lengths[i], terms[i + 1]) for i in range(len(terms) - 1)]
     return ECtr(ConstraintOrdered(terms, operator, lengths))
