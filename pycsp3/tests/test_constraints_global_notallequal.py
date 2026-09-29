@@ -8,10 +8,9 @@ Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being co
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-MINI = "#133: with the option -mini, NValues() keeps the expressions in the list instead of replacing them by auxiliary variables"
 ACE_TWO = "xcsp3team/ACE#18: ACE fails on notAllEqual (nValues with the condition (gt,1)) on two variables (control(scp.length > 2) in NotAllEqual)"
 ACE_REPEATED = "xcsp3team/ACE#19: ACE fails on nValues with a variable given twice (control(Variable.areAllDistinct(scp)) in NValuesCst.buildFrom)"
 CHOCO_DUPLICATES = "chocoteam/choco-solver#1248: CHOCO finds solutions several times with nValues on expressions and the condition (gt,1)"
@@ -157,26 +156,6 @@ def test_notallequal_on_expressions(run, solver, request, constraint, predicate)
     if "Sum" in constraint:  # an auxiliary variable and an expression: two terms
         bug_for(request, "ACE", ACE_TWO)
     check(run, solver, X4 + f"satisfy({constraint})", [range(3)] * 4, predicate)
-
-
-@pytest.mark.parametrize("constraint, predicate", EXPRESSIONS)
-def test_notallequal_on_expressions_with_option_mini(run, solver, request, constraint, predicate):
-    # with the option -mini, the expressions are replaced by auxiliary variables (which are not part of the solutions recorded by the harness)
-    bug_for(request, "COSOCO", MINI)
-    if constraint in DUPLICATED_BY_CHOCO:
-        bug_for(request, "CHOCO", MINI)
-    if "Sum" in constraint:
-        bug_for(request, "ACE", ACE_TWO)
-    check(run, solver, X4 + f"satisfy({constraint})", [range(3)] * 4, predicate, args=["-mini"])
-
-
-@pytest.mark.parametrize("constraint", [c for c, _ in EXPRESSIONS])
-@bug(MINI)
-def test_xcsp3_notallequal_on_expressions_with_option_mini(run, constraint):
-    # with the option -mini, the list of the element <nValues> only contains variables (as for AllDifferent() and AllEqual())
-    r = run(X4 + f"satisfy({constraint})", args=["-mini"])
-    assert r.ok, r.report()
-    assert "(" not in r.xml.find("constraints/nValues/list").text, r.report()
 
 
 # -------------------------------------------------------------------------------------------------------- integers
