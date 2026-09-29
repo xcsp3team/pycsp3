@@ -10,10 +10,9 @@ import re
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-REPEATED = "#134: NotAllEqual() keeps the terms given several times (ACE fails on a variable given several times, and cosoco refuses it)"
 ACE_TWO = "xcsp3team/ACE#18: ACE fails on notAllEqual (nValues with the condition (gt,1)) on two variables (control(scp.length > 2) in NotAllEqual)"
 CHOCO_DUPLICATES = "chocoteam/choco-solver#1248: CHOCO finds solutions several times with nValues on expressions and the condition (gt,1)"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
@@ -118,9 +117,8 @@ def test_notallequal_with_other_constraints(run, solver):
     ("NotAllEqual(x[0], x, x[3])", lambda *t: not_equal(t)),
     ("NotAllEqual(Sum(x[0], x[1]), Sum(x[0], x[1]), x[2], x[3])", lambda a, b, c, d: not_equal((a + b, c, d))),
 ])
-def test_notallequal_with_a_repeated_term(run, solver, request, constraint, predicate):
+def test_notallequal_with_a_repeated_term(run, solver, constraint, predicate):
     # a term given several times does not change the number of distinct values: it is kept once (at least three terms remain here)
-    bug_for(request, ("ACE", "COSOCO"), REPEATED)
     check(run, solver, X4 + f"satisfy({constraint})", [range(3)] * 4, predicate)
 
 
@@ -129,8 +127,8 @@ def test_notallequal_with_a_repeated_term(run, solver, request, constraint, pred
     ("NotAllEqual(x[0], x, x[2])", ["x[0]", "x[1]", "x[2]"]),
     ("NotAllEqual(x[0] + 1, x[0] + 1, x[1] + 1)", ["add(x[0],1)", "add(x[1],1)"]),
     ("NotAllEqual(Sum(x[0], x[1]), Sum(x[0], x[1]), x[2])", ["aux_gb[0]", "x[2]"]),  # the two sums are replaced by the same auxiliary variable
+    ("NotAllEqual(x[0], 1, 1, x[1])", ["x[0]", "aux_gb[0]", "x[1]"]),  # the integer is replaced by a single auxiliary variable
 ])
-@bug(REPEATED)
 def test_xcsp3_notallequal_with_a_repeated_term(run, constraint, terms):
     # each term given several times is kept once in the element <nValues>
     r = run(X3 + f"satisfy({constraint})")
@@ -148,7 +146,7 @@ def test_notallequal_trivially_false(run, solver, request, constraint):
 
 
 @pytest.mark.parametrize("constraint", ["NotAllEqual(x[0])", "NotAllEqual([x[0]])", "NotAllEqual([])", "NotAllEqual(x[0], [])",
-                                        pytest.param("NotAllEqual(x[0], x[0])", marks=bug(REPEATED))])  # x[0] kept once: a single term
+                                        "NotAllEqual(x[0], x[0])"])  # x[0] kept once: a single term
 def test_xcsp3_notallequal_trivially_false(run, constraint):
     # with less than two terms, no element <nValues> is generated, but a table with an empty set of supports; a warning is displayed
     r = run(X3 + f"satisfy({constraint}, x[1] == 1)")
@@ -198,7 +196,7 @@ def test_notallequal_on_expressions(run, solver, request, constraint, predicate)
 ])
 def test_notallequal_with_integers(run, solver, request, constraint, predicate):
     # an integer among the terms is a term like the others (it is replaced by an auxiliary variable, not part of the solutions)
-    if constraint == "NotAllEqual(x[0], 5)":
+    if constraint in ("NotAllEqual(x[0], 5)", "NotAllEqual(x[0], 1, 1)"):  # two terms (the integer 1 being kept once)
         bug_for(request, "ACE", ACE_TWO)
     check(run, solver, X3 + f"satisfy({constraint}, x[2] != 0)", [range(3)] * 3, lambda a, b, c: predicate(a, b, c) and c != 0)
 

@@ -2965,15 +2965,28 @@ def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
     if len(terms) == 1 and excepting is None and condition is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) \
             and not isinstance(terms[0], bool):  # an invalid term is reported below (as for AllEqual())
         return ConstraintDummyConstant(1)
+    integers = {}  # an integer given several times is replaced by a single auxiliary variable
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
         elif isinstance(t, int):
-            terms[i] = auxiliary().replace_int(t)
+            key = (t, type(t))  # True and 1 are not mixed up (a Boolean is reported by replace_int())
+            if key not in integers:
+                integers[key] = auxiliary().replace_int(t)
+            terms[i] = integers[key]
     # if _is_mixed_list(terms):
     #     terms = [auxiliary().replace_node(t) if isinstance(t, Node) else t for t in terms]
     checkType(terms, ([Variable], [Node], [Variable, Node]))
     # checkType(terms, ([Variable], [Node]))
+    # a term given several times does not change the number of distinct values: it is kept once (identical partial constraints being
+    # replaced by the same auxiliary variable); variables are compared by identity (== being redefined for building expressions)
+    kept = {}
+    for t in terms:
+        kept.setdefault(id(t) if isinstance(t, Variable) else str(t), t)
+    if len(kept) < len(terms):
+        terms = list(kept.values())
+        if len(terms) == 1 and excepting is None and condition is None:
+            return ConstraintDummyConstant(1)
     if excepting is not None:
         excepting = flatten(excepting)
         checkType(excepting, [int])
