@@ -2463,9 +2463,18 @@ def Precedence(within, *, values=None, covered=False):
         values = list(values)
         if len(set(values)) != len(values):
             error("Precedence() requires distinct values, which is not the case of " + str(values))
-    if len(within) < 2:
-        warning("A constraint Precedence discarded because defined with " + str(len(within)) + " variables")
+    elif len(within) == 1:
+        values = sorted({v for x in within for v in x.dom.all_values()})  # the ordered union of the domains (as in XCSP3)
+    if len(within) == 0:
+        warning("A constraint Precedence discarded because defined with 0 variables")
         return None
+    if len(within) == 1:  # a single variable cannot take the values after the first one
+        x = within[0]
+        if covered:
+            return None if len(values) == 0 else x == values[0] if len(values) == 1 else _false_constraint()
+        if len(values) < 2:
+            return None
+        return x == values[0] if all(v in values for v in x.dom.all_values()) else not_belong(x, values[1:])
     if values is None:
         return ECtr(ConstraintPrecedence(within))
     if len(values) < 2:

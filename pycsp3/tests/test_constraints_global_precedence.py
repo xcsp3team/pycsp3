@@ -14,7 +14,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-SINGLE_VARIABLE = "#149: Precedence() on a single variable is discarded, whereas the variable cannot take the values after the first one"
 COVERED = "#150: Precedence() ignores covered=True when values is not given, or when a single value is given"
 ACE_COVERED = ("xcsp3team/ACE#21: ACE fails on precedence with covered when the list has not more variables than values "
                "(control(!covered || list.length > values.length) in Precedence)")
@@ -179,9 +178,9 @@ def test_precedence_example_with_covered(run, solver):
 ], ids=["one variable", "one variable (not in a list)", "one variable without values", "one variable covered", "one variable one value covered",
         "one value covered", "one value", "no value", "no variable"])
 def test_precedence_degenerated(run, solver, request, constraint, predicate):
-    if constraint.startswith("Precedence([x[0]]") or constraint.startswith("Precedence(x[0]"):
-        request.applymarker(bug(SINGLE_VARIABLE))
-    elif "covered" in constraint:
+    if constraint == "Precedence([x[0]], values=[0, 1], covered=True)":  # the constraint false, posted by a table with an empty set of supports
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
+    elif "covered" in constraint and not constraint.startswith("Precedence([x[0]]"):
         request.applymarker(bug(COVERED))
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
 
