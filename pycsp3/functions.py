@@ -2156,6 +2156,8 @@ def AllEqualList(term, *others, excepting=None):
 
 
 def _ordered(term, others, operator, lengths):
+    name = ("Increasing" if operator in (TypeOrderedOperator.INCREASING, TypeOrderedOperator.STRICTLY_INCREASING) else "Decreasing") + "()"
+    error_if(term is None, name + " requires variables (or expressions), which is not the case of None")
     terms = flatten(term, others)
     if len(terms) == 0:
         return None
@@ -2170,7 +2172,8 @@ def _ordered(term, others, operator, lengths):
     if lengths is not None:
         if len(terms) == len(lengths):
             lengths = lengths[:-1]  # we assume that the last value is useless
-        assert len(terms) == len(lengths) + 1
+        error_if(len(terms) != len(lengths) + 1, name + " requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one "
+                 + "being ignored), which is not the case of " + str(lengths) + " for " + str(len(terms)) + " terms")
     if options.mini:
         return [expr(operator, terms[i] if lengths is None else terms[i] + lengths[i], terms[i + 1]) for i in range(len(terms) - 1)]
     return ECtr(ConstraintOrdered(terms, operator, lengths))

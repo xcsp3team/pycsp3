@@ -15,7 +15,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-INVALID = "#137: Increasing() and Decreasing(): None is ignored, and lengths of a wrong size are reported by an assert without message"
 SINGLE = "#138: Increasing() and Decreasing() with a single term generate an element <ordered> with a single variable"
 MIXED = "#139: lengths mixing integers and variables are accepted, and generate an invalid element <lengths>"
 REPEATED = "#140: a term given several times to Increasing() or Decreasing() is accepted (the solvers fail or are wrong on x[0] op x[0])"
@@ -302,11 +301,11 @@ def test_xcsp3_ordered_on_expressions(run, function):
     "x, lengths=2.5",
     "x, lengths='a'",
     "x, lengths=[1, 'a', 2]",
-    pytest.param("x, lengths=[1, 2]", marks=bug(INVALID)),
-    pytest.param("x, lengths=[1, 2, 3, 4, 5]", marks=bug(INVALID)),
-    pytest.param("x, lengths=[]", marks=bug(INVALID)),
-    pytest.param("x[:3], lengths=x[3:]", marks=bug(INVALID)),
-    pytest.param("None", marks=bug(INVALID)),
+    "x, lengths=[1, 2]",
+    "x, lengths=[1, 2, 3, 4, 5]",
+    "x, lengths=[]",
+    "x[:3], lengths=x[3:]",
+    "None",
 ])
 def test_invalid_ordered(run, function, arguments):
     assert_fails(run(X4 + f"satisfy({function}({arguments}))"))
@@ -320,3 +319,13 @@ def test_ordered_with_an_integer(run, solver, function, strict, op):
         assert_solutions(r, brute_force([range(3)] * 3, lambda a, b, c: ordered((a, 1, b), op)))
     else:
         assert_fails(r)
+
+
+@pytest.mark.parametrize("constraint, message", [
+    ("Increasing(None)", "Increasing() requires variables (or expressions), which is not the case of None"),
+    ("Decreasing(x, lengths=[1])", "Decreasing() requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one being ignored), "
+                                   "which is not the case of [1] for 4 terms"),
+])
+def test_invalid_ordered_message(run, constraint, message):
+    r = run(X4 + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()
