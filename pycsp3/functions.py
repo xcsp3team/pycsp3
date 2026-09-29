@@ -2170,6 +2170,8 @@ def _ordered(term, others, operator, lengths):
         lengths = [lengths] * (len(terms) - 1)
     checkType(lengths, ([int, Variable], type(None)))
     if lengths is not None:
+        error_if(any(isinstance(v, int) for v in lengths) and any(isinstance(v, Variable) for v in lengths),
+                 "The lengths of " + name + " must be either all integers or all variables, which is not the case of " + str(lengths))
         if len(terms) == len(lengths):
             lengths = lengths[:-1]  # we assume that the last value is useless
         error_if(len(terms) != len(lengths) + 1, name + " requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one "

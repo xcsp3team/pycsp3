@@ -15,7 +15,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-MIXED = "#139: lengths mixing integers and variables are accepted, and generate an invalid element <lengths>"
 REPEATED = "#140: a term given several times to Increasing() or Decreasing() is accepted (the solvers fail or are wrong on x[0] op x[0])"
 CHOCO_LENGTHS = "chocoteam/choco-solver#1248: CHOCO orders the whole sequence x[0], x[0] + l[0], x[1], x[1] + l[1], ..., which is wrong for some lengths"
 
@@ -176,7 +175,6 @@ def test_ordered_with_lengths_given_by_variables(run, solver, request, function,
 
 @pytest.mark.parametrize("function", ["Increasing", "Decreasing"])
 @pytest.mark.parametrize("lengths", ["[1, y]", "[y, 1]"])
-@bug(MIXED)
 def test_ordered_with_lengths_mixing_integers_and_variables(run, function, lengths):
     # the lengths are either all integers or all variables (syntax of XCSP3): mixing them is forbidden
     assert_fails(run("x = VarArray(size=3, dom=range(4))\ny = Var(dom=range(2))\n" + f"satisfy({function}(x, lengths={lengths}))"))
@@ -323,6 +321,7 @@ def test_ordered_with_an_integer(run, solver, function, strict, op):
     ("Increasing(None)", "Increasing() requires variables (or expressions), which is not the case of None"),
     ("Decreasing(x, lengths=[1])", "Decreasing() requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one being ignored), "
                                    "which is not the case of [1] for 4 terms"),
+    ("Increasing(x[:3], lengths=[1, x[3]])", "The lengths of Increasing() must be either all integers or all variables, which is not the case of [1, x[3]]"),
 ])
 def test_invalid_ordered_message(run, constraint, message):
     r = run(X4 + f"satisfy({constraint})")
