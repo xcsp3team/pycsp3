@@ -17,17 +17,18 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-INVALID = ("(to be reported) arguments of LexIncreasing() and LexDecreasing() reported by an assert without message or a Python error inside "
+INVALID = ("#142: arguments of LexIncreasing() and LexDecreasing() reported by an assert without message or a Python error inside "
            "PyCSP3, and a tuple of values refused (instead of being accepted as a list)")
-LESS_THAN_TWO = "(to be reported) LexIncreasing() and LexDecreasing() with less than two lists (or rows) generate an element <lex> with one list or without list"
-ONE_VARIABLE = "(to be reported) LexIncreasing() and LexDecreasing() on lists of one variable generate lex on lists of one variable, instead of ordered"
-SINGLE_LIST = "(to be reported) LexIncreasing() and LexDecreasing() on a single list of variables take each variable as a list, instead of reporting an error"
-LOGICAL = ("(to be reported) LexIncreasing() and LexDecreasing() in a logical expression: ~ and imply() fail, and | and & generate meta-constraints "
+LESS_THAN_TWO = "#143: LexIncreasing() and LexDecreasing() with less than two lists (or rows) generate an element <lex> with one list or without list"
+ONE_VARIABLE = "#144: LexIncreasing() and LexDecreasing() on lists of one variable generate lex on lists of one variable, instead of ordered"
+SINGLE_LIST = "#145: LexIncreasing() and LexDecreasing() on a single list of variables take each variable as a list, instead of reporting an error"
+LOGICAL = ("#146: LexIncreasing() and LexDecreasing() in a logical expression: ~ and imply() fail, and | and & generate meta-constraints "
            "<or> and <and> (not part of XCSP3-core; ACE takes <or> as <and>, CHOCO and cosoco do not handle them), instead of a decomposition")
-REPEATED = "(to be reported) a list given several times to LexIncreasing() or LexDecreasing() is accepted (ACE fails on x[0] x[0], and CHOCO accepts x[0] <lex x[0])"
-ACE_SHARED = ("(to be reported) ACE fails on lex when, once removed the positions where the same variable is in both lists, "
+REPEATED = "#147: a list given several times to LexIncreasing() or LexDecreasing() is accepted (ACE fails on x[0] x[0], and CHOCO accepts x[0] <lex x[0])"
+ACE_SHARED = ("xcsp3team/ACE#20: ACE fails on lex when, once removed the positions where the same variable is in both lists, "
               "a single position remains (control(1 < half) in LexicographicVar)")
-CHOCO_MATRIX = ("(to be reported) CHOCO loses solutions of lex-matrix with ge or gt (the columns of the matrix whose rows are reversed are ordered, "
+COSOCO_ROWS = "xcsp3team/cosoco#82: cosoco fails on a matrix given by explicit rows (Matrix variable (x does not exist)"
+CHOCO_MATRIX = ("chocoteam/choco-solver#1248: CHOCO loses solutions of lex-matrix with ge or gt (the columns of the matrix whose rows are reversed are ordered, "
                 "instead of the reversed sequence of columns)")
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
@@ -176,6 +177,20 @@ def test_lex_matrix_with_a_single_row(run, solver, request, function, strict, op
         bug_for(request, "CHOCO", LESS_THAN_TWO)
     check(run, solver, f"x = VarArray(size=[1, 3], dom=range(3))\nsatisfy({function}(x{strict}, matrix=True))", [range(3)] * 3,
           lambda *t: all(OPERATORS[op](a, b) for a, b in zip(t, t[1:])))
+
+
+@pytest.mark.parametrize("function, strict, op", ORDERINGS, ids=IDS)
+@pytest.mark.parametrize("rows_of, lists", [
+    ("x[0], x[2]", lambda t: [t[0:3], t[6:9]]),
+    ("[[x[0][0], x[1][1]], [x[2][2], x[0][1]]]", lambda t: [(t[0], t[4]), (t[8], t[1])]),
+], ids=["two rows", "any variables"])
+def test_lex_matrix_given_by_explicit_rows(run, solver, request, function, strict, op, rows_of, lists):
+    # the rows are not contiguous in the array: the matrix is written with explicit rows
+    bug_for(request, "COSOCO", COSOCO_ROWS)
+    if function == "LexDecreasing":
+        bug_for(request, "CHOCO", CHOCO_MATRIX)
+    check(run, solver, f"x = VarArray(size=[3, 3], dom=range(2))\nsatisfy({function}({rows_of}{strict}, matrix=True))", [range(2)] * 9,
+          lambda *t: lex(lists(t), op) and lex(list(zip(*lists(t))), op))
 
 
 # ------------------------------------------------------------------------------------------------------------- limits
