@@ -15,7 +15,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-SINGLE = "#138: Increasing() and Decreasing() with a single term generate an element <ordered> with a single variable"
 MIXED = "#139: lengths mixing integers and variables are accepted, and generate an invalid element <lengths>"
 REPEATED = "#140: a term given several times to Increasing() or Decreasing() is accepted (the solvers fail or are wrong on x[0] op x[0])"
 CHOCO_LENGTHS = "chocoteam/choco-solver#1248: CHOCO orders the whole sequence x[0], x[0] + l[0], x[1], x[1] + l[1], ..., which is wrong for some lengths"
@@ -255,7 +254,6 @@ def test_ordered_trivially_true(run, solver, function, strict, op, terms):
 
 @pytest.mark.parametrize("function", ["Increasing", "Decreasing"])
 @pytest.mark.parametrize("terms", ["x[0]", "[x[0]]", "x[0], []"])
-@bug(SINGLE)
 def test_xcsp3_ordered_with_a_single_term(run, function, terms):
     # with a single term, no element <ordered> is generated (the syntax requires at least two variables)
     r = run(X3 + f"satisfy({function}({terms}), x[1] == 1, x[2] == 2)")
@@ -329,3 +327,13 @@ def test_ordered_with_an_integer(run, solver, function, strict, op):
 def test_invalid_ordered_message(run, constraint, message):
     r = run(X4 + f"satisfy({constraint})")
     assert not r.ok and message in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Increasing(x[0]) | (x[1] == 1)", lambda a, b, c: True),
+    ("(x[1] == 1) | Decreasing([x[0]])", lambda a, b, c: True),
+    ("~Increasing(x[0]) | (x[1] == 1)", lambda a, b, c: b == 1),
+])
+def test_ordered_with_a_single_term_in_logical_expressions(run, solver, constraint, predicate):
+    # a single term is always ordered, including in a logical expression
+    check(run, solver, X3 + f"satisfy({constraint}, x[2] != 0)", [range(3)] * 3, lambda a, b, c: predicate(a, b, c) and c != 0)

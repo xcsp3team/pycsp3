@@ -1053,7 +1053,9 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
         return ConstraintDummyConstant(1 if self.val > other else 0)
 
     def __or__(self, other):
-        assert isinstance(other, ECtr) and self.val == 0, "For the moment"
+        if self.val == 1:
+            return self  # always true
+        assert self.val == 0 and isinstance(other, (ECtr, Node)), "For the moment"
         return other
 
     def __add__(self, other):

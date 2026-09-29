@@ -2159,8 +2159,8 @@ def _ordered(term, others, operator, lengths):
     name = ("Increasing" if operator in (TypeOrderedOperator.INCREASING, TypeOrderedOperator.STRICTLY_INCREASING) else "Decreasing") + "()"
     error_if(term is None, name + " requires variables (or expressions), which is not the case of None")
     terms = flatten(term, others)
-    if len(terms) == 0:
-        return None
+    if len(terms) < 2:
+        return ConstraintDummyConstant(1)  # less than two terms are always ordered
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
     checkType(terms, [Variable])
     checkType(operator, TypeOrderedOperator)
