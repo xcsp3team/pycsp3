@@ -2157,7 +2157,9 @@ def AllEqualList(term, *others, excepting=None):
 
 def _ordered(term, others, operator, lengths):
     name = ("Increasing" if operator in (TypeOrderedOperator.INCREASING, TypeOrderedOperator.STRICTLY_INCREASING) else "Decreasing") + "()"
-    error_if(term is None, name + " requires variables (or expressions), which is not the case of None")
+    # the messages are only built in case of error
+    if term is None:
+        error(name + " requires variables (or expressions), which is not the case of None")
     terms = flatten(term, others)
     if len(terms) < 2:
         return ConstraintDummyConstant(1)  # less than two terms are always ordered
@@ -2165,8 +2167,8 @@ def _ordered(term, others, operator, lengths):
     seen = set()
     for t in terms:
         key = id(t) if isinstance(t, Variable) else str(t)
-        error_if(key in seen, ("A variable" if isinstance(t, Variable) else "An expression") + " cannot be given several times to " + name
-                 + ", which is the case of " + str(t))
+        if key in seen:
+            error(("A variable" if isinstance(t, Variable) else "An expression") + " cannot be given several times to " + name + ", which is the case of " + str(t))
         seen.add(key)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
     checkType(terms, [Variable])
@@ -2177,12 +2179,13 @@ def _ordered(term, others, operator, lengths):
         lengths = [lengths] * (len(terms) - 1)
     checkType(lengths, ([int, Variable], type(None)))
     if lengths is not None:
-        error_if(any(isinstance(v, int) for v in lengths) and any(isinstance(v, Variable) for v in lengths),
-                 "The lengths of " + name + " must be either all integers or all variables, which is not the case of " + str(lengths))
+        if any(isinstance(v, int) for v in lengths) and any(isinstance(v, Variable) for v in lengths):
+            error("The lengths of " + name + " must be either all integers or all variables, which is not the case of " + str(lengths))
         if len(terms) == len(lengths):
             lengths = lengths[:-1]  # we assume that the last value is useless
-        error_if(len(terms) != len(lengths) + 1, name + " requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one "
-                 + "being ignored), which is not the case of " + str(lengths) + " for " + str(len(terms)) + " terms")
+        if len(terms) != len(lengths) + 1:
+            error(name + " requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one being ignored), which is not the case of "
+                  + str(lengths) + " for " + str(len(terms)) + " terms")
     if options.mini:
         return [expr(operator, terms[i] if lengths is None else terms[i] + lengths[i], terms[i + 1]) for i in range(len(terms) - 1)]
     return ECtr(ConstraintOrdered(terms, operator, lengths))
@@ -2259,23 +2262,41 @@ def Decreasing(term, *others, strict=False, lengths=None):
 
 
 def _lex(term, others, operator, matrix):
-    if len(others) == 0:
+    name = ("LexIncreasing" if operator in (TypeOrderedOperator.INCREASING, TypeOrderedOperator.STRICTLY_INCREASING) else "LexDecreasing") + "()"
+    # the messages are only built in case of error
+    if term is None or any(v is None for v in others):
+        error(name + " requires lists of variables, which is not the case of None")
+    for v in others:
+        if isinstance(v, range):
+            error(name + " does not accept a range as a list of values (a list or a tuple is expected), which is the case of " + str(v))
+    if len(others) == 0:  # a list of lists (for instance, a two-dimensional array, whose rows are considered)
+        term = list(term) if isinstance(term, types.GeneratorType) else term
+        if not isinstance(term, (list, tuple)) or any(not isinstance(v, (list, tuple, types.GeneratorType)) for v in term):
+            error(name + " requires several lists, or a list of lists (for instance, a two-dimensional array), which is not the case of " + str(term))
         lists = [flatten(v) for v in term]
-        assert is_matrix(lists, Variable)
-    elif not is_1d_list(term, Variable):
-        l1, l2 = flatten(term), flatten(others)
-        assert len(l1) == len(l2), str(len(l1)) + " vs " + str(len(l2))
-        lists = [l1, l2]
     else:
-        if len(others) == 1 and is_1d_list(others[0], int):
-            assert matrix is False
-            lists = [flatten(term)] + [flatten(others[0])]
-        else:
-            assert all(is_1d_list(v, Variable) for v in others)
-            lists = [flatten(term)] + [flatten(v) for v in others]
-    assert is_matrix(lists)  # new check because some null cells (variables) may have been discarded
-    assert all(len(t) == len(lists[0]) for t in lists)
-    assert all(checkType(l, [int, Variable] if i == 1 else [Variable]) for i, l in enumerate(lists))
+        lists = [flatten(v) for v in (term,) + others]  # a variable alone is a list of one variable
+    for i, lst in enumerate(lists):
+        if len(lists) == 2 and i == 1 and len(lst) > 0 and all(isinstance(v, int) and not isinstance(v, bool) for v in lst):  # a list of values
+            if matrix:
+                error("With matrix=True, " + name + " requires lists of variables, which is not the case of " + str(lst))
+        elif any(not isinstance(v, Variable) for v in lst):
+            error(name + " requires lists of variables (the second of two lists being possibly a list of values), which is not the case of " + str(lst))
+    if len(lists) < 2:  # less than two lists are always ordered (with matrix=True, the columns of a single row are ordered)
+        return _ordered(lists[0], (), operator, None) if matrix and len(lists) == 1 else ConstraintDummyConstant(1)
+    if any(len(lst) != len(lists[0]) for lst in lists):
+        error(name + " requires lists of the same length, which is not the case of " + str(lists))
+    if len(lists[0]) == 0:
+        error(name + " requires non-empty lists")
+    # a list given several times is forbidden; variables are compared by identity (== being redefined for building expressions)
+    seen = set()
+    for lst in lists:
+        key = tuple(id(v) if isinstance(v, Variable) else v for v in lst)
+        if key in seen:
+            error("A list cannot be given several times to " + name + ", which is the case of " + str(lst))
+        seen.add(key)
+    if len(lists[0]) == 1:  # lists of one element (lex requiring lists of at least two variables): the constraint ordered is posted
+        return expr(operator, lists[0][0], lists[1][0]) if isinstance(lists[1][0], int) else _ordered([lst[0] for lst in lists], (), operator, None)
     checkType(operator, TypeOrderedOperator)
     return ECtr(ConstraintLexMatrix(lists, operator)) if matrix else ECtr(ConstraintLex(lists, operator))
 
