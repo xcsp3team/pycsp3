@@ -2418,7 +2418,7 @@ def Precedence(within, *, values=None, covered=False):
 
     :param within: the scope of the constraint
     :param values: the values such that the ith value must precede the i+1th value in the scope.
-    When None, all values in the scope of the first variable are considered
+    When None, the ordered union of the domains of the variables is considered
     :param covered: if True, all specified values must be assigned to the variables of the scope
     :return: a constraint Precedence
     :example:
@@ -2443,23 +2443,46 @@ def Precedence(within, *, values=None, covered=False):
 
         # a solution: [0, 0, 0, 0, 0, 1, 2]
     """
+    # the messages are only built in case of error
+    if within is None:
+        error("Precedence() requires variables (or expressions), which is not the case of None")
     within = flatten(within)
-    if len(within) < 2:
-        warning("A constraint Precedence discarded because defined with " + str(len(within)) + " variables")
+    for t in within:
+        if not isinstance(t, (Variable, Node, PartialConstraint, int)):  # a Boolean is reported when replaced (domain)
+            error("Precedence() requires variables (or expressions), which is not the case of " + str(t))
+    # the expressions and the integers are replaced by auxiliary variables
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(within, nodes_too=True, int_too=True)
+    # a variable given several times is only kept at its first occurrence (the next ones cannot be the first occurrence of a value)
+    seen = set()
+    within = [x for x in within if id(x) not in seen and not seen.add(id(x))]
+    if values is not None:
+        if isinstance(values, types.GeneratorType):
+            values = list(values)
+        if not isinstance(values, (range, tuple, list)) or any(not isinstance(v, int) or isinstance(v, bool) for v in values):
+            error("Precedence() requires a list, a tuple or a range of integers for values, which is not the case of " + str(values))
+        values = list(values)
+        if len(set(values)) != len(values):
+            error("Precedence() requires distinct values, which is not the case of " + str(values))
+    elif covered or len(within) == 1:
+        values = sorted({v for x in within for v in x.dom.all_values()})  # the ordered union of the domains (as in XCSP3)
+    if len(within) == 0:
+        warning("A constraint Precedence discarded because defined with 0 variables")
         return None
+    if len(within) == 1:  # a single variable cannot take the values after the first one
+        x = within[0]
+        if covered:
+            return None if len(values) == 0 else x == values[0] if len(values) == 1 else _false_constraint()
+        if len(values) < 2:
+            return None
+        return x == values[0] if all(v in values for v in x.dom.all_values()) else not_belong(x, values[1:])
     if values is None:
         return ECtr(ConstraintPrecedence(within))
-        # assert all(scope[i].dom == scope[0].dom for i in range(1, len(scope)))
-        # values = scope[0].dom.all_values()
-    if isinstance(values, types.GeneratorType):
-        values = list(values)
-    assert isinstance(values, (range, tuple, list)) and all(isinstance(v, int) for v in values)
-    values = list(values)
-    if len(values) > 1:
-        return ECtr(ConstraintPrecedence(within, values=values, covered=covered))
-    else:
+    if len(values) < 2:
+        if covered and len(values) == 1:
+            return Count(within, value=values[0]) >= 1  # the single value must be assigned
         warning("A constraint Precedence discarded because defined with " + str(len(values)) + " values", "precedence_" + str(len(values)) + "_value")
         return None
+    return ECtr(ConstraintPrecedence(within, values=values, covered=covered))
 
 
 ''' Method for handling complete/partial constraints '''

@@ -586,6 +586,34 @@ class ConstraintPrecedence(Constraint):
         assert covered is False or values is not None
         if values is not None:
             self.arg(TypeCtrArg.VALUES, values, attributes=[(TypeCtrArg.COVERED, "true")] if covered else [], content_ordered=True)
+        self._lst, self._values, self._covered = lst, values, covered  # kept for the decomposition
+
+    def to_list(self):
+        """
+        Returns the nodes of a decomposition of linear size, adapted from the encoding of Walsh (Symmetry breaking using value precedence, ECAI 2006,
+        Section 4): y[i] is the greatest rank (from 1) in values of the values assigned to the variables before the ith one, and r[i] is the rank of the
+        value of the ith variable (0 if not in values), each variable being assigned the value of rank at most y[i] + 1; y[i] and r[i] are
+        auxiliary variables defined functionally (so that the decomposition can be used in any logical expression).
+        """
+        values = self._values if self._values is not None else sorted({v for x in self._lst for v in x.dom.all_values()})
+        m, nodes, y, y_ranks = len(values), [], 0, {0}
+        for i, x in enumerate(self._lst):
+            dom = set(x.dom.all_values())
+            ranks = [k + 1 for k, v in enumerate(values) if v in dom]
+            if len(ranks) == 0:
+                continue  # the rank is 0
+            terms = [(x == values[k - 1]) * k for k in ranks]
+            rank = auxiliary().replace_node(terms[0] if len(terms) == 1 else Node.build(TypeNode.ADD, *terms), values=[0] + ranks)
+            nodes.append(rank <= y + 1)
+            if i < len(self._lst) - 1 or self._covered:
+                y_ranks |= set(ranks)
+                y = rank if isinstance(y, int) else auxiliary().replace_node(Node.build(TypeNode.MAX, y, rank), values=sorted(y_ranks))
+        if self._covered:
+            nodes.append(y == m)
+        return nodes
+
+    def to_intension(self):
+        return functions.conjunction(self.to_list())
 
 
 # class ConstraintSubsetAllDifferent(ConstraintUnmergeable):
@@ -1643,7 +1671,7 @@ def global_indirection(c):
         return c.to_intension()
     if isinstance(c, ConstraintRefutation):  # we transform a refutation into a conjunction (Node)
         return c.to_intension()
-    if isinstance(c, (ConstraintOrdered, ConstraintLex, ConstraintLexMatrix)):
+    if isinstance(c, (ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence)):
         return c.to_intension()
     if isinstance(c, ConstraintWithCondition):
         reif = next((attribute for attribute in c.attributes if attribute[0] == TypeXML.REIFIED_BY), None)
