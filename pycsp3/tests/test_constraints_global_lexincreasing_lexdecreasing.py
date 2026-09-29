@@ -16,7 +16,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ONE_VARIABLE = "#144: LexIncreasing() and LexDecreasing() on lists of one variable generate lex on lists of one variable, instead of ordered"
 SINGLE_LIST = "#145: LexIncreasing() and LexDecreasing() on a single list of variables take each variable as a list, instead of reporting an error"
 REPEATED = "#147: a list given several times to LexIncreasing() or LexDecreasing() is accepted (ACE fails on x[0] x[0], and CHOCO accepts x[0] <lex x[0])"
 ACE_SHARED = ("xcsp3team/ACE#20: ACE fails on lex when, once removed the positions where the same variable is in both lists, "
@@ -205,9 +204,8 @@ def test_lex_with_a_limit_given_by_a_tuple(run, solver, function, strict, op):
 
 
 @pytest.mark.parametrize("function, strict, op", ORDERINGS, ids=IDS)
-def test_lex_with_a_limit_of_one_value(run, solver, request, function, strict, op):
+def test_lex_with_a_limit_of_one_value(run, solver, function, strict, op):
     # a list of one variable compared with a list of one value: an intensional constraint is posted
-    bug_for(request, "CHOCO", ONE_VARIABLE)
     check(run, solver, f"x = VarArray(size=2, dom=range(3))\nsatisfy({function}([x[0]], [1]{strict}))", [range(3)] * 2, lambda a, b: OPERATORS[op](a, 1))
 
 
@@ -250,7 +248,6 @@ def test_lex_on_lists_of_one_variable(run, solver, function, strict, op, lists, 
 
 @pytest.mark.parametrize("function, op", [("LexIncreasing", "le"), ("LexDecreasing", "ge")])
 @pytest.mark.parametrize("lists, variables", [("[x[0][0]], [x[1][0]]", "x[0][0] x[1][0]"), ("x[0][0], x[1][0], x[2][0]", "x[][0]")])
-@bug(ONE_VARIABLE)
 def test_xcsp3_lex_on_lists_of_one_variable(run, function, op, lists, variables):
     # the syntax of lex requires lists of at least two variables: the constraint ordered is posted instead (as for Increasing() and Decreasing())
     r = run(X32 + f"satisfy({function}({lists}))")
