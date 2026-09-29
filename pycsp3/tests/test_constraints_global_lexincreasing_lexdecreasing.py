@@ -16,7 +16,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-SINGLE_LIST = "#145: LexIncreasing() and LexDecreasing() on a single list of variables take each variable as a list, instead of reporting an error"
 REPEATED = "#147: a list given several times to LexIncreasing() or LexDecreasing() is accepted (ACE fails on x[0] x[0], and CHOCO accepts x[0] <lex x[0])"
 ACE_SHARED = ("xcsp3team/ACE#20: ACE fails on lex when, once removed the positions where the same variable is in both lists, "
               "a single position remains (control(1 < half) in LexicographicVar)")
@@ -259,7 +258,6 @@ def test_xcsp3_lex_on_lists_of_one_variable(run, function, op, lists, variables)
 
 @pytest.mark.parametrize("function", FUNCTIONS)
 @pytest.mark.parametrize("arguments", ["x", "x[0], strict=True", "(v for v in x)"])
-@bug(SINGLE_LIST)
 def test_lex_on_a_single_list(run, function, arguments):
     # a single list of variables (and not a list of lists) is an error
     assert_fails(run("x = VarArray(size=3, dom=range(3))\n" + f"satisfy({function}({arguments}))"))
@@ -366,7 +364,7 @@ def test_lex_on_an_array_with_holes(run, function):
     ("x[0], x[1], x[0]", "A list cannot be given several times to {f}(), which is the case of [x[0][0], x[0][1], x[0][2]]"),
 ])
 def test_invalid_lex_message(run, request, function, arguments, message):
-    if arguments in ("x[0]", "x[0], x[1], x[0]"):
-        request.applymarker(bug(SINGLE_LIST if arguments == "x[0]" else REPEATED))
+    if arguments == "x[0], x[1], x[0]":
+        request.applymarker(bug(REPEATED))
     r = run(X33 + f"satisfy({function}({arguments}))")
     assert not r.ok and message.format(f=function) in r.stdout, r.report()

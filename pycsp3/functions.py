@@ -2268,6 +2268,8 @@ def _lex(term, others, operator, matrix):
             error(name + " does not accept a range as a list of values (a list or a tuple is expected), which is the case of " + str(v))
     if len(others) == 0:  # a list of lists (for instance, a two-dimensional array, whose rows are considered)
         term = list(term) if isinstance(term, types.GeneratorType) else term
+        if not isinstance(term, (list, tuple)) or any(not isinstance(v, (list, tuple, types.GeneratorType)) for v in term):
+            error(name + " requires several lists, or a list of lists (for instance, a two-dimensional array), which is not the case of " + str(term))
         lists = [flatten(v) for v in term]
     else:
         lists = [flatten(v) for v in (term,) + others]  # a variable alone is a list of one variable
