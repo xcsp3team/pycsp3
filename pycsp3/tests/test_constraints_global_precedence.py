@@ -15,17 +15,17 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-SINGLE_VARIABLE = "(to be reported) Precedence() on a single variable is discarded, whereas the variable cannot take the values after the first one"
-COVERED = "(to be reported) Precedence() ignores covered=True when values is not given, or when a single value is given"
-INVALID = ("(to be reported) invalid arguments of Precedence() accepted (None, repeated values, strings in the list) "
+SINGLE_VARIABLE = "#149: Precedence() on a single variable is discarded, whereas the variable cannot take the values after the first one"
+COVERED = "#150: Precedence() ignores covered=True when values is not given, or when a single value is given"
+INVALID = ("#151: invalid arguments of Precedence() accepted (None, repeated values, strings in the list) "
            "or reported by an assert without message")
-EXPRESSIONS = "(to be reported) expressions and integers in the list of Precedence() generate an invalid element <precedence>, instead of auxiliary variables"
-ACE_COVERED = ("(to be reported) ACE fails on precedence with covered when the list has not more variables than values "
+EXPRESSIONS = "#152: expressions and integers in the list of Precedence() generate an invalid element <precedence>, instead of auxiliary variables"
+ACE_COVERED = ("xcsp3team/ACE#21: ACE fails on precedence with covered when the list has not more variables than values "
                "(control(!covered || list.length > values.length) in Precedence)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-REPEATED = "(to be reported) a variable given several times to Precedence() is kept (cosoco refuses it), instead of keeping its first occurrence only"
-LOGICAL = ("(to be reported) Precedence() in a logical expression: ~ and imply() fail, and | and & generate meta-constraints <or> and <and> "
+REPEATED = "#153: a variable given several times to Precedence() is kept (cosoco refuses it), instead of keeping its first occurrence only"
+LOGICAL = ("#154: Precedence() in a logical expression: ~ and imply() fail, and | and & generate meta-constraints <or> and <and> "
            "(not part of XCSP3-core), instead of a decomposition")
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)

@@ -18,7 +18,7 @@ ACE_NEGATIVE = "xcsp3team/ACE#12: ACE fails on abs, dist, mul, div and mod with 
 # The cases that a solver says it does not handle (not reported): for each constraint, the solvers and the reasons
 SKIPPED = {"x ** z == y": {"ACE": "ACE does not implement pow with a variable exponent (not implemented)"}}
 CHOCO_POW = "chocoteam/choco-solver#1248: CHOCO does not support pow in some intensional constraints"
-COSOCO_XEQYEQK = ("(to be reported) cosoco gives an invalid solution on a = (x = k) when a is not a 0/1 variable "
+COSOCO_XEQYEQK = ("xcsp3team/cosoco#87: cosoco gives an invalid solution on a = (x = k) when a is not a 0/1 variable "
                   "(Solution Error: constraint X = (Y = k) is not valid)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
