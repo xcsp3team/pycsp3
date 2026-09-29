@@ -14,7 +14,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ALL = ("ACE", "CHOCO", "COSOCO")
 SINGLE_VARIABLE = "#149: Precedence() on a single variable is discarded, whereas the variable cannot take the values after the first one"
 COVERED = "#150: Precedence() ignores covered=True when values is not given, or when a single value is given"
 INVALID = ("#151: invalid arguments of Precedence() accepted (None, repeated values, strings in the list) "
@@ -25,8 +24,6 @@ ACE_COVERED = ("xcsp3team/ACE#21: ACE fails on precedence with covered when the 
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 REPEATED = "#153: a variable given several times to Precedence() is kept (cosoco refuses it), instead of keeping its first occurrence only"
-LOGICAL = ("#154: Precedence() in a logical expression: ~ and imply() fail, and | and & generate meta-constraints <or> and <and> "
-           "(not part of XCSP3-core), instead of a decomposition")
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
 SYMBOLIC = "precedence on symbolic variables is not part of XCSP3-core"
@@ -212,8 +209,7 @@ def test_precedence_on_sliding_windows(run, solver):
     ("imply(x[0] == 2, Precedence(x, values=[1, 0]))", lambda *t: t[0] != 2 or precedence(t, [1, 0])),
     ("Precedence(x, values=[0, 1, 2], covered=True) | (x[0] == 2)", lambda *t: precedence(t, [0, 1, 2], covered=True) or t[0] == 2),
 ], ids=["not", "or", "and", "imply", "or covered"])
-def test_precedence_in_logical_expressions(run, solver, request, constraint, predicate):
-    bug_for(request, ("CHOCO", "COSOCO") if "&" in constraint else ALL, LOGICAL)
+def test_precedence_in_logical_expressions(run, solver, constraint, predicate):
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 
