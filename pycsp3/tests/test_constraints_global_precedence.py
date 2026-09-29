@@ -20,7 +20,6 @@ ACE_COVERED = ("xcsp3team/ACE#21: ACE fails on precedence with covered when the 
                "(control(!covered || list.length > values.length) in Precedence)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-REPEATED = "#153: a variable given several times to Precedence() is kept (cosoco refuses it), instead of keeping its first occurrence only"
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
 SYMBOLIC = "precedence on symbolic variables is not part of XCSP3-core"
@@ -96,13 +95,11 @@ def test_precedence_on_symbolic_variables(run, solver):
     pytest.skip(SYMBOLIC)
 
 
-def test_precedence_with_a_repeated_variable(run, solver, request):
+def test_precedence_with_a_repeated_variable(run, solver):
     # a variable may appear several times: only its first occurrence counts, and so is kept
-    bug_for(request, "COSOCO", REPEATED)
     check(run, solver, X4 + "satisfy(Precedence([x[0], x[1], x[0], x[2]], values=[0, 1, 2]))", D4, lambda a, b, c, d: precedence((a, b, a, c), [0, 1, 2]))
 
 
-@bug(REPEATED)
 def test_xcsp3_precedence_with_a_repeated_variable(run):
     r = run(X4 + "satisfy(Precedence([x[0], x[1], x[0], x[2]], values=[0, 1, 2]))")
     assert r.ok, r.report()

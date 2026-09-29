@@ -2452,6 +2452,9 @@ def Precedence(within, *, values=None, covered=False):
             error("Precedence() requires variables (or expressions), which is not the case of " + str(t))
     # the expressions and the integers are replaced by auxiliary variables
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(within, nodes_too=True, int_too=True)
+    # a variable given several times is only kept at its first occurrence (the next ones cannot be the first occurrence of a value)
+    seen = set()
+    within = [x for x in within if id(x) not in seen and not seen.add(id(x))]
     if values is not None:
         if isinstance(values, types.GeneratorType):
             values = list(values)
