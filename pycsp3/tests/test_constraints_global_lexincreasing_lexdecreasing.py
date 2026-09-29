@@ -16,7 +16,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-LESS_THAN_TWO = "#143: LexIncreasing() and LexDecreasing() with less than two lists (or rows) generate an element <lex> with one list or without list"
 ONE_VARIABLE = "#144: LexIncreasing() and LexDecreasing() on lists of one variable generate lex on lists of one variable, instead of ordered"
 SINGLE_LIST = "#145: LexIncreasing() and LexDecreasing() on a single list of variables take each variable as a list, instead of reporting an error"
 REPEATED = "#147: a list given several times to LexIncreasing() or LexDecreasing() is accepted (ACE fails on x[0] x[0], and CHOCO accepts x[0] <lex x[0])"
@@ -166,10 +165,8 @@ def test_lex_matrix_given_by_rows(run, solver, request, function, strict, op):
 
 
 @pytest.mark.parametrize("function, strict, op", ORDERINGS, ids=IDS)
-def test_lex_matrix_with_a_single_row(run, solver, request, function, strict, op):
+def test_lex_matrix_with_a_single_row(run, solver, function, strict, op):
     # with matrix=True, the columns of a single row (lists of one variable) are ordered
-    if function == "LexDecreasing" or strict:
-        bug_for(request, "CHOCO", LESS_THAN_TWO)
     check(run, solver, f"x = VarArray(size=[1, 3], dom=range(3))\nsatisfy({function}(x{strict}, matrix=True))", [range(3)] * 3,
           lambda *t: all(OPERATORS[op](a, b) for a, b in zip(t, t[1:])))
 
@@ -228,16 +225,13 @@ def test_lex_with_a_repeated_list(run, function, lists):
 
 @pytest.mark.parametrize("function, strict, op", ORDERINGS, ids=IDS)
 @pytest.mark.parametrize("lists", ["[x[0]]", "[]"])
-def test_lex_trivially_true(run, solver, request, function, strict, op, lists):
+def test_lex_trivially_true(run, solver, function, strict, op, lists):
     # with less than two lists, the constraint always holds
-    if lists == "[]":  # an element <lex> without list
-        bug_for(request, "CHOCO", LESS_THAN_TWO)
     check(run, solver, X32 + f"satisfy({function}({lists}{strict}), x[1][0] == 1)", D32, lambda *t: t[2] == 1)
 
 
 @pytest.mark.parametrize("function", FUNCTIONS)
 @pytest.mark.parametrize("lists", ["[x[0]]", "[]"])
-@bug(LESS_THAN_TWO)
 def test_xcsp3_lex_with_less_than_two_lists(run, function, lists):
     # with less than two lists, no element <lex> is generated (the syntax requires at least two lists)
     r = run(X32 + f"satisfy({function}({lists}), x[1][0] == 1)")

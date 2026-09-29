@@ -2277,9 +2277,11 @@ def _lex(term, others, operator, matrix):
                 error("With matrix=True, " + name + " requires lists of variables, which is not the case of " + str(lst))
         elif any(not isinstance(v, Variable) for v in lst):
             error(name + " requires lists of variables (the second of two lists being possibly a list of values), which is not the case of " + str(lst))
+    if len(lists) < 2:  # less than two lists are always ordered (with matrix=True, the columns of a single row are ordered)
+        return _ordered(lists[0], (), operator, None) if matrix and len(lists) == 1 else ConstraintDummyConstant(1)
     if any(len(lst) != len(lists[0]) for lst in lists):
         error(name + " requires lists of the same length, which is not the case of " + str(lists))
-    if len(lists) > 0 and len(lists[0]) == 0:
+    if len(lists[0]) == 0:
         error(name + " requires non-empty lists")
     checkType(operator, TypeOrderedOperator)
     return ECtr(ConstraintLexMatrix(lists, operator)) if matrix else ECtr(ConstraintLex(lists, operator))
