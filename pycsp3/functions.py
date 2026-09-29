@@ -2463,7 +2463,7 @@ def Precedence(within, *, values=None, covered=False):
         values = list(values)
         if len(set(values)) != len(values):
             error("Precedence() requires distinct values, which is not the case of " + str(values))
-    elif len(within) == 1:
+    elif covered or len(within) == 1:
         values = sorted({v for x in within for v in x.dom.all_values()})  # the ordered union of the domains (as in XCSP3)
     if len(within) == 0:
         warning("A constraint Precedence discarded because defined with 0 variables")
@@ -2478,6 +2478,8 @@ def Precedence(within, *, values=None, covered=False):
     if values is None:
         return ECtr(ConstraintPrecedence(within))
     if len(values) < 2:
+        if covered and len(values) == 1:
+            return Count(within, value=values[0]) >= 1  # the single value must be assigned
         warning("A constraint Precedence discarded because defined with " + str(len(values)) + " values", "precedence_" + str(len(values)) + "_value")
         return None
     return ECtr(ConstraintPrecedence(within, values=values, covered=covered))

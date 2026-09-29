@@ -11,10 +11,9 @@ domains of the variables; with covered, the last value of V must also be assigne
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-COVERED = "#150: Precedence() ignores covered=True when values is not given, or when a single value is given"
 ACE_COVERED = ("xcsp3team/ACE#21: ACE fails on precedence with covered when the list has not more variables than values "
                "(control(!covered || list.length > values.length) in Precedence)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
@@ -141,9 +140,10 @@ def test_precedence_without_values(run, solver, dom, domains):
     ("range(3)", [range(3)] * 4),
     ("lambda i: range(i, i + 2)", [range(i, i + 2) for i in range(4)]),
 ], ids=["same domains", "shifted domains"])
-@bug(COVERED)
-def test_precedence_without_values_covered(run, solver, dom, domains):
+def test_precedence_without_values_covered(run, solver, request, dom, domains):
     # without values, covered applies to the ordered union of the domains
+    if dom != "range(3)":  # 4 variables and 5 values
+        bug_for(request, "ACE", ACE_COVERED)
     union = sorted(set().union(*[set(d) for d in domains]))
     check(run, solver, f"x = VarArray(size=4, dom={dom})\nsatisfy(Precedence(x, covered=True))", domains, lambda *t: precedence(t, union, covered=True))
 
@@ -180,8 +180,6 @@ def test_precedence_example_with_covered(run, solver):
 def test_precedence_degenerated(run, solver, request, constraint, predicate):
     if constraint == "Precedence([x[0]], values=[0, 1], covered=True)":  # the constraint false, posted by a table with an empty set of supports
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
-    elif "covered" in constraint and not constraint.startswith("Precedence([x[0]]"):
-        request.applymarker(bug(COVERED))
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
 
 
@@ -209,7 +207,7 @@ def test_precedence_in_logical_expressions(run, solver, constraint, predicate):
 
 @pytest.mark.parametrize("constraint, expected", [
     ("Precedence(x)", ("x[]", None, None)),
-    pytest.param("Precedence(x, covered=True)", ("x[]", "0 1 2", "true"), marks=bug(COVERED)),  # the union of the domains
+    ("Precedence(x, covered=True)", ("x[]", "0 1 2", "true")),  # the union of the domains
     ("Precedence(x, values=[0, 1, 2])", ("x[]", "0 1 2", None)),
     ("Precedence(x, values=range(3), covered=True)", ("x[]", "0 1 2", "true")),
     ("Precedence(x[1:], values=(2, 0))", ("x[1..3]", "2 0", None)),
