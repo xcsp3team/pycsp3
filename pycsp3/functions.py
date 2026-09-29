@@ -2955,10 +2955,12 @@ def NValues(within, *within_complement, excepting=None, condition=None):
 
         # a solution: [0, 0, 1, 1, 1, 1, 1, 2]
     """
+    error_if(within is None, "NValues() requires variables (or expressions), which is not the case of None")
     terms = flatten(within, within_complement)
     if len(terms) == 0:
         return ConstraintDummyConstant(0)
-    if len(terms) == 1 and excepting is None and condition is None:
+    if len(terms) == 1 and excepting is None and condition is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) \
+            and not isinstance(terms[0], bool):  # an invalid term is reported below (as for AllEqual())
         return ConstraintDummyConstant(1)
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
@@ -3031,6 +3033,7 @@ def NotAllEqual(term, *others):
 
         # a solution: [0, 0, 1, 0, 0, 1]
     """
+    error_if(term is None, "NotAllEqual() requires variables (or expressions), which is not the case of None")
     return NValues(term, others) > 1
 
 

@@ -11,7 +11,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-INVALID_TERM = "#131: NotAllEqual() with a single invalid term (None, a string, a range, ...) posts false instead of reporting an error"
 INTEGERS_ONLY = "#132: NotAllEqual() given only integers is accepted, while AllDifferent() and AllEqual() report an error"
 MINI = "#133: with the option -mini, NValues() keeps the expressions in the list instead of replacing them by auxiliary variables"
 ACE_TWO = "xcsp3team/ACE#18: ACE fails on notAllEqual (nValues with the condition (gt,1)) on two variables (control(scp.length > 2) in NotAllEqual)"
@@ -262,14 +261,19 @@ def test_xcsp3_notallequal_with_an_integer(run):
     "NotAllEqual(x[0], True)",
     "NotAllEqual(x[0], range(3))",
     "NotAllEqual(x, excepting=0)",
-    pytest.param("NotAllEqual(None)", marks=bug(INVALID_TERM)),
-    pytest.param("NotAllEqual('a')", marks=bug(INVALID_TERM)),
-    pytest.param("NotAllEqual(2.5)", marks=bug(INVALID_TERM)),
-    pytest.param("NotAllEqual(range(3))", marks=bug(INVALID_TERM)),
-    pytest.param("NotAllEqual({'a': x[0]})", marks=bug(INVALID_TERM)),
+    "NotAllEqual(None)",
+    "NotAllEqual('a')",
+    "NotAllEqual(2.5)",
+    "NotAllEqual(range(3))",
+    "NotAllEqual({'a': x[0]})",
 ])
 def test_invalid_notallequal(run, constraint):
     assert_fails(run(X3 + f"satisfy({constraint})"))
+
+
+def test_invalid_notallequal_message(run):
+    r = run(X3 + "satisfy(NotAllEqual(None))")
+    assert not r.ok and "NotAllEqual() requires variables (or expressions), which is not the case of None" in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("constraint", ["NotAllEqual(1, 2)", "NotAllEqual(1, 1)", "NotAllEqual(5)"])
