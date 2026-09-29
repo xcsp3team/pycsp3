@@ -13,10 +13,9 @@ import operator
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-REPEATED = "#147: a list given several times to LexIncreasing() or LexDecreasing() is accepted (ACE fails on x[0] x[0], and CHOCO accepts x[0] <lex x[0])"
 ACE_SHARED = ("xcsp3team/ACE#20: ACE fails on lex when, once removed the positions where the same variable is in both lists, "
               "a single position remains (control(1 < half) in LexicographicVar)")
 COSOCO_ROWS = "xcsp3team/cosoco#82: cosoco fails on a matrix given by explicit rows (Matrix variable (x does not exist)"
@@ -212,7 +211,6 @@ def test_lex_with_a_limit_of_one_value(run, solver, function, strict, op):
 
 @pytest.mark.parametrize("function", FUNCTIONS)
 @pytest.mark.parametrize("lists", ["x[0], x[0]", "x[0], x[1], x[0]", "[x[0], x[1], x[0]]"])
-@bug(REPEATED)
 def test_lex_with_a_repeated_list(run, function, lists):
     # a list given several times is forbidden (on x[0] x[0], ACE fails, and CHOCO accepts x[0] <lex x[0])
     assert_fails(run(X32 + f"satisfy({function}({lists}))"))
@@ -363,8 +361,6 @@ def test_lex_on_an_array_with_holes(run, function):
     ("x[0], x[1][:2]", "{f}() requires lists of the same length"),
     ("x[0], x[1], x[0]", "A list cannot be given several times to {f}(), which is the case of [x[0][0], x[0][1], x[0][2]]"),
 ])
-def test_invalid_lex_message(run, request, function, arguments, message):
-    if arguments == "x[0], x[1], x[0]":
-        request.applymarker(bug(REPEATED))
+def test_invalid_lex_message(run, function, arguments, message):
     r = run(X33 + f"satisfy({function}({arguments}))")
     assert not r.ok and message.format(f=function) in r.stdout, r.report()

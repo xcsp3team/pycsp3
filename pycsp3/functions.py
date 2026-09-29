@@ -2285,6 +2285,13 @@ def _lex(term, others, operator, matrix):
         error(name + " requires lists of the same length, which is not the case of " + str(lists))
     if len(lists[0]) == 0:
         error(name + " requires non-empty lists")
+    # a list given several times is forbidden; variables are compared by identity (== being redefined for building expressions)
+    seen = set()
+    for lst in lists:
+        key = tuple(id(v) if isinstance(v, Variable) else v for v in lst)
+        if key in seen:
+            error("A list cannot be given several times to " + name + ", which is the case of " + str(lst))
+        seen.add(key)
     if len(lists[0]) == 1:  # lists of one element (lex requiring lists of at least two variables): the constraint ordered is posted
         return expr(operator, lists[0][0], lists[1][0]) if isinstance(lists[1][0], int) else _ordered([lst[0] for lst in lists], (), operator, None)
     checkType(operator, TypeOrderedOperator)
