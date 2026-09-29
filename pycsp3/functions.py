@@ -2161,6 +2161,13 @@ def _ordered(term, others, operator, lengths):
     terms = flatten(term, others)
     if len(terms) < 2:
         return ConstraintDummyConstant(1)  # less than two terms are always ordered
+    # a term given several times is forbidden; variables are compared by identity (== being redefined for building expressions)
+    seen = set()
+    for t in terms:
+        key = id(t) if isinstance(t, Variable) else str(t)
+        error_if(key in seen, ("A variable" if isinstance(t, Variable) else "An expression") + " cannot be given several times to " + name
+                 + ", which is the case of " + str(t))
+        seen.add(key)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
     checkType(terms, [Variable])
     checkType(operator, TypeOrderedOperator)

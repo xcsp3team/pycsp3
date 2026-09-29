@@ -12,10 +12,9 @@ import operator
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-REPEATED = "#140: a term given several times to Increasing() or Decreasing() is accepted (the solvers fail or are wrong on x[0] op x[0])"
 CHOCO_LENGTHS = "chocoteam/choco-solver#1248: CHOCO orders the whole sequence x[0], x[0] + l[0], x[1], x[1] + l[1], ..., which is wrong for some lengths"
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
@@ -111,7 +110,6 @@ def test_ordered_on_symbolic_variables(run, solver, function, strict, op):
 
 @pytest.mark.parametrize("function", ["Increasing", "Decreasing"])
 @pytest.mark.parametrize("terms", ["x[0], x[1], x[0]", "x[0], x[0]", "x[0], x, x[2]", "x[0] + 1, x[1], x[0] + 1"])
-@bug(REPEATED)
 def test_ordered_with_a_repeated_term(run, function, terms):
     # a term given several times is forbidden (on x[0] op x[0], ACE fails, CHOCO accepts x[0] < x[0], and cosoco reports its own solution
     # as invalid for x[0] <= x[0])
@@ -322,6 +320,8 @@ def test_ordered_with_an_integer(run, solver, function, strict, op):
     ("Decreasing(x, lengths=[1])", "Decreasing() requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one being ignored), "
                                    "which is not the case of [1] for 4 terms"),
     ("Increasing(x[:3], lengths=[1, x[3]])", "The lengths of Increasing() must be either all integers or all variables, which is not the case of [1, x[3]]"),
+    ("Decreasing(x[0], x[1], x[0])", "A variable cannot be given several times to Decreasing(), which is the case of x[0]"),
+    ("Increasing(x[0] + 1, x[1], x[0] + 1)", "An expression cannot be given several times to Increasing(), which is the case of add(x[0],1)"),
 ])
 def test_invalid_ordered_message(run, constraint, message):
     r = run(X4 + f"satisfy({constraint})")
