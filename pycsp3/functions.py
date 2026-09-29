@@ -2956,7 +2956,10 @@ def NValues(within, *within_complement, excepting=None, condition=None):
         # a solution: [0, 0, 1, 1, 1, 1, 1, 2]
     """
     error_if(within is None, "NValues() requires variables (or expressions), which is not the case of None")
-    terms = flatten(within, within_complement)
+    return _nvalues(flatten(within, within_complement), excepting, condition)
+
+
+def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
     if len(terms) == 0:
         return ConstraintDummyConstant(0)
     if len(terms) == 1 and excepting is None and condition is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) \
@@ -3034,7 +3037,10 @@ def NotAllEqual(term, *others):
         # a solution: [0, 0, 1, 0, 0, 1]
     """
     error_if(term is None, "NotAllEqual() requires variables (or expressions), which is not the case of None")
-    return NValues(term, others) > 1
+    terms = flatten(term, others)
+    error_if(len(terms) > 0 and all(isinstance(t, int) for t in terms),
+             "NotAllEqual() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
+    return _nvalues(terms) > 1
 
 
 def Cardinality(within, *within_complement, occurrences, closed=False):

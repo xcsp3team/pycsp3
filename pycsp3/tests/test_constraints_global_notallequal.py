@@ -11,7 +11,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-INTEGERS_ONLY = "#132: NotAllEqual() given only integers is accepted, while AllDifferent() and AllEqual() report an error"
 MINI = "#133: with the option -mini, NValues() keeps the expressions in the list instead of replacing them by auxiliary variables"
 ACE_TWO = "xcsp3team/ACE#18: ACE fails on notAllEqual (nValues with the condition (gt,1)) on two variables (control(scp.length > 2) in NotAllEqual)"
 ACE_REPEATED = "xcsp3team/ACE#19: ACE fails on nValues with a variable given twice (control(Variable.areAllDistinct(scp)) in NValuesCst.buildFrom)"
@@ -271,13 +270,16 @@ def test_invalid_notallequal(run, constraint):
     assert_fails(run(X3 + f"satisfy({constraint})"))
 
 
-def test_invalid_notallequal_message(run):
-    r = run(X3 + "satisfy(NotAllEqual(None))")
-    assert not r.ok and "NotAllEqual() requires variables (or expressions), which is not the case of None" in r.stdout, r.report()
+@pytest.mark.parametrize("constraint, message", [
+    ("NotAllEqual(None)", "NotAllEqual() requires variables (or expressions), which is not the case of None"),
+    ("NotAllEqual(1, 2)", "NotAllEqual() requires at least one variable (or expression), and not only integers, which is not the case of [1, 2]"),
+])
+def test_invalid_notallequal_message(run, constraint, message):
+    r = run(X3 + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("constraint", ["NotAllEqual(1, 2)", "NotAllEqual(1, 1)", "NotAllEqual(5)"])
-@bug(INTEGERS_ONLY)
 def test_notallequal_on_integers_only(run, constraint):
     # as for AllDifferent() and AllEqual(), at least one variable (or expression) is required
     assert_fails(run(X3 + f"satisfy({constraint})"))
