@@ -2448,8 +2448,10 @@ def Precedence(within, *, values=None, covered=False):
         error("Precedence() requires variables (or expressions), which is not the case of None")
     within = flatten(within)
     for t in within:
-        if not isinstance(t, (Variable, Node, PartialConstraint, int)):
+        if not isinstance(t, (Variable, Node, PartialConstraint, int)):  # a Boolean is reported when replaced (domain)
             error("Precedence() requires variables (or expressions), which is not the case of " + str(t))
+    # the expressions and the integers are replaced by auxiliary variables
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(within, nodes_too=True, int_too=True)
     if values is not None:
         if isinstance(values, types.GeneratorType):
             values = list(values)

@@ -16,7 +16,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 SINGLE_VARIABLE = "#149: Precedence() on a single variable is discarded, whereas the variable cannot take the values after the first one"
 COVERED = "#150: Precedence() ignores covered=True when values is not given, or when a single value is given"
-EXPRESSIONS = "#152: expressions and integers in the list of Precedence() generate an invalid element <precedence>, instead of auxiliary variables"
 ACE_COVERED = ("xcsp3team/ACE#21: ACE fails on precedence with covered when the list has not more variables than values "
                "(control(!covered || list.length > values.length) in Precedence)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
@@ -115,7 +114,6 @@ def test_xcsp3_precedence_with_a_repeated_variable(run):
     ("[x[0], 1, x[2]]", lambda a, b, c, d: (a, 1, c)),
     ("[x[0] * 2, x[1], abs(x[2] - x[3])]", lambda a, b, c, d: (a * 2, b, abs(c - d))),
 ])
-@bug(EXPRESSIONS)
 def test_precedence_on_expressions(run, solver, within, values):
     # the expressions and the integers are replaced by auxiliary variables
     check(run, solver, X4 + f"satisfy(Precedence({within}, values=[0, 1, 2]))", D4, lambda *t: precedence(values(*t), [0, 1, 2]))
