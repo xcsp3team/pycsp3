@@ -525,11 +525,38 @@ class ConstraintOrdered(Constraint):
         return functions.conjunction(self.to_list())
 
 
+def _lex_decomposition(lists, operator):
+    """
+    Returns a list of nodes, one for each pair of consecutive lists, capturing their lexicographic ordering according to the operator.
+    The disjunctive decomposition (Frisch et al., Propagation algorithms for lexicographic ordering constraints, Artificial Intelligence 170, 2006)
+    is written in a nested form (of linear size): for X <=lex Y, X0 < Y0 or (X0 = Y0 and (X1 < Y1 or (X1 = Y1 and ... Xn-1 <= Yn-1))).
+    """
+    increasing = operator in (TypeOrderedOperator.INCREASING, TypeOrderedOperator.STRICTLY_INCREASING)
+    strictly = operator in (TypeOrderedOperator.STRICTLY_INCREASING, TypeOrderedOperator.STRICTLY_DECREASING)
+    before = (lambda a, b: a < b) if increasing else (lambda a, b: a > b)
+    last = before if strictly else (lambda a, b: a <= b) if increasing else (lambda a, b: a >= b)
+
+    def pair(xs, ys):
+        node = last(xs[-1], ys[-1])
+        for i in range(len(xs) - 2, -1, -1):
+            node = before(xs[i], ys[i]) | ((xs[i] == ys[i]) & node)
+        return node
+
+    return [pair(lists[i], lists[i + 1]) for i in range(len(lists) - 1)]
+
+
 class ConstraintLex(ConstraintUnmergeable):
     def __init__(self, lst, operator):
         super().__init__(TypeCtr.LEX)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=True, lifted=True)
         self.arg(TypeCtrArg.OPERATOR, operator)
+        self._lists, self._operator = lst, operator  # kept for the decomposition
+
+    def to_list(self):
+        return _lex_decomposition(self._lists, self._operator)
+
+    def to_intension(self):
+        return functions.conjunction(self.to_list())
 
 
 class ConstraintLexMatrix(ConstraintUnmergeable):
@@ -537,6 +564,13 @@ class ConstraintLexMatrix(ConstraintUnmergeable):
         super().__init__(TypeCtr.LEX)
         self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst)
         self.arg(TypeCtrArg.OPERATOR, operator)
+        self._lists, self._operator = lst, operator  # kept for the decomposition
+
+    def to_list(self):  # both the rows and the columns are ordered
+        return _lex_decomposition(self._lists, self._operator) + _lex_decomposition([list(col) for col in zip(*self._lists)], self._operator)
+
+    def to_intension(self):
+        return functions.conjunction(self.to_list())
 
 
 class ConstraintDisjoint(ConstraintUnmergeable):
@@ -1609,7 +1643,7 @@ def global_indirection(c):
         return c.to_intension()
     if isinstance(c, ConstraintRefutation):  # we transform a refutation into a conjunction (Node)
         return c.to_intension()
-    if isinstance(c, ConstraintOrdered):
+    if isinstance(c, (ConstraintOrdered, ConstraintLex, ConstraintLexMatrix)):
         return c.to_intension()
     if isinstance(c, ConstraintWithCondition):
         reif = next((attribute for attribute in c.attributes if attribute[0] == TypeXML.REIFIED_BY), None)

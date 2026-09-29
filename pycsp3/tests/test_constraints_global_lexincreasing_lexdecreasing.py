@@ -22,8 +22,6 @@ INVALID = ("#142: arguments of LexIncreasing() and LexDecreasing() reported by a
 LESS_THAN_TWO = "#143: LexIncreasing() and LexDecreasing() with less than two lists (or rows) generate an element <lex> with one list or without list"
 ONE_VARIABLE = "#144: LexIncreasing() and LexDecreasing() on lists of one variable generate lex on lists of one variable, instead of ordered"
 SINGLE_LIST = "#145: LexIncreasing() and LexDecreasing() on a single list of variables take each variable as a list, instead of reporting an error"
-LOGICAL = ("#146: LexIncreasing() and LexDecreasing() in a logical expression: ~ and imply() fail, and | and & generate meta-constraints "
-           "<or> and <and> (not part of XCSP3-core; ACE takes <or> as <and>, CHOCO and cosoco do not handle them), instead of a decomposition")
 REPEATED = "#147: a list given several times to LexIncreasing() or LexDecreasing() is accepted (ACE fails on x[0] x[0], and CHOCO accepts x[0] <lex x[0])"
 ACE_SHARED = ("xcsp3team/ACE#20: ACE fails on lex when, once removed the positions where the same variable is in both lists, "
               "a single position remains (control(1 < half) in LexicographicVar)")
@@ -316,15 +314,13 @@ def test_lex_on_consecutive_rows(run, solver, function, strict, op):
     ("imply(x[2][0] == 0, {f}(x[0], x[1]{s}))", lambda op: lambda *t: t[4] != 0 or lex(rows(t, 3, 2)[:2], op)),
     ("{f}(x[0], [1, 2]{s}) | (x[2][0] == 0)", lambda op: lambda *t: lex([t[0:2], (1, 2)], op) or t[4] == 0),
 ], ids=["not", "or", "and", "imply", "or with a limit"])
-def test_lex_in_logical_expressions(run, solver, request, function, strict, op, constraint, predicate):
+def test_lex_in_logical_expressions(run, solver, function, strict, op, constraint, predicate):
     # the constraint is decomposed (as for Increasing() and Decreasing())
-    bug_for(request, ("CHOCO", "COSOCO") if "&" in constraint else ALL, LOGICAL)
     check(run, solver, X32 + "satisfy(" + constraint.format(f=function, s=strict) + ")", D32, predicate(op))
 
 
 @pytest.mark.parametrize("function, strict, op", ORDERINGS, ids=IDS)
-def test_lex_matrix_in_logical_expressions(run, solver, request, function, strict, op):
-    bug_for(request, ALL, LOGICAL)
+def test_lex_matrix_in_logical_expressions(run, solver, function, strict, op):
     check(run, solver, f"x = VarArray(size=[2, 2], dom=range(2))\nsatisfy(~{function}(x{strict}, matrix=True) | (x[0][0] == 1))", [range(2)] * 4,
           lambda *t: not (lex(rows(t, 2, 2), op) and lex(columns_of(t, 2, 2), op)) or t[0] == 1)
 
