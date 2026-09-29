@@ -2418,7 +2418,7 @@ def Precedence(within, *, values=None, covered=False):
 
     :param within: the scope of the constraint
     :param values: the values such that the ith value must precede the i+1th value in the scope.
-    When None, all values in the scope of the first variable are considered
+    When None, the ordered union of the domains of the variables is considered
     :param covered: if True, all specified values must be assigned to the variables of the scope
     :return: a constraint Precedence
     :example:
