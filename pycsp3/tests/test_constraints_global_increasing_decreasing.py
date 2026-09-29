@@ -16,13 +16,13 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ALL = ("ACE", "CHOCO", "COSOCO")
-TYPO = ("(to be reported) Decreasing(strict=True) in a logical expression raises AttributeError "
+TYPO = ("#136: Decreasing(strict=True) in a logical expression raises AttributeError "
         "(TypeOrderedOperator.Strictly_DECREASING in ConstraintOrdered.to_list())")
-INVALID = "(to be reported) Increasing() and Decreasing(): None is ignored, and lengths of a wrong size are reported by an assert without message"
-SINGLE = "(to be reported) Increasing() and Decreasing() with a single term generate an element <ordered> with a single variable"
-MIXED = "(to be reported) lengths mixing integers and variables are accepted, and generate an invalid element <lengths>"
-REPEATED = "(to be reported) a term given several times to Increasing() or Decreasing() is accepted (the solvers fail or are wrong on x[0] op x[0])"
-CHOCO_LENGTHS = "(to be reported) CHOCO orders the whole sequence x[0], x[0] + l[0], x[1], x[1] + l[1], ..., which is wrong for some lengths"
+INVALID = "#137: Increasing() and Decreasing(): None is ignored, and lengths of a wrong size are reported by an assert without message"
+SINGLE = "#138: Increasing() and Decreasing() with a single term generate an element <ordered> with a single variable"
+MIXED = "#139: lengths mixing integers and variables are accepted, and generate an invalid element <lengths>"
+REPEATED = "#140: a term given several times to Increasing() or Decreasing() is accepted (the solvers fail or are wrong on x[0] op x[0])"
+CHOCO_LENGTHS = "chocoteam/choco-solver#1248: CHOCO orders the whole sequence x[0], x[0] + l[0], x[1], x[1] + l[1], ..., which is wrong for some lengths"
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
 SYMBOLIC = "ordered on symbolic variables is not part of XCSP3-core"
