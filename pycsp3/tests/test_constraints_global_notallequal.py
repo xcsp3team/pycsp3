@@ -6,20 +6,21 @@ NValues(...) > 1, on variables, on expressions and on integers, in groups of con
 Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being compared with the ones computed by brute force.
 """
 
+import re
+
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
+REPEATED = "#134: NotAllEqual() keeps the terms given several times (ACE fails on a variable given several times, and cosoco refuses it)"
 ACE_TWO = "xcsp3team/ACE#18: ACE fails on notAllEqual (nValues with the condition (gt,1)) on two variables (control(scp.length > 2) in NotAllEqual)"
-ACE_REPEATED = "xcsp3team/ACE#19: ACE fails on nValues with a variable given twice (control(Variable.areAllDistinct(scp)) in NValuesCst.buildFrom)"
 CHOCO_DUPLICATES = "chocoteam/choco-solver#1248: CHOCO finds solutions several times with nValues on expressions and the condition (gt,1)"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
 COSOCO_EXPRESSIONS = "cosoco does not handle nValues on expressions (s UNSUPPORTED)"
-COSOCO_REPEATED = "cosoco does not accept a variable given several times (Constraint 0 Not All Equal : scope contains variable x[0] many times)"
 SYMBOLIC = "nValues on symbolic variables is not part of XCSP3-core (ACE and CHOCO fail, cosoco has no symbolic variables)"
 
 
@@ -32,6 +33,21 @@ def check(run, solver, code, domains, predicate, args=()):
     r = run(code, solver=solver, args=args)
     assert_solutions(r, brute_force(domains, predicate))
     return r
+
+
+def nvalues_terms(r):
+    """Returns the terms of the element <nValues>, the compact forms of the variables of one-dimensional arrays (as x[] or x[0..1]) being expanded."""
+    sizes = {a.get("id"): int(a.get("size")[1:-1]) for a in r.xml.iter("array")}
+    terms = []
+    for token in r.xml.find("constraints/nValues/list").text.split():
+        m = re.fullmatch(r"(\w+)\[(\d*)(?:\.\.(\d+))?\]", token)
+        if m is None:  # an expression
+            terms.append(token)
+        else:
+            first = int(m.group(2)) if m.group(2) else 0
+            last = int(m.group(3)) if m.group(3) else first if m.group(2) else sizes[m.group(1)] - 1
+            terms.extend(m.group(1) + "[" + str(i) + "]" for i in range(first, last + 1))
+    return terms
 
 
 X3 = "x = VarArray(size=3, dom=range(3))\n"
@@ -98,16 +114,28 @@ def test_notallequal_with_other_constraints(run, solver):
 
 
 @pytest.mark.parametrize("constraint, predicate", [
-    ("NotAllEqual(x[0], x[1], x[0])", lambda a, b, c: a != b),
-    ("NotAllEqual(x[0], x, x[2])", lambda a, b, c: not_equal((a, b, c))),
-    ("NotAllEqual(x[0], x[0])", lambda a, b, c: False),
+    ("NotAllEqual(x[0], x[1], x[2], x[0])", lambda a, b, c, d: not_equal((a, b, c))),
+    ("NotAllEqual(x[0], x, x[3])", lambda *t: not_equal(t)),
+    ("NotAllEqual(Sum(x[0], x[1]), Sum(x[0], x[1]), x[2], x[3])", lambda a, b, c, d: not_equal((a + b, c, d))),
 ])
-def test_notallequal_with_a_repeated_variable(run, solver, request, constraint, predicate):
-    # a variable is always equal to itself
-    if solver == "COSOCO":
-        pytest.skip(COSOCO_REPEATED)
-    bug_for(request, "ACE", ACE_REPEATED)
-    check(run, solver, X3 + f"satisfy({constraint})", [range(3)] * 3, predicate)
+def test_notallequal_with_a_repeated_term(run, solver, request, constraint, predicate):
+    # a term given several times does not change the number of distinct values: it is kept once (at least three terms remain here)
+    bug_for(request, ("ACE", "COSOCO"), REPEATED)
+    check(run, solver, X4 + f"satisfy({constraint})", [range(3)] * 4, predicate)
+
+
+@pytest.mark.parametrize("constraint, terms", [
+    ("NotAllEqual(x[0], x[1], x[0])", ["x[0]", "x[1]"]),
+    ("NotAllEqual(x[0], x, x[2])", ["x[0]", "x[1]", "x[2]"]),
+    ("NotAllEqual(x[0] + 1, x[0] + 1, x[1] + 1)", ["add(x[0],1)", "add(x[1],1)"]),
+    ("NotAllEqual(Sum(x[0], x[1]), Sum(x[0], x[1]), x[2])", ["aux_gb[0]", "x[2]"]),  # the two sums are replaced by the same auxiliary variable
+])
+@bug(REPEATED)
+def test_xcsp3_notallequal_with_a_repeated_term(run, constraint, terms):
+    # each term given several times is kept once in the element <nValues>
+    r = run(X3 + f"satisfy({constraint})")
+    assert r.ok, r.report()
+    assert sorted(nvalues_terms(r)) == sorted(terms), r.report()
 
 
 # ----------------------------------------------------------------------------------------------- degenerated cases
@@ -119,7 +147,8 @@ def test_notallequal_trivially_false(run, solver, request, constraint):
     check(run, solver, X3 + f"satisfy({constraint}, x[1] == 1)", [range(3)] * 3, lambda a, b, c: False)
 
 
-@pytest.mark.parametrize("constraint", ["NotAllEqual(x[0])", "NotAllEqual([x[0]])", "NotAllEqual([])", "NotAllEqual(x[0], [])"])
+@pytest.mark.parametrize("constraint", ["NotAllEqual(x[0])", "NotAllEqual([x[0]])", "NotAllEqual([])", "NotAllEqual(x[0], [])",
+                                        pytest.param("NotAllEqual(x[0], x[0])", marks=bug(REPEATED))])  # x[0] kept once: a single term
 def test_xcsp3_notallequal_trivially_false(run, constraint):
     # with less than two terms, no element <nValues> is generated, but a table with an empty set of supports; a warning is displayed
     r = run(X3 + f"satisfy({constraint}, x[1] == 1)")
