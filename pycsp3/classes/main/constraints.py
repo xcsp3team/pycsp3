@@ -518,7 +518,7 @@ class ConstraintOrdered(Constraint):
             return [lefts[i] >= lst[i + 1] for i in range(r)]
         if operator is TypeOrderedOperator.STRICTLY_INCREASING:
             return [lefts[i] < lst[i + 1] for i in range(r)]
-        assert operator is TypeOrderedOperator.Strictly_DECREASING
+        assert operator is TypeOrderedOperator.STRICTLY_DECREASING
         return [lefts[i] > lst[i + 1] for i in range(r)]
 
     def to_intension(self):

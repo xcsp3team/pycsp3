@@ -15,9 +15,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ALL = ("ACE", "CHOCO", "COSOCO")
-TYPO = ("#136: Decreasing(strict=True) in a logical expression raises AttributeError "
-        "(TypeOrderedOperator.Strictly_DECREASING in ConstraintOrdered.to_list())")
 INVALID = "#137: Increasing() and Decreasing(): None is ignored, and lengths of a wrong size are reported by an assert without message"
 SINGLE = "#138: Increasing() and Decreasing() with a single term generate an element <ordered> with a single variable"
 MIXED = "#139: lengths mixing integers and variables are accepted, and generate an invalid element <lengths>"
@@ -244,9 +241,7 @@ def test_ordered_on_sliding_windows(run, solver, function, strict, op):
     ("either({f}(x[:2]{s}), {f}(x[1:]{s}))", lambda op: lambda *t: ordered(t[:2], op) or ordered(t[1:], op)),
     ("{f}(x{s}, lengths=1) | (x[0] == 0)", lambda op: lambda *t: ordered(t, op, [1, 1]) or t[0] == 0),
 ], ids=["not", "or", "and", "imply", "either", "or with lengths"])
-def test_ordered_in_logical_expressions(run, solver, request, function, strict, op, constraint, predicate):
-    if function == "Decreasing" and strict:
-        bug_for(request, ALL, TYPO)
+def test_ordered_in_logical_expressions(run, solver, function, strict, op, constraint, predicate):
     check(run, solver, X3 + "satisfy(" + constraint.format(f=function, s=strict) + ")", [range(3)] * 3, predicate(op))
 
 
