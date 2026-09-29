@@ -18,6 +18,8 @@ ACE_NEGATIVE = "xcsp3team/ACE#12: ACE fails on abs, dist, mul, div and mod with 
 # The cases that a solver says it does not handle (not reported): for each constraint, the solvers and the reasons
 SKIPPED = {"x ** z == y": {"ACE": "ACE does not implement pow with a variable exponent (not implemented)"}}
 CHOCO_POW = "chocoteam/choco-solver#1248: CHOCO does not support pow in some intensional constraints"
+COSOCO_XEQYEQK = ("(to be reported) cosoco gives an invalid solution on a = (x = k) when a is not a 0/1 variable "
+                  "(Solution Error: constraint X = (Y = k) is not valid)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
@@ -57,6 +59,7 @@ X = [("x", "range(-3, 4)")]
 XY = [("x", "range(-3, 4)"), ("y", "range(-3, 4)")]
 XYZ = [("x", "range(-3, 4)"), ("y", "range(-3, 4)"), ("z", "range(3)")]
 XYB = [("x", "range(-3, 4)"), ("y", "range(-3, 4)"), ("b", "{0, 1}")]
+XYAB = [("x", "range(3)"), ("y", "range(3)"), ("a", "range(3)"), ("b", "range(3)")]
 
 
 def check(request, run, solver,constraints, variables, predicate, prefix=""):
@@ -228,6 +231,17 @@ def test_logical_operators(run, solver, request, constraint, predicate):
 ])
 def test_logical_operators_with_binary_variables(run, solver, request, constraint, predicate):
     check(request, run, solver,[constraint], XYB, predicate)
+
+
+@pytest.mark.parametrize("constraints, predicate", [
+    (["a == (x == 0)"], lambda x, y, a, b: a == int(x == 0)),
+    (["a == (x == 0)", "b == (y == 0)", "b <= a + 1"], lambda x, y, a, b: a == int(x == 0) and b == int(y == 0) and b <= a + 1),
+], ids=["one equality", "two equalities"])
+def test_reified_equality_with_a_non_binary_variable(run, solver, request, constraints, predicate):
+    # a and b are not 0/1 variables (domains 0..2): they can only take the values of (x == 0) and (y == 0)
+    if len(constraints) > 1:
+        bug_for(request, "COSOCO", COSOCO_XEQYEQK)
+    check(request, run, solver, constraints, XYAB, predicate)
 
 
 # ---------------------------------------------------------------------------------------------------- membership operators
