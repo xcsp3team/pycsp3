@@ -16,9 +16,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ALL = ("ACE", "CHOCO", "COSOCO")
-INVALID = ("#142: arguments of LexIncreasing() and LexDecreasing() reported by an assert without message or a Python error inside "
-           "PyCSP3, and a tuple of values refused (instead of being accepted as a list)")
 LESS_THAN_TWO = "#143: LexIncreasing() and LexDecreasing() with less than two lists (or rows) generate an element <lex> with one list or without list"
 ONE_VARIABLE = "#144: LexIncreasing() and LexDecreasing() on lists of one variable generate lex on lists of one variable, instead of ordered"
 SINGLE_LIST = "#145: LexIncreasing() and LexDecreasing() on a single list of variables take each variable as a list, instead of reporting an error"
@@ -203,11 +200,10 @@ def test_lex_with_a_limit(run, solver, function, strict, op, limit):
 
 
 @pytest.mark.parametrize("function, strict, op", ORDERINGS, ids=IDS)
-def test_lex_with_a_limit_given_by_a_tuple(run, solver, request, function, strict, op):
+def test_lex_with_a_limit_given_by_a_tuple(run, solver, function, strict, op):
     # a tuple of values is accepted, as a list
     if solver == "CHOCO":
         pytest.skip(CHOCO_LIMIT)
-    bug_for(request, ALL, INVALID)
     check(run, solver, f"x = VarArray(size=3, dom=range(3))\nsatisfy({function}(x, (1, 0, 2){strict}))", [range(3)] * 3, lambda *t: lex([t, (1, 0, 2)], op))
 
 
@@ -254,9 +250,7 @@ def test_xcsp3_lex_with_less_than_two_lists(run, function, lists):
     ("[x[0][0]], [x[1][0]]", lambda t: (t[0], t[2])),
     ("x[0][0], x[1][0], x[2][0]", lambda t: (t[0], t[2], t[4])),
 ], ids=["two lists", "three variables"])
-def test_lex_on_lists_of_one_variable(run, solver, request, function, strict, op, lists, values):
-    if lists == "x[0][0], x[1][0], x[2][0]":
-        bug_for(request, ALL, ONE_VARIABLE)
+def test_lex_on_lists_of_one_variable(run, solver, function, strict, op, lists, values):
     check(run, solver, X32 + f"satisfy({function}({lists}{strict}))", D32, lambda *t: all(OPERATORS[op](a, b) for a, b in zip(values(t), values(t)[1:])))
 
 
@@ -332,7 +326,7 @@ def test_lex_matrix_in_logical_expressions(run, solver, function, strict, op):
     ("x", ("list", ["x[0][]", "x[1][]", "x[2][]"])),
     ("x[0], x[2]", ("list", ["x[0][]", "x[2][]"])),
     ("x[0], [1, 0, 2]", ("list", ["x[0][]", "1 0 2"])),
-    pytest.param("x[0], (1, 0, 2)", ("list", ["x[0][]", "1 0 2"]), marks=bug(INVALID)),
+    ("x[0], (1, 0, 2)", ("list", ["x[0][]", "1 0 2"])),
     ("x, matrix=True", ("matrix", ["x[][]"])),
 ])
 def test_xcsp3_lex(run, function, strict, op, arguments, expected):
@@ -360,14 +354,11 @@ def test_xcsp3_lex(run, function, strict, op, arguments, expected):
     "x[0], [x[1][0] + 1, x[1][1], x[1][2]]",
     "[x[0][0] + 1, x[0][1], x[0][2]], x[1]",
 ])
-def test_invalid_lex(run, request, function, arguments):
-    if arguments not in ("x, 'a'", "[x[0][0] + 1, x[0][1], x[0][2]], x[1]"):
-        request.applymarker(bug(INVALID))
+def test_invalid_lex(run, function, arguments):
     assert_fails(run(X33 + f"satisfy({function}({arguments}))"))
 
 
 @pytest.mark.parametrize("function", FUNCTIONS)
-@bug(INVALID)
 def test_lex_on_an_array_with_holes(run, function):
     # the rows of an array with holes may have different lengths: an error is reported
     assert_fails(run(f"x = VarArray(size=[2, 3], dom=lambda i, j: None if (i, j) == (1, 2) else range(2))\nsatisfy({function}(x))"))
@@ -384,6 +375,7 @@ def test_lex_on_an_array_with_holes(run, function):
     ("x[0], x[1], x[0]", "A list cannot be given several times to {f}(), which is the case of [x[0][0], x[0][1], x[0][2]]"),
 ])
 def test_invalid_lex_message(run, request, function, arguments, message):
-    request.applymarker(bug(SINGLE_LIST if arguments == "x[0]" else REPEATED if arguments == "x[0], x[1], x[0]" else INVALID))
+    if arguments in ("x[0]", "x[0], x[1], x[0]"):
+        request.applymarker(bug(SINGLE_LIST if arguments == "x[0]" else REPEATED))
     r = run(X33 + f"satisfy({function}({arguments}))")
     assert not r.ok and message.format(f=function) in r.stdout, r.report()

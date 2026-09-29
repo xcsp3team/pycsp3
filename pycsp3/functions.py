@@ -2259,23 +2259,28 @@ def Decreasing(term, *others, strict=False, lengths=None):
 
 
 def _lex(term, others, operator, matrix):
-    if len(others) == 0:
+    name = ("LexIncreasing" if operator in (TypeOrderedOperator.INCREASING, TypeOrderedOperator.STRICTLY_INCREASING) else "LexDecreasing") + "()"
+    # the messages are only built in case of error
+    if term is None or any(v is None for v in others):
+        error(name + " requires lists of variables, which is not the case of None")
+    for v in others:
+        if isinstance(v, range):
+            error(name + " does not accept a range as a list of values (a list or a tuple is expected), which is the case of " + str(v))
+    if len(others) == 0:  # a list of lists (for instance, a two-dimensional array, whose rows are considered)
+        term = list(term) if isinstance(term, types.GeneratorType) else term
         lists = [flatten(v) for v in term]
-        assert is_matrix(lists, Variable)
-    elif not is_1d_list(term, Variable):
-        l1, l2 = flatten(term), flatten(others)
-        assert len(l1) == len(l2), str(len(l1)) + " vs " + str(len(l2))
-        lists = [l1, l2]
     else:
-        if len(others) == 1 and is_1d_list(others[0], int):
-            assert matrix is False
-            lists = [flatten(term)] + [flatten(others[0])]
-        else:
-            assert all(is_1d_list(v, Variable) for v in others)
-            lists = [flatten(term)] + [flatten(v) for v in others]
-    assert is_matrix(lists)  # new check because some null cells (variables) may have been discarded
-    assert all(len(t) == len(lists[0]) for t in lists)
-    assert all(checkType(l, [int, Variable] if i == 1 else [Variable]) for i, l in enumerate(lists))
+        lists = [flatten(v) for v in (term,) + others]  # a variable alone is a list of one variable
+    for i, lst in enumerate(lists):
+        if len(lists) == 2 and i == 1 and len(lst) > 0 and all(isinstance(v, int) and not isinstance(v, bool) for v in lst):  # a list of values
+            if matrix:
+                error("With matrix=True, " + name + " requires lists of variables, which is not the case of " + str(lst))
+        elif any(not isinstance(v, Variable) for v in lst):
+            error(name + " requires lists of variables (the second of two lists being possibly a list of values), which is not the case of " + str(lst))
+    if any(len(lst) != len(lists[0]) for lst in lists):
+        error(name + " requires lists of the same length, which is not the case of " + str(lists))
+    if len(lists) > 0 and len(lists[0]) == 0:
+        error(name + " requires non-empty lists")
     checkType(operator, TypeOrderedOperator)
     return ECtr(ConstraintLexMatrix(lists, operator)) if matrix else ECtr(ConstraintLex(lists, operator))
 
