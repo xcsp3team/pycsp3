@@ -17,7 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-SUM_TIMES = "#158: Sum(x) * y, a sum multiplied by a variable or an expression, fails with an assert without message"
 EMPTY_CONDITION = ("#159: Sum(x) in range(0), in set() and not in range(0) write the conditions (in,0..-1), (in,{}) and (notin,0..-1), "
                    "on which the solvers fail")
 HOLES_COEFFS = "#160: coefficients given for an array with holes (w * [1, 2, 3, 4]) are not discarded with the holes: assert fails"
@@ -246,6 +245,11 @@ def test_sum_with_variables_as_coefficients(run, solver):
           lambda a, b, c, d: a * c + b * d == 3)
 
 
+def test_scalar_product_of_two_lists_of_variables(run, solver):
+    r = check(run, solver, "x = VarArray(size=2, dom=range(3))\nc = VarArray(size=2, dom=range(3))\nsatisfy(x * c == 3)", D4, lambda a, b, c, d: a * c + b * d == 3)
+    assert " ".join(r.xml.find("constraints/sum/coeffs").text.split()) == "c[0] c[1]", r.report()  # the variables are the coefficients
+
+
 def test_sum_with_variables_and_integers_as_coefficients(run, solver):
     check(run, solver, "x = VarArray(size=3, dom=range(3))\nc = Var(dom=range(3))\nsatisfy(Sum(x * [1, c, 2]) == 4)", D4,
           lambda a, b, d, c: a + c * b + 2 * d == 4)
@@ -334,9 +338,7 @@ def test_sum_with_integers(run, solver, request, constraint, predicate):
     ("Sum(x[:2]) - Sum(x[:2]) >= 1", lambda *t: False),
 ])
 def test_sum_in_arithmetic_expressions(run, solver, request, constraint, predicate):
-    if constraint.startswith("Sum(x[:3]) *") or constraint.startswith("Sum(x[:2]) * Sum"):
-        bug_for(request, ("ACE", "CHOCO", "COSOCO"), SUM_TIMES)
-    elif constraint.startswith("Sum(x) - Sum(x)") or constraint.startswith("Sum(x[:2]) - Sum(x[:2])"):
+    if constraint.startswith("Sum(x) - Sum(x)") or constraint.startswith("Sum(x[:2]) - Sum(x[:2])"):
         bug_for(request, "ACE", ACE_CANCEL)
         if not constraint.endswith("== 0"):  # the sum being always 0, the constraint is false
             bug_for(request, "COSOCO", COSOCO_CANCEL)

@@ -1295,6 +1295,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __mul__(self, other):
         if not isinstance(other, int):
             pair = self._simplify_operation(other)
+            if pair is None and isinstance(other, (Variable, Node, PartialConstraint)):  # a sum multiplied by a variable, an expression or a sum
+                pair = (auxiliary().replace_partial_constraint(self), auxiliary().replace_partial_constraint(other) if isinstance(other, PartialConstraint) else other)
             return Node.build(TypeNode.MUL, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.MUL, other)
         if not isinstance(self.constraint, ConstraintSum):
             return Node.build(TypeNode.MUL, self._simplify_operation(other))
