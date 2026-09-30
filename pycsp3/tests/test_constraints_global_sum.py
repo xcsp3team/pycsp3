@@ -263,6 +263,18 @@ def test_scalar_product_without_sum(run, solver, constraint, predicate):
     check(run, solver, X4 + f"satisfy({constraint})", D4, lambda *t: predicate(t[0] + 2 * t[1] + 3 * t[2] + 4 * t[3]))
 
 
+@pytest.mark.parametrize("constraint, predicate", [
+    ("x * [1, 2, 3, 4] in {3, 5}", lambda s: s in (3, 5)),
+    ("x * [1, 2, 3, 4] in [3, 5]", lambda s: s in (3, 5)),
+    ("x * [1, 2, 3, 4] not in {3, 5}", lambda s: s not in (3, 5)),
+    ("x * [1, 2, 3, 4] not in [3, 5]", lambda s: s not in (3, 5)),
+    ("x * [1, 2, 3, 4] in range(3, 6)", lambda s: 3 <= s <= 5),
+])
+def test_scalar_product_without_sum_compared_with_a_set(run, solver, request, constraint, predicate):
+    notin_bugs(request, constraint)  # a sum with the condition notin (a literal list on the right of 'in' being changed into a tuple by Python)
+    check(run, solver, X4 + f"satisfy({constraint})", D4, lambda *t: predicate(t[0] + 2 * t[1] + 3 * t[2] + 4 * t[3]))
+
+
 def test_sum_with_variables_as_coefficients(run, solver):
     check(run, solver, "x = VarArray(size=2, dom=range(3))\nc = VarArray(size=2, dom=range(3))\nsatisfy(Sum(x * c) == 3)", D4,
           lambda a, b, c, d: a * c + b * d == 3)
@@ -386,10 +398,14 @@ def test_sum_in_arithmetic_expressions(run, solver, request, constraint, predica
     ("Sum(x[0] * 3) in {0, 3}", lambda a: 3 * a in (0, 3)),
     ("Sum(x[0] * 2, condition=('in', range(1, 3)))", lambda a: 1 <= 2 * a <= 2),
     ("Sum(x[0] * 2, condition=('notin', {2, 4}))", lambda a: 2 * a not in (2, 4)),
+    ("x[:1] * [2] in {2, 4}", lambda a: 2 * a in (2, 4)),
+    ("x[:1] * [2] in [0, 4]", lambda a: 2 * a in (0, 4)),
+    ("x[:1] * [2] not in range(1, 4)", lambda a: not 1 <= 2 * a <= 3),
 ], ids=["one variable", "one variable in a list", "one variable with a coefficient", "one negated variable", "one variable (scalar product)",
         "one variable with condition", "one variable in a set", "one variable and one integer", "one variable (scalar product without Sum)",
         "one variable with a coefficient in a set", "one variable with a coefficient and an interval as condition",
-        "one variable with a coefficient and notin as condition"])
+        "one variable with a coefficient and notin as condition", "one variable (scalar product without Sum) in a set",
+        "one variable (scalar product without Sum) in a list", "one variable (scalar product without Sum) not in a range"])
 def test_sum_on_a_single_variable(run, solver, constraint, predicate):
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(t[0]) and t[3] != 1)
 
@@ -397,7 +413,8 @@ def test_sum_on_a_single_variable(run, solver, constraint, predicate):
 def test_xcsp3_sum_has_at_least_two_terms(run):
     # XCSP3-core requires |X| = |C| >= 2
     for constraint in ["Sum(x[0] * 3) == 3", "Sum(-x[0]) == -1", "Sum(x[:1] * [2]) <= 2", "Sum(x[0], condition=('eq', 1))", "x[:1] * [2] <= 2",
-                       "Sum(x[0] * 3) in {0, 3}", "Sum(x[0] * 2, condition=('in', range(1, 3)))"]:
+                       "Sum(x[0] * 3) in {0, 3}", "Sum(x[0] * 2, condition=('in', range(1, 3)))", "x[:1] * [2] in range(1, 4)",
+                       "x[:1] * [2] not in range(1, 4)", "x[:1] * [2] in {2, 4}"]:
         r = run(X4 + f"satisfy({constraint})")
         assert r.ok, r.report()
         for c in r.xml.iter("sum"):
