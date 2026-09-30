@@ -449,6 +449,14 @@ def test_sum_in_logical_expressions(run, solver, constraint, predicate):
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 
+@pytest.mark.parametrize("constraint", ["imply(x[0] == 1, Sum(x) in {1, 3})", "iff(x[0] == 1, Sum(x) not in {1, 3})",
+                                        "imply(x[0] == 1, x[1] in {1, 2})"])
+def test_imply_or_iff_with_an_operand_in_is_refused(run, constraint):
+    # imply() and iff() refuse an operand given by 'in' (a Boolean for Python)
+    r = run(X4 + f"satisfy({constraint})")
+    assert not r.ok, r.report()
+
+
 # ------------------------------------------------------------------------------------------------------------ objectives
 
 @pytest.mark.parametrize("objective, value, maximize", [
