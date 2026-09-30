@@ -1515,6 +1515,12 @@ class ScalarProduct:
     def to_terms(self):
         return [self.variables[i] * self.coeffs[i] for i in range(len(self.variables))]
 
+    def to_partial_sum(self):
+        # the partial sum of the scalar product, with its coefficients (possibly variables), or its single term (XCSP3-core requiring at least two terms)
+        if len(self.variables) == 1:
+            return self.variables[0] * self.coeffs[0]
+        return PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
+
 
 class _Auxiliary:
     cache_ints = dict()

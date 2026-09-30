@@ -280,8 +280,14 @@ def test_sum_with_variables_as_coefficients(run, solver):
           lambda a, b, c, d: a * c + b * d == 3)
 
 
-def test_scalar_product_of_two_lists_of_variables(run, solver):
-    r = check(run, solver, "x = VarArray(size=2, dom=range(3))\nc = VarArray(size=2, dom=range(3))\nsatisfy(x * c == 3)", D4, lambda a, b, c, d: a * c + b * d == 3)
+@pytest.mark.parametrize("condition, predicate", [
+    ("== 3", lambda s: s == 3),
+    ("in range(2, 4)", lambda s: 2 <= s <= 3),
+    ("in {1, 3}", lambda s: s in (1, 3)),
+])
+def test_scalar_product_of_two_lists_of_variables(run, solver, condition, predicate):
+    r = check(run, solver, f"x = VarArray(size=2, dom=range(3))\nc = VarArray(size=2, dom=range(3))\nsatisfy(x * c {condition})", D4,
+              lambda a, b, c, d: predicate(a * c + b * d))
     assert " ".join(r.xml.find("constraints/sum/coeffs").text.split()) == "c[0] c[1]", r.report()  # the variables are the coefficients
 
 

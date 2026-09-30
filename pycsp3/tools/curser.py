@@ -43,7 +43,7 @@ def cursing():
         if not OpOverrider.activated:
             return self.__contains__(other)
         if isinstance(other, ScalarProduct):
-            other = functions.Sum(other)  # a partial sum, or a single term (XCSP3-core requiring at least two terms in a sum)
+            other = other.to_partial_sum()
         # if len(self) == 0:
         #     return False
         if isinstance(other, Node):
@@ -76,7 +76,7 @@ def cursing():
         if not OpOverrider.activated:
             return self.__contains__(other)
         if isinstance(other, ScalarProduct):
-            other = functions.Sum(other)  # a partial sum, or a single term (XCSP3-core requiring at least two terms in a sum)
+            other = other.to_partial_sum()
         # if len(self) == 0:
         #     return False
         if isinstance(other, Node):
@@ -119,7 +119,7 @@ def cursing():
         if not OpOverrider.activated:
             return self.__contains__(other)
         if isinstance(other, ScalarProduct):
-            other = functions.Sum(other)  # a partial sum, or a single term (XCSP3-core requiring at least two terms in a sum)
+            other = other.to_partial_sum()
         # if len(self) == 0:
         #     return False
         if isinstance(other, Node):
@@ -159,7 +159,7 @@ def cursing():
         if not OpOverrider.activated:
             return self.__contains__(other)
         if isinstance(other, ScalarProduct):
-            other = functions.Sum(other)  # a partial sum, or a single term (XCSP3-core requiring at least two terms in a sum)
+            other = other.to_partial_sum()
         if isinstance(other, Variable):  # unary table constraint (based on a range)
             queue_in.append((self, other))
             return True
