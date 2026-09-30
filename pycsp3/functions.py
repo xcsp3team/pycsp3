@@ -463,7 +463,11 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         if isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
             # the value never belongs to an empty set: the constraint is false with 'in', and always holds with 'not in'
             return _false_constraint() if bool_value else None
-        ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
+        operator = TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN
+        if options.mini and isinstance(left_operand.constraint, ConstraintSum):
+            ctr = _sum_for_mini(left_operand, Condition.build_condition((operator, right_operand)))
+            return ctr if not isinstance(ctr, ConstraintDummyConstant) else _false_constraint() if ctr.val == 0 else None
+        ctr = ECtr(left_operand.constraint.set_condition(operator, right_operand))
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)")
         ctr = Regular(scope=left_operand, automaton=right_operand)
@@ -2499,6 +2503,20 @@ def _wrapping_by_complete_or_partial_constraint(ctr):
 ''' Counting and Summing Constraints '''
 
 
+def _sum_for_mini(pc, condition):
+    # with -mini, 'sum in S' (or 'not in S'), not accepted in the mini-tracks, is replaced by sum = aux, the domain of aux being the possible values
+    # of the sum (as for any auxiliary variable replacing a sum), and a unary table on aux whose supports (or conflicts) are the values of S that
+    # the sum can take; 0 (false) or 1 (true) is returned when there is no such value
+    lo, hi = pc.constraint.min_possible_value(), pc.constraint.max_possible_value()
+    if isinstance(condition, ConditionInterval):
+        values = list(range(max(condition.min, lo), min(condition.max, hi) + 1))
+    else:
+        values = sorted(v for v in condition.t if lo <= v <= hi)
+    if len(values) == 0:
+        return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
+    return _Extension(scope=[auxiliary().replace_partial_constraint(pc)], table=values, positive=condition.operator == TypeConditionOperator.IN)
+
+
 def Sum(term, *others, condition=None):
     """
     Builds and returns a component Sum (that becomes a constraint when subject to a condition).
@@ -2616,6 +2634,8 @@ def Sum(term, *others, condition=None):
             return terms[0]
         # else  return ...  # TODO returning a unary (or binary) constraint terms[0] <op> k?
     # TODO control here some assumptions (empty list seems to be possible. See RLFAP)
+    if options.mini and condition is not None and condition.operator.is_set():
+        return _sum_for_mini(PartialConstraint(ConstraintSum(terms, coeffs, None)), condition)
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, condition))
 
 

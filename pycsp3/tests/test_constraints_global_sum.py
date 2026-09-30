@@ -14,10 +14,9 @@ import re
 
 import pytest
 
-from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-MINI_SET = "#161: with -mini, a sum keeps its condition in or notin, which is not accepted in the mini-tracks"
 ONE_TERM = "#162: a sum on a single variable with a coefficient is written as <sum> with one term, while XCSP3-core requires at least two"
 INVALID = "#163: an invalid argument of Sum() is not reported explicitly (or not reported at all)"
 ACE_NOTIN = ("xcsp3team/ACE#22: ACE gives the solutions of in instead of those of notin for a sum on a small space "
@@ -489,23 +488,50 @@ MINI_CASES = [
     ("Sum(x[0], x[1] + 1, x[2]) == 3", lambda a, b, c, d: a + b + 1 + c == 3),
     ("Sum(x[:3]) == x[3] + 1", lambda a, b, c, d: a + b + c == d + 1),
     ("Sum(x, condition=('in', {1, 3}))", lambda a, b, c, d: a + b + c + d in (1, 3)),
+    ("Sum(x) in {-1, 3, 20}", lambda a, b, c, d: a + b + c + d == 3),
+    ("Sum(x) in {20}", lambda a, b, c, d: False),
+    ("Sum(x) not in range(0, 9)", lambda a, b, c, d: False),
 ]
 
 
 @pytest.mark.parametrize("constraint, predicate", MINI_CASES)
 def test_sum_with_mini(run, solver, request, constraint, predicate):
-    notin_bugs(request, constraint)
+    if constraint == "Sum(x) in {20}":  # the constraint false, no value of the set being possible
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate, args=("-mini",))
 
 
-@pytest.mark.parametrize("constraint", [pytest.param(c, marks=bug(MINI_SET)) if re.search(r"\) (not )?in |'in'", c) else c for c, _ in MINI_CASES])
+@pytest.mark.parametrize("constraint", [c for c, _ in MINI_CASES])
 def test_xcsp3_sum_with_mini(run, constraint):
     # in the mini-tracks, the list of a sum only contains variables, and its condition is relational with a value or a variable as operand
+    # (the tables are ordinary, and not empty, except for the constraint false, posted by a table on the first variable of the model)
     r = run(X4 + f"satisfy({constraint})", args=("-mini",))
     assert r.ok, r.report()
     for c in r.xml.iter("sum"):
         assert all(re.fullmatch(r"[\w\[\]\.]+", token) for token in c.find("list").text.split()), r.report()
         assert re.fullmatch(r"\((lt|le|gt|ge|eq|ne),[\w\[\]\-]+\)", c.find("condition").text.strip()), r.report()
+
+
+@pytest.mark.parametrize("constraint, table, domain", [
+    ("Sum(x) in {1, 3}", ("supports", "1 3"), "0..8"),
+    ("Sum(x) in {-1, 3, 20}", ("supports", "3"), "0..8"),
+    ("Sum(x) in range(2, 5)", ("supports", "2..4"), "0..8"),
+    ("Sum(x) in range(5, 20)", ("supports", "5..8"), "0..8"),
+    ("Sum(x) not in range(2, 5)", ("conflicts", "2..4"), "0..8"),
+    ("Sum(x) not in {1, 3}", ("conflicts", "1 3"), "0..8"),
+    ("Sum(x * [1, 2, 3, 4]) not in range(1, 19)", ("conflicts", "1..18"), "0..20"),
+])
+def test_xcsp3_sum_with_mini_table(run, constraint, table, domain):
+    # with -mini, 'sum in S' (or 'not in S') is replaced by sum = aux, aux having the possible values of the sum as domain,
+    # and a unary table on aux whose supports (or conflicts) are the values of S that the sum can take
+    r = run(X4 + f"satisfy({constraint})", args=("-mini",))
+    assert r.ok, r.report()
+    aux = re.fullmatch(r"\(eq,(aux_gb\[\d+\])\)", r.xml.find("constraints/sum/condition").text.strip())
+    assert aux is not None, r.report()
+    ext = [e for e in r.xml.iter("extension") if e.find("list").text.split() == [aux.group(1)]]
+    assert len(ext) == 1 and ext[0].find(table[0]) is not None and " ".join(ext[0].find(table[0]).text.split()) == table[1], r.report()
+    lo, hi = (int(v) for v in domain.split(".."))
+    assert declared_variables(r)[aux.group(1)] == list(range(lo, hi + 1)), r.report()
 
 
 # ----------------------------------------------------------------------------------------------------- XCSP3 files
