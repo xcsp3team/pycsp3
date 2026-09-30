@@ -17,8 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-EMPTY_CONDITION = ("#159: Sum(x) in range(0), in set() and not in range(0) write the conditions (in,0..-1), (in,{}) and (notin,0..-1), "
-                   "on which the solvers fail")
 HOLES_COEFFS = "#160: coefficients given for an array with holes (w * [1, 2, 3, 4]) are not discarded with the holes: assert fails"
 MINI_SET = "#161: with -mini, a sum keeps its condition in or notin, which is not accepted in the mini-tracks"
 ONE_TERM = "#162: a sum on a single variable with a coefficient is written as <sum> with one term, while XCSP3-core requires at least two"
@@ -138,20 +136,40 @@ def test_sum_with_the_parameter_condition_on_a_variable(run, solver):
     ("Sum(x) in set()", lambda s: False),
     ("Sum(x) not in range(0)", lambda s: True),
     ("Sum(x) not in set()", lambda s: True),
+    ("Sum(x) in range(3, 1)", lambda s: False),
+    ("Sum(x, condition=('in', set()))", lambda s: False),
+    ("Sum(x, condition=('notin', range(0)))", lambda s: True),
     ("Sum(x) in range(9, 20)", lambda s: False),
     ("Sum(x) in range(-5, 0)", lambda s: False),
     ("Sum(x) not in range(0, 9)", lambda s: False),
 ])
 def test_sum_with_an_empty_or_unreachable_condition(run, solver, request, constraint, predicate):
-    if constraint in ("Sum(x) in range(0)", "Sum(x) not in range(0)"):
-        bug_for(request, ("ACE", "CHOCO"), EMPTY_CONDITION)
-    elif constraint == "Sum(x) in set()":
-        bug_for(request, ("ACE", "CHOCO", "COSOCO"), EMPTY_CONDITION)
-    elif constraint == "Sum(x) not in set()":
-        bug_for(request, ("ACE", "CHOCO"), EMPTY_CONDITION)
-    else:
+    # a sum never belongs to an empty set: the constraint false is posted for 'in', and nothing for 'not in'
+    if constraint in ("Sum(x) in range(0)", "Sum(x) in set()", "Sum(x, condition=('in', set()))", "Sum(x) in range(3, 1)"):
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
+    elif constraint == "Sum(x) not in range(0, 9)":
         notin_bugs(request, constraint)
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(sum(t)) and t[3] != 1)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(Sum(x) in set()) | (x[0] == 1)", lambda *t: t[0] == 1),
+    ("(Sum(x) not in set()) | (x[0] == 1)", lambda *t: True),
+    ("(Sum(x) in range(0)) | (x[0] == 1)", lambda *t: t[0] == 1),
+    ("(Sum(x) not in range(0)) & (x[0] == 1)", lambda *t: t[0] == 1),
+    ("[Sum(x[:2]) not in set(), x[0] == 1]", lambda *t: t[0] == 1),
+])
+def test_sum_with_an_empty_set_in_expressions_and_groups(run, solver, constraint, predicate):
+    check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
+
+
+def test_xcsp3_sum_with_an_empty_set(run):
+    r = run(X4 + "satisfy(Sum(x) not in set(), Sum(x[:2]) not in range(0), x[3] != 1)")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/sum") is None, r.report()
+    r = run(X4 + "satisfy(Sum(x) in set())")
+    assert r.ok, r.report()
+    assert "trivially false" in r.stdout and r.xml.find("constraints/sum") is None, r.report()
 
 
 # ------------------------------------------------------------------------------------------------------------ forms

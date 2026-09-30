@@ -3,7 +3,7 @@ import math
 import types
 from collections import namedtuple
 
-from pycsp3.classes.auxiliary.conditions import Condition, eq, le
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, eq, le
 from pycsp3.classes.auxiliary.enums import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.diagrams import Automaton, MDD
 from pycsp3.classes.entities import (
@@ -460,6 +460,9 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     #     else:
     #         ctr = Intension(disjunction(left_operand < right_operand.start, left_operand > right_operand.stop - 1))
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
+        if isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
+            # the value never belongs to an empty set: the constraint is false with 'in', and always holds with 'not in'
+            return _false_constraint() if bool_value else None
         ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)")
@@ -2604,12 +2607,16 @@ def Sum(term, *others, condition=None):
             terms, coeffs = [list(v) for v in zip(*d.items())]
 
     terms, coeffs = _manage_coeffs(terms, coeffs)
+    condition = Condition.build_condition(condition)
+    if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
+        # the sum never belongs to an empty set: false with 'in', and always true with 'not in'
+        return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
     if len(terms) == 1 and (coeffs is None or coeffs[0] == 1):
         if condition is None:
             return terms[0]
         # else  return ...  # TODO returning a unary (or binary) constraint terms[0] <op> k?
     # TODO control here some assumptions (empty list seems to be possible. See RLFAP)
-    return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))
+    return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, condition))
 
 
 def Product(term, *others):
