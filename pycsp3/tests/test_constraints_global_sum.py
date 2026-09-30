@@ -17,23 +17,23 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-NEG_ORDER = "(to be reported) -Sum(x) writes the element <coeffs> after <condition>, and ACE and CHOCO fail (StringIndexOutOfBoundsException)"
-SUM_TIMES = "(to be reported) Sum(x) * y, a sum multiplied by a variable or an expression, fails with an assert without message"
-EMPTY_CONDITION = ("(to be reported) Sum(x) in range(0), in set() and not in range(0) write the conditions (in,0..-1), (in,{}) and (notin,0..-1), "
+NEG_ORDER = "#157: -Sum(x) writes the element <coeffs> after <condition>, and ACE and CHOCO fail (StringIndexOutOfBoundsException)"
+SUM_TIMES = "#158: Sum(x) * y, a sum multiplied by a variable or an expression, fails with an assert without message"
+EMPTY_CONDITION = ("#159: Sum(x) in range(0), in set() and not in range(0) write the conditions (in,0..-1), (in,{}) and (notin,0..-1), "
                    "on which the solvers fail")
-HOLES_COEFFS = "(to be reported) coefficients given for an array with holes (w * [1, 2, 3, 4]) are not discarded with the holes: assert fails"
-MINI_SET = "(to be reported) with -mini, a sum keeps its condition in or notin, which is not accepted in the mini-tracks"
-ONE_TERM = "(to be reported) a sum on a single variable with a coefficient is written as <sum> with one term, while XCSP3-core requires at least two"
-INVALID = "(to be reported) an invalid argument of Sum() is not reported explicitly (or not reported at all)"
-ACE_NOTIN = ("(to be reported) ACE gives the solutions of in instead of those of notin for a sum on a small space "
+HOLES_COEFFS = "#160: coefficients given for an array with holes (w * [1, 2, 3, 4]) are not discarded with the holes: assert fails"
+MINI_SET = "#161: with -mini, a sum keeps its condition in or notin, which is not accepted in the mini-tracks"
+ONE_TERM = "#162: a sum on a single variable with a coefficient is written as <sum> with one term, while XCSP3-core requires at least two"
+INVALID = "#163: an invalid argument of Sum() is not reported explicitly (or not reported at all)"
+ACE_NOTIN = ("xcsp3team/ACE#22: ACE gives the solutions of in instead of those of notin for a sum on a small space "
              "(Problem.sum(): the table is built with api.in(...) whatever the operator)")
-ACE_CANCEL = ("(to be reported) ACE fails on a sum whose terms all cancel out (Problem.sum(): newCoeffs[0] read on an empty array once the terms "
+ACE_CANCEL = ("xcsp3team/ACE#23: ACE fails on a sum whose terms all cancel out (Problem.sum(): newCoeffs[0] read on an empty array once the terms "
               "of coefficient 0 are discarded)")
-CHOCO_NOTIN = ("(to be reported) CHOCO gives wrong solutions, several times, for a sum with notin (buildSum(): resu != sum, with resu a new variable "
+CHOCO_NOTIN = ("chocoteam/choco-solver#1248: CHOCO gives wrong solutions, several times, for a sum with notin (buildSum(): resu != sum, with resu a new variable "
                "taking any value of the set)")
-COSOCO_BASIC = ("(to be reported) cosoco gives wrong solutions for a sum mixing expressions such as eq(x,k) and variables that are not 0/1, without "
+COSOCO_BASIC = ("xcsp3team/cosoco#88: cosoco gives wrong solutions for a sum mixing expressions such as eq(x,k) and variables that are not 0/1, without "
                 "coefficients (matchParams() accepts any variable, while BasicNodeVar assumes a 0/1 variable)")
-COSOCO_CANCEL = ("(to be reported) cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
+COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
