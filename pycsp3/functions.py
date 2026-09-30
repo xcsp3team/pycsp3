@@ -952,7 +952,8 @@ def _01_to_node(arg):
         x = Variable.name2obj.get(arg.id, arg)
         return Node.build(TypeNode.EQ, x, 0 if arg.negation else 1)  # transformed into a basic logical equation
     if isinstance(arg, PartialConstraint):
-        assert isinstance(arg.constraint, ConstraintElement)  # TODO to be extended (other cases should be possible)
+        if not isinstance(arg.constraint, ConstraintElement):  # TODO to be extended (other cases should be possible)
+            error("The component " + str(arg) + " is not a constraint: it must be subject to a condition, as in Sum(x) > 10")
         assert all(isinstance(t, Variable) and t.dom.is_binary() for t in arg.constraint.arguments[TypeCtrArg.LIST].content)  # TODO to be extended
         return arg == 1
     return arg
@@ -2616,7 +2617,10 @@ def Sum(term, *others, condition=None):
             [t.to_terms() if isinstance(t, ScalarProduct) else t.constraint.to_terms() if isinstance(t, PartialConstraint) and isinstance(t.constraint,
                                                                                                                                           ConstraintSum) else t
              for t in terms])
-    if any(v is None or (isinstance(v, int) and v == 0) or isinstance(v, ConstraintDummyConstant) for v in terms):  # note False is of type int and equal to 0
+    for v in terms:
+        if type(v) is bool:
+            error("Sum() does not accept Booleans as terms, which is the case of " + str(v))
+    if any(v is None or (isinstance(v, int) and v == 0) or isinstance(v, ConstraintDummyConstant) for v in terms):
         terms = [v.val if isinstance(v, ConstraintDummyConstant) else v for v in terms if
                  v is not None and not (isinstance(v, int) and v == 0) and not (isinstance(v, ConstraintDummyConstant) and v.val == 0)]
     if len(terms) == 0:
@@ -2625,6 +2629,9 @@ def Sum(term, *others, condition=None):
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini and any(
         not isinstance(term, Variable) and not neg_var.matches(term) for term in terms))
     checkType(terms, ([Variable], [Node], [Variable, Node], [ScalarProduct]))  # , [PartialConstraint], [ECtr]))
+    for v in terms:
+        if isinstance(v, Variable) and v.dom.type != TypeVar.INTEGER:
+            error("Sum() requires integer variables (or expressions), which is not the case of " + str(v))
     terms, coeffs = _get_terms_coeffs(terms)
     if options.group_sum_coeffs and all(isinstance(v, Variable) for v in terms) and coeffs is None:
         # maybe some variables occurs several times

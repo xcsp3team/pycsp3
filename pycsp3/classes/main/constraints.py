@@ -1424,6 +1424,8 @@ class ScalarProduct:
         for x, c in zip(variables, coefficients):
             if x is None:  # a hole (e.g., in an array) is discarded with its coefficient
                 continue
+            if type(c) is bool or not isinstance(c, (int, Variable, Node)):
+                error("A coefficient of a scalar product must be an integer, a variable or an expression, which is not the case of " + str(c))
             self.variables.append(x)
             self.coeffs.append(c)
         n0s = len(list(v for v in self.coeffs if isinstance(v, int) and v == 0))  # TODO hard coding (10% below)

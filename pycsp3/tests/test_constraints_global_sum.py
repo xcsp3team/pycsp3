@@ -14,10 +14,9 @@ import re
 
 import pytest
 
-from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
+from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-INVALID = "#163: an invalid argument of Sum() is not reported explicitly (or not reported at all)"
 ACE_NOTIN = ("xcsp3team/ACE#22: ACE gives the solutions of in instead of those of notin for a sum on a small space "
              "(Problem.sum(): the table is built with api.in(...) whatever the operator)")
 ACE_CANCEL = ("xcsp3team/ACE#23: ACE fails on a sum whose terms all cancel out (Problem.sum(): newCoeffs[0] read on an empty array once the terms "
@@ -576,25 +575,39 @@ def test_xcsp3_sum_order_of_elements(run, constraint):
 
 # --------------------------------------------------------------------------------------------------- invalid cases
 
-@pytest.mark.parametrize("constraint", [
-    pytest.param("Sum(x)", marks=bug(INVALID)),
-    "Sum(x) == 2.5",
-    "Sum(x) == 'a'",
-    "Sum(x) == None",
-    pytest.param("Sum(x) == True", marks=bug(INVALID)),
-    "Sum(x, condition=('le',))",
-    pytest.param("Sum(x, condition=('foo', 3))", marks=bug(INVALID)),
-    "Sum(x, condition='(le,3)')",
-    pytest.param("Sum(x, condition=('le', 'a'))", marks=bug(INVALID)),
-    "Sum(x, 'a') == 0",
-    "Sum(x, 1.5) == 0",
-    "Sum(x, True) == 0",
-    "Sum() == 0",
-    "Sum(x * [1, 2]) == 5",
-    "Sum(x * [1, 2, 3, 4, 5]) == 5",
-    pytest.param("Sum(x * ['a', 'b', 'c', 'd']) == 5", marks=bug(INVALID)),
-    "Sum(x * [1.5, 2, 3, 4]) == 5",
-    pytest.param("Sum(s) == 1", marks=bug(INVALID)),
-])
+INVALID_CASES = [
+    ("Sum(x)", "is not a constraint: it must be subject to a condition"),
+    ("Sum(x) == 2.5", "Wrong type for 2.5"),
+    ("Sum(x) == 'a'", "Wrong type for a"),
+    ("Sum(x) == None", "Wrong type for None"),
+    ("Sum(x) == True", "A Boolean cannot be the operand of a condition"),
+    ("Sum(x) != False", "A Boolean cannot be the operand of a condition"),
+    ("Sum(x) in {True, 2}", "A Boolean cannot be the operand of a condition"),
+    ("Sum(x, condition=('eq', True))", "A Boolean cannot be the operand of a condition"),
+    ("Sum(x, condition=('le',))", "a condition must a pair"),
+    ("Sum(x, condition=('foo', 3))", "The operator foo of the condition"),
+    ("Sum(x, condition='(le,3)')", "a condition must a pair"),
+    ("Sum(x, condition=('le', 'a'))", "must be an integer, a variable, a range or a set of integers"),
+    ("Sum(x, 'a') == 0", "Wrong type for"),
+    ("Sum(x, 1.5) == 0", "Wrong type for"),
+    ("Sum(x, True) == 0", "Sum() does not accept Booleans as terms"),
+    ("Sum(x, False) == 0", "Sum() does not accept Booleans as terms"),
+    ("Sum() == 0", "missing 1 required positional argument"),
+    ("Sum(x * [1, 2]) == 5", "A scalar product requires as many coefficients as variables"),
+    ("Sum(x * [1, 2, 3, 4, 5]) == 5", "A scalar product requires as many coefficients as variables"),
+    ("Sum(x * ['a', 'b', 'c', 'd']) == 5", "A coefficient of a scalar product must be an integer, a variable or an expression"),
+    ("Sum(x * [1.5, 2, 3, 4]) == 5", "A coefficient of a scalar product must be an integer, a variable or an expression"),
+    ("Sum(x * [True, 1, 1, 1]) == 2", "A coefficient of a scalar product must be an integer, a variable or an expression"),
+    ("Sum(s) == 1", "Sum() requires integer variables"),
+]
+
+
+@pytest.mark.parametrize("constraint", [c for c, _ in INVALID_CASES])
 def test_invalid_sum(run, constraint):
     assert_fails(run(X4 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({constraint})"))
+
+
+@pytest.mark.parametrize("constraint, message", INVALID_CASES)
+def test_invalid_sum_message(run, constraint, message):
+    r = run(X4 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout + r.stderr, r.report()
