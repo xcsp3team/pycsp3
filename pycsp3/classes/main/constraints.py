@@ -1509,6 +1509,9 @@ class ScalarProduct:
     def __rmod__(self, other):
         return Node.build(TypeNode.MOD, other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
+    def __neg__(self):
+        return ScalarProduct(self.variables, [-c for c in self.coeffs])
+
     def to_terms(self):
         return [self.variables[i] * self.coeffs[i] for i in range(len(self.variables))]
 

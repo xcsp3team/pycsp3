@@ -355,6 +355,7 @@ def test_sum_with_integers(run, solver, request, constraint, predicate):
     ("Count(x, value=1) + Sum(x[:3]) == 4", lambda a, b, c, d: [a, b, c, d].count(1) + a + b + c == 4),
     ("Count(x, value=1) - Sum(x[:3]) >= 1", lambda a, b, c, d: [a, b, c, d].count(1) - (a + b + c) >= 1),
     ("Maximum(x[:2]) - Sum(x[2:]) > 0", lambda a, b, c, d: max(a, b) - (c + d) > 0),
+    ("-(x * [1, 2, 3, 4]) == -5", lambda a, b, c, d: -(a + 2 * b + 3 * c + 4 * d) == -5),
     ("Sum(x) - Sum(x) == 0", lambda *t: True),
     ("Sum(x) - Sum(x) != 0", lambda *t: False),
     ("Sum(x[:2]) - Sum(x[:2]) >= 1", lambda *t: False),
