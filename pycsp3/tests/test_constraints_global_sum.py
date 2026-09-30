@@ -11,10 +11,11 @@ the condition is relational (lt, le, gt, ge, eq or ne), its operand being a valu
 """
 
 import re
+import sys
 
 import pytest
 
-from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug_for, declared_variables
+from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ACE_NOTIN = ("xcsp3team/ACE#22: ACE gives the solutions of in instead of those of notin for a sum on a small space "
@@ -27,6 +28,8 @@ COSOCO_BASIC = ("xcsp3team/cosoco#88: cosoco gives wrong solutions for a sum mix
                 "coefficients (matchParams() accepts any variable, while BasicNodeVar assumes a 0/1 variable)")
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
+PY313_IN = ("#166: with Python 3.13, 'in' with a set inside a comprehension is only intercepted at the first iteration "
+            "(CONTAINS_OP specialized for sets)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
@@ -427,6 +430,14 @@ D32 = [range(3)] * 6
 ])
 def test_sum_in_groups(run, solver, constraints, predicate):
     check(run, solver, M32 + f"satisfy({constraints})", D32, predicate)
+
+
+@pytest.mark.parametrize("values", [pytest.param(v, marks=bug(PY313_IN)) if sys.version_info >= (3, 13) and v in ("{1, 3}", "frozenset({1, 3})", "S") else v
+                                    for v in ["{1, 3}", "frozenset({1, 3})", "S", "[1, 3]", "range(1, 4, 2)"]])
+def test_sum_in_a_set_in_a_comprehension(run, solver, values):
+    # S is the set {1, 3}
+    check(run, solver, M32 + f"S = {{1, 3}}\nsatisfy([Sum(m[i]) in {values} for i in range(3)])", D32,
+          lambda *t: all(t[2 * i] + t[2 * i + 1] in (1, 3) for i in range(3)))
 
 
 # ------------------------------------------------------------------------------------------------ logical contexts
