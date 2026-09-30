@@ -17,7 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ONE_TERM = "#162: a sum on a single variable with a coefficient is written as <sum> with one term, while XCSP3-core requires at least two"
 INVALID = "#163: an invalid argument of Sum() is not reported explicitly (or not reported at all)"
 ACE_NOTIN = ("xcsp3team/ACE#22: ACE gives the solutions of in instead of those of notin for a sum on a small space "
              "(Problem.sum(): the table is built with api.in(...) whatever the operator)")
@@ -378,16 +377,22 @@ def test_sum_in_arithmetic_expressions(run, solver, request, constraint, predica
     ("Sum(x[0], condition=('eq', 1))", lambda a: a == 1),
     ("Sum([x[0]]) in {1, 2}", lambda a: a in (1, 2)),
     ("Sum(x[0], 2) == 3", lambda a: a == 1),
+    ("x[:1] * [2] <= 2", lambda a: 2 * a <= 2),
+    ("Sum(x[0] * 3) in {0, 3}", lambda a: 3 * a in (0, 3)),
+    ("Sum(x[0] * 2, condition=('in', range(1, 3)))", lambda a: 1 <= 2 * a <= 2),
+    ("Sum(x[0] * 2, condition=('notin', {2, 4}))", lambda a: 2 * a not in (2, 4)),
 ], ids=["one variable", "one variable in a list", "one variable with a coefficient", "one negated variable", "one variable (scalar product)",
-        "one variable with condition", "one variable in a set", "one variable and one integer"])
+        "one variable with condition", "one variable in a set", "one variable and one integer", "one variable (scalar product without Sum)",
+        "one variable with a coefficient in a set", "one variable with a coefficient and an interval as condition",
+        "one variable with a coefficient and notin as condition"])
 def test_sum_on_a_single_variable(run, solver, constraint, predicate):
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(t[0]) and t[3] != 1)
 
 
-@bug(ONE_TERM)
 def test_xcsp3_sum_has_at_least_two_terms(run):
     # XCSP3-core requires |X| = |C| >= 2
-    for constraint in ["Sum(x[0] * 3) == 3", "Sum(-x[0]) == -1", "Sum(x[:1] * [2]) <= 2", "Sum(x[0], condition=('eq', 1))"]:
+    for constraint in ["Sum(x[0] * 3) == 3", "Sum(-x[0]) == -1", "Sum(x[:1] * [2]) <= 2", "Sum(x[0], condition=('eq', 1))", "x[:1] * [2] <= 2",
+                       "Sum(x[0] * 3) in {0, 3}", "Sum(x[0] * 2, condition=('in', range(1, 3)))"]:
         r = run(X4 + f"satisfy({constraint})")
         assert r.ok, r.report()
         for c in r.xml.iter("sum"):

@@ -1433,6 +1433,8 @@ class ScalarProduct:
             self.coeffs = [self.coeffs[i] for i in indexes]
 
     def _combine_with(self, operator, right_operand):
+        if len(self.variables) == 1 and isinstance(right_operand, (int, Variable, Node)):  # XCSP3-core requires at least two terms in a sum
+            return Node.build(operator, self.variables[0] * self.coeffs[0], right_operand)
         if len(self.variables) == 0:
             pc = ConstraintDummyConstant(0)
         else:

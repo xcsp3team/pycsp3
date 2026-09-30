@@ -2517,6 +2517,16 @@ def _sum_for_mini(pc, condition):
     return _Extension(scope=[auxiliary().replace_partial_constraint(pc)], table=values, positive=condition.operator == TypeConditionOperator.IN)
 
 
+def _term_with_condition(term, condition):
+    # the condition applied to a single term (a variable or an expression), since XCSP3-core requires at least two terms in a sum
+    if isinstance(condition, (ConditionInterval, ConditionSet)):
+        values = range(condition.min, condition.max + 1) if isinstance(condition, ConditionInterval) else sorted(condition.t)
+        if isinstance(term, Variable):
+            return belong(term, values) if condition.operator == TypeConditionOperator.IN else not_belong(term, values)
+        return Node.build(condition.operator, term, Node.build(SET, list(values)))
+    return Node.build(condition.operator, term, condition.right_operand())
+
+
 def Sum(term, *others, condition=None):
     """
     Builds and returns a component Sum (that becomes a constraint when subject to a condition).
@@ -2629,11 +2639,9 @@ def Sum(term, *others, condition=None):
     if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
         # the sum never belongs to an empty set: false with 'in', and always true with 'not in'
         return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
-    if len(terms) == 1 and (coeffs is None or coeffs[0] == 1):
-        if condition is None:
-            return terms[0]
-        # else  return ...  # TODO returning a unary (or binary) constraint terms[0] <op> k?
-    # TODO control here some assumptions (empty list seems to be possible. See RLFAP)
+    if len(terms) == 1:  # no constraint sum (XCSP3-core requires at least two terms)
+        term = terms[0] if coeffs is None or coeffs[0] == 1 else terms[0] * coeffs[0]
+        return term if condition is None else _term_with_condition(term, condition)
     if options.mini and condition is not None and condition.operator.is_set():
         return _sum_for_mini(PartialConstraint(ConstraintSum(terms, coeffs, None)), condition)
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, condition))
