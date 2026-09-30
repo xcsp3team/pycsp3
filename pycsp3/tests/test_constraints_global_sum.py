@@ -17,7 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-HOLES_COEFFS = "#160: coefficients given for an array with holes (w * [1, 2, 3, 4]) are not discarded with the holes: assert fails"
 MINI_SET = "#161: with -mini, a sum keeps its condition in or notin, which is not accepted in the mini-tracks"
 ONE_TERM = "#162: a sum on a single variable with a coefficient is written as <sum> with one term, while XCSP3-core requires at least two"
 INVALID = "#163: an invalid argument of Sum() is not reported explicitly (or not reported at all)"
@@ -200,10 +199,16 @@ def test_sum_on_an_array_with_holes(run, solver):
     assert r.variables == ["w[0]", "w[2]", "w[3]"]
 
 
-@bug(HOLES_COEFFS)
-def test_sum_with_coefficients_on_an_array_with_holes(run, solver):
-    check(run, solver, "w = VarArray(size=4, dom=lambda i: None if i == 1 else range(3))\nsatisfy(Sum(w * [1, 2, 3, 4]) == 5)", [range(3)] * 3,
+@pytest.mark.parametrize("terms", ["w * [1, 2, 3, 4]", "[1, 2, 3, 4] * w", "w * (1, 2, 3, 4)", "w * range(1, 5)"])
+def test_sum_with_coefficients_on_an_array_with_holes(run, solver, terms):
+    # the coefficient of a hole is discarded with it
+    check(run, solver, f"w = VarArray(size=4, dom=lambda i: None if i == 1 else range(3))\nsatisfy(Sum({terms}) == 5)", [range(3)] * 3,
           lambda a, c, d: a + 3 * c + 4 * d == 5)
+
+
+def test_sum_with_coefficients_on_a_matrix_with_holes(run, solver):
+    check(run, solver, "w = VarArray(size=[2, 3], dom=lambda i, j: None if i == j else range(3))\nsatisfy(Sum(w * [[1, 2, 3], [4, 5, 6]]) == 7)",
+          [range(3)] * 4, lambda b, c, d, f: 2 * b + 3 * c + 4 * d + 6 * f == 7)
 
 
 @pytest.mark.parametrize("n, d, k", [(2, 2, 1), (3, 3, 4), (5, 2, 3), (6, 2, 2)])

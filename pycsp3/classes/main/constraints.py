@@ -1416,11 +1416,18 @@ class ScalarProduct:
         variables = list(variables) if isinstance(variables, tuple) else variables
         coefficients = list(coefficients) if isinstance(coefficients, tuple) else coefficients
         assert isinstance(variables, list) and isinstance(coefficients, (int, list, range)), str(variables) + " " + str(coefficients)
-        self.variables = flatten(variables)  # for example, in order to remove None occurrences
-        self.coeffs = flatten([coefficients] * len(variables) if isinstance(coefficients, int) else coefficients)
-        assert len(self.variables) == len(self.coeffs), str(self.variables) + " " + str(self.coeffs)
-        n0s = len(list(v for v in coefficients if isinstance(v, int) and v == 0))  # TODO hard coding (10% below)
-        if n0s > 0 and not options.unchange_scalar and ((n0s * 100) // len(coefficients) > 10) and any(isinstance(v, int) and v == 0 for v in coefficients):
+        variables = flatten(variables, keep_none=True)
+        coefficients = [coefficients] * len(variables) if isinstance(coefficients, int) else flatten(coefficients, keep_none=True)
+        if len(variables) != len(coefficients):
+            error("A scalar product requires as many coefficients as variables, which is not the case of " + str(coefficients) + " for " + str(variables))
+        self.variables, self.coeffs = [], []
+        for x, c in zip(variables, coefficients):
+            if x is None:  # a hole (e.g., in an array) is discarded with its coefficient
+                continue
+            self.variables.append(x)
+            self.coeffs.append(c)
+        n0s = len(list(v for v in self.coeffs if isinstance(v, int) and v == 0))  # TODO hard coding (10% below)
+        if n0s > 0 and not options.unchange_scalar and ((n0s * 100) // len(self.coeffs) > 10):
             indexes = [i for i in range(len(self.variables)) if not isinstance(self.coeffs[i], int) or self.coeffs[i] != 0]
             self.variables = [self.variables[i] for i in indexes]
             self.coeffs = [self.coeffs[i] for i in indexes]
