@@ -17,7 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-NEG_ORDER = "#157: -Sum(x) writes the element <coeffs> after <condition>, and ACE and CHOCO fail (StringIndexOutOfBoundsException)"
 SUM_TIMES = "#158: Sum(x) * y, a sum multiplied by a variable or an expression, fails with an assert without message"
 EMPTY_CONDITION = ("#159: Sum(x) in range(0), in set() and not in range(0) write the conditions (in,0..-1), (in,{}) and (notin,0..-1), "
                    "on which the solvers fail")
@@ -44,7 +43,6 @@ def notin_bugs(request, text):
     if "not in" in text or "notin" in text:
         bug_for(request, "ACE", ACE_NOTIN)
         bug_for(request, "CHOCO", CHOCO_NOTIN)
-
 
 
 def check(run, solver, code, domains, predicate, args=()):
@@ -328,14 +326,15 @@ def test_sum_with_integers(run, solver, request, constraint, predicate):
     ("x[:2] * [1, 2] - x[2:] * [1, 1] == 0", lambda a, b, c, d: a + 2 * b == c + d),
     ("Minimum(Sum(x[:2]), Sum(x[2:])) == 1", lambda a, b, c, d: min(a + b, c + d) == 1),
     ("(Sum(x[:2]) == 2) == (x[2] == 1)", lambda a, b, c, d: (a + b == 2) == (c == 1)),
+    ("Sum(x[:3]) - Count(x, value=1) >= 1", lambda a, b, c, d: a + b + c - [a, b, c, d].count(1) >= 1),
+    ("Sum(x[:3]) - Maximum(x[:2]) == 1", lambda a, b, c, d: a + b + c - max(a, b) == 1),
+    ("Count(x, value=1) + Sum(x[:3]) == 4", lambda a, b, c, d: [a, b, c, d].count(1) + a + b + c == 4),
     ("Sum(x) - Sum(x) == 0", lambda *t: True),
     ("Sum(x) - Sum(x) != 0", lambda *t: False),
     ("Sum(x[:2]) - Sum(x[:2]) >= 1", lambda *t: False),
 ])
 def test_sum_in_arithmetic_expressions(run, solver, request, constraint, predicate):
-    if constraint.startswith("-Sum(x)"):
-        bug_for(request, ("ACE", "CHOCO"), NEG_ORDER)
-    elif constraint.startswith("Sum(x[:3]) *") or constraint.startswith("Sum(x[:2]) * Sum"):
+    if constraint.startswith("Sum(x[:3]) *") or constraint.startswith("Sum(x[:2]) * Sum"):
         bug_for(request, ("ACE", "CHOCO", "COSOCO"), SUM_TIMES)
     elif constraint.startswith("Sum(x) - Sum(x)") or constraint.startswith("Sum(x[:2]) - Sum(x[:2])"):
         bug_for(request, "ACE", ACE_CANCEL)
@@ -494,7 +493,7 @@ def test_xcsp3_sum_with_mini(run, constraint):
     ("Sum(x) in range(2, 5)", ("x[]", None, "(in,2..4)")),
     ("Sum(x) not in {1, 3}", ("x[]", None, "(notin,{1,3})")),
     ("Sum(x[:2]) == Sum(x[2:])", ("x[]", "1 1 -1 -1", "(eq,0)")),
-    pytest.param("-Sum(x) == -3", ("x[]", "-1x4", "(eq,-3)"), marks=bug(NEG_ORDER)),
+    ("-Sum(x) == -3", ("x[]", "-1x4", "(eq,-3)")),
     ("Sum(x[i] > 0 for i in range(4)) == 2", ("gt(x[0],0) gt(x[1],0) gt(x[2],0) gt(x[3],0)", None, "(eq,2)")),
 ])
 def test_xcsp3_sum(run, constraint, expected):
@@ -506,6 +505,17 @@ def test_xcsp3_sum(run, constraint, expected):
     coeffs = c.find("coeffs")
     got = (" ".join(c.find("list").text.split()), None if coeffs is None else " ".join(coeffs.text.split()), c.find("condition").text.strip())
     assert got == expected, r.report()
+
+
+@pytest.mark.parametrize("constraint", ["-Sum(x) == -3", "-Sum(x * [1, 2, 3, 4]) <= -5", "Sum(x[:3]) - Count(x, value=1) >= 1",
+                                        "Sum(x[:3]) - Maximum(x[:2]) == 1", "x[0] + x[1] - Sum(x[2:]) == 0", "-Sum(x) * 2 == -6"])
+def test_xcsp3_sum_order_of_elements(run, constraint):
+    # XCSP3: <list>, then <coeffs>, then <condition>
+    r = run(X4 + f"satisfy({constraint})")
+    assert r.ok, r.report()
+    for c in r.xml.iter("sum"):
+        tags = [e.tag for e in c]
+        assert tags in (["list", "condition"], ["list", "coeffs", "condition"]), constraint + "\n" + r.report()
 
 
 # --------------------------------------------------------------------------------------------------- invalid cases

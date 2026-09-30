@@ -672,11 +672,19 @@ class ConstraintSum(ConstraintWithCondition):
         assert len(vs) == len(cs)
         return sum(ConstraintSum._min_or_max_term_value(x, cs[i], False) for i, x in enumerate(vs))
 
+    def set_coeffs(self, coefficients):
+        # the condition is put back after the coefficients (the order of the elements of <sum> in XCSP3)
+        condition = self.arguments.pop(TypeCtrArg.CONDITION, None)
+        self.arg(TypeCtrArg.COEFFS, coefficients, content_ordered=True)
+        if condition is not None:
+            self.arguments[TypeCtrArg.CONDITION] = condition
+        return self
+
     def revert_coeffs(self):
         if TypeCtrArg.COEFFS in self.arguments:
             self.arguments[TypeCtrArg.COEFFS].content = [-v for v in self.arguments[TypeCtrArg.COEFFS].content]
         else:
-            self.arg(TypeCtrArg.COEFFS, [-1 for _ in self.arguments[TypeCtrArg.LIST].content])
+            self.set_coeffs([-1 for _ in self.arguments[TypeCtrArg.LIST].content])
         return self
 
     def add(self, term):
@@ -687,7 +695,7 @@ class ConstraintSum(ConstraintWithCondition):
         assert isinstance(term, (Variable, Node))
         if isinstance(term, Node) and term.type == TypeNode.NEG:
             if TypeCtrArg.COEFFS not in self.arguments:
-                self.arg(TypeCtrArg.COEFFS, [1 for _ in self.arguments[TypeCtrArg.LIST].content])
+                self.set_coeffs([1 for _ in self.arguments[TypeCtrArg.LIST].content])
             self.arguments[TypeCtrArg.LIST].content.append(term.cnt)
             self.arguments[TypeCtrArg.COEFFS].content.append(-1)
         else:
@@ -1236,7 +1244,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         if isinstance(self.constraint, ConstraintSum):
             args = self.constraint.arguments
             cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-            self.constraint.arg(TypeCtrArg.COEFFS, [-c for c in cs])
+            self.constraint.set_coeffs([-c for c in cs])
             return self
         return - auxiliary().replace_partial_constraint(self)
 
@@ -1295,10 +1303,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         # if not options.keep_sum and TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
         #     return auxiliary().replace_partial_constraint(self) * other
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-        value = args[TypeCtrArg.CONDITION]
-        del args[TypeCtrArg.CONDITION]  # we delete and put back below this argument to have arguments in the right order
-        self.constraint.arg(TypeCtrArg.COEFFS, [c * other for c in cs])
-        args[TypeCtrArg.CONDITION] = value
+        self.constraint.set_coeffs([c * other for c in cs])
         return self
 
     __rmul__ = __mul__
