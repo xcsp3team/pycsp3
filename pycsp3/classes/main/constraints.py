@@ -1283,9 +1283,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
                 self.constraint.add(-other)
                 return self
         if isinstance(other, PartialConstraint) and isinstance(other.constraint, ConstraintSum):
-            if not isinstance(self.constraint, ConstraintSum):
-                other.constraint.add(-self)
-                return other
+            if not isinstance(self.constraint, ConstraintSum):  # self - other is -other + self
+                return -other + self
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
