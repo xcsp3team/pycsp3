@@ -1325,17 +1325,17 @@ def max(*args, **kwargs):
     The node represents the largest value among the arguments, as in z == max(x).
     :return: either a node, root of a tree expression, or the largest item of the specified arguments
     :example:
--        # the workshop closes when the last machine has finished
--        x = VarArray(size=3, dom=range(20))  # x[i] is the completion time of the ith machine
--        z = Var(dom=range(20))  # z is the closing time of the workshop
--
--        satisfy(
--           x[0] == 8, x[1] == 5, x[2] == 11,
--
--           z == max(x)
--        )
--
--        # a solution: [8, 5, 11] 11
+         # the workshop closes when the last machine has finished
+         x = VarArray(size=3, dom=range(20))  # x[i] is the completion time of the ith machine
+         z = Var(dom=range(20))  # z is the closing time of the workshop
+
+         satisfy(
+            x[0] == 8, x[1] == 5, x[2] == 11,
+
+            z == max(x)
+        )
+
+        # a solution: [8, 5, 11] 11
     """
     expanded = len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType))
     if expanded:
