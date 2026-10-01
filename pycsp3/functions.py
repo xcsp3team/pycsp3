@@ -1290,7 +1290,7 @@ def abs(arg):
     return Node.build(TypeNode.ABS, arg) if isinstance(arg, (Node, Variable)) else absPython(arg)
 
 
-def min(*args):
+def min(*args, **kwargs):
     """
     Builds and returns a node 'min' if one argument is a node or a variable of the model, and the usual smallest item otherwise.
     The node represents the smallest value among the arguments, as in z == min(x).
@@ -1309,35 +1309,42 @@ def min(*args):
 
         # a solution: [8, 5, 11] 5
     """
-    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
+    expanded = len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType))
+    if expanded:
         args = [v for v in args[0]]
-    return args[0] if len(args) == 1 and isinstance(args[0], (int, str, Variable, Node)) else Node.build(TypeNode.MIN, *args) if len(args) > 1 and any(
-        isinstance(a, (Node, Variable)) for a in args) else minPython(*args)
+    if any(isinstance(arg, (Variable, Node)) for arg in args):
+        if kwargs:
+            error("parameters not to be used when dealing with variables or nodes of the model")
+        return args[0] if len(args) == 1 else Node.build(TypeNode.MIN, *args)
+    return minPython(args, **kwargs) if expanded else minPython(*args, **kwargs)
 
 
-def max(*args):
+def max(*args, **kwargs):
     """
     Builds and returns a node 'max' if one argument is a node or a variable of the model, and the usual largest item otherwise.
     The node represents the largest value among the arguments, as in z == max(x).
-
     :return: either a node, root of a tree expression, or the largest item of the specified arguments
     :example:
-        # the workshop closes when the last machine has finished
-        x = VarArray(size=3, dom=range(20))  # x[i] is the completion time of the ith machine
-        z = Var(dom=range(20))  # z is the closing time of the workshop
-
-        satisfy(
-           x[0] == 8, x[1] == 5, x[2] == 11,
-
-           z == max(x)
-        )
-
-        # a solution: [8, 5, 11] 11
+-        # the workshop closes when the last machine has finished
+-        x = VarArray(size=3, dom=range(20))  # x[i] is the completion time of the ith machine
+-        z = Var(dom=range(20))  # z is the closing time of the workshop
+-
+-        satisfy(
+-           x[0] == 8, x[1] == 5, x[2] == 11,
+-
+-           z == max(x)
+-        )
+-
+-        # a solution: [8, 5, 11] 11
     """
-    if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
+    expanded = len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType))
+    if expanded:
         args = [v for v in args[0]]
-    return args[0] if len(args) == 1 and isinstance(args[0], (int, str, Variable, Node)) else Node.build(TypeNode.MAX, *args) if len(args) > 1 and any(
-        isinstance(a, (Node, Variable)) for a in args) else maxPython(*args)
+    if any(isinstance(arg, (Variable, Node)) for arg in args):
+        if kwargs:
+            error("parameters not to be used when dealing with variables or nodes of the model")
+        return args[0] if len(args) == 1 else Node.build(TypeNode.MAX, *args)
+    return maxPython(args, **kwargs) if expanded else maxPython(*args, **kwargs)
 
 
 def xor(*args):
@@ -2168,7 +2175,9 @@ def _ordered(term, others, operator, lengths):
     for t in terms:
         key = id(t) if isinstance(t, Variable) else str(t)
         if key in seen:
-            error(("A variable" if isinstance(t, Variable) else "An expression") + " cannot be given several times to " + name + ", which is the case of " + str(t))
+            error(
+                ("A variable" if isinstance(t, Variable) else "An expression") + " cannot be given several times to " + name + ", which is the case of " + str(
+                    t))
         seen.add(key)
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
     checkType(terms, [Variable])
