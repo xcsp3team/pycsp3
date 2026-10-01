@@ -3,7 +3,7 @@ import math
 import types
 from collections import namedtuple
 
-from pycsp3.classes.auxiliary.conditions import Condition, eq, le
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, eq, le
 from pycsp3.classes.auxiliary.enums import TypeOrderedOperator, TypeConditionOperator, TypeVar, TypeCtr, TypeCtrArg, TypeRank
 from pycsp3.classes.auxiliary.diagrams import Automaton, MDD
 from pycsp3.classes.entities import (
@@ -460,7 +460,14 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     #     else:
     #         ctr = Intension(disjunction(left_operand < right_operand.start, left_operand > right_operand.stop - 1))
     elif isinstance(left_operand, PartialConstraint):  # it is a partial form of constraint (sum, count, maximum, ...)
-        ctr = ECtr(left_operand.constraint.set_condition(TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN, right_operand))
+        if isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
+            # the value never belongs to an empty set: the constraint is false with 'in', and always holds with 'not in'
+            return _false_constraint() if bool_value else None
+        operator = TypeConditionOperator.IN if bool_value else TypeConditionOperator.NOTIN
+        if options.mini and isinstance(left_operand.constraint, ConstraintSum):
+            ctr = _sum_for_mini(left_operand, Condition.build_condition((operator, right_operand)))
+            return ctr if not isinstance(ctr, ConstraintDummyConstant) else _false_constraint() if ctr.val == 0 else None
+        ctr = ECtr(left_operand.constraint.set_condition(operator, right_operand))
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)")
         ctr = Regular(scope=left_operand, automaton=right_operand)
@@ -945,7 +952,8 @@ def _01_to_node(arg):
         x = Variable.name2obj.get(arg.id, arg)
         return Node.build(TypeNode.EQ, x, 0 if arg.negation else 1)  # transformed into a basic logical equation
     if isinstance(arg, PartialConstraint):
-        assert isinstance(arg.constraint, ConstraintElement)  # TODO to be extended (other cases should be possible)
+        if not isinstance(arg.constraint, ConstraintElement):  # TODO to be extended (other cases should be possible)
+            error("The component " + str(arg) + " is not a constraint: it must be subject to a condition, as in Sum(x) > 10")
         assert all(isinstance(t, Variable) and t.dom.is_binary() for t in arg.constraint.arguments[TypeCtrArg.LIST].content)  # TODO to be extended
         return arg == 1
     return arg
@@ -2505,6 +2513,30 @@ def _wrapping_by_complete_or_partial_constraint(ctr):
 ''' Counting and Summing Constraints '''
 
 
+def _sum_for_mini(pc, condition):
+    # with -mini, 'sum in S' (or 'not in S'), not accepted in the mini-tracks, is replaced by sum = aux, the domain of aux being the possible values
+    # of the sum (as for any auxiliary variable replacing a sum), and a unary table on aux whose supports (or conflicts) are the values of S that
+    # the sum can take; 0 (false) or 1 (true) is returned when there is no such value
+    lo, hi = pc.constraint.min_possible_value(), pc.constraint.max_possible_value()
+    if isinstance(condition, ConditionInterval):
+        values = list(range(max(condition.min, lo), min(condition.max, hi) + 1))
+    else:
+        values = sorted(v for v in condition.t if lo <= v <= hi)
+    if len(values) == 0:
+        return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
+    return _Extension(scope=[auxiliary().replace_partial_constraint(pc)], table=values, positive=condition.operator == TypeConditionOperator.IN)
+
+
+def _term_with_condition(term, condition):
+    # the condition applied to a single term (a variable or an expression), since XCSP3-core requires at least two terms in a sum
+    if isinstance(condition, (ConditionInterval, ConditionSet)):
+        values = range(condition.min, condition.max + 1) if isinstance(condition, ConditionInterval) else sorted(condition.t)
+        if isinstance(term, Variable):
+            return belong(term, values) if condition.operator == TypeConditionOperator.IN else not_belong(term, values)
+        return Node.build(condition.operator, term, Node.build(SET, list(values)))
+    return Node.build(condition.operator, term, condition.right_operand())
+
+
 def Sum(term, *others, condition=None):
     """
     Builds and returns a component Sum (that becomes a constraint when subject to a condition).
@@ -2594,7 +2626,10 @@ def Sum(term, *others, condition=None):
             [t.to_terms() if isinstance(t, ScalarProduct) else t.constraint.to_terms() if isinstance(t, PartialConstraint) and isinstance(t.constraint,
                                                                                                                                           ConstraintSum) else t
              for t in terms])
-    if any(v is None or (isinstance(v, int) and v == 0) or isinstance(v, ConstraintDummyConstant) for v in terms):  # note False is of type int and equal to 0
+    for v in terms:
+        if type(v) is bool:
+            error("Sum() does not accept Booleans as terms, which is the case of " + str(v))
+    if any(v is None or (isinstance(v, int) and v == 0) or isinstance(v, ConstraintDummyConstant) for v in terms):
         terms = [v.val if isinstance(v, ConstraintDummyConstant) else v for v in terms if
                  v is not None and not (isinstance(v, int) and v == 0) and not (isinstance(v, ConstraintDummyConstant) and v.val == 0)]
     if len(terms) == 0:
@@ -2603,6 +2638,9 @@ def Sum(term, *others, condition=None):
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini and any(
         not isinstance(term, Variable) and not neg_var.matches(term) for term in terms))
     checkType(terms, ([Variable], [Node], [Variable, Node], [ScalarProduct]))  # , [PartialConstraint], [ECtr]))
+    for v in terms:
+        if isinstance(v, Variable) and v.dom.type != TypeVar.INTEGER:
+            error("Sum() requires integer variables (or expressions), which is not the case of " + str(v))
     terms, coeffs = _get_terms_coeffs(terms)
     if options.group_sum_coeffs and all(isinstance(v, Variable) for v in terms) and coeffs is None:
         # maybe some variables occurs several times
@@ -2613,12 +2651,16 @@ def Sum(term, *others, condition=None):
             terms, coeffs = [list(v) for v in zip(*d.items())]
 
     terms, coeffs = _manage_coeffs(terms, coeffs)
-    if len(terms) == 1 and (coeffs is None or coeffs[0] == 1):
-        if condition is None:
-            return terms[0]
-        # else  return ...  # TODO returning a unary (or binary) constraint terms[0] <op> k?
-    # TODO control here some assumptions (empty list seems to be possible. See RLFAP)
-    return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, Condition.build_condition(condition)))
+    condition = Condition.build_condition(condition)
+    if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
+        # the sum never belongs to an empty set: false with 'in', and always true with 'not in'
+        return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
+    if len(terms) == 1:  # no constraint sum (XCSP3-core requires at least two terms)
+        term = terms[0] if coeffs is None or coeffs[0] == 1 else terms[0] * coeffs[0]
+        return term if condition is None else _term_with_condition(term, condition)
+    if options.mini and condition is not None and condition.operator.is_set():
+        return _sum_for_mini(PartialConstraint(ConstraintSum(terms, coeffs, None)), condition)
+    return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, condition))
 
 
 def Product(term, *others):

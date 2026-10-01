@@ -672,11 +672,19 @@ class ConstraintSum(ConstraintWithCondition):
         assert len(vs) == len(cs)
         return sum(ConstraintSum._min_or_max_term_value(x, cs[i], False) for i, x in enumerate(vs))
 
+    def set_coeffs(self, coefficients):
+        # the condition is put back after the coefficients (the order of the elements of <sum> in XCSP3)
+        condition = self.arguments.pop(TypeCtrArg.CONDITION, None)
+        self.arg(TypeCtrArg.COEFFS, coefficients, content_ordered=True)
+        if condition is not None:
+            self.arguments[TypeCtrArg.CONDITION] = condition
+        return self
+
     def revert_coeffs(self):
         if TypeCtrArg.COEFFS in self.arguments:
             self.arguments[TypeCtrArg.COEFFS].content = [-v for v in self.arguments[TypeCtrArg.COEFFS].content]
         else:
-            self.arg(TypeCtrArg.COEFFS, [-1 for _ in self.arguments[TypeCtrArg.LIST].content])
+            self.set_coeffs([-1 for _ in self.arguments[TypeCtrArg.LIST].content])
         return self
 
     def add(self, term):
@@ -687,7 +695,7 @@ class ConstraintSum(ConstraintWithCondition):
         assert isinstance(term, (Variable, Node))
         if isinstance(term, Node) and term.type == TypeNode.NEG:
             if TypeCtrArg.COEFFS not in self.arguments:
-                self.arg(TypeCtrArg.COEFFS, [1 for _ in self.arguments[TypeCtrArg.LIST].content])
+                self.set_coeffs([1 for _ in self.arguments[TypeCtrArg.LIST].content])
             self.arguments[TypeCtrArg.LIST].content.append(term.cnt)
             self.arguments[TypeCtrArg.COEFFS].content.append(-1)
         else:
@@ -1236,7 +1244,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         if isinstance(self.constraint, ConstraintSum):
             args = self.constraint.arguments
             cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-            self.constraint.arg(TypeCtrArg.COEFFS, [-c for c in cs])
+            self.constraint.set_coeffs([-c for c in cs])
             return self
         return - auxiliary().replace_partial_constraint(self)
 
@@ -1275,9 +1283,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
                 self.constraint.add(-other)
                 return self
         if isinstance(other, PartialConstraint) and isinstance(other.constraint, ConstraintSum):
-            if not isinstance(self.constraint, ConstraintSum):
-                other.constraint.add(-self)
-                return other
+            if not isinstance(self.constraint, ConstraintSum):  # self - other is -other + self
+                return -other + self
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.SUB, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.SUB, other)
 
@@ -1287,6 +1294,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __mul__(self, other):
         if not isinstance(other, int):
             pair = self._simplify_operation(other)
+            if pair is None and isinstance(other, (Variable, Node, PartialConstraint)):  # a sum multiplied by a variable, an expression or a sum
+                pair = (auxiliary().replace_partial_constraint(self), auxiliary().replace_partial_constraint(other) if isinstance(other, PartialConstraint) else other)
             return Node.build(TypeNode.MUL, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.MUL, other)
         if not isinstance(self.constraint, ConstraintSum):
             return Node.build(TypeNode.MUL, self._simplify_operation(other))
@@ -1295,10 +1304,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         # if not options.keep_sum and TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
         #     return auxiliary().replace_partial_constraint(self) * other
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-        value = args[TypeCtrArg.CONDITION]
-        del args[TypeCtrArg.CONDITION]  # we delete and put back below this argument to have arguments in the right order
-        self.constraint.arg(TypeCtrArg.COEFFS, [c * other for c in cs])
-        args[TypeCtrArg.CONDITION] = value
+        self.constraint.set_coeffs([c * other for c in cs])
         return self
 
     __rmul__ = __mul__
@@ -1409,16 +1415,27 @@ class ScalarProduct:
         variables = list(variables) if isinstance(variables, tuple) else variables
         coefficients = list(coefficients) if isinstance(coefficients, tuple) else coefficients
         assert isinstance(variables, list) and isinstance(coefficients, (int, list, range)), str(variables) + " " + str(coefficients)
-        self.variables = flatten(variables)  # for example, in order to remove None occurrences
-        self.coeffs = flatten([coefficients] * len(variables) if isinstance(coefficients, int) else coefficients)
-        assert len(self.variables) == len(self.coeffs), str(self.variables) + " " + str(self.coeffs)
-        n0s = len(list(v for v in coefficients if isinstance(v, int) and v == 0))  # TODO hard coding (10% below)
-        if n0s > 0 and not options.unchange_scalar and ((n0s * 100) // len(coefficients) > 10) and any(isinstance(v, int) and v == 0 for v in coefficients):
+        variables = flatten(variables, keep_none=True)
+        coefficients = [coefficients] * len(variables) if isinstance(coefficients, int) else flatten(coefficients, keep_none=True)
+        if len(variables) != len(coefficients):
+            error("A scalar product requires as many coefficients as variables, which is not the case of " + str(coefficients) + " for " + str(variables))
+        self.variables, self.coeffs = [], []
+        for x, c in zip(variables, coefficients):
+            if x is None:  # a hole (e.g., in an array) is discarded with its coefficient
+                continue
+            if type(c) is bool or not isinstance(c, (int, Variable, Node)):
+                error("A coefficient of a scalar product must be an integer, a variable or an expression, which is not the case of " + str(c))
+            self.variables.append(x)
+            self.coeffs.append(c)
+        n0s = len(list(v for v in self.coeffs if isinstance(v, int) and v == 0))  # TODO hard coding (10% below)
+        if n0s > 0 and not options.unchange_scalar and ((n0s * 100) // len(self.coeffs) > 10):
             indexes = [i for i in range(len(self.variables)) if not isinstance(self.coeffs[i], int) or self.coeffs[i] != 0]
             self.variables = [self.variables[i] for i in indexes]
             self.coeffs = [self.coeffs[i] for i in indexes]
 
     def _combine_with(self, operator, right_operand):
+        if len(self.variables) == 1 and isinstance(right_operand, (int, Variable, Node)):  # XCSP3-core requires at least two terms in a sum
+            return Node.build(operator, self.variables[0] * self.coeffs[0], right_operand)
         if len(self.variables) == 0:
             pc = ConstraintDummyConstant(0)
         else:
@@ -1492,8 +1509,17 @@ class ScalarProduct:
     def __rmod__(self, other):
         return Node.build(TypeNode.MOD, other, auxiliary().replace_scalar_product(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
+    def __neg__(self):
+        return ScalarProduct(self.variables, [-c for c in self.coeffs])
+
     def to_terms(self):
         return [self.variables[i] * self.coeffs[i] for i in range(len(self.variables))]
+
+    def to_partial_sum(self):
+        # the partial sum of the scalar product, with its coefficients (possibly variables), or its single term (XCSP3-core requiring at least two terms)
+        if len(self.variables) == 1:
+            return self.variables[0] * self.coeffs[0]
+        return PartialConstraint(ConstraintSum(self.variables, self.coeffs, None))
 
 
 class _Auxiliary:

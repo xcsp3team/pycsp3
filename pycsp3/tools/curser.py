@@ -42,6 +42,8 @@ def cursing():
         # because sometimes Python changes lists into tuples in comprehension expressions
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, ScalarProduct):
+            other = other.to_partial_sum()
         # if len(self) == 0:
         #     return False
         if isinstance(other, Node):
@@ -73,6 +75,8 @@ def cursing():
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, ScalarProduct):
+            other = other.to_partial_sum()
         # if len(self) == 0:
         #     return False
         if isinstance(other, Node):
@@ -114,6 +118,8 @@ def cursing():
     def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, ScalarProduct):
+            other = other.to_partial_sum()
         # if len(self) == 0:
         #     return False
         if isinstance(other, Node):
@@ -153,7 +159,7 @@ def cursing():
         if not OpOverrider.activated:
             return self.__contains__(other)
         if isinstance(other, ScalarProduct):
-            other = PartialConstraint(ConstraintSum(other.variables, other.coeffs, None))  # functions.Sum(other)
+            other = other.to_partial_sum()
         if isinstance(other, Variable):  # unary table constraint (based on a range)
             queue_in.append((self, other))
             return True

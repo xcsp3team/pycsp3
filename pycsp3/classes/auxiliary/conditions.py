@@ -5,7 +5,7 @@ from pycsp3.classes import main
 from pycsp3.classes.auxiliary.enums import TypeConditionOperator
 from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.classes.main.variables import Variable
-from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY
+from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY, error
 
 LT, LE, GE, GT, EQ, NE, IN, NOTIN = [t for t in TypeConditionOperator]
 
@@ -38,8 +38,15 @@ class Condition:
             return None  # it may occur when building a partial constraint
         condition = tuple(condition) if isinstance(condition, list) else condition  # we expect a condition to be given as a tuple (or a list)
         assert isinstance(condition, tuple) and len(condition) == 2, "a condition must a pair, given as a tuple (or a list)"
-        operator = TypeConditionOperator.value_of(condition[0]) if isinstance(condition[0], str) else condition[0]
+        operator = condition[0]
+        if isinstance(operator, str):
+            try:
+                operator = TypeConditionOperator.value_of(operator)
+            except ValueError:
+                error("The operator " + operator + " of the condition " + str(condition) + " is unknown (lt, le, ge, gt, eq, ne, in, notin, <, <=, >=, >, ==, !=)")
         right_operand = list(condition[1]) if isinstance(condition[1], (set, frozenset, GeneratorType)) else condition[1]
+        if type(right_operand) is bool or isinstance(right_operand, (list, tuple)) and any(type(v) is bool for v in right_operand):
+            error("A Boolean cannot be the operand of a condition, which is the case of " + str(condition[1]))
         # checkType(right_operand, (int, Variable, range, [int, Variable]))
         if isinstance(right_operand, range) and right_operand.step != 1:
             right_operand = list(right_operand)
@@ -53,7 +60,7 @@ class Condition:
             return ConditionParameter(operator, right_operand)
         if isinstance(right_operand, (list, tuple, set, frozenset)):
             return ConditionSet(operator, set(right_operand))
-        assert False
+        error("The operand of the condition " + str(condition) + " must be an integer, a variable, a range or a set of integers")
 
     def filtering(self, values):
         pass
