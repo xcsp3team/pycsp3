@@ -1,4 +1,8 @@
+import dis
 import keyword
+import os
+import sys
+import sysconfig
 import types
 from collections import deque, namedtuple, abc
 
@@ -17,6 +21,49 @@ from pycsp3.tools.utilities import (flatten, is_containing, unique_type_in, is_1
 queue_in = deque()  # To store partial constraints when using the IN operator
 
 unsafe_cache = False  # see for example Pic since the table is released as it occurs as a parameter
+
+
+def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
+    if not OpOverrider.activated:
+        return self.__contains__(other)
+    if isinstance(other, (int, str)) and (len(self) == 0 or not isinstance(next(iter(self)), Variable)):
+        return self.__contains__(other)  # a value and a set of values (not of variables): an ordinary membership
+    if isinstance(other, ScalarProduct):
+        other = other.to_partial_sum()
+    # if len(self) == 0:
+    #     return False
+    if isinstance(other, Node):
+        other = auxiliary().replace_node(other)
+    if isinstance(other, types.GeneratorType):
+        other = list(other)
+    if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
+        other = [v for v in other if v]
+    tself = unique_type_in(self)
+    # if isinstance(other, Variable) and len(self) > 0 and is_containing(self, int):  # unary table constraint
+    if isinstance(other, Variable) and tself in {int, str}:  # unary table constraint
+        queue_in.append((list(self), other))
+        return True
+    # if isinstance(other, (Variable, PartialConstraint)) or isinstance(other, (int, str)) and is_containing(self, Variable):  # intension constraint
+    if isinstance(other, (Variable, PartialConstraint)) or isinstance(other, (int, str)) and tself and issubclass(tself, Variable):  # intension constraint
+        queue_in.append((self, other))
+        return True
+    # if is_1d_tuple(other, Variable) or is_1d_list(other, Variable):  # non-unary table constraint
+    #     queue_in.append((list(self), other))
+    #     return True
+    if isinstance(other, (tuple, list)) and is_containing(other, (Variable, Node, types.GeneratorType)):  # non-unary table constraint
+        ll = flatten(other)
+        for i in range(len(ll)):  # we replace nodes by auxiliary variables if present
+            if isinstance(ll[i], Node):
+                ll[i] = auxiliary().replace_node(ll[i])
+                # if is_containing(other, Variable):  # non-unary table constraint
+        if unsafe_cache:
+            if not hasattr(_set_contains, "cache"):
+                _set_contains.cache = {}
+            if id(self) not in _set_contains.cache:
+                _set_contains.cache[id(self)] = list({tuple(v) if isinstance(v, types.GeneratorType) else v for v in self})
+        queue_in.append((_set_contains.cache[id(self)] if unsafe_cache else list(self), ll))  # flatten(other)))
+        return True
+    return self.__contains__(other)
 
 
 def cursing():
@@ -59,7 +106,7 @@ def cursing():
             queue_in.append((list(self), other))
             return True
         if len(self) == 0 and is_containing(other, Variable):  # as for an empty set (e.g., x not in [], where [] is changed into ())
-            return other in set(self)
+            return _set_contains(set(self), other)  # a call (and not 'in', whose instruction could be specialized from Python 3.13)
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
             queue_in.append((self, other))
             return True
@@ -92,7 +139,7 @@ def cursing():
             queue_in.append((self, other))
             return True
         if len(self) == 0 and is_containing(other, Variable):
-            return other in set(self)
+            return _set_contains(set(self), other)  # a call (and not 'in', whose instruction could be specialized from Python 3.13)
         if isinstance(other, Variable) and isinstance(self, list):
             for i, v in enumerate(self):
                 # TODO: certainly other cases (not just PartialConstraint) to be handled
@@ -112,46 +159,6 @@ def cursing():
                 if isinstance(ll[i], Node):
                     ll[i] = auxiliary().replace_node(ll[i])
             queue_in.append((list(self), ll))
-            return True
-        return self.__contains__(other)
-
-    def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
-        if not OpOverrider.activated:
-            return self.__contains__(other)
-        if isinstance(other, ScalarProduct):
-            other = other.to_partial_sum()
-        # if len(self) == 0:
-        #     return False
-        if isinstance(other, Node):
-            other = auxiliary().replace_node(other)
-        if isinstance(other, types.GeneratorType):
-            other = list(other)
-        if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
-            other = [v for v in other if v]
-        tself = unique_type_in(self)
-        # if isinstance(other, Variable) and len(self) > 0 and is_containing(self, int):  # unary table constraint
-        if isinstance(other, Variable) and tself in {int, str}:  # unary table constraint
-            queue_in.append((list(self), other))
-            return True
-        # if isinstance(other, (Variable, PartialConstraint)) or isinstance(other, (int, str)) and is_containing(self, Variable):  # intension constraint
-        if isinstance(other, (Variable, PartialConstraint)) or isinstance(other, (int, str)) and tself and issubclass(tself, Variable):  # intension constraint
-            queue_in.append((self, other))
-            return True
-        # if is_1d_tuple(other, Variable) or is_1d_list(other, Variable):  # non-unary table constraint
-        #     queue_in.append((list(self), other))
-        #     return True
-        if isinstance(other, (tuple, list)) and is_containing(other, (Variable, Node, types.GeneratorType)):  # non-unary table constraint
-            ll = flatten(other)
-            for i in range(len(ll)):  # we replace nodes by auxiliary variables if present
-                if isinstance(ll[i], Node):
-                    ll[i] = auxiliary().replace_node(ll[i])
-                    # if is_containing(other, Variable):  # non-unary table constraint
-            if unsafe_cache:
-                if not hasattr(_set_contains, "cache"):
-                    _set_contains.cache = {}
-                if id(self) not in _set_contains.cache:
-                    _set_contains.cache[id(self)] = list({tuple(v) if isinstance(v, types.GeneratorType) else v for v in self})
-            queue_in.append((_set_contains.cache[id(self)] if unsafe_cache else list(self), ll))  # flatten(other)))
             return True
         return self.__contains__(other)
 
@@ -180,6 +187,48 @@ def cursing():
     curse(list, "__contains__", _list_contains)
     curse(set, "__contains__", _set_contains)
     curse(range, "__contains__", _range_contains)
+    _prevent_specialization_of_contains()
+
+
+def _prevent_specialization_of_contains():
+    """
+    From Python 3.13, an instruction CONTAINS_OP (the operator 'in') is specialized once executed with a set or a frozenset (CONTAINS_OP_SET):
+    the membership is then computed directly by CPython, and the method __contains__ replaced above is no longer called (at the next iterations
+    of a loop, for example). An instruction observed with sys.monitoring (event INSTRUCTION) is never specialized, its adaptive counter being
+    paused: the instructions CONTAINS_OP of the code of the user (models, notebooks, ...), and only them, remain observed.
+    """
+    if sys.version_info < (3, 13):
+        return
+    monitoring = sys.monitoring
+    tool = next((t for t in (4, 3) if monitoring.get_tool(t) is None), None)
+    if tool is None:  # no identifier of tool available
+        return
+    events, contains_op = monitoring.events, dis.opmap["CONTAINS_OP"]
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + os.sep  # the directory of the package pycsp3
+    user_dirs = tuple(root + d + os.sep for d in ("tests", "problems"))
+    python_dirs = tuple({os.path.abspath(sysconfig.get_path(k)) + os.sep for k in ("stdlib", "platstdlib", "purelib", "platlib")})
+
+    def _user_code(code):  # code that is neither in the library PyCSP3 nor in the Python installation
+        name = code.co_filename
+        return not (name.startswith(root) and not name.startswith(user_dirs) or name.startswith(python_dirs))
+
+    def _on_start(code, offset):  # at its first start, a code object of the user is observed instruction by instruction
+        if _user_code(code):
+            monitoring.set_local_events(tool, code, events.INSTRUCTION)
+        return monitoring.DISABLE
+
+    def _on_instruction(code, offset):  # the observation is only kept for the instructions CONTAINS_OP
+        return None if code.co_code[offset] == contains_op else monitoring.DISABLE
+
+    monitoring.use_tool_id(tool, "pycsp3")
+    monitoring.register_callback(tool, events.PY_START, _on_start)
+    monitoring.register_callback(tool, events.INSTRUCTION, _on_instruction)
+    monitoring.set_events(tool, events.PY_START)
+    frame = sys._getframe(1)
+    while frame is not None:  # the code of the user already running (typically, the model) is observed now
+        if _user_code(frame.f_code):
+            monitoring.set_local_events(tool, frame.f_code, events.INSTRUCTION)
+        frame = frame.f_back
 
 
 class OpOverrider:
@@ -716,7 +765,7 @@ class OpOverrider:
             if unique_type_in(other, int):
                 res = OpOverrider.__extract_vars_vals(self, other)
                 if res is not None:
-                    return res[0] not in {tuple(res[1])}
+                    return not _set_contains({tuple(res[1])}, res[0])  # a call (and not 'in', whose instruction could be specialized from Python 3.13)
             if unique_type_in(other, Variable):
                 res = OpOverrider.__extract_vars_vals(self, other)
                 if res is not None:
