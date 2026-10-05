@@ -342,6 +342,17 @@ def test_tables_inside_comprehensions(run, solver, definitions, constraints, pre
     check(run, solver, X3 + definitions + f"satisfy({constraints}, x[0] != 1)", D3, lambda *t: predicate(*t) and t[0] != 1)
 
 
+def test_large_table_built_in_parallel(run):
+    # a table of at least 100,000 tuples is built in parallel, unless -safe; with the default start method of multiprocessing from Python 3.14
+    # (forkserver), the processes executed the model again (see #168)
+    code = "x = VarArray(size=3, dom=range(50))\nsatisfy(x in {(a, b, c) for a in range(50) for b in range(50) for c in range(50) if (a + b + c) % 7 != 0})"
+    r = run(code)
+    assert r.ok and "in parallel" in r.stdout, r.report()
+    s = run(code, args=["-safe"])
+    assert s.ok and "in parallel" not in s.stdout, s.report()
+    supports = [" ".join(t.xml.find("constraints/extension/supports").text.split()) for t in (r, s)]
+    assert supports[0] == supports[1] and supports[0].count("(") == 107142, r.report()
+
 
 # ---------------------------------------------------------------------------------------------------- XCSP3 files
 
