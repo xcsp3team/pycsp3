@@ -297,10 +297,10 @@ def test_abs_min_max_on_integers(run):
     assert "values 3 2 1 7 5 9 3 b" in r.lines, r.report()
 
 
-@pytest.mark.parametrize("call", ["min([])", "max()", "abs([1, 2])", "abs('a')"])
-def test_abs_min_max_invalid_on_integers(run, call):
+@pytest.mark.parametrize("call, exception", [("min([])", "ValueError"), ("max()", "TypeError"), ("abs([1, 2])", "TypeError"), ("abs('a')", "TypeError")])
+def test_abs_min_max_invalid_on_integers(run, call, exception):
     r = run(f"v = {call}")
-    assert not r.ok and r.exception == "TypeError", r.report()  # as with the functions of Python
+    assert not r.ok and r.exception == exception, r.report()  # as with the functions of Python
 
 
 def test_min_max_objective(run, solver):
