@@ -29,13 +29,13 @@ REIFIED_LOST = ("#178: Exist() with reified_by, when used in an expression, is r
 REIFIED_NOT_01 = "#179: Exist() with reified_by on a single variable that is not 0/1 posts r = x instead of r = (x == 1)"
 REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
 REIFIED_INVALID = "#179: Exist() with reified_by checks it with an assert without message"
-ACE_EMPTY_SCOPE = ("(to be reported) ACE fails on a count whose values belong to the domain of no variable of the list "
+ACE_EMPTY_SCOPE = ("#184: ACE fails on a count whose values belong to the domain of no variable of the list "
                    "(Problem.count(): control(scp.length > 0, \"A constraint Count is posted with an empty scope\"))")
-ACE_REPEATED = ("(to be reported) ACE gives wrong solutions for a count whose list contains a variable several times "
+ACE_REPEATED = ("#183: ACE gives wrong solutions for a count whose list contains a variable several times "
                 "(the propagators of atLeast/atMost/exactly count each variable once)")
-CHOCO_REIFIED = "(to be reported) CHOCO gives wrong solutions for an element (member) constraint with the attribute reifiedBy"
-PARSER_REIFIED = ("(to be reported) ACE and CHOCO fail on an element (member) constraint with the attribute reifiedBy whose value is a variable "
-                  "(CtrLoaderInteger.element(): ClassCastException: XVarInteger cannot be cast to Long)")
+CHOCO_REIFIED = "#187: CHOCO gives wrong solutions for an element (member) constraint with the attribute reifiedBy"
+PARSER_REIFIED = ("#188: ACE fails on an element (member) constraint with the attribute reifiedBy whose value is a variable "
+                  "(the parser, CtrLoaderInteger.element(), casts the value into Long: ClassCastException)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
@@ -43,7 +43,8 @@ EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty 
 COSOCO_REPEATED = "cosoco does not handle a count whose list contains a variable several times (scope contains variable x0 many times)"
 COSOCO_ABSENT = "cosoco does not handle a count whose value belongs to the domain of no variable (AtLeast, all variables must contain value)"
 COSOCO_REIFIED = "cosoco does not handle the constraint element with the attribute reifiedBy (s UNSUPPORTED)"
-COSOCO_OR_REPEATED = "cosoco does not handle a disjunction whose two terms are the same variable (At least: scope contains variable b[0] many times)"
+COSOCO_OR_REPEATED = ("cosoco does not handle a disjunction whose two terms are the same variable (At least: scope contains variable "
+                      "b[0] many times; whether it must be reported is discussed in #191)")
 
 # Each function, with the condition on the number c of counted terms among n terms, and whether it has the parameter value
 FUNCTIONS = {
@@ -308,7 +309,9 @@ REIFIED = "r = Var(dom={0, 1})\n"
 ])
 def test_exist_reified(run, solver, request, arguments, counted):
     if "b[0]" not in arguments or "b[0], b[1]" in arguments:  # an element constraint is posted
-        bug_for(request, ("ACE", "CHOCO"), PARSER_REIFIED) if "value=b" in arguments else bug_for(request, "CHOCO", CHOCO_REIFIED)
+        bug_for(request, "CHOCO", CHOCO_REIFIED)
+        if "value=b" in arguments:
+            bug_for(request, "ACE", PARSER_REIFIED)
         if solver == "COSOCO":
             pytest.skip(COSOCO_REIFIED)
     check(run, solver, B4 + REIFIED + f"satisfy(Exist({arguments}, reified_by=r))", DB4 + [(0, 1)], lambda *t: t[4] == any(counted(t)))
@@ -324,7 +327,9 @@ def test_exist_reified(run, solver, request, arguments, counted):
 ])
 def test_exist_reified_on_integer_variables(run, solver, request, arguments, counted):
     if not arguments.startswith("x[0]"):  # an element constraint is posted
-        bug_for(request, ("ACE", "CHOCO"), PARSER_REIFIED) if "value=x" in arguments else bug_for(request, "CHOCO", CHOCO_REIFIED)
+        bug_for(request, "CHOCO", CHOCO_REIFIED)
+        if "value=x" in arguments:
+            bug_for(request, "ACE", PARSER_REIFIED)
         if solver == "COSOCO":
             pytest.skip(COSOCO_REIFIED)
     check(run, solver, X4 + REIFIED + f"satisfy(Exist({arguments}, reified_by=r))", D4 + [(0, 1)], lambda *t: t[4] == any(counted(t)))

@@ -26,21 +26,21 @@ ONE_TERM = "#172: Count() on a single term generates an element <count> with a l
 INTEGERS = "#180: Count() refuses integers among the terms (TypeError: Wrong type for ...), contrary to Sum()"
 MINI = "#177: with -mini, Count() on 0/1 variables with the value 1 is changed into a sum without its parameter condition"
 INVALID = "#176: Count() does not detect explicitly some invalid arguments"
-ACE_EMPTY_SCOPE = ("(to be reported) ACE fails on a count whose values belong to the domain of no variable of the list "
+ACE_EMPTY_SCOPE = ("#184: ACE fails on a count whose values belong to the domain of no variable of the list "
                    "(Problem.count(): control(scp.length > 0, \"A constraint Count is posted with an empty scope\"))")
-ACE_LIMIT = ("(to be reported) ACE fails on a count compared with an integer outside 0..|X| (Problem.count(): control(0 <= l && l <= list.length) "
+ACE_LIMIT = ("#185: ACE fails on a count compared with an integer outside 0..|X| (Problem.count(): control(0 <= l && l <= list.length) "
              "without message)")
-ACE_REPEATED = ("(to be reported) ACE gives wrong solutions for a count whose list contains a variable several times "
+ACE_REPEATED = ("#183: ACE gives wrong solutions for a count whose list contains a variable several times "
                 "(the propagators of atLeast/atMost/exactly count each variable once)")
-ACE_NE = ("(to be reported) ACE fails on a count with the condition (ne,k) when k is 0 or |X| (Problem.count(): control(op == NE && 0 < k && "
+ACE_NE = ("#181: ACE fails on a count with the condition (ne,k) when k is 0 or |X| (Problem.count(): control(op == NE && 0 < k && "
           "k < scp.length) without message)")
-ACE_AMONG = "(to be reported) ACE fails on a count with several values and the condition (eq,0) (ERROR: Bad value of k=0)"
-CHOCO_RANGE = "(to be reported) CHOCO gives wrong solutions for a count with the condition in or notin an interval"
-CHOCO_LIMIT = ("(to be reported) CHOCO fails on a count compared with an integer that the count cannot reach "
+ACE_AMONG = "#182: ACE fails on a count with several values and the condition (eq,0) (ERROR: Bad value of k=0)"
+CHOCO_RANGE = "#186: CHOCO gives wrong solutions for a count with the condition in or notin an interval"
+CHOCO_LIMIT = ("#185: CHOCO fails on a count compared with an integer that the count cannot reach "
                "(SolverException: wrong domain definition, lower bound > upper bound)")
-COSOCO_REPEATED_VARIABLE = ("(to be reported) cosoco gives wrong solutions (Solution Error) for a count whose list contains a variable several times, "
+COSOCO_REPEATED_VARIABLE = ("#190: cosoco gives wrong solutions (Solution Error) for a count whose list contains a variable several times, "
                             "when the condition is on a variable (no message, contrary to the other conditions)")
-COSOCO_ALONE = "(to be reported) cosoco crashes (segmentation fault) when the only constraint is a count that always holds, and is discarded"
+COSOCO_ALONE = "#189: cosoco crashes (segmentation fault) when the only constraint is a count that always holds, and is discarded"
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
 DUMMY_IN = "#173: Count() on no term cannot be compared with 'in' a set (TypeError: unhashable type: 'ConstraintDummyConstant')"
