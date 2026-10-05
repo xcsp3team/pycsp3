@@ -1,0 +1,654 @@
+"""
+Tests of the constraint Sum of the section Constraints (Global) of the API (https://pycsp.org/documentation/api/constraints-global/#Sum):
+the function Sum(), which builds a component that becomes a constraint sum when compared with a value, a variable, an expression, an interval or a
+set (or when given the parameter condition), with or without coefficients (x * [1, 2, 3], Sum(c * x[i] for i in ...), variables as coefficients),
+on variables and on expressions, as a term of expressions, in groups of constraints, in logical expressions, in objectives, and with the option -mini.
+
+Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being compared with the ones computed by brute force.
+According to XCSP3-core, sum(X, C, (op, k)) holds iff the sum of the c[i] * x[i] satisfies (op, k), with |X| = |C| >= 2, expressions being accepted
+instead of variables (generalized forms). In the mini-tracks of the XCSP3 competitions, the list of a sum only contains variables and the operator of
+the condition is relational (lt, le, gt, ge, eq or ne), its operand being a value or a variable.
+"""
+
+import re
+
+import pytest
+
+from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug_for, declared_variables
+
+# Known bugs (each bug is reported in the issue given at the start of its reason)
+ACE_NOTIN = ("xcsp3team/ACE#22: ACE gives the solutions of in instead of those of notin for a sum on a small space "
+             "(Problem.sum(): the table is built with api.in(...) whatever the operator)")
+ACE_CANCEL = ("xcsp3team/ACE#23: ACE fails on a sum whose terms all cancel out (Problem.sum(): newCoeffs[0] read on an empty array once the terms "
+              "of coefficient 0 are discarded)")
+CHOCO_NOTIN = ("chocoteam/choco-solver#1248: CHOCO gives wrong solutions, several times, for a sum with notin (buildSum(): resu != sum, with resu a new variable "
+               "taking any value of the set)")
+COSOCO_BASIC = ("xcsp3team/cosoco#88: cosoco gives wrong solutions for a sum mixing expressions such as eq(x,k) and variables that are not 0/1, without "
+                "coefficients (matchParams() accepts any variable, while BasicNodeVar assumes a 0/1 variable)")
+COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
+                 "cannot be satisfied")
+EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
+                  "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
+
+
+def notin_bugs(request, text):
+    """Marks the running test with the bugs of ACE and CHOCO on notin, if the text contains a condition notin."""
+    if "not in" in text or "notin" in text:
+        bug_for(request, "ACE", ACE_NOTIN)
+        bug_for(request, "CHOCO", CHOCO_NOTIN)
+
+
+def check(run, solver, code, domains, predicate, args=()):
+    r = run(code, solver=solver, args=args)
+    assert_solutions(r, brute_force(domains, predicate))
+    return r
+
+
+X4 = "x = VarArray(size=4, dom=range(3))\n"
+D4 = [range(3)] * 4
+
+
+# ------------------------------------------------------------------------------------------------------------ conditions
+
+@pytest.mark.parametrize("condition, predicate", [
+    ("== 3", lambda s: s == 3),
+    ("!= 3", lambda s: s != 3),
+    ("< 3", lambda s: s < 3),
+    ("<= 3", lambda s: s <= 3),
+    ("> 5", lambda s: s > 5),
+    (">= 5", lambda s: s >= 5),
+    ("in range(2, 5)", lambda s: 2 <= s <= 4),
+    ("in {1, 3, 5}", lambda s: s in (1, 3, 5)),
+    ("in [1, 3, 5]", lambda s: s in (1, 3, 5)),
+    ("in {4}", lambda s: s == 4),
+    ("in range(0, 9, 2)", lambda s: s % 2 == 0),
+    ("not in range(2, 5)", lambda s: not 2 <= s <= 4),
+    ("not in {1, 3, 5}", lambda s: s not in (1, 3, 5)),
+    ("not in [1, 3, 5]", lambda s: s not in (1, 3, 5)),
+])
+def test_sum_conditions(run, solver, request, condition, predicate):
+    notin_bugs(request, condition)
+    check(run, solver, X4 + f"satisfy(Sum(x) {condition})", D4, lambda *t: predicate(sum(t)))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("3 <= Sum(x)", lambda s: s >= 3),
+    ("3 == Sum(x)", lambda s: s == 3),
+    ("3 > Sum(x)", lambda s: s < 3),
+    ("3 != Sum(x)", lambda s: s != 3),
+])
+def test_sum_on_the_right(run, solver, constraint, predicate):
+    check(run, solver, X4 + f"satisfy({constraint})", D4, lambda *t: predicate(sum(t)))
+
+
+@pytest.mark.parametrize("operand, predicate", [
+    ("== x[3]", lambda s, v: s == v),
+    ("!= x[3]", lambda s, v: s != v),
+    ("< x[3]", lambda s, v: s < v),
+    ("<= x[3]", lambda s, v: s <= v),
+    ("> x[3]", lambda s, v: s > v),
+    (">= x[3]", lambda s, v: s >= v),
+    ("== x[3] + 1", lambda s, v: s == v + 1),
+    ("== x[3] * 2", lambda s, v: s == v * 2),
+    ("<= abs(x[3] - 1)", lambda s, v: s <= abs(v - 1)),
+    ("> 2 * x[3]", lambda s, v: s > 2 * v),
+])
+def test_sum_compared_with_a_variable_or_an_expression(run, solver, operand, predicate):
+    check(run, solver, X4 + f"satisfy(Sum(x[:3]) {operand})", D4, lambda a, b, c, d: predicate(a + b + c, d))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Sum(x[:2]) == Sum(x[2:])", lambda a, b, c, d: a + b == c + d),
+    ("Sum(x[:2]) > Sum(x[2:]) + 1", lambda a, b, c, d: a + b > c + d + 1),
+    ("Sum(x[:2]) <= Sum(x[2:]) - 1", lambda a, b, c, d: a + b <= c + d - 1),
+    ("Sum(x[:2]) != Sum(x[1:])", lambda a, b, c, d: a + b != b + c + d),
+    ("Sum(x[:2] * [1, 2]) >= Sum(x[2:] * [2, 1])", lambda a, b, c, d: a + 2 * b >= 2 * c + d),
+])
+def test_sum_compared_with_a_sum(run, solver, constraint, predicate):
+    check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
+
+
+@pytest.mark.parametrize("condition, predicate", [
+    ("('le', 3)", lambda s: s <= 3),
+    ("['ge', 5]", lambda s: s >= 5),
+    ("('<=', 3)", lambda s: s <= 3),
+    ("('!=', 3)", lambda s: s != 3),
+    ("('eq', 4)", lambda s: s == 4),
+    ("('in', range(2, 5))", lambda s: 2 <= s <= 4),
+    ("('in', {1, 3})", lambda s: s in (1, 3)),
+    ("('notin', {1, 3})", lambda s: s not in (1, 3)),
+])
+def test_sum_with_the_parameter_condition(run, solver, request, condition, predicate):
+    notin_bugs(request, condition)
+    check(run, solver, X4 + f"satisfy(Sum(x, condition={condition}))", D4, lambda *t: predicate(sum(t)))
+
+
+def test_sum_with_the_parameter_condition_on_a_variable(run, solver):
+    check(run, solver, X4 + "satisfy(Sum(x[:3], condition=('eq', x[3])))", D4, lambda a, b, c, d: a + b + c == d)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Sum(x) in range(0)", lambda s: False),
+    ("Sum(x) in set()", lambda s: False),
+    ("Sum(x) not in range(0)", lambda s: True),
+    ("Sum(x) not in set()", lambda s: True),
+    ("Sum(x) in range(3, 1)", lambda s: False),
+    ("Sum(x, condition=('in', set()))", lambda s: False),
+    ("Sum(x, condition=('notin', range(0)))", lambda s: True),
+    ("Sum(x) in range(9, 20)", lambda s: False),
+    ("Sum(x) in range(-5, 0)", lambda s: False),
+    ("Sum(x) not in range(0, 9)", lambda s: False),
+])
+def test_sum_with_an_empty_or_unreachable_condition(run, solver, request, constraint, predicate):
+    # a sum never belongs to an empty set: the constraint false is posted for 'in', and nothing for 'not in'
+    if constraint in ("Sum(x) in range(0)", "Sum(x) in set()", "Sum(x, condition=('in', set()))", "Sum(x) in range(3, 1)"):
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
+    elif constraint == "Sum(x) not in range(0, 9)":
+        notin_bugs(request, constraint)
+    check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(sum(t)) and t[3] != 1)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(Sum(x) in set()) | (x[0] == 1)", lambda *t: t[0] == 1),
+    ("(Sum(x) not in set()) | (x[0] == 1)", lambda *t: True),
+    ("(Sum(x) in range(0)) | (x[0] == 1)", lambda *t: t[0] == 1),
+    ("(Sum(x) not in range(0)) & (x[0] == 1)", lambda *t: t[0] == 1),
+    ("[Sum(x[:2]) not in set(), x[0] == 1]", lambda *t: t[0] == 1),
+])
+def test_sum_with_an_empty_set_in_expressions_and_groups(run, solver, constraint, predicate):
+    check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
+
+
+def test_xcsp3_sum_with_an_empty_set(run):
+    r = run(X4 + "satisfy(Sum(x) not in set(), Sum(x[:2]) not in range(0), x[3] != 1)")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/sum") is None, r.report()
+    r = run(X4 + "satisfy(Sum(x) in set())")
+    assert r.ok, r.report()
+    assert "trivially false" in r.stdout and r.xml.find("constraints/sum") is None, r.report()
+
+
+# ------------------------------------------------------------------------------------------------------------ forms
+
+@pytest.mark.parametrize("terms", [
+    "x",
+    "x[:]",
+    "x[0], x[1], x[2], x[3]",
+    "(x[0], x[1], x[2], x[3])",
+    "[x[0], x[1], x[2], x[3]]",
+    "x[i] for i in range(4)",
+    "x[:2], x[2:]",
+    "[x[:2], x[2:]]",
+    "x[0], [x[1], [x[2], x[3]]]",
+    "{x[0], x[1], x[2], x[3]}",
+    "[x[0], None, x[1], x[2], x[3]]",
+])
+def test_sum_forms(run, solver, terms):
+    check(run, solver, X4 + f"satisfy(Sum({terms}) == 4)", D4, lambda *t: sum(t) == 4)
+
+
+def test_sum_on_a_matrix(run, solver):
+    check(run, solver, "m = VarArray(size=[2, 2], dom=range(3))\nsatisfy(Sum(m) == 5)", D4, lambda *t: sum(t) == 5)
+
+
+def test_sum_on_an_array_with_holes(run, solver):
+    r = check(run, solver, "w = VarArray(size=4, dom=lambda i: None if i == 1 else range(3))\nsatisfy(Sum(w) == 3)", [range(3)] * 3, lambda *t: sum(t) == 3)
+    assert r.variables == ["w[0]", "w[2]", "w[3]"]
+
+
+@pytest.mark.parametrize("terms", ["w * [1, 2, 3, 4]", "[1, 2, 3, 4] * w", "w * (1, 2, 3, 4)", "w * range(1, 5)"])
+def test_sum_with_coefficients_on_an_array_with_holes(run, solver, terms):
+    # the coefficient of a hole is discarded with it
+    check(run, solver, f"w = VarArray(size=4, dom=lambda i: None if i == 1 else range(3))\nsatisfy(Sum({terms}) == 5)", [range(3)] * 3,
+          lambda a, c, d: a + 3 * c + 4 * d == 5)
+
+
+def test_sum_with_coefficients_on_a_matrix_with_holes(run, solver):
+    check(run, solver, "w = VarArray(size=[2, 3], dom=lambda i, j: None if i == j else range(3))\nsatisfy(Sum(w * [[1, 2, 3], [4, 5, 6]]) == 7)",
+          [range(3)] * 4, lambda b, c, d, f: 2 * b + 3 * c + 4 * d + 6 * f == 7)
+
+
+@pytest.mark.parametrize("n, d, k", [(2, 2, 1), (3, 3, 4), (5, 2, 3), (6, 2, 2)])
+def test_sum_sizes(run, solver, n, d, k):
+    check(run, solver, f"x = VarArray(size={n}, dom=range({d}))\nsatisfy(Sum(x) == {k})", [range(d)] * n, lambda *t: sum(t) == k)
+
+
+def test_sum_on_negative_values(run, solver):
+    check(run, solver, "x = VarArray(size=4, dom=range(-2, 2))\nsatisfy(Sum(x) == -1)", [range(-2, 2)] * 4, lambda *t: sum(t) == -1)
+
+
+def test_sum_on_different_domains(run, solver):
+    check(run, solver, "x = VarArray(size=3, dom=lambda i: {0, 2 * i + 1, 5})\nsatisfy(Sum(x) in range(6, 9))", [{0, 1, 5}, {0, 3, 5}, {0, 5}],
+          lambda *t: 6 <= sum(t) <= 8)
+
+
+# ------------------------------------------------------------------------------------------------------------ coefficients
+
+@pytest.mark.parametrize("terms, coeffs", [
+    ("x * [1, 2, 3, 4]", [1, 2, 3, 4]),
+    ("x * (1, 2, 3, 4)", [1, 2, 3, 4]),
+    ("x * range(1, 5)", [1, 2, 3, 4]),
+    ("x * 2", [2, 2, 2, 2]),
+    ("[1, 2, 3, 4] * x", [1, 2, 3, 4]),
+    ("x * [1, -2, 3, -4]", [1, -2, 3, -4]),
+    ("x * [0, 2, 0, 1]", [0, 2, 0, 1]),
+    ("x * [0, 2, 3, 1]", [0, 2, 3, 1]),
+    ("x * [5, 10, 100, 1000]", [5, 10, 100, 1000]),
+    ("x[i] * (i + 1) for i in range(4)", [1, 2, 3, 4]),
+    ("(i + 1) * x[i] for i in range(4)", [1, 2, 3, 4]),
+    ("x[i] * i for i in range(4)", [0, 1, 2, 3]),
+    ("-x[0], x[1], -x[2], x[3]", [-1, 1, -1, 1]),
+    ("x[0] * 2, x[1], x[2] * -1, x[3]", [2, 1, -1, 1]),
+    ("x[:2] * [1, 2], x[2:] * [3, 4]", [1, 2, 3, 4]),
+    ("Sum(x[:2] * [1, 2]), x[2], x[3]", [1, 2, 1, 1]),
+    ("x[:3] * [1, 2, 3], x[3]", [1, 2, 3, 1]),
+])
+@pytest.mark.parametrize("condition", ["== 5", "<= 4", "in range(3, 8)"])
+def test_sum_with_coefficients(run, solver, terms, coeffs, condition):
+    predicate = {"== 5": lambda s: s == 5, "<= 4": lambda s: s <= 4, "in range(3, 8)": lambda s: 3 <= s <= 7}[condition]
+    check(run, solver, X4 + f"satisfy(Sum({terms}) {condition})", D4, lambda *t: predicate(sum(c * v for c, v in zip(coeffs, t))))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("x * [1, 2, 3, 4] == 5", lambda s: s == 5),
+    ("x * [1, 2, 3, 4] <= 5", lambda s: s <= 5),
+    ("x * [1, 2, 3, 4] > 10", lambda s: s > 10),
+    ("x * [1, 2, 3, 4] != 5", lambda s: s != 5),
+    ("5 >= x * [1, 2, 3, 4]", lambda s: s <= 5),
+])
+def test_scalar_product_without_sum(run, solver, constraint, predicate):
+    check(run, solver, X4 + f"satisfy({constraint})", D4, lambda *t: predicate(t[0] + 2 * t[1] + 3 * t[2] + 4 * t[3]))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("x * [1, 2, 3, 4] in {3, 5}", lambda s: s in (3, 5)),
+    ("x * [1, 2, 3, 4] in [3, 5]", lambda s: s in (3, 5)),
+    ("x * [1, 2, 3, 4] not in {3, 5}", lambda s: s not in (3, 5)),
+    ("x * [1, 2, 3, 4] not in [3, 5]", lambda s: s not in (3, 5)),
+    ("x * [1, 2, 3, 4] in range(3, 6)", lambda s: 3 <= s <= 5),
+])
+def test_scalar_product_without_sum_compared_with_a_set(run, solver, request, constraint, predicate):
+    notin_bugs(request, constraint)  # a sum with the condition notin (a literal list on the right of 'in' being changed into a tuple by Python)
+    check(run, solver, X4 + f"satisfy({constraint})", D4, lambda *t: predicate(t[0] + 2 * t[1] + 3 * t[2] + 4 * t[3]))
+
+
+def test_sum_with_variables_as_coefficients(run, solver):
+    check(run, solver, "x = VarArray(size=2, dom=range(3))\nc = VarArray(size=2, dom=range(3))\nsatisfy(Sum(x * c) == 3)", D4,
+          lambda a, b, c, d: a * c + b * d == 3)
+
+
+@pytest.mark.parametrize("condition, predicate", [
+    ("== 3", lambda s: s == 3),
+    ("in range(2, 4)", lambda s: 2 <= s <= 3),
+    ("in {1, 3}", lambda s: s in (1, 3)),
+])
+def test_scalar_product_of_two_lists_of_variables(run, solver, condition, predicate):
+    r = check(run, solver, f"x = VarArray(size=2, dom=range(3))\nc = VarArray(size=2, dom=range(3))\nsatisfy(x * c {condition})", D4,
+              lambda a, b, c, d: predicate(a * c + b * d))
+    assert " ".join(r.xml.find("constraints/sum/coeffs").text.split()) == "c[0] c[1]", r.report()  # the variables are the coefficients
+
+
+def test_sum_with_variables_and_integers_as_coefficients(run, solver):
+    check(run, solver, "x = VarArray(size=3, dom=range(3))\nc = Var(dom=range(3))\nsatisfy(Sum(x * [1, c, 2]) == 4)", D4,
+          lambda a, b, d, c: a + c * b + 2 * d == 4)
+
+
+# ------------------------------------------------------------------------------------------------------------ expressions
+
+@pytest.mark.parametrize("terms, value", [
+    ("x[i] > 0 for i in range(4)", lambda *t: sum(v > 0 for v in t)),
+    ("abs(x[i] - 1) for i in range(4)", lambda *t: sum(abs(v - 1) for v in t)),
+    ("(x[i] == 1) * 3 for i in range(4)", lambda *t: sum(3 * (v == 1) for v in t)),
+    ("x[0], x[1] + 1, x[2] * 2, x[3]", lambda a, b, c, d: a + b + 1 + 2 * c + d),
+    ("x[0] - x[1], x[2], x[3]", lambda a, b, c, d: a - b + c + d),
+    ("x[0] * x[1], x[2], x[3]", lambda a, b, c, d: a * b + c + d),
+    ("max(x[0], x[1]), x[2]", lambda a, b, c, d: max(a, b) + c),
+    ("Count(x, value=1), x[0]", lambda *t: t.count(1) + t[0]),
+    ("Maximum(x[:2]), x[2]", lambda a, b, c, d: max(a, b) + c),
+    ("Sum(x[:2]) == 2, x[2], x[3]", lambda a, b, c, d: (a + b == 2) + c + d),
+    ("x[0] == 2, x[1], x[2]", lambda a, b, c, d: (a == 2) + b + c),
+    ("x[0] != 2, x[1], x[2]", lambda a, b, c, d: (a != 2) + b + c),
+    ("(x[0] == 2) * 3, x[1]", lambda a, b, c, d: 3 * (a == 2) + b),
+    ("x[0] + x[1], x[2] + x[3]", lambda *t: sum(t)),
+])
+def test_sum_on_expressions(run, solver, request, terms, value):
+    if terms in ("Sum(x[:2]) == 2, x[2], x[3]", "x[0] == 2, x[1], x[2]", "x[0] != 2, x[1], x[2]"):
+        bug_for(request, "COSOCO", COSOCO_BASIC)
+    check(run, solver, X4 + f"satisfy(Sum({terms}) == 3)", D4, lambda *t: value(*t) == 3)
+
+
+# ------------------------------------------------------------------------------------------------ integers among the terms
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Sum(x[0], 2, x[1]) == 3", lambda a, b, c, d: a + b == 1),
+    ("Sum(x[0], 0, x[1]) == 2", lambda a, b, c, d: a + b == 2),
+    ("Sum(x[0], 1, 1) == 3", lambda a, b, c, d: a == 1),
+    ("Sum(x[0], -1, x[1]) == 1", lambda a, b, c, d: a + b == 2),
+    ("Sum(1, x[0]) == x[1]", lambda a, b, c, d: a + 1 == b),
+    ("Sum(1, 2) == 3", lambda *t: True),
+    ("Sum(1, 2) == 4", lambda *t: False),
+    ("Sum(1, 2) <= x[0]", lambda *t: t[0] >= 3),
+    ("Sum(0) == 0", lambda *t: True),
+    ("Sum([]) == 0", lambda *t: True),
+    ("Sum([]) <= x[0]", lambda *t: True),
+    ("Sum([]) == 1", lambda *t: False),
+    ("Sum(x * [0, 0, 0, 0]) == 0", lambda *t: True),
+    ("Sum(x * [0, 0, 0, 0]) == 1", lambda *t: False),
+])
+def test_sum_with_integers(run, solver, request, constraint, predicate):
+    if constraint in ("Sum([]) == 1", "Sum(x * [0, 0, 0, 0]) == 1"):  # the constraint false, posted by a table with an empty set of supports
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
+    check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
+
+
+# ----------------------------------------------------------------------------------------------- arithmetic with sums
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Sum(x[:3]) + x[3] == 3", lambda a, b, c, d: a + b + c + d == 3),
+    ("Sum(x) + 1 == 3", lambda *t: sum(t) + 1 == 3),
+    ("Sum(x) - 1 == 2", lambda *t: sum(t) - 1 == 2),
+    ("1 - Sum(x) == -2", lambda *t: 1 - sum(t) == -2),
+    ("1 + Sum(x) == 3", lambda *t: 1 + sum(t) == 3),
+    ("-Sum(x) == -3", lambda *t: -sum(t) == -3),
+    ("-Sum(x) <= -5", lambda *t: -sum(t) <= -5),
+    ("Sum(x) * 2 == 6", lambda *t: 2 * sum(t) == 6),
+    ("2 * Sum(x) == 6", lambda *t: 2 * sum(t) == 6),
+    ("Sum(x) * -1 == -3", lambda *t: -sum(t) == -3),
+    ("Sum(x[:3]) * x[3] == 4", lambda a, b, c, d: (a + b + c) * d == 4),
+    ("Sum(x[:2]) * Sum(x[2:]) == 4", lambda a, b, c, d: (a + b) * (c + d) == 4),
+    ("Sum(x[:3]) * (x[3] + 1) == 4", lambda a, b, c, d: (a + b + c) * (d + 1) == 4),
+    ("x[3] * Sum(x[:3]) == 4", lambda a, b, c, d: (a + b + c) * d == 4),
+    ("Sum(x) // 2 == 1", lambda *t: sum(t) // 2 == 1),
+    ("Sum(x) % 2 == 0", lambda *t: sum(t) % 2 == 0),
+    ("abs(Sum(x) - 3) <= 1", lambda *t: abs(sum(t) - 3) <= 1),
+    ("Sum(x[:2]) - Sum(x[2:]) == 0", lambda a, b, c, d: a + b == c + d),
+    ("Sum(x[:2]) + Sum(x[2:]) == 3", lambda *t: sum(t) == 3),
+    ("Sum(x[:2]) * 2 + x[2] == 3", lambda a, b, c, d: 2 * (a + b) + c == 3),
+    ("x * [1, 2, 3, 4] + 1 == 5", lambda a, b, c, d: a + 2 * b + 3 * c + 4 * d + 1 == 5),
+    ("x[:2] * [1, 2] - x[2:] * [1, 1] == 0", lambda a, b, c, d: a + 2 * b == c + d),
+    ("Minimum(Sum(x[:2]), Sum(x[2:])) == 1", lambda a, b, c, d: min(a + b, c + d) == 1),
+    ("(Sum(x[:2]) == 2) == (x[2] == 1)", lambda a, b, c, d: (a + b == 2) == (c == 1)),
+    ("Sum(x[:3]) - Count(x, value=1) >= 1", lambda a, b, c, d: a + b + c - [a, b, c, d].count(1) >= 1),
+    ("Sum(x[:3]) - Maximum(x[:2]) == 1", lambda a, b, c, d: a + b + c - max(a, b) == 1),
+    ("Count(x, value=1) + Sum(x[:3]) == 4", lambda a, b, c, d: [a, b, c, d].count(1) + a + b + c == 4),
+    ("Count(x, value=1) - Sum(x[:3]) >= 1", lambda a, b, c, d: [a, b, c, d].count(1) - (a + b + c) >= 1),
+    ("Maximum(x[:2]) - Sum(x[2:]) > 0", lambda a, b, c, d: max(a, b) - (c + d) > 0),
+    ("-(x * [1, 2, 3, 4]) == -5", lambda a, b, c, d: -(a + 2 * b + 3 * c + 4 * d) == -5),
+    ("Sum(x) - Sum(x) == 0", lambda *t: True),
+    ("Sum(x) - Sum(x) != 0", lambda *t: False),
+    ("Sum(x[:2]) - Sum(x[:2]) >= 1", lambda *t: False),
+])
+def test_sum_in_arithmetic_expressions(run, solver, request, constraint, predicate):
+    if constraint.startswith("Sum(x) - Sum(x)") or constraint.startswith("Sum(x[:2]) - Sum(x[:2])"):
+        bug_for(request, "ACE", ACE_CANCEL)
+        if not constraint.endswith("== 0"):  # the sum being always 0, the constraint is false
+            bug_for(request, "COSOCO", COSOCO_CANCEL)
+    check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
+
+
+# ----------------------------------------------------------------------------------------------- degenerated cases
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Sum(x[0]) == 1", lambda a: a == 1),
+    ("Sum([x[0]]) == 1", lambda a: a == 1),
+    ("Sum(x[0] * 3) == 3", lambda a: 3 * a == 3),
+    ("Sum(-x[0]) == -1", lambda a: a == 1),
+    ("Sum(x[:1] * [2]) <= 2", lambda a: 2 * a <= 2),
+    ("Sum(x[0], condition=('eq', 1))", lambda a: a == 1),
+    ("Sum([x[0]]) in {1, 2}", lambda a: a in (1, 2)),
+    ("Sum(x[0], 2) == 3", lambda a: a == 1),
+    ("x[:1] * [2] <= 2", lambda a: 2 * a <= 2),
+    ("Sum(x[0] * 3) in {0, 3}", lambda a: 3 * a in (0, 3)),
+    ("Sum(x[0] * 2, condition=('in', range(1, 3)))", lambda a: 1 <= 2 * a <= 2),
+    ("Sum(x[0] * 2, condition=('notin', {2, 4}))", lambda a: 2 * a not in (2, 4)),
+    ("x[:1] * [2] in {2, 4}", lambda a: 2 * a in (2, 4)),
+    ("x[:1] * [2] in [0, 4]", lambda a: 2 * a in (0, 4)),
+    ("x[:1] * [2] not in range(1, 4)", lambda a: not 1 <= 2 * a <= 3),
+], ids=["one variable", "one variable in a list", "one variable with a coefficient", "one negated variable", "one variable (scalar product)",
+        "one variable with condition", "one variable in a set", "one variable and one integer", "one variable (scalar product without Sum)",
+        "one variable with a coefficient in a set", "one variable with a coefficient and an interval as condition",
+        "one variable with a coefficient and notin as condition", "one variable (scalar product without Sum) in a set",
+        "one variable (scalar product without Sum) in a list", "one variable (scalar product without Sum) not in a range"])
+def test_sum_on_a_single_variable(run, solver, constraint, predicate):
+    check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(t[0]) and t[3] != 1)
+
+
+def test_xcsp3_sum_has_at_least_two_terms(run):
+    # XCSP3-core requires |X| = |C| >= 2
+    for constraint in ["Sum(x[0] * 3) == 3", "Sum(-x[0]) == -1", "Sum(x[:1] * [2]) <= 2", "Sum(x[0], condition=('eq', 1))", "x[:1] * [2] <= 2",
+                       "Sum(x[0] * 3) in {0, 3}", "Sum(x[0] * 2, condition=('in', range(1, 3)))", "x[:1] * [2] in range(1, 4)",
+                       "x[:1] * [2] not in range(1, 4)", "x[:1] * [2] in {2, 4}"]:
+        r = run(X4 + f"satisfy({constraint})")
+        assert r.ok, r.report()
+        for c in r.xml.iter("sum"):
+            assert len(c.find("list").text.split()) >= 2, constraint + "\n" + r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate, args", [
+    ("Sum(x[0], x[0], x[1]) == 3", lambda a, b, c, d: 2 * a + b == 3, ()),
+    ("Sum(x[0], x[0], x[1]) == 3", lambda a, b, c, d: 2 * a + b == 3, ("-group_sum_coeffs",)),
+    ("Sum(x[0], x[0]) == 2", lambda a, b, c, d: a == 1, ()),
+    ("Sum(x * [1, 2, 3, 4], x[0]) == 5", lambda a, b, c, d: 2 * a + 2 * b + 3 * c + 4 * d == 5, ()),
+    ("Sum(x[0], -x[0], x[1]) == 1", lambda a, b, c, d: b == 1, ()),
+], ids=["twice", "twice (group_sum_coeffs)", "only twice", "with coefficients", "opposite"])
+def test_sum_with_a_repeated_variable(run, solver, constraint, predicate, args):
+    check(run, solver, X4 + f"satisfy({constraint})", D4, predicate, args=args)
+
+
+# ---------------------------------------------------------------------------------------------------------- groups
+
+M32 = "m = VarArray(size=[3, 2], dom=range(3))\n"
+D32 = [range(3)] * 6
+
+
+@pytest.mark.parametrize("constraints, predicate", [
+    ("[Sum(m[i]) == 2 for i in range(3)]", lambda *t: all(t[2 * i] + t[2 * i + 1] == 2 for i in range(3))),
+    ("[Sum(m[i]) == i for i in range(3)]", lambda *t: all(t[2 * i] + t[2 * i + 1] == i for i in range(3))),
+    ("[Sum(m[i] * [1, 2]) == 2 for i in range(3)]", lambda *t: all(t[2 * i] + 2 * t[2 * i + 1] == 2 for i in range(3))),
+    ("[Sum(m[i] * [1, i + 1]) == 2 for i in range(3)]", lambda *t: all(t[2 * i] + (i + 1) * t[2 * i + 1] == 2 for i in range(3))),
+    ("[Sum(m[:, j]) <= 3 for j in range(2)]", lambda *t: all(t[j] + t[2 + j] + t[4 + j] <= 3 for j in range(2))),
+])
+def test_sum_in_groups(run, solver, constraints, predicate):
+    check(run, solver, M32 + f"satisfy({constraints})", D32, predicate)
+
+
+@pytest.mark.parametrize("values", ["{1, 3}", "frozenset({1, 3})", "S", "[1, 3]", "range(1, 4, 2)"])
+def test_sum_in_a_set_in_a_comprehension(run, solver, values):
+    # S is the set {1, 3}; from Python 3.13, the instruction 'in' with a set is specialized after its first executions (see #166)
+    check(run, solver, M32 + f"S = {{1, 3}}\nsatisfy([Sum(m[i]) in {values} for i in range(3)])", D32,
+          lambda *t: all(t[2 * i] + t[2 * i + 1] in (1, 3) for i in range(3)))
+
+
+# ------------------------------------------------------------------------------------------------ logical contexts
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(Sum(x) == 3) | (x[0] == 1)", lambda *t: sum(t) == 3 or t[0] == 1),
+    ("(Sum(x) == 3) & (x[0] == 1)", lambda *t: sum(t) == 3 and t[0] == 1),
+    ("~(Sum(x) == 3)", lambda *t: sum(t) != 3),
+    ("~(Sum(x) <= 3)", lambda *t: sum(t) > 3),
+    ("imply(x[0] == 1, Sum(x) == 3)", lambda *t: t[0] != 1 or sum(t) == 3),
+    ("iff(x[0] == 1, Sum(x) == 3)", lambda *t: (t[0] == 1) == (sum(t) == 3)),
+    ("xor(x[0] == 0, Sum(x) > 5)", lambda *t: (t[0] == 0) != (sum(t) > 5)),
+    ("If(x[0] == 1, Then=Sum(x[1:]) == 2)", lambda *t: t[0] != 1 or sum(t[1:]) == 2),
+    ("(Sum(x) in {1, 3}) | (x[0] == 1)", lambda *t: sum(t) in (1, 3) or t[0] == 1),
+    ("(Sum(x) not in range(2, 5)) | (x[0] == 1)", lambda *t: not 2 <= sum(t) <= 4 or t[0] == 1),
+    ("(Sum(x * [1, 2, 3, 4]) == 5) | (x[0] == 1)", lambda a, b, c, d: a + 2 * b + 3 * c + 4 * d == 5 or a == 1),
+    ("(Sum(x[:3]) == x[3]) | (x[0] == 1)", lambda a, b, c, d: a + b + c == d or a == 1),
+])
+def test_sum_in_logical_expressions(run, solver, constraint, predicate):
+    check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
+
+
+@pytest.mark.parametrize("constraint", ["imply(x[0] == 1, Sum(x) in {1, 3})", "iff(x[0] == 1, Sum(x) not in {1, 3})",
+                                        "imply(x[0] == 1, x[1] in {1, 2})"])
+def test_imply_or_iff_with_an_operand_in_is_refused(run, constraint):
+    # imply() and iff() refuse an operand given by 'in' (a Boolean for Python)
+    r = run(X4 + f"satisfy({constraint})")
+    assert not r.ok, r.report()
+
+
+# ------------------------------------------------------------------------------------------------------------ objectives
+
+@pytest.mark.parametrize("objective, value, maximize", [
+    ("minimize(Sum(x))", lambda *t: sum(t), False),
+    ("maximize(Sum(x * [1, 2, 3, 4]))", lambda a, b, c, d: a + 2 * b + 3 * c + 4 * d, True),
+    ("maximize(x * [1, -2, 3, -4])", lambda a, b, c, d: a - 2 * b + 3 * c - 4 * d, True),
+    ("minimize(Sum(x[:2]) + x[2])", lambda a, b, c, d: a + b + c, False),
+    ("minimize(Sum(abs(x[i] - 1) for i in range(4)))", lambda *t: sum(abs(v - 1) for v in t), False),
+    ("minimize(Sum(x[i] > 0 for i in range(4)))", lambda *t: sum(v > 0 for v in t), False),
+    ("minimize(Sum(x[0]))", lambda *t: t[0], False),
+    ("maximize(Sum(x[:2]) - Sum(x[2:]))", lambda a, b, c, d: a + b - c - d, True),
+    ("maximize(Sum(x) * 2)", lambda *t: 2 * sum(t), True),
+])
+def test_sum_in_objectives(run, solver, objective, value, maximize):
+    r = run(X4 + f"satisfy(x[0] != x[1], Sum(x) >= 3)\n{objective}", solver=solver)
+    assert_optimum(r, brute_force(D4, lambda a, b, c, d: a != b and a + b + c + d >= 3), value, maximize=maximize)
+
+
+# ------------------------------------------------------------------------------------------------ examples of the doc
+
+def test_sum_example(run, solver):
+    # the first example of the documentation (knapsack)
+    weights = [4, 3, 5, 2, 6, 3]
+    check(run, solver, f"x = VarArray(size=6, dom={{0, 1}})\nsatisfy(Sum(x) == 3, Sum(x * {weights}) <= 10)", [(0, 1)] * 6,
+          lambda *t: sum(t) == 3 and sum(w * v for w, v in zip(weights, t)) <= 10)
+
+
+def test_sum_example_with_expressions(run, solver):
+    # the second example of the documentation, with smaller domains
+    check(run, solver, "y = VarArray(size=3, dom=range(4))\nz = Var(dom=range(20))\nsatisfy(z == 6, Sum(y[i] * (i + 1) for i in range(3)) == z)",
+          [range(4)] * 3 + [range(20)], lambda a, b, c, z: z == 6 and a + 2 * b + 3 * c == z)
+
+
+# ------------------------------------------------------------------------------------------------------------ -mini
+
+MINI_CASES = [
+    ("Sum(x) == 3", lambda a, b, c, d: a + b + c + d == 3),
+    ("Sum(x) in {1, 3}", lambda a, b, c, d: a + b + c + d in (1, 3)),
+    ("Sum(x) in range(2, 5)", lambda a, b, c, d: 2 <= a + b + c + d <= 4),
+    ("Sum(x) not in range(2, 5)", lambda a, b, c, d: not 2 <= a + b + c + d <= 4),
+    ("Sum(x) not in {1, 3}", lambda a, b, c, d: a + b + c + d not in (1, 3)),
+    ("Sum(x * [1, 2, 3, 4]) == 5", lambda a, b, c, d: a + 2 * b + 3 * c + 4 * d == 5),
+    ("Sum(x[i] > 0 for i in range(4)) == 2", lambda *t: sum(v > 0 for v in t) == 2),
+    ("Sum(x[0], x[1] + 1, x[2]) == 3", lambda a, b, c, d: a + b + 1 + c == 3),
+    ("Sum(x[:3]) == x[3] + 1", lambda a, b, c, d: a + b + c == d + 1),
+    ("Sum(x, condition=('in', {1, 3}))", lambda a, b, c, d: a + b + c + d in (1, 3)),
+    ("Sum(x) in {-1, 3, 20}", lambda a, b, c, d: a + b + c + d == 3),
+    ("Sum(x) in {20}", lambda a, b, c, d: False),
+    ("Sum(x) not in range(0, 9)", lambda a, b, c, d: False),
+]
+
+
+@pytest.mark.parametrize("constraint, predicate", MINI_CASES)
+def test_sum_with_mini(run, solver, request, constraint, predicate):
+    if constraint == "Sum(x) in {20}":  # the constraint false, no value of the set being possible
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
+    check(run, solver, X4 + f"satisfy({constraint})", D4, predicate, args=("-mini",))
+
+
+@pytest.mark.parametrize("constraint", [c for c, _ in MINI_CASES])
+def test_xcsp3_sum_with_mini(run, constraint):
+    # in the mini-tracks, the list of a sum only contains variables, and its condition is relational with a value or a variable as operand
+    # (the tables are ordinary, and not empty, except for the constraint false, posted by a table on the first variable of the model)
+    r = run(X4 + f"satisfy({constraint})", args=("-mini",))
+    assert r.ok, r.report()
+    for c in r.xml.iter("sum"):
+        assert all(re.fullmatch(r"[\w\[\]\.]+", token) for token in c.find("list").text.split()), r.report()
+        assert re.fullmatch(r"\((lt|le|gt|ge|eq|ne),[\w\[\]\-]+\)", c.find("condition").text.strip()), r.report()
+
+
+@pytest.mark.parametrize("constraint, table, domain", [
+    ("Sum(x) in {1, 3}", ("supports", "1 3"), "0..8"),
+    ("Sum(x) in {-1, 3, 20}", ("supports", "3"), "0..8"),
+    ("Sum(x) in range(2, 5)", ("supports", "2..4"), "0..8"),
+    ("Sum(x) in range(5, 20)", ("supports", "5..8"), "0..8"),
+    ("Sum(x) not in range(2, 5)", ("conflicts", "2..4"), "0..8"),
+    ("Sum(x) not in {1, 3}", ("conflicts", "1 3"), "0..8"),
+    ("Sum(x * [1, 2, 3, 4]) not in range(1, 19)", ("conflicts", "1..18"), "0..20"),
+])
+def test_xcsp3_sum_with_mini_table(run, constraint, table, domain):
+    # with -mini, 'sum in S' (or 'not in S') is replaced by sum = aux, aux having the possible values of the sum as domain,
+    # and a unary table on aux whose supports (or conflicts) are the values of S that the sum can take
+    r = run(X4 + f"satisfy({constraint})", args=("-mini",))
+    assert r.ok, r.report()
+    aux = re.fullmatch(r"\(eq,(aux_gb\[\d+\])\)", r.xml.find("constraints/sum/condition").text.strip())
+    assert aux is not None, r.report()
+    ext = [e for e in r.xml.iter("extension") if e.find("list").text.split() == [aux.group(1)]]
+    assert len(ext) == 1 and ext[0].find(table[0]) is not None and " ".join(ext[0].find(table[0]).text.split()) == table[1], r.report()
+    lo, hi = (int(v) for v in domain.split(".."))
+    assert declared_variables(r)[aux.group(1)] == list(range(lo, hi + 1)), r.report()
+
+
+# ----------------------------------------------------------------------------------------------------- XCSP3 files
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("Sum(x) == 3", ("x[]", None, "(eq,3)")),
+    ("Sum(x * [1, 2, 3, 4]) <= 5", ("x[]", "1 2 3 4", "(le,5)")),
+    ("Sum(x * 2) == 4", ("x[]", "2x4", "(eq,4)")),
+    ("Sum(x[:3]) == x[3]", ("x[0..2]", None, "(eq,x[3])")),
+    ("Sum(x) in range(2, 5)", ("x[]", None, "(in,2..4)")),
+    ("Sum(x) not in {1, 3}", ("x[]", None, "(notin,{1,3})")),
+    ("Sum(x[:2]) == Sum(x[2:])", ("x[]", "1 1 -1 -1", "(eq,0)")),
+    ("-Sum(x) == -3", ("x[]", "-1x4", "(eq,-3)")),
+    ("Sum(x[i] > 0 for i in range(4)) == 2", ("gt(x[0],0) gt(x[1],0) gt(x[2],0) gt(x[3],0)", None, "(eq,2)")),
+])
+def test_xcsp3_sum(run, constraint, expected):
+    r = run(X4 + f"satisfy({constraint})")
+    assert r.ok, r.report()
+    c = r.xml.find("constraints/sum")
+    assert c is not None, r.report()
+    assert [e.tag for e in c] == ["list"] + (["coeffs"] if expected[1] is not None else []) + ["condition"], r.report()  # the order of XCSP3
+    coeffs = c.find("coeffs")
+    got = (" ".join(c.find("list").text.split()), None if coeffs is None else " ".join(coeffs.text.split()), c.find("condition").text.strip())
+    assert got == expected, r.report()
+
+
+@pytest.mark.parametrize("constraint", ["-Sum(x) == -3", "-Sum(x * [1, 2, 3, 4]) <= -5", "Sum(x[:3]) - Count(x, value=1) >= 1",
+                                        "Sum(x[:3]) - Maximum(x[:2]) == 1", "x[0] + x[1] - Sum(x[2:]) == 0", "-Sum(x) * 2 == -6"])
+def test_xcsp3_sum_order_of_elements(run, constraint):
+    # XCSP3: <list>, then <coeffs>, then <condition>
+    r = run(X4 + f"satisfy({constraint})")
+    assert r.ok, r.report()
+    for c in r.xml.iter("sum"):
+        tags = [e.tag for e in c]
+        assert tags in (["list", "condition"], ["list", "coeffs", "condition"]), constraint + "\n" + r.report()
+
+
+# --------------------------------------------------------------------------------------------------- invalid cases
+
+INVALID_CASES = [
+    ("Sum(x)", "is not a constraint: it must be subject to a condition"),
+    ("Sum(x) == 2.5", "Wrong type for 2.5"),
+    ("Sum(x) == 'a'", "Wrong type for a"),
+    ("Sum(x) == None", "Wrong type for None"),
+    ("Sum(x) == True", "A Boolean cannot be the operand of a condition"),
+    ("Sum(x) != False", "A Boolean cannot be the operand of a condition"),
+    ("Sum(x) in {True, 2}", "A Boolean cannot be the operand of a condition"),
+    ("Sum(x, condition=('eq', True))", "A Boolean cannot be the operand of a condition"),
+    ("Sum(x, condition=('le',))", "a condition must a pair"),
+    ("Sum(x, condition=('foo', 3))", "The operator foo of the condition"),
+    ("Sum(x, condition='(le,3)')", "a condition must a pair"),
+    ("Sum(x, condition=('le', 'a'))", "must be an integer, a variable, a range or a set of integers"),
+    ("Sum(x, 'a') == 0", "Wrong type for"),
+    ("Sum(x, 1.5) == 0", "Wrong type for"),
+    ("Sum(x, True) == 0", "Sum() does not accept Booleans as terms"),
+    ("Sum(x, False) == 0", "Sum() does not accept Booleans as terms"),
+    ("Sum() == 0", "missing 1 required positional argument"),
+    ("Sum(x * [1, 2]) == 5", "A scalar product requires as many coefficients as variables"),
+    ("Sum(x * [1, 2, 3, 4, 5]) == 5", "A scalar product requires as many coefficients as variables"),
+    ("Sum(x * ['a', 'b', 'c', 'd']) == 5", "A coefficient of a scalar product must be an integer, a variable or an expression"),
+    ("Sum(x * [1.5, 2, 3, 4]) == 5", "A coefficient of a scalar product must be an integer, a variable or an expression"),
+    ("Sum(x * [True, 1, 1, 1]) == 2", "A coefficient of a scalar product must be an integer, a variable or an expression"),
+    ("Sum(s) == 1", "Sum() requires integer variables"),
+]
+
+
+@pytest.mark.parametrize("constraint", [c for c, _ in INVALID_CASES])
+def test_invalid_sum(run, constraint):
+    assert_fails(run(X4 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({constraint})"))
+
+
+@pytest.mark.parametrize("constraint, message", INVALID_CASES)
+def test_invalid_sum_message(run, constraint, message):
+    r = run(X4 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout + r.stderr, r.report()

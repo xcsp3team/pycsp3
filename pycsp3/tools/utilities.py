@@ -5,7 +5,7 @@ import types
 from collections.abc import Iterable
 from decimal import Decimal
 from itertools import product
-from multiprocessing import cpu_count, Pool
+from multiprocessing import cpu_count, get_context
 from time import time
 
 from pycsp3 import tools
@@ -424,7 +424,7 @@ def table_to_string(table, restricting_domains=None, *, parallel=False):
         print("\tCreation of a table of size: " + str(len(table)) + (" in parallel" if parallel and len(table) >= LIMIT else ""))
         n_threads = cpu_count()
         size = len(table) // n_threads
-        pool = Pool(n_threads)
+        pool = get_context("fork").Pool(n_threads)  # not the default method spawn or forkserver (Python 3.14 on Linux), which re-executes the model
         left, right = 0, size
         t = []
         for piece in range(n_threads):

@@ -324,6 +324,36 @@ def test_table_with_expressions_in_scope(run, solver):
     assert_solutions(r, brute_force(D3, lambda a, b, c: (a + b, c) in {(0, 1), (5, 3), (6, 0)}))
 
 
+@pytest.mark.parametrize("definitions, constraints, predicate", [
+    ("", "[x[i] in {1, 3} for i in range(3)]", lambda *t: all(v in (1, 3) for v in t)),
+    ("", "[x[i] not in {1, 3} for i in range(3)]", lambda *t: all(v not in (1, 3) for v in t)),
+    ("S = {0, 2}\n", "[x[i] in S for i in range(3)]", lambda *t: all(v in (0, 2) for v in t)),
+    ("", "[(x[i], x[i + 1]) in {(0, 1), (1, 2), (2, 0), (3, 3)} for i in range(2)]",
+     lambda a, b, c: (a, b) in {(0, 1), (1, 2), (2, 0), (3, 3)} and (b, c) in {(0, 1), (1, 2), (2, 0), (3, 3)}),
+    ("", "[(x[i], x[i + 1]) not in {(0, 1), (1, 2)} for i in range(2)]", lambda a, b, c: (a, b) not in {(0, 1), (1, 2)} and (b, c) not in {(0, 1), (1, 2)}),
+    ("", "[x[i] not in [] for i in range(3)]", lambda *t: True),
+    ("", "[x[i:i + 2] != (1, 1) for i in range(2)]", lambda a, b, c: (a, b) != (1, 1) and (b, c) != (1, 1)),
+    ("def f(i):\n    return x[i] in {0, 2}\n", "[f(i) for i in range(3)]", lambda *t: all(v in (0, 2) for v in t)),
+], ids=["in a set", "not in a set", "in a set given by a variable", "tuples in a set", "tuples not in a set", "not in an empty list",
+        "different from a tuple", "in a set inside a function"])
+def test_tables_inside_comprehensions(run, solver, definitions, constraints, predicate):
+    # from Python 3.13, the instruction 'in' with a set is specialized after its first executions, the method redefined by PyCSP3 being then no longer
+    # called if the instruction is not kept generic (see #166)
+    check(run, solver, X3 + definitions + f"satisfy({constraints}, x[0] != 1)", D3, lambda *t: predicate(*t) and t[0] != 1)
+
+
+def test_large_table_built_in_parallel(run):
+    # a table of at least 100,000 tuples is built in parallel, unless -safe; with the default start method of multiprocessing from Python 3.14
+    # (forkserver), the processes executed the model again (see #168)
+    code = "x = VarArray(size=3, dom=range(50))\nsatisfy(x in {(a, b, c) for a in range(50) for b in range(50) for c in range(50) if (a + b + c) % 7 != 0})"
+    r = run(code)
+    assert r.ok and "in parallel" in r.stdout, r.report()
+    s = run(code, args=["-safe"])
+    assert s.ok and "in parallel" not in s.stdout, s.report()
+    supports = [" ".join(t.xml.find("constraints/extension/supports").text.split()) for t in (r, s)]
+    assert supports[0] == supports[1] and supports[0].count("(") == 107142, r.report()
+
+
 # ---------------------------------------------------------------------------------------------------- XCSP3 files
 
 @pytest.mark.parametrize("constraint, tag, text", [
