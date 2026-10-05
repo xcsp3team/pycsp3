@@ -18,14 +18,14 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-NOT_IN = "(to be reported) 'k not in x' posts the same constraint as 'k in x' (count >= 1)"
-NO_VALUE = "(to be reported) Count() with no value (values=[] or values=set()) generates an empty element <values>, refused by the three solvers"
-SEVERAL_VARIABLES = ("(to be reported) Count() sorts the variables given as values with '<', which builds expressions "
+NOT_IN = "#170: 'k not in x' posts the same constraint as 'k in x' (count >= 1)"
+NO_VALUE = "#171: Count() with no value (values=[] or values=set()) generates an empty element <values>, refused by the three solvers"
+SEVERAL_VARIABLES = ("#175: Count() sorts the variables given as values with '<', which builds expressions "
                      "(warning: A node is evaluated as a Boolean)")
-ONE_TERM = "(to be reported) Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
-INTEGERS = "(to be reported) Count() refuses integers among the terms (TypeError: Wrong type for ...), contrary to Sum()"
-MINI = "(to be reported) with -mini, Count() on 0/1 variables with the value 1 is changed into a sum without its parameter condition"
-INVALID = "(to be reported) Count() does not detect explicitly some invalid arguments"
+ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
+INTEGERS = "#180: Count() refuses integers among the terms (TypeError: Wrong type for ...), contrary to Sum()"
+MINI = "#177: with -mini, Count() on 0/1 variables with the value 1 is changed into a sum without its parameter condition"
+INVALID = "#176: Count() does not detect explicitly some invalid arguments"
 ACE_EMPTY_SCOPE = ("(to be reported) ACE fails on a count whose values belong to the domain of no variable of the list "
                    "(Problem.count(): control(scp.length > 0, \"A constraint Count is posted with an empty scope\"))")
 ACE_LIMIT = ("(to be reported) ACE fails on a count compared with an integer outside 0..|X| (Problem.count(): control(0 <= l && l <= list.length) "
@@ -43,7 +43,7 @@ COSOCO_REPEATED_VARIABLE = ("(to be reported) cosoco gives wrong solutions (Solu
 COSOCO_ALONE = "(to be reported) cosoco crashes (segmentation fault) when the only constraint is a count that always holds, and is discarded"
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
-DUMMY_IN = "(to be reported) Count() on no term cannot be compared with 'in' a set (TypeError: unhashable type: 'ConstraintDummyConstant')"
+DUMMY_IN = "#173: Count() on no term cannot be compared with 'in' a set (TypeError: unhashable type: 'ConstraintDummyConstant')"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 

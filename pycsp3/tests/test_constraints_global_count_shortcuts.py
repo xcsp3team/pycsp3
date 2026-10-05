@@ -18,17 +18,17 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-NOT_01 = ("(to be reported) Exist(), AtLeastOne() and AnyHold() on one or two terms that are not 0/1 post the term itself, or the disjunction of the "
+NOT_01 = ("#174: Exist(), AtLeastOne() and AnyHold() on one or two terms that are not 0/1 post the term itself, or the disjunction of the "
           "terms, instead of counting the terms equal to 1")
-ONE_TERM = "(to be reported) Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
-DUMMY_OR = "(to be reported) a shortcut of Count() on no term combined with '|' and a 0/1 variable fails (AssertionError: For the moment)"
-INTEGERS = "(to be reported) Count() refuses integers among the terms (TypeError: Wrong type for ...), contrary to Sum()"
-INVALID = "(to be reported) Count() does not detect explicitly some invalid arguments"
-REIFIED_LOST = ("(to be reported) Exist() with reified_by, when used in an expression, is replaced by its reification variable, the constraint "
+ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
+DUMMY_OR = "#173: a shortcut of Count() on no term combined with '|' and a 0/1 variable fails (AssertionError: For the moment)"
+INTEGERS = "#180: Count() refuses integers among the terms (TypeError: Wrong type for ...), contrary to Sum()"
+INVALID = "#176: Count() does not detect explicitly some invalid arguments"
+REIFIED_LOST = ("#178: Exist() with reified_by, when used in an expression, is replaced by its reification variable, the constraint "
                 "element reified by this variable being lost")
-REIFIED_NOT_01 = "(to be reported) Exist() with reified_by on a single variable that is not 0/1 posts r = x instead of r = (x == 1)"
-REIFIED_EMPTY = "(to be reported) Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
-REIFIED_INVALID = "(to be reported) Exist() with reified_by checks it with an assert without message"
+REIFIED_NOT_01 = "#179: Exist() with reified_by on a single variable that is not 0/1 posts r = x instead of r = (x == 1)"
+REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
+REIFIED_INVALID = "#179: Exist() with reified_by checks it with an assert without message"
 ACE_EMPTY_SCOPE = ("(to be reported) ACE fails on a count whose values belong to the domain of no variable of the list "
                    "(Problem.count(): control(scp.length > 0, \"A constraint Count is posted with an empty scope\"))")
 ACE_REPEATED = ("(to be reported) ACE gives wrong solutions for a count whose list contains a variable several times "
