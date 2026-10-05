@@ -324,6 +324,25 @@ def test_table_with_expressions_in_scope(run, solver):
     assert_solutions(r, brute_force(D3, lambda a, b, c: (a + b, c) in {(0, 1), (5, 3), (6, 0)}))
 
 
+@pytest.mark.parametrize("definitions, constraints, predicate", [
+    ("", "[x[i] in {1, 3} for i in range(3)]", lambda *t: all(v in (1, 3) for v in t)),
+    ("", "[x[i] not in {1, 3} for i in range(3)]", lambda *t: all(v not in (1, 3) for v in t)),
+    ("S = {0, 2}\n", "[x[i] in S for i in range(3)]", lambda *t: all(v in (0, 2) for v in t)),
+    ("", "[(x[i], x[i + 1]) in {(0, 1), (1, 2), (2, 0), (3, 3)} for i in range(2)]",
+     lambda a, b, c: (a, b) in {(0, 1), (1, 2), (2, 0), (3, 3)} and (b, c) in {(0, 1), (1, 2), (2, 0), (3, 3)}),
+    ("", "[(x[i], x[i + 1]) not in {(0, 1), (1, 2)} for i in range(2)]", lambda a, b, c: (a, b) not in {(0, 1), (1, 2)} and (b, c) not in {(0, 1), (1, 2)}),
+    ("", "[x[i] not in [] for i in range(3)]", lambda *t: True),
+    ("", "[x[i:i + 2] != (1, 1) for i in range(2)]", lambda a, b, c: (a, b) != (1, 1) and (b, c) != (1, 1)),
+    ("def f(i):\n    return x[i] in {0, 2}\n", "[f(i) for i in range(3)]", lambda *t: all(v in (0, 2) for v in t)),
+], ids=["in a set", "not in a set", "in a set given by a variable", "tuples in a set", "tuples not in a set", "not in an empty list",
+        "different from a tuple", "in a set inside a function"])
+def test_tables_inside_comprehensions(run, solver, definitions, constraints, predicate):
+    # from Python 3.13, the instruction 'in' with a set is specialized after its first executions, the method redefined by PyCSP3 being then no longer
+    # called if the instruction is not kept generic (see #166)
+    check(run, solver, X3 + definitions + f"satisfy({constraints}, x[0] != 1)", D3, lambda *t: predicate(*t) and t[0] != 1)
+
+
+
 # ---------------------------------------------------------------------------------------------------- XCSP3 files
 
 @pytest.mark.parametrize("constraint, tag, text", [
