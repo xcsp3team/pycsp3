@@ -211,7 +211,6 @@ def test_xcsp3_count_known_when_compiling(run, constraint, holds):
 # ------------------------------------------------------------------------------------------------------------ values
 
 @pytest.mark.parametrize("arguments, values", [
-    ("", (1,)),
     ("value=1", (1,)),
     ("value=0", (0,)),
     ("value=2", (2,)),
@@ -224,12 +223,31 @@ def test_xcsp3_count_known_when_compiling(run, constraint, holds):
     ("values=[1]", (1,)),
     ("values=[0, 1, 2]", (0, 1, 2)),
     ("values=[1, 5]", (1,)),
-    ("value=None, values=None", (1,)),
 ])
 @pytest.mark.parametrize("condition", ["== 2", ">= 3", "in {0, 4}"])
 def test_count_values(run, solver, arguments, values, condition):
     predicate = {"== 2": lambda c: c == 2, ">= 3": lambda c: c >= 3, "in {0, 4}": lambda c: c in (0, 4)}[condition]
-    check(run, solver, X4 + f"satisfy(Count(x{', ' if arguments else ''}{arguments}) {condition})", D4, lambda *t: predicate(count(t, values)))
+    check(run, solver, X4 + f"satisfy(Count(x, {arguments}) {condition})", D4, lambda *t: predicate(count(t, values)))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Count(b) == 2", lambda *t: sum(t[4:]) == 2),
+    ("Count(b, value=None, values=None) >= 3", lambda *t: sum(t[4:]) >= 3),
+    ("Count(b[0], b[1] == 0, x[0] > 1) == 2", lambda *t: (t[4] == 1) + (t[5] == 0) + (t[0] > 1) == 2),
+    ("Count(x[i] == b[i] for i in range(4)) <= 1", lambda *t: sum(t[i] == t[4 + i] for i in range(4)) <= 1),
+])
+def test_count_without_value_on_01_terms(run, solver, constraint, predicate):
+    # without value, the terms evaluating to 1 are counted, the terms having to be 0/1
+    check(run, solver, X4 + B4 + f"satisfy({constraint})", D4 + DB4, predicate)
+
+
+@pytest.mark.parametrize("constraint", ["Count(x) == 2", "Count(x[0], x[1]) >= 1", "Count(x[0] + 1, x[1]) == 1", "Count(Sum(x[:2]), x[2]) == 1",
+                                        "Count(b[0], x[1]) == 1", "Count(b[0] + b[1], b[2]) == 1", "minimize(Count(x[0]))"])
+def test_count_without_value_on_terms_that_are_not_01(run, constraint):
+    # without value, the terms must be 0/1 (variables with domain {0, 1} or Boolean expressions): an explicit error otherwise (decision of #174)
+    r = run(X4 + B4 + (f"satisfy({constraint})" if not constraint.startswith("minimize") else constraint))
+    assert_fails(r)
+    assert "Count() without value requires 0/1 terms" in r.stdout + r.stderr, r.report()
 
 
 @pytest.mark.parametrize("constraint, predicate", [
@@ -383,7 +401,7 @@ def test_count_on_a_single_term(run, solver, request, constraint, predicate):
 
 
 @pytest.mark.parametrize("constraint", ["Count(x[0], value=1) == 1", "Count([x[0]], value=1) == 0", "Count(x[0], values=[1, 2]) >= 1",
-                                        "Count(x[0] + 1, value=2) == 1", "Count(x[0], value=x[3]) == 1", "1 in [x[0]]", "minimize(Count(x[0]))"])
+                                        "Count(x[0] + 1, value=2) == 1", "Count(x[0], value=x[3]) == 1", "1 in [x[0]]", "minimize(Count(x[0], value=1))"])
 @bug(ONE_TERM)
 def test_xcsp3_count_has_at_least_two_terms(run, constraint):
     # XCSP3-core requires |X| >= 2
@@ -650,7 +668,7 @@ def test_xcsp3_count_with_mini(run, constraint):
 
 @pytest.mark.parametrize("constraint, expected", [
     ("Count(x, value=1) == 2", ("x[]", "1", "(eq,2)")),
-    ("Count(x) >= 1", ("x[]", "1", "(ge,1)")),
+    ("Count(b) >= 1", ("b[]", "1", "(ge,1)")),
     ("Count(x, values=[2, 0, 2]) <= 3", ("x[]", "0 2", "(le,3)")),
     ("Count(x, values={2, 1}) != 1", ("x[]", "1 2", "(ne,1)")),
     ("Count(x[:3], value=x[3]) == 1", ("x[0..2]", "x[3]", "(eq,1)")),
@@ -661,7 +679,7 @@ def test_xcsp3_count_with_mini(run, constraint):
     ("1 in x", ("x[]", "1", "(ge,1)")),
 ])
 def test_xcsp3_count(run, constraint, expected):
-    r = run(X4 + f"satisfy({constraint})")
+    r = run(X4 + B4 + f"satisfy({constraint})")
     assert r.ok, r.report()
     c = r.xml.find("constraints/count")
     assert c is not None, r.report()
@@ -704,7 +722,8 @@ INVALID_CASES = [
     ("Count(x, value=1, values=[2]) == 2", "Count() accepts either the parameter value or the parameter values, not both"),
     ("Count(s, value='a') == 2", "Count() requires integer variables"),
     ("Count(x, True) == 2", "Count() does not accept Booleans as terms"),
-    ("Count(x, 'a') == 2", "Wrong type for"),
+    ("Count(x, 'a') == 2", "Count() without value requires 0/1 terms"),
+    ("Count(x) == 2", "Count() without value requires 0/1 terms"),
 ]
 
 

@@ -20,11 +20,7 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-NOT_01 = ("#174: the shortcuts of Count() without value do not check that the terms are 0/1 (an explicit error is expected); Exist() on one or "
-          "two terms that are not 0/1 posts the term itself, or the disjunction of the terms")
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
-REIFIED_NOT_01 = ("#179: Exist() with reified_by on a single variable that is not 0/1 posts r = x (an explicit error is expected, as decided "
-                  "in #174)")
 REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
 REIFIED_INVALID = "#179: Exist() with reified_by checks it with an assert without message"
 KNOWN = ("#193: a count of values that no term can take is posted as an element <count> (to be evaluated when compiling), on which ACE fails "
@@ -91,7 +87,6 @@ def test_on_01_variables(run, solver, f, n):
 @pytest.mark.parametrize("f", FUNCTIONS)
 @pytest.mark.parametrize("terms", ["x[0]", "x[0], x[1]", "x[0], x[1], x[2]", "x", "b[0], x[1]", "b[:2], x[2]", "x[0] + 1, x[1], x[2]",
                                    "abs(x[0] - x[1]), x[2]", "Sum(x[:2]), x[2], x[3]", "b[0] + b[1], b[2]"])
-@bug(NOT_01)
 def test_on_terms_that_are_not_01_without_value(run, f, terms):
     # without value, the terms must be 0/1 (variables with domain {0, 1} or Boolean expressions): an explicit error otherwise (decision of #174)
     r = run(B4 + X4 + f"satisfy({f}({terms}))")
@@ -253,7 +248,6 @@ def test_in_logical_expressions(run, solver, f, n, context, predicate):
 
 @pytest.mark.parametrize("f", FUNCTIONS)
 @pytest.mark.parametrize("context", ["{} | (x[3] == 2)", "~{}", "iff(x[3] == 2, {})"])
-@bug(NOT_01)
 def test_on_integer_variables_without_value_in_logical_expressions(run, f, context):
     # without value, the terms must be 0/1: an explicit error otherwise (decision of #174)
     r = run(X4 + f"satisfy({context.format(f + '(x[0], x[1])')})")
@@ -313,10 +307,9 @@ def test_exist_reified_on_integer_variables(run, solver, request, arguments, cou
     check(run, solver, X4 + REIFIED + f"satisfy(Exist({arguments}, reified_by=r))", D4 + [(0, 1)], lambda *t: t[4] == any(counted(t)))
 
 
-@pytest.mark.parametrize("arguments, reason", [("x[:3]", NOT_01), ("x[0], x[1]", NOT_01), ("x[0]", REIFIED_NOT_01)])
-def test_exist_reified_on_integer_variables_without_value(run, request, arguments, reason):
-    # without value, the terms must be 0/1: an explicit error otherwise (decision of #174)
-    request.applymarker(bug(reason))
+@pytest.mark.parametrize("arguments", ["x[:3]", "x[0], x[1]", "x[0]"])
+def test_exist_reified_on_integer_variables_without_value(run, arguments):
+    # without value, the terms must be 0/1: an explicit error otherwise (decisions of #174 and #179)
     r = run(X4 + REIFIED + f"satisfy(Exist({arguments}, reified_by=r))")
     assert_fails(r)
     assert "requires 0/1 terms" in r.stdout + r.stderr, r.report()

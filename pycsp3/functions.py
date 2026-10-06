@@ -2715,8 +2715,20 @@ def Product(term, *others):
     checkType(terms, ([Variable], [Node]))
     return Node.build(TypeNode.MUL, *terms)
 
+def _is_01(t):
+    # returns True if the term is 0/1: a variable whose domain is included in {0, 1}, a Boolean expression, a constraint, or a component with values 0 and 1
+    if isinstance(t, Variable):
+        return t.dom.type == TypeVar.INTEGER and 0 <= t.dom.smallest_value() and t.dom.greatest_value() <= 1
+    if isinstance(t, Node):
+        return t.type.is_predicate_operator() or all(0 <= v <= 1 for v in t.possible_values())
+    if isinstance(t, PartialConstraint):
+        return 0 <= t.constraint.min_possible_value() and t.constraint.max_possible_value() <= 1
+    return isinstance(t, (ECtr, bool))  # a constraint, or True/False for a constraint given by 'in'
+
+
 def _check_count_terms(name, terms, value):
-    # the terms of a count (Count() or one of its shortcuts, whose name is given): neither Booleans, nor integers, nor symbolic variables
+    # the terms of a count (Count() or one of its shortcuts, whose name is given): neither Booleans, nor integers, nor symbolic variables; and
+    # without value, only 0/1 terms (the terms evaluating to 1 being counted)
     for t in terms:
         if type(t) is bool and len(queue_in) == 0:  # (True and False represent constraints given by 'in' when queue_in is not empty)
             error(name + "() does not accept Booleans as terms, which is the case of " + str(t))
@@ -2724,6 +2736,10 @@ def _check_count_terms(name, terms, value):
             error(name + "() does not accept integers among the terms, which is the case of " + str(t.val if isinstance(t, ConstraintDummyConstant) else t))
         if isinstance(t, Variable) and t.dom.type != TypeVar.INTEGER:
             error(name + "() requires integer variables, which is not the case of " + str(t))
+    if value is None:
+        for t in terms:
+            if not _is_01(t):
+                error(name + "() without value requires 0/1 terms (variables with domain {0,1} or Boolean expressions), which is not the case of " + str(t))
 
 
 def _count_values(name, value, values):
