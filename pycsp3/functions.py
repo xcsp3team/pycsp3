@@ -945,6 +945,17 @@ def Slide(*args, expression=None, circular=None, offset=None, collect=None):
     return ESlide([EToGather(entities)])
 
 
+def _root_node(arg):
+    # a node at the root of a constraint: an integer (a constant, after simplification) is posted as a constant (nothing or the constraint false),
+    # and not as an intension, and a 0/1 variable (as or(x,x) simplified) is posted as an equation, as a 0/1 variable given alone
+    if isinstance(arg, Node):
+        if arg.type == TypeNode.INT:
+            return ConstraintDummyConstant(arg.cnt)
+        if arg.type == TypeNode.VAR:
+            return _01_to_node(arg.cnt)
+    return arg
+
+
 def _01_to_node(arg):
     if isinstance(arg, Variable):
         assert arg.dom.is_binary()
@@ -991,7 +1002,7 @@ def _group(*_args, block=False):
             reordered_entities.append(_group(g))
         return reordered_entities
 
-    tab = _remove_dummy_constraints(flatten(*_args))
+    tab = _remove_dummy_constraints([_root_node(v) for v in flatten(*_args)])
     if len(tab) == 0:
         return None
     for i in range(len(tab)):
@@ -1056,6 +1067,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
     for i, arg in enumerate(args):
         if arg is None:
             continue
+        arg = _root_node(arg)
         if isinstance(arg, ConstraintDummyConstant):
             if arg.val != 0:  # the constant 1 (true) is discarded
                 warning_if(arg.val != 1, "It seems that there is a bad expression in the model " + str(arg))
@@ -2627,9 +2639,11 @@ def Sum(term, *others, condition=None):
             [t.to_terms() if isinstance(t, ScalarProduct) else t.constraint.to_terms() if isinstance(t, PartialConstraint) and isinstance(t.constraint,
                                                                                                                                           ConstraintSum) else t
              for t in terms])
-    for v in terms:
+    for i, v in enumerate(terms):
         if type(v) is bool:
             error("Sum() does not accept Booleans as terms, which is the case of " + str(v))
+        if type(v) is Node and v.type is TypeNode.INT:  # a constant expression (as x >= x, simplified into 1 by Node.build())
+            terms[i] = v.cnt
     if any(v is None or (isinstance(v, int) and v == 0) or isinstance(v, ConstraintDummyConstant) for v in terms):
         terms = [v.val if isinstance(v, ConstraintDummyConstant) else v for v in terms if
                  v is not None and not (isinstance(v, int) and v == 0) and not (isinstance(v, ConstraintDummyConstant) and v.val == 0)]
@@ -2745,6 +2759,13 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
         values = [auxiliary().replace_node(value)]
     values = sorted(set(values))  # ordered set of values
     checkType(values, ([int], [Variable]))
+    if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
+        s = frozenset(values) if len(values) > 0 and isinstance(values[0], int) else None
+        # a constant that is not counted is discarded, and a constant that is counted is replaced by an auxiliary variable
+        terms = [auxiliary().replace_int(t.cnt) if type(t) is Node and t.type is TypeNode.INT else t for t in terms
+                 if not (type(t) is Node and t.type is TypeNode.INT and s is not None and t.cnt not in s)]
+        if len(terms) == 0:
+            return ConstraintDummyConstant(0)
     if options.mini and value is not None and value == 1 and all(isinstance(term, Variable) and term.dom.is_binary() for term in terms):
         return Sum(terms)
 

@@ -172,6 +172,13 @@ LT, LE, GE, GT, IN, NOTIN = TypeNode.LT, TypeNode.LE, TypeNode.GE, TypeNode.GT, 
 ADD, MUL, MIN, MAX, NE, EQ = TypeNode.ADD, TypeNode.MUL, TypeNode.MIN, TypeNode.MAX, TypeNode.NE, TypeNode.EQ
 AND, OR, XOR, IFF = TypeNode.AND, TypeNode.OR, TypeNode.XOR, TypeNode.IFF
 SET, SPECIAL = TypeNode.SET, TypeNode.SPECIAL
+# the types of the nodes simplified by Node.build(), given by their identities (the operator 'in' is intercepted for tuples and sets, and the hash
+# of an enumeration member is computed in Python)
+_SIMPLIFIABLE = frozenset(id(t) for t in (OR, AND, XOR, MIN, MAX, EQ, NE, LT, LE, GE, GT, NOT, IMP, IFF))
+_LOGICAL = frozenset(id(t) for t in (OR, AND, XOR, IMP, IFF))
+_IDEMPOTENT = frozenset(id(t) for t in (OR, AND, MIN, MAX))
+_TRUE_IF_IDENTICAL = frozenset(id(t) for t in (EQ, LE, GE, IMP, IFF))
+_NARY_SIMPLIFIABLE = frozenset(id(t) for t in (OR, AND, XOR, MIN, MAX, EQ))
 
 
 class Node(Entity):
@@ -379,6 +386,113 @@ class Node(Entity):
             else:  # no break
                 break
 
+    @staticmethod
+    def _distinct_sons(sons):
+        # returns the distinct sons, in the order of their first occurrences, with their numbers of occurrences; a cheap key (the variable of a
+        # leaf, or the type, the arity and the first son of an internal node) is computed for each son, the sons with the same key being then
+        # compared by structure
+        distinct, counts, index = [], [], {}
+        for son in sons:
+            t = son.type
+            if t is VAR:
+                key = id(son.cnt)
+            elif t is INT or t is SYMBOL:
+                key = (id(t), son.cnt)
+            elif isinstance(son.cnt, list) and len(son.cnt) > 0:
+                first = son.cnt[0]
+                key = (id(t), len(son.cnt), id(first.cnt) if first.type is VAR else id(first.type))
+            else:
+                key = (id(t), str(son.cnt))
+            js = index.get(key)
+            j = None if js is None else next((k for k in js if distinct[k] is son or distinct[k].eq__safe(son)), None)
+            if j is None:
+                if js is None:
+                    index[key] = [len(distinct)]
+                else:
+                    js.append(len(distinct))
+                distinct.append(son)
+                counts.append(1)
+            else:
+                counts[j] += 1
+        return distinct, counts
+
+    @staticmethod
+    def _identical(node1, node2):
+        # returns True if the two nodes (of the same type, not variables) are identical; their first sons are compared first (cheaply)
+        c1, c2 = node1.cnt, node2.cnt
+        if isinstance(c1, list):
+            if len(c1) != len(c2) or len(c1) == 0:
+                return len(c1) == len(c2) and node1.eq__safe(node2)
+            f1, f2 = c1[0], c2[0]
+            if f1.type is not f2.type or (f1.type is VAR and f1.cnt is not f2.cnt):
+                return False
+        return node1.eq__safe(node2)
+
+    def _simplified(self):
+        # the node simplified with respect to its constant sons (0 and 1, for the logical operators) and its repeated sons: the node itself when
+        # nothing is simplified, and otherwise, the node with less sons, one of its sons or an integer (constant)
+        t = self.type
+        if id(t) not in _SIMPLIFIABLE:
+            return self
+        sons = self.cnt
+        if len(sons) == 1:
+            if t is NOT and sons[0].type is INT and (sons[0].cnt == 0 or sons[0].cnt == 1):
+                return Node(INT, 1 - sons[0].cnt)
+            return self
+        if len(sons) == 2:
+            s0, s1 = sons
+            if s0.type is INT or s1.type is INT:  # a constant son
+                if s0.type is INT and s1.type is INT:
+                    a, b = s0.cnt, s1.cnt
+                    if id(t) in _LOGICAL and not (0 <= a <= 1 and 0 <= b <= 1):
+                        return self
+                    return Node(INT, int(a < b if t is LT else a <= b if t is LE else a >= b if t is GE else a > b if t is GT else a == b if t is EQ or t is IFF
+                                         else a != b if t is NE or t is XOR else (a and b) if t is AND else (a or b) if t is OR else (not a or b) if t is IMP
+                                         else min(a, b) if t is MIN else max(a, b)))
+                k, other = (s0.cnt, s1) if s0.type is INT else (s1.cnt, s0)
+                if id(t) in _LOGICAL and (k == 0 or k == 1):
+                    if t is OR:  # or(1,x) is true, and or(0,x) is x
+                        return Node(INT, 1) if k == 1 else other
+                    if t is AND:  # and(0,x) is false, and and(1,x) is x
+                        return Node(INT, 0) if k == 0 else other
+                    if t is XOR:  # xor(0,x) is x, and xor(1,x) is not(x)
+                        return other if k == 0 else Node.build(NOT, other)
+                    if t is IFF:  # iff(1,x) is x, and iff(0,x) is not(x)
+                        return other if k == 1 else Node.build(NOT, other)
+                    if t is IMP:
+                        if s0.type is INT:  # imp(0,x) is true, and imp(1,x) is x
+                            return Node(INT, 1) if k == 0 else other
+                        return Node(INT, 1) if k == 1 else Node.build(NOT, other)  # imp(x,1) is true, and imp(x,0) is not(x)
+                return self
+            if s0.type is s1.type and (s0.cnt is s1.cnt if s0.type is VAR else Node._identical(s0, s1)):  # two identical sons
+                if id(t) in _IDEMPOTENT:  # or(x,x), and(x,x), min(x,x), max(x,x) are x
+                    return s0
+                return Node(INT, 1 if id(t) in _TRUE_IF_IDENTICAL else 0)  # x == x is true, x != x false, xor(x,x) false, ...
+            return self
+        if id(t) not in _NARY_SIMPLIFIABLE:
+            return self
+        if all(son.type is VAR for son in sons) and len({id(son.cnt) for son in sons}) == len(sons):
+            return self  # distinct variables (the most frequent case)
+        if t is OR or t is AND:
+            absorbing, neutral = (1, 0) if t is OR else (0, 1)
+            if any(son.type is INT and son.cnt == absorbing for son in sons):
+                return Node(INT, absorbing)
+            sons = [son for son in sons if not (son.type is INT and son.cnt == neutral)]
+        elif t is XOR:
+            sons = [son for son in sons if not (son.type is INT and son.cnt == 0)]
+        distinct, counts = Node._distinct_sons(sons)
+        if t is XOR:
+            distinct = [son for son, c in zip(distinct, counts) if c % 2 == 1]  # the repeated sons cancel out by pairs: xor(x,x,y) is y
+        if len(distinct) <= 1:
+            if t is EQ:
+                return Node(INT, 1)  # eq(x,x,x) is true
+            return Node(INT, 0 if t is OR or t is XOR else 1) if len(distinct) == 0 else distinct[0]
+        if len(distinct) < len(self.cnt):
+            self.cnt = distinct
+            if len(distinct) == 2:
+                return self._simplified()
+        return self
+
     def reduce_integers(self):
         if self.type not in {ADD, MUL}:
             return
@@ -544,6 +658,8 @@ class Node(Entity):
                 t.append(Node(SYMBOL, arg))
             elif isinstance(arg, main.constraints.PartialConstraint):
                 t.append(Node(TypeNode.PARTIAL, arg))
+            elif isinstance(arg, main.constraints.ConstraintDummyConstant):  # a constant (true or false)
+                t.append(Node(INT, arg.val))
             else:
                 raise ValueError("Problem: bad form of predicate " + str(arg))
         return t
@@ -582,7 +698,9 @@ class Node(Entity):
         for t in {ADD, MUL, OR, AND}:
             node.flatten_by_associativity(t)
         node.reduce_integers()
-        return node
+        if len(node.cnt) == 1 and (node.type is ADD or node.type is MUL):  # the integers have been reduced into a single one
+            return node.cnt[0]
+        return node._simplified()
 
     @staticmethod
     def set(*args):

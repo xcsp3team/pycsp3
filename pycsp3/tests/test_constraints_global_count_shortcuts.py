@@ -45,8 +45,6 @@ EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty 
 
 # The cases that a solver says it does not handle (not reported)
 COSOCO_REIFIED = "cosoco does not handle the constraint element with the attribute reifiedBy (s UNSUPPORTED)"
-COSOCO_OR_REPEATED = ("cosoco does not handle a disjunction whose two terms are the same variable (At least: scope contains variable "
-                      "b[0] many times; whether it must be reported is discussed in #191)")
 
 # Each function, with the condition on the number c of counted terms among n terms, and whether it has the parameter value
 FUNCTIONS = {
@@ -211,11 +209,8 @@ def test_on_no_term_in_expressions(run, solver, request, f, context, predicate):
     ("b[0], b[1], b[0], b[2]", lambda a, b, c, d: [a, b, a, c]),
 ])
 def test_with_a_repeated_variable(run, solver, request, f, terms, values):
-    # a variable repeated among the terms is counted as many times as it appears
-    if f in EXISTS and terms == "b[0], b[0]":  # or(b[0],b[0])
-        if solver == "COSOCO":
-            pytest.skip(COSOCO_OR_REPEATED)
-    else:
+    # a variable repeated among the terms is counted as many times as it appears (or(b[0],b[0]) is b[0], #194)
+    if not (f in EXISTS and terms == "b[0], b[0]"):
         bug_for(request, "COSOCO", REPEATED)  # cosoco: scope contains variable b[0] many times
         if f not in ("NotExist", "NoneHold", "AllHold"):  # ACE is right for (eq,0) and (eq,|X|)
             bug_for(request, "ACE", REPEATED)
