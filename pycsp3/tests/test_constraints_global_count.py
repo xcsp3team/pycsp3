@@ -43,6 +43,8 @@ COSOCO_ALONE = ("xcsp3team/cosoco#89: cosoco crashes (segmentation fault) when t
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
 DUMMY_IN = "#173: Count() on no term cannot be compared with 'in' a set (TypeError: unhashable type: 'ConstraintDummyConstant')"
+COMPACTOR = ("#195: the list of a count mixing variables of arrays and simple variables cannot be compacted (compactor.compact(): "
+             "ValueError: substring not found)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
@@ -322,6 +324,12 @@ def test_count_on_different_domains(run, solver):
 ])
 def test_count_forms(run, solver, terms):
     check(run, solver, X4 + f"satisfy(Count({terms}, value=1) == 2)", D4, lambda *t: t.count(1) == 2)
+
+
+@bug(COMPACTOR)
+def test_count_on_variables_of_arrays_and_simple_variables(run, solver):
+    check(run, solver, "x = VarArray(size=2, dom=range(3))\ny = Var(dom=range(3))\nz = Var(dom=range(3))\nsatisfy(Count(x[0], y, z, value=1) == 2)", [range(3)] * 4,
+          lambda a, b, c, d: [a, c, d].count(1) == 2)
 
 
 def test_count_on_a_matrix(run, solver):
