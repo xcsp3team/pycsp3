@@ -2793,7 +2793,7 @@ def _count(name, terms, value, values, condition):
             return ConstraintDummyConstant(0)
     checkType(terms, ([Variable], [Node], [Variable, Node]))
     if options.mini and values == [1] and all(isinstance(t, Variable) and t.dom.is_binary() for t in terms):
-        return Sum(terms)  # the count of 0/1 variables equal to 1 is their sum (count is not in the mini-tracks)
+        return Sum(terms, condition=condition)  # the count of 0/1 variables equal to 1 is their sum (count is not in the mini-tracks)
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
 

@@ -21,7 +21,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
-MINI = "#177: with -mini, Count() on 0/1 variables with the value 1 is changed into a sum without its parameter condition"
 REPEATED = ("#192: a variable repeated among the terms gives an element <count> with a repeated variable (to be posted as a sum), on which "
             "ACE gives wrong solutions and that cosoco refuses")
 KNOWN = ("#193: a count whose result is known when compiling (an integer outside 0..|X|, values that no term can take) is posted as an element "
@@ -642,10 +641,10 @@ MINI_CASES = [
     ("Count(b[i] == 1 for i in range(4)) == 2", lambda *t: sum(t) == 2),
     ("Count(b, value=0) == 1", lambda *t: t.count(0) == 1),
     ("Count(b, values=[1]) == 2", lambda *t: sum(t) == 2),
-    pytest.param("Count(b, value=1, condition=('eq', 2))", lambda *t: sum(t) == 2, marks=bug(MINI)),
-    pytest.param("Count(b, condition=('ge', 3))", lambda *t: sum(t) >= 3, marks=bug(MINI)),
-    pytest.param("1 in b", lambda *t: 1 in t, marks=bug(MINI)),
-    pytest.param("[1 in b[i:i + 2] for i in range(3)]", lambda *t: all(1 in t[i:i + 2] for i in range(3)), marks=bug(MINI)),
+    ("Count(b, value=1, condition=('eq', 2))", lambda *t: sum(t) == 2),
+    ("Count(b, condition=('ge', 3))", lambda *t: sum(t) >= 3),
+    ("1 in b", lambda *t: 1 in t),
+    ("[1 in b[i:i + 2] for i in range(3)]", lambda *t: all(1 in t[i:i + 2] for i in range(3))),
 ]
 
 
@@ -655,8 +654,8 @@ def test_count_with_mini(run, solver, constraint, predicate):
 
 
 @pytest.mark.parametrize("constraint", ["Count(b, value=1) == 2", "Count(b) >= 3", "Count(b[:3], value=1) == b[3]", "Count(b[i] == 1 for i in range(4)) == 2",
-                                        pytest.param("Count(b, value=1, condition=('eq', 2))", marks=bug(MINI)),
-                                        pytest.param("1 in b", marks=bug(MINI))])
+                                        "Count(b, value=1, condition=('eq', 2))",
+                                        "1 in b"])
 def test_xcsp3_count_with_mini(run, constraint):
     # with -mini, counting the value 1 on 0/1 variables is a sum
     r = run(B4 + f"satisfy({constraint})", args=("-mini",))
