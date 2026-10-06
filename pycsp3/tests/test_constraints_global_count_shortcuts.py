@@ -9,6 +9,8 @@ Without value, a term is counted when it evaluates to 1 (as Count(), whose defau
 Exist(X) holds iff at least one term is counted (as AtLeastOne(X) and AnyHold(X)), NotExist(X) iff no term is counted (as NoneHold(X)),
 ExactlyOne(X) iff exactly one term is counted, AtMostOne(X) iff at most one term is counted, and AllHold(X) iff all the terms are counted.
 A variable repeated among the terms is counted as many times as it appears (as for count in XCSP3-core).
+As decided with the maintainers (questions of #169), without value, the terms must be 0/1 (variables with domain {0, 1} or Boolean expressions,
+#174), and integers among the terms are refused (#180).
 """
 
 import re
@@ -18,30 +20,30 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-NOT_01 = ("#174: Exist(), AtLeastOne() and AnyHold() on one or two terms that are not 0/1 post the term itself, or the disjunction of the "
-          "terms, instead of counting the terms equal to 1")
+NOT_01 = ("#174: the shortcuts of Count() without value do not check that the terms are 0/1 (an explicit error is expected); Exist() on one or "
+          "two terms that are not 0/1 posts the term itself, or the disjunction of the terms")
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
 DUMMY_OR = "#173: a shortcut of Count() on no term combined with '|' and a 0/1 variable fails (AssertionError: For the moment)"
-INTEGERS = "#180: Count() refuses integers among the terms (TypeError: Wrong type for ...), contrary to Sum()"
+INTEGERS = "#180: Count() and its shortcuts do not refuse integers among the terms with an explicit message"
 INVALID = "#176: Count() does not detect explicitly some invalid arguments"
 REIFIED_LOST = ("#178: Exist() with reified_by, when used in an expression, is replaced by its reification variable, the constraint "
                 "element reified by this variable being lost")
-REIFIED_NOT_01 = "#179: Exist() with reified_by on a single variable that is not 0/1 posts r = x instead of r = (x == 1)"
+REIFIED_NOT_01 = ("#179: Exist() with reified_by on a single variable that is not 0/1 posts r = x (an explicit error is expected, as decided "
+                  "in #174)")
 REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
 REIFIED_INVALID = "#179: Exist() with reified_by checks it with an assert without message"
-ACE_EMPTY_SCOPE = ("#184: ACE fails on a count whose values belong to the domain of no variable of the list "
-                   "(Problem.count(): control(scp.length > 0, \"A constraint Count is posted with an empty scope\"))")
-ACE_REPEATED = ("#183: ACE gives wrong solutions for a count whose list contains a variable several times "
-                "(the propagators of atLeast/atMost/exactly count each variable once)")
-CHOCO_REIFIED = "#187: CHOCO gives wrong solutions for an element (member) constraint with the attribute reifiedBy"
-PARSER_REIFIED = ("#188: ACE fails on an element (member) constraint with the attribute reifiedBy whose value is a variable "
-                  "(the parser, CtrLoaderInteger.element(), casts the value into Long: ClassCastException)")
+KNOWN = ("#193: a count of values that no term can take is posted as an element <count> (to be evaluated when compiling), on which ACE fails "
+         "(empty scope) and that cosoco refuses")
+REPEATED = ("#192: a variable repeated among the terms gives an element <count> with a repeated variable (to be posted as a sum), on which "
+            "ACE gives wrong solutions and that cosoco refuses")
+CHOCO_REIFIED = ("chocoteam/choco-solver#1248 (section 10): CHOCO gives wrong solutions for an element (member) constraint with the attribute "
+                 "reifiedBy (the reification is ignored)")
+PARSER_REIFIED = ("xcsp3team/XCSP3-Java-Tools#22: ACE fails on an element (member) constraint with the attribute reifiedBy whose value is a "
+                  "variable (the parser, CtrLoaderInteger.element(), casts the value into Long: ClassCastException)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
 # The cases that a solver says it does not handle (not reported)
-COSOCO_REPEATED = "cosoco does not handle a count whose list contains a variable several times (scope contains variable x0 many times)"
-COSOCO_ABSENT = "cosoco does not handle a count whose value belongs to the domain of no variable (AtLeast, all variables must contain value)"
 COSOCO_REIFIED = "cosoco does not handle the constraint element with the attribute reifiedBy (s UNSUPPORTED)"
 COSOCO_OR_REPEATED = ("cosoco does not handle a disjunction whose two terms are the same variable (At least: scope contains variable "
                       "b[0] many times; whether it must be reported is discussed in #191)")
@@ -94,15 +96,14 @@ def test_on_01_variables(run, solver, f, n):
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
-@pytest.mark.parametrize("n", [1, 2, 3, 4])
-def test_on_integer_variables(run, solver, request, f, n):
-    # the terms equal to 1 are counted
-    if f in EXISTS and n == 1:
-        request.applymarker(bug(NOT_01))  # assert arg.dom.is_binary()
-    elif f in EXISTS and n == 2:
-        bug_for(request, ("ACE", "CHOCO"), NOT_01)  # or(x[0],x[1]): ACE considers any non-zero value as true, CHOCO fails
-    terms = ", ".join(f"x[{i}]" for i in range(n))
-    check(run, solver, X4 + f"satisfy({f}({terms}))", D4, lambda *t: holds(f, t[:n]))
+@pytest.mark.parametrize("terms", ["x[0]", "x[0], x[1]", "x[0], x[1], x[2]", "x", "b[0], x[1]", "b[:2], x[2]", "x[0] + 1, x[1], x[2]",
+                                   "abs(x[0] - x[1]), x[2]", "Sum(x[:2]), x[2], x[3]", "b[0] + b[1], b[2]"])
+@bug(NOT_01)
+def test_on_terms_that_are_not_01_without_value(run, f, terms):
+    # without value, the terms must be 0/1 (variables with domain {0, 1} or Boolean expressions): an explicit error otherwise (decision of #174)
+    r = run(B4 + X4 + f"satisfy({f}({terms}))")
+    assert_fails(r)
+    assert "requires 0/1 terms" in r.stdout + r.stderr, r.report()
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
@@ -118,17 +119,15 @@ def test_on_boolean_expressions(run, solver, f, terms, values):
     check(run, solver, X4 + f"satisfy({f}({terms}))", D4, lambda *t: holds(f, values(*t)))
 
 
-@pytest.mark.parametrize("f", FUNCTIONS)
+@pytest.mark.parametrize("f", WITH_VALUE)
 @pytest.mark.parametrize("terms, values", [
     ("x[0] + 1, x[1], x[2]", lambda a, b, c, d: [a + 1, b, c]),
     ("abs(x[0] - x[1]), x[2]", lambda a, b, c, d: [abs(a - b), c]),
     ("Sum(x[:2]), x[2], x[3]", lambda a, b, c, d: [a + b, c, d]),
 ])
-def test_on_integer_expressions(run, solver, request, f, terms, values):
-    # the terms equal to 1 are counted
-    if f in EXISTS and terms.count(",") == 1:
-        request.applymarker(bug(NOT_01))  # the disjunction of two integer terms (and not of two variables, see above)
-    check(run, solver, X4 + f"satisfy({f}({terms}))", D4, lambda *t: holds(f, values(*t)))
+@pytest.mark.parametrize("value", [1, 2])
+def test_on_integer_expressions_with_a_value(run, solver, f, terms, values, value):
+    check(run, solver, X4 + f"satisfy({f}({terms}, value={value}))", D4, lambda *t: holds(f, values(*t), value))
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
@@ -147,9 +146,9 @@ def test_on_a_matrix(run, solver):
 
 @pytest.mark.parametrize("f", WITH_VALUE)
 @pytest.mark.parametrize("n", [1, 2, 3, 4])
-@pytest.mark.parametrize("value", [0, 2])
+@pytest.mark.parametrize("value", [0, 1, 2])
 def test_with_a_value(run, solver, request, f, n, value):
-    if n == 1 and value == 2 and f in EXISTS:
+    if n == 1 and value != 0 and f in EXISTS:
         bug_for(request, "COSOCO", ONE_TERM)  # cosoco gives an invalid solution for a count of one variable with the condition (ge,1)
     terms = ", ".join(f"x[{i}]" for i in range(n))
     check(run, solver, X4 + f"satisfy({f}({terms}, value={value}))", D4, lambda *t: holds(f, t[:n], value))
@@ -167,9 +166,9 @@ def test_with_a_variable_or_an_expression_as_value(run, solver, f, n, value, v):
 @pytest.mark.parametrize("value", [7, -1])
 def test_with_a_value_out_of_the_domains(run, solver, request, f, value):
     # no term can take the value, so that no term is counted
-    bug_for(request, "ACE", ACE_EMPTY_SCOPE)
-    if solver == "COSOCO" and f in ("Exist", "AtLeastOne", "ExactlyOne", "AtMostOne"):
-        pytest.skip(COSOCO_ABSENT)
+    bug_for(request, "ACE", KNOWN)  # ACE: A constraint Count is posted with an empty scope
+    if f in ("Exist", "AtLeastOne", "AtMostOne"):
+        bug_for(request, "COSOCO", KNOWN)  # cosoco: AtLeast (AtMost), all variables must contain value
     check(run, solver, X4 + f"satisfy({f}(x[:3], value={value}), x[3] != 1)", D4, lambda *t: holds(f, t[:3], value) and t[3] != 1)
 
 
@@ -217,35 +216,30 @@ def test_with_a_repeated_variable(run, solver, request, f, terms, values):
         if solver == "COSOCO":
             pytest.skip(COSOCO_OR_REPEATED)
     else:
-        if solver == "COSOCO":
-            pytest.skip(COSOCO_REPEATED)
+        bug_for(request, "COSOCO", REPEATED)  # cosoco: scope contains variable b[0] many times
         if f not in ("NotExist", "NoneHold", "AllHold"):  # ACE is right for (eq,0) and (eq,|X|)
-            bug_for(request, "ACE", ACE_REPEATED)
+            bug_for(request, "ACE", REPEATED)
     check(run, solver, B4 + f"satisfy({f}({terms}))", DB4, lambda *t: holds(f, values(*t)))
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
-@pytest.mark.parametrize("terms, values", [
-    ("b[0], 1", lambda a, b, c, d: [a, 1]),
-    ("b[0], 0", lambda a, b, c, d: [a, 0]),
-    ("b[0], 0, b[1]", lambda a, b, c, d: [a, 0, b]),
-    ("b[0], 1, b[1]", lambda a, b, c, d: [a, 1, b]),
-    ("b[:3], 1", lambda a, b, c, d: [a, b, c, 1]),
-])
-def test_with_integers(run, solver, request, f, terms, values):
-    if not (f in EXISTS and terms in ("b[0], 1", "b[0], 0")):  # or(b[0],1) and or(b[0],0) are accepted
-        request.applymarker(bug(INTEGERS))
-    check(run, solver, B4 + f"satisfy({f}({terms}))", DB4, lambda *t: holds(f, values(*t)))
+@pytest.mark.parametrize("terms", ["b[0], 1", "b[0], 0", "b[0], 0, b[1]", "b[0], 1, b[1]", "b[:3], 1"])
+@bug(INTEGERS)
+def test_with_integers(run, f, terms):
+    # integers among the terms are refused with an explicit error (decision of #180)
+    r = run(B4 + f"satisfy({f}({terms}))")
+    assert_fails(r)
+    assert "does not accept integers among the terms" in r.stdout + r.stderr, r.report()
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
 @pytest.mark.parametrize("n", [1, 2, 3])
 def test_xcsp3_count_has_at_least_two_terms(run, request, f, n):
     # XCSP3-core requires |X| >= 2 for count
-    if n == 1 or f not in EXISTS:  # the shortcuts of Exist() return the single term (here, x[3] == 1) itself
+    if f not in EXISTS or (n == 1 and FUNCTIONS[f][1]):  # without value, the shortcuts of Exist() return a single term (here, x[3] == 1) itself
         request.applymarker(bug(ONE_TERM))
-    terms = ", ".join(f"x[{i}]" for i in range(n)) + (", value=2" if FUNCTIONS[f][1] else "")
-    r = run(X4 + f"satisfy({f}({terms}), {f}(x[3] == 1))")
+    terms = ", ".join(f"x[{i}]" for i in range(n)) + ", value=2" if FUNCTIONS[f][1] else ", ".join(f"b[{i}]" for i in range(n))
+    r = run(B4 + X4 + f"satisfy({f}({terms}), {f}(x[3] == 1))")
     assert r.ok, r.report()
     for c in r.xml.iter("count"):
         assert n_terms(c.find("list").text) >= 2, r.report()
@@ -271,15 +265,13 @@ def test_in_logical_expressions(run, solver, f, n, context, predicate):
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
-@pytest.mark.parametrize("context, predicate", [
-    ("{} | (x[3] == 2)", lambda e, t: e or t[3] == 2),
-    ("~{}", lambda e, t: not e),
-    ("iff(x[3] == 2, {})", lambda e, t: (t[3] == 2) == e),
-])
-def test_on_integer_variables_in_logical_expressions(run, solver, request, f, context, predicate):
-    if f in EXISTS:
-        request.applymarker(bug(NOT_01))
-    check(run, solver, X4 + f"satisfy({context.format(f + '(x[0], x[1])')})", D4, lambda *t: predicate(holds(f, t[:2]), t))
+@pytest.mark.parametrize("context", ["{} | (x[3] == 2)", "~{}", "iff(x[3] == 2, {})"])
+@bug(NOT_01)
+def test_on_integer_variables_without_value_in_logical_expressions(run, f, context):
+    # without value, the terms must be 0/1: an explicit error otherwise (decision of #174)
+    r = run(X4 + f"satisfy({context.format(f + '(x[0], x[1])')})")
+    assert_fails(r)
+    assert "requires 0/1 terms" in r.stdout + r.stderr, r.report()
 
 
 # ---------------------------------------------------------------------------------------------------------- groups
@@ -318,12 +310,11 @@ def test_exist_reified(run, solver, request, arguments, counted):
 
 
 @pytest.mark.parametrize("arguments, counted", [
-    ("x[:3]", lambda t: [v == 1 for v in t[:3]]),
+    ("x[:3], value=1", lambda t: [v == 1 for v in t[:3]]),
     ("x[:3], value=2", lambda t: [v == 2 for v in t[:3]]),
     ("x[0], value=2", lambda t: [t[0] == 2]),
     ("x[:3], value=x[3]", lambda t: [v == t[3] for v in t[:3]]),
     ("x[0], value=x[3]", lambda t: [t[0] == t[3]]),
-    pytest.param("x[0]", lambda t: [t[0] == 1], marks=bug(REIFIED_NOT_01)),
 ])
 def test_exist_reified_on_integer_variables(run, solver, request, arguments, counted):
     if not arguments.startswith("x[0]"):  # an element constraint is posted
@@ -333,6 +324,15 @@ def test_exist_reified_on_integer_variables(run, solver, request, arguments, cou
         if solver == "COSOCO":
             pytest.skip(COSOCO_REIFIED)
     check(run, solver, X4 + REIFIED + f"satisfy(Exist({arguments}, reified_by=r))", D4 + [(0, 1)], lambda *t: t[4] == any(counted(t)))
+
+
+@pytest.mark.parametrize("arguments, reason", [("x[:3]", NOT_01), ("x[0], x[1]", NOT_01), ("x[0]", REIFIED_NOT_01)])
+def test_exist_reified_on_integer_variables_without_value(run, request, arguments, reason):
+    # without value, the terms must be 0/1: an explicit error otherwise (decision of #174)
+    request.applymarker(bug(reason))
+    r = run(X4 + REIFIED + f"satisfy(Exist({arguments}, reified_by=r))")
+    assert_fails(r)
+    assert "requires 0/1 terms" in r.stdout + r.stderr, r.report()
 
 
 @pytest.mark.parametrize("terms", ["b[:3]", "b[0]"])
@@ -422,10 +422,10 @@ def test_exist_by_element(run, solver, request, constraint, predicate):
     ("AllHold", ("1", "(eq,4)")),
 ])
 def test_xcsp3(run, f, expected):
-    r = run(X4 + f"satisfy({f}(x))")
+    r = run(B4 + f"satisfy({f}(b))")
     assert r.ok, r.report()
     c = r.xml.find("constraints/count")
-    assert c is not None and " ".join(c.find("list").text.split()) == "x[]", r.report()
+    assert c is not None and " ".join(c.find("list").text.split()) == "b[]", r.report()
     assert (" ".join(c.find("values").text.split()), c.find("condition").text.strip()) == expected, r.report()
 
 
@@ -522,4 +522,4 @@ def test_invalid_parameter_value(run, f):
 def test_invalid_symbolic_variables(run, f):
     r = run(f"s = VarArray(size=3, dom={{'a', 'b'}})\nsatisfy({f}(s{', value=' + repr('a') if FUNCTIONS[f][1] else ''}))")
     assert_fails(r)
-    assert "Count() requires integer variables" in r.stdout + r.stderr, r.report()
+    assert "Count() requires integer variables" in r.stdout + r.stderr or "requires 0/1 terms" in r.stdout + r.stderr, r.report()

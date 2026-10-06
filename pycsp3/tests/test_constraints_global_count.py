@@ -9,6 +9,8 @@ Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being co
 According to XCSP3-core, count(X, V, (op, k)) holds iff the number of variables of X assigned a value of V satisfies (op, k), with |X| >= 2 and
 |V| >= 1, V being a list of integers or a list of variables, and expressions being accepted instead of variables in X (generalized form).
 The example of XCSP3-core (constraint c5, list z1 z3 z3) shows that a variable can be repeated in X: it is then counted as many times.
+As decided with the maintainers (questions of #169), PyCSP3 posts a sum when a variable is repeated among the terms (#192), evaluates the counts
+whose result is known when compiling (#193), and refuses integers among the terms (#180) and an empty collection of values (#171).
 """
 
 import re
@@ -19,28 +21,25 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 NOT_IN = "#170: 'k not in x' posts the same constraint as 'k in x' (count >= 1)"
-NO_VALUE = "#171: Count() with no value (values=[] or values=set()) generates an empty element <values>, refused by the three solvers"
+NO_VALUE = ("#171: Count() with no value (values=[] or values=set()) is not refused with an explicit error (an empty element <values> is "
+            "generated)")
 SEVERAL_VARIABLES = ("#175: Count() sorts the variables given as values with '<', which builds expressions "
                      "(warning: A node is evaluated as a Boolean)")
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
-INTEGERS = "#180: Count() refuses integers among the terms (TypeError: Wrong type for ...), contrary to Sum()"
+INTEGERS = "#180: Count() does not refuse integers among the terms with an explicit message"
 MINI = "#177: with -mini, Count() on 0/1 variables with the value 1 is changed into a sum without its parameter condition"
 INVALID = "#176: Count() does not detect explicitly some invalid arguments"
-ACE_EMPTY_SCOPE = ("#184: ACE fails on a count whose values belong to the domain of no variable of the list "
-                   "(Problem.count(): control(scp.length > 0, \"A constraint Count is posted with an empty scope\"))")
-ACE_LIMIT = ("#185: ACE fails on a count compared with an integer outside 0..|X| (Problem.count(): control(0 <= l && l <= list.length) "
-             "without message)")
-ACE_REPEATED = ("#183: ACE gives wrong solutions for a count whose list contains a variable several times "
-                "(the propagators of atLeast/atMost/exactly count each variable once)")
-ACE_NE = ("#181: ACE fails on a count with the condition (ne,k) when k is 0 or |X| (Problem.count(): control(op == NE && 0 < k && "
+REPEATED = ("#192: a variable repeated among the terms gives an element <count> with a repeated variable (to be posted as a sum), on which "
+            "ACE gives wrong solutions and that cosoco refuses")
+KNOWN = ("#193: a count whose result is known when compiling (an integer outside 0..|X|, values that no term can take) is posted as an element "
+         "<count> (to be evaluated), on which ACE and CHOCO fail and that cosoco refuses")
+ACE_NE = ("xcsp3team/ACE#24: ACE fails on a count with the condition (ne,k) when k is 0 or |X| (Problem.count(): control(op == NE && 0 < k && "
           "k < scp.length) without message)")
-ACE_AMONG = "#182: ACE fails on a count with several values and the condition (eq,0) (ERROR: Bad value of k=0)"
-CHOCO_RANGE = "#186: CHOCO gives wrong solutions for a count with the condition in or notin an interval"
-CHOCO_LIMIT = ("#185: CHOCO fails on a count compared with an integer that the count cannot reach "
-               "(SolverException: wrong domain definition, lower bound > upper bound)")
-COSOCO_REPEATED_VARIABLE = ("#190: cosoco gives wrong solutions (Solution Error) for a count whose list contains a variable several times, "
-                            "when the condition is on a variable (no message, contrary to the other conditions)")
-COSOCO_ALONE = "#189: cosoco crashes (segmentation fault) when the only constraint is a count that always holds, and is discarded"
+ACE_AMONG = "xcsp3team/ACE#25: ACE fails on a count with several values and the condition (eq,0) (ERROR: Bad value of k=0)"
+CHOCO_RANGE = ("chocoteam/choco-solver#1248 (section 9): CHOCO gives wrong solutions for a count with the condition in or notin an interval "
+               "(XCSPParser.dealWithConditionIntvl())")
+COSOCO_ALONE = ("xcsp3team/cosoco#89: cosoco crashes (segmentation fault) when the only constraint is a count that always holds, and is "
+                "discarded")
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
 DUMMY_IN = "#173: Count() on no term cannot be compared with 'in' a set (TypeError: unhashable type: 'ConstraintDummyConstant')"
@@ -48,10 +47,7 @@ EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty 
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
 # The cases that a solver says it does not handle (not reported)
-COSOCO_REPEATED = "cosoco does not handle a count whose list contains a variable several times (scope contains variable x0 many times)"
 COSOCO_VARIABLES = "cosoco does not handle a count whose values are several variables (s UNSUPPORTED)"
-COSOCO_LIMIT = "cosoco does not handle a count compared with an integer outside 0..|X| (ExactlyK must have 0 <= k <= size(list))"
-COSOCO_ABSENT = "cosoco does not handle a count whose value belongs to the domain of no variable (AtLeast, all variables must contain value)"
 
 
 def n_terms(text):
@@ -176,11 +172,11 @@ def test_count_with_an_empty_or_unreachable_condition(run, solver, request, cons
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
     elif constraint in ("Count(x, value=1) == 5", "Count(x, value=1) == -1", "Count(x, value=1) != 7", "Count(x, value=1) >= 5",
                         "Count(x, value=1) <= -1"):
-        bug_for(request, "ACE", ACE_LIMIT)
+        bug_for(request, "ACE", KNOWN)  # ACE: control(0 <= l && l <= list.length)
         if constraint in ("Count(x, value=1) >= 5", "Count(x, value=1) <= -1"):
-            bug_for(request, "CHOCO", CHOCO_LIMIT)
-        if constraint != "Count(x, value=1) != 7" and solver == "COSOCO":
-            pytest.skip(COSOCO_LIMIT)
+            bug_for(request, "CHOCO", KNOWN)  # CHOCO: wrong domain definition, lower bound > upper bound
+        if constraint != "Count(x, value=1) != 7":
+            bug_for(request, "COSOCO", KNOWN)  # cosoco: ExactlyK must have 0 <= k <= size(list), ...
     elif constraint == "Count(x, value=1) in range(5, 9)":
         bug_for(request, "CHOCO", CHOCO_RANGE)
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(t.count(1)) and t[3] != 1)
@@ -192,6 +188,30 @@ def test_count_always_satisfied_alone(run, solver, request, constraint):
     if constraint in ("Count(x, value=1) >= 0", "Count(x, value=1) > -1"):
         bug_for(request, "COSOCO", COSOCO_ALONE)
     check(run, solver, X4 + f"satisfy({constraint})", D4, lambda *t: True)
+
+
+@pytest.mark.parametrize("constraint, holds", [
+    ("Count(x, value=1) == 5", False),
+    ("Count(x, value=1) >= 5", False),
+    ("Count(x, value=1) <= -1", False),
+    ("Count(x, value=1) == -1", False),
+    ("Count(x, value=1) in range(5, 9)", False),
+    ("Count(x, value=1) != 7", True),
+    ("Count(x, value=1) <= 4", True),
+    ("Count(x, value=1) >= 0", True),
+    ("Count(x, value=1) > -1", True),
+    ("Count(x, value=7) == 0", True),
+    ("Count(x, value=7) >= 1", False),
+    ("Count(x, values=[5, 6]) <= 1", True),
+    ("7 in x", False),
+])
+@bug(KNOWN)
+def test_xcsp3_count_known_when_compiling(run, constraint, holds):
+    # the result of the count is known when compiling (decision of #193): nothing is posted when the constraint always holds, and the
+    # constraint false when it never holds
+    r = run(X4 + f"satisfy({constraint}, x[3] != 1)")
+    assert r.ok and r.xml.find("constraints/count") is None, r.report()
+    assert ("trivially false" in r.stdout) != holds, r.report()
 
 
 # ------------------------------------------------------------------------------------------------------------ values
@@ -257,22 +277,21 @@ def test_count_with_variables_as_values_displays_no_warning(run, values):
 @pytest.mark.parametrize("condition", ["== 0", ">= 1"])
 def test_count_with_values_out_of_the_domains(run, solver, request, arguments, predicate, condition):
     # no variable can take a value to be counted: the count is always 0
-    bug_for(request, "ACE", ACE_EMPTY_SCOPE)
-    if condition == ">= 1" and solver == "COSOCO":
-        pytest.skip(COSOCO_ABSENT)
+    bug_for(request, "ACE", KNOWN)  # ACE: A constraint Count is posted with an empty scope
+    if condition == ">= 1" and arguments != "values=[5, 6]":
+        bug_for(request, "COSOCO", KNOWN)  # cosoco: AtLeast, all variables must contain value
     holds = (condition == "== 0")
     check(run, solver, X4 + f"satisfy(Count(x, {arguments}) {condition}, x[3] != 1)", D4, lambda *t: holds and t[3] != 1)
 
 
-@pytest.mark.parametrize("arguments", [
-    pytest.param("values=[]", marks=bug(NO_VALUE)),
-    pytest.param("values=set()", marks=bug(NO_VALUE)),
-    pytest.param("values=()", marks=bug(NO_VALUE)),
-])
-@pytest.mark.parametrize("condition, holds", [("== 0", True), (">= 1", False), ("<= 2", True)])
-def test_count_with_no_value(run, solver, arguments, condition, holds):
-    # with no value to be counted, the count is always 0
-    check(run, solver, X4 + f"satisfy(Count(x, {arguments}) {condition}, x[3] != 1)", D4, lambda *t: holds and t[3] != 1)
+@pytest.mark.parametrize("arguments", ["values=[]", "values=set()", "values=()", "values=frozenset()", "values=range(0)", "values=(v for v in [])"])
+@pytest.mark.parametrize("condition", ["== 0", ">= 1"])
+@bug(NO_VALUE)
+def test_count_with_no_value(run, arguments, condition):
+    # an empty collection of values is refused with an explicit error (decision of #171)
+    r = run(X4 + f"satisfy(Count(x, {arguments}) {condition})")
+    assert_fails(r)
+    assert "Count() requires at least one value" in r.stdout + r.stderr, r.report()
 
 
 def test_count_on_negative_values(run, solver):
@@ -405,27 +424,31 @@ def test_count_on_no_term(run, solver, request, constraint, holds):
     ("Count(x[0], x[0], x[1], value=1) == x[2]", lambda a, b, c, d: [a, a, b].count(1) == c),
 ], ids=["twice", "only twice, odd", "only twice", "twice among others", "twice with two values", "twice with le", "twice compared with a variable"])
 def test_count_with_a_repeated_variable(run, solver, request, constraint, predicate):
-    # according to XCSP3-core (example c5 of count), a variable repeated in the list is counted as many times as it appears
-    if constraint.endswith("== x[2]"):
-        bug_for(request, "COSOCO", COSOCO_REPEATED_VARIABLE)
-    elif solver == "COSOCO":
-        pytest.skip(COSOCO_REPEATED)
+    # a variable repeated in the list is counted as many times as it appears (as in the example c5 of count in XCSP3-core)
+    bug_for(request, "COSOCO", REPEATED)  # cosoco: scope contains variable x0 many times (wrong solutions when compared with a variable)
     if constraint not in ("Count(x[0], x[0], value=1) == 2", "Count(x[0], x[0], x[1], values=[1, 2]) <= 1", "Count(x[0], x[0], x[1], value=1) == x[2]"):
-        bug_for(request, "ACE", ACE_REPEATED)
+        bug_for(request, "ACE", REPEATED)  # ACE: wrong solutions
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 
-@pytest.mark.parametrize("constraint, predicate", [
-    ("Count(x[0], 1, x[1], value=1) == 2", lambda a, b, c, d: [a, b].count(1) == 1),
-    ("Count(x[0], 0, x[1], value=1) == 2", lambda a, b, c, d: [a, b].count(1) == 2),
-    ("Count(x[:3], 2, value=2) >= 2", lambda a, b, c, d: [a, b, c].count(2) >= 1),
-    ("Count(x[0], 1, 1, value=1) == 3", lambda a, b, c, d: a == 1),
-    ("Count(1, 2, 1, value=1) == 2", lambda *t: True),
-    ("Count(1, 2, value=1) == 2", lambda *t: False),
-])
+@pytest.mark.parametrize("constraint", ["Count(x[0], x[0], x[1], value=1) == 2", "Count(x[0], x[1], x[0], x[2], values=[1, 2]) >= 3",
+                                        "Count(x[0], x[0], x[1], value=x[3]) <= 1", "Count(x[0], x[0], x[1], value=1) == x[2]"])
+@bug(REPEATED)
+def test_xcsp3_count_with_a_repeated_variable(run, constraint):
+    # with a variable repeated among the terms, a sum is posted, each distinct term being weighted by its number of occurrences (decision of #192)
+    r = run(X4 + f"satisfy({constraint})")
+    assert r.ok and r.xml.find("constraints/count") is None and r.xml.find("constraints/sum/coeffs") is not None, r.report()
+
+
+@pytest.mark.parametrize("constraint", ["Count(x[0], 1, x[1], value=1) == 2", "Count(x[0], 0, x[1], value=1) == 2", "Count(x[:3], 2, value=2) >= 2",
+                                        "Count(x[0], 1, 1, value=1) == 3", "Count(1, 2, 1, value=1) == 2", "Count(1, 2, value=1) == 2",
+                                        "Count([x[0], 1], values=[1, 2]) <= 1"])
 @bug(INTEGERS)
-def test_count_with_integers(run, solver, constraint, predicate):
-    check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
+def test_count_with_integers(run, constraint):
+    # integers among the terms are refused with an explicit error (decision of #180)
+    r = run(X4 + f"satisfy({constraint})")
+    assert_fails(r)
+    assert "does not accept integers among the terms" in r.stdout + r.stderr, r.report()
 
 
 # ----------------------------------------------------------------------------------------------- arithmetic with counts
@@ -562,9 +585,9 @@ def test_value_in_a_list_of_variables(run, solver, constraint, predicate):
                                                pytest.param("7 not in x", True, marks=bug(NOT_IN)),
                                                pytest.param("-1 not in x", True, marks=bug(NOT_IN))])
 def test_value_out_of_the_domains_in_a_list_of_variables(run, solver, request, constraint, holds):
-    bug_for(request, "ACE", ACE_EMPTY_SCOPE)
-    if not holds and solver == "COSOCO":
-        pytest.skip(COSOCO_ABSENT)
+    bug_for(request, "ACE", KNOWN)  # ACE: A constraint Count is posted with an empty scope
+    if not holds:
+        bug_for(request, "COSOCO", KNOWN)  # cosoco: AtLeast, all variables must contain value
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: holds and t[3] != 1)
 
 
@@ -656,15 +679,6 @@ def test_xcsp3_count_with_an_expression_as_value(run):
     values = r.xml.find("constraints/count/values").text.split()
     assert len(values) == 1 and values[0].startswith("aux_gb"), r.report()
     assert declared_variables(r)[values[0]] == [1, 2, 3], r.report()
-
-
-@pytest.mark.parametrize("constraint", ["Count(x, values=[]) == 0", "Count(x, values=set()) >= 1", "Count(x, values=()) <= 2"])
-@bug(NO_VALUE)
-def test_xcsp3_count_has_at_least_one_value(run, constraint):
-    r = run(X4 + f"satisfy({constraint})")
-    assert r.ok, r.report()
-    for c in r.xml.iter("count"):
-        assert len(c.find("values").text.split()) >= 1, r.report()
 
 
 # --------------------------------------------------------------------------------------------------- invalid cases
