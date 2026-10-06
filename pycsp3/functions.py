@@ -475,7 +475,8 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an MDD: only 'x in M' is possible (constraint MDD)")
         ctr = Mdd(scope=left_operand, mdd=right_operand)
     elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
-        ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1))  # atLeast1 TODO to be replaced by a member/element constraint ?
+        # at least one variable takes the value with 'in' (atLeast1), and none with 'not in' TODO to be replaced by a member/element constraint ?
+        ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1) if bool_value else (TypeConditionOperator.EQ, 0))
     # elif isinstance(left_operand, Node):
     #
     else:  # It is a table constraint

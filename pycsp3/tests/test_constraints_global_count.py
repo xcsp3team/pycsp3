@@ -20,7 +20,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-NOT_IN = "#170: 'k not in x' posts the same constraint as 'k in x' (count >= 1)"
 NO_VALUE = ("#171: Count() with no value (values=[] or values=set()) is not refused with an explicit error (an empty element <values> is "
             "generated)")
 SEVERAL_VARIABLES = ("#175: Count() sorts the variables given as values with '<', which builds expressions "
@@ -580,18 +579,18 @@ def test_count_example_with_values(run, solver):
     ("1 in (x[0], x[1])", lambda *t: 1 in t[:2]),
     ("1 in [x[0], x[2], x[3]]", lambda a, b, c, d: 1 in (a, c, d)),
     ("0 in x[1:]", lambda *t: 0 in t[1:]),
-    pytest.param("1 not in x", lambda *t: 1 not in t, marks=bug(NOT_IN)),
-    pytest.param("2 not in x[:2]", lambda *t: 2 not in t[:2], marks=bug(NOT_IN)),
-    pytest.param("1 not in (x[0], x[1])", lambda *t: 1 not in t[:2], marks=bug(NOT_IN)),
-    pytest.param("1 not in [x[0], x[2], x[3]]", lambda a, b, c, d: 1 not in (a, c, d), marks=bug(NOT_IN)),
+    ("1 not in x", lambda *t: 1 not in t),
+    ("2 not in x[:2]", lambda *t: 2 not in t[:2]),
+    ("1 not in (x[0], x[1])", lambda *t: 1 not in t[:2]),
+    ("1 not in [x[0], x[2], x[3]]", lambda a, b, c, d: 1 not in (a, c, d)),
 ])
 def test_value_in_a_list_of_variables(run, solver, constraint, predicate):
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 
 @pytest.mark.parametrize("constraint, holds", [("7 in x", False), ("-1 in x", False),
-                                               pytest.param("7 not in x", True, marks=bug(NOT_IN)),
-                                               pytest.param("-1 not in x", True, marks=bug(NOT_IN))])
+                                               ("7 not in x", True),
+                                               ("-1 not in x", True)])
 def test_value_out_of_the_domains_in_a_list_of_variables(run, solver, request, constraint, holds):
     bug_for(request, "ACE", KNOWN)  # ACE: A constraint Count is posted with an empty scope
     if not holds:
@@ -603,7 +602,7 @@ def test_value_out_of_the_domains_in_a_list_of_variables(run, solver, request, c
     ("(1 in x) | (x[0] == 2)", lambda *t: 1 in t or t[0] == 2),
     ("[1 in x[i:i + 2] for i in range(3)]", lambda *t: all(1 in t[i:i + 2] for i in range(3))),
     ("[v in x for v in range(3)]", lambda *t: all(v in t for v in range(3))),
-    pytest.param("[1 not in x[i:i + 2] for i in range(0, 4, 2)]", lambda *t: 1 not in t, marks=bug(NOT_IN)),
+    ("[1 not in x[i:i + 2] for i in range(0, 4, 2)]", lambda *t: 1 not in t),
 ])
 def test_value_in_a_list_of_variables_in_expressions_and_groups(run, solver, constraint, predicate):
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
@@ -611,7 +610,7 @@ def test_value_in_a_list_of_variables_in_expressions_and_groups(run, solver, con
 
 @pytest.mark.parametrize("constraint, condition", [
     ("1 in x", "(ge,1)"),
-    pytest.param("1 not in x", "(eq,0)", marks=bug(NOT_IN)),
+    ("1 not in x", "(eq,0)"),
 ])
 def test_xcsp3_value_in_a_list_of_variables(run, constraint, condition):
     r = run(X4 + f"satisfy({constraint})")
