@@ -2734,6 +2734,8 @@ def _count_values(name, value, values):
         if not isinstance(values, (list, tuple, set, frozenset, range)):
             error(name + "() requires a list, a tuple, a set or a range of values, which is not the case of " + str(values))
         values = list(values)
+        if len(values) == 0:
+            error(name + "() requires at least one value (the parameter values is empty)")
         if any(type(v) is bool for v in values):
             error(name + "() does not accept Booleans as values, which is the case of " + str(values))
         if not (all(type(v) is int for v in values) or all(isinstance(v, Variable) for v in values)):
@@ -2750,7 +2752,7 @@ def _count_values(name, value, values):
         elif isinstance(value, Node):
             value = auxiliary().replace_node(value)
         values = [value]
-    if len(values) == 0 or isinstance(values[0], int):
+    if isinstance(values[0], int):
         return sorted(set(values))
     seen = set()
     return [v for v in values if id(v) not in seen and not seen.add(id(v))]  # in the given order (variables are not compared with <)

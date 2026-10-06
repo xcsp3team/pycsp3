@@ -20,8 +20,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-NO_VALUE = ("#171: Count() with no value (values=[] or values=set()) is not refused with an explicit error (an empty element <values> is "
-            "generated)")
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
 INTEGERS = "#180: Count() does not refuse integers among the terms with an explicit message"
 MINI = "#177: with -mini, Count() on 0/1 variables with the value 1 is changed into a sum without its parameter condition"
@@ -283,7 +281,6 @@ def test_count_with_values_out_of_the_domains(run, solver, request, arguments, p
 
 @pytest.mark.parametrize("arguments", ["values=[]", "values=set()", "values=()", "values=frozenset()", "values=range(0)", "values=(v for v in [])"])
 @pytest.mark.parametrize("condition", ["== 0", ">= 1"])
-@bug(NO_VALUE)
 def test_count_with_no_value(run, arguments, condition):
     # an empty collection of values is refused with an explicit error (decision of #171)
     r = run(X4 + f"satisfy(Count(x, {arguments}) {condition})")
