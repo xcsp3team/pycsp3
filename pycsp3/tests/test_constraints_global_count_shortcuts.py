@@ -25,8 +25,6 @@ NOT_01 = ("#174: the shortcuts of Count() without value do not check that the te
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
 INTEGERS = "#180: Count() and its shortcuts do not refuse integers among the terms with an explicit message"
 INVALID = "#176: Count() does not detect explicitly some invalid arguments"
-REIFIED_LOST = ("#178: Exist() with reified_by, when used in an expression, is replaced by its reification variable, the constraint "
-                "element reified by this variable being lost")
 REIFIED_NOT_01 = ("#179: Exist() with reified_by on a single variable that is not 0/1 posts r = x (an explicit error is expected, as decided "
                   "in #174)")
 REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
@@ -350,9 +348,11 @@ def test_exist_reified_on_no_term(run, solver):
     ("imply(b[3] == 1, {})", lambda r, t: t[3] != 1 or r == 1),
 ])
 @pytest.mark.parametrize("terms", ["b[:3]", "b[0], b[1]"])
-@bug(REIFIED_LOST)
-def test_exist_reified_in_logical_expressions(run, solver, context, predicate, terms):
+def test_exist_reified_in_logical_expressions(run, solver, request, context, predicate, terms):
     # the constraint Exist (r is 1 iff a term is 1) holds, and r is then used in the expression
+    bug_for(request, "CHOCO", CHOCO_REIFIED)  # the element reified by r is posted
+    if solver == "COSOCO":
+        pytest.skip(COSOCO_REIFIED)
     n = 3 if terms == "b[:3]" else 2
     check(run, solver, B4 + REIFIED + f"satisfy({context.format('Exist(' + terms + ', reified_by=r)')})", DB4 + [(0, 1)],
           lambda *t: t[4] == (1 in t[:n]) and predicate(t[4], t))

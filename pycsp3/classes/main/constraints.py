@@ -1702,7 +1702,10 @@ def global_indirection(c):
     if isinstance(c, ConstraintWithCondition):
         reif = next((attribute for attribute in c.attributes if attribute[0] == TypeXML.REIFIED_BY), None)
         if reif is not None:
-            return reif[1]  # the 0/1 variable involved in the reification
+            if not getattr(c, "reification_posted", False):  # the reified constraint is posted (once), its 0/1 variable being used instead
+                c.reification_posted = True
+                auxiliary()._collected_raw_constraints.append(ECtr(c))
+            return Variable.name2obj.get(reif[1], reif[1])  # the 0/1 variable involved in the reification
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
         pc = PartialConstraint(c)
