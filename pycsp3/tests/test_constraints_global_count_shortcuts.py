@@ -20,7 +20,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
 REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
 REIFIED_INVALID = "#179: Exist() with reified_by checks it with an assert without message"
 KNOWN = ("#193: a count of values that no term can take is posted as an element <count> (to be evaluated when compiling), on which ACE fails "
@@ -104,7 +103,10 @@ def test_on_terms_that_are_not_01_without_value(run, f, terms):
     ("both(x[0] == 1, x[1] == 1), x[2] == 0, x[3] == 2", lambda a, b, c, d: [a == 1 and b == 1, c == 0, d == 2]),
 ])
 def test_on_boolean_expressions(run, solver, f, terms, values):
-    check(run, solver, X4 + f"satisfy({f}({terms}))", D4, lambda *t: holds(f, values(*t)))
+    if f == "AtMostOne" and terms == "x[0] > 0":  # the constraint always holds (no constraint is posted): another one is posted
+        check(run, solver, X4 + f"satisfy({f}({terms}), x[3] != 1)", D4, lambda *t: t[3] != 1)
+    else:
+        check(run, solver, X4 + f"satisfy({f}({terms}))", D4, lambda *t: holds(f, values(*t)))
 
 
 @pytest.mark.parametrize("f", WITH_VALUE)
@@ -135,11 +137,11 @@ def test_on_a_matrix(run, solver):
 @pytest.mark.parametrize("f", WITH_VALUE)
 @pytest.mark.parametrize("n", [1, 2, 3, 4])
 @pytest.mark.parametrize("value", [0, 1, 2])
-def test_with_a_value(run, solver, request, f, n, value):
-    if n == 1 and value != 0 and f in EXISTS:
-        bug_for(request, "COSOCO", ONE_TERM)  # cosoco gives an invalid solution for a count of one variable with the condition (ge,1)
+def test_with_a_value(run, solver, f, n, value):
     terms = ", ".join(f"x[{i}]" for i in range(n))
-    check(run, solver, X4 + f"satisfy({f}({terms}, value={value}))", D4, lambda *t: holds(f, t[:n], value))
+    # AtMostOne() on a single term always holds (no constraint is posted): another constraint is posted
+    other, p = (", x[3] != 1", lambda t: t[3] != 1) if f == "AtMostOne" and n == 1 else ("", lambda t: True)
+    check(run, solver, X4 + f"satisfy({f}({terms}, value={value}){other})", D4, lambda *t: holds(f, t[:n], value) and p(t))
 
 
 @pytest.mark.parametrize("f", WITH_VALUE)
@@ -147,7 +149,9 @@ def test_with_a_value(run, solver, request, f, n, value):
 @pytest.mark.parametrize("value, v", [("x[3]", lambda d: d), ("x[3] + 1", lambda d: d + 1), ("abs(x[3] - 1)", lambda d: abs(d - 1))])
 def test_with_a_variable_or_an_expression_as_value(run, solver, f, n, value, v):
     terms = ", ".join(f"x[{i}]" for i in range(n))
-    check(run, solver, X4 + f"satisfy({f}({terms}, value={value}))", D4, lambda *t: holds(f, t[:n], v(t[3])))
+    # AtMostOne() on a single term always holds (no constraint is posted): another constraint is posted
+    other, p = (", x[2] != 1", lambda t: t[2] != 1) if f == "AtMostOne" and n == 1 else ("", lambda t: True)
+    check(run, solver, X4 + f"satisfy({f}({terms}, value={value}){other})", D4, lambda *t: holds(f, t[:n], v(t[3])) and p(t))
 
 
 @pytest.mark.parametrize("f", WITH_VALUE)
@@ -216,10 +220,8 @@ def test_with_integers(run, f, terms):
 
 @pytest.mark.parametrize("f", FUNCTIONS)
 @pytest.mark.parametrize("n", [1, 2, 3])
-def test_xcsp3_count_has_at_least_two_terms(run, request, f, n):
+def test_xcsp3_count_has_at_least_two_terms(run, f, n):
     # XCSP3-core requires |X| >= 2 for count
-    if f not in EXISTS or (n == 1 and FUNCTIONS[f][1]):  # without value, the shortcuts of Exist() return a single term (here, x[3] == 1) itself
-        request.applymarker(bug(ONE_TERM))
     terms = ", ".join(f"x[{i}]" for i in range(n)) + ", value=2" if FUNCTIONS[f][1] else ", ".join(f"b[{i}]" for i in range(n))
     r = run(B4 + X4 + f"satisfy({f}({terms}), {f}(x[3] == 1))")
     assert r.ok, r.report()

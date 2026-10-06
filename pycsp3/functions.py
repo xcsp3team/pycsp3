@@ -479,6 +479,8 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
         # at least one variable takes the value with 'in' (atLeast1), and none with 'not in' TODO to be replaced by a member/element constraint ?
         ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1) if bool_value else (TypeConditionOperator.EQ, 0))
+        if isinstance(ctr, Node):  # a single variable
+            ctr = _Intension(ctr)
     # elif isinstance(left_operand, Node):
     #
     else:  # It is a table constraint
@@ -2776,6 +2778,17 @@ def _count_values(name, value, values):
     return [v for v in values if id(v) not in seen and not seen.add(id(v))]  # in the given order (variables are not compared with <)
 
 
+def _counted(term, values):
+    # the 0/1 expression that holds iff the term takes one of the values (integers or variables)
+    if values == [1] and isinstance(term, Variable) and term.dom.is_binary():
+        return term
+    if len(values) == 1:
+        return Node.build(TypeNode.EQ, term, values[0])
+    if isinstance(values[0], int):
+        return Node.build(TypeNode.IN, term, Node.build(TypeNode.SET, values))
+    return disjunction(Node.build(TypeNode.EQ, term, y) for y in values)
+
+
 def _count(name, terms, value, values, condition):
     # a count of the specified values (by default, the value 1) among the terms, for Count() and its shortcuts (whose name is given for the messages)
     _check_count_terms(name, terms, value if values is None else values)
@@ -2794,6 +2807,9 @@ def _count(name, terms, value, values, condition):
     checkType(terms, ([Variable], [Node], [Variable, Node]))
     if options.mini and values == [1] and all(isinstance(t, Variable) and t.dom.is_binary() for t in terms):
         return Sum(terms, condition=condition)  # the count of 0/1 variables equal to 1 is their sum (count is not in the mini-tracks)
+    if len(terms) == 1:  # no constraint count (XCSP3-core requires at least two terms)
+        term = _counted(terms[0], values)
+        return term if condition is None else _term_with_condition(term, Condition.build_condition(condition))
     return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
 
 

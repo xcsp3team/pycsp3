@@ -20,7 +20,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
 REPEATED = ("#192: a variable repeated among the terms gives an element <count> with a repeated variable (to be posted as a sum), on which "
             "ACE gives wrong solutions and that cosoco refuses")
 KNOWN = ("#193: a count whose result is known when compiling (an integer outside 0..|X|, values that no term can take) is posted as an element "
@@ -390,18 +389,13 @@ def test_count_on_boolean_expressions_by_default(run, solver):
     ("1 in [x[0]]", lambda a: a == 1),
 ], ids=["one variable", "one variable in a list", "one variable and two values", "one variable with ne", "one expression", "one variable with condition",
         "one variable and a variable as value", "shortcut in"])
-def test_count_on_a_single_term(run, solver, request, constraint, predicate):
-    if constraint == "Count(x[0], value=1) != 1":
-        bug_for(request, "ACE", ONE_TERM)  # ACE fails on a count of one variable with the condition (ne,1)
-    elif constraint == "1 in [x[0]]":
-        bug_for(request, "COSOCO", ONE_TERM)  # cosoco gives an invalid solution for a count of one variable with the condition (ge,1)
+def test_count_on_a_single_term(run, solver, constraint, predicate):
     p = (lambda a, b, c, d: (a == d) and d != 1) if predicate is None else (lambda *t: predicate(t[0]) and t[3] != 1)
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, p)
 
 
 @pytest.mark.parametrize("constraint", ["Count(x[0], value=1) == 1", "Count([x[0]], value=1) == 0", "Count(x[0], values=[1, 2]) >= 1",
                                         "Count(x[0] + 1, value=2) == 1", "Count(x[0], value=x[3]) == 1", "1 in [x[0]]", "minimize(Count(x[0], value=1))"])
-@bug(ONE_TERM)
 def test_xcsp3_count_has_at_least_two_terms(run, constraint):
     # XCSP3-core requires |X| >= 2
     r = run(X4 + (f"satisfy({constraint})" if not constraint.startswith("minimize") else constraint))
