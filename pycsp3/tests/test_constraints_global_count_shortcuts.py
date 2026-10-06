@@ -23,7 +23,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 NOT_01 = ("#174: the shortcuts of Count() without value do not check that the terms are 0/1 (an explicit error is expected); Exist() on one or "
           "two terms that are not 0/1 posts the term itself, or the disjunction of the terms")
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
-DUMMY_OR = "#173: a shortcut of Count() on no term combined with '|' and a 0/1 variable fails (AssertionError: For the moment)"
 INTEGERS = "#180: Count() and its shortcuts do not refuse integers among the terms with an explicit message"
 INVALID = "#176: Count() does not detect explicitly some invalid arguments"
 REIFIED_LOST = ("#178: Exist() with reified_by, when used in an expression, is replaced by its reification variable, the constraint "
@@ -195,9 +194,7 @@ def test_on_no_term(run, solver, request, f, terms):
 def test_on_no_term_in_expressions(run, solver, request, f, context, predicate):
     # another constraint (b[0] != b[1]) is posted, the model having no constraint when the expression always holds
     e = EMPTY[f]
-    if context == "{} | (b[3] == 1)" and not e:
-        request.applymarker(bug(DUMMY_OR))
-    elif not any(predicate(e, t) for t in brute_force(DB4, lambda *t: True)):
+    if not any(predicate(e, t) for t in brute_force(DB4, lambda *t: True)):
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
     check(run, solver, B4 + f"satisfy({context.format(f + '([])')}, b[0] != b[1])", DB4, lambda *t: predicate(e, t) and t[0] != t[1])
 

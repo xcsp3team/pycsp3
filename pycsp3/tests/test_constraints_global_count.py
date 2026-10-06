@@ -41,7 +41,6 @@ COSOCO_ALONE = ("xcsp3team/cosoco#89: cosoco crashes (segmentation fault) when t
                 "discarded")
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
-DUMMY_IN = "#173: Count() on no term cannot be compared with 'in' a set (TypeError: unhashable type: 'ConstraintDummyConstant')"
 COMPACTOR = ("#195: the list of a count mixing variables of arrays and simple variables cannot be compacted (compactor.compact(): "
              "ValueError: substring not found)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
@@ -406,9 +405,9 @@ def test_xcsp3_count_has_at_least_two_terms(run, constraint):
     ("Count([], value=1) >= 1", False),
     ("Count([], value=1) <= 2", True),
     ("Count([]) != 0", False),
-    pytest.param("Count([], values=[1, 2]) in {0, 3}", True, marks=bug(DUMMY_IN)),
-    pytest.param("Count([], value=1) not in {0, 3}", False, marks=bug(DUMMY_IN)),
-    pytest.param("Count([], value=1) in range(2)", True, marks=bug(DUMMY_IN)),
+    ("Count([], values=[1, 2]) in {0, 3}", True),
+    ("Count([], value=1) not in {0, 3}", False),
+    ("Count([], value=1) in range(2)", True),
     ("Count([], value=1) == x[3]", None),
 ])
 def test_count_on_no_term(run, solver, request, constraint, holds):

@@ -430,6 +430,8 @@ def var(name):
 
 def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     assert type(bool_value) is bool
+    if isinstance(left_operand, ConstraintDummyConstant):  # a constant (as the count of no term) in (or not in) a set of values
+        return ConstraintDummyConstant(1 if (left_operand.val in right_operand) == bool_value else 0)
     if isinstance(left_operand, Variable):
         if isinstance(right_operand, (tuple, list, set, frozenset, range)) and len(right_operand) == 0:
             if not bool_value:
@@ -1007,7 +1009,12 @@ def _group(*_args, block=False):
         return None
     for i in range(len(tab)):
         tab[i] = _01_to_node(tab[i])
-    entities = _wrap_intension_constraints(_complete_partial_forms_of_constraints(tab))
+    entities = _complete_partial_forms_of_constraints(tab)
+    if any(isinstance(v, ConstraintDummyConstant) for v in entities):  # constants given by 'in' (as the count of no term in a set)
+        entities = _remove_dummy_constraints(entities)
+        if len(entities) == 0:
+            return None
+    entities = _wrap_intension_constraints(entities)
     checkType(entities, [ECtr, ECtrs, EMetaCtr])
     return EBlock(_block_reorder(entities)) if block else EToGather(entities)
 
@@ -1111,6 +1118,9 @@ def satisfy(*args, no_comment_tags_extraction=False):
             to_post = _bool_interpretation_for_in(partial, other, arg)
             if isinstance(to_post, list):
                 to_post = _group(to_post)
+            elif isinstance(to_post, ConstraintDummyConstant):  # a constant (as the count of no term in a set)
+                warning_if(to_post.val not in (0, 1), "It seems that there is a bad expression in the model " + str(to_post))
+                to_post = None if to_post.val != 0 else _false_constraint()
         else:
             assert isinstance(arg, list)
             if any(isinstance(ele, ESlide) for ele in arg):  # Case: Slide

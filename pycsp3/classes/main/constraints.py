@@ -1125,8 +1125,8 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
     def __or__(self, other):
         if self.val == 1:
             return self  # always true
-        assert self.val == 0 and isinstance(other, (ECtr, Node)), "For the moment"
-        return other
+        assert self.val == 0 and isinstance(other, (ECtr, Node, Variable)), "For the moment"
+        return other  # false | other is other
 
     def __add__(self, other):
         return other if self.val == 0 else other + self.val
@@ -1769,7 +1769,9 @@ def manage_global_indirection(*args, also_pc=False):
         if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression, or a table constraint to be reified
             error_if(len(curser.queue_in) == 0, msg)
             (table, scp) = curser.queue_in.pop()
-            if isinstance(scp, (tuple, list)):
+            if isinstance(scp, ConstraintDummyConstant):  # a constant (as the count of no term) in a set of values
+                arg = int(scp.val in table)
+            elif isinstance(scp, (tuple, list)):
                 assert all(isinstance(x, VariableInteger) for x in scp)
                 var = auxiliary().new_var(0, 1)
                 auxiliary().collect_table(scp, var, to_reified_ordinary_table(table, [x.dom for x in scp]))
@@ -1787,7 +1789,9 @@ def manage_global_indirection(*args, also_pc=False):
             # TODO to be extended with reified non unary tables
             error_if(len(curser.queue_in) == 0, msg)
             (table, scp) = curser.queue_in.pop()
-            if isinstance(scp, list) and len(scp) > 1 and isinstance(table, list) and len(table) == 1:
+            if isinstance(scp, ConstraintDummyConstant):  # a constant (as the count of no term) not in a set of values
+                arg = int(scp.val not in table)
+            elif isinstance(scp, list) and len(scp) > 1 and isinstance(table, list) and len(table) == 1:
                 assert len(scp) == len(table[0])
                 arg = functions.disjunction(scp[i] != table[0][i] for i in range(len(scp)))
             elif isinstance(scp, int):
