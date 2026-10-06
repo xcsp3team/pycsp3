@@ -2716,10 +2716,12 @@ def Product(term, *others):
     return Node.build(TypeNode.MUL, *terms)
 
 def _check_count_terms(name, terms, value):
-    # the terms of a count (Count() or one of its shortcuts, whose name is given): neither Booleans, nor symbolic variables
+    # the terms of a count (Count() or one of its shortcuts, whose name is given): neither Booleans, nor integers, nor symbolic variables
     for t in terms:
         if type(t) is bool and len(queue_in) == 0:  # (True and False represent constraints given by 'in' when queue_in is not empty)
             error(name + "() does not accept Booleans as terms, which is the case of " + str(t))
+        if type(t) is int or isinstance(t, ConstraintDummyConstant):
+            error(name + "() does not accept integers among the terms, which is the case of " + str(t.val if isinstance(t, ConstraintDummyConstant) else t))
         if isinstance(t, Variable) and t.dom.type != TypeVar.INTEGER:
             error(name + "() requires integer variables, which is not the case of " + str(t))
 
@@ -2781,6 +2783,7 @@ def _count(name, terms, value, values, condition):
 
 def _exist(name, terms, value, reified_by):
     # at least one term takes the value (or evaluates to 1 if value is None), for Exist() and AtLeastOne(), AnyHold() (whose name is given for the messages)
+    _check_count_terms(name, terms, value)
     if len(terms) == 0:
         return ConstraintDummyConstant(0)
     if reified_by is not None:

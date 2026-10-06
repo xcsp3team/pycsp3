@@ -23,7 +23,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 NOT_01 = ("#174: the shortcuts of Count() without value do not check that the terms are 0/1 (an explicit error is expected); Exist() on one or "
           "two terms that are not 0/1 posts the term itself, or the disjunction of the terms")
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
-INTEGERS = "#180: Count() and its shortcuts do not refuse integers among the terms with an explicit message"
 REIFIED_NOT_01 = ("#179: Exist() with reified_by on a single variable that is not 0/1 posts r = x (an explicit error is expected, as decided "
                   "in #174)")
 REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
@@ -213,7 +212,6 @@ def test_with_a_repeated_variable(run, solver, request, f, terms, values):
 
 @pytest.mark.parametrize("f", FUNCTIONS)
 @pytest.mark.parametrize("terms", ["b[0], 1", "b[0], 0", "b[0], 0, b[1]", "b[0], 1, b[1]", "b[:3], 1"])
-@bug(INTEGERS)
 def test_with_integers(run, f, terms):
     # integers among the terms are refused with an explicit error (decision of #180)
     r = run(B4 + f"satisfy({f}({terms}))")

@@ -21,7 +21,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
-INTEGERS = "#180: Count() does not refuse integers among the terms with an explicit message"
 MINI = "#177: with -mini, Count() on 0/1 variables with the value 1 is changed into a sum without its parameter condition"
 REPEATED = ("#192: a variable repeated among the terms gives an element <count> with a repeated variable (to be posted as a sum), on which "
             "ACE gives wrong solutions and that cosoco refuses")
@@ -443,7 +442,6 @@ def test_xcsp3_count_with_a_repeated_variable(run, constraint):
 @pytest.mark.parametrize("constraint", ["Count(x[0], 1, x[1], value=1) == 2", "Count(x[0], 0, x[1], value=1) == 2", "Count(x[:3], 2, value=2) >= 2",
                                         "Count(x[0], 1, 1, value=1) == 3", "Count(1, 2, 1, value=1) == 2", "Count(1, 2, value=1) == 2",
                                         "Count([x[0], 1], values=[1, 2]) <= 1"])
-@bug(INTEGERS)
 def test_count_with_integers(run, constraint):
     # integers among the terms are refused with an explicit error (decision of #180)
     r = run(X4 + f"satisfy({constraint})")
