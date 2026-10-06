@@ -24,7 +24,6 @@ NOT_01 = ("#174: the shortcuts of Count() without value do not check that the te
           "two terms that are not 0/1 posts the term itself, or the disjunction of the terms")
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
 INTEGERS = "#180: Count() and its shortcuts do not refuse integers among the terms with an explicit message"
-INVALID = "#176: Count() does not detect explicitly some invalid arguments"
 REIFIED_NOT_01 = ("#179: Exist() with reified_by on a single variable that is not 0/1 posts r = x (an explicit error is expected, as decided "
                   "in #174)")
 REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
@@ -491,11 +490,10 @@ def test_allhold_example(run, solver):
     ("'a'", "Count() requires an integer, a variable or an expression as value"),
     ("[1, 2]", "Count() requires an integer, a variable or an expression as value"),
 ])
-@bug(INVALID)
 def test_invalid_value(run, f, value, message):
     r = run(X4 + f"satisfy({f}(x, value={value}))")
     assert_fails(r)
-    assert message in r.stdout + r.stderr, r.report()
+    assert message.replace("Count()", f + "()") in r.stdout + r.stderr, r.report()
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
@@ -510,8 +508,7 @@ def test_invalid_parameter_value(run, f):
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
-@bug(INVALID)
 def test_invalid_symbolic_variables(run, f):
     r = run(f"s = VarArray(size=3, dom={{'a', 'b'}})\nsatisfy({f}(s{', value=' + repr('a') if FUNCTIONS[f][1] else ''}))")
     assert_fails(r)
-    assert "Count() requires integer variables" in r.stdout + r.stderr or "requires 0/1 terms" in r.stdout + r.stderr, r.report()
+    assert f + "() requires integer variables" in r.stdout + r.stderr, r.report()

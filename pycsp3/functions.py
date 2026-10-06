@@ -2715,6 +2715,88 @@ def Product(term, *others):
     checkType(terms, ([Variable], [Node]))
     return Node.build(TypeNode.MUL, *terms)
 
+def _check_count_terms(name, terms, value):
+    # the terms of a count (Count() or one of its shortcuts, whose name is given): neither Booleans, nor symbolic variables
+    for t in terms:
+        if type(t) is bool and len(queue_in) == 0:  # (True and False represent constraints given by 'in' when queue_in is not empty)
+            error(name + "() does not accept Booleans as terms, which is the case of " + str(t))
+        if isinstance(t, Variable) and t.dom.type != TypeVar.INTEGER:
+            error(name + "() requires integer variables, which is not the case of " + str(t))
+
+
+def _count_values(name, value, values):
+    # the values to be counted (by default, the value 1): an ordered list of integers or of variables
+    if value is not None and values is not None:
+        error(name + "() accepts either the parameter value or the parameter values, not both")
+    if values is not None:
+        if isinstance(values, types.GeneratorType):
+            values = list(values)
+        if not isinstance(values, (list, tuple, set, frozenset, range)):
+            error(name + "() requires a list, a tuple, a set or a range of values, which is not the case of " + str(values))
+        values = list(values)
+        if any(type(v) is bool for v in values):
+            error(name + "() does not accept Booleans as values, which is the case of " + str(values))
+        if not (all(type(v) is int for v in values) or all(isinstance(v, Variable) for v in values)):
+            error(name + "() requires the values to be all integers or all variables, which is not the case of " + str(values))
+    elif value is None:
+        values = [1]
+    else:
+        if type(value) is bool:
+            error(name + "() does not accept Booleans as values, which is the case of " + str(value))
+        if not isinstance(value, (int, Variable, Node, PartialConstraint)):
+            error(name + "() requires an integer, a variable or an expression as value, which is not the case of " + str(value))
+        if isinstance(value, PartialConstraint):
+            value = auxiliary().replace_partial_constraint(value)
+        elif isinstance(value, Node):
+            value = auxiliary().replace_node(value)
+        values = [value]
+    return sorted(set(values))  # ordered set of values
+
+
+def _count(name, terms, value, values, condition):
+    # a count of the specified values (by default, the value 1) among the terms, for Count() and its shortcuts (whose name is given for the messages)
+    _check_count_terms(name, terms, value if values is None else values)
+    values = _count_values(name, value, values)
+    if len(terms) == 0:  # the count of no term is 0
+        return ConstraintDummyConstant(0)
+    terms = manage_global_indirection(terms, also_pc=True)
+    assert terms is not None
+    if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
+        s = frozenset(values) if len(values) > 0 and isinstance(values[0], int) else None
+        # a constant that is not counted is discarded, and a constant that is counted is replaced by an auxiliary variable
+        terms = [auxiliary().replace_int(t.cnt) if type(t) is Node and t.type is TypeNode.INT else t for t in terms
+                 if not (type(t) is Node and t.type is TypeNode.INT and s is not None and t.cnt not in s)]
+        if len(terms) == 0:
+            return ConstraintDummyConstant(0)
+    checkType(terms, ([Variable], [Node], [Variable, Node]))
+    if options.mini and values == [1] and all(isinstance(t, Variable) and t.dom.is_binary() for t in terms):
+        return Sum(terms)  # the count of 0/1 variables equal to 1 is their sum (count is not in the mini-tracks)
+    return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
+
+
+def _exist(name, terms, value, reified_by):
+    # at least one term takes the value (or evaluates to 1 if value is None), for Exist() and AtLeastOne(), AnyHold() (whose name is given for the messages)
+    if len(terms) == 0:
+        return ConstraintDummyConstant(0)
+    if reified_by is not None:
+        assert isinstance(reified_by, Variable) and reified_by.dom.is_binary()
+        if reified_by.negation:
+            reified_by = Variable.name2obj.get(reified_by.id, reified_by)  # the declared variable (see _01_to_node)
+            aux = auxiliary().new_var(0, 1)
+            satisfy(aux != reified_by)
+            reified_by = aux
+        if len(terms) == 1:
+            return (terms[0] == reified_by) if value is None or isinstance(value, int) and value == 1 else ((terms[0] == value) == reified_by)
+        return ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=reified_by))
+    if value is None and len(terms) <= 2:
+        return terms[0] if len(terms) == 1 else disjunction(terms)
+    if options.exist_by_element:
+        aux = auxiliary().new_var(0, 1)
+        satisfy(ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=aux)))
+        return aux
+    return _count(name, terms, value, None, None) >= 1
+
+
 
 def Count(within, *within_complement, value=None, values=None, condition=None):
     """
@@ -2750,37 +2832,7 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
 
         # a solution: [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     """
-    terms = flatten(within, within_complement)
-    if len(terms) == 0:
-        return ConstraintDummyConstant(0)
-    # assert len(terms) > 0, "A count with an empty scope"
-
-    terms = manage_global_indirection(terms, also_pc=True)
-    assert terms is not None
-    checkType(terms, ([Variable], [Node], [Variable, Node]))
-
-    if value is None and values is None:
-        value = 1
-    assert value is None or values is None, str(value) + " " + str(values)
-    values = list(values) if isinstance(values, (tuple, set)) else [value] if isinstance(value, (int, Variable)) else values
-    if isinstance(value, PartialConstraint):
-        values = [auxiliary().replace_partial_constraint(value)]
-    elif isinstance(value, Node):
-        values = [auxiliary().replace_node(value)]
-    values = sorted(set(values))  # ordered set of values
-    checkType(values, ([int], [Variable]))
-    if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
-        s = frozenset(values) if len(values) > 0 and isinstance(values[0], int) else None
-        # a constant that is not counted is discarded, and a constant that is counted is replaced by an auxiliary variable
-        terms = [auxiliary().replace_int(t.cnt) if type(t) is Node and t.type is TypeNode.INT else t for t in terms
-                 if not (type(t) is Node and t.type is TypeNode.INT and s is not None and t.cnt not in s)]
-        if len(terms) == 0:
-            return ConstraintDummyConstant(0)
-    if options.mini and value is not None and value == 1 and all(isinstance(term, Variable) and term.dom.is_binary() for term in terms):
-        return Sum(terms)
-
-    # terms = list(terms)
-    return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
+    return _count("Count", flatten(within, within_complement), value, values, condition)
 
 
 def Exist(within, *within_complement, value=None, reified_by=None):
@@ -2818,36 +2870,7 @@ def Exist(within, *within_complement, value=None, reified_by=None):
 
         # a solution: [0, 0, 0, 0, 1] 0
     """
-    terms = flatten(within, within_complement)
-    if len(terms) == 0:
-        return ConstraintDummyConstant(0)
-    assert len(terms) >= 1
-    if reified_by is not None:
-        assert isinstance(reified_by, Variable) and reified_by.dom.is_binary()
-        if reified_by.negation:
-            reified_by = Variable.name2obj.get(reified_by.id, reified_by)  # the declared variable (see _01_to_node)
-            aux = auxiliary().new_var(0, 1)
-            satisfy(aux != reified_by)
-            reified_by = aux
-        if len(terms) == 1:
-            return (terms[0] == reified_by) if value is None or isinstance(value, int) and value == 1 else ((terms[0] == value) == reified_by)
-        return ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=reified_by))
-    if value is None:
-        if len(terms) == 1:
-            return terms[0]
-        if len(terms) == 2:
-            return disjunction(terms)
-        # if all(isinstance(t, Node) and t.type.is_predicate_operator() for t in terms):  # TODO is that interesting?
-        #     return disjunction(terms)
-    if options.exist_by_element:
-        aux = auxiliary().new_var(0, 1)
-        satisfy(ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=aux)))
-        return aux
-    res = Count(terms, value=value)
-    if isinstance(res, int):
-        assert res == 0
-        return 0  # for false
-    return res >= 1
+    return _exist("Exist", flatten(within, within_complement), value, reified_by)
 
 
 def AnyHold(within, *within_complement):
@@ -2869,7 +2892,7 @@ def AnyHold(within, *within_complement):
 
         # a solution: [0, 1, 2, 3]
     """
-    return Exist(within, within_complement, value=None)
+    return _exist("AnyHold", flatten(within, within_complement), None, None)
 
 
 def NotExist(within, *within_complement, value=None):
@@ -2893,12 +2916,7 @@ def NotExist(within, *within_complement, value=None):
 
         # a solution: [0, 0, 0, 2, 2, 0, 0]
     """
-    terms = flatten(within, within_complement)
-    res = Count(terms, value=value)
-    if isinstance(res, int):
-        assert res == 0
-        return 1  # for true
-    return res == 0
+    return _count("NotExist", flatten(within, within_complement), value, None, None) == 0
 
 
 def NoneHold(within, *within_complement):
@@ -2920,7 +2938,7 @@ def NoneHold(within, *within_complement):
 
         # a solution: [0, 0, 1, 0, 1]
     """
-    return NotExist(within, within_complement, value=None)
+    return _count("NoneHold", flatten(within, within_complement), None, None, None) == 0
 
 
 def ExactlyOne(within, *within_complement, value=None):
@@ -2942,13 +2960,7 @@ def ExactlyOne(within, *within_complement, value=None):
 
         # a solution: [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]
     """
-    terms = flatten(within, within_complement)
-    res = Count(terms, value=value)
-    if isinstance(res, int):
-        assert res == 0
-        return 0  # for false
-    return res == 1
-    # return Sum(term, others) == 1
+    return _count("ExactlyOne", flatten(within, within_complement), value, None, None) == 1
 
 
 def AtLeastOne(within, *within_complement, value=None):
@@ -2971,7 +2983,7 @@ def AtLeastOne(within, *within_complement, value=None):
 
         # a solution: [0, 0, 1, 1, 1]
     """
-    return Exist(within, within_complement, value=value)
+    return _exist("AtLeastOne", flatten(within, within_complement), value, None)
 
 
 def AtMostOne(within, *within_complement, value=None):
@@ -2996,12 +3008,7 @@ def AtMostOne(within, *within_complement, value=None):
 
         # a solution: [0, 0, 1, 0, 1]
     """
-    terms = flatten(within, within_complement)
-    res = Count(terms, value=value)
-    if isinstance(res, int):
-        assert res == 0
-        return 1  # for true
-    return res <= 1
+    return _count("AtMostOne", flatten(within, within_complement), value, None, None) <= 1
 
 
 def AllHold(within, *within_complement):
@@ -3023,11 +3030,7 @@ def AllHold(within, *within_complement):
         # a solution: [0, 3, 3, 6]
     """
     terms = flatten(within, within_complement)
-    res = Count(terms)  # , value=value)
-    if isinstance(res, int):
-        assert res == 0
-        return 1  # for true
-    return res == len(terms)
+    return _count("AllHold", terms, None, None, None) == len(terms)
 
 
 def Hamming(term, *others):

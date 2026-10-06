@@ -27,7 +27,6 @@ SEVERAL_VARIABLES = ("#175: Count() sorts the variables given as values with '<'
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
 INTEGERS = "#180: Count() does not refuse integers among the terms with an explicit message"
 MINI = "#177: with -mini, Count() on 0/1 variables with the value 1 is changed into a sum without its parameter condition"
-INVALID = "#176: Count() does not detect explicitly some invalid arguments"
 REPEATED = ("#192: a variable repeated among the terms gives an element <count> with a repeated variable (to be posted as a sum), on which "
             "ACE gives wrong solutions and that cosoco refuses")
 KNOWN = ("#193: a count whose result is known when compiling (an integer outside 0..|X|, values that no term can take) is posted as an element "
@@ -714,22 +713,14 @@ INVALID_CASES = [
     ("Count(x, True) == 2", "Count() does not accept Booleans as terms"),
     ("Count(x, 'a') == 2", "Wrong type for"),
 ]
-BUGGY_INVALID_CASES = {"Count(x, values=[1, x[0]]) == 2", "Count(x, value=True) == 2", "Count(x, values=[True, 2]) == 2", "Count(x, value=1.5) == 2",
-                       "Count(x, value='a') == 2", "Count(x, value=[1, 2]) == 2", "Count(x, value=range(3)) == 2", "Count(x, values=1) == 2",
-                       "Count(x, values=[1.5]) == 2", "Count(x, values=[x[0], None]) == 2", "Count(x, value=1, values=[2]) == 2",
-                       "Count(s, value='a') == 2", "Count(x, True) == 2"}
-# the invalid cases that already fail, but without an explicit error
-NOT_EXPLICIT = {"Count(x, value=True) == 2", "Count(x, values=[True, 2]) == 2", "Count(x, value=1.5) == 2", "Count(x, value='a') == 2",
-                "Count(x, value=[1, 2]) == 2", "Count(x, value=range(3)) == 2", "Count(x, values=1) == 2", "Count(x, values=[x[0], None]) == 2",
-                "Count(s, value='a') == 2"}
 
 
-@pytest.mark.parametrize("constraint", [pytest.param(c, marks=bug(INVALID)) if c in NOT_EXPLICIT else c for c, _ in INVALID_CASES])
+@pytest.mark.parametrize("constraint", [c for c, _ in INVALID_CASES])
 def test_invalid_count(run, constraint):
     assert_fails(run(X4 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({constraint})"))
 
 
-@pytest.mark.parametrize("constraint, message", [pytest.param(c, m, marks=bug(INVALID)) if c in BUGGY_INVALID_CASES else (c, m) for c, m in INVALID_CASES])
+@pytest.mark.parametrize("constraint, message", INVALID_CASES)
 def test_invalid_count_message(run, constraint, message):
     r = run(X4 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({constraint})")
     assert not r.ok and message in r.stdout + r.stderr, r.report()
