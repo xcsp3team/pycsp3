@@ -2873,11 +2873,12 @@ def _count(name, terms, value, values, condition):
 
 def _exist(name, terms, value, reified_by):
     # at least one term takes the value (or evaluates to 1 if value is None), for Exist() and AtLeastOne(), AnyHold() (whose name is given for the messages)
+    if reified_by is not None and not (isinstance(reified_by, Variable) and reified_by.dom.is_binary()):
+        error("The parameter reified_by of " + name + "() must be a 0/1 variable (possibly negated with ~), which is not the case of " + str(reified_by))
     _check_count_terms(name, terms, value)
-    if len(terms) == 0:
-        return ConstraintDummyConstant(0)
+    if len(terms) == 0:  # no term: false (and so, the reification variable is 0)
+        return ConstraintDummyConstant(0) if reified_by is None else reified_by == 0
     if reified_by is not None:
-        assert isinstance(reified_by, Variable) and reified_by.dom.is_binary()
         if reified_by.negation:
             reified_by = Variable.name2obj.get(reified_by.id, reified_by)  # the declared variable (see _01_to_node)
             aux = auxiliary().new_var(0, 1)
@@ -2886,7 +2887,7 @@ def _exist(name, terms, value, reified_by):
         if len(terms) == 1:
             return (terms[0] == reified_by) if value is None or isinstance(value, int) and value == 1 else ((terms[0] == value) == reified_by)
         return ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=reified_by))
-    if value is None and len(terms) <= 2:
+    if value is None and len(terms) <= 2:  # the terms are 0/1
         return terms[0] if len(terms) == 1 else disjunction(terms)
     if options.exist_by_element:
         aux = auxiliary().new_var(0, 1)

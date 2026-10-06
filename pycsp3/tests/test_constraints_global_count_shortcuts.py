@@ -20,8 +20,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
-REIFIED_INVALID = "#179: Exist() with reified_by checks it with an assert without message"
 AUX_UNUSED = "#196: a constant term (as x >= x) of a count gives an auxiliary variable that remains declared when the count is evaluated"
 CHOCO_REIFIED = ("chocoteam/choco-solver#1248 (section 10): CHOCO gives wrong solutions for an element (member) constraint with the attribute "
                  "reifiedBy (the reification is ignored)")
@@ -330,7 +328,6 @@ def test_exist_reified_by_a_negation(run, solver, request, terms):
     check(run, solver, B4 + REIFIED + f"satisfy(Exist({terms}, reified_by=~r))", DB4 + [(0, 1)], lambda *t: t[4] == (1 not in t[:n]))
 
 
-@bug(REIFIED_EMPTY)
 def test_exist_reified_on_no_term(run, solver):
     check(run, solver, B4 + REIFIED + "satisfy(Exist([], reified_by=r))", DB4 + [(0, 1)], lambda *t: t[4] == 0)
 
@@ -353,7 +350,6 @@ def test_exist_reified_in_logical_expressions(run, solver, request, context, pre
 
 
 @pytest.mark.parametrize("constraint", ["Exist(b, reified_by=x[0])", "Exist(b, reified_by=1)", "Exist(b, reified_by=b[0] + b[1])"])
-@bug(REIFIED_INVALID)
 def test_exist_reified_by_an_invalid_argument(run, constraint):
     r = run(B4 + X4 + f"satisfy({constraint})")
     assert not r.ok and r.error is not None and "reified_by" in r.error, r.report()
