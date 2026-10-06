@@ -20,8 +20,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-REPEATED = ("#192: a variable repeated among the terms gives an element <count> with a repeated variable (to be posted as a sum), on which "
-            "ACE gives wrong solutions and that cosoco refuses")
 KNOWN = ("#193: a count whose result is known when compiling (an integer outside 0..|X|, values that no term can take) is posted as an element "
          "<count> (to be evaluated), on which ACE and CHOCO fail and that cosoco refuses")
 ACE_NE = ("xcsp3team/ACE#24: ACE fails on a count with the condition (ne,k) when k is 0 or |X| (Problem.count(): control(op == NE && 0 < k && "
@@ -33,6 +31,7 @@ COSOCO_ALONE = ("xcsp3team/cosoco#89: cosoco crashes (segmentation fault) when t
                 "discarded")
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
+CHOCO_SUM_IN = "chocoteam/choco-solver#1248 (section 11): CHOCO gives wrong solutions for a sum of expressions in(x,set(...))"
 COMPACTOR = ("#195: the list of a count mixing variables of arrays and simple variables cannot be compacted (compactor.compact(): "
              "ValueError: substring not found)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
@@ -434,16 +433,14 @@ def test_count_on_no_term(run, solver, request, constraint, holds):
     ("Count(x[0], x[0], x[1], value=1) == x[2]", lambda a, b, c, d: [a, a, b].count(1) == c),
 ], ids=["twice", "only twice, odd", "only twice", "twice among others", "twice with two values", "twice with le", "twice compared with a variable"])
 def test_count_with_a_repeated_variable(run, solver, request, constraint, predicate):
-    # a variable repeated in the list is counted as many times as it appears (as in the example c5 of count in XCSP3-core)
-    bug_for(request, "COSOCO", REPEATED)  # cosoco: scope contains variable x0 many times (wrong solutions when compared with a variable)
-    if constraint not in ("Count(x[0], x[0], value=1) == 2", "Count(x[0], x[0], x[1], values=[1, 2]) <= 1", "Count(x[0], x[0], x[1], value=1) == x[2]"):
-        bug_for(request, "ACE", REPEATED)  # ACE: wrong solutions
+    # a variable repeated in the list is counted as many times as it appears (as in the example c5 of count in XCSP3-core); a sum is posted (#192)
+    if "values=[1, 2]" in constraint:
+        bug_for(request, "CHOCO", CHOCO_SUM_IN)  # sum(in(x[0],set(1,2)) * 2, in(x[1],set(1,2)))
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 
 @pytest.mark.parametrize("constraint", ["Count(x[0], x[0], x[1], value=1) == 2", "Count(x[0], x[1], x[0], x[2], values=[1, 2]) >= 3",
                                         "Count(x[0], x[0], x[1], value=x[3]) <= 1", "Count(x[0], x[0], x[1], value=1) == x[2]"])
-@bug(REPEATED)
 def test_xcsp3_count_with_a_repeated_variable(run, constraint):
     # with a variable repeated among the terms, a sum is posted, each distinct term being weighted by its number of occurrences (decision of #192)
     r = run(X4 + f"satisfy({constraint})")

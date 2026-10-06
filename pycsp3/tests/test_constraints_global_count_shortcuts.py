@@ -24,8 +24,6 @@ REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint f
 REIFIED_INVALID = "#179: Exist() with reified_by checks it with an assert without message"
 KNOWN = ("#193: a count of values that no term can take is posted as an element <count> (to be evaluated when compiling), on which ACE fails "
          "(empty scope) and that cosoco refuses")
-REPEATED = ("#192: a variable repeated among the terms gives an element <count> with a repeated variable (to be posted as a sum), on which "
-            "ACE gives wrong solutions and that cosoco refuses")
 CHOCO_REIFIED = ("chocoteam/choco-solver#1248 (section 10): CHOCO gives wrong solutions for an element (member) constraint with the attribute "
                  "reifiedBy (the reification is ignored)")
 PARSER_REIFIED = ("xcsp3team/XCSP3-Java-Tools#22: ACE fails on an element (member) constraint with the attribute reifiedBy whose value is a "
@@ -201,11 +199,9 @@ def test_on_no_term_in_expressions(run, solver, request, f, context, predicate):
     ("b[0], b[1], b[0], b[2]", lambda a, b, c, d: [a, b, a, c]),
 ])
 def test_with_a_repeated_variable(run, solver, request, f, terms, values):
-    # a variable repeated among the terms is counted as many times as it appears (or(b[0],b[0]) is b[0], #194)
-    if not (f in EXISTS and terms == "b[0], b[0]"):
-        bug_for(request, "COSOCO", REPEATED)  # cosoco: scope contains variable b[0] many times
-        if f not in ("NotExist", "NoneHold", "AllHold"):  # ACE is right for (eq,0) and (eq,|X|)
-            bug_for(request, "ACE", REPEATED)
+    # a variable repeated among the terms is counted as many times as it appears (a sum is posted, #192, and or(b[0],b[0]) is b[0], #194)
+    if f == "ExactlyOne" and terms == "b[0], b[0]":  # 2 * b[0] == 1
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # an intension that is always false, recognized as such by the parser
     check(run, solver, B4 + f"satisfy({f}({terms}))", DB4, lambda *t: holds(f, values(*t)))
 
 

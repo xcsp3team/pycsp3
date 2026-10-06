@@ -2717,6 +2717,7 @@ def Product(term, *others):
     checkType(terms, ([Variable], [Node]))
     return Node.build(TypeNode.MUL, *terms)
 
+
 def _is_01(t):
     # returns True if the term is 0/1: a variable whose domain is included in {0, 1}, a Boolean expression, a constraint, or a component with values 0 and 1
     if isinstance(t, Variable):
@@ -2807,6 +2808,14 @@ def _count(name, terms, value, values, condition):
     checkType(terms, ([Variable], [Node], [Variable, Node]))
     if options.mini and values == [1] and all(isinstance(t, Variable) and t.dom.is_binary() for t in terms):
         return Sum(terms, condition=condition)  # the count of 0/1 variables equal to 1 is their sum (count is not in the mini-tracks)
+    variables = [t for t in terms if isinstance(t, Variable)]
+    if len({id(x) for x in variables}) < len(variables):  # a variable is repeated: a sum is posted, each term weighted by its number of occurrences
+        distinct, counts = Node._distinct_sons(Node._create_sons(*terms))
+        terms = [son.cnt if son.type == TypeNode.VAR else son for son in distinct]
+        if len(terms) == 1:
+            term = _counted(terms[0], values) * counts[0]
+            return term if condition is None else _term_with_condition(term, Condition.build_condition(condition))
+        return _wrapping_by_complete_or_partial_constraint(ConstraintSum([_counted(t, values) for t in terms], counts, Condition.build_condition(condition)))
     if len(terms) == 1:  # no constraint count (XCSP3-core requires at least two terms)
         term = _counted(terms[0], values)
         return term if condition is None else _term_with_condition(term, Condition.build_condition(condition))
