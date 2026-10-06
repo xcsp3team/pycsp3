@@ -5,7 +5,7 @@ from itertools import permutations, combinations
 
 from pycsp3 import functions
 from pycsp3.classes import main
-from pycsp3.classes.auxiliary.conditions import Condition, ConditionInterval, ConditionSet, ConditionNode, inside
+from pycsp3.classes.auxiliary.conditions import Condition, ConditionValue, ConditionInterval, ConditionSet, ConditionNode, inside
 from pycsp3.classes.auxiliary.enums import TypeVar, TypeCtr, TypeCtrArg, TypeXML, TypeAnn, TypeConditionOperator, TypeOrderedOperator, TypeRank
 from pycsp3.classes.auxiliary.tables import to_ordinary_table, to_reified_ordinary_table
 from pycsp3.classes.entities import EVarArray, ECtr, EMetaCtr
@@ -711,11 +711,21 @@ class ConstraintSum(ConstraintWithCondition):
 
 
 class ConstraintCount(ConstraintWithCondition):
-    def __init__(self, lst, values, condition):
+    def __init__(self, lst, values, condition, bounds=None):
         super().__init__(TypeCtr.COUNT)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=False)
         self.arg(TypeCtrArg.VALUES, values)
         self.arg(TypeCtrArg.CONDITION, condition)
+        self.bounds = (0, len(lst)) if bounds is None else bounds  # the smallest and greatest possible values of the count
+
+    def known_result(self):
+        # 1 (resp. 0) if the condition holds for all (resp. none of) the possible values of the count, and None otherwise (or with a variable)
+        condition = self.arguments[TypeCtrArg.CONDITION].content
+        if not isinstance(condition, (ConditionValue, ConditionInterval, ConditionSet)) or not isinstance(condition.right_operand(), (int, str)):
+            return None
+        lo, hi = self.bounds
+        n = sum(1 for _ in condition.filtering(range(lo, hi + 1)))
+        return 1 if n == hi - lo + 1 else 0 if n == 0 else None
 
     def min_possible_value(self):
         return 0
@@ -1125,8 +1135,8 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
     def __or__(self, other):
         if self.val == 1:
             return self  # always true
-        assert self.val == 0 and isinstance(other, (ECtr, Node)), "For the moment"
-        return other
+        assert self.val == 0 and isinstance(other, (ECtr, Node, Variable)), "For the moment"
+        return other  # false | other is other
 
     def __add__(self, other):
         return other if self.val == 0 else other + self.val
@@ -1174,9 +1184,18 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __init__(self, constraint):
         self.constraint = constraint
 
+    @staticmethod
+    def complete(c):
+        # the constraint c, now with its condition; a count whose result is known when compiling is a constant (true or false)
+        if isinstance(c, ConstraintCount):
+            k = c.known_result()
+            if k is not None:
+                return ConstraintDummyConstant(k)
+        return ECtr(c)
+
     def add_condition(self, operator, right_operand):
         if isinstance(right_operand, (int, Variable)):  # or not isinstance(self.constraint, ConstraintSum):  # and isinstance(right_operand, Variable):
-            return ECtr(self.constraint.set_condition(operator, right_operand))
+            return PartialConstraint.complete(self.constraint.set_condition(operator, right_operand))
         # TODO : which kind of right operand is authorized? just a partial sum?
         assert isinstance(self.constraint, ConstraintSum)
         pc = PartialConstraint.combine_partial_objects(self, TypeNode.SUB, right_operand)  # the 'complex' right operand is moved to the left
@@ -1702,7 +1721,10 @@ def global_indirection(c):
     if isinstance(c, ConstraintWithCondition):
         reif = next((attribute for attribute in c.attributes if attribute[0] == TypeXML.REIFIED_BY), None)
         if reif is not None:
-            return reif[1]  # the 0/1 variable involved in the reification
+            if not getattr(c, "reification_posted", False):  # the reified constraint is posted (once), its 0/1 variable being used instead
+                c.reification_posted = True
+                auxiliary()._collected_raw_constraints.append(ECtr(c))
+            return Variable.name2obj.get(reif[1], reif[1])  # the 0/1 variable involved in the reification
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
         pc = PartialConstraint(c)
@@ -1769,7 +1791,9 @@ def manage_global_indirection(*args, also_pc=False):
         if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression, or a table constraint to be reified
             error_if(len(curser.queue_in) == 0, msg)
             (table, scp) = curser.queue_in.pop()
-            if isinstance(scp, (tuple, list)):
+            if isinstance(scp, ConstraintDummyConstant):  # a constant (as the count of no term) in a set of values
+                arg = int(scp.val in table)
+            elif isinstance(scp, (tuple, list)):
                 assert all(isinstance(x, VariableInteger) for x in scp)
                 var = auxiliary().new_var(0, 1)
                 auxiliary().collect_table(scp, var, to_reified_ordinary_table(table, [x.dom for x in scp]))
@@ -1787,7 +1811,9 @@ def manage_global_indirection(*args, also_pc=False):
             # TODO to be extended with reified non unary tables
             error_if(len(curser.queue_in) == 0, msg)
             (table, scp) = curser.queue_in.pop()
-            if isinstance(scp, list) and len(scp) > 1 and isinstance(table, list) and len(table) == 1:
+            if isinstance(scp, ConstraintDummyConstant):  # a constant (as the count of no term) not in a set of values
+                arg = int(scp.val not in table)
+            elif isinstance(scp, list) and len(scp) > 1 and isinstance(table, list) and len(table) == 1:
                 assert len(scp) == len(table[0])
                 arg = functions.disjunction(scp[i] != table[0][i] for i in range(len(scp)))
             elif isinstance(scp, int):
