@@ -2725,7 +2725,7 @@ def _check_count_terms(name, terms, value):
 
 
 def _count_values(name, value, values):
-    # the values to be counted (by default, the value 1): an ordered list of integers or of variables
+    # the values to be counted (by default, the value 1): an ordered list of integers, or a list of distinct variables
     if value is not None and values is not None:
         error(name + "() accepts either the parameter value or the parameter values, not both")
     if values is not None:
@@ -2750,7 +2750,10 @@ def _count_values(name, value, values):
         elif isinstance(value, Node):
             value = auxiliary().replace_node(value)
         values = [value]
-    return sorted(set(values))  # ordered set of values
+    if len(values) == 0 or isinstance(values[0], int):
+        return sorted(set(values))
+    seen = set()
+    return [v for v in values if id(v) not in seen and not seen.add(id(v))]  # in the given order (variables are not compared with <)
 
 
 def _count(name, terms, value, values, condition):

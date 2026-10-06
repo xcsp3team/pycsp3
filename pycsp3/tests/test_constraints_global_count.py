@@ -22,8 +22,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 NO_VALUE = ("#171: Count() with no value (values=[] or values=set()) is not refused with an explicit error (an empty element <values> is "
             "generated)")
-SEVERAL_VARIABLES = ("#175: Count() sorts the variables given as values with '<', which builds expressions "
-                     "(warning: A node is evaluated as a Boolean)")
 ONE_TERM = "#172: Count() on a single term generates an element <count> with a list of one variable (XCSP3 requires at least two)"
 INTEGERS = "#180: Count() does not refuse integers among the terms with an explicit message"
 MINI = "#177: with -mini, Count() on 0/1 variables with the value 1 is changed into a sum without its parameter condition"
@@ -259,8 +257,8 @@ def test_count_with_variables_as_values(run, solver, values):
 
 
 @pytest.mark.parametrize("values", [
-    pytest.param("[x[2], x[3]]", marks=bug(SEVERAL_VARIABLES)),
-    pytest.param("[x[3], x[2]]", marks=bug(SEVERAL_VARIABLES)),
+    "[x[2], x[3]]",
+    "[x[3], x[2]]",
     "[x[2], x[2]]",
 ])
 def test_count_with_variables_as_values_displays_no_warning(run, values):
