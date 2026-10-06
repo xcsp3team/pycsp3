@@ -17,13 +17,12 @@ import re
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 REIFIED_EMPTY = "#179: Exist() with reified_by on no term posts the constraint false, instead of forcing the reification variable to 0"
 REIFIED_INVALID = "#179: Exist() with reified_by checks it with an assert without message"
-KNOWN = ("#193: a count of values that no term can take is posted as an element <count> (to be evaluated when compiling), on which ACE fails "
-         "(empty scope) and that cosoco refuses")
+AUX_UNUSED = "#196: a constant term (as x >= x) of a count gives an auxiliary variable that remains declared when the count is evaluated"
 CHOCO_REIFIED = ("chocoteam/choco-solver#1248 (section 10): CHOCO gives wrong solutions for an element (member) constraint with the attribute "
                  "reifiedBy (the reification is ignored)")
 PARSER_REIFIED = ("xcsp3team/XCSP3-Java-Tools#22: ACE fails on an element (member) constraint with the attribute reifiedBy whose value is a "
@@ -155,10 +154,9 @@ def test_with_a_variable_or_an_expression_as_value(run, solver, f, n, value, v):
 @pytest.mark.parametrize("f", WITH_VALUE)
 @pytest.mark.parametrize("value", [7, -1])
 def test_with_a_value_out_of_the_domains(run, solver, request, f, value):
-    # no term can take the value, so that no term is counted
-    bug_for(request, "ACE", KNOWN)  # ACE: A constraint Count is posted with an empty scope
-    if f in ("Exist", "AtLeastOne", "AtMostOne"):
-        bug_for(request, "COSOCO", KNOWN)  # cosoco: AtLeast (AtMost), all variables must contain value
+    # no term can take the value, so that no term is counted (the constraint is evaluated when compiling, #193)
+    if f in ("Exist", "AtLeastOne", "ExactlyOne"):
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
     check(run, solver, X4 + f"satisfy({f}(x[:3], value={value}), x[3] != 1)", D4, lambda *t: holds(f, t[:3], value) and t[3] != 1)
 
 
@@ -223,6 +221,14 @@ def test_xcsp3_count_has_at_least_two_terms(run, f, n):
     assert r.ok, r.report()
     for c in r.xml.iter("count"):
         assert n_terms(c.find("list").text) >= 2, r.report()
+
+
+@bug(AUX_UNUSED)
+def test_xcsp3_constant_term_gives_no_auxiliary_variable(run):
+    # x[0] >= x[0] is the constant 1 (#194), so that the count is always at least 1 (#193): no constraint, and no auxiliary variable
+    r = run(X4 + B4 + "satisfy(Exist(x[j] >= x[0] for j in range(3)), b[0] != b[1])")
+    assert r.ok and r.xml.find("constraints/count") is None, r.report()
+    assert not any(v.startswith("aux") for v in declared_variables(r)), r.report()
 
 
 # ------------------------------------------------------------------------------------------------ logical contexts

@@ -36,6 +36,8 @@ class Condition:
     def build_condition(condition):
         if condition is None:
             return None  # it may occur when building a partial constraint
+        if isinstance(condition, Condition):
+            return condition  # already built
         condition = tuple(condition) if isinstance(condition, list) else condition  # we expect a condition to be given as a tuple (or a list)
         assert isinstance(condition, tuple) and len(condition) == 2, "a condition must a pair, given as a tuple (or a list)"
         operator = condition[0]

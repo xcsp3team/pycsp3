@@ -469,7 +469,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         if options.mini and isinstance(left_operand.constraint, ConstraintSum):
             ctr = _sum_for_mini(left_operand, Condition.build_condition((operator, right_operand)))
             return ctr if not isinstance(ctr, ConstraintDummyConstant) else _false_constraint() if ctr.val == 0 else None
-        ctr = ECtr(left_operand.constraint.set_condition(operator, right_operand))
+        ctr = PartialConstraint.complete(left_operand.constraint.set_condition(operator, right_operand))  # a constant if the result is known
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)")
         ctr = Regular(scope=left_operand, automaton=right_operand)
@@ -2779,6 +2779,41 @@ def _count_values(name, value, values):
     return [v for v in values if id(v) not in seen and not seen.add(id(v))]  # in the given order (variables are not compared with <)
 
 
+def _count_bounds(terms, values):
+    # the smallest and greatest possible values of the count of the specified values among the specified terms (variables and expressions)
+    if not isinstance(values[0], int):
+        return 0, len(terms)
+    lo = hi = 0
+    if len(values) == 1:  # the most frequent case
+        v = values[0]
+        for t in terms:
+            if not isinstance(t, Variable):
+                hi += 1  # the possible values of an expression are not computed
+                continue
+            dom = t.dom.all_values()
+            if dom.start <= v < dom.stop and (v - dom.start) % dom.step == 0 if isinstance(dom, range) else dom.count(v) > 0:
+                hi += 1
+                if len(dom) == 1:
+                    lo += 1
+        return lo, hi
+    s = frozenset(values)  # (the operator 'in' is not intercepted for a frozenset)
+    for t in terms:
+        if not isinstance(t, Variable):
+            hi += 1  # the possible values of an expression are not computed
+            continue
+        dom = t.dom.all_values()
+        if isinstance(dom, range):  # (a range, whose operator 'in' is intercepted)
+            if any(dom.start <= v < dom.stop and (v - dom.start) % dom.step == 0 for v in values):
+                hi += 1
+                if len(dom) <= len(values) and all(v in s for v in dom):
+                    lo += 1
+        elif any(v in s for v in dom):
+            hi += 1
+            if len(dom) <= len(values) and all(v in s for v in dom):
+                lo += 1
+    return lo, hi
+
+
 def _counted(term, values):
     # the 0/1 expression that holds iff the term takes one of the values (integers or variables)
     if values == [1] and isinstance(term, Variable) and term.dom.is_binary():
@@ -2790,36 +2825,50 @@ def _counted(term, values):
     return disjunction(Node.build(TypeNode.EQ, term, y) for y in values)
 
 
+def _constant_with_condition(k, condition):
+    # the constant k (as the count of no term) subject to the specified condition (if any): a constant, or an expression if the operand is a variable
+    if condition is None:
+        return ConstraintDummyConstant(k)
+    if isinstance(condition, (ConditionInterval, ConditionSet)) or isinstance(condition.right_operand(), int):
+        return ConstraintDummyConstant(1 if any(True for _ in condition.filtering([k])) else 0)
+    return Node.build(condition.operator, k, condition.right_operand())
+
+
 def _count(name, terms, value, values, condition):
     # a count of the specified values (by default, the value 1) among the terms, for Count() and its shortcuts (whose name is given for the messages)
     _check_count_terms(name, terms, value if values is None else values)
     values = _count_values(name, value, values)
+    condition = Condition.build_condition(condition)
     if len(terms) == 0:  # the count of no term is 0
-        return ConstraintDummyConstant(0)
+        return _constant_with_condition(0, condition)
     terms = manage_global_indirection(terms, also_pc=True)
     assert terms is not None
     if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
-        s = frozenset(values) if len(values) > 0 and isinstance(values[0], int) else None
+        s = frozenset(values) if isinstance(values[0], int) else None
         # a constant that is not counted is discarded, and a constant that is counted is replaced by an auxiliary variable
         terms = [auxiliary().replace_int(t.cnt) if type(t) is Node and t.type is TypeNode.INT else t for t in terms
                  if not (type(t) is Node and t.type is TypeNode.INT and s is not None and t.cnt not in s)]
         if len(terms) == 0:
-            return ConstraintDummyConstant(0)
+            return _constant_with_condition(0, condition)
     checkType(terms, ([Variable], [Node], [Variable, Node]))
     if options.mini and values == [1] and all(isinstance(t, Variable) and t.dom.is_binary() for t in terms):
         return Sum(terms, condition=condition)  # the count of 0/1 variables equal to 1 is their sum (count is not in the mini-tracks)
+    lo, hi = _count_bounds(terms, values)
+    if hi == 0:  # no term can take one of the values: the count is 0
+        return _constant_with_condition(0, condition)
     variables = [t for t in terms if isinstance(t, Variable)]
     if len({id(x) for x in variables}) < len(variables):  # a variable is repeated: a sum is posted, each term weighted by its number of occurrences
         distinct, counts = Node._distinct_sons(Node._create_sons(*terms))
         terms = [son.cnt if son.type == TypeNode.VAR else son for son in distinct]
         if len(terms) == 1:
             term = _counted(terms[0], values) * counts[0]
-            return term if condition is None else _term_with_condition(term, Condition.build_condition(condition))
-        return _wrapping_by_complete_or_partial_constraint(ConstraintSum([_counted(t, values) for t in terms], counts, Condition.build_condition(condition)))
+            return term if condition is None else _term_with_condition(term, condition)
+        return _wrapping_by_complete_or_partial_constraint(ConstraintSum([_counted(t, values) for t in terms], counts, condition))
     if len(terms) == 1:  # no constraint count (XCSP3-core requires at least two terms)
         term = _counted(terms[0], values)
-        return term if condition is None else _term_with_condition(term, Condition.build_condition(condition))
-    return _wrapping_by_complete_or_partial_constraint(ConstraintCount(terms, values, Condition.build_condition(condition)))
+        return term if condition is None else _term_with_condition(term, condition)
+    ctr = ConstraintCount(terms, values, condition, bounds=(lo, hi))
+    return _wrapping_by_complete_or_partial_constraint(ctr) if condition is None else PartialConstraint.complete(ctr)
 
 
 def _exist(name, terms, value, reified_by):

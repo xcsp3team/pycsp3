@@ -20,15 +20,11 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-KNOWN = ("#193: a count whose result is known when compiling (an integer outside 0..|X|, values that no term can take) is posted as an element "
-         "<count> (to be evaluated), on which ACE and CHOCO fail and that cosoco refuses")
 ACE_NE = ("xcsp3team/ACE#24: ACE fails on a count with the condition (ne,k) when k is 0 or |X| (Problem.count(): control(op == NE && 0 < k && "
           "k < scp.length) without message)")
 ACE_AMONG = "xcsp3team/ACE#25: ACE fails on a count with several values and the condition (eq,0) (ERROR: Bad value of k=0)"
 CHOCO_RANGE = ("chocoteam/choco-solver#1248 (section 9): CHOCO gives wrong solutions for a count with the condition in or notin an interval "
                "(XCSPParser.dealWithConditionIntvl())")
-COSOCO_ALONE = ("xcsp3team/cosoco#89: cosoco crashes (segmentation fault) when the only constraint is a count that always holds, and is "
-                "discarded")
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
 CHOCO_SUM_IN = "chocoteam/choco-solver#1248 (section 11): CHOCO gives wrong solutions for a sum of expressions in(x,set(...))"
@@ -159,26 +155,10 @@ def test_count_with_the_parameter_condition_on_a_variable(run, solver):
     ("Count(x, value=1) <= -1", lambda c: False),
 ])
 def test_count_with_an_empty_or_unreachable_condition(run, solver, request, constraint, predicate):
-    if constraint in ("Count(x, value=1) in set()", "Count(x, value=1) in range(0)"):
+    # the count of the 4 terms is in 0..4: the constraint is evaluated when compiling (#193)
+    if not any(predicate(c) for c in range(5)):
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
-    elif constraint in ("Count(x, value=1) == 5", "Count(x, value=1) == -1", "Count(x, value=1) != 7", "Count(x, value=1) >= 5",
-                        "Count(x, value=1) <= -1"):
-        bug_for(request, "ACE", KNOWN)  # ACE: control(0 <= l && l <= list.length)
-        if constraint in ("Count(x, value=1) >= 5", "Count(x, value=1) <= -1"):
-            bug_for(request, "CHOCO", KNOWN)  # CHOCO: wrong domain definition, lower bound > upper bound
-        if constraint != "Count(x, value=1) != 7":
-            bug_for(request, "COSOCO", KNOWN)  # cosoco: ExactlyK must have 0 <= k <= size(list), ...
-    elif constraint == "Count(x, value=1) in range(5, 9)":
-        bug_for(request, "CHOCO", CHOCO_RANGE)
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(t.count(1)) and t[3] != 1)
-
-
-@pytest.mark.parametrize("constraint", ["Count(x, value=1) >= 0", "Count(x, value=1) <= 4", "Count(x, value=1) > -1", "Count(x, value=1) < 5"])
-def test_count_always_satisfied_alone(run, solver, request, constraint):
-    # the only constraint of the model always holds
-    if constraint in ("Count(x, value=1) >= 0", "Count(x, value=1) > -1"):
-        bug_for(request, "COSOCO", COSOCO_ALONE)
-    check(run, solver, X4 + f"satisfy({constraint})", D4, lambda *t: True)
 
 
 @pytest.mark.parametrize("constraint, holds", [
@@ -196,7 +176,6 @@ def test_count_always_satisfied_alone(run, solver, request, constraint):
     ("Count(x, values=[5, 6]) <= 1", True),
     ("7 in x", False),
 ])
-@bug(KNOWN)
 def test_xcsp3_count_known_when_compiling(run, constraint, holds):
     # the result of the count is known when compiling (decision of #193): nothing is posted when the constraint always holds, and the
     # constraint false when it never holds
@@ -222,9 +201,12 @@ def test_xcsp3_count_known_when_compiling(run, constraint, holds):
     ("values=[1, 5]", (1,)),
 ])
 @pytest.mark.parametrize("condition", ["== 2", ">= 3", "in {0, 4}"])
-def test_count_values(run, solver, arguments, values, condition):
+def test_count_values(run, solver, request, arguments, values, condition):
+    # another constraint (x[0] != x[1]) is posted, the count of [0, 1, 2] being always 4 (so that the constraint count is evaluated, #193)
     predicate = {"== 2": lambda c: c == 2, ">= 3": lambda c: c >= 3, "in {0, 4}": lambda c: c in (0, 4)}[condition]
-    check(run, solver, X4 + f"satisfy(Count(x, {arguments}) {condition})", D4, lambda *t: predicate(count(t, values)))
+    if arguments == "values=[0, 1, 2]" and condition == "== 2":
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
+    check(run, solver, X4 + f"satisfy(Count(x, {arguments}) {condition}, x[0] != x[1])", D4, lambda *t: predicate(count(t, values)) and t[0] != t[1])
 
 
 @pytest.mark.parametrize("constraint, predicate", [
@@ -285,10 +267,9 @@ def test_count_with_variables_as_values_displays_no_warning(run, values):
 ])
 @pytest.mark.parametrize("condition", ["== 0", ">= 1"])
 def test_count_with_values_out_of_the_domains(run, solver, request, arguments, predicate, condition):
-    # no variable can take a value to be counted: the count is always 0
-    bug_for(request, "ACE", KNOWN)  # ACE: A constraint Count is posted with an empty scope
-    if condition == ">= 1" and arguments != "values=[5, 6]":
-        bug_for(request, "COSOCO", KNOWN)  # cosoco: AtLeast, all variables must contain value
+    # no variable can take a value to be counted: the count is always 0 (#193)
+    if condition == ">= 1":
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
     holds = (condition == "== 0")
     check(run, solver, X4 + f"satisfy(Count(x, {arguments}) {condition}, x[3] != 1)", D4, lambda *t: holds and t[3] != 1)
 
@@ -591,9 +572,8 @@ def test_value_in_a_list_of_variables(run, solver, constraint, predicate):
                                                ("7 not in x", True),
                                                ("-1 not in x", True)])
 def test_value_out_of_the_domains_in_a_list_of_variables(run, solver, request, constraint, holds):
-    bug_for(request, "ACE", KNOWN)  # ACE: A constraint Count is posted with an empty scope
-    if not holds:
-        bug_for(request, "COSOCO", KNOWN)  # cosoco: AtLeast, all variables must contain value
+    if not holds:  # no variable can take the value (#193)
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: holds and t[3] != 1)
 
 
