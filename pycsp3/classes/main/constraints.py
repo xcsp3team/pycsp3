@@ -1132,17 +1132,55 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
         assert isinstance(other, int)
         return ConstraintDummyConstant(1 if self.val > other else 0)
 
+    @staticmethod
+    def _waiting_in(other):
+        # True (or False) given by Python for an expression 'in' (or 'not in'), whose constraint waits in the queue queue_in (see tools/curser.py)
+        return type(other) is bool and len(curser.queue_in) > 0
+
     def __or__(self, other):
-        if self.val == 1:
-            return self  # always true
-        assert self.val == 0, "The operator | can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(self.val)
-        if isinstance(other, ConstraintDummyConstant):  # false | c is c (true or false)
+        assert self.val in (0, 1), "The operator | can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(self.val)
+        if ConstraintDummyConstant._waiting_in(other):  # the expression e (x in S, for example) is the last one put in the queue
+            if self.val == 1:
+                curser.queue_in.pop()  # true | e is true: the expression e is discarded
+                return self
+            return other  # false | e is e, which remains in the queue
+        if isinstance(other, ConstraintDummyConstant):
             assert other.val in (0, 1), "The operator | can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(other.val)
-            return other
-        assert isinstance(other, (ECtr, Node, Variable)), ("A constraint known to be false when compiling (for example, Exist([]) on no term, or "
-            "Exist(x, value=v) when no variable of x can take the value v) can be combined with the operator | only with a constraint, an expression "
-            "or a variable, which is not the case of " + str(other))
-        return other  # false | other is other
+            return ConstraintDummyConstant(self.val | other.val)
+        assert isinstance(other, (ECtr, Node, Variable)), ("A constraint known when compiling (for example, Exist([]) on no term, or Exist(x, value=v) when "
+            "no variable of x can take the value v) can be combined with the operator | only with a constraint, an expression or a variable, which is not the case of " + str(other))
+        return self if self.val == 1 else other  # true | e is true, and false | e is e
+
+    __ror__ = __or__  # e | c (e being, for example, an expression 'in', which gives a Boolean)
+
+    def __and__(self, other):
+        assert self.val in (0, 1), "The operator & can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(self.val)
+        if ConstraintDummyConstant._waiting_in(other):  # the expression e (x in S, for example) is the last one put in the queue
+            if self.val == 0:
+                curser.queue_in.pop()  # false & e is false: the expression e is discarded
+                return self
+            return other  # true & e is e, which remains in the queue
+        if isinstance(other, ConstraintDummyConstant):
+            assert other.val in (0, 1), "The operator & can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(other.val)
+            return ConstraintDummyConstant(self.val & other.val)
+        assert isinstance(other, (ECtr, Node, Variable)), ("A constraint known when compiling (for example, Exist([]) on no term, or Exist(x, value=v) when "
+            "no variable of x can take the value v) can be combined with the operator & only with a constraint, an expression or a variable, which is not the case of " + str(other))
+        return other if self.val == 1 else self  # true & e is e, and false & e is false
+
+    __rand__ = __and__  # e & c
+
+    def __xor__(self, other):
+        assert self.val in (0, 1), "The operator ^ can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(self.val)
+        if ConstraintDummyConstant._waiting_in(other):  # the expression e (x in S, for example) is the last one put in the queue
+            return other if self.val == 0 else not other  # false ^ e is e, and true ^ e is ~e (x in S becoming x not in S), which remains in the queue
+        if isinstance(other, ConstraintDummyConstant):
+            assert other.val in (0, 1), "The operator ^ can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(other.val)
+            return ConstraintDummyConstant(self.val ^ other.val)
+        assert isinstance(other, (ECtr, Node, Variable)), ("A constraint known when compiling (for example, Exist([]) on no term, or Exist(x, value=v) when "
+            "no variable of x can take the value v) can be combined with the operator ^ only with a constraint, an expression or a variable, which is not the case of " + str(other))
+        return other if self.val == 0 else ~other  # false ^ e is e, and true ^ e is ~e
+
+    __rxor__ = __xor__  # e ^ c
 
     def __add__(self, other):
         return other if self.val == 0 else other + self.val

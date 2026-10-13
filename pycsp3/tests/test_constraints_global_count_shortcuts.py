@@ -20,8 +20,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-CONSTANT_IN = ("#197: a constant (as NotExist(x, value=7) when no variable can take 7) combined with | or & and an expression 'in' gives a wrong "
-               "model (the entry of queue_in is left for the next 'in') or an error")
 AUX_UNUSED = "#196: a constant term (as x >= x) of a count gives an auxiliary variable that remains declared when the count is evaluated"
 CHOCO_REIFIED = ("chocoteam/choco-solver#1248 (section 10): CHOCO gives wrong solutions for an element (member) constraint with the attribute "
                  "reifiedBy (the reification is ignored)")
@@ -203,12 +201,37 @@ def test_constants_combined_with_or(run, solver, request, constraint, holds):
     check(run, solver, B4 + f"satisfy({constraint}, b[0] != b[1])", DB4, lambda *t: holds and t[0] != t[1])
 
 
-@pytest.mark.parametrize("constraint", ["Exist(b, value=7) | 1", "Exist(b, value=7) | True", "Exist([]) | [b[0], b[1]]"])
-def test_false_constant_combined_with_or_and_an_invalid_operand(run, constraint):
-    # the message explains which operands are accepted (#173)
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Exist(b, value=7) ^ NotExist(b, value=7)", lambda t: True),
+    ("NotExist(b, value=7) ^ NotExist(b, value=8)", lambda t: False),
+    ("NotExist(b, value=7) ^ b[0]", lambda t: t[0] == 0),
+    ("Exist(b, value=7) ^ b[0]", lambda t: t[0] == 1),
+    ("NotExist(b, value=7) ^ (b[0] == b[1])", lambda t: t[0] != t[1]),
+    ("b[0] ^ NotExist(b, value=7)", lambda t: t[0] == 0),
+])
+def test_constants_combined_with_xor(run, solver, request, constraint, predicate):
+    # no term can take the value 7 (or 8): each shortcut is a constant (#193); false ^ e is e, and true ^ e is ~e (#197)
+    if constraint == "NotExist(b, value=7) ^ NotExist(b, value=8)":
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
+    check(run, solver, B4 + f"satisfy({constraint}, b[2] != b[3])", DB4, lambda *t: predicate(t) and t[2] != t[3])
+
+
+@pytest.mark.parametrize("constraint, operator", [
+    ("Exist(b, value=7) | 1", "|"),
+    ("Exist(b, value=7) | True", "|"),
+    ("Exist([]) | [b[0], b[1]]", "|"),
+    ("NotExist(b, value=7) | 1", "|"),
+    ("1 | NotExist(b, value=7)", "|"),
+    ("NotExist(b, value=7) & 1", "&"),
+    ("Exist(b, value=7) & [b[0], b[1]]", "&"),
+    ("NotExist(b, value=7) ^ 1", "^"),
+    ("Exist(b, value=7) ^ True", "^"),
+])
+def test_constant_combined_with_an_invalid_operand(run, constraint, operator):
+    # the message explains which operands are accepted, with |, & and ^ (#173, #197)
     r = run(B4 + f"satisfy({constraint}, b[0] != b[1])")
     assert_fails(r)
-    assert "can be combined with the operator | only with a constraint, an expression or a variable" in r.stderr, r.report()
+    assert f"can be combined with the operator {operator} only with a constraint, an expression or a variable" in r.stderr, r.report()
 
 
 @pytest.mark.parametrize("constraint, predicate", [
@@ -220,10 +243,22 @@ def test_false_constant_combined_with_or_and_an_invalid_operand(run, constraint)
     ("(x[0] in {1, 2}) | Exist(x, value=7)", lambda t: t[0] in (1, 2)),
     ("NotExist(x, value=7) & (x[0] in {1, 2})", lambda t: t[0] in (1, 2)),
     ("(x[0] in {1, 2}) & NotExist(x, value=7)", lambda t: t[0] in (1, 2)),
+    ("Exist(x, value=7) & (x[0] in {1, 2})", lambda t: False),
+    ("(x[0] not in {1, 2}) & NotExist(x, value=7)", lambda t: t[0] not in (1, 2)),
+    ("Exist(x, value=7) | ((x[0], x[2]) in {(0, 1), (2, 2)})", lambda t: (t[0], t[2]) in ((0, 1), (2, 2))),
+    ("(Exist(x, value=7) | (x[0] in {1, 2})) | (x[2] == 1)", lambda t: t[0] in (1, 2) or t[2] == 1),
+    ("Exist(x, value=7) | (Sum(x) in {1, 2})", lambda t: sum(t) in (1, 2)),
+    ("[Exist(x, value=7) | (x[i] in {1, 2}) for i in (0, 2)]", lambda t: t[0] in (1, 2) and t[2] in (1, 2)),
+    ("NotExist(x, value=7) ^ (x[0] in {1, 2})", lambda t: t[0] not in (1, 2)),
+    ("(x[0] in {1, 2}) ^ Exist(x, value=7)", lambda t: t[0] in (1, 2)),
+    ("NotExist(x, value=7) ^ (x[0] not in {1, 2})", lambda t: t[0] in (1, 2)),
+    ("Exist(x, value=7) ^ (Sum(x) in {1, 2})", lambda t: sum(t) in (1, 2)),  # (true ^ gives a sum with notin: ACE#22, choco-solver#1248 section 8)
 ])
-@bug(CONSTANT_IN)
-def test_constants_combined_with_in(run, solver, constraint, predicate):
-    # no variable can take the value 7: each shortcut is a constant (#193), combined with an expression 'in'; another 'in' is posted after it
+def test_constants_combined_with_in(run, solver, request, constraint, predicate):
+    # no variable can take the value 7: each shortcut is a constant (#193), combined with an expression 'in' (#197); another 'in' is posted
+    # after it, to check that the queue of the expressions 'in' (queue_in) is left as expected
+    if constraint.startswith("Exist(x, value=7) & "):
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
     check(run, solver, X4 + f"satisfy({constraint}, x[1] in {{0, 2}})", D4, lambda *t: predicate(t) and t[1] in (0, 2))
 
 
