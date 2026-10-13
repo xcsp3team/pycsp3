@@ -188,6 +188,27 @@ def test_on_no_term_in_expressions(run, solver, request, f, context, predicate):
     check(run, solver, B4 + f"satisfy({context.format(f + '([])')}, b[0] != b[1])", DB4, lambda *t: predicate(e, t) and t[0] != t[1])
 
 
+@pytest.mark.parametrize("constraint, holds", [
+    ("Exist(b, value=7) | NotExist(b, value=7)", True),
+    ("Exist(b, value=7) | Exist(b, value=8)", False),
+    ("NotExist(b, value=7) | Exist(b, value=7)", True),
+    ("Exist([]) | AllHold([])", True),
+])
+def test_constants_combined_with_or(run, solver, request, constraint, holds):
+    # no term can take the value 7 (or 8), or no term is given: each shortcut is a constant (#193), and false | c is c (#173)
+    if not holds:
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
+    check(run, solver, B4 + f"satisfy({constraint}, b[0] != b[1])", DB4, lambda *t: holds and t[0] != t[1])
+
+
+@pytest.mark.parametrize("constraint", ["Exist(b, value=7) | 1", "Exist(b, value=7) | True", "Exist([]) | [b[0], b[1]]"])
+def test_false_constant_combined_with_or_and_an_invalid_operand(run, constraint):
+    # the message explains which operands are accepted (#173)
+    r = run(B4 + f"satisfy({constraint}, b[0] != b[1])")
+    assert_fails(r)
+    assert "can be combined with the operator | only with a constraint, an expression or a variable" in r.stderr, r.report()
+
+
 @pytest.mark.parametrize("f", FUNCTIONS)
 @pytest.mark.parametrize("terms, values", [
     ("b[0], b[0], b[1]", lambda a, b, c, d: [a, a, b]),

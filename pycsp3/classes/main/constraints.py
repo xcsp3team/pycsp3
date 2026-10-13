@@ -1135,7 +1135,13 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
     def __or__(self, other):
         if self.val == 1:
             return self  # always true
-        assert self.val == 0 and isinstance(other, (ECtr, Node, Variable)), "For the moment"
+        assert self.val == 0, "The operator | can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(self.val)
+        if isinstance(other, ConstraintDummyConstant):  # false | c is c (true or false)
+            assert other.val in (0, 1), "The operator | can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(other.val)
+            return other
+        assert isinstance(other, (ECtr, Node, Variable)), ("A constraint known to be false when compiling (for example, Exist([]) on no term, or "
+            "Exist(x, value=v) when no variable of x can take the value v) can be combined with the operator | only with a constraint, an expression "
+            "or a variable, which is not the case of " + str(other))
         return other  # false | other is other
 
     def __add__(self, other):
