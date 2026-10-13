@@ -13,14 +13,12 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
-ACE_NON_SQUARE = "xcsp3team/ACE#16: ACE fails on allDifferent-matrix with a non-square matrix"
 COSOCO_MATRIX_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions of allDifferent-matrix with except"
 COSOCO_MATRIX_ROWS = ("xcsp3team/cosoco#82: cosoco fails on allDifferent-matrix whose matrix is given by explicit rows "
                       "(c Matrix variable (x does not exist)")
 COSOCO_EXCEPT_EXPRESSIONS = "xcsp3team/cosoco#78: cosoco stops with a segmentation fault on allDifferent with expressions and except"
 CHOCO_MATRIX_EXCEPT = "chocoteam/choco-solver#1248: CHOCO loses solutions of allDifferent-matrix with except"
 CHOCO_EXCEPT_EXPRESSIONS = "CHOCO does not handle allDifferent with expressions and except (Other forms not implemented)"
-ACE_SINGLE_VALUE = "xcsp3team/ACE#11: ace fails (ArrayIndexOutOfBoundsException in STR0a) on AllDifferent with a variable whose domain is a single value"
 
 
 def different(values, excepting=()):
@@ -69,8 +67,7 @@ def test_alldifferent_on_different_domains(run, solver):
     check(run, solver, "x = VarArray(size=4, dom=lambda i: {i, i + 1, 5})\nsatisfy(AllDifferent(x))", [{i, i + 1, 5} for i in range(4)], lambda *t: different(t))
 
 
-def test_alldifferent_with_a_single_value_domain(run, solver, request):
-    bug_for(request, "ACE", ACE_SINGLE_VALUE)
+def test_alldifferent_with_a_single_value_domain(run, solver):
     check(run, solver, "x = VarArray(size=3, dom=lambda i: range(i + 1))\nsatisfy(AllDifferent(x))", [range(1), range(2), range(3)], lambda *t: different(t))
 
 
@@ -201,8 +198,6 @@ def _matrix_different(rows, excepting=()):
     ("[2, 2]", 3, [0, 2]),
 ], ids=["latin square", "2 rows 3 columns", "3 rows 2 columns", "excepting 0", "excepting 0 and 2"])
 def test_alldifferent_matrix(run, solver, request, size, dom, excepting):
-    if size in ("[2, 3]", "[3, 2]"):
-        bug_for(request, "ACE", ACE_NON_SQUARE)
     if excepting is not None:
         bug_for(request, "CHOCO", CHOCO_MATRIX_EXCEPT)
         bug_for(request, "COSOCO", COSOCO_MATRIX_EXCEPT)

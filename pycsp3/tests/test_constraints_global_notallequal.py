@@ -13,7 +13,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ACE_TWO = "xcsp3team/ACE#18: ACE fails on notAllEqual (nValues with the condition (gt,1)) on two variables (control(scp.length > 2) in NotAllEqual)"
 CHOCO_DUPLICATES = "chocoteam/choco-solver#1248: CHOCO finds solutions several times with nValues on expressions and the condition (gt,1)"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
@@ -70,9 +69,7 @@ def test_notallequal_forms(run, solver, constraint):
 
 
 @pytest.mark.parametrize("n, d", [(2, 2), (3, 3), (5, 2), (2, 5)])
-def test_notallequal_sizes(run, solver, request, n, d):
-    if n == 2:
-        bug_for(request, "ACE", ACE_TWO)
+def test_notallequal_sizes(run, solver, n, d):
     check(run, solver, f"x = VarArray(size={n}, dom=range({d}))\nsatisfy(NotAllEqual(x))", [range(d)] * n, lambda *t: not_equal(t))
 
 
@@ -180,8 +177,6 @@ def test_notallequal_on_expressions(run, solver, request, constraint, predicate)
         pytest.skip(COSOCO_EXPRESSIONS)
     if constraint in DUPLICATED_BY_CHOCO:
         bug_for(request, "CHOCO", CHOCO_DUPLICATES)
-    if "Sum" in constraint:  # an auxiliary variable and an expression: two terms
-        bug_for(request, "ACE", ACE_TWO)
     check(run, solver, X4 + f"satisfy({constraint})", [range(3)] * 4, predicate)
 
 
@@ -194,17 +189,14 @@ def test_notallequal_on_expressions(run, solver, request, constraint, predicate)
     ("NotAllEqual(x[0], x[1], -1)", lambda a, b, c: True),
     ("NotAllEqual(x[0], 1, 1)", lambda a, b, c: a != 1),
 ])
-def test_notallequal_with_integers(run, solver, request, constraint, predicate):
+def test_notallequal_with_integers(run, solver, constraint, predicate):
     # an integer among the terms is a term like the others (it is replaced by an auxiliary variable, not part of the solutions)
-    if constraint in ("NotAllEqual(x[0], 5)", "NotAllEqual(x[0], 1, 1)"):  # two terms (the integer 1 being kept once)
-        bug_for(request, "ACE", ACE_TWO)
     check(run, solver, X3 + f"satisfy({constraint}, x[2] != 0)", [range(3)] * 3, lambda a, b, c: predicate(a, b, c) and c != 0)
 
 
 # ---------------------------------------------------------------------------------------------------------- groups
 
-def test_notallequal_on_rows(run, solver, request):
-    bug_for(request, "ACE", ACE_TWO)  # rows of two variables
+def test_notallequal_on_rows(run, solver):
     check(run, solver, "x = VarArray(size=[3, 2], dom=range(2))\nsatisfy([NotAllEqual(row) for row in x], AllDifferent(x[:, 0]))", [range(2)] * 6,
           lambda *t: all(t[2 * i] != t[2 * i + 1] for i in range(3)) and len({t[0], t[2], t[4]}) == 3)
 

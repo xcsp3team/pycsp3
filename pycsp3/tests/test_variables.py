@@ -245,8 +245,7 @@ def test_vararray_domain_depending_on_index(run):
     assert declared_variables(r) == {"x[0]": [0, 5], "x[1]": [0, 1], "x[2]": [0, 1]}
 
 
-def test_vararray_domain_depending_on_index_solutions(run, solver, request):
-    bug_for(request, "ACE", "xcsp3team/ACE#11: ace fails (ArrayIndexOutOfBoundsException in STR0a) on AllDifferent with a variable whose domain is a single value")
+def test_vararray_domain_depending_on_index_solutions(run, solver):
     r = run("""
         x = VarArray(size=3, dom=lambda i: range(i + 1))
         satisfy(AllDifferent(x))
