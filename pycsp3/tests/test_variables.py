@@ -823,7 +823,7 @@ NEGATED_CASES = [
     ("Sum(~b[0], y, z) == 2", lambda b0, b1, b2, y, z: 1 - b0 + y + z == 2),
     ("AllDifferent(~b[0], y, z)", lambda b0, b1, b2, y, z: len({1 - b0, y, z}) == 3),
     ("AllEqual(~b[0], b[1], b[2])", lambda b0, b1, b2, y, z: 1 - b0 == b1 == b2),
-    ("NValues(~b[0], b[1], b[2]) == 1", lambda b0, b1, b2, y, z: len({1 - b0, b1, b2}) == 1),  # (with == 2, ACE gives wrong solutions, negation or not)
+    ("NValues(~b[0], b[1], b[2]) == 1", lambda b0, b1, b2, y, z: len({1 - b0, b1, b2}) == 1),  # (with == 2, ACE gives wrong solutions: xcsp3team/ACE#26)
     ("Maximum(~b[0], y, z) == 1", lambda b0, b1, b2, y, z: max(1 - b0, y, z) == 1),
     ("Increasing(~b[0], y, z)", lambda b0, b1, b2, y, z: 1 - b0 <= y <= z),
     ("Cardinality([~b[0], b[1], b[2]], occurrences={0: 1, 1: 2})", lambda b0, b1, b2, y, z: [1 - b0, b1, b2].count(0) == 1),
