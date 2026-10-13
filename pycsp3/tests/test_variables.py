@@ -3,6 +3,7 @@ Tests of the section Variables of the API (https://pycsp.org/documentation/api/v
 Var(), VarArray(), VarArrayMultiple(), var(), and the classes Variable, VariableInteger, Domain, ListVar and ListInt.
 """
 
+import re
 from itertools import product
 
 import pytest
@@ -808,3 +809,38 @@ def test_listint_scalar_product(run, solver, expression):
         satisfy({expression})
     """, solver=solver)
     assert_solutions(r, brute_force([range(2)] * 3, lambda a, b, c: a + 2 * b + 3 * c == 3))
+
+
+# ------------------------------------------------------------------------------------------------------------ negated 0/1 variables in lists
+
+NEGATED = "b = VarArray(size=3, dom={0, 1})\ny = Var(dom=range(3))\nz = Var(dom=range(3))\n"
+D_NEGATED = [(0, 1)] * 3 + [range(3)] * 2
+NEGATED_CASES = [
+    ("Count(~b[0], y, z, value=1) == 1", lambda b0, b1, b2, y, z: [1 - b0, y, z].count(1) == 1),
+    ("Count(y, ~b[0], z, ~~b[1], value=1) == 2", lambda b0, b1, b2, y, z: [y, 1 - b0, z, b1].count(1) == 2),
+    ("Count(~b[0], ~b[0], ~b[1], z, value=1) == 2", lambda b0, b1, b2, y, z: [1 - b0, 1 - b0, 1 - b1, z].count(1) == 2),
+    ("Exist(~b[0], b[1], b[2])", lambda b0, b1, b2, y, z: 1 - b0 + b1 + b2 >= 1),
+    ("Sum(~b[0], y, z) == 2", lambda b0, b1, b2, y, z: 1 - b0 + y + z == 2),
+    ("AllDifferent(~b[0], y, z)", lambda b0, b1, b2, y, z: len({1 - b0, y, z}) == 3),
+    ("AllEqual(~b[0], b[1], b[2])", lambda b0, b1, b2, y, z: 1 - b0 == b1 == b2),
+    ("NValues(~b[0], b[1], b[2]) == 1", lambda b0, b1, b2, y, z: len({1 - b0, b1, b2}) == 1),  # (with == 2, ACE gives wrong solutions, negation or not)
+    ("Maximum(~b[0], y, z) == 1", lambda b0, b1, b2, y, z: max(1 - b0, y, z) == 1),
+    ("Increasing(~b[0], y, z)", lambda b0, b1, b2, y, z: 1 - b0 <= y <= z),
+    ("Cardinality([~b[0], b[1], b[2]], occurrences={0: 1, 1: 2})", lambda b0, b1, b2, y, z: [1 - b0, b1, b2].count(0) == 1),
+]
+
+
+@pytest.mark.parametrize("constraint, predicate", NEGATED_CASES)
+def test_negated_variable_in_the_list_of_a_global_constraint(run, solver, constraint, predicate):
+    # in the list of a global constraint, ~b[0] (b[0] being a 0/1 variable) is an auxiliary variable equal to not(b[0]) (its negation was lost)
+    r = run(NEGATED + f"satisfy({constraint}, y != z)", solver=solver)  # (y != z, so that all the variables are involved)
+    assert_solutions(r, brute_force(D_NEGATED, lambda *t: predicate(*t) and t[3] != t[4]))
+
+
+@pytest.mark.parametrize("constraint", [c for c, _ in NEGATED_CASES] + ["Count(~b[0], ~b[0], ~b[1], z, value=1) == 1", "[Count(~b[0], y, z, value=1) == 1, Sum(~b[0], y) == 1]"])
+def test_xcsp3_negated_variable_in_the_list_of_a_global_constraint(run, constraint):
+    # a single auxiliary variable is introduced for each negated variable, equal to not(b[i]); b[0] is no longer written in the lists
+    r = run(NEGATED + f"satisfy({constraint})")
+    assert r.ok, r.report()
+    n_negated = len(set(re.findall(r"(?<!~)~b\[(\d)\]", constraint)))
+    assert len([v for v in declared_variables(r) if v.startswith("aux")]) == n_negated, r.report()

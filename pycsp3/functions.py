@@ -18,7 +18,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintDisjoint, ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
-    ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
+    ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection, is_variant, replaced_variant)
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic, check_no_boolean
 from pycsp3.classes.nodes import TypeNode, Node, neg_var
@@ -2843,6 +2843,8 @@ def _count(name, terms, value, values, condition):
         return _constant_with_condition(0, condition)
     terms = manage_global_indirection(terms, also_pc=True)
     assert terms is not None
+    if any(is_variant(t) for t in terms):  # ~b is replaced by an auxiliary variable equal to not(b), so that a repeated ~b is detected below
+        terms = [replaced_variant(t) if is_variant(t) else t for t in terms]
     constants = []  # the counted constants, each of them adding 1 to the count
     if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
         if isinstance(values[0], int):  # a constant that is not counted is discarded, and a constant that is counted is kept apart (#196)
