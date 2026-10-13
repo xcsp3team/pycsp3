@@ -216,12 +216,22 @@ def test_constants_combined_with_xor(run, solver, request, constraint, predicate
     check(run, solver, B4 + f"satisfy({constraint}, b[2] != b[3])", DB4, lambda *t: predicate(t) and t[2] != t[3])
 
 
-@pytest.mark.parametrize("constraint", ["Exist(b, value=7) | 1", "Exist(b, value=7) | True", "Exist([]) | [b[0], b[1]]"])
-def test_false_constant_combined_with_or_and_an_invalid_operand(run, constraint):
-    # the message explains which operands are accepted (#173)
+@pytest.mark.parametrize("constraint, operator", [
+    ("Exist(b, value=7) | 1", "|"),
+    ("Exist(b, value=7) | True", "|"),
+    ("Exist([]) | [b[0], b[1]]", "|"),
+    ("NotExist(b, value=7) | 1", "|"),
+    ("1 | NotExist(b, value=7)", "|"),
+    ("NotExist(b, value=7) & 1", "&"),
+    ("Exist(b, value=7) & [b[0], b[1]]", "&"),
+    ("NotExist(b, value=7) ^ 1", "^"),
+    ("Exist(b, value=7) ^ True", "^"),
+])
+def test_constant_combined_with_an_invalid_operand(run, constraint, operator):
+    # the message explains which operands are accepted, with |, & and ^ (#173, #197)
     r = run(B4 + f"satisfy({constraint}, b[0] != b[1])")
     assert_fails(r)
-    assert "can be combined with the operator | only with a constraint, an expression or a variable" in r.stderr, r.report()
+    assert f"can be combined with the operator {operator} only with a constraint, an expression or a variable" in r.stderr, r.report()
 
 
 @pytest.mark.parametrize("constraint, predicate", [
