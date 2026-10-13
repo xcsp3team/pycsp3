@@ -1170,6 +1170,19 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
 
     __rand__ = __and__  # e & c
 
+    def __xor__(self, other):
+        assert self.val in (0, 1), "The operator ^ can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(self.val)
+        if ConstraintDummyConstant._waiting_in(other):  # the expression e (x in S, for example) is the last one put in the queue
+            return other if self.val == 0 else not other  # false ^ e is e, and true ^ e is ~e (x in S becoming x not in S), which remains in the queue
+        if isinstance(other, ConstraintDummyConstant):
+            assert other.val in (0, 1), "The operator ^ can only be applied to a Boolean constant (0 for false, 1 for true), which is not the case of " + str(other.val)
+            return ConstraintDummyConstant(self.val ^ other.val)
+        if isinstance(other, (ECtr, Node, Variable)):
+            return other if self.val == 0 else ~other  # false ^ e is e, and true ^ e is ~e
+        return NotImplemented
+
+    __rxor__ = __xor__  # e ^ c
+
     def __add__(self, other):
         return other if self.val == 0 else other + self.val
 
