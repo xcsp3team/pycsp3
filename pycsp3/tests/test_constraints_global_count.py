@@ -25,8 +25,6 @@ CHOCO_RANGE = ("chocoteam/choco-solver#1248 (section 9): CHOCO gives wrong solut
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
 CHOCO_SUM_IN = "chocoteam/choco-solver#1248 (section 11): CHOCO gives wrong solutions for a sum of expressions in(x,set(...))"
-COMPACTOR = ("#195: the list of a count mixing variables of arrays and simple variables cannot be compacted (compactor.compact(): "
-             "ValueError: substring not found)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
@@ -308,10 +306,24 @@ def test_count_forms(run, solver, terms):
     check(run, solver, X4 + f"satisfy(Count({terms}, value=1) == 2)", D4, lambda *t: t.count(1) == 2)
 
 
-@bug(COMPACTOR)
 def test_count_on_variables_of_arrays_and_simple_variables(run, solver):
     check(run, solver, "x = VarArray(size=2, dom=range(3))\ny = Var(dom=range(3))\nz = Var(dom=range(3))\nsatisfy(Count(x[0], y, z, value=1) == 2)", [range(3)] * 4,
           lambda a, b, c, d: [a, c, d].count(1) == 2)
+
+
+@pytest.mark.parametrize("constraint, element, terms", [
+    ("Count(x[0], y, z, value=1) == 2", "count/list", "x[0] y z"),
+    ("Count(y, x[0], z, value=1) == 2", "count/list", "x[0] y z"),
+    ("Count(x[0], x[1], x[2], y, z, value=1) == 2", "count/list", "x[] y z"),
+    ("AllDifferent(x[0], y, z)", "allDifferent", "x[0] y z"),
+    ("AllEqual(x[0], y, z)", "allEqual", "x[0] y z"),
+    ("NValues(x[0], y, z) == 2", "nValues/list", "x[0] y z"),
+])
+def test_xcsp3_list_of_variables_of_arrays_and_simple_variables(run, constraint, element, terms):
+    # the compactor writes the variables of arrays (compacted when possible), then the simple variables, the order of these lists not mattering
+    # (the compactor is shared by the constraints whose list is not ordered, #195)
+    r = run("x = VarArray(size=3, dom=range(3))\ny = Var(dom=range(3))\nz = Var(dom=range(3))\n" + f"satisfy({constraint})")
+    assert r.ok and r.xml.find("constraints/" + element).text.split() == terms.split(), r.report()
 
 
 def test_count_on_a_matrix(run, solver):
