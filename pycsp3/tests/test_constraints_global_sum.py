@@ -17,10 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ACE_NOTIN = ("xcsp3team/ACE#22: ACE gives the solutions of in instead of those of notin for a sum on a small space "
-             "(Problem.sum(): the table is built with api.in(...) whatever the operator)")
-ACE_CANCEL = ("xcsp3team/ACE#23: ACE fails on a sum whose terms all cancel out (Problem.sum(): newCoeffs[0] read on an empty array once the terms "
-              "of coefficient 0 are discarded)")
 CHOCO_NOTIN = ("chocoteam/choco-solver#1248: CHOCO gives wrong solutions, several times, for a sum with notin (buildSum(): resu != sum, with resu a new variable "
                "taking any value of the set)")
 COSOCO_BASIC = ("xcsp3team/cosoco#88: cosoco gives wrong solutions for a sum mixing expressions such as eq(x,k) and variables that are not 0/1, without "
@@ -32,9 +28,8 @@ EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty 
 
 
 def notin_bugs(request, text):
-    """Marks the running test with the bugs of ACE and CHOCO on notin, if the text contains a condition notin."""
+    """Marks the running test with the bug of CHOCO on notin, if the text contains a condition notin."""
     if "not in" in text or "notin" in text:
-        bug_for(request, "ACE", ACE_NOTIN)
         bug_for(request, "CHOCO", CHOCO_NOTIN)
 
 
@@ -380,7 +375,6 @@ def test_sum_with_integers(run, solver, request, constraint, predicate):
 ])
 def test_sum_in_arithmetic_expressions(run, solver, request, constraint, predicate):
     if constraint.startswith("Sum(x) - Sum(x)") or constraint.startswith("Sum(x[:2]) - Sum(x[:2])"):
-        bug_for(request, "ACE", ACE_CANCEL)
         if not constraint.endswith("== 0"):  # the sum being always 0, the constraint is false
             bug_for(request, "COSOCO", COSOCO_CANCEL)
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)

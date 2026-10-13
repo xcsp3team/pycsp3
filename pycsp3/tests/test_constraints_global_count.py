@@ -20,9 +20,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ACE_NE = ("xcsp3team/ACE#24: ACE fails on a count with the condition (ne,k) when k is 0 or |X| (Problem.count(): control(op == NE && 0 < k && "
-          "k < scp.length) without message)")
-ACE_AMONG = "xcsp3team/ACE#25: ACE fails on a count with several values and the condition (eq,0) (ERROR: Bad value of k=0)"
 CHOCO_RANGE = ("chocoteam/choco-solver#1248 (section 9): CHOCO gives wrong solutions for a count with the condition in or notin an interval "
                "(XCSPParser.dealWithConditionIntvl())")
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
@@ -82,8 +79,6 @@ D4 = [range(3)] * 4
 def test_count_conditions(run, solver, request, condition, predicate):
     if condition in ("in range(1, 3)", "not in range(1, 3)"):
         bug_for(request, "CHOCO", CHOCO_RANGE)
-    elif condition in ("!= 0", "!= 4"):
-        bug_for(request, "ACE", ACE_NE)
     check(run, solver, X4 + f"satisfy(Count(x, value=1) {condition})", D4, lambda *t: predicate(t.count(1)))
 
 
@@ -487,9 +482,7 @@ D32 = [range(3)] * 6
     ("[Count(m[i], values=[1, 2]) == i for i in range(3)]", lambda *t: all(count((t[2 * i], t[2 * i + 1]), (1, 2)) == i for i in range(3))),
     ("[Count(m, value=v) == 2 for v in range(3)]", lambda *t: all(t.count(v) == 2 for v in range(3))),
 ])
-def test_count_in_groups(run, solver, request, constraints, predicate):
-    if "values=[1, 2]" in constraints:
-        bug_for(request, "ACE", ACE_AMONG)  # the first count is compared with 0
+def test_count_in_groups(run, solver, constraints, predicate):
     check(run, solver, M32 + f"satisfy({constraints})", D32, predicate)
 
 

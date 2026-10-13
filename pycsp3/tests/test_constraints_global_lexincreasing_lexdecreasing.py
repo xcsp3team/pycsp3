@@ -16,8 +16,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ACE_SHARED = ("xcsp3team/ACE#20: ACE fails on lex when, once removed the positions where the same variable is in both lists, "
-              "a single position remains (control(1 < half) in LexicographicVar)")
 COSOCO_ROWS = "xcsp3team/cosoco#82: cosoco fails on a matrix given by explicit rows (Matrix variable (x does not exist)"
 CHOCO_MATRIX = ("chocoteam/choco-solver#1248: CHOCO loses solutions of lex-matrix with ge or gt (the columns of the matrix whose rows are reversed are ordered, "
                 "instead of the reversed sequence of columns)")
@@ -271,10 +269,8 @@ def test_lex_on_a_single_list(run, function, arguments):
     ("[x[0], x[1]], [x[0], x[2]]", lambda a, b, c: [(a, b), (a, c)]),
     ("[x[0], x[1], x[2]], [x[0], x[2], x[1]]", lambda a, b, c: [(a, b, c), (a, c, b)]),
 ], ids=["within a list", "across lists", "across three lists", "at the same position", "at the same position among three"])
-def test_lex_with_a_shared_variable(run, solver, request, function, strict, op, lists, predicate):
+def test_lex_with_a_shared_variable(run, solver, function, strict, op, lists, predicate):
     # a variable may appear several times in a list, or in different lists (only a list given several times is forbidden)
-    if lists == "[x[0], x[1]], [x[0], x[2]]":  # once x[0] removed (at the same position), a single position remains
-        bug_for(request, "ACE", ACE_SHARED)
     check(run, solver, "x = VarArray(size=3, dom=range(3))\n" + f"satisfy({function}({lists}{strict}))", [range(3)] * 3, lambda *t: lex(predicate(*t), op))
 
 

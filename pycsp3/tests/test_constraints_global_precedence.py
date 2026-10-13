@@ -14,8 +14,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-ACE_COVERED = ("xcsp3team/ACE#21: ACE fails on precedence with covered when the list has not more variables than values "
-               "(control(!covered || list.length > values.length) in Precedence)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
@@ -116,9 +114,8 @@ def test_precedence_on_expressions(run, solver, within, values):
 
 @pytest.mark.parametrize("n, values", [(3, [0, 1, 2]), (2, [0, 1]), (3, [0, 1, 2, 3]), (2, [1, 0, 2])],
                          ids=["as many values as variables (3)", "as many values as variables (2)", "more values", "more values (other order)"])
-def test_precedence_covered_with_not_more_variables_than_values(run, solver, request, n, values):
+def test_precedence_covered_with_not_more_variables_than_values(run, solver, n, values):
     # with covered, the values must all be assigned: with more values than variables, there is no solution
-    bug_for(request, "ACE", ACE_COVERED)
     check(run, solver, f"x = VarArray(size={n}, dom=range(4))\nsatisfy(Precedence(x, values={values}, covered=True))", [range(4)] * n,
           lambda *t: precedence(t, values, covered=True))
 
@@ -140,10 +137,8 @@ def test_precedence_without_values(run, solver, dom, domains):
     ("range(3)", [range(3)] * 4),
     ("lambda i: range(i, i + 2)", [range(i, i + 2) for i in range(4)]),
 ], ids=["same domains", "shifted domains"])
-def test_precedence_without_values_covered(run, solver, request, dom, domains):
+def test_precedence_without_values_covered(run, solver, dom, domains):
     # without values, covered applies to the ordered union of the domains
-    if dom != "range(3)":  # 4 variables and 5 values
-        bug_for(request, "ACE", ACE_COVERED)
     union = sorted(set().union(*[set(d) for d in domains]))
     check(run, solver, f"x = VarArray(size=4, dom={dom})\nsatisfy(Precedence(x, covered=True))", domains, lambda *t: precedence(t, union, covered=True))
 
