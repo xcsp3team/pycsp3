@@ -179,24 +179,28 @@ def test_data_json_solutions(run, solver):
 
 
 def test_data_json_non_identifier_keys(run):
-    r = run('print("dict", dict(data), data["t"]["x-y"])', args=["-data=data.json"], files={"data.json": '{"my-key": 3, "t": {"x-y": 4}}'})
+    # the data are kept as ordered dictionaries: their types and their content (json.dumps) are displayed, the repr of an OrderedDict depending
+    # on the version of Python (#198)
+    r = run('print("dict", type(data).__name__, type(data["t"]).__name__, __import__("json").dumps(data), data["t"]["x-y"])', args=["-data=data.json"],
+            files={"data.json": '{"my-key": 3, "t": {"x-y": 4}}'})
     assert "no conversion to named tuples is performed" in r.stdout, r.report()
-    assert "dict {'my-key': 3, 't': OrderedDict({'x-y': 4})} 4" in r.lines
+    assert 'dict OrderedDict OrderedDict {"my-key": 3, "t": {"x-y": 4}} 4' in r.lines, r.report()
 
 
 @pytest.mark.parametrize("content, shown", [
-    ('{"my-key": 3}', "3"),
-    ('{"class": 3}', "3"),
-    ('{"my-key": [1, 2]}', "[1, 2]"),
-    ('{"my-key": {"x-y": 4}}', "OrderedDict({'x-y': 4})"),
+    ('{"my-key": 3}', "int 3"),
+    ('{"class": 3}', "int 3"),
+    ('{"my-key": [1, 2]}', "list [1, 2]"),
+    ('{"my-key": {"x-y": 4}}', 'OrderedDict {"x-y": 4}'),
 ])
 @pytest.mark.parametrize("code, args", [
-    ('print("value", data)', ["-data=data.json"]),
-    ('print("value", load_json_data("data.json"))', []),
+    ('v = data', ["-data=data.json"]),
+    ('v = load_json_data("data.json")', []),
 ])
 def test_data_json_single_non_identifier_key(run, code, args, content, shown):
-    # the root object has a single field: its value is given, even if the data are not converted into named tuples
-    r = run(code, args=args, files={"data.json": content})
+    # the root object has a single field: its value is given, even if the data are not converted into named tuples; its type and its content
+    # (json.dumps) are displayed, the repr of an OrderedDict depending on the version of Python (#198)
+    r = run(code + '\nprint("value", type(v).__name__, __import__("json").dumps(v))', args=args, files={"data.json": content})
     assert "value " + shown in r.lines, r.report()
 
 
