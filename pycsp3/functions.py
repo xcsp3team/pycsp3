@@ -2843,31 +2843,39 @@ def _count(name, terms, value, values, condition):
         return _constant_with_condition(0, condition)
     terms = manage_global_indirection(terms, also_pc=True)
     assert terms is not None
+    constants = []  # the counted constants, each of them adding 1 to the count
     if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
-        s = frozenset(values) if isinstance(values[0], int) else None
-        # a constant that is not counted is discarded, and a constant that is counted is replaced by an auxiliary variable
-        terms = [auxiliary().replace_int(t.cnt) if type(t) is Node and t.type is TypeNode.INT else t for t in terms
-                 if not (type(t) is Node and t.type is TypeNode.INT and s is not None and t.cnt not in s)]
+        if isinstance(values[0], int):  # a constant that is not counted is discarded, and a constant that is counted is kept apart (#196)
+            s = frozenset(values)
+            constants = [t.cnt for t in terms if type(t) is Node and t.type is TypeNode.INT and t.cnt in s]
+            terms = [t for t in terms if not (type(t) is Node and t.type is TypeNode.INT)]
+        else:  # with variables as values, a constant is replaced by an auxiliary variable
+            terms = [auxiliary().replace_int(t.cnt) if type(t) is Node and t.type is TypeNode.INT else t for t in terms]
         if len(terms) == 0:
-            return _constant_with_condition(0, condition)
+            return _constant_with_condition(len(constants), condition)
     checkType(terms, ([Variable], [Node], [Variable, Node]))
+    if len(constants) > 0 and options.mini:  # (the constants are put back as auxiliary variables, as for a sum)
+        terms, constants = terms + [auxiliary().replace_int(v) for v in constants], []
     if options.mini and values == [1] and all(isinstance(t, Variable) and t.dom.is_binary() for t in terms):
         return Sum(terms, condition=condition)  # the count of 0/1 variables equal to 1 is their sum (count is not in the mini-tracks)
     lo, hi = _count_bounds(terms, values)
-    if hi == 0:  # no term can take one of the values: the count is 0
-        return _constant_with_condition(0, condition)
+    if hi == 0:  # no term can take one of the values: the count is the number of counted constants
+        return _constant_with_condition(len(constants), condition)
     variables = [t for t in terms if isinstance(t, Variable)]
     if len({id(x) for x in variables}) < len(variables):  # a variable is repeated: a sum is posted, each term weighted by its number of occurrences
         distinct, counts = Node._distinct_sons(Node._create_sons(*terms))
         terms = [son.cnt if son.type == TypeNode.VAR else son for son in distinct]
         if len(terms) == 1:
             term = _counted(terms[0], values) * counts[0]
+            term = term + len(constants) if len(constants) > 0 else term
             return term if condition is None else _term_with_condition(term, condition)
+        terms, counts = terms + [auxiliary().replace_int(v) for v in constants], counts + [1] * len(constants)  # (as for a sum)
         return _wrapping_by_complete_or_partial_constraint(ConstraintSum([_counted(t, values) for t in terms], counts, condition))
     if len(terms) == 1:  # no constraint count (XCSP3-core requires at least two terms)
         term = _counted(terms[0], values)
+        term = term + len(constants) if len(constants) > 0 else term
         return term if condition is None else _term_with_condition(term, condition)
-    ctr = ConstraintCount(terms, values, condition, bounds=(lo, hi))
+    ctr = ConstraintCount(terms, values, condition, bounds=(lo, hi), constants=constants)
     return _wrapping_by_complete_or_partial_constraint(ctr) if condition is None else PartialConstraint.complete(ctr)
 
 

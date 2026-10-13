@@ -20,7 +20,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-AUX_UNUSED = "#196: a constant term (as x >= x) of a count gives an auxiliary variable that remains declared when the count is evaluated"
 CHOCO_REIFIED = ("chocoteam/choco-solver#1248 (section 10): CHOCO gives wrong solutions for an element (member) constraint with the attribute "
                  "reifiedBy (the reification is ignored)")
 PARSER_REIFIED = ("xcsp3team/XCSP3-Java-Tools#22: ACE fails on an element (member) constraint with the attribute reifiedBy whose value is a "
@@ -295,7 +294,6 @@ def test_xcsp3_count_has_at_least_two_terms(run, f, n):
         assert n_terms(c.find("list").text) >= 2, r.report()
 
 
-@bug(AUX_UNUSED)
 def test_xcsp3_constant_term_gives_no_auxiliary_variable(run):
     # x[0] >= x[0] is the constant 1 (#194), so that the count is always at least 1 (#193): no constraint, and no auxiliary variable
     r = run(X4 + B4 + "satisfy(Exist(x[j] >= x[0] for j in range(3)), b[0] != b[1])")

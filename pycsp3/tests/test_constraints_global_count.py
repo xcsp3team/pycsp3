@@ -311,6 +311,36 @@ def test_count_on_variables_of_arrays_and_simple_variables(run, solver):
           lambda a, b, c, d: [a, c, d].count(1) == 2)
 
 
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) == 2", lambda a, b, c, d: 1 + [b, c].count(1) == 2),
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) in range(2, 4)", lambda a, b, c, d: 1 + [b, c].count(1) in (2, 3)),
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) in {1, 3}", lambda a, b, c, d: 1 + [b, c].count(1) in (1, 3)),
+    ("Count(x[0] >= x[0], x[1] >= x[1], x[2], x[3], value=1) != 3", lambda a, b, c, d: 2 + [c, d].count(1) != 3),
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) == x[3]", lambda a, b, c, d: 1 + [b, c].count(1) == d),
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) + x[3] == 3", lambda a, b, c, d: 1 + [b, c].count(1) + d == 3),
+    ("Count(x[0] >= x[0], x[1], value=1) == 2", lambda a, b, c, d: b == 1),
+    ("Count(x[0] >= x[0], x[1], x[2], value=2) == 1", lambda a, b, c, d: [b, c].count(2) == 1),
+])
+def test_count_with_constant_terms(run, solver, request, constraint, predicate):
+    # a term simplified into a constant (x[0] >= x[0] is 1, #194) is counted when it is one of the values (#196)
+    if "in range" in constraint:
+        bug_for(request, "CHOCO", CHOCO_RANGE)  # the shifted condition (in,1..2)
+    check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
+
+
+@pytest.mark.parametrize("constraint, condition", [
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) == 2", "(eq,1)"),
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) in range(2, 4)", "(in,1..2)"),
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) in {1, 3}", "(in,{0,2})"),
+    ("Count(x[0] >= x[0], x[1] >= x[1], x[2], x[3], value=1) != 3", "(ne,1)"),
+])
+def test_xcsp3_count_with_constant_terms(run, constraint, condition):
+    # the counted constants are not written in the list (no auxiliary variable): the condition is shifted (#196)
+    r = run(X4 + f"satisfy({constraint})")
+    assert r.ok and r.xml.find("constraints/count/condition").text.strip() == condition, r.report()
+    assert not any(v.startswith("aux") for v in declared_variables(r)), r.report()
+
+
 @pytest.mark.parametrize("constraint, element, terms", [
     ("Count(x[0], y, z, value=1) == 2", "count/list", "x[0] y z"),
     ("Count(y, x[0], z, value=1) == 2", "count/list", "x[0] y z"),
