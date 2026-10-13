@@ -20,6 +20,8 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
+CONSTANT_IN = ("#197: a constant (as NotExist(x, value=7) when no variable can take 7) combined with | or & and an expression 'in' gives a wrong "
+               "model (the entry of queue_in is left for the next 'in') or an error")
 AUX_UNUSED = "#196: a constant term (as x >= x) of a count gives an auxiliary variable that remains declared when the count is evaluated"
 CHOCO_REIFIED = ("chocoteam/choco-solver#1248 (section 10): CHOCO gives wrong solutions for an element (member) constraint with the attribute "
                  "reifiedBy (the reification is ignored)")
@@ -207,6 +209,22 @@ def test_false_constant_combined_with_or_and_an_invalid_operand(run, constraint)
     r = run(B4 + f"satisfy({constraint}, b[0] != b[1])")
     assert_fails(r)
     assert "can be combined with the operator | only with a constraint, an expression or a variable" in r.stderr, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("NotExist(x, value=7) | (x[0] in {1, 2})", lambda t: True),
+    ("NotExist(x, value=7) | (x[0] not in {1, 2})", lambda t: True),
+    ("NotExist(x, value=7) | (Sum(x) in {1, 2})", lambda t: True),
+    ("(x[0] in {1, 2}) | NotExist(x, value=7)", lambda t: True),
+    ("Exist(x, value=7) | (x[0] in {1, 2})", lambda t: t[0] in (1, 2)),
+    ("(x[0] in {1, 2}) | Exist(x, value=7)", lambda t: t[0] in (1, 2)),
+    ("NotExist(x, value=7) & (x[0] in {1, 2})", lambda t: t[0] in (1, 2)),
+    ("(x[0] in {1, 2}) & NotExist(x, value=7)", lambda t: t[0] in (1, 2)),
+])
+@bug(CONSTANT_IN)
+def test_constants_combined_with_in(run, solver, constraint, predicate):
+    # no variable can take the value 7: each shortcut is a constant (#193), combined with an expression 'in'; another 'in' is posted after it
+    check(run, solver, X4 + f"satisfy({constraint}, x[1] in {{0, 2}})", D4, lambda *t: predicate(t) and t[1] in (0, 2))
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
