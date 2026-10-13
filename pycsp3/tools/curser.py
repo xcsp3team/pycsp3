@@ -28,6 +28,9 @@ def _set_contains(self, other):  # for being able to use 'in' when expressing in
         return self.__contains__(other)
     if isinstance(other, (int, str)) and (len(self) == 0 or not isinstance(next(iter(self)), Variable)):
         return self.__contains__(other)  # a value and a set of values (not of variables): an ordinary membership
+    if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
+        queue_in.append((self, other))
+        return True
     if isinstance(other, ScalarProduct):
         other = other.to_partial_sum()
     # if len(self) == 0:
@@ -89,6 +92,9 @@ def cursing():
         # because sometimes Python changes lists into tuples in comprehension expressions
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
+            queue_in.append((self, other))
+            return True
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -122,6 +128,9 @@ def cursing():
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
+            queue_in.append((self, other))
+            return True
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -165,6 +174,9 @@ def cursing():
     def _range_contains(self, other):  # for being able to use 'in' when expressing conditions of constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
+            queue_in.append((self, other))
+            return True
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         if isinstance(other, Variable):  # unary table constraint (based on a range)

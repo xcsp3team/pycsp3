@@ -565,3 +565,122 @@ def test_xcsp3_expressions(run, constraint, text):
     r = run(f"x = Var(dom=range(10))\ny = Var(dom=range(10))\nz = Var(dom=range(20))\nsatisfy({constraint})")
     assert r.ok, r.report()
     assert [c.text.strip() for c in r.xml.find("constraints")] == [text], r.report()
+
+
+# ------------------------------------------------------------------------------------------- repeated operands and constants
+
+ABCXY = "a = Var(dom={0, 1})\nb = Var(dom={0, 1})\nc = Var(dom={0, 1})\nx = Var(dom=range(3))\ny = Var(dom=range(3))\n"
+D_ABCXY = [(0, 1), (0, 1), (0, 1), range(3), range(3)]
+
+REPEATED_OPERANDS = [
+    ("a | a", lambda a, b, c, x, y: a == 1),
+    ("a | a | b", lambda a, b, c, x, y: a == 1 or b == 1),
+    ("disjunction(a, b, b, a)", lambda a, b, c, x, y: a == 1 or b == 1),
+    ("(x == 1) | (x == 1)", lambda a, b, c, x, y: x == 1),
+    ("a & a & b", lambda a, b, c, x, y: a == 1 and b == 1),
+    ("conjunction(x > 0, x > 0, y > 0)", lambda a, b, c, x, y: x > 0 and y > 0),
+    ("xor(a, a)", lambda a, b, c, x, y: False),
+    ("xor(a, a, b)", lambda a, b, c, x, y: b == 1),
+    ("xor(a, b, a, b, c)", lambda a, b, c, x, y: c == 1),
+    ("max(x, x) == 1", lambda a, b, c, x, y: x == 1),
+    ("min(x, x, y) == 1", lambda a, b, c, x, y: min(x, y) == 1),
+    ("x == x", lambda a, b, c, x, y: True),
+    ("x <= x", lambda a, b, c, x, y: True),
+    ("x != x", lambda a, b, c, x, y: False),
+    ("x < x", lambda a, b, c, x, y: False),
+    ("x > x", lambda a, b, c, x, y: False),
+    ("imply(a, a)", lambda a, b, c, x, y: True),
+    ("iff(a, a)", lambda a, b, c, x, y: True),
+    ("(x + 1 == y) | (x + 1 == y)", lambda a, b, c, x, y: x + 1 == y),
+    ("Exist(a, a)", lambda a, b, c, x, y: a == 1),
+    ("AnyHold(x > 0, x > 0)", lambda a, b, c, x, y: x > 0),
+]
+
+CONSTANTS = [
+    ("(x == 1) <= 1", lambda a, b, c, x, y: True),
+    ("(x == 1) > 1", lambda a, b, c, x, y: False),
+    ("((x == 1) > 1) | (b == 1)", lambda a, b, c, x, y: b == 1),
+    ("((x == 1) <= 1) & (b == 1)", lambda a, b, c, x, y: b == 1),
+    ("((x == 1) <= 1) | (b == 1)", lambda a, b, c, x, y: True),
+    ("~((x == 1) > 1)", lambda a, b, c, x, y: True),
+    ("imply((x == 1) > 1, b == 1)", lambda a, b, c, x, y: True),
+    ("imply(b == 1, (x == 1) > 1)", lambda a, b, c, x, y: b == 0),
+    ("iff((x == 1) <= 1, b == 1)", lambda a, b, c, x, y: b == 1),
+]
+
+
+@pytest.mark.parametrize("constraint, predicate", REPEATED_OPERANDS + CONSTANTS)
+def test_repeated_operands_and_constants(run, solver, request, constraint, predicate):
+    # the repeated operands are simplified and the constants propagated; another constraint (y != c) is posted, the model having no constraint
+    # when the constraint always holds
+    if not any(predicate(*t) for t in brute_force(D_ABCXY, lambda *t: True)):
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
+    r = run(ABCXY + f"satisfy({constraint}, y != c)", solver=solver)
+    assert_solutions(r, brute_force(D_ABCXY, lambda a, b, c, x, y: predicate(a, b, c, x, y) and y != c))
+
+
+@pytest.mark.parametrize("constraint, text", [
+    ("a | a", "eq(a,1)"),
+    ("a | a | b", "or(a,b)"),
+    ("disjunction(a, b, b, a)", "or(a,b)"),
+    ("(x == 1) | (x == 1)", "eq(x,1)"),
+    ("xor(a, a, b)", "eq(b,1)"),
+    ("xor(a, b, a, b, c)", "eq(c,1)"),
+    ("max(x, x) == 1", "eq(x,1)"),
+    ("min(x, x, y) == 1", "eq(min(x,y),1)"),
+    ("Exist(a, a)", "eq(a,1)"),
+    ("((x == 1) > 1) | (b == 1)", "eq(b,1)"),
+    ("imply(b == 1, (x == 1) > 1)", "not(b)"),
+    ("x == x", None),
+    ("imply(a, a)", None),
+    ("(x == 1) <= 1", None),
+    ("((x == 1) <= 1) | (b == 1)", None),
+    ("x != x", "false"),
+    ("xor(a, a)", "false"),
+    ("(x == 1) > 1", "false"),
+])
+def test_xcsp3_repeated_operands_and_constants(run, constraint, text):
+    # no intension is a constant (as <intension> 1 </intension>): a constraint always true is not posted, and a constraint always false is
+    # posted as the constraint false (a table with an empty set of supports)
+    r = run(ABCXY + f"satisfy({constraint}, y != c)")
+    assert r.ok, r.report()
+    texts = [e.text.strip() for e in r.xml.iter("intension")]
+    assert all(t not in ("0", "1") for t in texts), r.report()
+    if text is None:
+        assert texts == ["ne(y,c)"], r.report()
+    elif text == "false":
+        assert texts == ["ne(y,c)"] and "trivially false" in r.stdout, r.report()
+    else:
+        assert texts == [text, "ne(y,c)"], r.report()
+
+
+# (the 0/1 variables are in an array, a count whose list mixes variables of arrays and simple variables being not compacted correctly)
+VCXY = "v = VarArray(size=2, dom={0, 1})\nc = Var(dom={0, 1})\nx = Var(dom=range(3))\ny = Var(dom=range(3))\n"
+D_VCXY = [(0, 1), (0, 1), (0, 1), range(3), range(3)]
+CONSTANT_TERMS = [
+    ("Sum(x >= x, v[0], v[1]) == 2", lambda a, b, c, x, y: 1 + a + b == 2),
+    ("Sum((x >= x) * 2, v[0]) == 2", lambda a, b, c, x, y: 2 + a == 2),
+    ("Sum(x != x, v[0], v[1]) == 1", lambda a, b, c, x, y: a + b == 1),
+    ("Count(x >= x, v[0], v[1]) == 2", lambda a, b, c, x, y: 1 + a + b == 2),
+    ("Count(x == x, v[0], v[1] == 0) >= 2", lambda a, b, c, x, y: 1 + a + (b == 0) >= 2),
+    ("ExactlyOne(x >= x, v[0], v[1])", lambda a, b, c, x, y: a + b == 0),
+    ("AtMostOne(x < x, v[0], v[1])", lambda a, b, c, x, y: a + b <= 1),
+]
+
+
+@pytest.mark.parametrize("constraint, predicate", CONSTANT_TERMS)
+def test_constant_terms_in_sums_and_counts(run, solver, constraint, predicate):
+    # a term simplified into a constant (as x >= x) in a sum or a count
+    r = run(VCXY + f"satisfy({constraint}, y != c)", solver=solver)
+    assert_solutions(r, brute_force(D_VCXY, lambda a, b, c, x, y: predicate(a, b, c, x, y) and y != c))
+
+
+@pytest.mark.parametrize("constraint", [c for c, _ in CONSTANT_TERMS])
+def test_xcsp3_constant_terms_in_sums_and_counts(run, constraint):
+    # no integer is written alone in the list of a sum or of a count, and no node mul or add has a single operand
+    r = run(VCXY + f"satisfy({constraint}, y != c)")
+    assert r.ok, r.report()
+    for tag in ("sum", "count"):
+        for e in r.xml.iter(tag):
+            tokens = e.find("list").text.split()
+            assert not any(t.lstrip("-").isdigit() for t in tokens) and not any(t.startswith(("mul(", "add(")) and "," not in t for t in tokens), r.report()
