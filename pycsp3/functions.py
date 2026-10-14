@@ -2684,9 +2684,12 @@ def Sum(term, *others, condition=None):
     if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
         # the sum never belongs to an empty set: false with 'in', and always true with 'not in'
         return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
-    if len(terms) == 1:  # no constraint sum (XCSP3-core requires at least two terms)
+    if len(terms) == 1:  # no constraint sum (XCSP3-core requires at least two terms), except for a coefficient with 'in' or 'not in' (#208)
         term = terms[0] if coeffs is None or coeffs[0] == 1 else terms[0] * coeffs[0]
-        return term if condition is None else _term_with_condition(term, condition)
+        if condition is None:
+            return term
+        if not condition.operator.is_set() or not isinstance(term, Node) or term.var_val_if_binary_type(TypeNode.MUL) is None or options.mini:
+            return _term_with_condition(term, condition)
     if options.mini and condition is not None and condition.operator.is_set():
         return _sum_for_mini(PartialConstraint(ConstraintSum(terms, coeffs, None)), condition)
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, condition))

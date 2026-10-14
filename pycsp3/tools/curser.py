@@ -23,6 +23,15 @@ queue_in = deque()  # To store partial constraints when using the IN operator
 unsafe_cache = False  # see for example Pic since the table is released as it occurs as a parameter
 
 
+def _replace_node_in(node):
+    # a node compared with 'in' or 'not in' is replaced by an auxiliary variable, except for a variable with a coefficient (as x[0] * 3, also given by
+    # Sum(x[0] * 3) or x[:1] * [3]), which gives a sum of one term (#208), not with -mini (the mini-tracks requiring at least two terms in a sum)
+    pair = node.var_val_if_binary_type(TypeNode.MUL)
+    if pair is not None and not options.mini:
+        return PartialConstraint(ConstraintSum([pair[0]], [pair[1]], None))
+    return auxiliary().replace_node(node)
+
+
 def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
     if not OpOverrider.activated:
         return self.__contains__(other)
@@ -36,7 +45,7 @@ def _set_contains(self, other):  # for being able to use 'in' when expressing in
     # if len(self) == 0:
     #     return False
     if isinstance(other, Node):
-        other = auxiliary().replace_node(other)
+        other = _replace_node_in(other)
     if isinstance(other, types.GeneratorType):
         other = list(other)
     if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
@@ -100,7 +109,7 @@ def cursing():
         # if len(self) == 0:
         #     return False
         if isinstance(other, Node):
-            other = auxiliary().replace_node(other)
+            other = _replace_node_in(other)
         if isinstance(other, PartialConstraint):
             if len(self) > 0 and all(isinstance(v, int) for v in self):  # TODO more cases?
                 queue_in.append((list(self), other))
@@ -186,7 +195,7 @@ def cursing():
             queue_in.append((self, other))
             return True
         if isinstance(other, Node):
-            other = auxiliary().replace_node(other)
+            other = _replace_node_in(other)
             queue_in.append((self, other))
             return True
         return self.__contains__(other)
