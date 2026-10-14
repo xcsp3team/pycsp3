@@ -280,10 +280,11 @@ def test_xcsp3_ordered(run, constraint, expected):
 
 @pytest.mark.parametrize("function", ["Increasing", "Decreasing"])
 def test_xcsp3_ordered_on_expressions(run, function):
-    # the expressions are replaced by auxiliary variables
+    # with expressions, intension constraints are posted between consecutive terms (the list of ordered being of variables, #203)
     r = run(X3 + f"satisfy({function}(x[0] + 1, x[1], x[2] * 2))")
-    assert r.ok, r.report()
-    assert " ".join(r.xml.find("constraints/ordered/list").text.split()) == "aux_gb[0] x[1] aux_gb[1]", r.report()
+    assert r.ok and r.xml.find("constraints/ordered") is None, r.report()
+    op = "le" if function == "Increasing" else "ge"
+    assert [" ".join(e.text.split()) for e in r.xml.iter("intension")] == [f"{op}(add(x[0],1),x[1])", f"{op}(x[1],mul(x[2],2))"], r.report()
 
 
 # ------------------------------------------------------------------------------------------------------ invalid cases

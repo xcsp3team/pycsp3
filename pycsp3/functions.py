@@ -18,7 +18,7 @@ from pycsp3.classes.main.constraints import (
     ConstraintDisjoint, ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
     ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
     ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
-    ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
+    ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection, is_variant, variant_as_term)
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic, check_no_boolean
 from pycsp3.classes.nodes import TypeNode, Node, neg_var
@@ -2212,8 +2212,9 @@ def _ordered(term, others, operator, lengths):
                 ("A variable" if isinstance(t, Variable) else "An expression") + " cannot be given several times to " + name + ", which is the case of " + str(
                     t))
         seen.add(key)
-    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
-    checkType(terms, [Variable])
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms)  # (the expressions are kept)
+    terms = [variant_as_term(t) if is_variant(t) else t for t in terms]  # ~b is the expression not(b) (#203)
+    checkType(terms, ([Variable], [Node], [Variable, Node]))
     checkType(operator, TypeOrderedOperator)
     if isinstance(lengths, range):
         lengths = list(lengths)
@@ -2228,7 +2229,7 @@ def _ordered(term, others, operator, lengths):
         if len(terms) != len(lengths) + 1:
             error(name + " requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one being ignored), which is not the case of "
                   + str(lengths) + " for " + str(len(terms)) + " terms")
-    if options.mini:
+    if options.mini or any(isinstance(t, Node) for t in terms):  # with expressions, intension constraints (ordered is on variables)
         return [expr(operator, terms[i] if lengths is None else terms[i] + lengths[i], terms[i + 1]) for i in range(len(terms) - 1)]
     return ECtr(ConstraintOrdered(terms, operator, lengths))
 
@@ -2843,6 +2844,7 @@ def _count(name, terms, value, values, condition):
         return _constant_with_condition(0, condition)
     terms = manage_global_indirection(terms, also_pc=True)
     assert terms is not None
+    terms = [variant_as_term(t) if is_variant(t) else t for t in terms]  # ~b is the expression not(b) (#203)
     constants = []  # the counted constants, each of them adding 1 to the count
     if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
         if isinstance(values[0], int):  # a constant that is not counted is discarded, and a constant that is counted is kept apart (#196)
@@ -2861,8 +2863,8 @@ def _count(name, terms, value, values, condition):
     lo, hi = _count_bounds(terms, values)
     if hi == 0:  # no term can take one of the values: the count is the number of counted constants
         return _constant_with_condition(len(constants), condition)
-    variables = [t for t in terms if isinstance(t, Variable)]
-    if len({id(x) for x in variables}) < len(variables):  # a variable is repeated: a sum is posted, each term weighted by its number of occurrences
+    keys = [id(t) if isinstance(t, Variable) else str(t) for t in terms]
+    if len(set(keys)) < len(keys):  # a variable (or an expression, as not(b)) is repeated: a sum is posted, each term weighted by its number of occurrences
         distinct, counts = Node._distinct_sons(Node._create_sons(*terms))
         terms = [son.cnt if son.type == TypeNode.VAR else son for son in distinct]
         if len(terms) == 1:
@@ -3350,11 +3352,12 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
         warning("A constraint Cardinality discarded because defined with 0 term", "cardinality_0_term")
         return ConstraintDummyConstant(1)
     assert len(terms) > 0, "Cardinality constraint posted over a sequence of zero variable"
+    terms = [variant_as_term(t) if is_variant(t) else t for t in terms]  # ~b is the expression not(b), replaced below by an auxiliary variable (#203)
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
         elif isinstance(t, Node):
-            terms[i] = [auxiliary().replace_node(t)]
+            terms[i] = auxiliary().replace_node(t)  # (the auxiliary variable was put in a list, written [aux_gb[0]])
     checkType(terms, [Variable])
     if isinstance(occurrences, (tuple, list)):
         occurrences = dict(enumerate(occurrences))
