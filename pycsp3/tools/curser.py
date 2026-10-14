@@ -596,9 +596,7 @@ class OpOverrider:
             other = other[0] if len(other) == 1 else functions.conjunction(other)
 
         if isinstance(other, int):
-            if other == 1 and isinstance(self, Variable) and self.dom.is_binary() and not self.negation:
-                return self
-            if other == 0 and isinstance(self, Variable) and self.dom.is_binary() and self.negation:
+            if other == 1 and isinstance(self, Variable) and self.dom.is_binary():
                 return self
             if other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
                 return Node.build(TypeNode.EQ, self[0], self[1])
@@ -628,9 +626,7 @@ class OpOverrider:
             other = other[0] if len(other) == 1 else functions.conjunction(other)
 
         if isinstance(other, int):
-            if other == 0 and isinstance(self, Variable) and self.dom.is_binary() and not self.negation:
-                return self
-            if other == 1 and isinstance(self, Variable) and self.dom.is_binary() and self.negation:
+            if other == 0 and isinstance(self, Variable) and self.dom.is_binary():
                 return self
             if other == 0 and isinstance(self, Node) and self.type == TypeNode.DIST:  # we simplify the expression
                 return Node.build(TypeNode.NE, self[0], self[1])
@@ -694,6 +690,8 @@ class OpOverrider:
             self = gi
         if isinstance(self, VariableInteger):
             return Variable.__invert__(self)
+        if isinstance(self, Node) and self.type == TypeNode.NOT:  # ~(~x) is x
+            return self.cnt[0].cnt if self.cnt[0].type == TypeNode.VAR else self.cnt[0]
         if isinstance(self, Node):  # we simplify when possible (while building new nodes, as the node may be shared)
             if ~self.type is not None:
                 return Node(~self.type, self.cnt)

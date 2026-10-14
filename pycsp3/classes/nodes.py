@@ -648,8 +648,6 @@ class Node(Entity):
             elif isinstance(arg, Variable):
                 if arg.inverse:
                     t.append(Node(NEG, [Node(VAR, arg)]))
-                elif arg.negation:
-                    t.append(Node(NOT, [Node(VAR, arg)]))
                 else:
                     t.append(Node(VAR, arg))
             elif isinstance(arg, int):

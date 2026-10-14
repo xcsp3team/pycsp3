@@ -292,7 +292,7 @@ class Variable:
         var_name = name + "[" + "][".join(str(i) for i in indexes) + "]"
         return Variable.build_variable(var_name, domain, indexes)
 
-    def __init__(self, name, dom, *, inverse=False, negation=False):
+    def __init__(self, name, dom, *, inverse=False):
         self.id = name
         self.dom = dom
         pos = self.id.find("[")
@@ -302,7 +302,6 @@ class Variable:
             self.prefix, self.suffix = self.id[:pos], self.id[pos:]
             self.indexes = [int(v) for v in re.split("]\\[", self.suffix[1:-1])]
         self.inverse = inverse  # arithmetic inverse
-        self.negation = negation  # logical negation
         self.value = None  # value of the last found solution
         self.values = []  # values of the successive found solutions
 
@@ -333,7 +332,10 @@ class Variable:
         return self.eq__safe(other)  # isinstance(other, Variable) and self.id == other.id
 
     def __invert__(self):
-        return Variable(self.id, self.dom, negation=not self.negation)
+        # the logical negation of a 0/1 variable x is the expression not(x)
+        from pycsp3.classes.nodes import Node, TypeNode  # (a global import would be circular)
+        error_if(not self.dom.is_binary(), "The operator ~ can only be applied to a 0/1 variable, which is not the case of " + self.id)
+        return Node.build(TypeNode.NOT, self)
 
     def __neg__(self):
         return Variable(self.id, self.dom, inverse=not self.inverse)

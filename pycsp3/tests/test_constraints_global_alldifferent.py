@@ -71,6 +71,12 @@ def test_alldifferent_with_a_single_value_domain(run, solver):
     check(run, solver, "x = VarArray(size=3, dom=lambda i: range(i + 1))\nsatisfy(AllDifferent(x))", [range(1), range(2), range(3)], lambda *t: different(t))
 
 
+def test_alldifferent_on_variables_of_arrays_and_simple_variables(run, solver):
+    # the list mixes a variable of an array and simple variables, written as they are by the compactor (#195)
+    check(run, solver, "x = VarArray(size=2, dom=range(3))\ny = Var(dom=range(3))\nz = Var(dom=range(3))\nsatisfy(AllDifferent(x[0], y, z))", [range(3)] * 4,
+          lambda a, b, c, d: different((a, c, d)))
+
+
 def test_alldifferent_on_negative_values(run, solver):
     check(run, solver, "x = VarArray(size=3, dom=range(-2, 1))\nsatisfy(AllDifferent(x))", [range(-2, 1)] * 3, lambda *t: different(t))
 

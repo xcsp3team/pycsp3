@@ -630,7 +630,7 @@ def test_repeated_operands_and_constants(run, solver, request, constraint, predi
     ("min(x, x, y) == 1", "eq(min(x,y),1)"),
     ("Exist(a, a)", "eq(a,1)"),
     ("((x == 1) > 1) | (b == 1)", "eq(b,1)"),
-    ("imply(b == 1, (x == 1) > 1)", "not(b)"),
+    ("imply(b == 1, (x == 1) > 1)", "eq(b,0)"),  # (not(b) at the root of a constraint is posted b = 0, #203)
     ("x == x", None),
     ("imply(a, a)", None),
     ("(x == 1) <= 1", None),

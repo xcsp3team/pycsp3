@@ -178,7 +178,9 @@ def Var(term=None, *others, dom=None, id=None):
         started_modeling = True
 
     if term is None and dom is None and id is None:
-        return auxiliary().new_var(math.inf)  # TODO printing a warning?
+        x = auxiliary().new_var(math.inf)  # TODO printing a warning?
+        auxiliary().declared.add(x.id)  # (declared by the user, it is written even if it is involved in no constraint)
+        return x
     if term is None and dom is None:
         dom = Domain(math.inf)
     error_if(term is not None and dom is not None, "The domain of a variable must be given either by terms or by the parameter dom, but not both")
@@ -773,10 +775,12 @@ def If(test, *test_complement, Then, Else=None, meta=False):
     def __neg(term):
         if isinstance(term, Variable):
             assert term.dom.is_binary()
-            return var(term.id) if term.negation else Node.build(EQ, term, 0)
+            return Node.build(EQ, term, 0)
         assert isinstance(term, Node) and term.type.is_predicate_operator()
         sons = term.cnt
         if term.type == TypeNode.NOT:
+            if sons[0].type == TypeNode.VAR:  # ~x, for a 0/1 variable x
+                return sons[0].cnt
             assert sons[0].type.is_predicate_operator()
             return sons[0]
         if term.type == TypeNode.AND:
@@ -796,12 +800,11 @@ def If(test, *test_complement, Then, Else=None, meta=False):
 
     # if options.ev:
     if Else is None and len(tests) == 1:
-        if isinstance(tests[0], Variable) and not tests[0].negation:
+        if isinstance(tests[0], Variable):
             return [imply(tests, term) for term in flatten(thens)]
         if len(thens) == 1:
             if (not (isinstance(thens[0], Node) and thens[0].type == TypeNode.OR)
-                    and not (isinstance(tests[0], Node) and tests[0].type == TypeNode.NOT)
-                    and not (isinstance(tests[0], Variable) and tests[0].negation)):
+                    and not (isinstance(tests[0], Node) and tests[0].type == TypeNode.NOT)):
                 return imply(tests, thens)
 
     neg_test = __neg(tests[0]) if len(tests) == 1 else disjunction(__neg(term) for term in tests)
@@ -957,16 +960,15 @@ def _root_node(arg):
             return ConstraintDummyConstant(arg.cnt)
         if arg.type == TypeNode.VAR:
             return _01_to_node(arg.cnt)
+        if arg.type == TypeNode.NOT and arg.cnt[0].type == TypeNode.VAR:  # ~x, for a 0/1 variable x, is posted as x = 0
+            return Node.build(TypeNode.EQ, arg.cnt[0].cnt, 0)
     return arg
 
 
 def _01_to_node(arg):
     if isinstance(arg, Variable):
         assert arg.dom.is_binary()
-        # the declared variable is used: arg may be a variant (as built by ~x), which is a distinct object,
-        # unknown of VarEntities.varToEVarArray (and modifying it in place would corrupt the expressions using it)
-        x = Variable.name2obj.get(arg.id, arg)
-        return Node.build(TypeNode.EQ, x, 0 if arg.negation else 1)  # transformed into a basic logical equation
+        return Node.build(TypeNode.EQ, arg, 1)  # transformed into a basic logical equation
     if isinstance(arg, PartialConstraint):
         if not isinstance(arg.constraint, ConstraintElement):  # TODO to be extended (other cases should be possible)
             error("The component " + str(arg) + " is not a constraint: it must be subject to a condition, as in Sum(x) > 10")
@@ -2212,8 +2214,8 @@ def _ordered(term, others, operator, lengths):
                 ("A variable" if isinstance(t, Variable) else "An expression") + " cannot be given several times to " + name + ", which is the case of " + str(
                     t))
         seen.add(key)
-    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=True)
-    checkType(terms, [Variable])
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms)  # (the expressions are kept)
+    checkType(terms, ([Variable], [Node], [Variable, Node]))
     checkType(operator, TypeOrderedOperator)
     if isinstance(lengths, range):
         lengths = list(lengths)
@@ -2228,7 +2230,7 @@ def _ordered(term, others, operator, lengths):
         if len(terms) != len(lengths) + 1:
             error(name + " requires as many lengths as terms minus 1 (possibly as many lengths as terms, the last one being ignored), which is not the case of "
                   + str(lengths) + " for " + str(len(terms)) + " terms")
-    if options.mini:
+    if options.mini or any(isinstance(t, Node) for t in terms):  # with expressions, intension constraints (ordered is on variables)
         return [expr(operator, terms[i] if lengths is None else terms[i] + lengths[i], terms[i + 1]) for i in range(len(terms) - 1)]
     return ECtr(ConstraintOrdered(terms, operator, lengths))
 
@@ -2856,8 +2858,8 @@ def _count(name, terms, value, values, condition):
     lo, hi = _count_bounds(terms, values)
     if hi == 0:  # no term can take one of the values: the count is 0
         return _constant_with_condition(0, condition)
-    variables = [t for t in terms if isinstance(t, Variable)]
-    if len({id(x) for x in variables}) < len(variables):  # a variable is repeated: a sum is posted, each term weighted by its number of occurrences
+    keys = [id(t) if isinstance(t, Variable) else str(t) for t in terms]
+    if len(set(keys)) < len(keys):  # a variable (or an expression, as not(b)) is repeated: a sum is posted, each term weighted by its number of occurrences
         distinct, counts = Node._distinct_sons(Node._create_sons(*terms))
         terms = [son.cnt if son.type == TypeNode.VAR else son for son in distinct]
         if len(terms) == 1:
@@ -2873,16 +2875,16 @@ def _count(name, terms, value, values, condition):
 
 def _exist(name, terms, value, reified_by):
     # at least one term takes the value (or evaluates to 1 if value is None), for Exist() and AtLeastOne(), AnyHold() (whose name is given for the messages)
-    if reified_by is not None and not (isinstance(reified_by, Variable) and reified_by.dom.is_binary()):
+    negated = isinstance(reified_by, Node) and reified_by.type == TypeNode.NOT and reified_by.cnt[0].type == TypeNode.VAR  # ~r
+    if reified_by is not None and not negated and not (isinstance(reified_by, Variable) and reified_by.dom.is_binary()):
         error("The parameter reified_by of " + name + "() must be a 0/1 variable (possibly negated with ~), which is not the case of " + str(reified_by))
     _check_count_terms(name, terms, value)
     if len(terms) == 0:  # no term: false (and so, the reification variable is 0)
         return ConstraintDummyConstant(0) if reified_by is None else reified_by == 0
     if reified_by is not None:
-        if reified_by.negation:
-            reified_by = Variable.name2obj.get(reified_by.id, reified_by)  # the declared variable (see _01_to_node)
+        if negated:  # ~r: an auxiliary variable equal to not(r)
             aux = auxiliary().new_var(0, 1)
-            satisfy(aux != reified_by)
+            satisfy(aux != reified_by.cnt[0].cnt)
             reified_by = aux
         if len(terms) == 1:
             return (terms[0] == reified_by) if value is None or isinstance(value, int) and value == 1 else ((terms[0] == value) == reified_by)
@@ -3346,7 +3348,7 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
         elif isinstance(t, Node):
-            terms[i] = [auxiliary().replace_node(t)]
+            terms[i] = auxiliary().replace_node(t)  # (the auxiliary variable was put in a list, written [aux_gb[0]])
     checkType(terms, [Variable])
     if isinstance(occurrences, (tuple, list)):
         occurrences = dict(enumerate(occurrences))
@@ -4062,7 +4064,8 @@ def Clause(variables, *variables_complement, phases=None):
 
     :param variables: the first term on which the constraint applies
     :param variables_complement: the other terms (if any) on which the constraint applies
-    :param phases: the phase of the variables involved in the clause
+    :param phases: the phases of the literals: True for the variable itself, False for its negation (by default, all True); a literal ~x has
+                   the opposite phase of the variable x
     :return: a constraint Clause
     :example:
         # a SAT-like model: at least one of the three literals of the clause must be true
@@ -4077,13 +4080,13 @@ def Clause(variables, *variables_complement, phases=None):
         # a solution: [0, 1, 1]
     """
     variables = flatten(variables, variables_complement)
-    phases = [False] * len(variables) if phases is None else flatten(phases)
+    phases = [True] * len(variables) if phases is None else flatten(phases)  # (the literals were negative by default, #205)
     assert len(variables) == len(phases)
+    for i, literal in enumerate(variables):
+        if isinstance(literal, Node) and literal.type == TypeNode.NOT and literal.cnt[0].type == TypeNode.VAR:  # ~x: the variable x, opposite phase
+            variables[i], phases[i] = literal.cnt[0].cnt, not phases[i]
     checkType(variables, [Variable])
     checkType(phases, [bool])
-    for i, literal in enumerate(variables):
-        if literal.negation:
-            phases[i] = True
     return ECtr(ConstraintClause(variables, phases))
 
 

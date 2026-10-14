@@ -1,3 +1,4 @@
+import re
 from collections import OrderedDict
 
 from lxml import etree
@@ -7,7 +8,7 @@ from pycsp3.classes.auxiliary.enums import TypeFramework, TypeConditionOperator,
 from pycsp3.classes.entities import (Entity, EVar, EVarArray, ECtr, EMetaCtr, EObjective, EAnnotation, EGroup, EBlock, ESlide, EToGather,
                                      EToSatisfy, CtrEntities, VarEntities, ObjEntities, AnnEntities)
 from pycsp3.classes.main.annotations import TypeAnnArg
-from pycsp3.classes.main.constraints import ConstraintIntension
+from pycsp3.classes.main.constraints import ConstraintIntension, auxiliary
 from pycsp3.dashboard import options
 from pycsp3.tools.compactor import compact
 from pycsp3.tools.slider import _identify_slide
@@ -260,6 +261,37 @@ def _annotations():
     return elt
 
 
+AUX = "aux_gb"  # the prefix of the auxiliary variables (see _Auxiliary in classes/main/constraints.py)
+
+
+def _remove_unused_auxiliary_variables(root):
+    # the auxiliary variables involved in no constraint, objective or annotation (as an auxiliary variable introduced for a count whose result
+    # is finally known when compiling, #196) are not declared: they become holes of the array (a single search is made in the text of the
+    # constraints, objectives and annotations, much faster than visiting the elements)
+    variables = root.find(str(TypeXML.VARIABLES))
+    elt = next((e for e in variables if e.get("id") == AUX), None)
+    va = next((v for v in VarEntities.items if isinstance(v, EVarArray) and v.id == AUX), None)
+    if elt is None or va is None:
+        return
+    used, n = {i for i, x in enumerate(va.flatVars) if x.id in auxiliary().declared}, len(va.flatVars)  # (Var() without domain)
+    text = b"".join(etree.tostring(e) for e in root if e is not variables).decode()
+    for m in re.finditer(AUX + r"\[([^\]]*)\]", text):
+        index = m.group(1)
+        if index == "":  # aux_gb[]: all the auxiliary variables are used
+            return
+        lo, _, hi = index.partition("..")
+        used.update(range(int(lo), int(hi or lo) + 1))
+        if len(used) == n:  # all the auxiliary variables are used
+            return
+    if len(used) == 0:
+        variables.remove(elt)
+        return
+    dom2vars = DefaultListOrderedDict(())
+    for i in sorted(used):
+        dom2vars[str(va.flatVars[i].dom)].append(va.flatVars[i])
+    variables.replace(elt, _complex_var(va, dom2vars))
+
+
 def build_document():
     root = _element(TypeXML.INSTANCE, attributes=[(TypeXML.FORMAT, "XCSP3")])
 
@@ -279,4 +311,5 @@ def build_document():
         root.set(str(TypeXML.TYPE), str(TypeFramework.CSP))
     if len(annotations := _annotations()) > 0:
         root.append(annotations)
+    _remove_unused_auxiliary_variables(root)
     return root

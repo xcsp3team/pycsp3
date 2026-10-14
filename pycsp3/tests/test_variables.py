@@ -808,3 +808,114 @@ def test_listint_scalar_product(run, solver, expression):
         satisfy({expression})
     """, solver=solver)
     assert_solutions(r, brute_force([range(2)] * 3, lambda a, b, c: a + 2 * b + 3 * c == 3))
+
+
+# ------------------------------------------------------------------------------------------------------------ negated 0/1 variables in lists
+
+COSOCO_SUM_NOT = ("xcsp3team/cosoco#88: cosoco gives wrong solutions for a sum of expressions (here not(b)) mixed with variables that are not 0/1 "
+                  "(taken as 0/1 variables)")
+COSOCO_NOT = "xcsp3team/cosoco#92: cosoco does not handle allEqual, nValues (eq,1) and maximum on expressions such as not(b) (s UNSUPPORTED)"
+ACE_ALLDIFFERENT = ("xcsp3team/ACE#27: ACE fails on allDifferent on at most 4 terms with expressions, when the union of the domains has as many values as "
+                    "terms (Problem.allDifferent(): ClassCastException, (Var[]) scp)")
+NEGATED = "b = VarArray(size=3, dom={0, 1})\ny = Var(dom=range(3))\nz = Var(dom=range(3))\n"
+D_NEGATED = [(0, 1)] * 3 + [range(3)] * 2
+NEGATED_CASES = [
+    ("Count(~b[0], y, z, value=1) == 1", lambda b0, b1, b2, y, z: [1 - b0, y, z].count(1) == 1),
+    ("Count(y, ~b[0], z, ~~b[1], value=1) == 2", lambda b0, b1, b2, y, z: [y, 1 - b0, z, b1].count(1) == 2),
+    ("Count(~b[0], ~b[0], ~b[1], z, value=1) == 2", lambda b0, b1, b2, y, z: [1 - b0, 1 - b0, 1 - b1, z].count(1) == 2),
+    ("Count(~b[0], b[0], b[1], value=1) == 2", lambda b0, b1, b2, y, z: [1 - b0, b0, b1].count(1) == 2),
+    ("Exist(~b[0], b[1], b[2])", lambda b0, b1, b2, y, z: 1 - b0 + b1 + b2 >= 1),
+    ("Sum(~b[0], y, z) == 2", lambda b0, b1, b2, y, z: 1 - b0 + y + z == 2),
+    ("AllDifferent(~b[0], y, z)", lambda b0, b1, b2, y, z: len({1 - b0, y, z}) == 3),
+    ("AllEqual(~b[0], b[1], b[2])", lambda b0, b1, b2, y, z: 1 - b0 == b1 == b2),
+    ("NValues(~b[0], b[1], b[2]) == 1", lambda b0, b1, b2, y, z: len({1 - b0, b1, b2}) == 1),  # (with == 2, ACE gives wrong solutions: xcsp3team/ACE#26)
+    ("Maximum(~b[0], y, z) == 1", lambda b0, b1, b2, y, z: max(1 - b0, y, z) == 1),
+    ("Increasing(~b[0], y, z)", lambda b0, b1, b2, y, z: 1 - b0 <= y <= z),
+    ("Decreasing(y, ~b[0], b[1], strict=True)", lambda b0, b1, b2, y, z: y > 1 - b0 > b1),
+    ("Cardinality([~b[0], b[1], b[2]], occurrences={0: 1, 1: 2})", lambda b0, b1, b2, y, z: [1 - b0, b1, b2].count(0) == 1),
+]
+
+
+@pytest.mark.parametrize("constraint, predicate", NEGATED_CASES)
+def test_negated_variable_in_the_list_of_a_global_constraint(run, solver, request, constraint, predicate):
+    # in the list of a global constraint, ~b[0] (b[0] being a 0/1 variable) is the expression not(b[0]) (its negation was lost, #203)
+    if constraint.startswith("Sum"):
+        bug_for(request, "COSOCO", COSOCO_SUM_NOT)
+    elif constraint.startswith("AllDifferent"):
+        bug_for(request, "ACE", ACE_ALLDIFFERENT)
+    elif constraint.startswith(("AllEqual", "NValues", "Maximum")):
+        bug_for(request, "COSOCO", COSOCO_NOT)
+    r = run(NEGATED + f"satisfy({constraint}, y != z)", solver=solver)  # (y != z, so that all the variables are involved)
+    assert_solutions(r, brute_force(D_NEGATED, lambda *t: predicate(*t) and t[3] != t[4]))
+
+
+@pytest.mark.parametrize("constraint, element", [(c, c.split("(")[0]) for c, _ in NEGATED_CASES])
+def test_xcsp3_negated_variable_in_the_list_of_a_global_constraint(run, constraint, element):
+    # not(b[0]) is written in the list, except for ordered (intension constraints) and cardinality (an auxiliary variable, as for any expression)
+    r = run(NEGATED + f"satisfy({constraint})")
+    assert r.ok, r.report()
+    text = " ".join(e.text or "" for e in r.xml.iter() if e.tag in ("list", "allDifferent", "allEqual", "intension"))
+    if element in ("Increasing", "Decreasing"):
+        assert r.xml.find("constraints/ordered") is None and "not(b[0])" in text, r.report()
+    elif element == "Cardinality":
+        assert "not(b[0])" not in r.xml.find("constraints/cardinality/list").text and "[aux" not in text, r.report()
+        assert any(v.startswith("aux") for v in declared_variables(r)), r.report()
+    else:
+        assert "not(b[0])" in text and not any(v.startswith("aux") for v in declared_variables(r)), r.report()
+
+
+def test_cardinality_on_an_expression(run, solver):
+    # an expression is replaced by an auxiliary variable, which was written [aux_gb[0]] (in a list)
+    r = run("x = VarArray(size=3, dom=range(3))\nsatisfy(Cardinality([x[0] + 1, x[1], x[2]], occurrences={1: 1, 2: 2}))", solver=solver)
+    assert_solutions(r, brute_force([range(3)] * 3, lambda a, b, c: [a + 1, b, c].count(1) == 1 and [a + 1, b, c].count(2) == 2))
+
+
+COSOCO_CLAUSE = "cosoco does not handle the constraint clause (s UNSUPPORTED)"
+NEGATION_CASES = [
+    ("~b[0] == 0", lambda b0, b1, b2, y, z: b0 == 1),
+    ("~b[0] != 1", lambda b0, b1, b2, y, z: b0 == 1),
+    ("~b[0] == 1", lambda b0, b1, b2, y, z: b0 == 0),
+    ("~b[0] != 0", lambda b0, b1, b2, y, z: b0 == 0),
+    ("(~b[0] == 0) | (b[1] == 1)", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 1),
+    ("~b[0]", lambda b0, b1, b2, y, z: b0 == 0),
+    ("~~b[0]", lambda b0, b1, b2, y, z: b0 == 1),
+    ("~b[0] | ~b[1]", lambda b0, b1, b2, y, z: b0 == 0 or b1 == 0),
+    ("If(~b[0], Then=y == 1)", lambda b0, b1, b2, y, z: b0 == 1 or y == 1),
+    ("If(~b[0], Then=y == 1, Else=y == 2)", lambda b0, b1, b2, y, z: y == (1 if b0 == 0 else 2)),
+    ("Clause(b[0], ~b[1])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0),
+    ("(~b[0], y) in {(0, 1), (1, 2)}", lambda b0, b1, b2, y, z: (1 - b0, y) in ((0, 1), (1, 2))),
+]
+
+
+@pytest.mark.parametrize("constraint, predicate", NEGATION_CASES)
+def test_negation_of_a_01_variable(run, solver, constraint, predicate):
+    # ~b[0] (b[0] being a 0/1 variable) is the expression not(b[0]) (#203); ~b[0] == 0 and ~b[0] != 1 were written b[0] = 0 (#204)
+    if solver == "COSOCO" and constraint.startswith("Clause"):
+        pytest.skip(COSOCO_CLAUSE)
+    r = run(NEGATED + f"satisfy({constraint}, y != z)", solver=solver)
+    assert_solutions(r, brute_force(D_NEGATED, lambda *t: predicate(*t) and t[3] != t[4]))
+
+
+@pytest.mark.parametrize("constraint", ["~y == 1", "Sum(~y, z) == 1", "Count(~y, z, value=1) == 1"])
+def test_negation_of_a_variable_that_is_not_01(run, constraint):
+    # the operator ~ is only for 0/1 variables (an assert without message was raised later)
+    r = run(NEGATED + f"satisfy({constraint})")
+    assert_fails(r)
+    assert "The operator ~ can only be applied to a 0/1 variable" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Clause(b[0], b[1])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 1),
+    ("Clause(b)", lambda b0, b1, b2, y, z: 1 in (b0, b1, b2)),
+    ("Clause(b[0], ~b[1])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0),
+    ("Clause([b[0], b[1]], phases=[True, False])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0),
+    ("Clause([b[0], ~b[1]], phases=[True, True])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0),
+    ("Clause([~b[0], b[1]], phases=[False, True])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 1),
+    ("Clause(b, phases=[True, False, True])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0 or b2 == 1),
+])
+def test_clause_phases(run, solver, constraint, predicate):
+    # the literals are positive by default, and ~x has the opposite phase of x (they had the opposite phases, #205)
+    if solver == "COSOCO":
+        pytest.skip(COSOCO_CLAUSE)
+    r = run(NEGATED + f"satisfy({constraint}, y != z)", solver=solver)
+    assert_solutions(r, brute_force(D_NEGATED, lambda *t: predicate(*t) and t[3] != t[4]))

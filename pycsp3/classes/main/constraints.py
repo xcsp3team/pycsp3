@@ -1596,6 +1596,7 @@ class _Auxiliary:
         self._collected_extension_constraints = []  # notably, for element
         self.prefix = "aux_gb"
         self.cache = []
+        self.declared = set()  # the ids of the auxiliary variables declared by the user (Var() without domain), which are always written
 
     def new_var(self, *args):
         dom = args[0] if len(args) == 1 and isinstance(args[0], Domain) else Domain(*args)

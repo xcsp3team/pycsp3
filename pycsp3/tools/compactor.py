@@ -99,7 +99,7 @@ def build_partition(variables, preserve_order):
         def update(z):
             nonlocal part, no_arrays
             harvest.append(z)
-            if isinstance(z, Variable) and z.indexes and not z.inverse and not z.negation:
+            if isinstance(z, Variable) and z.indexes and not z.inverse:
                 no_arrays = False
                 if len(part) == 0 or VarEntities.varToEVarArray[z].id == VarEntities.varToEVarArray[part[-1]].id:
                     part.append(z)
@@ -132,7 +132,8 @@ def build_partition(variables, preserve_order):
         if len(arrays) == 0:
             return None, None
         # Here, as the order is not a problem, we can below build the partition by means of the returned structure
-        return [arrays_partition[a] for a in arrays] + [others], complete_expanded_form
+        # (the other objects, as simple variables, are not from arrays: they are kept as they are, and not in a part to be compacted)
+        return [arrays_partition[a] for a in arrays] + others, complete_expanded_form
     else:
         return _complex_partition(variables)
 
