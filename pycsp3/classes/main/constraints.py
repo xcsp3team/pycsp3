@@ -724,35 +724,12 @@ class ConstraintSum(ConstraintWithCondition):
 
 
 class ConstraintCount(ConstraintWithCondition):
-    def __init__(self, lst, values, condition, bounds=None, constants=None):
+    def __init__(self, lst, values, condition, bounds=None):
         super().__init__(TypeCtr.COUNT)
         self.arg(TypeCtrArg.LIST, lst, content_ordered=False)
         self.arg(TypeCtrArg.VALUES, values)
-        self.bounds = (0, len(lst)) if bounds is None else bounds  # the smallest and greatest possible values of the count of the list
-        self.constants = [] if constants is None else constants  # the counted constants (as x >= x, simplified into 1), not in the list
-        self.arg(TypeCtrArg.CONDITION, self._shifted(condition))
-
-    def _shifted(self, condition):
-        # the condition on the count of the list, for the specified condition on the count of the list and of the counted constants (each of
-        # them adding 1); when the condition cannot be shifted (as with a variable), the constants are put in the list as auxiliary variables
-        k = len(self.constants)
-        if condition is None or k == 0:
-            return condition
-        if isinstance(condition, ConditionValue) and isinstance(condition.value, int):
-            return ConditionValue(condition.operator, condition.value - k)
-        if isinstance(condition, ConditionInterval):
-            return ConditionInterval(condition.operator, condition.min - k, condition.max - k)
-        if isinstance(condition, ConditionSet) and all(isinstance(v, int) for v in condition.t):
-            return ConditionSet(condition.operator, {v - k for v in condition.t})
-        self.arg(TypeCtrArg.LIST, self.arguments[TypeCtrArg.LIST].content + [auxiliary().replace_int(v) for v in self.constants], content_ordered=False)
-        self.bounds, self.constants = (self.bounds[0] + k, self.bounds[1] + k), []
-        return condition
-
-    def set_condition(self, operator, right_operand):
-        return self.arg(TypeCtrArg.CONDITION, self._shifted(Condition.build_condition((operator, right_operand))))
-
-    def equal_except_condition(self, other):
-        return super().equal_except_condition(other) and self.constants == other.constants
+        self.arg(TypeCtrArg.CONDITION, condition)
+        self.bounds = (0, len(lst)) if bounds is None else bounds  # the smallest and greatest possible values of the count
 
     def known_result(self):
         # 1 (resp. 0) if the condition holds for all (resp. none of) the possible values of the count, and None otherwise (or with a variable)
@@ -764,10 +741,10 @@ class ConstraintCount(ConstraintWithCondition):
         return 1 if n == hi - lo + 1 else 0 if n == 0 else None
 
     def min_possible_value(self):
-        return len(self.constants)
+        return 0
 
     def max_possible_value(self):
-        return len(self.arguments[TypeCtrArg.LIST].content) + len(self.constants)
+        return len(self.arguments[TypeCtrArg.LIST].content)
 
 
 class ConstraintNValues(ConstraintWithCondition):
@@ -1632,6 +1609,7 @@ class _Auxiliary:
         self._collected_extension_constraints = []  # notably, for element
         self.prefix = "aux_gb"
         self.cache = []
+        self.declared = set()  # the ids of the auxiliary variables declared by the user (Var() without domain), which are always written
 
     def new_var(self, *args):
         dom = args[0] if len(args) == 1 and isinstance(args[0], Domain) else Domain(*args)

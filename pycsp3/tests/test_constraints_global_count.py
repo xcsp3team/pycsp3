@@ -320,25 +320,29 @@ def test_count_on_variables_of_arrays_and_simple_variables(run, solver):
     ("Count(x[0] >= x[0], x[1], x[2], value=1) + x[3] == 3", lambda a, b, c, d: 1 + [b, c].count(1) + d == 3),
     ("Count(x[0] >= x[0], x[1], value=1) == 2", lambda a, b, c, d: b == 1),
     ("Count(x[0] >= x[0], x[1], x[2], value=2) == 1", lambda a, b, c, d: [b, c].count(2) == 1),
+    ("Exist(x[j] >= x[0] for j in range(3)), Count(x[0] >= x[0], x[1], x[2], value=1) == 2, x[0] != x[3]",
+     lambda a, b, c, d: 1 + [b, c].count(1) == 2 and a != d),
 ])
 def test_count_with_constant_terms(run, solver, request, constraint, predicate):
-    # a term simplified into a constant (x[0] >= x[0] is 1, #194) is counted when it is one of the values (#196)
-    if "in range" in constraint:
-        bug_for(request, "CHOCO", CHOCO_RANGE)  # the shifted condition (in,1..2)
+    # a term simplified into a constant (x[0] >= x[0] is 1, #194) is counted when it is one of the values, by an auxiliary variable (the last
+    # case declares only one of the two auxiliary variables, the first one being involved in no constraint, #196)
+    if ") in range(" in constraint:
+        bug_for(request, "CHOCO", CHOCO_RANGE)  # the condition (in,2..3)
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 
-@pytest.mark.parametrize("constraint, condition", [
-    ("Count(x[0] >= x[0], x[1], x[2], value=1) == 2", "(eq,1)"),
-    ("Count(x[0] >= x[0], x[1], x[2], value=1) in range(2, 4)", "(in,1..2)"),
-    ("Count(x[0] >= x[0], x[1], x[2], value=1) in {1, 3}", "(in,{0,2})"),
-    ("Count(x[0] >= x[0], x[1] >= x[1], x[2], x[3], value=1) != 3", "(ne,1)"),
+@pytest.mark.parametrize("constraints, declared", [
+    ("Exist(x[j] >= x[0] for j in range(3)), x[1] != x[2]", []),
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) == 2", ["aux_gb[0]"]),
+    ("Exist(x[j] >= x[0] for j in range(3)), Count(x[0] >= x[0], x[1], x[2], value=1) == 2", ["aux_gb[1]"]),
+    ("Exist(x[j] >= x[0] for j in range(3)), Exist(x[j] >= x[1] for j in range(3)), Count(x[0] >= x[0], x[1], x[2], value=1) == 2", ["aux_gb[2]"]),
+    ("Count(x[0] >= x[0], x[1], x[2], value=1) == 2, Count(x[1] >= x[1], x[0], x[2], value=1) == 2", ["aux_gb[0]", "aux_gb[1]"]),
 ])
-def test_xcsp3_count_with_constant_terms(run, constraint, condition):
-    # the counted constants are not written in the list (no auxiliary variable): the condition is shifted (#196)
-    r = run(X4 + f"satisfy({constraint})")
-    assert r.ok and r.xml.find("constraints/count/condition").text.strip() == condition, r.report()
-    assert not any(v.startswith("aux") for v in declared_variables(r)), r.report()
+def test_xcsp3_count_with_constant_terms(run, constraints, declared):
+    # a counted constant is replaced by an auxiliary variable, which is not declared when it is involved in no constraint, as when the result
+    # of the count is known when compiling (#193); the array of the auxiliary variables then has holes (#196)
+    r = run(X4 + f"satisfy({constraints})")
+    assert sorted(v for v in declared_variables(r) if v.startswith("aux")) == declared, r.report()
 
 
 @pytest.mark.parametrize("constraint, element, terms", [
