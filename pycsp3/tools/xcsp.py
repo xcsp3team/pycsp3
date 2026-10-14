@@ -174,8 +174,11 @@ def _slide(entity, scope, offset, circular, group):
 
 
 def _group(entity):
-    if len(entity.all_args) == 0:
-        return None
+    if len(entity.all_args) == 0:  # all the constraints of the group are identical (no parameter): a single one is written (#206)
+        c = entity.entities[0]
+        if c.blank_basic_attributes():
+            c.copy_basic_attributes_of(entity)
+        return _constraint(c)
     if options.recognize_slides:
         all_args = entity.original_all_args if hasattr(entity, "original_all_args") else entity.all_args
         if len(all_args) > 3 and len(all_args[0]) > 1:

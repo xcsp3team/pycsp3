@@ -684,3 +684,32 @@ def test_xcsp3_constant_terms_in_sums_and_counts(run, constraint):
         for e in r.xml.iter(tag):
             tokens = e.find("list").text.split()
             assert not any(t.lstrip("-").isdigit() for t in tokens) and not any(t.startswith(("mul(", "add(")) and "," not in t for t in tokens), r.report()
+
+
+# ------------------------------------------------------------------------------------------------------------ identical constraints
+
+B5 = "x = VarArray(size=5, dom={0, 1})\n"
+D_B5 = [(0, 1)] * 5
+IDENTICAL_CONSTRAINTS = [
+    ("[x[4] >= 1, x[4] >= 1, x[0] + x[1] >= 1, x[2] + x[3] >= 1]", lambda a, b, c, d, e: e >= 1 and a + b >= 1 and c + d >= 1),
+    ("[x[0] + x[1] >= 1, x[4] >= 1, x[2] + x[3] >= 1, x[4] >= 1]", lambda a, b, c, d, e: e >= 1 and a + b >= 1 and c + d >= 1),
+    ("[x[4] != x[0], x[4] != x[0], x[1] < x[2], x[2] < x[3]]", lambda a, b, c, d, e: e != a and b < c < d),
+    ("(Count(within=[x[i] for i in t], value=1) >= 1 for t in [[0, 1], [4], [2, 3], [4]])", lambda a, b, c, d, e: a + b >= 1 and e >= 1 and c + d >= 1),
+    ("(Count(within=[x[i] for i in t], value=1) <= 1 for t in [[0, 1, 2], [4], [2, 3], [4]])", lambda a, b, c, d, e: a + b + c <= 1 and c + d <= 1),
+]
+
+
+@pytest.mark.parametrize("constraints, predicate", IDENTICAL_CONSTRAINTS)
+def test_identical_constraints_with_other_constraints(run, solver, constraints, predicate):
+    # identical constraints are posted once (they were grouped, and the group, without parameter, was not written, #206); the counts of a
+    # single term (x[4] >= 1 twice) come from the model SetCovering of PyCSP3-models
+    r = run(B5 + f"satisfy({constraints})", solver=solver)
+    assert_solutions(r, brute_force(D_B5, predicate))
+
+
+@pytest.mark.parametrize("constraints, text", [(IDENTICAL_CONSTRAINTS[0][0], "ge(x[4],1)"), (IDENTICAL_CONSTRAINTS[2][0], "ne(x[4],x[0])"),
+                                               (IDENTICAL_CONSTRAINTS[3][0], "ge(x[4],1)")])
+def test_xcsp3_identical_constraints_with_other_constraints(run, constraints, text):
+    r = run(B5 + f"satisfy({constraints})")
+    assert r.ok, r.report()
+    assert [" ".join(e.text.split()) for e in r.xml.iter("intension")].count(text) == 1, r.report()
