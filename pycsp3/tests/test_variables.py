@@ -815,8 +815,8 @@ def test_listint_scalar_product(run, solver, expression):
 COSOCO_SUM_NOT = ("xcsp3team/cosoco#88: cosoco gives wrong solutions for a sum of expressions (here not(b)) mixed with variables that are not 0/1 "
                   "(taken as 0/1 variables)")
 COSOCO_NOT = "xcsp3team/cosoco#92: cosoco does not handle allEqual, nValues (eq,1) and maximum on expressions such as not(b) (s UNSUPPORTED)"
-ACE_ALLDIFFERENT = ("(to be reported) ACE fails on allDifferent on at most 4 terms with expressions, when the union of the domains has as many values as terms "
-                    "(Problem.allDifferent(): ClassCastException, (Var[]) scp)")
+ACE_ALLDIFFERENT = ("xcsp3team/ACE#27: ACE fails on allDifferent on at most 4 terms with expressions, when the union of the domains has as many values as "
+                    "terms (Problem.allDifferent(): ClassCastException, (Var[]) scp)")
 NEGATED = "b = VarArray(size=3, dom={0, 1})\ny = Var(dom=range(3))\nz = Var(dom=range(3))\n"
 D_NEGATED = [(0, 1)] * 3 + [range(3)] * 2
 NEGATED_CASES = [
