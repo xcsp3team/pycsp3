@@ -57,17 +57,6 @@ class Diffs:
                 # for i in range(len(Diffs.fusion.argument_flags)): Diffs.fusion.argument_flags[i] |= self.argument_flags[i]
 
 
-def is_variant(v):
-    # True if v is a variant of a declared 0/1 variable, built by ~ (as ~b or ~~b), which is an object of type Variable
-    return type(v) is Variable and not v.inverse
-
-
-def replaced_variant(v):
-    # for a variant of a declared 0/1 variable b built by ~: an auxiliary variable equal to not(b) if it is negated (as ~b), and b otherwise (as ~~b)
-    x = Variable.name2obj.get(v.id, v)
-    return auxiliary().replace_negation(x) if v.negation else x
-
-
 class ConstraintArgument:
     def __init__(self, name, content, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
         assert adhoc or isinstance(name, (TypeCtrArg, TypeXML, TypeAnn, main.annotations.TypeAnnArg)), str(name) + " " + str(type(name))
@@ -123,8 +112,6 @@ class Constraint:
         return [v for v in self.arguments.items() if str(v[0]) != "condition"] == [v for v in other.arguments.items() if str(v[0]) != "condition"]
 
     def arg(self, name, content, *, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
-        if name == TypeCtrArg.LIST and isinstance(content, list) and any(is_variant(v) for v in content):
-            content = [replaced_variant(v) if is_variant(v) else v for v in content]  # (the negation of ~b was lost when writing the list)
         self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc)
         return self
 
@@ -1632,7 +1619,6 @@ class _Auxiliary:
         self._collected_extension_constraints = []  # notably, for element
         self.prefix = "aux_gb"
         self.cache = []
-        self.negations = dict()  # the auxiliary variables equal to not(x), for the 0/1 variables x negated in lists (keys are the ids of the variables)
 
     def new_var(self, *args):
         dom = args[0] if len(args) == 1 and isinstance(args[0], Domain) else Domain(*args)
@@ -1707,12 +1693,6 @@ class _Auxiliary:
             values = node.possible_values()
             values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
         return self.__replace(node, Domain(values))
-
-    def replace_negation(self, x):
-        # the auxiliary 0/1 variable equal to not(x), for the 0/1 variable x (a single one for each variable)
-        if x.id not in self.negations:
-            self.negations[x.id] = self.replace_node(Node.build(TypeNode.NOT, x))
-        return self.negations[x.id]
 
     def replace_nodes(self, nodes, *, values=None):
         assert isinstance(nodes, list)
