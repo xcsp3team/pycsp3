@@ -664,19 +664,21 @@ class Node(Entity):
 
     @staticmethod
     def build(node_type, *args):
-        if node_type in (LT, LE, GE, GT) and len(args) == 2 and isinstance(args[0], Node) and args[0].type.is_predicate_operator() and isinstance(args[1], int):
-            if (node_type == LE and args[1] >= 1) or (node_type == GE and args[1] <= 0):
+        tn = TypeNode.value_of(node_type)  # for handling the cases where type is of type str or TypeConditionOperator
+        if tn in (LT, LE, GE, GT) and len(args) == 2 and isinstance(args[1], int) and (
+                isinstance(args[0], Node) and args[0].type.is_predicate_operator() or isinstance(args[0], Variable) and args[0].dom.is_binary()):
+            # a Boolean expression, or a 0/1 variable (#210), compared with an integer: a constant when the comparison always holds (or never holds)
+            if (tn == LE and args[1] >= 1) or (tn == GE and args[1] <= 0):
                 return Node(INT, 1)
-            if (node_type == LT and args[1] > 1) or (node_type == GT and args[1] < 0):
+            if (tn == LT and args[1] > 1) or (tn == GT and args[1] < 0):
                 return Node(INT, 1)
-            if (node_type == LE and args[1] < 0) or (node_type == GE and args[1] > 1):
+            if (tn == LE and args[1] < 0) or (tn == GE and args[1] > 1):
                 return Node(INT, 0)
-            if (node_type == LT and args[1] <= 0) or (node_type == GT and args[1] >= 1):
+            if (tn == LT and args[1] <= 0) or (tn == GT and args[1] >= 1):
                 return Node(INT, 0)
         if node_type in (DIV, MOD) and len(args) == 2 and isinstance(args[1], Variable):
             removed = args[1].dom.remove(0)
             warning_if(removed, "value 0 removed from the domain of " + str(args[1]) + " because involved in a division")
-        tn = TypeNode.value_of(node_type)  # for handling the cases where type is of type str or TypeConditionOperator
         if tn is SET:
             assert len(args) == 1
             elements = list(args[0])

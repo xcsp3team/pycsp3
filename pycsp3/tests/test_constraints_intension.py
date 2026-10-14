@@ -606,6 +606,19 @@ CONSTANTS = [
     ("imply((x == 1) > 1, b == 1)", lambda a, b, c, x, y: True),
     ("imply(b == 1, (x == 1) > 1)", lambda a, b, c, x, y: b == 0),
     ("iff((x == 1) <= 1, b == 1)", lambda a, b, c, x, y: b == 1),
+    # a 0/1 variable compared with an integer, as a Boolean expression (#210)
+    ("a <= 1", lambda a, b, c, x, y: True),
+    ("a >= 0", lambda a, b, c, x, y: True),
+    ("a > 1", lambda a, b, c, x, y: False),
+    ("a >= 1", lambda a, b, c, x, y: a == 1),
+    ("a < 1", lambda a, b, c, x, y: a == 0),
+    ("(a > 1) | (b == 1)", lambda a, b, c, x, y: b == 1),
+    ("(a <= 1) & (b == 1)", lambda a, b, c, x, y: b == 1),
+    ("If(a <= 1, Then=b == 1)", lambda a, b, c, x, y: b == 1),
+    ("Count([a], value=1) <= 1", lambda a, b, c, x, y: True),
+    ("AtMostOne([a])", lambda a, b, c, x, y: True),
+    ("Count([a], value=1, condition=('le', 1))", lambda a, b, c, x, y: True),
+    ("Count([x], value=2, condition=('ge', 2))", lambda a, b, c, x, y: False),
 ]
 
 
@@ -638,6 +651,17 @@ def test_repeated_operands_and_constants(run, solver, request, constraint, predi
     ("x != x", "false"),
     ("xor(a, a)", "false"),
     ("(x == 1) > 1", "false"),
+    ("a <= 1", None),
+    ("1 >= a", None),
+    ("Count([a], value=1) <= 1", None),
+    ("AtMostOne([a])", None),
+    ("Count([a], value=1, condition=('le', 1))", None),
+    ("Count([x], value=2, condition=('le', 1))", None),
+    ("a > 1", "false"),
+    ("Count([x], value=2, condition=('ge', 2))", "false"),
+    ("(a > 1) | (b == 1)", "eq(b,1)"),
+    ("a >= 1", "ge(a,1)"),
+    ("a < 1", "lt(a,1)"),
 ])
 def test_xcsp3_repeated_operands_and_constants(run, constraint, text):
     # no intension is a constant (as <intension> 1 </intension>): a constraint always true is not posted, and a constraint always false is
