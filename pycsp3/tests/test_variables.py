@@ -7,7 +7,7 @@ from itertools import product
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, declared_variables
+from harness import assert_fails, assert_solutions, brute_force, bug_for, declared_variables
 
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
@@ -870,8 +870,7 @@ def test_cardinality_on_an_expression(run, solver):
     assert_solutions(r, brute_force([range(3)] * 3, lambda a, b, c: [a + 1, b, c].count(1) == 1 and [a + 1, b, c].count(2) == 2))
 
 
-CLAUSE = ("(to be reported) Clause() writes the literals with the opposite phases, when no phase is given and for ~x: Clause(b[0], ~b[1]) "
-          "gives <clause> not(b[0]) b[1] </clause>")
+COSOCO_CLAUSE = "cosoco does not handle the constraint clause (s UNSUPPORTED)"
 NEGATION_CASES = [
     ("~b[0] == 0", lambda b0, b1, b2, y, z: b0 == 1),
     ("~b[0] != 1", lambda b0, b1, b2, y, z: b0 == 1),
@@ -889,10 +888,10 @@ NEGATION_CASES = [
 
 
 @pytest.mark.parametrize("constraint, predicate", NEGATION_CASES)
-def test_negation_of_a_01_variable(run, solver, request, constraint, predicate):
+def test_negation_of_a_01_variable(run, solver, constraint, predicate):
     # ~b[0] (b[0] being a 0/1 variable) is the expression not(b[0]) (#203); ~b[0] == 0 and ~b[0] != 1 were written b[0] = 0 (#204)
-    if constraint.startswith("Clause"):
-        request.applymarker(bug(CLAUSE))
+    if solver == "COSOCO" and constraint.startswith("Clause"):
+        pytest.skip(COSOCO_CLAUSE)
     r = run(NEGATED + f"satisfy({constraint}, y != z)", solver=solver)
     assert_solutions(r, brute_force(D_NEGATED, lambda *t: predicate(*t) and t[3] != t[4]))
 
@@ -903,3 +902,20 @@ def test_negation_of_a_variable_that_is_not_01(run, constraint):
     r = run(NEGATED + f"satisfy({constraint})")
     assert_fails(r)
     assert "The operator ~ can only be applied to a 0/1 variable" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Clause(b[0], b[1])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 1),
+    ("Clause(b)", lambda b0, b1, b2, y, z: 1 in (b0, b1, b2)),
+    ("Clause(b[0], ~b[1])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0),
+    ("Clause([b[0], b[1]], phases=[True, False])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0),
+    ("Clause([b[0], ~b[1]], phases=[True, True])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0),
+    ("Clause([~b[0], b[1]], phases=[False, True])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 1),
+    ("Clause(b, phases=[True, False, True])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0 or b2 == 1),
+])
+def test_clause_phases(run, solver, constraint, predicate):
+    # the literals are positive by default, and ~x has the opposite phase of x (they had the opposite phases, #205)
+    if solver == "COSOCO":
+        pytest.skip(COSOCO_CLAUSE)
+    r = run(NEGATED + f"satisfy({constraint}, y != z)", solver=solver)
+    assert_solutions(r, brute_force(D_NEGATED, lambda *t: predicate(*t) and t[3] != t[4]))

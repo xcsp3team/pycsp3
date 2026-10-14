@@ -4064,7 +4064,8 @@ def Clause(variables, *variables_complement, phases=None):
 
     :param variables: the first term on which the constraint applies
     :param variables_complement: the other terms (if any) on which the constraint applies
-    :param phases: the phase of the variables involved in the clause
+    :param phases: the phases of the literals: True for the variable itself, False for its negation (by default, all True); a literal ~x has
+                   the opposite phase of the variable x
     :return: a constraint Clause
     :example:
         # a SAT-like model: at least one of the three literals of the clause must be true
@@ -4079,11 +4080,11 @@ def Clause(variables, *variables_complement, phases=None):
         # a solution: [0, 1, 1]
     """
     variables = flatten(variables, variables_complement)
-    phases = [False] * len(variables) if phases is None else flatten(phases)
+    phases = [True] * len(variables) if phases is None else flatten(phases)  # (the literals were negative by default, #205)
     assert len(variables) == len(phases)
     for i, literal in enumerate(variables):
-        if isinstance(literal, Node) and literal.type == TypeNode.NOT and literal.cnt[0].type == TypeNode.VAR:  # ~x: the variable x, negatively
-            variables[i], phases[i] = literal.cnt[0].cnt, True
+        if isinstance(literal, Node) and literal.type == TypeNode.NOT and literal.cnt[0].type == TypeNode.VAR:  # ~x: the variable x, opposite phase
+            variables[i], phases[i] = literal.cnt[0].cnt, not phases[i]
     checkType(variables, [Variable])
     checkType(phases, [bool])
     return ECtr(ConstraintClause(variables, phases))
