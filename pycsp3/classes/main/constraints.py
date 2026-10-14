@@ -57,17 +57,6 @@ class Diffs:
                 # for i in range(len(Diffs.fusion.argument_flags)): Diffs.fusion.argument_flags[i] |= self.argument_flags[i]
 
 
-def is_variant(v):
-    # True if v is a variant of a declared 0/1 variable built by ~ (as ~b or ~~b), which is an object of type Variable (and not of a subclass)
-    return type(v) is Variable and not v.inverse
-
-
-def variant_as_term(v):
-    # for a variant of a declared 0/1 variable b built by ~: the expression not(b) if it is negated (as ~b), and b otherwise (as ~~b)
-    x = Variable.name2obj.get(v.id, v)
-    return Node.build(TypeNode.NOT, x) if v.negation else x
-
-
 class ConstraintArgument:
     def __init__(self, name, content, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
         assert adhoc or isinstance(name, (TypeCtrArg, TypeXML, TypeAnn, main.annotations.TypeAnnArg)), str(name) + " " + str(type(name))
@@ -123,8 +112,6 @@ class Constraint:
         return [v for v in self.arguments.items() if str(v[0]) != "condition"] == [v for v in other.arguments.items() if str(v[0]) != "condition"]
 
     def arg(self, name, content, *, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
-        if name == TypeCtrArg.LIST and isinstance(content, list) and any(is_variant(v) for v in content):
-            content = [variant_as_term(v) if is_variant(v) else v for v in content]  # the negation of ~b was lost when writing the list (#203)
         self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc)
         return self
 

@@ -7,7 +7,7 @@ from itertools import product
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug_for, declared_variables
+from harness import assert_fails, assert_solutions, brute_force, bug, bug_for, declared_variables
 
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
@@ -868,3 +868,38 @@ def test_cardinality_on_an_expression(run, solver):
     # an expression is replaced by an auxiliary variable, which was written [aux_gb[0]] (in a list)
     r = run("x = VarArray(size=3, dom=range(3))\nsatisfy(Cardinality([x[0] + 1, x[1], x[2]], occurrences={1: 1, 2: 2}))", solver=solver)
     assert_solutions(r, brute_force([range(3)] * 3, lambda a, b, c: [a + 1, b, c].count(1) == 1 and [a + 1, b, c].count(2) == 2))
+
+
+CLAUSE = ("(to be reported) Clause() writes the literals with the opposite phases, when no phase is given and for ~x: Clause(b[0], ~b[1]) "
+          "gives <clause> not(b[0]) b[1] </clause>")
+NEGATION_CASES = [
+    ("~b[0] == 0", lambda b0, b1, b2, y, z: b0 == 1),
+    ("~b[0] != 1", lambda b0, b1, b2, y, z: b0 == 1),
+    ("~b[0] == 1", lambda b0, b1, b2, y, z: b0 == 0),
+    ("~b[0] != 0", lambda b0, b1, b2, y, z: b0 == 0),
+    ("(~b[0] == 0) | (b[1] == 1)", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 1),
+    ("~b[0]", lambda b0, b1, b2, y, z: b0 == 0),
+    ("~~b[0]", lambda b0, b1, b2, y, z: b0 == 1),
+    ("~b[0] | ~b[1]", lambda b0, b1, b2, y, z: b0 == 0 or b1 == 0),
+    ("If(~b[0], Then=y == 1)", lambda b0, b1, b2, y, z: b0 == 1 or y == 1),
+    ("If(~b[0], Then=y == 1, Else=y == 2)", lambda b0, b1, b2, y, z: y == (1 if b0 == 0 else 2)),
+    ("Clause(b[0], ~b[1])", lambda b0, b1, b2, y, z: b0 == 1 or b1 == 0),
+    ("(~b[0], y) in {(0, 1), (1, 2)}", lambda b0, b1, b2, y, z: (1 - b0, y) in ((0, 1), (1, 2))),
+]
+
+
+@pytest.mark.parametrize("constraint, predicate", NEGATION_CASES)
+def test_negation_of_a_01_variable(run, solver, request, constraint, predicate):
+    # ~b[0] (b[0] being a 0/1 variable) is the expression not(b[0]) (#203); ~b[0] == 0 and ~b[0] != 1 were written b[0] = 0 (#204)
+    if constraint.startswith("Clause"):
+        request.applymarker(bug(CLAUSE))
+    r = run(NEGATED + f"satisfy({constraint}, y != z)", solver=solver)
+    assert_solutions(r, brute_force(D_NEGATED, lambda *t: predicate(*t) and t[3] != t[4]))
+
+
+@pytest.mark.parametrize("constraint", ["~y == 1", "Sum(~y, z) == 1", "Count(~y, z, value=1) == 1"])
+def test_negation_of_a_variable_that_is_not_01(run, constraint):
+    # the operator ~ is only for 0/1 variables (an assert without message was raised later)
+    r = run(NEGATED + f"satisfy({constraint})")
+    assert_fails(r)
+    assert "The operator ~ can only be applied to a 0/1 variable" in r.stdout, r.report()
