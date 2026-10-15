@@ -30,7 +30,6 @@ CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutio
 COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-NEGATED_MEMBERSHIP = "#222: ~(e in S) fails with AssertionError: non authorized type -2, instead of an explicit message"
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
 CHOCO_EXCEPT = "CHOCO does not handle nValues with except (Missing Implementation: buildCtrNValuesExcept)"
@@ -913,9 +912,13 @@ def test_constant_in_objectives_message(run, objective):
     assert not r.ok and "The objective is the constant" in r.stdout and "there is nothing to optimize" in r.stdout, r.report()
 
 
-@bug(NEGATED_MEMBERSHIP)
-@pytest.mark.parametrize("constraint", ["~(NValues(x) in {1, 3})", "~(NValues(x) not in {1, 3})", "~(Sum(x) in {1, 3})", "~(x[0] in {1, 2})"])
-def test_negated_membership_message(run, constraint):
-    # Python converts the result of 'in' into a Boolean, and ~True is -2: 'not in' (or 'in') must be used instead
+@pytest.mark.parametrize("constraint, written", [
+    ("~(NValues(x) in {1, 3})", "not in"),
+    ("~(NValues(x) not in {1, 3})", "in"),
+    ("~(Sum(x) in {1, 3})", "not in"),
+    ("~(NValues(x, excepting=0) in range(2)) | (x[0] == 1)", "not in"),
+])
+def test_negated_membership_message(run, constraint, written):
+    # Python converts the result of 'in' into a Boolean, and ~True is -2: 'not in' (or 'in') must be used instead (#222)
     r = run(X4 + f"satisfy({constraint})")
-    assert not r.ok and "not in" in r.stdout, r.report()
+    assert not r.ok and f"write '{written}' instead" in r.stdout, r.report()

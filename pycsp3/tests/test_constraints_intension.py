@@ -213,6 +213,8 @@ def test_relational_operators(run, solver, request, constraint, predicate):
     ("((x > 0) | (y > 0)) & (x != y)", lambda x, y: (x > 0 or y > 0) and x != y),
     ("(x == 0) | (y == 0) | (x == y)", lambda x, y: x == 0 or y == 0 or x == y),
     ("((x > 0) ^ (y > 0)) ^ (x == y)", lambda x, y: ((x > 0) != (y > 0)) != (x == y)),
+    ("1 ^ (x > 0)", lambda x, y: not x > 0),  # an integer on the left of ^ (__rxor__, #222)
+    ("0 ^ (x > y)", lambda x, y: x > y),
 ])
 def test_logical_operators(run, solver, request, constraint, predicate):
     check(request, run, solver,[constraint], XY, predicate)
@@ -226,6 +228,7 @@ def test_logical_operators(run, solver, request, constraint, predicate):
     ("b == (x < y)", lambda x, y, b: b == (x < y)),
     ("b != (x < y)", lambda x, y, b: b != (x < y)),
     ("b ^ (x < y)", lambda x, y, b: (b == 1) != (x < y)),
+    ("1 ^ b", lambda x, y, b: b == 0),
     ("(x > 0) >> b", lambda x, y, b: x <= 0 or b == 1),
     ("x + b == y", lambda x, y, b: x + b == y),
 ])
@@ -257,6 +260,47 @@ def test_reified_equality_with_a_non_binary_variable(run, solver, request, const
 ])
 def test_membership_operators(run, solver, request, constraint, predicate):
     check(request, run, solver,[constraint, "y != 0"], XY, lambda x, y: predicate(x, y) and y != 0)
+
+
+NOT_IN = "write 'not in' instead, as in x not in {1, 3} for ~(x in {1, 3})"
+IN = "write 'in' instead, as in x in {1, 3} for ~(x not in {1, 3})"
+
+
+@pytest.mark.parametrize("constraint, message", [
+    ("~(x in {1, 2})", NOT_IN),
+    ("~(x not in {1, 2})", IN),
+    ("~(x + y in {0, 1})", NOT_IN),
+    ("~(x in range(2))", NOT_IN),
+    ("[~(x in {1, 2}), y != 0]", NOT_IN),
+    ("y != 0, ~(x in {1, 2})", NOT_IN),
+    ("~(x in {1, 2}) | (y == 1)", NOT_IN),
+    ("(y == 1) | ~(x in {1, 2})", NOT_IN),
+    ("(y == 1) & ~(x not in {1, 2})", IN),
+    ("~(x in {1, 2}) & (y == 1)", NOT_IN),
+    ("(y == 1) ^ ~(x in {1, 2})", NOT_IN),
+    ("~(x in {1, 2}) ^ (y == 1)", NOT_IN),
+    ("~(x not in {1, 2}) ^ (y == 1)", IN),
+    ("imply(y == 1, ~(x in {1, 2}))", NOT_IN),
+    ("iff(y == 1, ~(x in {1, 2}))", NOT_IN),
+    ("xor(y == 1, ~(x in {1, 2}))", NOT_IN),
+    ("either(y == 1, ~(x in {1, 2}))", NOT_IN),
+    ("both(y == 1, ~(x in {1, 2}))", NOT_IN),
+    ("conjunction(y == 1, ~(x in {1, 2}))", NOT_IN),
+    ("disjunction([y == 1, ~(x in {1, 2})])", NOT_IN),
+    ("If(y == 1, Then=~(x in {1, 2}))", NOT_IN),
+])
+def test_negated_membership(run, constraint, message):
+    # Python evaluates an expression 'in' as a Boolean, and ~True is -2 (~False is -1): 'not in' (resp. 'in') must be written instead (#222)
+    r = run(f"x = Var(dom=range(3))\ny = Var(dom=range(3))\nsatisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraints", ["x in {1, 2}, x + y == -1", "x in {1, 2}, x != -2", "x in {1, 2}, x - 2 >= -1", "x not in {1, 2}, y - 3 < -1",
+                                         "x in {1, 2}, (x - 3 == -1) | (y == 1)"])
+def test_negative_integers_with_membership(run, constraints):
+    # the integers -1 and -2 are accepted in a model where an expression 'in' is waiting (#222)
+    r = run(f"x = Var(dom=range(3))\ny = Var(dom=range(3))\nsatisfy({constraints})")
+    assert r.ok and r.xml is not None, r.report()
 
 
 # ------------------------------------------------------------------------------------------------------ abs() min() max()
@@ -332,6 +376,7 @@ def test_min_max_objective(run, solver):
     ("xor(True, x > 0, True)", lambda x, y, b: x > 0),
     ("xor(x > 0, True, y > 0, True, b)", lambda x, y, b: ((x > 0) + (y > 0) + b) % 2 == 1),
     ("xor([x > 0, y > 0], True)", lambda x, y, b: not (x > 0 and y > 0)),
+    ("xor(1, x > 0)", lambda x, y, b: x <= 0),  # an integer as first argument (__rxor__, #222)
     ("iff(x > 0, y > 0)", lambda x, y, b: (x > 0) == (y > 0)),
     ("iff(x > 0, y > 0, b)", lambda x, y, b: (x > 0) == (y > 0) == (b == 1)),
     ("iff([x >= 0, y >= 0])", lambda x, y, b: (x >= 0) == (y >= 0)),

@@ -23,7 +23,7 @@ from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic, check_no_boolean
 from pycsp3.classes.nodes import TypeNode, Node, neg_var
 from pycsp3.dashboard import options
-from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
+from pycsp3.tools.curser import queue_in, check_no_negated_membership, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, error, warning, warning_if, error_if, is_2d_list)
 
@@ -1078,6 +1078,8 @@ def satisfy(*args, no_comment_tags_extraction=False):
     for i, arg in enumerate(args):
         if arg is None:
             continue
+        if len(queue_in) > 0:  # ~(e in S) gives an integer (-2), with an expression 'in' waiting
+            check_no_negated_membership(arg if isinstance(arg, (list, tuple)) else (arg,))
         arg = _root_node(arg)
         if isinstance(arg, ConstraintDummyConstant):
             if arg.val != 0:  # the constant 1 (true) is discarded
@@ -1401,6 +1403,7 @@ def xor(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    check_no_negated_membership(args)
     args = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args]
     if any(isinstance(v, bool) for v in args):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
@@ -1435,6 +1438,7 @@ def iff(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    check_no_negated_membership(args)
     error_if(len(args) < 2, "iff() must have at least two arguments (possibly given in a list), which is not the case of " + str(len(args)))
 
     if any(isinstance(v, bool) for v in args):
@@ -1477,6 +1481,7 @@ def imply(*args):
         # a solution: [0, 0, 1, 1] [0, 0, 1, 1]
     """
     error_if(len(args) != 2, "imply() must have two arguments (a condition and a consequence), which is not the case of " + str(len(args)))
+    check_no_negated_membership(args)
     cnd, tp = args  # condition and then part
     if isinstance(cnd, bool) or isinstance(tp, bool):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
@@ -1738,6 +1743,7 @@ def conjunction(*args):
 
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    check_no_negated_membership(args)
     if len(queue_in) == 0:
         args = [v for v in args if v is not True]
         if any(v is False for v in args):
@@ -1767,6 +1773,7 @@ def both(this, And):
 
         # a solution: [10]
     """
+    check_no_negated_membership((this, And))
     if this is None:
         return And
     if And is None:
@@ -1800,6 +1807,7 @@ def disjunction(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    check_no_negated_membership(args)
     if len(queue_in) == 0:
         args = [v for v in args if v is not False]
         if any(v is True for v in args):
@@ -1829,6 +1837,7 @@ def either(this, Or):
 
         # a solution: [0, 4]
     """
+    check_no_negated_membership((this, Or))
     if this is None:
         return Or
     if Or is None:

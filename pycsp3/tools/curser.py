@@ -20,6 +20,19 @@ from pycsp3.tools.utilities import (flatten, is_containing, unique_type_in, is_1
 
 queue_in = deque()  # To store partial constraints when using the IN operator
 
+
+def check_no_negated_membership(values):
+    # ~(e in S) and ~(e not in S) give the integers -2 and -1, Python evaluating an expression 'in' as a Boolean (the expression being kept aside in
+    # queue_in): such an integer cannot be the operand of a logical operator, nor a constraint (values is an iterable)
+    if len(queue_in) > 0:
+        for v in values:
+            if type(v) is int and (v == -2 or v == -1):
+                if v == -2:
+                    error("The operator ~ cannot be applied to an expression with 'in', which Python evaluates as a Boolean (~True being -2): "
+                          "write 'not in' instead, as in x not in {1, 3} for ~(x in {1, 3})")
+                error("The operator ~ cannot be applied to an expression with 'not in', which Python evaluates as a Boolean (~False being -1): "
+                      "write 'in' instead, as in x in {1, 3} for ~(x not in {1, 3})")
+
 unsafe_cache = False  # see for example Pic since the table is released as it occurs as a parameter
 
 
@@ -304,6 +317,7 @@ class OpOverrider:
         ECtr.__ror__ = EMetaCtr.__ror__ = Variable.__ror__ = Node.__ror__ = OpOverrider.__ror__
         ECtr.__invert__ = Node.__invert__ = OpOverrider.__invert__  # we keep __invert__ for Variable
         ECtr.__xor__ = EMetaCtr.__xor__ = Variable.__xor__ = Node.__xor__ = OpOverrider.__xor__
+        ECtr.__rxor__ = EMetaCtr.__rxor__ = Variable.__rxor__ = Node.__rxor__ = OpOverrider.__rxor__
         Variable.__rshift__ = Node.__rshift__ = OpOverrider.__rshift__  # TODO ECtr and EMetaCtr too?
 
     @staticmethod
@@ -344,6 +358,7 @@ class OpOverrider:
         ECtr.__ror__ = EMetaCtr.__ror__ = Variable.__ror__ = Node.__ror__ = None
         ECtr.__invert__ = Node.__invert__ = None  # we keep __invert__ for Variable
         ECtr.__xor__ = EMetaCtr.__xor__ = Variable.__xor__ = Node.__xor__ = None
+        ECtr.__rxor__ = EMetaCtr.__rxor__ = Variable.__rxor__ = Node.__rxor__ = None
         Variable.__rshift__ = Node.__rshift__ = None
 
         return OpOverrider
@@ -643,6 +658,7 @@ class OpOverrider:
         return other.__ne__(self) if isinstance(other, (PartialConstraint, ScalarProduct)) else Node.build(TypeNode.NE, self, other)
 
     def __or__(self, other):
+        check_no_negated_membership((other,))
         if isinstance(other, ConstraintDummyConstant):
             assert other.val in (0, 1)
             return self if other.val == 0 else ConstraintDummyConstant(1)
@@ -667,6 +683,7 @@ class OpOverrider:
     __ror__ = __or__
 
     def __and__(self, other):
+        check_no_negated_membership((other,))
         if isinstance(other, ConstraintDummyConstant):
             assert other.val in (0, 1)
             return self if other.val == 1 else ConstraintDummyConstant(0)
@@ -709,6 +726,7 @@ class OpOverrider:
         return Node.build(TypeNode.NOT, self)
 
     def __xor__(self, other):
+        check_no_negated_membership((other,))
         if isinstance(other, ConstraintDummyConstant):
             assert other.val in (0, 1)
             other = other.val
@@ -723,6 +741,8 @@ class OpOverrider:
         if isinstance(other, (tuple, list)):
             other = other[0] if len(other) == 1 else functions.conjunction(other)
         return Node.build(TypeNode.XOR, self, other)
+
+    __rxor__ = __xor__  # (xor being commutative), for an operand on the left that is not an object of PyCSP3 (as an integer)
 
     def __rshift__(self, other):
         return functions.imply(self, other)
