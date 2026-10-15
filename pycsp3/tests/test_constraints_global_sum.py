@@ -6,7 +6,7 @@ on variables and on expressions, as a term of expressions, in groups of constrai
 
 Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being compared with the ones computed by brute force.
 According to XCSP3-core, sum(X, C, (op, k)) holds iff the sum of the c[i] * x[i] satisfies (op, k), with |X| = |C| >= 2, expressions being accepted
-instead of variables (generalized forms). In the mini-tracks of the XCSP3 competitions, the list of a sum only contains variables and the operator of
+instead of variables (generalized forms); a sum of one term is however posted for a variable with a coefficient compared with in or not in (#208). In the mini-tracks of the XCSP3 competitions, the list of a sum only contains variables and the operator of
 the condition is relational (lt, le, gt, ge, eq or ne), its operand being a value or a variable.
 """
 
@@ -23,6 +23,8 @@ COSOCO_BASIC = ("xcsp3team/cosoco#88: cosoco gives wrong solutions for a sum mix
                 "coefficients (matchParams() accepts any variable, while BasicNodeVar assumes a 0/1 variable)")
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
+COSOCO_UNSORTED_SET = ("xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on a sum whose condition is in a set whose values are not in "
+                       "increasing order, as {-1,-2} written by PyCSP3 (buildVariableInteger(): the first and last values of the set taken as bounds)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
@@ -403,19 +405,62 @@ def test_sum_in_arithmetic_expressions(run, solver, request, constraint, predica
         "one variable with a coefficient in a set", "one variable with a coefficient and an interval as condition",
         "one variable with a coefficient and notin as condition", "one variable (scalar product without Sum) in a set",
         "one variable (scalar product without Sum) in a list", "one variable (scalar product without Sum) not in a range"])
-def test_sum_on_a_single_variable(run, solver, constraint, predicate):
+def test_sum_on_a_single_variable(run, solver, request, constraint, predicate):
+    notin_bugs(request, constraint)
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(t[0]) and t[3] != 1)
 
 
-def test_xcsp3_sum_has_at_least_two_terms(run):
-    # XCSP3-core requires |X| = |C| >= 2
-    for constraint in ["Sum(x[0] * 3) == 3", "Sum(-x[0]) == -1", "Sum(x[:1] * [2]) <= 2", "Sum(x[0], condition=('eq', 1))", "x[:1] * [2] <= 2",
-                       "Sum(x[0] * 3) in {0, 3}", "Sum(x[0] * 2, condition=('in', range(1, 3)))", "x[:1] * [2] in range(1, 4)",
-                       "x[:1] * [2] not in range(1, 4)", "x[:1] * [2] in {2, 4}"]:
-        r = run(X4 + f"satisfy({constraint})")
-        assert r.ok, r.report()
-        for c in r.xml.iter("sum"):
-            assert len(c.find("list").text.split()) >= 2, constraint + "\n" + r.report()
+@pytest.mark.parametrize("constraint, predicate", [
+    ("x[0] * 2 in {2, 4}", lambda a, b, c, d: 2 * a in (2, 4)),
+    ("Sum(-x[0]) in {-1, -2}", lambda a, b, c, d: a in (1, 2)),
+    ("[Sum(x[i] * 2) in {2, 4} for i in range(3)]", lambda a, b, c, d: all(2 * v in (2, 4) for v in (a, b, c))),
+    ("(x[0] * 2 in {0, 4}) | (x[1] == 1)", lambda a, b, c, d: 2 * a in (0, 4) or b == 1),
+    ("5 // (x[:1] * [3]) == 1", lambda a, b, c, d: a == 1),
+], ids=["expression in a set", "negated variable in a set", "group", "logical expression", "integer division"])
+def test_sum_of_one_term_in_other_contexts(run, solver, request, constraint, predicate):
+    if constraint == "Sum(-x[0]) in {-1, -2}":  # the set is written {-1,-2}
+        bug_for(request, "COSOCO", COSOCO_UNSORTED_SET)
+    check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
+
+
+@pytest.mark.parametrize("constraint, args", [
+    ("Sum(x[0] * 3) == 3", ()),
+    ("Sum(-x[0]) == -1", ()),
+    ("Sum(x[:1] * [2]) <= 2", ()),
+    ("Sum(x[0], condition=('eq', 1))", ()),
+    ("x[:1] * [2] <= 2", ()),
+    ("(x[0] * 2 in {0, 4}) | (x[1] == 1)", ()),
+    ("5 // (x[:1] * [3]) == 1", ()),
+    ("Sum(x[0] * 3) in {0, 3}", ("-mini",)),
+    ("x[:1] * [2] not in range(1, 4)", ("-mini",)),
+    ("Sum(x[0] * 2, condition=('in', range(1, 3)))", ("-mini",)),
+])
+def test_xcsp3_sum_has_at_least_two_terms(run, constraint, args):
+    # XCSP3-core requires |X| = |C| >= 2: a sum of one term is only posted with in or not in (#208), and not with -mini
+    r = run(X4 + f"satisfy({constraint})", args=args)
+    assert r.ok, r.report()
+    for c in r.xml.iter("sum"):
+        assert len(c.find("list").text.split()) >= 2, constraint + "\n" + r.report()
+
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("Sum(x[0] * 3) in {0, 3}", ("3", "(in,{0,3})")),
+    ("Sum(x[0] * 3) not in {0, 3}", ("3", "(notin,{0,3})")),
+    ("Sum(x[0] * 2, condition=('in', range(1, 3)))", ("2", "(in,1..2)")),
+    ("Sum(x[0] * 2, condition=('notin', {2, 4}))", ("2", "(notin,{2,4})")),
+    ("x[:1] * [480] in range(960, 1441)", ("480", "(in,960..1440)")),
+    ("x[:1] * [2] in [0, 4]", ("2", "(in,{0,4})")),
+    ("x[:1] * [2] not in range(1, 4)", ("2", "(notin,1..3)")),
+    ("x[0] * 3 in {0, 3}", ("3", "(in,{0,3})")),
+])
+def test_xcsp3_sum_of_one_term_with_in(run, constraint, expected):
+    # a variable with a coefficient compared with in or not in gives a sum of one term, without auxiliary variable (#208)
+    r = run(X4 + f"satisfy({constraint})")
+    assert list(declared_variables(r)) == ["x[0]", "x[1]", "x[2]", "x[3]"], r.report()
+    sums = list(r.xml.iter("sum"))
+    assert len(sums) == 1 and len(list(r.xml.find("constraints"))) == 1, r.report()
+    assert sums[0].find("list").text.split() == ["x[0]"], r.report()
+    assert (sums[0].find("coeffs").text.strip(), sums[0].find("condition").text.strip()) == expected, r.report()
 
 
 @pytest.mark.parametrize("constraint, predicate, args", [

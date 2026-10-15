@@ -1627,6 +1627,11 @@ class _Auxiliary:
 
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
+        if isinstance(pc.constraint, ConstraintSum) and len(pc.constraint.arguments[TypeCtrArg.LIST].content) == 1:
+            # a sum of one term replaced by an auxiliary variable (as in 5 // (x[:1] * [3]) or in a logical expression) is defined by an intension,
+            # and not by a sum of one term with the condition (eq,aux): a sum of one term is only posted directly compared with 'in' or 'not in' (#208)
+            term = pc.constraint.to_terms()[0]
+            return term if isinstance(term, Variable) else self.replace_node(term)
         if not options.dont_use_aux_cache:
             for c, x in self.cache:
                 if pc.constraint.equal_except_condition(c):
