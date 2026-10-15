@@ -30,6 +30,16 @@ SOLVERS = ("ACE", "CHOCO", "COSOCO")
 
 TIMEOUT = 60  # in seconds, for running a model (solving included)
 
+# The Java solvers (ACE, CHOCO) start faster with an archive of their classes (AppCDS), built once at the start of each session (see
+# build_java_archives()), and with the compiler C1 only (the models of the tests are small): about 0.26 s instead of 0.50 s for ACE
+JARS = {"ACE": (ROOT / "pycsp3" / "solvers" / "ace" / "ACE-2.6.jar", ["-jar"], []),
+        "CHOCO": (ROOT / "pycsp3" / "solvers" / "choco" / "choco-parsers-4.10.15-beta.jar", ["-cp"], ["org.chocosolver.parser.xcsp.ChocoXCSP"])}
+TINY_INSTANCE = """<instance format="XCSP3" type="CSP">
+  <variables> <array id="x" size="[3]"> 0..2 </array> </variables>
+  <constraints> <allDifferent> x[] </allDifferent> <intension> lt(x[0],x[1]) </intension> </constraints>
+</instance>
+"""
+
 MARKER = "@@PYCSP3-TEST@@"
 
 ANSI_CODES = re.compile(r"\x1b\[[0-9;]*m")
@@ -118,13 +128,36 @@ class Run:
                           "---- stdout ----", self.stdout, "---- stderr ----", self.stderr])
 
 
-def _execute(code, directory, args, files, timeout):
+def build_java_archives(directory):
+    """
+    Builds in the specified directory an archive of the classes of each Java solver (AppCDS), by solving a tiny instance.
+    A solver whose archive cannot be built is run without archive.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "tiny.xml").write_text(TINY_INSTANCE)
+    for solver, (jar, prefix, suffix) in JARS.items():
+        archive = directory / (solver.lower() + ".jsa")
+        subprocess.run(["java", "-XX:ArchiveClassesAtExit=" + str(archive), *prefix, str(jar), *suffix, str(directory / "tiny.xml")],
+                       cwd=directory, capture_output=True, timeout=TIMEOUT)
+
+
+def _java_options(solver):
+    """The options of the JVM of the specified solver (given by the variable JDK_JAVA_OPTIONS, read by the launcher java), or None."""
+    archive = ROOT / "pycsp3" / "tests" / "output" / "java" / ((solver or "").lower() + ".jsa")
+    if solver not in JARS or not archive.exists():
+        return None
+    return "-XX:SharedArchiveFile=" + str(archive) + " -Xshare:auto -XX:TieredStopAtLevel=1"
+
+
+def _execute(code, directory, args, files, timeout, solver=None):
     (directory / "model.py").write_text(code)
     for name, content in (files or {}).items():
         (directory / name).parent.mkdir(parents=True, exist_ok=True)  # the name may contain subdirectories, as in "instances/a.txt"
         (directory / name).write_text(content)
     env = dict(os.environ)
     env["PYTHONPATH"] = str(ROOT) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    if (options := _java_options(solver)) is not None:
+        env["JDK_JAVA_OPTIONS"] = options
     try:
         process = subprocess.run([sys.executable, "model.py", *args], cwd=directory, env=env, stdin=subprocess.DEVNULL,  # input() never waits
                                  capture_output=True, text=True, timeout=timeout)
@@ -161,11 +194,11 @@ def run_model(code, directory, *, solver=None, args=(), files=None, header=True,
         code = "from pycsp3 import *\n\n" + code
     if solver is None:
         return _execute(code, directory, args, files, timeout)
-    r = _execute(code + SOLVING.format(solver=solver, marker=MARKER, enumerating=True), directory, args, files, timeout)
+    r = _execute(code + SOLVING.format(solver=solver, marker=MARKER, enumerating=True), directory, args, files, timeout, solver)
     if r.cop:
         (directory / "optimization").mkdir()
         r.optimization = _execute(code + SOLVING.format(solver=solver, marker=MARKER, enumerating=False),
-                                  directory / "optimization", args, files, timeout)
+                                  directory / "optimization", args, files, timeout, solver)
     return r
 
 
