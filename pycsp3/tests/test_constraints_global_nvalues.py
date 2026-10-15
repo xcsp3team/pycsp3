@@ -536,20 +536,13 @@ def test_nvalues_with_integers(run, solver, request, constraint, predicate):
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
 
 
-@pytest.mark.parametrize("constraint, holds", [
-    ("NValues(1, 2) == 2", True),
-    ("NValues(1, 1) == 1", True),
-    ("NValues(5) == 1", True),
-    ("NValues(1, 2, 1) == 3", False),
-    ("NValues(1, 2, excepting=1) == 1", True),
-])
-def test_nvalues_on_integers_only(run, solver, request, constraint, holds):
-    # each integer is replaced by an auxiliary variable whose domain only contains this integer
-    if "excepting" in constraint:
-        skip_except(solver)
-    if constraint == "NValues(1, 2, 1) == 3":
-        bug_for(request, "ACE", ACE_LIMIT)  # nValues on two auxiliary variables with the condition (eq,3)
-    check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: holds and t[3] != 1)
+@pytest.mark.parametrize("constraint", ["NValues(1, 2) == 2", "NValues(1, 1) == 1", "NValues(5) == 1", "NValues(1, 2, 1) == 3", "NValues([1, 2], 3) <= 2",
+                                        "NValues(1, 2, excepting=1) == 1", "NumberDistinctValues(1, 2) == 2", "NValues((1, 2), condition=('eq', 2))"])
+def test_nvalues_on_integers_only(run, constraint):
+    # as for NotAllEqual(), AllDifferent() and AllEqual(), at least one variable (or expression) is required (#219)
+    r = run(X4 + f"satisfy({constraint}, x[3] != 1)")
+    assert_fails(r)
+    assert "NValues() requires at least one variable (or expression), and not only integers" in r.stdout, r.report()
 
 
 # ----------------------------------------------------------------------------------------------- arithmetic with NValues

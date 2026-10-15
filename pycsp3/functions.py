@@ -3204,7 +3204,10 @@ def NValues(within, *within_complement, excepting=None, condition=None):
         # a solution: [0, 0, 1, 1, 1, 1, 1, 2]
     """
     error_if(within is None, "NValues() requires variables (or expressions), which is not the case of None")
-    return _nvalues(flatten(within, within_complement), excepting, condition)
+    terms = flatten(within, within_complement)
+    if len(terms) > 0 and all(isinstance(t, int) for t in terms):
+        error("NValues() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
+    return _nvalues(terms, excepting, condition)
 
 
 def _nvalues_excepting(excepting):
