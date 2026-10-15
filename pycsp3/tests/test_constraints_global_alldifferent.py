@@ -10,7 +10,7 @@ from itertools import product
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug_for
+from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 COSOCO_MATRIX_EXCEPT = "xcsp3team/cosoco#78: cosoco loses solutions of allDifferent-matrix with except"
@@ -19,6 +19,11 @@ COSOCO_MATRIX_ROWS = ("xcsp3team/cosoco#82: cosoco fails on allDifferent-matrix 
 COSOCO_EXCEPT_EXPRESSIONS = "xcsp3team/cosoco#78: cosoco stops with a segmentation fault on allDifferent with expressions and except"
 CHOCO_MATRIX_EXCEPT = "chocoteam/choco-solver#1248: CHOCO loses solutions of allDifferent-matrix with except"
 CHOCO_EXCEPT_EXPRESSIONS = "CHOCO does not handle allDifferent with expressions and except (Other forms not implemented)"
+EXCEPT_LOGICAL = "#223: AllDifferent with excepting in a logical expression is replaced by NValues(..., excepting=...) == n (solutions lost)"
+CHOCO_NVALUES_EXCEPT = ("CHOCO does not handle nValues with except (Missing Implementation: buildCtrNValuesExcept), by which AllDifferent with "
+                        "excepting is replaced in a logical expression")
+COSOCO_NVALUES_EXCEPT = ("cosoco does not handle nValues with except (s UNSUPPORTED), by which AllDifferent with excepting is replaced in a "
+                         "logical expression")
 
 
 def different(values, excepting=()):
@@ -188,6 +193,21 @@ def test_alldifferent_excepting_on_expressions(run, solver, request):
         pytest.skip(CHOCO_EXCEPT_EXPRESSIONS)
     bug_for(request, "COSOCO", COSOCO_EXCEPT_EXPRESSIONS)
     check(run, solver, X4 + "satisfy(AllDifferent(x[0] + 1, x[1], x[2], excepting=1))", [range(4)] * 4, lambda a, b, c, d: different((a + 1, b, c), {1}))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("AllDifferent(x) | (z == 0)", lambda a, b, c, z: different((a, b, c)) or z == 0),
+    ("~AllDifferent(x)", lambda a, b, c, z: not different((a, b, c))),
+    ("AllDifferent(x, excepting=0) | (z == 0)", lambda a, b, c, z: different((a, b, c), {0}) or z == 0),
+    ("~AllDifferent(x, excepting=0)", lambda a, b, c, z: not different((a, b, c), {0})),
+    ("imply(z == 1, AllDifferent(x, excepting=[0, 1]))", lambda a, b, c, z: z != 1 or different((a, b, c), {0, 1})),
+])
+def test_alldifferent_in_logical_expressions(run, solver, request, constraint, predicate):
+    if "excepting" in constraint:
+        if solver != "ACE":
+            pytest.skip(CHOCO_NVALUES_EXCEPT if solver == "CHOCO" else COSOCO_NVALUES_EXCEPT)
+        request.applymarker(bug(EXCEPT_LOGICAL))
+    check(run, solver, X3 + "z = Var(range(2))\n" + f"satisfy({constraint})", [range(3)] * 3 + [range(2)], predicate)
 
 
 # ---------------------------------------------------------------------------------------------------------- matrix
