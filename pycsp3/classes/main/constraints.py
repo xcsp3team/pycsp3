@@ -740,12 +740,16 @@ class ConstraintNValues(ConstraintWithCondition):
         self.arg(TypeCtrArg.LIST, lst)
         self.arg(TypeCtrArg.EXCEPT, excepting)
         self.arg(TypeCtrArg.CONDITION, condition)
+        # the smallest and greatest possible numbers of distinct values (with excepting, all the terms may take excepted values)
+        self.bounds = (1 if excepting is None else 0, len(lst))
+
+    known_result = ConstraintCount.known_result
 
     def min_possible_value(self):
-        return 1 if self.arguments[TypeCtrArg.EXCEPT].content is None else 0  # with excepting, all the terms may take excepted values
+        return self.bounds[0]
 
     def max_possible_value(self):
-        return len(self.arguments[TypeCtrArg.LIST].content)
+        return self.bounds[1]
 
 
 class ConstraintCardinality(Constraint):
@@ -1230,8 +1234,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     @staticmethod
     def complete(c):
-        # the constraint c, now with its condition; a count whose result is known when compiling is a constant (true or false)
-        if isinstance(c, ConstraintCount):
+        # the constraint c, now with its condition; a count (or a number of distinct values) whose result is known when compiling is a constant
+        if isinstance(c, (ConstraintCount, ConstraintNValues)):
             k = c.known_result()
             if k is not None:
                 return ConstraintDummyConstant(k)

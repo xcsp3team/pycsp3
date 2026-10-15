@@ -3255,7 +3255,8 @@ def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
         t = terms[0]
         term = Node.build(TypeNode.NE, t, excepting[0]) if len(excepting) == 1 else Node.build(TypeNode.NOTIN, t, Node.build(TypeNode.SET, excepting))
         return term if condition is None else _term_with_condition(term, condition)
-    return _wrapping_by_complete_or_partial_constraint(ConstraintNValues(terms, excepting, condition))
+    ctr = ConstraintNValues(terms, excepting, condition)
+    return _wrapping_by_complete_or_partial_constraint(ctr) if condition is None else PartialConstraint.complete(ctr)
 
 
 def NumberDistinctValues(within, *within_complement, excepting=None, condition=None):

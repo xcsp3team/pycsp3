@@ -21,8 +21,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ACE_EQ = ("xcsp3team/ACE#26: ACE gives wrong solutions for nValues with the condition (eq,k), 1 < k < |X|, and fails when the variables have "
           "different types of domains")
-ACE_LIMIT = ("xcsp3team/ACE#28: ACE fails without message on nValues when the limit k is not in 1..|X| (control(1 <= k && k <= list.length) "
-             "in the constructor of NValuesCst), although the instance is valid")
 PARSER_EXCEPT = ("xcsp3team/XCSP3-Java-Tools#23: the parser of ACE and CHOCO (CtrLoaderInteger.nValues()) ignores the element <except> "
                  "when the list contains expressions")
 CHOCO_LIMIT = ("CHOCO 4.10.15-beta (embedded in PyCSP3) finds solutions several times with nValues and the conditions le, ne, ge, gt, and wrong "
@@ -118,15 +116,9 @@ def test_nvalues_conditions(run, solver, request, condition, predicate):
     ("in {0, 5}", lambda n: False),
 ])
 def test_nvalues_with_an_unreachable_condition(run, solver, request, condition, predicate):
-    # the number of distinct values of 4 terms is between 1 and 4
-    if solver == "CHOCO" and " in " in f" {condition}":
-        pytest.skip(CHOCO_IN)
-    if solver == "COSOCO" and condition.startswith("!="):
-        pytest.skip(COSOCO_CONDITION)
-    if condition in ("== 0", "== 5", "== -1", "> 4", "< 1"):
-        bug_for(request, "ACE", ACE_LIMIT)
-    if condition in ("!= 0", ">= 1", "<= 4"):
-        bug_for(request, "CHOCO", CHOCO_LIMIT)
+    # the number of distinct values of 4 terms is between 1 and 4: the result is known when compiling (#220)
+    if not predicate(1):
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
     check(run, solver, X4 + f"satisfy(NValues(x) {condition}, x[0] != 1)", D4, lambda *t: predicate(nv(t)) and t[0] != 1)
 
 
@@ -140,6 +132,37 @@ def test_nvalues_with_an_empty_condition(run, solver, request, constraint, predi
     if not predicate(1):
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
     check(run, solver, X4 + f"satisfy({constraint}, x[0] != 1)", D4, lambda *t: predicate(nv(t)) and t[0] != 1)
+
+
+@pytest.mark.parametrize("constraint, holds", [
+    ("NValues(x) == 0", False),
+    ("NValues(x) == 5", False),
+    ("NValues(x) > 4", False),
+    ("NValues(x) < 1", False),
+    ("NValues(x) in range(5, 9)", False),
+    ("NValues(x, condition=('le', 0))", False),
+    ("NValues(x[0], x[1]) == 3", False),
+    ("NValues(x) >= 1", True),
+    ("NValues(x) <= 4", True),
+    ("NValues(x) != 0", True),
+    ("NValues(x) not in {0, 5}", True),
+    ("NValues(x, excepting=0) >= 0", True),
+    ("NValues(x, excepting=0) <= 4", True),
+    ("NValues(x, excepting=0) == 5", False),
+    ("NValues(x, condition=('ge', 1))", True),
+])
+def test_xcsp3_nvalues_known_when_compiling(run, constraint, holds):
+    # the number of distinct values of n terms is between 1 and n (0 and n with excepting): when the condition holds for all (or none) of these
+    # numbers, nothing is posted (or the constraint false), as for Count() (#220)
+    r = run(X4 + f"satisfy({constraint}, x[3] != 1)")
+    assert r.ok and r.xml.find("constraints/nValues") is None, r.report()
+    assert ("trivially false" in r.stdout) != holds, r.report()
+
+
+@pytest.mark.parametrize("constraint", ["NValues(x) == 4", "NValues(x) >= 2", "NValues(x, excepting=0) == 0", "NValues(x) <= 3", "NValues(x) in {0, 1}"])
+def test_xcsp3_nvalues_not_known_when_compiling(run, constraint):
+    r = run(X4 + f"satisfy({constraint})")
+    assert r.ok and r.xml.find("constraints/nValues") is not None, r.report()
 
 
 @pytest.mark.parametrize("constraint, predicate", [
@@ -614,7 +637,7 @@ def test_nvalues_in_groups(run, solver, request, constraints, predicate):
     if "excepting" in constraints:
         skip_except(solver)
     if constraints == "[NValues(m[i]) == i for i in range(3)]":
-        bug_for(request, "ACE", ACE_LIMIT)  # NValues(m[0]) == 0
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # NValues(m[0]) == 0 is known to be false when compiling (#220)
     check(run, solver, M32 + f"satisfy({constraints})", D32, predicate)
 
 
