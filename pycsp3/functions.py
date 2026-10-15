@@ -3206,8 +3206,8 @@ def NValues(within, *within_complement, excepting=None, condition=None):
 
 
 def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
-    if len(terms) == 0:
-        return ConstraintDummyConstant(0)
+    if len(terms) == 0:  # the number of distinct values of no term is 0
+        return _constant_with_condition(0, Condition.build_condition(condition))
     if len(terms) == 1 and excepting is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) and not isinstance(terms[0], bool):
         return _constant_with_condition(1, Condition.build_condition(condition))  # a single term (an invalid term is reported below, as for AllEqual())
     integers = {}  # an integer given several times is replaced by a single auxiliary variable

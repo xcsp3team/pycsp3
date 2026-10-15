@@ -32,7 +32,6 @@ CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutio
 COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-NO_TERM_CONDITION = "#217: NValues() on no term ignores the parameter condition: the constraint is always false"
 EXCEPTING = ("#218: excepting: an empty collection gives an empty element <except>, a range is refused, a Boolean is accepted, a value given "
              "several times is accepted")
 CONSTANT_OBJECTIVE = "#221: the objective is a constant, reported by TypeError: Wrong type for Dummy"
@@ -490,14 +489,16 @@ def test_xcsp3_nvalues_has_at_least_two_terms(run, constraint):
     ("NValues([]) in {0, 3}", True),
     ("NValues([], excepting=0) == 0", True),
     ("NValues([], x[3]) == 1", None),
-    pytest.param("NValues([], condition=('eq', 0))", True, marks=bug(NO_TERM_CONDITION)),
+    ("NValues([], condition=('eq', 0))", True),
     ("NValues([], condition=('ge', 1))", False),
-    pytest.param("NValues([], excepting=0, condition=('le', 0))", True, marks=bug(NO_TERM_CONDITION)),
+    ("NValues([], excepting=0, condition=('le', 0))", True),
+    ("NValues([], condition=('eq', x[3]))", None),
 ])
 def test_nvalues_on_no_term(run, solver, request, constraint, holds):
-    # the number of distinct values of no term is 0
+    # the number of distinct values of no term is 0, the parameter condition included (#217)
     if holds is None:
-        check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: t[3] != 1)
+        predicate = (lambda *t: t[3] == 0) if "condition" in constraint else (lambda *t: t[3] != 1)
+        check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, predicate)
         return
     if not holds:
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
