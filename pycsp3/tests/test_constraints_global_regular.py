@@ -7,6 +7,8 @@ Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being co
 computed by brute force.
 """
 
+import sys
+
 import pytest
 
 from harness import assert_fails, assert_solutions, brute_force, bug_for
@@ -16,6 +18,8 @@ ALL = ("ACE", "CHOCO", "COSOCO")
 COSOCO_NFA = "xcsp3team/cosoco#77: cosoco loses solutions with a non-deterministic automaton"
 ACE_DOMAINS = ("xcsp3team/ACE#17: ACE fails on regular when the variables have different domains "
                "(java.lang.Exception in MDD$Node.buildRootFromAutomaton)")
+COSOCO_DOMAINS = ("xcsp3team/cosoco#95: cosoco writes out of the nodes of the MDD built from an automaton when the variables have "
+                  "different domains (crash or wrong solutions on macOS, unnoticed with the memory allocator of Linux)")
 
 # The cases that a solver says it does not handle (not reported)
 ACE_NFA = "ACE does not handle non-deterministic automata (unimplemented case for non deterministic automaton)"
@@ -141,6 +145,9 @@ def test_automaton_on_symbolic_variables(run, solver):
 def test_automaton_with_ranges_on_different_domains(run, solver, request):
     # the labels given by ranges are applied to variables with different domains
     bug_for(request, "ACE", ACE_DOMAINS)
+    if sys.platform == "darwin" and solver == "COSOCO":
+        # the overflow does not always crash cosoco, so the mark cannot be strict
+        request.applymarker(pytest.mark.xfail(strict=False, reason="bug: " + COSOCO_DOMAINS))
     spec =dict(start="a", transitions=[("a", range(0, 2), "a"), ("a", range(2, 4), "b"), ("b", range(0, 4), "b")], final="b")
     r = run(automaton(spec) + "x = VarArray(size=3, dom=lambda i: range(2 + i))\nsatisfy(x in A)", solver=solver)
     assert_solutions(r, brute_force([range(2), range(3), range(4)], lambda *t: accepts(t, "a", spec["transitions"], "b")))

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from harness import SOLVERS, run_model
+from harness import SOLVERS, build_java_archives, run_model
 
 # The files of each test (models, XCSP3 files, solver logs, outputs) are kept in output/<test file>/<test>,
 # this directory being emptied at the start of each session.
@@ -16,6 +16,7 @@ OUTPUT = Path(__file__).resolve().parent / "output"
 def pytest_configure(config):
     if not hasattr(config, "workerinput"):  # not in a worker of pytest-xdist, so only once per session
         shutil.rmtree(OUTPUT, ignore_errors=True)
+        build_java_archives(OUTPUT / "java")  # the Java solvers start faster with an archive of their classes (see harness)
 
 
 @pytest.fixture(params=SOLVERS)
