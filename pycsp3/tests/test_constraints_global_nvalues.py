@@ -32,7 +32,6 @@ CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutio
 COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-EXCEPT_AUX = "#214: the auxiliary variable replacing NValues(..., excepting=...) has the domain 1..n, whereas the number of values can be 0"
 OBJ_EXCEPT = "#215: an objective NValues(..., excepting=...) is written with an element <except>, which objectives do not have in XCSP3"
 ONE_TERM = "#216: a constraint nValues on a single term is posted (XCSP3 requires at least two terms)"
 NO_TERM_CONDITION = "#217: NValues() on no term ignores the parameter condition: the constraint is always false"
@@ -601,10 +600,9 @@ def test_nvalues_with_other_terms_in_arithmetic_expressions(run, solver, constra
     ("NValues(x[:2], excepting=0) == NValues(x[2:], excepting=0)", lambda a, b, c, d: nv((a, b), (0,)) == nv((c, d), (0,))),
     ("Sum(NValues(x, excepting=[0, 1]), x[0]) == 0", lambda *t: nv(t, (0, 1)) + t[0] == 0),
 ])
-def test_nvalues_excepting_in_arithmetic_expressions(run, solver, request, constraint, predicate):
-    # with excepting, the number of distinct values can be 0
+def test_nvalues_excepting_in_arithmetic_expressions(run, solver, constraint, predicate):
+    # with excepting, the number of distinct values can be 0 (#214)
     skip_except(solver)
-    request.applymarker(bug(EXCEPT_AUX))
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 
@@ -613,10 +611,8 @@ def test_nvalues_excepting_in_arithmetic_expressions(run, solver, request, const
     ("NValues(x, excepting=0) + x[0] == 3", (0, 4)),
     ("NValues(x, excepting=[0, 1]) + x[0] == 3", (0, 4)),
 ])
-def test_xcsp3_auxiliary_variable_of_nvalues(run, request, constraint, domain):
-    # the domain of the auxiliary variable replacing NValues contains all its possible values
-    if "excepting" in constraint:
-        request.applymarker(bug(EXCEPT_AUX))
+def test_xcsp3_auxiliary_variable_of_nvalues(run, constraint, domain):
+    # the domain of the auxiliary variable replacing NValues contains all its possible values (with excepting, 0, #214)
     r = run(X4 + f"satisfy({constraint})")
     values = declared_variables(r)["aux_gb[0]"]
     assert values[0] <= domain[0] and values[-1] >= domain[1], r.report()
@@ -685,10 +681,9 @@ def test_nvalues_in_logical_expressions(run, solver, constraint, predicate):
     ("imply(x[0] == 0, NValues(x, excepting=0) < 1)", lambda *t: t[0] != 0 or nv(t, (0,)) == 0),
     ("(NValues(x, excepting=0) == 1) | (x[0] == 2)", lambda *t: nv(t, (0,)) == 1 or t[0] == 2),
 ])
-def test_nvalues_excepting_in_logical_expressions(run, solver, request, constraint, predicate):
+def test_nvalues_excepting_in_logical_expressions(run, solver, constraint, predicate):
+    # with excepting, the number of distinct values can be 0 (#214)
     skip_except(solver)
-    if "== 1" not in constraint:
-        request.applymarker(bug(EXCEPT_AUX))
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 

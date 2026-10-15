@@ -742,7 +742,7 @@ class ConstraintNValues(ConstraintWithCondition):
         self.arg(TypeCtrArg.CONDITION, condition)
 
     def min_possible_value(self):
-        return 1
+        return 1 if self.arguments[TypeCtrArg.EXCEPT].content is None else 0  # with excepting, all the terms may take excepted values
 
     def max_possible_value(self):
         return len(self.arguments[TypeCtrArg.LIST].content)
