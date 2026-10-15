@@ -21,13 +21,13 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 ACE_EQ = ("xcsp3team/ACE#26: ACE gives wrong solutions for nValues with the condition (eq,k), 1 < k < |X|, and fails when the variables have "
           "different types of domains")
-ACE_LIMIT = ("(to be reported) ACE fails without message on nValues when the limit k is not in 1..|X| (control(1 <= k && k <= list.length) "
+ACE_LIMIT = ("xcsp3team/ACE#28: ACE fails without message on nValues when the limit k is not in 1..|X| (control(1 <= k && k <= list.length) "
              "in the constructor of NValuesCst), although the instance is valid")
-ACE_EXCEPT_REPEATED = "(to be reported) ACE gives wrong solutions when a value is repeated in the element <except> of nValues"
-PARSER_EXCEPT = ("(to be reported) the parser of ACE and CHOCO (XCSP3-Java-Tools, CtrLoaderInteger.nValues()) ignores the element <except> "
+PARSER_EXCEPT = ("xcsp3team/XCSP3-Java-Tools#23: the parser of ACE and CHOCO (CtrLoaderInteger.nValues()) ignores the element <except> "
                  "when the list contains expressions")
-CHOCO_LIMIT = ("(to be reported) CHOCO finds solutions several times with nValues and the conditions le, ne, ge, gt (the limit variable "
-               "built by condToVar() is not determined by the list)")
+CHOCO_LIMIT = ("CHOCO 4.10.15-beta (embedded in PyCSP3) finds solutions several times with nValues and the conditions le, ne, ge, gt, and wrong "
+               "solutions with ne (the limit variable built by condToVar() is not determined by the list); fixed since CHOCO 5.0.0 (checked with "
+               "6.0.2), so not reported")
 CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutions several times with nValues on expressions"
 COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
@@ -36,7 +36,10 @@ EXCEPT_AUX = "#214: the auxiliary variable replacing NValues(..., excepting=...)
 OBJ_EXCEPT = "#215: an objective NValues(..., excepting=...) is written with an element <except>, which objectives do not have in XCSP3"
 ONE_TERM = "#216: a constraint nValues on a single term is posted (XCSP3 requires at least two terms)"
 NO_TERM_CONDITION = "#217: NValues() on no term ignores the parameter condition: the constraint is always false"
-EXCEPTING = "#218: excepting: an empty collection gives an empty element <except>, a range is refused, a Boolean is accepted"
+EXCEPTING = ("#218: excepting: an empty collection gives an empty element <except>, a range is refused, a Boolean is accepted, a value given "
+             "several times is accepted")
+CONSTANT_OBJECTIVE = "#221: the objective is a constant, reported by TypeError: Wrong type for Dummy"
+NEGATED_MEMBERSHIP = "#222: ~(e in S) fails with AssertionError: non authorized type -2, instead of an explicit message"
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
 CHOCO_EXCEPT = "CHOCO does not handle nValues with except (Missing Implementation: buildCtrNValuesExcept)"
@@ -236,7 +239,6 @@ def test_nvalues_in_a_set_given_in_any_order(run, solver, request, condition):
     ("(0, 1)", (0, 1)),
     ("[0, 1, 2]", (0, 1, 2)),
     ("[[0], [1]]", (0, 1)),
-    ("[0, 0]", (0,)),
     ("{2, 0}", (0, 2)),
     ("-1", (-1,)),
     ("7", (7,)),
@@ -249,10 +251,8 @@ def test_nvalues_in_a_set_given_in_any_order(run, solver, request, condition):
     (">= 2", lambda n: n >= 2),
     ("!= 1", lambda n: n != 1),
 ])
-def test_nvalues_excepting(run, solver, request, excepting, values, condition, predicate):
+def test_nvalues_excepting(run, solver, excepting, values, condition, predicate):
     skip_except(solver)
-    if excepting == "[0, 0]":
-        bug_for(request, "ACE", ACE_EXCEPT_REPEATED)
     check(run, solver, X4 + f"satisfy(NValues(x, excepting={excepting}) {condition})", D4, lambda *t: predicate(nv(t, values)))
 
 
@@ -872,6 +872,8 @@ def test_xcsp3_nvalues_with_a_repeated_term(run, constraint, terms):
     "NValues(x, excepting=[x[0]]) == 2",
     pytest.param("NValues(x, excepting=True) == 2", marks=bug(EXCEPTING)),
     pytest.param("NValues(x, excepting=[0, False]) == 2", marks=bug(EXCEPTING)),
+    pytest.param("NValues(x, excepting=[0, 0]) == 2", marks=bug(EXCEPTING)),  # a value given several times is refused (decision C of #213)
+    pytest.param("NValues(x, excepting=[[0], 1, [0]]) == 2", marks=bug(EXCEPTING)),
     "NValues(x, condition=2)",
     "NValues(x, condition=('eq',))",
     "NValues(x, condition=('foo', 2))",
@@ -898,3 +900,18 @@ def test_invalid_nvalues_message(run, constraint, message):
 def test_nvalues_constant_in_objectives(run, objective):
     # the number of distinct values of less than two terms is a constant: there is nothing to optimize
     assert_fails(run(X4 + f"satisfy(x[0] != x[1])\n{objective}"))
+
+
+@bug(CONSTANT_OBJECTIVE)
+@pytest.mark.parametrize("objective", ["minimize(NValues(x[0]))", "maximize(NValues([]))", "minimize(Sum([]))", "minimize(Count([], value=1))"])
+def test_constant_in_objectives_message(run, objective):
+    r = run(X4 + f"satisfy(x[0] != x[1])\n{objective}")
+    assert not r.ok and "constant" in r.stdout, r.report()
+
+
+@bug(NEGATED_MEMBERSHIP)
+@pytest.mark.parametrize("constraint", ["~(NValues(x) in {1, 3})", "~(NValues(x) not in {1, 3})", "~(Sum(x) in {1, 3})", "~(x[0] in {1, 2})"])
+def test_negated_membership_message(run, constraint):
+    # Python converts the result of 'in' into a Boolean, and ~True is -2: 'not in' (or 'in') must be used instead
+    r = run(X4 + f"satisfy({constraint})")
+    assert not r.ok and "not in" in r.stdout, r.report()
