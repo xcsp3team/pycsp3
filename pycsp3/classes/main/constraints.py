@@ -1791,8 +1791,21 @@ def global_indirection(c):
     else:
         if isinstance(c, ConstraintAllDifferent):
             lst = c.arguments[TypeCtrArg.LIST].content
-            pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))
+            excepting = c.arguments[TypeCtrArg.EXCEPT].content
+            pc = PartialConstraint(ConstraintNValues(lst, None, None))  # the number of distinct values, without excepting
             condition = Condition.build_condition((TypeConditionOperator.EQ, len(lst)))
+            if excepting is not None:
+                # the terms are all different, except those taking a value v of excepting, which can be repeated: as the number n of distinct values
+                # counts v once, n + sum of max(count(v) - 1, 0) over the values v of excepting must be the number of terms; this sum being never greater
+                # than the number of terms, the comparison ge is used (equivalent to eq, and cheaper to filter)
+                n = auxiliary().replace_partial_constraint(pc)
+                extra = []
+                for v in excepting:
+                    k = functions.Count(lst, value=v)  # the constant 0 when no term can take v (#193)
+                    if not isinstance(k, ConstraintDummyConstant):
+                        k = auxiliary().replace_partial_constraint(k) if isinstance(k, PartialConstraint) else k
+                        extra.append(Node.build(TypeNode.MAX, Node.build(TypeNode.SUB, k, 1), 0))
+                return Node.build(TypeNode.GE, Node.build(TypeNode.ADD, n, *extra) if len(extra) > 0 else n, len(lst))
         elif isinstance(c, ConstraintAllEqual):
             mode = 0  # TODO hard coding ; which is the best way?
             if mode == 0:
