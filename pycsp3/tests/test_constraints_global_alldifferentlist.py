@@ -118,10 +118,14 @@ def test_alldifferentlist_in_a_group(run, solver):
     ("[(0, 0), (1, 1)]", {(0, 0), (1, 1)}),
     ("((0, 0), (2, 2))", {(0, 0), (2, 2)}),
     ("(5, 5)", {(5, 5)}),
+    ("{(1, 1), (0, 0)}", {(0, 0), (1, 1)}),  # (#218)
+    ("[]", set()),
+    ("()", set()),
+    ("set()", set()),
     ("None", set()),
 ])
 def test_alldifferentlist_excepting(run, solver, request, excepting, tuples):
-    if excepting != "None":
+    if tuples:
         if solver == "CHOCO":
             pytest.skip(CHOCO_EXCEPT)
         if excepting != "(5, 5)":
@@ -165,6 +169,9 @@ def test_alldifferentlist_with_a_repeated_list(run, constraint):
     ("AllDifferentList(x[0], x[2])", ["x[0][]", "x[2][]"], None),
     ("AllDifferentList(x, excepting=(0, 0))", ["x[0][]", "x[1][]", "x[2][]"], "(0,0)"),
     ("AllDifferentList(x, excepting=[(0, 0), (1, 2)])", ["x[0][]", "x[1][]", "x[2][]"], "(0,0)(1,2)"),
+    ("AllDifferentList(x, excepting=[(1, 2), (0, 0)])", ["x[0][]", "x[1][]", "x[2][]"], "(0,0)(1,2)"),  # the tuples in increasing order (#218)
+    ("AllDifferentList(x, excepting={(1, 2), (0, 0)})", ["x[0][]", "x[1][]", "x[2][]"], "(0,0)(1,2)"),
+    ("AllDifferentList(x, excepting=[])", ["x[0][]", "x[1][]", "x[2][]"], None),
 ])
 def test_xcsp3_alldifferentlist(run, constraint, lists, excepting):
     r = run(X32 + f"satisfy({constraint})")
@@ -190,6 +197,10 @@ def test_xcsp3_alldifferentlist(run, constraint, lists, excepting):
     "AllDifferentList(x, excepting=[(0, 0), (1,)])",
     "AllDifferentList(x, excepting=('a', 'b'))",
     "AllDifferentList(x, excepting=(0.5, 1))",
+    "AllDifferentList(x, excepting=[(0, 0), (0, 0)])",
+    "AllDifferentList(x, excepting=(True, 0))",
+    "AllDifferentList(x, excepting=[(0, 0), (1, False)])",
+    "AllDifferentList(x, excepting={0: 1})",
     "AllDifferentList([])",
     "AllDifferentList(None)",
 ])
@@ -211,6 +222,11 @@ def test_alldifferentlist_on_an_array_with_holes(run):
     ("AllDifferentList(x, excepting=(0,))", "The tuples of excepting given to AllDifferentList() must have the length of the lists (2), which is not the case of (0,)"),
     ("AllDifferentList(x, excepting=(0, 0, 0))", "The tuples of excepting given to AllDifferentList() must have the length of the lists (2), which is not the case of (0, 0, 0)"),
     ("AllDifferentList(x, excepting=[(0, 0), (1,)])", "The tuples of excepting given to AllDifferentList() must have the length of the lists (2), which is not the case of (1,)"),
+    ("AllDifferentList(x, excepting=0)",
+     "The parameter excepting of AllDifferentList() must be given a tuple of integers, or a collection of such tuples, which is not the case of 0"),
+    ("AllDifferentList(x, excepting=(True, 0))", "The parameter excepting of AllDifferentList() must be given tuples of integers, which is not the case of (True, 0)"),
+    ("AllDifferentList(x, excepting=[(0, 0), (0, 0)])",
+     "A tuple is given several times in the parameter excepting of AllDifferentList(), which is not allowed: [(0, 0), (0, 0)]"),
 ])
 def test_invalid_alldifferentlist_messages(run, constraint, message):
     r = run(X32 + f"satisfy({constraint})")

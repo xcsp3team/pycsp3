@@ -291,6 +291,8 @@ def test_alldifferent_with_excepting_in_a_group(run, solver):
 @pytest.mark.parametrize("constraint, expected", [
     ("AllDifferent(x)", ("allDifferent", "x[]", None)),
     ("AllDifferent(x, excepting=0)", ("allDifferent", "x[]", "0")),
+    ("AllDifferent(x, excepting={2, -1})", ("allDifferent", "x[]", "-1 2")),  # the values in increasing order (#218)
+    ("AllDifferent(x, excepting=())", ("allDifferent", "x[]", None)),
     ("AllDifferent(x[0], x[2])", ("allDifferent", "x[0] x[2]", None)),
     ("AllDifferent(x[0] + 1, x[1])", ("allDifferent", "add(x[0],1) x[1]", None)),
 ])
@@ -324,6 +326,10 @@ def test_xcsp3_alldifferent_matrix(run):
     "AllDifferent(x, excepting=x[0])",
     "AllDifferent(x, excepting=True)",
     "AllDifferent(x, excepting=[0, False])",
+    "AllDifferent(x, excepting=[0, 0])",
+    "AllDifferent(x, excepting=[0, [0]])",
+    "AllDifferent(x, excepting=[[2], [0]])",  # an enumeration of values, which cannot be nested (#218)
+    "AllDifferent(x, excepting={0: 1})",
     "AllDifferent(x, x, matrix=True)",
     "AllDifferent(x, matrix=True)",
     "AllDifferent([[x[0], x[1]], [x[2]]], matrix=True)",
@@ -336,7 +342,11 @@ def test_invalid_alldifferent(run, constraint):
 @pytest.mark.parametrize("constraint, message", [
     ("AllDifferent(None)", "AllDifferent() requires variables (or expressions), which is not the case of None"),
     ("AllDifferent(5)", "AllDifferent() requires at least one variable (or expression), and not only integers, which is not the case of [5]"),
-    ("AllDifferent(x, excepting=True)", "The parameter excepting of AllDifferent() must be given integers, which is not the case of [True]"),  # #218
+    ("AllDifferent(x, excepting=True)",
+     "The parameter excepting of AllDifferent() must be given an integer, or an enumeration (list, tuple, set, range) of integers, which is not the case of True"),  # #218
+    ("AllDifferent(x, excepting=[[2], [0]])", "The parameter excepting of AllDifferent() must be given an integer, or an enumeration (list, tuple, set, range) of "
+                                               "integers, which is not the case of [[2], [0]]"),
+    ("AllDifferent(x, excepting=[1, 1])", "A value is given several times in the parameter excepting of AllDifferent(), which is not allowed: [1, 1]"),
     ("AllDifferent([[x[0], x[1]], [x[2], x[0]]], [[x[1]]], matrix=True)",
      "With matrix=True, AllDifferent() requires a single argument (the matrix), which is not the case of 2 arguments"),
 ])

@@ -211,6 +211,8 @@ def test_allequal_on_sliding_windows(run, solver, request):
 @pytest.mark.parametrize("constraint, expected", [
     ("AllEqual(x)", ("allEqual", "x[]", None)),
     ("AllEqual(x, excepting=0)", ("allEqual", "x[]", "0")),
+    ("AllEqual(x, excepting={2, -1})", ("allEqual", "x[]", "-1 2")),  # the values in increasing order (#218)
+    ("AllEqual(x, excepting=())", ("allEqual", "x[]", None)),
     ("AllEqual(x[0], x[2])", ("allEqual", "x[0] x[2]", None)),
     ("AllEqual(x[0] + 1, x[1] + 1)", ("allEqual", "add(x[0],1) add(x[1],1)", None)),
 ])
@@ -237,6 +239,10 @@ def test_xcsp3_allequal(run, constraint, expected):
     "AllEqual(x, excepting=x[0])",
     "AllEqual(x, excepting=True)",
     "AllEqual(x, excepting=(0, False))",
+    "AllEqual(x, excepting=[0, 0])",
+    "AllEqual(x, excepting=[0, [0]])",
+    "AllEqual(x, excepting=[[2], [0]])",  # an enumeration of values, which cannot be nested (#218)
+    "AllEqual(x, excepting={0: 1})",
 ])
 def test_invalid_allequal(run, constraint):
     assert_fails(run(X3 + f"satisfy({constraint})"))
@@ -245,7 +251,9 @@ def test_invalid_allequal(run, constraint):
 @pytest.mark.parametrize("constraint, message", [
     ("AllEqual(None)", "AllEqual() requires variables (or expressions), which is not the case of None"),
     ("AllEqual(5)", "AllEqual() requires at least one variable (or expression), and not only integers, which is not the case of [5]"),
-    ("AllEqual(x, excepting=True)", "The parameter excepting of AllEqual() must be given integers, which is not the case of [True]"),  # #218
+    ("AllEqual(x, excepting=True)",
+     "The parameter excepting of AllEqual() must be given an integer, or an enumeration (list, tuple, set, range) of integers, which is not the case of True"),  # #218
+    ("AllEqual(x, excepting=[1, 1])", "A value is given several times in the parameter excepting of AllEqual(), which is not allowed: [1, 1]"),
 ])
 def test_invalid_allequal_message(run, constraint, message):
     r = run(X3 + f"satisfy({constraint})")

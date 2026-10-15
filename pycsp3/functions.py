@@ -1930,15 +1930,41 @@ def Mdd(*, scope, mdd):
 
 def _excepting_values(excepting, name):
     """
-    Returns the list of values given by the parameter excepting of AllDifferent() and AllEqual() (whose name is given for the messages): an
-    integer, or a collection (list, tuple, set, range) of integers; None is returned when there is no value (excepting=None or an empty
-    collection), so that no element <except> is generated
+    Returns the values given by the parameter excepting of AllDifferent(), AllEqual() and NValues() (whose name is given for the messages): an
+    integer, or an enumeration of integers (a list, a tuple, a set or a range, which cannot be nested), each value being given once. The values are
+    returned in increasing order, and None is returned when there is no value (excepting=None or an empty collection), so that no element <except>
+    is generated.
     """
-    excepting = list(excepting) if isinstance(excepting, (tuple, set, frozenset, range)) else [excepting] if isinstance(excepting, int) else excepting
-    if isinstance(excepting, list) and any(isinstance(v, bool) for v in excepting):
-        error("The parameter excepting of " + name + "() must be given integers, which is not the case of " + str(excepting))
-    checkType(excepting, ([int], type(None)))
-    return None if excepting is not None and len(excepting) == 0 else excepting
+    if excepting is None:
+        return None
+    values = list(excepting) if isinstance(excepting, (list, tuple, set, frozenset, range)) else [excepting]
+    if any(not isinstance(v, int) or isinstance(v, bool) for v in values):
+        error("The parameter excepting of " + name + "() must be given an integer, or an enumeration (list, tuple, set, range) of integers, which is not "
+              "the case of " + str(excepting))
+    if len(set(values)) < len(values):
+        error("A value is given several times in the parameter excepting of " + name + "(), which is not allowed: " + str(excepting))
+    return sorted(values) if len(values) > 0 else None
+
+
+def _excepting_tuples(excepting, name):
+    """
+    Returns the tuples given by the parameter excepting of AllDifferentList() and AllEqualList() (whose name is given for the messages): a tuple
+    (or a list, or a range) of integers, or a collection (list, tuple, set) of such tuples, each tuple being given once. The tuples are returned in
+    increasing (lexicographic) order, and None is returned when there is no tuple (excepting=None or an empty collection).
+    """
+    if excepting is None:
+        return None
+    if not isinstance(excepting, (list, tuple, set, frozenset, range)):
+        error("The parameter excepting of " + name + "() must be given a tuple of integers, or a collection of such tuples, which is not the case of "
+              + str(excepting))
+    elements = list(excepting)
+    several = len(elements) > 0 and all(isinstance(e, (list, tuple, range)) for e in elements)
+    tuples = [tuple(e) for e in elements] if several else [tuple(elements)] if len(elements) > 0 else []
+    if any(not isinstance(v, int) or isinstance(v, bool) for t in tuples for v in t):
+        error("The parameter excepting of " + name + "() must be given tuples of integers, which is not the case of " + str(excepting))
+    if len(set(tuples)) < len(tuples):
+        error("A tuple is given several times in the parameter excepting of " + name + "(), which is not allowed: " + str(excepting))
+    return sorted(tuples) if len(tuples) > 0 else None
 
 
 def AllDifferent(term, *others, excepting=None, matrix=False):
@@ -2094,8 +2120,7 @@ def AllDifferentList(term, *others, excepting=None):
         # a solution: [0, 1, 0, 2, 0, 0, 0, 0]
     """
     lists = _check_lists_of_list_constraint("AllDifferentList", term, others, excepting)
-    excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
-    checkType(excepting, ([int], type(None)))
+    excepting = _excepting_tuples(excepting, "AllDifferentList")
     seen = set()  # identities of the variables of the lists (== being redefined for building expressions)
     for t in lists:
         key = tuple(id(x) for x in t)
@@ -2105,7 +2130,7 @@ def AllDifferentList(term, *others, excepting=None):
         warning("A constraint AllDifferentList discarded because defined with 1 list", "alldifferentlist_1_list")
         return None  # a single list is always different from the other ones (as for AllDifferent() with a single variable)
     if len(lists) > 0 and len(lists[0]) == 1:  # allDifferent-list requires lists of at least two variables: AllDifferent is posted on the variables
-        return AllDifferent([t[0] for t in lists], excepting=excepting)
+        return AllDifferent([t[0] for t in lists], excepting=None if excepting is None else [e[0] for e in excepting])
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 
@@ -2180,15 +2205,7 @@ def AllEqualList(term, *others, excepting=None):
         )
     """
     lists = _check_lists_of_list_constraint("AllEqualList", term, others, excepting)
-    if excepting is not None:  # excepting is changed into a list of tuples (None if empty)
-        values = list(excepting) if isinstance(excepting, (tuple, list, set, frozenset, range)) else None
-        error_if(values is None, "excepting given to AllEqualList() must be a tuple of integers, or a collection of such tuples, which is not the case of "
-                 + str(excepting))
-        several = len(values) > 0 and all(isinstance(e, (tuple, list)) for e in values)
-        tuples = [tuple(e) for e in values] if several else [tuple(values)] if len(values) > 0 else []
-        error_if(any(not isinstance(v, int) for e in tuples for v in e),
-                 "The values of excepting given to AllEqualList() must be integers, which is not the case of " + str(excepting))
-        excepting = (sorted(tuples) if isinstance(excepting, (set, frozenset)) else tuples) if len(tuples) > 0 else None
+    excepting = _excepting_tuples(excepting, "AllEqualList")
     if len(lists) == 1:
         warning("A constraint AllEqualList discarded because defined with 1 list", "allequallist_1_list")
         return None  # a single list is always equal to the other ones (as for AllEqual() with a single variable)
@@ -3210,20 +3227,8 @@ def NValues(within, *within_complement, excepting=None, condition=None):
     return _nvalues(terms, excepting, condition)
 
 
-def _nvalues_excepting(excepting):
-    # the values ignored by NValues() (an integer, or a possibly nested collection of integers), in increasing order, or None when there is no value
-    if excepting is None:
-        return None
-    values = flatten(list(excepting) if isinstance(excepting, range) else excepting)
-    if any(not isinstance(v, int) or isinstance(v, bool) for v in values):
-        error("The parameter excepting of NValues() must be given integers, which is not the case of " + str(excepting))
-    if len(set(values)) < len(values):
-        error("A value is given several times in the parameter excepting of NValues(), which is not allowed: " + str(excepting))
-    return sorted(values) if len(values) > 0 else None
-
-
 def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
-    excepting = _nvalues_excepting(excepting)
+    excepting = _excepting_values(excepting, "NValues")
     if len(terms) == 0:  # the number of distinct values of no term is 0
         return _constant_with_condition(0, Condition.build_condition(condition))
     if len(terms) == 1 and excepting is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) and not isinstance(terms[0], bool):

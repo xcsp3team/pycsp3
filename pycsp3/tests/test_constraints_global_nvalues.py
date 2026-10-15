@@ -254,7 +254,6 @@ def test_nvalues_in_a_set_given_in_any_order(run, solver, request, condition):
     ("{0, 1}", (0, 1)),
     ("(0, 1)", (0, 1)),
     ("[0, 1, 2]", (0, 1, 2)),
-    ("[[0], [1]]", (0, 1)),
     ("{2, 0}", (0, 2)),
     ("-1", (-1,)),
     ("7", (7,)),
@@ -871,6 +870,8 @@ def test_xcsp3_nvalues_with_a_repeated_term(run, constraint, terms):
     "NValues(x, excepting=[0, False]) == 2",
     "NValues(x, excepting=[0, 0]) == 2",  # a value given several times is refused (decision C of #213, #218)
     "NValues(x, excepting=[[0], 1, [0]]) == 2",
+    "NValues(x, excepting={0: 1}) == 2",
+    "NValues(x, excepting=[[0], [1]]) == 2",  # an enumeration of values, which cannot be nested (#218)
     "NValues(x, condition=2)",
     "NValues(x, condition=('eq',))",
     "NValues(x, condition=('foo', 2))",
@@ -887,8 +888,11 @@ def test_invalid_nvalues(run, constraint):
     ("NValues(x)", "is not a constraint: it must be subject to a condition"),
     ("NValues(x) == True", "A Boolean cannot be the operand of a condition"),
     ("NValues(x, condition=('foo', 2))", "The operator foo of the condition ('foo', 2) is unknown"),
-    ("NValues(x, excepting=True) == 2", "The parameter excepting of NValues() must be given integers, which is not the case of True"),
-    ("NValues(x, excepting=[0, x[0]]) == 2", "The parameter excepting of NValues() must be given integers"),
+    ("NValues(x, excepting=True) == 2",
+     "The parameter excepting of NValues() must be given an integer, or an enumeration (list, tuple, set, range) of integers, which is not the case of True"),
+    ("NValues(x, excepting=[0, x[0]]) == 2", "The parameter excepting of NValues() must be given an integer, or an enumeration"),
+    ("NValues(x, excepting=[[0], [1]]) == 2", "The parameter excepting of NValues() must be given an integer, or an enumeration (list, tuple, set, range) of "
+                                              "integers, which is not the case of [[0], [1]]"),
     ("NValues(x, excepting=[0, 0]) == 2", "A value is given several times in the parameter excepting of NValues()"),
 ])
 def test_invalid_nvalues_message(run, constraint, message):
