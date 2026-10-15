@@ -1928,13 +1928,15 @@ def Mdd(*, scope, mdd):
 ''' Comparison-based Constraints '''
 
 
-def _excepting_values(excepting):
+def _excepting_values(excepting, name):
     """
-    Returns the list of values given by the parameter excepting of AllDifferent() and AllEqual(): an integer, or a collection (list,
-    tuple, set, range) of integers; None is returned when there is no value (excepting=None or an empty collection), so that no
-    element <except> is generated
+    Returns the list of values given by the parameter excepting of AllDifferent() and AllEqual() (whose name is given for the messages): an
+    integer, or a collection (list, tuple, set, range) of integers; None is returned when there is no value (excepting=None or an empty
+    collection), so that no element <except> is generated
     """
     excepting = list(excepting) if isinstance(excepting, (tuple, set, frozenset, range)) else [excepting] if isinstance(excepting, int) else excepting
+    if isinstance(excepting, list) and any(isinstance(v, bool) for v in excepting):
+        error("The parameter excepting of " + name + "() must be given integers, which is not the case of " + str(excepting))
     checkType(excepting, ([int], type(None)))
     return None if excepting is not None and len(excepting) == 0 else excepting
 
@@ -1985,7 +1987,7 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         # a solution: [0, 1, 2, 3, 1, 0, 3, 2, 2, 3, 0, 1, 3, 2, 1, 0]
     """
     error_if(term is None, "AllDifferent() requires variables (or expressions), which is not the case of None")
-    excepting = _excepting_values(excepting)
+    excepting = _excepting_values(excepting, "AllDifferent")
     if matrix:
         error_if(len(others) > 0,
                  "With matrix=True, AllDifferent() requires a single argument (the matrix), which is not the case of " + str(1 + len(others)) + " arguments")
@@ -2140,7 +2142,7 @@ def AllEqual(term, *others, excepting=None):
         # a solution: [0, 1, 1, 1]
     """
     error_if(term is None, "AllEqual() requires variables (or expressions), which is not the case of None")
-    excepting = _excepting_values(excepting)
+    excepting = _excepting_values(excepting, "AllEqual")
     terms = flatten(term, others)
     if len(terms) == 0:
         return ConstraintDummyConstant(1)
@@ -3205,7 +3207,20 @@ def NValues(within, *within_complement, excepting=None, condition=None):
     return _nvalues(flatten(within, within_complement), excepting, condition)
 
 
+def _nvalues_excepting(excepting):
+    # the values ignored by NValues() (an integer, or a possibly nested collection of integers), in increasing order, or None when there is no value
+    if excepting is None:
+        return None
+    values = flatten(list(excepting) if isinstance(excepting, range) else excepting)
+    if any(not isinstance(v, int) or isinstance(v, bool) for v in values):
+        error("The parameter excepting of NValues() must be given integers, which is not the case of " + str(excepting))
+    if len(set(values)) < len(values):
+        error("A value is given several times in the parameter excepting of NValues(), which is not allowed: " + str(excepting))
+    return sorted(values) if len(values) > 0 else None
+
+
 def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
+    excepting = _nvalues_excepting(excepting)
     if len(terms) == 0:  # the number of distinct values of no term is 0
         return _constant_with_condition(0, Condition.build_condition(condition))
     if len(terms) == 1 and excepting is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) and not isinstance(terms[0], bool):
@@ -3230,12 +3245,9 @@ def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
         kept.setdefault(id(t) if isinstance(t, Variable) else str(t), t)
     if len(kept) < len(terms):
         terms = list(kept.values())
-    if excepting is not None:
-        excepting = flatten(excepting)
-        checkType(excepting, [int])
     condition = Condition.build_condition(condition)
     if len(terms) == 1:  # no constraint nValues (XCSP3-core requires at least two terms): one value, or none if the term takes an excepted value
-        if not excepting:
+        if excepting is None:
             return _constant_with_condition(1, condition)
         t = terms[0]
         term = Node.build(TypeNode.NE, t, excepting[0]) if len(excepting) == 1 else Node.build(TypeNode.NOTIN, t, Node.build(TypeNode.SET, excepting))

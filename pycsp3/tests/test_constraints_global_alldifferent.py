@@ -322,6 +322,8 @@ def test_xcsp3_alldifferent_matrix(run):
     "AllDifferent(x, excepting=2.5)",
     "AllDifferent(x, excepting=[0, 'a'])",
     "AllDifferent(x, excepting=x[0])",
+    "AllDifferent(x, excepting=True)",
+    "AllDifferent(x, excepting=[0, False])",
     "AllDifferent(x, x, matrix=True)",
     "AllDifferent(x, matrix=True)",
     "AllDifferent([[x[0], x[1]], [x[2]]], matrix=True)",
@@ -334,6 +336,7 @@ def test_invalid_alldifferent(run, constraint):
 @pytest.mark.parametrize("constraint, message", [
     ("AllDifferent(None)", "AllDifferent() requires variables (or expressions), which is not the case of None"),
     ("AllDifferent(5)", "AllDifferent() requires at least one variable (or expression), and not only integers, which is not the case of [5]"),
+    ("AllDifferent(x, excepting=True)", "The parameter excepting of AllDifferent() must be given integers, which is not the case of [True]"),  # #218
     ("AllDifferent([[x[0], x[1]], [x[2], x[0]]], [[x[1]]], matrix=True)",
      "With matrix=True, AllDifferent() requires a single argument (the matrix), which is not the case of 2 arguments"),
 ])

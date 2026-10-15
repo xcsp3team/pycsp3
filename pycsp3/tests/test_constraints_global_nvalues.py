@@ -32,8 +32,6 @@ CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutio
 COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-EXCEPTING = ("#218: excepting: an empty collection gives an empty element <except>, a range is refused, a Boolean is accepted, a value given "
-             "several times is accepted")
 CONSTANT_OBJECTIVE = "#221: the objective is a constant, reported by TypeError: Wrong type for Dummy"
 NEGATED_MEMBERSHIP = "#222: ~(e in S) fails with AssertionError: non authorized type -2, instead of an explicit message"
 
@@ -261,21 +259,16 @@ def test_nvalues_excepting(run, solver, excepting, values, condition, predicate)
     ("set()", ()),
     ("None", ()),
 ])
-def test_nvalues_excepting_given_by_a_range_or_an_empty_collection(run, solver, request, excepting, values):
+def test_nvalues_excepting_given_by_a_range_or_an_empty_collection(run, solver, excepting, values):
+    # a range is accepted, and an empty collection means no value to ignore, as for AllDifferent() and AllEqual() (#218)
     if values:
         skip_except(solver)
-    if excepting.startswith("range"):
-        request.applymarker(bug(EXCEPTING))  # refused
-    elif not values and excepting != "None":
-        bug_for(request, ("ACE", "CHOCO"), EXCEPTING)  # an empty element <except>, on which ACE and CHOCO fail
     check(run, solver, X4 + f"satisfy(NValues(x, excepting={excepting}) == 1)", D4, lambda *t: nv(t, values) == 1)
 
 
 @pytest.mark.parametrize("excepting", ["[]", "()", "set()", "None"])
-def test_xcsp3_nvalues_with_an_empty_excepting(run, request, excepting):
-    # XCSP3 requires at least one value in the element <except>: an empty collection means no value to ignore
-    if excepting != "None":
-        request.applymarker(bug(EXCEPTING))
+def test_xcsp3_nvalues_with_an_empty_excepting(run, excepting):
+    # XCSP3 requires at least one value in the element <except>: an empty collection means no value to ignore (#218)
     r = run(X4 + f"satisfy(NValues(x, excepting={excepting}) == 1)")
     assert r.ok, r.report()
     e = r.xml.find("constraints/nValues/except")
@@ -791,6 +784,8 @@ def test_solutions_given_in_the_doc(run, solver, code, solution):
     ("NValues(x[0], x[2]) <= 1", ("x[0] x[2]", None, "(le,1)")),
     ("NValues(x, excepting=0) >= 2", ("x[]", "0", "(ge,2)")),
     ("NValues(x, excepting=[0, 1]) == 1", ("x[]", "0 1", "(eq,1)")),
+    ("NValues(x, excepting={3, -1}) >= 2", ("x[]", "-1 3", "(ge,2)")),  # the values in increasing order (#218)
+    ("NValues(x, excepting=range(2)) >= 2", ("x[]", "0 1", "(ge,2)")),
     ("NValues(x) in range(2, 4)", ("x[]", None, "(in,2..3)")),
     ("NValues(x) not in {1, 3}", ("x[]", None, "(notin,{1,3})")),
     ("NValues(x[:3]) == x[3]", ("x[0..2]", None, "(eq,x[3])")),
@@ -857,10 +852,10 @@ def test_xcsp3_nvalues_with_a_repeated_term(run, constraint, terms):
     "NValues(x, excepting=2.5) == 2",
     "NValues(x, excepting=[0, 'a']) == 2",
     "NValues(x, excepting=[x[0]]) == 2",
-    pytest.param("NValues(x, excepting=True) == 2", marks=bug(EXCEPTING)),
-    pytest.param("NValues(x, excepting=[0, False]) == 2", marks=bug(EXCEPTING)),
-    pytest.param("NValues(x, excepting=[0, 0]) == 2", marks=bug(EXCEPTING)),  # a value given several times is refused (decision C of #213)
-    pytest.param("NValues(x, excepting=[[0], 1, [0]]) == 2", marks=bug(EXCEPTING)),
+    "NValues(x, excepting=True) == 2",
+    "NValues(x, excepting=[0, False]) == 2",
+    "NValues(x, excepting=[0, 0]) == 2",  # a value given several times is refused (decision C of #213, #218)
+    "NValues(x, excepting=[[0], 1, [0]]) == 2",
     "NValues(x, condition=2)",
     "NValues(x, condition=('eq',))",
     "NValues(x, condition=('foo', 2))",
@@ -877,6 +872,9 @@ def test_invalid_nvalues(run, constraint):
     ("NValues(x)", "is not a constraint: it must be subject to a condition"),
     ("NValues(x) == True", "A Boolean cannot be the operand of a condition"),
     ("NValues(x, condition=('foo', 2))", "The operator foo of the condition ('foo', 2) is unknown"),
+    ("NValues(x, excepting=True) == 2", "The parameter excepting of NValues() must be given integers, which is not the case of True"),
+    ("NValues(x, excepting=[0, x[0]]) == 2", "The parameter excepting of NValues() must be given integers"),
+    ("NValues(x, excepting=[0, 0]) == 2", "A value is given several times in the parameter excepting of NValues()"),
 ])
 def test_invalid_nvalues_message(run, constraint, message):
     r = run(X4 + f"satisfy({constraint})")
