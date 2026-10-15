@@ -32,7 +32,6 @@ CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutio
 COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-ONE_TERM = "#216: a constraint nValues on a single term is posted (XCSP3 requires at least two terms)"
 NO_TERM_CONDITION = "#217: NValues() on no term ignores the parameter condition: the constraint is always false"
 EXCEPTING = ("#218: excepting: an empty collection gives an empty element <except>, a range is refused, a Boolean is accepted, a value given "
              "several times is accepted")
@@ -449,21 +448,19 @@ def test_nvalues_on_components(run, solver, request, constraint, predicate):
     ("NValues(x[0]) == 2", lambda a: False),
     ("NValues(x[0]) >= 1", lambda a: True),
     ("NValues([x[0]]) != 1", lambda a: False),
-    pytest.param("NValues(x[0], excepting=0) == 1", lambda a: a != 0, marks=bug(ONE_TERM)),
-    pytest.param("NValues(x[0], excepting=0) == 0", lambda a: a == 0, marks=bug(ONE_TERM)),
-    pytest.param("NValues([x[0]], excepting=[0, 1]) >= 1", lambda a: a == 2, marks=bug(ONE_TERM)),
+    ("NValues(x[0], excepting=0) == 1", lambda a: a != 0),
+    ("NValues(x[0], excepting=0) == 0", lambda a: a == 0),
+    ("NValues([x[0]], excepting=[0, 1]) >= 1", lambda a: a == 2),
     ("NValues(x[0], condition=('eq', 1))", lambda a: True),
     ("NValues(x[0], condition=('eq', 2))", lambda a: False),
-    pytest.param("NValues(x[0], excepting=0, condition=('eq', 0))", lambda a: a == 0, marks=bug(ONE_TERM)),
+    ("NValues(x[0], excepting=0, condition=('eq', 0))", lambda a: a == 0),
     ("NValues(x[0] + 1) == 1", lambda a: True),
-    pytest.param("NValues(x[0] + 1, excepting=1) == 1", lambda a: a != 0, marks=bug(ONE_TERM)),
+    ("NValues(x[0] + 1, excepting=1) == 1", lambda a: a != 0),
 ])
 def test_nvalues_on_a_single_term(run, solver, request, constraint, predicate):
-    # the number of distinct values of a single term t is 1, or (t not in E) with excepting=E
-    if "== 2" in constraint or "!= 1" in constraint:
+    # the number of distinct values of a single term t is 1, or (t not in E) with excepting=E (#216)
+    if "== 2" in constraint or "!= 1" in constraint or "('eq', 2)" in constraint:
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
-    if "('eq', 2)" in constraint:
-        bug_for(request, "ACE", ACE_LIMIT)  # a constraint nValues on the single term x[0] is posted
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(t[0]) and t[3] != 1)
 
 
@@ -477,10 +474,8 @@ def test_nvalues_on_a_single_term(run, solver, request, constraint, predicate):
     "NValues(x[0], x[0], condition=('le', 1))",
     "NValues(x[0] + 1, excepting=1) == 1",
 ])
-def test_xcsp3_nvalues_has_at_least_two_terms(run, request, constraint):
-    # XCSP3-core requires |X| >= 2
-    if "excepting" in constraint or "condition" in constraint:
-        request.applymarker(bug(ONE_TERM))
+def test_xcsp3_nvalues_has_at_least_two_terms(run, constraint):
+    # XCSP3-core requires |X| >= 2 (#216)
     r = run(X4 + f"satisfy({constraint}, x[3] != 1)")
     assert r.ok, r.report()
     for c in r.xml.iter("nValues"):
@@ -522,9 +517,7 @@ def test_nvalues_on_no_term(run, solver, request, constraint, holds):
 ])
 def test_nvalues_with_a_repeated_term(run, solver, request, constraint, predicate):
     # a term given several times does not change the number of distinct values: it is kept once (#134)
-    if constraint == "NValues(x[0], x[0], excepting=0) == 1":
-        request.applymarker(bug(ONE_TERM))  # a constraint nValues on the single term x[0] (kept once) is posted
-    elif "excepting" in constraint:
+    if "excepting" in constraint and constraint != "NValues(x[0], x[0], excepting=0) == 1":  # (a single term, x[0] being kept once: x[0] != 0)
         skip_except(solver)
     if solver == "COSOCO" and "+ 1" in constraint:
         pytest.skip(COSOCO_EXPRESSIONS)

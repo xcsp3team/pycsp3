@@ -3208,9 +3208,8 @@ def NValues(within, *within_complement, excepting=None, condition=None):
 def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
     if len(terms) == 0:
         return ConstraintDummyConstant(0)
-    if len(terms) == 1 and excepting is None and condition is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) \
-            and not isinstance(terms[0], bool):  # an invalid term is reported below (as for AllEqual())
-        return ConstraintDummyConstant(1)
+    if len(terms) == 1 and excepting is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) and not isinstance(terms[0], bool):
+        return _constant_with_condition(1, Condition.build_condition(condition))  # a single term (an invalid term is reported below, as for AllEqual())
     integers = {}  # an integer given several times is replaced by a single auxiliary variable
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
@@ -3231,12 +3230,17 @@ def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
         kept.setdefault(id(t) if isinstance(t, Variable) else str(t), t)
     if len(kept) < len(terms):
         terms = list(kept.values())
-        if len(terms) == 1 and excepting is None and condition is None:
-            return ConstraintDummyConstant(1)
     if excepting is not None:
         excepting = flatten(excepting)
         checkType(excepting, [int])
-    return _wrapping_by_complete_or_partial_constraint(ConstraintNValues(terms, excepting, Condition.build_condition(condition)))
+    condition = Condition.build_condition(condition)
+    if len(terms) == 1:  # no constraint nValues (XCSP3-core requires at least two terms): one value, or none if the term takes an excepted value
+        if not excepting:
+            return _constant_with_condition(1, condition)
+        t = terms[0]
+        term = Node.build(TypeNode.NE, t, excepting[0]) if len(excepting) == 1 else Node.build(TypeNode.NOTIN, t, Node.build(TypeNode.SET, excepting))
+        return term if condition is None else _term_with_condition(term, condition)
+    return _wrapping_by_complete_or_partial_constraint(ConstraintNValues(terms, excepting, condition))
 
 
 def NumberDistinctValues(within, *within_complement, excepting=None, condition=None):
