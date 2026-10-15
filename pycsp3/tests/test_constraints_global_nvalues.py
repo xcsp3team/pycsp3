@@ -32,11 +32,11 @@ CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutio
 COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-EXCEPT_AUX = "(to be reported) the auxiliary variable replacing NValues(..., excepting=...) has the domain 1..n, whereas the number of values can be 0"
-OBJ_EXCEPT = "(to be reported) an objective NValues(..., excepting=...) is written with an element <except>, which objectives do not have in XCSP3"
-ONE_TERM = "(to be reported) a constraint nValues on a single term is posted (XCSP3 requires at least two terms)"
-NO_TERM_CONDITION = "(to be reported) NValues() on no term ignores the parameter condition: the constraint is always false"
-EXCEPTING = "(to be reported) excepting: an empty collection gives an empty element <except>, a range is refused, a Boolean is accepted"
+EXCEPT_AUX = "#214: the auxiliary variable replacing NValues(..., excepting=...) has the domain 1..n, whereas the number of values can be 0"
+OBJ_EXCEPT = "#215: an objective NValues(..., excepting=...) is written with an element <except>, which objectives do not have in XCSP3"
+ONE_TERM = "#216: a constraint nValues on a single term is posted (XCSP3 requires at least two terms)"
+NO_TERM_CONDITION = "#217: NValues() on no term ignores the parameter condition: the constraint is always false"
+EXCEPTING = "#218: excepting: an empty collection gives an empty element <except>, a range is refused, a Boolean is accepted"
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
 CHOCO_EXCEPT = "CHOCO does not handle nValues with except (Missing Implementation: buildCtrNValuesExcept)"
