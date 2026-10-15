@@ -32,7 +32,6 @@ CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutio
 COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-OBJ_EXCEPT = "#215: an objective NValues(..., excepting=...) is written with an element <except>, which objectives do not have in XCSP3"
 ONE_TERM = "#216: a constraint nValues on a single term is posted (XCSP3 requires at least two terms)"
 NO_TERM_CONDITION = "#217: NValues() on no term ignores the parameter condition: the constraint is always false"
 EXCEPTING = ("#218: excepting: an empty collection gives an empty element <except>, a range is refused, a Boolean is accepted, a value given "
@@ -720,17 +719,16 @@ def test_nvalues_on_expressions_in_objectives(run, solver, objective, value, max
     ("minimize(NValues(x, excepting=[1, 2]))", lambda *t: nv(t, (1, 2)), False),
     ("maximize(NValues(x, excepting=[0, 1]))", lambda *t: nv(t, (0, 1)), True),
 ])
-def test_nvalues_excepting_in_objectives(run, solver, request, objective, value, maximize):
+def test_nvalues_excepting_in_objectives(run, solver, objective, value, maximize):
+    # the objective is an auxiliary variable equal to the number of values (#215)
     skip_except(solver)
-    request.applymarker(bug(OBJ_EXCEPT))
     r = run(X4 + f"satisfy(x[0] != x[1], Sum(x) >= 3)\n{objective}", solver=solver)
     assert_optimum(r, brute_force(D4, lambda a, b, c, d: a != b and a + b + c + d >= 3), value, maximize=maximize)
 
 
 @pytest.mark.parametrize("objective", ["minimize(NValues(x, excepting=0))", "maximize(NValues(x, excepting=[0, 1]))"])
-def test_xcsp3_nvalues_excepting_in_objectives(run, request, objective):
-    # in XCSP3, an objective of type nValues has no element <except>
-    request.applymarker(bug(OBJ_EXCEPT))
+def test_xcsp3_nvalues_excepting_in_objectives(run, objective):
+    # in XCSP3, an objective of type nValues has no element <except>: an auxiliary variable is the objective (#215)
     r = run(X4 + f"satisfy(x[0] != x[1])\n{objective}")
     assert r.ok, r.report()
     assert r.xml.find("objectives")[0].find("except") is None, r.report()
