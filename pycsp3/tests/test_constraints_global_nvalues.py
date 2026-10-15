@@ -30,7 +30,6 @@ CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutio
 COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-CONSTANT_OBJECTIVE = "#221: the objective is a constant, reported by TypeError: Wrong type for Dummy"
 NEGATED_MEMBERSHIP = "#222: ~(e in S) fails with AssertionError: non authorized type -2, instead of an explicit message"
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
@@ -903,11 +902,11 @@ def test_nvalues_constant_in_objectives(run, objective):
     assert_fails(run(X4 + f"satisfy(x[0] != x[1])\n{objective}"))
 
 
-@bug(CONSTANT_OBJECTIVE)
 @pytest.mark.parametrize("objective", ["minimize(NValues(x[0]))", "maximize(NValues([]))", "minimize(Sum([]))", "minimize(Count([], value=1))"])
 def test_constant_in_objectives_message(run, objective):
+    # an explicit error (#221)
     r = run(X4 + f"satisfy(x[0] != x[1])\n{objective}")
-    assert not r.ok and "constant" in r.stdout, r.report()
+    assert not r.ok and "The objective is the constant" in r.stdout and "there is nothing to optimize" in r.stdout, r.report()
 
 
 @bug(NEGATED_MEMBERSHIP)

@@ -4173,6 +4173,8 @@ def _optimize(term, minimization):
                 term = t.content[0]  # this was a sum/maximum/minimum with only one term, so we just consider this term as an expression to be optimized
     if isinstance(term, ScalarProduct):
         term = Sum(term)  # to have a PartialConstraint
+    if isinstance(term, ConstraintDummyConstant):  # as NValues() of a single term, or Sum() and Count() of no term
+        error("The objective is the constant " + str(term.val) + ": there is nothing to optimize")
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"
     satisfy(pc == var for (pc, var) in auxiliary().get_collected_and_clear())
 
