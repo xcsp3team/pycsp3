@@ -74,7 +74,9 @@ D4 = [range(3)] * 4
 @pytest.mark.parametrize("n", [1, 2, 3, 4])
 def test_on_01_variables(run, solver, f, n):
     terms = ", ".join(f"b[{i}]" for i in range(n))
-    check(run, solver, B4 + f"satisfy({f}({terms}))", DB4, lambda *t: holds(f, t[:n]))
+    # AtMostOne() on a single term always holds (no constraint is posted, #210): another constraint is posted
+    other, p = (", b[2] != b[3]", lambda t: t[2] != t[3]) if f == "AtMostOne" and n == 1 else ("", lambda t: True)
+    check(run, solver, B4 + f"satisfy({f}({terms}){other})", DB4, lambda *t: holds(f, t[:n]) and p(t))
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
@@ -315,9 +317,14 @@ def test_xcsp3_constant_term_gives_no_auxiliary_variable(run):
     ("Sum({}, b[3]) == 1", lambda e, t: e + t[3] == 1),
     ("If(b[3] == 1, Then={})", lambda e, t: t[3] != 1 or e),
 ])
-def test_in_logical_expressions(run, solver, f, n, context, predicate):
+def test_in_logical_expressions(run, solver, request, f, n, context, predicate):
     terms = ", ".join(f"b[{i}]" for i in range(n))
-    check(run, solver, B4 + f"satisfy({context.format(f + '(' + terms + ')')})", DB4, lambda *t: predicate(holds(f, t[:n]), t))
+    # AtMostOne() on a single term always holds (#210): another constraint is posted, the model having no constraint when the expression always
+    # holds, and ~AtMostOne() is the constraint false
+    other, p = (", b[1] != b[2]", lambda t: t[1] != t[2]) if f == "AtMostOne" and n == 1 else ("", lambda t: True)
+    if other and context == "~{}":
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
+    check(run, solver, B4 + f"satisfy({context.format(f + '(' + terms + ')')}{other})", DB4, lambda *t: predicate(holds(f, t[:n]), t) and p(t))
 
 
 @pytest.mark.parametrize("f", FUNCTIONS)
