@@ -465,6 +465,34 @@ def test_conjunction_disjunction(run, solver, request, constraint, predicate):
     check(request, run, solver,[constraint, "y != 1"], XY, lambda x, y: predicate(x, y) and y != 1)
 
 
+GLOBAL_NOT_AN_EXPRESSION = ("#239: a global constraint that cannot be replaced by an expression, in a logical expression, is silently discarded by either(), "
+                            "both(), conjunction(), disjunction() and And(), and gives a meta-constraint (|, &, iff(), xor()), an assert without message (imply(), "
+                            "If()) or a TypeError (~), instead of an explicit error (decision E of #226)")
+
+GLOBAL_CONSTRAINTS = {
+    "Channel": "Channel(x)",
+    "NoOverlap": "NoOverlap(origins=x[:2], lengths=[2, 3])",
+    "Cumulative": "Cumulative(origins=x[:2], lengths=[1, 2], heights=[1, 1]) <= 1",
+    "BinPacking": "BinPacking(x, sizes=[1, 2, 1, 2]) <= 3",
+    "Circuit": "Circuit(x)",
+    "Clause": "Clause(b)",
+    "Regular": "x in Automaton(start='a', final=['a'], transitions=[('a', 0, 'a'), ('a', 1, 'a')])",
+}
+LOGICAL_CONTEXTS = ["({g}) | (z == 1)", "({g}) & (z == 1)", "~({g})", "imply(z == 1, {g})", "iff(z == 1, {g})", "xor(z == 1, {g})", "If(z == 1, Then={g})",
+                    "either({g}, z == 1)", "both({g}, z == 1)", "conjunction({g}, z == 1)", "disjunction({g}, z == 1)", "And({g}, z == 1)", "Or({g}, z == 1)"]
+
+
+@pytest.mark.parametrize("context", LOGICAL_CONTEXTS)
+@pytest.mark.parametrize("name", GLOBAL_CONSTRAINTS)
+def test_global_constraint_in_a_logical_expression(run, request, name, context):
+    # no solver handles the meta-constraints (CHOCO and cosoco say so, ACE gives wrong solutions: xcsp3team/ACE#32), so a global constraint that cannot be
+    # replaced by an expression (or an auxiliary variable) is refused with an explicit error in a logical expression (decision E of #226)
+    if not (name == "Regular" and context.split("(")[0] in ("~", "either", "both", "conjunction", "disjunction", "And", "Or")):  # (explicit errors already)
+        request.applymarker(pytest.mark.xfail(strict=True, reason="bug: " + GLOBAL_NOT_AN_EXPRESSION))
+    code = "x = VarArray(size=4, dom=range(4))\nb = VarArray(size=3, dom={0, 1})\nz = Var(range(8))\n"
+    assert_fails(run(code + "satisfy(" + context.format(g=GLOBAL_CONSTRAINTS[name]) + ")"))
+
+
 # ---------------------------------------------------------------------------------------------- belong() not_belong()
 
 @pytest.mark.parametrize("constraint, predicate", [

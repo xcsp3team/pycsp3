@@ -7,6 +7,9 @@ Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being co
 According to XCSP3-core, cardinality(X, V, O) holds iff, for each j, the number of variables of X assigned the value v[j] is o[j] (an integer, a
 variable, or an interval of integers), and with closed="true", each variable of X must also be assigned a value of V; X is a list of (at least two)
 variables, V is a list of integers or a list of variables, O is a list of integers, of variables or of intervals, with |V| = |O| >= 1.
+As decided in #226, a number of occurrences given by a range or a collection must be a non-empty set of contiguous integers (A), the integers mixed
+with variables are replaced by auxiliary variables (B), the numbers of occurrences known when compiling are evaluated by PyCSP3 (C), and a variable
+cannot be given several times in the list (D).
 """
 
 import pytest
@@ -15,9 +18,10 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 RANGES = ("#227: a number of occurrences given by an empty range is written 0, and by a range with a step as an interval (the step "
-          "being ignored): silently wrong models")
-COLLECTIONS = ("#228: a number of occurrences given by a collection of integers (list, tuple, set) that is not an interval is written as in "
-               "Python (e.g. [1, 3]) in the element <occurs>, and an empty list raises ValueError")
+          "being ignored), instead of an explicit error (decision A of #226)")
+COLLECTIONS = ("#228: a number of occurrences given by a collection of integers (list, tuple, set) is written as in Python (e.g. [1, 3]) in the "
+               "element <occurs>, unless it is a sorted list of contiguous integers; an empty or non-contiguous collection must be refused (decision A "
+               "of #226)")
 EXPRESSIONS = ("#229: a number of occurrences given by an expression is written as such in the element <occurs>, and a value given by an "
                "expression is refused by an assert without message, instead of being replaced by an auxiliary variable")
 MIXED = ("#230: occurrences mixing variables with integers or intervals, and values mixing variables and integers, are not XCSP3-core: ACE "
@@ -28,16 +32,19 @@ NO_VALUE = "#233: Cardinality() without value writes empty elements <values> and
 INVALID = "#234: invalid arguments of Cardinality() refused by an assert without message, or accepted and written as such in the XCSP3 file"
 LOGICAL = ("#235: Cardinality() in a logical expression gives a meta-constraint (or, and, iff, xor), an assert without message or a TypeError, "
            "and is silently discarded by both(), either(), conjunction() and disjunction()")
-ACE_ALL = ("(to be reported) ACE finds wrong solutions when the number of occurrences of a value is the number of variables, the value not being the "
+ACE_ALL = ("xcsp3team/ACE#29: ACE finds wrong solutions when the number of occurrences of a value is the number of variables, the value not being the "
            "smallest one of the domains")
-ACE_ALLDIFFERENT = ("(to be reported) ACE posts allDifferent when each value can be assigned at most once (with closed, or domains included in the "
+ACE_ALLDIFFERENT = ("xcsp3team/ACE#30: ACE posts allDifferent when each value can be assigned at most once (with closed, or domains included in the "
                     "values), ignoring that some values must be assigned")
-ACE_FAILS = ("(to be reported) ACE fails without message when the number of occurrences is 0 for all the values, negative, or when a value is in no "
-             "domain")
-ACE_RANGE = "(to be reported) ACE excludes the upper bound of an interval of occurrences when the values are variables (Range is half-open)"
-ACE_REPEATED = "(to be reported) ACE finds wrong solutions when a variable is given several times in the list (filtering based on a matching)"
+KNOWN = ("#237: numbers of occurrences known when compiling (negative, greater than the number of terms, values that no term can take) are written as "
+         "such: ACE fails without message, cosoco crashes on values greater than the values of the domains")
+REPEATED = "#238: a variable given several times in the list of Cardinality() is accepted (ACE gives wrong solutions), instead of an explicit error"
+ACE_FAILS = ("(to be reported) ACE fails without message when the number of occurrences is 0 for all the values, or when a value in no domain has a "
+             "variable as number of occurrences")
+ACE_RANGE = "xcsp3team/ACE#31: ACE excludes the upper bound of an interval of occurrences when the values are variables (Range is half-open)"
 COSOCO_CLOSED = "(to be reported) cosoco ignores closed=\"true\""
-COSOCO_OUTSIDE = "(to be reported) cosoco crashes (heap overflow: malloc(): corrupted top size) when a value is greater than the values of the domains"
+COSOCO_OUTSIDE = ("(to be reported) cosoco crashes (heap overflow: malloc(): corrupted top size) when a value greater than the values of the domains "
+                  "has a variable as number of occurrences")
 CHOCO_VALUES_CLOSED = ("(to be reported) CHOCO 4.10.15-beta (embedded in PyCSP3) finds solutions several times with variables as values and closed, "
                        "and CHOCO 6.0.2 fails (ClassCastException: SetVarImpl cannot be cast to IntVar)")
 
@@ -100,7 +107,7 @@ def test_cardinality_occurrences(run, solver, request, occurrences, expected):
     if occurrences in ("{0: 0}", "{0: 0, 1: 0}"):
         bug_for(request, "ACE", ACE_FAILS)
     if occurrences == "{0: 1, 7: 0}":
-        bug_for(request, "COSOCO", COSOCO_OUTSIDE)
+        bug_for(request, "COSOCO", KNOWN)
     check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}))", D4, lambda *t: card(t, expected))
 
 
@@ -118,8 +125,7 @@ def test_cardinality_occurrences(run, solver, request, occurrences, expected):
 ])
 def test_cardinality_closed(run, solver, request, occurrences, expected):
     if occurrences == "{0: 1, 7: 3}":
-        bug_for(request, "ACE", ACE_FAILS)
-        bug_for(request, "COSOCO", COSOCO_OUTSIDE)
+        bug_for(request, ("ACE", "COSOCO"), KNOWN)
     if occurrences in ("{0: 1, 1: 2}", "{0: range(1, 3), 1: range(1, 3)}", "{0: range(0, 5)}", "{1: range(0, 5), 2: range(0, 5)}"):
         bug_for(request, "COSOCO", COSOCO_CLOSED)
     check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}, closed=True))", D4, lambda *t: card(t, expected, closed=True))
@@ -290,48 +296,67 @@ def test_cardinality_values_given_by_variables_of_the_list(run, solver):
 def test_cardinality_with_unreachable_occurrences(run, solver, request, occurrences, expected):
     # numbers of occurrences that cannot be reached (negative, greater than the number of terms) or always reached
     if "-" in occurrences or "7" in occurrences:
-        bug_for(request, "ACE", ACE_FAILS)
+        bug_for(request, "ACE", KNOWN)
     check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}), x[3] != 1)", D4, lambda *t: card(t, expected) and t[3] != 1)
 
 
-@pytest.mark.parametrize("occurrences, expected", [
-    ("{0: range(0)}", [(0, range(0))]),
-    ("{0: range(3, 1)}", [(0, range(3, 1))]),
-    ("{0: range(1, 3), 1: range(2, 2)}", [(0, range(1, 3)), (1, range(2, 2))]),
-    ("{0: []}", [(0, [])]),
-    ("{0: set()}", [(0, [])]),
+@pytest.mark.parametrize("occurrences, written", [
+    ("{0: -1}", None),
+    ("{0: 5}", None),
+    ("{7: 2}", None),
+    ("{0: range(5, 8)}", None),
+    ("{0: range(-2, 1)}", ("0", "0")),
+    ("{0: range(-2, 2), 1: 2}", ("0 1", "0..1 2")),
+    ("{0: range(0, 9)}", ("0", "0..4")),
+    ("{0: 1, 7: 0}", ("0", "1")),
+    ("{0: 1, 7: range(0, 2)}", ("0", "1")),
 ])
-def test_cardinality_with_empty_ranges(run, solver, request, occurrences, expected):
-    # no number of occurrences is possible: the constraint cannot be satisfied
-    bug_for(request, ALL, RANGES if "range" in occurrences else COLLECTIONS)
-    check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}), x[3] != 1)", D4, lambda *t: card(t, expected) and t[3] != 1)
+@bug(KNOWN)
+def test_xcsp3_cardinality_known_when_compiling(run, occurrences, written):
+    # the numbers of occurrences are between 0 and the number of terms, and a value that no term can take has 0 occurrences: the constraint is false
+    # (None), or written with intervals restricted to 0..len(X) and without the values that no term can take (decision C of #226)
+    r = run(X4 + f"satisfy(Cardinality(x, occurrences={occurrences}), x[3] != 1)")
+    assert r.ok, r.report()
+    c = r.xml.find("constraints/cardinality")
+    if written is None:
+        assert c is None and "trivially false" in r.stdout, r.report()
+    else:
+        assert c is not None and (" ".join(c.find("values").text.split()), " ".join(c.find("occurs").text.split())) == written, r.report()
+
+
+@pytest.mark.parametrize("occurrences", [
+    pytest.param("{0: range(0)}", marks=bug(RANGES)),
+    pytest.param("{0: range(3, 1)}", marks=bug(RANGES)),
+    pytest.param("{0: range(1, 3), 1: range(2, 2)}", marks=bug(RANGES)),
+    pytest.param("{0: range(0, 5, 2)}", marks=bug(RANGES)),
+    pytest.param("{0: range(1, 4, 2), 1: 1}", marks=bug(RANGES)),
+    pytest.param("{0: []}", marks=bug(COLLECTIONS)),
+    pytest.param("{0: set()}", marks=bug(COLLECTIONS)),
+    pytest.param("{0: ()}", marks=bug(COLLECTIONS)),
+    pytest.param("{0: [1, 3]}", marks=bug(COLLECTIONS)),
+    pytest.param("{0: [3, 1]}", marks=bug(COLLECTIONS)),
+    pytest.param("{0: {1, 3}}", marks=bug(COLLECTIONS)),
+    pytest.param("{0: (1, 3)}", marks=bug(COLLECTIONS)),
+    pytest.param("{0: {0, 2}, 1: [1, 2]}", marks=bug(COLLECTIONS)),
+])
+def test_cardinality_with_empty_or_non_contiguous_occurrences(run, occurrences):
+    # an empty range or collection, or integers that are not contiguous, are refused with an explicit error (decision A of #226)
+    assert_fails(run(X4 + f"satisfy(Cardinality(x, occurrences={occurrences}))"))
 
 
 @pytest.mark.parametrize("occurrences, expected", [
-    ("{0: range(0, 5, 2)}", [(0, range(0, 5, 2))]),
-    ("{0: range(1, 4, 2), 1: 1}", [(0, range(1, 4, 2)), (1, 1)]),
     ("{0: range(3, 0, -1)}", [(0, range(3, 0, -1))]),
-])
-def test_cardinality_with_ranges_with_a_step(run, solver, request, occurrences, expected):
-    if occurrences != "{0: range(3, 0, -1)}":  # (written 1..3, which is right)
-        bug_for(request, ALL, RANGES)
-    check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}))", D4, lambda *t: card(t, expected))
-
-
-@pytest.mark.parametrize("occurrences, expected", [
+    ("{0: range(1, 3, 1)}", [(0, range(1, 3))]),
     ("{0: [1, 2]}", [(0, [1, 2])]),
     ("{0: [1, 2, 3]}", [(0, [1, 2, 3])]),
     ("{0: [2]}", [(0, [2])]),
-    ("{0: [1, 3]}", [(0, [1, 3])]),
-    ("{0: [3, 1]}", [(0, [3, 1])]),
-    ("{0: {1, 3}}", [(0, [1, 3])]),
-    ("{0: (1, 3)}", [(0, [1, 3])]),
-    ("{0: {0, 2}, 1: [1, 2]}", [(0, [0, 2]), (1, [1, 2])]),
+    pytest.param("{0: [3, 2]}", [(0, [2, 3])], marks=bug(COLLECTIONS)),
+    pytest.param("{0: (1, 2)}", [(0, [1, 2])], marks=bug(COLLECTIONS)),
+    pytest.param("{0: {1, 2}}", [(0, [1, 2])], marks=bug(COLLECTIONS)),
+    pytest.param("{0: frozenset({0, 1}), 1: (2,)}", [(0, [0, 1]), (1, [2])], marks=bug(COLLECTIONS)),
 ])
-def test_cardinality_with_collections_of_occurrences(run, solver, request, occurrences, expected):
-    # a collection of integers gives the possible numbers of occurrences, as a range
-    if occurrences not in ("{0: [1, 2]}", "{0: [1, 2, 3]}", "{0: [2]}"):  # (an interval, written as such)
-        bug_for(request, ALL, COLLECTIONS)
+def test_cardinality_with_contiguous_occurrences(run, solver, occurrences, expected):
+    # a range or a collection of contiguous integers gives the possible numbers of occurrences (an interval)
     check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}))", D4, lambda *t: card(t, expected))
 
 
@@ -503,7 +528,6 @@ def test_cardinality_on_a_single_term(run, solver, request, constraint, predicat
     pytest.param("Cardinality(x[0], occurrences={0: 1})", marks=bug(SINGLE_TERM)),
     pytest.param("Cardinality([x[0]], occurrences={0: range(0, 2), 1: 0})", marks=bug(SINGLE_TERM)),
     pytest.param("Cardinality(x[0], occurrences={0: z})", marks=bug(SINGLE_TERM)),
-    "Cardinality(x[0], x[0], occurrences={0: 2})",
 ])
 def test_xcsp3_cardinality_has_at_least_two_terms(run, constraint):
     # XCSP3-core requires |X| >= 2
@@ -540,21 +564,29 @@ def test_cardinality_with_no_value(run, solver, request, occurrences, closed, pr
     check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}, closed={closed}), x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
 
 
-@pytest.mark.parametrize("constraint, predicate", [
-    ("Cardinality(x[0], x[1], x[0], occurrences={0: 2})", lambda a, b, c, d: card((a, b, a), [(0, 2)])),
-    ("Cardinality(x[0], x[0], occurrences={0: 2})", lambda a, b, c, d: a == 0),
-    ("Cardinality(x[0], x[0], occurrences={0: 1})", lambda a, b, c, d: False),
-    ("Cardinality(x, x[0], occurrences={0: 2, 1: 2})", lambda *t: card(t + (t[0],), [(0, 2), (1, 2)])),
-    ("Cardinality(x[0], x[0], x[1], occurrences={1: 1, 2: 2})", lambda a, b, c, d: card((a, a, b), [(1, 1), (2, 2)])),
-    ("Cardinality(x[0], x[0], x[1], occurrences={1: range(1, 3)}, closed=True)", lambda a, b, c, d: card((a, a, b), [(1, range(1, 3))], closed=True)),
-    ("Cardinality(x[0] + 1, x[0] + 1, x[1], occurrences={1: 2})", lambda a, b, c, d: card((a + 1, a + 1, b), [(1, 2)])),
+@pytest.mark.parametrize("constraint", [
+    "Cardinality(x[0], x[1], x[0], occurrences={0: 2})",
+    "Cardinality(x[0], x[0], occurrences={0: 2})",
+    "Cardinality(x, x[0], occurrences={0: 2, 1: 2})",
+    "Cardinality(x[0], [x[0], x[1]], occurrences={1: range(1, 3)}, closed=True)",
+    "Cardinality(x[:2], x[1:], occurrences={0: z})",
+    "Cardinality(Sum(x[:2]), Sum(x[:2]), x[2], occurrences={1: 2})",
 ])
-def test_cardinality_with_a_repeated_term(run, solver, request, constraint, predicate):
-    # a term given several times is counted as many times as it is given
-    if "x[0] + 1" not in constraint:
-        bug_for(request, "ACE", ACE_REPEATED)
-    if "closed" in constraint:
-        bug_for(request, "COSOCO", COSOCO_CLOSED)
+@bug(REPEATED)
+def test_cardinality_with_a_repeated_variable(run, constraint):
+    # a variable given several times in the list is refused with an explicit error (decision D of #226), also when it replaces a component given
+    # several times
+    r = run(XZ + f"satisfy({constraint}, x[3] != 1)")
+    assert_fails(r)
+    assert "several times" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Cardinality(x[0] + 1, x[0] + 1, x[1], occurrences={1: 2})", lambda a, b, c, d: card((a + 1, a + 1, b), [(1, 2)])),
+    ("Cardinality(x[0] + 1, 1 + x[0], x[1], occurrences={1: 1})", lambda a, b, c, d: card((a + 1, a + 1, b), [(1, 1)])),
+])
+def test_cardinality_with_a_repeated_expression(run, solver, constraint, predicate):
+    # an expression given several times is replaced by distinct auxiliary variables, and counted as many times as it is given
     check(run, solver, X4 + f"satisfy({constraint}, x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
 
 
