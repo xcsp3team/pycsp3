@@ -23,7 +23,7 @@ from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic, check_no_boolean
 from pycsp3.classes.nodes import TypeNode, Node, neg_var
 from pycsp3.dashboard import options
-from pycsp3.tools.curser import queue_in, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
+from pycsp3.tools.curser import queue_in, check_no_negated_membership, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
 from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
 from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, error, warning, warning_if, error_if, is_2d_list)
 
@@ -1078,6 +1078,8 @@ def satisfy(*args, no_comment_tags_extraction=False):
     for i, arg in enumerate(args):
         if arg is None:
             continue
+        if len(queue_in) > 0:  # ~(e in S) gives an integer (-2), with an expression 'in' waiting
+            check_no_negated_membership(arg if isinstance(arg, (list, tuple)) else (arg,))
         arg = _root_node(arg)
         if isinstance(arg, ConstraintDummyConstant):
             if arg.val != 0:  # the constant 1 (true) is discarded
@@ -1401,6 +1403,7 @@ def xor(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    check_no_negated_membership(args)
     args = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args]
     if any(isinstance(v, bool) for v in args):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
@@ -1435,6 +1438,7 @@ def iff(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    check_no_negated_membership(args)
     error_if(len(args) < 2, "iff() must have at least two arguments (possibly given in a list), which is not the case of " + str(len(args)))
 
     if any(isinstance(v, bool) for v in args):
@@ -1477,6 +1481,7 @@ def imply(*args):
         # a solution: [0, 0, 1, 1] [0, 0, 1, 1]
     """
     error_if(len(args) != 2, "imply() must have two arguments (a condition and a consequence), which is not the case of " + str(len(args)))
+    check_no_negated_membership(args)
     cnd, tp = args  # condition and then part
     if isinstance(cnd, bool) or isinstance(tp, bool):
         assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
@@ -1738,6 +1743,7 @@ def conjunction(*args):
 
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    check_no_negated_membership(args)
     if len(queue_in) == 0:
         args = [v for v in args if v is not True]
         if any(v is False for v in args):
@@ -1767,6 +1773,7 @@ def both(this, And):
 
         # a solution: [10]
     """
+    check_no_negated_membership((this, And))
     if this is None:
         return And
     if And is None:
@@ -1800,6 +1807,7 @@ def disjunction(*args):
     """
     if len(args) == 1 and isinstance(args[0], (tuple, list, set, frozenset, types.GeneratorType)):
         args = tuple(args[0])
+    check_no_negated_membership(args)
     if len(queue_in) == 0:
         args = [v for v in args if v is not False]
         if any(v is True for v in args):
@@ -1829,6 +1837,7 @@ def either(this, Or):
 
         # a solution: [0, 4]
     """
+    check_no_negated_membership((this, Or))
     if this is None:
         return Or
     if Or is None:
@@ -1928,15 +1937,43 @@ def Mdd(*, scope, mdd):
 ''' Comparison-based Constraints '''
 
 
-def _excepting_values(excepting):
+def _excepting_values(excepting, name):
     """
-    Returns the list of values given by the parameter excepting of AllDifferent() and AllEqual(): an integer, or a collection (list,
-    tuple, set, range) of integers; None is returned when there is no value (excepting=None or an empty collection), so that no
-    element <except> is generated
+    Returns the values given by the parameter excepting of AllDifferent(), AllEqual() and NValues() (whose name is given for the messages): an
+    integer, or an enumeration of integers (a list, a tuple, a set or a range, which cannot be nested), each value being given once. The values are
+    returned in increasing order, and None is returned when there is no value (excepting=None or an empty collection), so that no element <except>
+    is generated.
     """
-    excepting = list(excepting) if isinstance(excepting, (tuple, set, frozenset, range)) else [excepting] if isinstance(excepting, int) else excepting
-    checkType(excepting, ([int], type(None)))
-    return None if excepting is not None and len(excepting) == 0 else excepting
+    if excepting is None:
+        return None
+    values = list(excepting) if isinstance(excepting, (list, tuple, set, frozenset, range)) else [excepting]
+    if any(not isinstance(v, int) or isinstance(v, bool) for v in values):
+        error("The parameter excepting of " + name + "() must be given an integer, or an enumeration (list, tuple, set, range) of integers, which is not "
+              "the case of " + str(excepting))
+    if len(set(values)) < len(values):
+        error("A value is given several times in the parameter excepting of " + name + "(), which is not allowed: " + str(excepting))
+    return sorted(values) if len(values) > 0 else None
+
+
+def _excepting_tuples(excepting, name):
+    """
+    Returns the tuples given by the parameter excepting of AllDifferentList() and AllEqualList() (whose name is given for the messages): a tuple
+    (or a list, or a range) of integers, or a collection (list, tuple, set) of such tuples, each tuple being given once. The tuples are returned in
+    increasing (lexicographic) order, and None is returned when there is no tuple (excepting=None or an empty collection).
+    """
+    if excepting is None:
+        return None
+    if not isinstance(excepting, (list, tuple, set, frozenset, range)):
+        error("The parameter excepting of " + name + "() must be given a tuple of integers, or a collection of such tuples, which is not the case of "
+              + str(excepting))
+    elements = list(excepting)
+    several = len(elements) > 0 and all(isinstance(e, (list, tuple, range)) for e in elements)
+    tuples = [tuple(e) for e in elements] if several else [tuple(elements)] if len(elements) > 0 else []
+    if any(not isinstance(v, int) or isinstance(v, bool) for t in tuples for v in t):
+        error("The parameter excepting of " + name + "() must be given tuples of integers, which is not the case of " + str(excepting))
+    if len(set(tuples)) < len(tuples):
+        error("A tuple is given several times in the parameter excepting of " + name + "(), which is not allowed: " + str(excepting))
+    return sorted(tuples) if len(tuples) > 0 else None
 
 
 def AllDifferent(term, *others, excepting=None, matrix=False):
@@ -1985,7 +2022,7 @@ def AllDifferent(term, *others, excepting=None, matrix=False):
         # a solution: [0, 1, 2, 3, 1, 0, 3, 2, 2, 3, 0, 1, 3, 2, 1, 0]
     """
     error_if(term is None, "AllDifferent() requires variables (or expressions), which is not the case of None")
-    excepting = _excepting_values(excepting)
+    excepting = _excepting_values(excepting, "AllDifferent")
     if matrix:
         error_if(len(others) > 0,
                  "With matrix=True, AllDifferent() requires a single argument (the matrix), which is not the case of " + str(1 + len(others)) + " arguments")
@@ -2092,8 +2129,7 @@ def AllDifferentList(term, *others, excepting=None):
         # a solution: [0, 1, 0, 2, 0, 0, 0, 0]
     """
     lists = _check_lists_of_list_constraint("AllDifferentList", term, others, excepting)
-    excepting = list(excepting) if isinstance(excepting, (tuple, range)) else excepting
-    checkType(excepting, ([int], type(None)))
+    excepting = _excepting_tuples(excepting, "AllDifferentList")
     seen = set()  # identities of the variables of the lists (== being redefined for building expressions)
     for t in lists:
         key = tuple(id(x) for x in t)
@@ -2103,7 +2139,7 @@ def AllDifferentList(term, *others, excepting=None):
         warning("A constraint AllDifferentList discarded because defined with 1 list", "alldifferentlist_1_list")
         return None  # a single list is always different from the other ones (as for AllDifferent() with a single variable)
     if len(lists) > 0 and len(lists[0]) == 1:  # allDifferent-list requires lists of at least two variables: AllDifferent is posted on the variables
-        return AllDifferent([t[0] for t in lists], excepting=excepting)
+        return AllDifferent([t[0] for t in lists], excepting=None if excepting is None else [e[0] for e in excepting])
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 
@@ -2140,7 +2176,7 @@ def AllEqual(term, *others, excepting=None):
         # a solution: [0, 1, 1, 1]
     """
     error_if(term is None, "AllEqual() requires variables (or expressions), which is not the case of None")
-    excepting = _excepting_values(excepting)
+    excepting = _excepting_values(excepting, "AllEqual")
     terms = flatten(term, others)
     if len(terms) == 0:
         return ConstraintDummyConstant(1)
@@ -2178,15 +2214,7 @@ def AllEqualList(term, *others, excepting=None):
         )
     """
     lists = _check_lists_of_list_constraint("AllEqualList", term, others, excepting)
-    if excepting is not None:  # excepting is changed into a list of tuples (None if empty)
-        values = list(excepting) if isinstance(excepting, (tuple, list, set, frozenset, range)) else None
-        error_if(values is None, "excepting given to AllEqualList() must be a tuple of integers, or a collection of such tuples, which is not the case of "
-                 + str(excepting))
-        several = len(values) > 0 and all(isinstance(e, (tuple, list)) for e in values)
-        tuples = [tuple(e) for e in values] if several else [tuple(values)] if len(values) > 0 else []
-        error_if(any(not isinstance(v, int) for e in tuples for v in e),
-                 "The values of excepting given to AllEqualList() must be integers, which is not the case of " + str(excepting))
-        excepting = (sorted(tuples) if isinstance(excepting, (set, frozenset)) else tuples) if len(tuples) > 0 else None
+    excepting = _excepting_tuples(excepting, "AllEqualList")
     if len(lists) == 1:
         warning("A constraint AllEqualList discarded because defined with 1 list", "allequallist_1_list")
         return None  # a single list is always equal to the other ones (as for AllEqual() with a single variable)
@@ -3202,15 +3230,18 @@ def NValues(within, *within_complement, excepting=None, condition=None):
         # a solution: [0, 0, 1, 1, 1, 1, 1, 2]
     """
     error_if(within is None, "NValues() requires variables (or expressions), which is not the case of None")
-    return _nvalues(flatten(within, within_complement), excepting, condition)
+    terms = flatten(within, within_complement)
+    if len(terms) > 0 and all(isinstance(t, int) for t in terms):
+        error("NValues() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
+    return _nvalues(terms, excepting, condition)
 
 
 def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
-    if len(terms) == 0:
-        return ConstraintDummyConstant(0)
-    if len(terms) == 1 and excepting is None and condition is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) \
-            and not isinstance(terms[0], bool):  # an invalid term is reported below (as for AllEqual())
-        return ConstraintDummyConstant(1)
+    excepting = _excepting_values(excepting, "NValues")
+    if len(terms) == 0:  # the number of distinct values of no term is 0
+        return _constant_with_condition(0, Condition.build_condition(condition))
+    if len(terms) == 1 and excepting is None and isinstance(terms[0], (Variable, Node, PartialConstraint, int)) and not isinstance(terms[0], bool):
+        return _constant_with_condition(1, Condition.build_condition(condition))  # a single term (an invalid term is reported below, as for AllEqual())
     integers = {}  # an integer given several times is replaced by a single auxiliary variable
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
@@ -3231,12 +3262,15 @@ def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
         kept.setdefault(id(t) if isinstance(t, Variable) else str(t), t)
     if len(kept) < len(terms):
         terms = list(kept.values())
-        if len(terms) == 1 and excepting is None and condition is None:
-            return ConstraintDummyConstant(1)
-    if excepting is not None:
-        excepting = flatten(excepting)
-        checkType(excepting, [int])
-    return _wrapping_by_complete_or_partial_constraint(ConstraintNValues(terms, excepting, Condition.build_condition(condition)))
+    condition = Condition.build_condition(condition)
+    if len(terms) == 1:  # no constraint nValues (XCSP3-core requires at least two terms): one value, or none if the term takes an excepted value
+        if excepting is None:
+            return _constant_with_condition(1, condition)
+        t = terms[0]
+        term = Node.build(TypeNode.NE, t, excepting[0]) if len(excepting) == 1 else Node.build(TypeNode.NOTIN, t, Node.build(TypeNode.SET, excepting))
+        return term if condition is None else _term_with_condition(term, condition)
+    ctr = ConstraintNValues(terms, excepting, condition)
+    return _wrapping_by_complete_or_partial_constraint(ctr) if condition is None else PartialConstraint.complete(ctr)
 
 
 def NumberDistinctValues(within, *within_complement, excepting=None, condition=None):
@@ -4144,14 +4178,17 @@ def _optimize(term, minimization):
 
     ObjEntities.items = []  # TODO currently, we overwrite the objective if one was posted
     if isinstance(term, PartialConstraint):
-        if isinstance(term.constraint, (ConstraintElement, ConstraintCount)):
-            term = auxiliary().replace_partial_constraint(term)
+        if isinstance(term.constraint, (ConstraintElement, ConstraintCount)) \
+                or isinstance(term.constraint, ConstraintNValues) and term.constraint.arguments[TypeCtrArg.EXCEPT].content is not None:
+            term = auxiliary().replace_partial_constraint(term)  # (an objective of type nValues has no element <except>)
         elif isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):
             t = term.constraint.arguments[TypeCtrArg.LIST]
             if len(t.content) == 1 and TypeCtrArg.COEFFS not in term.constraint.arguments:
                 term = t.content[0]  # this was a sum/maximum/minimum with only one term, so we just consider this term as an expression to be optimized
     if isinstance(term, ScalarProduct):
         term = Sum(term)  # to have a PartialConstraint
+    if isinstance(term, ConstraintDummyConstant):  # as NValues() of a single term, or Sum() and Count() of no term
+        error("The objective is the constant " + str(term.val) + ": there is nothing to optimize")
     checkType(term, (Variable, Node, PartialConstraint)), "Did you forget to use Sum, e.g., as in Sum(x[i]*3 for i in range(10))"
     satisfy(pc == var for (pc, var) in auxiliary().get_collected_and_clear())
 

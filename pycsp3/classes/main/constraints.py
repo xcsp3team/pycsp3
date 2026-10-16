@@ -740,12 +740,16 @@ class ConstraintNValues(ConstraintWithCondition):
         self.arg(TypeCtrArg.LIST, lst)
         self.arg(TypeCtrArg.EXCEPT, excepting)
         self.arg(TypeCtrArg.CONDITION, condition)
+        # the smallest and greatest possible numbers of distinct values (with excepting, all the terms may take excepted values)
+        self.bounds = (1 if excepting is None else 0, len(lst))
+
+    known_result = ConstraintCount.known_result
 
     def min_possible_value(self):
-        return 1
+        return self.bounds[0]
 
     def max_possible_value(self):
-        return len(self.arguments[TypeCtrArg.LIST].content)
+        return self.bounds[1]
 
 
 class ConstraintCardinality(Constraint):
@@ -1230,8 +1234,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     @staticmethod
     def complete(c):
-        # the constraint c, now with its condition; a count whose result is known when compiling is a constant (true or false)
-        if isinstance(c, ConstraintCount):
+        # the constraint c, now with its condition; a count (or a number of distinct values) whose result is known when compiling is a constant
+        if isinstance(c, (ConstraintCount, ConstraintNValues)):
             k = c.known_result()
             if k is not None:
                 return ConstraintDummyConstant(k)
@@ -1787,8 +1791,21 @@ def global_indirection(c):
     else:
         if isinstance(c, ConstraintAllDifferent):
             lst = c.arguments[TypeCtrArg.LIST].content
-            pc = PartialConstraint(ConstraintNValues(lst, c.arguments[TypeCtrArg.EXCEPT].content, None))
+            excepting = c.arguments[TypeCtrArg.EXCEPT].content
+            pc = PartialConstraint(ConstraintNValues(lst, None, None))  # the number of distinct values, without excepting
             condition = Condition.build_condition((TypeConditionOperator.EQ, len(lst)))
+            if excepting is not None:
+                # the terms are all different, except those taking a value v of excepting, which can be repeated: as the number n of distinct values
+                # counts v once, n + sum of max(count(v) - 1, 0) over the values v of excepting must be the number of terms; this sum being never greater
+                # than the number of terms, the comparison ge is used (equivalent to eq, and cheaper to filter)
+                n = auxiliary().replace_partial_constraint(pc)
+                extra = []
+                for v in excepting:
+                    k = functions.Count(lst, value=v)  # the constant 0 when no term can take v (#193)
+                    if not isinstance(k, ConstraintDummyConstant):
+                        k = auxiliary().replace_partial_constraint(k) if isinstance(k, PartialConstraint) else k
+                        extra.append(Node.build(TypeNode.MAX, Node.build(TypeNode.SUB, k, 1), 0))
+                return Node.build(TypeNode.GE, Node.build(TypeNode.ADD, n, *extra) if len(extra) > 0 else n, len(lst))
         elif isinstance(c, ConstraintAllEqual):
             mode = 0  # TODO hard coding ; which is the best way?
             if mode == 0:
