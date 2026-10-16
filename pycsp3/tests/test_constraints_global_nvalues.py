@@ -1,6 +1,6 @@
 """
 Tests of the constraint NValues of the section Constraints (Global) of the API (https://pycsp.org/documentation/api/constraints-global/#NValues):
-the functions NValues() and NumberDistinctValues() (an alias), which build a component that becomes a constraint nValues when compared with a value,
+the function NValues(), which builds a component that becomes a constraint nValues when compared with a value,
 a variable, an expression, an interval or a set (or when given the parameter condition), with the parameter excepting, on variables and on
 expressions, as a term of expressions, in groups of constraints, in logical expressions and in objectives.
 The function NotAllEqual(), which posts NValues(...) > 1, is tested in test_constraints_global_notallequal.py.
@@ -327,22 +327,6 @@ def test_nvalues_forms(run, solver, terms):
     check(run, solver, X4 + f"satisfy(NValues({terms}) >= 3)", D4, lambda *t: nv(t) >= 3)
 
 
-@pytest.mark.parametrize("constraint, predicate", [
-    ("NumberDistinctValues(x) <= 2", lambda *t: nv(t) <= 2),
-    ("NumberDistinctValues(x, excepting=0) == 1", lambda *t: nv(t, (0,)) == 1),
-    ("NumberDistinctValues(x[0], x[1], x[2]) != 1", lambda a, b, c, d: nv((a, b, c)) != 1),
-    ("NumberDistinctValues(x, condition=('ge', 3))", lambda *t: nv(t) >= 3),
-])
-def test_number_distinct_values(run, solver, request, constraint, predicate):
-    if "excepting" in constraint:
-        skip_except(solver)
-    if solver == "COSOCO" and "!=" in constraint:
-        pytest.skip(COSOCO_CONDITION)
-    if "<=" in constraint or "!=" in constraint:
-        bug_for(request, "CHOCO", CHOCO_LIMIT)
-    check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
-
-
 @pytest.mark.parametrize("n, d, k", [(2, 2, 1), (2, 3, 2), (3, 3, 1), (5, 2, 2), (2, 5, 1), (3, 4, 3)])
 def test_nvalues_sizes(run, solver, request, n, d, k):
     if 1 < k < n:
@@ -557,7 +541,7 @@ def test_nvalues_with_integers(run, solver, request, constraint, predicate):
 
 
 @pytest.mark.parametrize("constraint", ["NValues(1, 2) == 2", "NValues(1, 1) == 1", "NValues(5) == 1", "NValues(1, 2, 1) == 3", "NValues([1, 2], 3) <= 2",
-                                        "NValues(1, 2, excepting=1) == 1", "NumberDistinctValues(1, 2) == 2", "NValues((1, 2), condition=('eq', 2))"])
+                                        "NValues(1, 2, excepting=1) == 1", "NValues((1, 2), condition=('eq', 2))"])
 def test_nvalues_on_integers_only(run, constraint):
     # as for NotAllEqual(), AllDifferent() and AllEqual(), at least one variable (or expression) is required (#219)
     r = run(X4 + f"satisfy({constraint}, x[3] != 1)")
@@ -759,28 +743,11 @@ def test_nvalues_example_with_excepting(run, solver):
           lambda *t: t.count(0) == 2 and nv(t, (0,)) == 2)
 
 
-def test_number_distinct_values_example(run, solver):
-    # the first example of the documentation of NumberDistinctValues(), with less colours
-    check(run, solver, "x = VarArray(size=6, dom=range(3))\nedges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]\n"
-                       "satisfy([x[i] != x[j] for (i, j) in edges], NumberDistinctValues(x) <= 2)", [range(3)] * 6,
-          lambda *t: all(t[i] != t[i + 1] for i in range(5)) and nv(t) <= 2)
-
-
-def test_number_distinct_values_example_with_excepting(run, solver):
-    skip_except(solver)
-    # the second example of the documentation of NumberDistinctValues(), with less nodes
-    check(run, solver, "x = VarArray(size=5, dom=range(4))\nsatisfy(Count(x, value=0) == 2, NumberDistinctValues(x, excepting=0) == 2)",
-          [range(4)] * 5, lambda *t: t.count(0) == 2 and nv(t, (0,)) == 2)
-
-
 @pytest.mark.parametrize("code, solution", [
     ("x = VarArray(size=6, dom=range(6))\nedges = [(0, 1), (0, 2), (1, 3), (2, 4), (3, 5), (4, 5)]\nsatisfy([x[i] != x[j] for (i, j) in edges])\n"
      "minimize(NValues(x))", [0, 1, 1, 0, 0, 1]),
     ("y = VarArray(size=8, dom=range(4))\nsatisfy(Count(y, value=0) == 2, NValues(y, excepting=0) == 2)", [0, 0, 1, 1, 1, 1, 1, 2]),
-    ("x = VarArray(size=6, dom=range(6))\nedges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]\nsatisfy([x[i] != x[j] for (i, j) in edges], "
-     "NumberDistinctValues(x) <= 3)", [0, 1, 0, 1, 0, 1]),
-    ("x = VarArray(size=6, dom=range(4))\nsatisfy(Count(x, value=0) == 2, NumberDistinctValues(x, excepting=0) == 2)", [0, 0, 1, 1, 1, 2]),
-], ids=["NValues 1", "NValues 2", "NumberDistinctValues 1", "NumberDistinctValues 2"])
+], ids=["NValues 1", "NValues 2"])
 def test_solutions_given_in_the_doc(run, solver, code, solution):
     # the solution given by the documentation satisfies the constraints of the example
     if "excepting" in code:
@@ -803,7 +770,7 @@ def test_solutions_given_in_the_doc(run, solver, code, solution):
     ("NValues(x) not in {1, 3}", ("x[]", None, "(notin,{1,3})")),
     ("NValues(x[:3]) == x[3]", ("x[0..2]", None, "(eq,x[3])")),
     ("NValues(x[0] + 1, x[1] + 1) != 1", ("add(x[0],1) add(x[1],1)", None, "(ne,1)")),
-    ("NumberDistinctValues(x, condition=('lt', 3))", ("x[]", None, "(lt,3)")),
+    ("NValues(x, condition=('lt', 3))", ("x[]", None, "(lt,3)")),
 ])
 def test_xcsp3_nvalues(run, constraint, expected):
     r = run(X4 + f"satisfy({constraint})")
