@@ -39,13 +39,13 @@ ACE_ALLDIFFERENT = ("xcsp3team/ACE#30: ACE posts allDifferent when each value ca
 KNOWN = ("#237: numbers of occurrences known when compiling (negative, greater than the number of terms, values that no term can take) are written as "
          "such: ACE fails without message, cosoco crashes on values greater than the values of the domains")
 REPEATED = "#238: a variable given several times in the list of Cardinality() is accepted (ACE gives wrong solutions), instead of an explicit error"
-ACE_FAILS = ("(to be reported) ACE fails without message when the number of occurrences is 0 for all the values, or when a value in no domain has a "
+ACE_FAILS = ("xcsp3team/ACE#33: ACE fails without message when the number of occurrences is 0 for all the values, or when a value in no domain has a "
              "variable as number of occurrences")
 ACE_RANGE = "xcsp3team/ACE#31: ACE excludes the upper bound of an interval of occurrences when the values are variables (Range is half-open)"
-COSOCO_CLOSED = "(to be reported) cosoco ignores closed=\"true\""
-COSOCO_OUTSIDE = ("(to be reported) cosoco crashes (heap overflow: malloc(): corrupted top size) when a value greater than the values of the domains "
+COSOCO_CLOSED = "xcsp3team/cosoco#98: cosoco ignores closed=\"true\""
+COSOCO_OUTSIDE = ("xcsp3team/cosoco#98: cosoco crashes (heap overflow: malloc(): corrupted top size) when a value greater than the values of the domains "
                   "has a variable as number of occurrences")
-CHOCO_VALUES_CLOSED = ("(to be reported) CHOCO 4.10.15-beta (embedded in PyCSP3) finds solutions several times with variables as values and closed, "
+CHOCO_VALUES_CLOSED = ("chocoteam/choco-solver#1260: CHOCO 4.10.15-beta (embedded in PyCSP3) finds solutions several times with variables as values and closed, "
                        "and CHOCO 6.0.2 fails (ClassCastException: SetVarImpl cannot be cast to IntVar)")
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
