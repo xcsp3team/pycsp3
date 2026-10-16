@@ -14,19 +14,19 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-RANGES = ("(to be reported) a number of occurrences given by an empty range is written 0, and by a range with a step as an interval (the step "
+RANGES = ("#227: a number of occurrences given by an empty range is written 0, and by a range with a step as an interval (the step "
           "being ignored): silently wrong models")
-COLLECTIONS = ("(to be reported) a number of occurrences given by a collection of integers (list, tuple, set) that is not an interval is written as in "
+COLLECTIONS = ("#228: a number of occurrences given by a collection of integers (list, tuple, set) that is not an interval is written as in "
                "Python (e.g. [1, 3]) in the element <occurs>, and an empty list raises ValueError")
-EXPRESSIONS = ("(to be reported) a number of occurrences given by an expression is written as such in the element <occurs>, and a value given by an "
+EXPRESSIONS = ("#229: a number of occurrences given by an expression is written as such in the element <occurs>, and a value given by an "
                "expression is refused by an assert without message, instead of being replaced by an auxiliary variable")
-MIXED = ("(to be reported) occurrences mixing variables with integers or intervals, and values mixing variables and integers, are not XCSP3-core: ACE "
+MIXED = ("#230: occurrences mixing variables with integers or intervals, and values mixing variables and integers, are not XCSP3-core: ACE "
          "and CHOCO fail (Pb, ClassCastException), cosoco crashes or ignores the variables")
-SINGLE_TERM = "(to be reported) a constraint cardinality is written on a single term, whereas XCSP3-core requires at least two"
-NO_TERM = "(to be reported) Cardinality() on no term fails with an assert without message, unless each number of occurrences can be 0"
-NO_VALUE = "(to be reported) Cardinality() without value writes empty elements <values> and <occurs>, whereas XCSP3-core requires at least one value"
-INVALID = "(to be reported) invalid arguments of Cardinality() refused by an assert without message, or accepted and written as such in the XCSP3 file"
-LOGICAL = ("(to be reported) Cardinality() in a logical expression gives a meta-constraint (or, and, iff, xor), an assert without message or a TypeError, "
+SINGLE_TERM = "#231: a constraint cardinality is written on a single term, whereas XCSP3-core requires at least two"
+NO_TERM = "#232: Cardinality() on no term fails with an assert without message, unless each number of occurrences can be 0"
+NO_VALUE = "#233: Cardinality() without value writes empty elements <values> and <occurs>, whereas XCSP3-core requires at least one value"
+INVALID = "#234: invalid arguments of Cardinality() refused by an assert without message, or accepted and written as such in the XCSP3 file"
+LOGICAL = ("#235: Cardinality() in a logical expression gives a meta-constraint (or, and, iff, xor), an assert without message or a TypeError, "
            "and is silently discarded by both(), either(), conjunction() and disjunction()")
 ACE_ALL = ("(to be reported) ACE finds wrong solutions when the number of occurrences of a value is the number of variables, the value not being the "
            "smallest one of the domains")
