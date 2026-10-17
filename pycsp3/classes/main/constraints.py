@@ -753,13 +753,29 @@ class ConstraintNValues(ConstraintWithCondition):
 
 
 class ConstraintCardinality(Constraint):
-    def __init__(self, lst, values, occurs, closed=False):
+    def __init__(self, lst, values, occurs, closed=False, decomposition=None):
         super().__init__(TypeCtr.CARDINALITY)
         self.arg(TypeCtrArg.LIST, lst)
         assert len(values) == len(occurs)
+        self._decomposition_args = (lst, values, occurs, closed) if decomposition is None else decomposition
         #  values = integers_to_string(values)  TODO (and compact form for occurs)
         self.arg(TypeCtrArg.VALUES, values, content_ordered=True, attributes=[(TypeXML.CLOSED, "true")] if closed else [])
+        occurs = [str(occ.start) + ".." + str(occ.stop - 1) if isinstance(occ, range) else occ for occ in occurs]  # a range is an interval
         self.arg(TypeCtrArg.OCCURS, occurs, content_ordered=True)
+
+    def to_list(self):
+        # a count for each value (and for all the values, with closed), as when the constraint is in a logical expression
+        lst, values, occurs, closed = self._decomposition_args
+        t = [functions.Count(lst, value=v, condition=(TypeConditionOperator.IN if isinstance(occ, range) else TypeConditionOperator.EQ, occ))
+             for v, occ in zip(values, occurs)]
+        if closed:
+            if any(isinstance(v, Variable) for v in values) and not all(isinstance(v, Variable) for v in values):
+                values = [v if isinstance(v, Variable) else auxiliary().replace_int(v) for v in values]
+            t.append(functions.Count(lst, values=values, condition=(TypeConditionOperator.EQ, len(lst))))
+        return t
+
+    def to_intension(self):
+        return functions.conjunction(self.to_list())
 
 
 ''' Connection Constraints '''
@@ -1770,7 +1786,7 @@ def global_indirection(c):
         return c.to_intension()
     if isinstance(c, ConstraintRefutation):  # we transform a refutation into a conjunction (Node)
         return c.to_intension()
-    if isinstance(c, (ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence)):
+    if isinstance(c, (ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence, ConstraintCardinality)):
         return c.to_intension()
     if isinstance(c, ConstraintWithCondition):
         reif = next((attribute for attribute in c.attributes if attribute[0] == TypeXML.REIFIED_BY), None)
@@ -1829,12 +1845,15 @@ def global_indirection(c):
             auxiliary().collect_table(lst, var, to_reified_ordinary_table(c.original_small_ordinary_table, [x.dom for x in lst]))
             return var
     if pc is None:
-        warning("You use a global constraint/function in a complex expression.\n" +
-                "\tHowever, this constraint cannot be externalized by introducing an auxiliary variable.\n" +
-                "\tHence a meta-constraint function (Or, And, Not, IfThen, IfThenElse, Iff) is automatically called.\n" +
-                "\tCheck that it is relevant, or modify your model.\n")
-        return None
-    return Node.build(condition.operator, auxiliary().replace_partial_constraint(pc), condition.right_operand())
+        # no solver handles the meta-constraints (Or, And, Not, Xor, Iff, ...), which are only built when they are explicitly asked for (#239)
+        error("A constraint " + str(c.name) + " cannot be in a logical expression: it cannot be replaced by an expression, and the meta-constraints "
+              "(that are needed) are not handled by the solvers; post it separately, or use the option -use_meta (or meta=True) to build a "
+              "meta-constraint anyway")
+    aux = auxiliary().replace_partial_constraint(pc)
+    if isinstance(condition, (ConditionInterval, ConditionSet)):  # in or notin, written with a set in an expression
+        values = range(condition.min, condition.max + 1) if isinstance(condition, ConditionInterval) else condition.t
+        return functions.belong(aux, values) if condition.operator == TypeConditionOperator.IN else functions.not_belong(aux, values)
+    return Node.build(condition.operator, aux, condition.right_operand())
 
 
 def manage_global_indirection(*args, also_pc=False):
@@ -1858,6 +1877,9 @@ def manage_global_indirection(*args, also_pc=False):
         if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression, or a table constraint to be reified
             error_if(len(curser.queue_in) == 0, msg)
             (table, scp) = curser.queue_in.pop()
+            if not options.use_meta and hasattr(table, "transitions"):  # an automaton or an MDD (#239)
+                error("A constraint " + ("regular" if type(table).__name__ == "Automaton" else "mdd") + " cannot be in a logical expression: it cannot be "
+                      "replaced by an expression, and the meta-constraints (that are needed) are not handled by the solvers; post it separately")
             if isinstance(scp, ConstraintDummyConstant):  # a constant (as the count of no term) in a set of values
                 arg = int(scp.val in table)
             elif isinstance(scp, (tuple, list)):

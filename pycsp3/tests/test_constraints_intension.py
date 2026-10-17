@@ -465,6 +465,67 @@ def test_conjunction_disjunction(run, solver, request, constraint, predicate):
     check(request, run, solver,[constraint, "y != 1"], XY, lambda x, y: predicate(x, y) and y != 1)
 
 
+GLOBAL_CONSTRAINTS = {
+    "Channel": "Channel(x)",
+    "NoOverlap": "NoOverlap(origins=x[:2], lengths=[2, 3])",
+    "Cumulative": "Cumulative(origins=x[:2], lengths=[1, 2], heights=[1, 1]) <= 1",
+    "BinPacking": "BinPacking(x, sizes=[1, 2, 1, 2]) <= 3",
+    "Circuit": "Circuit(x)",
+    "Clause": "Clause(b)",
+    "Regular": "x in Automaton(start='a', final=['a'], transitions=[('a', 0, 'a'), ('a', 1, 'a')])",
+}
+LOGICAL_CONTEXTS = ["({g}) | (z == 1)", "({g}) & (z == 1)", "~({g})", "imply(z == 1, {g})", "iff(z == 1, {g})", "xor(z == 1, {g})", "If(z == 1, Then={g})",
+                    "either({g}, z == 1)", "both({g}, z == 1)", "conjunction({g}, z == 1)", "disjunction({g}, z == 1)", "And({g}, z == 1)", "Or({g}, z == 1)"]
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Count(x, value=0, condition=('in', range(1, 3))) | (z == 1)", lambda *t: t[:3].count(0) in (1, 2) or t[3] == 1),
+    ("Count(x, value=0, condition=('notin', range(1, 3))) | (z == 1)", lambda *t: t[:3].count(0) not in (1, 2) or t[3] == 1),
+    ("Count(x, value=0, condition=('in', {0, 3})) & (z != 1)", lambda *t: t[:3].count(0) in (0, 3) and t[3] != 1),
+    ("Sum(x, condition=('in', range(2, 4))) | (z == 1)", lambda *t: sum(t[:3]) in (2, 3) or t[3] == 1),
+    ("Sum(x, condition=('notin', {1, 4})) | (z == 1)", lambda *t: sum(t[:3]) not in (1, 4) or t[3] == 1),
+    ("NValues(x, condition=('in', range(2, 4))) | (z == 1)", lambda *t: len(set(t[:3])) in (2, 3) or t[3] == 1),
+])
+def test_condition_in_or_notin_in_a_logical_expression(run, solver, constraint, predicate):
+    # a component with the parameter condition (in or notin) in a logical expression is replaced by an auxiliary variable, which must belong to (or not
+    # belong to) a set written in XCSP3 with set(...) (#240)
+    r = run("x = VarArray(size=3, dom=range(3))\nz = Var(range(3))\n" + f"satisfy({constraint})", solver=solver)
+    assert_solutions(r, brute_force([range(3)] * 4, predicate))
+
+
+@pytest.mark.parametrize("context", LOGICAL_CONTEXTS)
+@pytest.mark.parametrize("name", GLOBAL_CONSTRAINTS)
+def test_global_constraint_in_a_logical_expression(run, name, context):
+    # no solver handles the meta-constraints (CHOCO and cosoco say so, ACE gives wrong solutions: xcsp3team/ACE#32), so a global constraint that cannot be
+    # replaced by an expression (or an auxiliary variable) is refused with an explicit error in a logical expression (#239)
+    code = "x = VarArray(size=4, dom=range(4))\nb = VarArray(size=3, dom={0, 1})\nz = Var(range(8))\n"
+    assert_fails(run(code + "satisfy(" + context.format(g=GLOBAL_CONSTRAINTS[name]) + ")"))
+
+
+@pytest.mark.parametrize("constraint, message", [
+    ("either(Channel(x), z == 1)", "A constraint channel cannot be in a logical expression"),
+    ("Circuit(x) | (z == 1)", "A constraint circuit cannot be in a logical expression"),
+    ("~Clause(b)", "A constraint clause cannot be in a logical expression"),
+    ("(x in Automaton(start='a', final=['a'], transitions=[('a', 0, 'a'), ('a', 1, 'a')])) | (z == 1)", "A constraint regular cannot be in a logical expression"),
+    ("iff(z == 1, x in Automaton(start='a', final=['a'], transitions=[('a', 0, 'a'), ('a', 1, 'a')]))", "An operand given by 'in'"),
+])
+def test_global_constraint_in_a_logical_expression_message(run, constraint, message):
+    r = run("x = VarArray(size=4, dom=range(4))\nb = VarArray(size=3, dom={0, 1})\nz = Var(range(8))\n" + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, tag", [
+    ("And(Channel(x), z == 1, meta=True)", "and"),
+    ("Or(Channel(x), z == 1, meta=True)", "or"),
+    ("either(And(Channel(x), z == 1, meta=True), z == 2)", "or"),
+    ("both(Or(Channel(x), z == 1, meta=True), z != 2)", "and"),
+])
+def test_meta_constraints_explicitly_asked_for(run, constraint, tag):
+    # the meta-constraints explicitly asked for are built (and not silently discarded, #239)
+    r = run("x = VarArray(size=4, dom=range(4))\nz = Var(range(8))\n" + f"satisfy({constraint})")
+    assert r.ok and r.xml.find("constraints/" + tag) is not None, r.report()
+
+
 # ---------------------------------------------------------------------------------------------- belong() not_belong()
 
 @pytest.mark.parametrize("constraint, predicate", [
