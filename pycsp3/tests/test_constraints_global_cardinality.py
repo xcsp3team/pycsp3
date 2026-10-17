@@ -17,8 +17,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-MIXED = ("#230: occurrences mixing variables with integers or intervals, and values mixing variables and integers, are not XCSP3-core: ACE "
-         "and CHOCO fail (Pb, ClassCastException), cosoco crashes or ignores the variables")
 LOGICAL = ("#235: Cardinality() in a logical expression gives a meta-constraint (or, and, iff, xor), an assert without message or a TypeError, "
            "and is silently discarded by both(), either(), conjunction() and disjunction()")
 ACE_ALL = ("xcsp3team/ACE#29: ACE finds wrong solutions when the number of occurrences of a value is the number of variables, the value not being the "
@@ -157,8 +155,6 @@ def test_cardinality_with_values_at_most_once(run, solver, request, n, occurrenc
     ("{0: z, 7: z}", lambda *t: t[4] == 0 and card(t[:4], [(0, 0)])),
 ])
 def test_cardinality_occurrences_given_by_variables(run, solver, request, occurrences, predicate):
-    if occurrences in ("{0: z, 1: 2}", "{0: 1, 1: z}", "{0: z, 1: range(1, 3)}", "[range(0, 2), z, 1]"):
-        bug_for(request, ALL, MIXED)
     if "7" in occurrences:
         bug_for(request, "ACE", ACE_FAILS)
     if occurrences == "{0: z, 7: z}":
@@ -177,7 +173,7 @@ def test_cardinality_occurrences_given_by_a_variable_with_negative_values(run, s
     ("{0: z, 1: 2}", lambda *t: card(t[:4], [(0, t[4]), (1, 2)], closed=True)),
 ])
 def test_cardinality_occurrences_given_by_variables_closed(run, solver, request, occurrences, predicate):
-    bug_for(request, ALL if occurrences == "{0: z, 1: 2}" else "COSOCO", MIXED if occurrences == "{0: z, 1: 2}" else COSOCO_CLOSED)
+    bug_for(request, "COSOCO", COSOCO_CLOSED)
     check(run, solver, XZ + f"satisfy(Cardinality(x, occurrences={occurrences}, closed=True))", DZ, predicate)
 
 
@@ -215,9 +211,7 @@ def test_cardinality_occurrences_given_by_expressions(run, solver, occurrences, 
     ("{2: 1, v[0]: 1}", lambda *t: card(t[:3], [(2, 1), (t[3], 1)])),
 ])
 def test_cardinality_values_given_by_variables(run, solver, request, occurrences, predicate):
-    if occurrences in ("{v[0]: 1, 2: 2}", "{2: 1, v[0]: 1}"):
-        bug_for(request, ALL, MIXED)
-    elif solver == "COSOCO":
+    if solver == "COSOCO":
         pytest.skip(COSOCO_VALUES)
     if "range" in occurrences:
         bug_for(request, "ACE", ACE_RANGE)
@@ -648,9 +642,8 @@ def test_cardinality_example_closed(run, solver, request):
           [range(6)] * 4, lambda *t: card(t, [(2, range(3)), (3, range(3)), (5, range(3))], closed=True))
 
 
-def test_cardinality_example_with_a_variable(run, solver, request):
+def test_cardinality_example_with_a_variable(run, solver):
     # the third example of the documentation (a variable as number of occurrences), with less employees
-    bug_for(request, ALL, MIXED)
     check(run, solver, "x = VarArray(size=5, dom=range(3))\nz = Var(dom=range(2, 5))\n"
                        "satisfy(Cardinality(x, occurrences={0: z, 1: range(1, 3), 2: range(1, 3)}))", [range(3)] * 5 + [range(2, 5)],
           lambda *t: card(t[:5], [(0, t[5]), (1, range(1, 3)), (2, range(1, 3))]))
@@ -690,9 +683,9 @@ def test_xcsp3_cardinality(run, constraint, expected):
 
 
 @pytest.mark.parametrize("occurrences", [
-    pytest.param("{0: z, 1: 2}", marks=bug(MIXED)),
-    pytest.param("{0: z, 1: range(1, 3)}", marks=bug(MIXED)),
-    pytest.param("[range(0, 2), z, 1]", marks=bug(MIXED)),
+    "{0: z, 1: 2}",
+    "{0: z, 1: range(1, 3)}",
+    "[range(0, 2), z, 1]",
     "{0: z, 1: z}",
 ])
 def test_xcsp3_cardinality_occurrences_of_a_single_kind(run, occurrences):
@@ -705,7 +698,7 @@ def test_xcsp3_cardinality_occurrences_of_a_single_kind(run, occurrences):
         assert len(kinds) == 1, r.report()
 
 
-@pytest.mark.parametrize("occurrences", [pytest.param("{v[0]: 1, 2: 2}", marks=bug(MIXED)), pytest.param("{2: 1, v[0]: 1}", marks=bug(MIXED)),
+@pytest.mark.parametrize("occurrences", ["{v[0]: 1, 2: 2}", "{2: 1, v[0]: 1}",
                                          "{v[0]: 1, v[1]: 2}"])
 def test_xcsp3_cardinality_values_of_a_single_kind(run, occurrences):
     # XCSP3-core: the values are all integers, or all variables

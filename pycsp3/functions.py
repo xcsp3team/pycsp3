@@ -3416,6 +3416,11 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     if len(kept) == 0:  # no value: nothing is required, except with closed
         return ConstraintDummyConstant(0 if closed else 1)
     values, occurs = [v for v, _ in kept], [occ for _, occ in kept]
+    # XCSP3-core does not allow variables mixed with integers or intervals
+    if any(isinstance(occ, Variable) for occ in occurs) and not all(isinstance(occ, Variable) for occ in occurs):
+        occurs = [occ if isinstance(occ, Variable) else auxiliary().new_var(occ) if isinstance(occ, range) else auxiliary().replace_int(occ) for occ in occurs]
+    if any(isinstance(v, Variable) for v in values) and not all(isinstance(v, Variable) for v in values):
+        values = [v if isinstance(v, Variable) else auxiliary().replace_int(v) for v in values]
     return ECtr(ConstraintCardinality(terms, values, occurs, closed))
 
 
