@@ -3393,7 +3393,7 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
         occurrences = dict(enumerate(occurrences))
     values = [_cardinality_value(v) for v in occurrences.keys()]
     occurs = [_cardinality_occurrences(occ) for occ in occurrences.values()]
-    if len(terms) == 0:
+    if len(terms) < 2:  # XCSP3 requires at least two terms
         return _cardinality_on_few_terms(terms, values, occurs, closed)
     return ECtr(ConstraintCardinality(terms, values, occurs, closed))
 
@@ -3422,15 +3422,30 @@ def _cardinality_occurrences(occ):
 
 
 def _cardinality_on_few_terms(terms, values, occurs, closed):
-    # Cardinality() on no term: the number of occurrences of any value is 0
-    assert len(terms) == 0
+    # Cardinality() on no term or a single term t: the number of occurrences of a value v is 0, or (t == v)
+    assert len(terms) < 2
     parts = []
-    for occ in occurs:
+    for v, occ in zip(values, occurs):
+        if len(terms) == 0:
+            if isinstance(occ, Variable):
+                parts.append(occ == 0)
+            elif 0 not in (occ if isinstance(occ, range) else [occ]):
+                return ConstraintDummyConstant(0)
+            continue
+        t = terms[0]
         if isinstance(occ, Variable):
-            parts.append(occ == 0)
-        elif 0 not in (occ if isinstance(occ, range) else [occ]):
+            parts.append(Node.build(TypeNode.EQ, occ, Node.build(TypeNode.EQ, t, v)))
+            continue
+        possible = [k for k in (0, 1) if k in (occ if isinstance(occ, range) else [occ])]
+        if len(possible) == 0:
             return ConstraintDummyConstant(0)
-    if len(parts) == 0:
+        if len(possible) == 1:
+            parts.append(Node.build(TypeNode.EQ if possible[0] == 1 else TypeNode.NE, t, v))
+    if closed and len(terms) == 1:
+        if len(values) == 0:
+            return ConstraintDummyConstant(0)
+        parts.append(belong(terms[0], values) if all(isinstance(v, int) for v in values) else disjunction(terms[0] == v for v in values))
+    if len(terms) == 0 and len(parts) == 0:
         warning("A constraint Cardinality discarded because defined with 0 term", "cardinality_0_term")
     return conjunction(parts) if len(parts) > 0 else ConstraintDummyConstant(1)
 

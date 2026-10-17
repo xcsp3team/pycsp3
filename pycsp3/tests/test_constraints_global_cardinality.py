@@ -19,7 +19,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 MIXED = ("#230: occurrences mixing variables with integers or intervals, and values mixing variables and integers, are not XCSP3-core: ACE "
          "and CHOCO fail (Pb, ClassCastException), cosoco crashes or ignores the variables")
-SINGLE_TERM = "#231: a constraint cardinality is written on a single term, whereas XCSP3-core requires at least two"
 NO_VALUE = "#233: Cardinality() without value writes empty elements <values> and <occurs>, whereas XCSP3-core requires at least one value"
 LOGICAL = ("#235: Cardinality() in a logical expression gives a meta-constraint (or, and, iff, xor), an assert without message or a TypeError, "
            "and is silently discarded by both(), either(), conjunction() and disjunction()")
@@ -504,11 +503,8 @@ def test_cardinality_on_negated_variables(run, solver, terms, occurrences, predi
 ])
 def test_cardinality_on_a_single_term(run, solver, request, constraint, predicate):
     # with a single term t, the number of occurrences of a value v is 1 if t = v, and 0 otherwise
-    if constraint in ("Cardinality(x[0], occurrences={0: 0})", "Cardinality(x[0], occurrences={0: 1, 1: 1})", "Cardinality(x[0], occurrences={0: 2})",
-                      "Cardinality(x[0], occurrences={0: range(0, 2), 1: range(0, 2)})"):
-        bug_for(request, "ACE", SINGLE_TERM)
-    if "closed" in constraint:
-        bug_for(request, "COSOCO", SINGLE_TERM)
+    if constraint == "Cardinality(x[0], occurrences={0: 2})":  # (the constraint false)
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     if "z" in constraint:
         check(run, solver, XZ + f"satisfy({constraint}, x[3] != 1)", DZ, lambda *t: t[4] == int(t[0] == 0) and t[3] != 1)
         return
@@ -516,9 +512,9 @@ def test_cardinality_on_a_single_term(run, solver, request, constraint, predicat
 
 
 @pytest.mark.parametrize("constraint", [
-    pytest.param("Cardinality(x[0], occurrences={0: 1})", marks=bug(SINGLE_TERM)),
-    pytest.param("Cardinality([x[0]], occurrences={0: range(0, 2), 1: 0})", marks=bug(SINGLE_TERM)),
-    pytest.param("Cardinality(x[0], occurrences={0: z})", marks=bug(SINGLE_TERM)),
+    "Cardinality(x[0], occurrences={0: 1})",
+    "Cardinality([x[0]], occurrences={0: range(0, 2), 1: 0})",
+    "Cardinality(x[0], occurrences={0: z})",
 ])
 def test_xcsp3_cardinality_has_at_least_two_terms(run, constraint):
     # XCSP3-core requires |X| >= 2
