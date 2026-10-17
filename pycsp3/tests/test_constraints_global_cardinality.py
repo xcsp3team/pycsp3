@@ -22,7 +22,6 @@ MIXED = ("#230: occurrences mixing variables with integers or intervals, and val
 SINGLE_TERM = "#231: a constraint cardinality is written on a single term, whereas XCSP3-core requires at least two"
 NO_TERM = "#232: Cardinality() on no term fails with an assert without message, unless each number of occurrences can be 0"
 NO_VALUE = "#233: Cardinality() without value writes empty elements <values> and <occurs>, whereas XCSP3-core requires at least one value"
-INVALID = "#234: invalid arguments of Cardinality() refused by an assert without message, or accepted and written as such in the XCSP3 file"
 LOGICAL = ("#235: Cardinality() in a logical expression gives a meta-constraint (or, and, iff, xor), an assert without message or a TypeError, "
            "and is silently discarded by both(), either(), conjunction() and disjunction()")
 ACE_ALL = ("xcsp3team/ACE#29: ACE finds wrong solutions when the number of occurrences of a value is the number of variables, the value not being the "
@@ -764,10 +763,8 @@ def test_xcsp3_cardinality_in_a_group(run):
     "x[0], {'a': x[1]}, occurrences={0: 1}",
 ])
 def test_invalid_cardinality(run, request, arguments):
-    if arguments not in ("x", "occurrences={0: 1}", "x, {0: 1}", "x, occurrences={0: 1}, closed=1", "x, occurrences={0: 1}, closed='yes'",
-                         "x, occurrences={0: 1}, foo=2", "x[0], 'a', occurrences={0: 1}", "x[0], 2.5, occurrences={0: 1}", "x[0], True, occurrences={0: 1}",
-                         "x[0], {'a': x[1]}, occurrences={0: 1}", "x, occurrences={0: [1, 'a']}", "x, occurrences={0: [x[0], 1]}"):  # (refused since #228)
-        request.applymarker(bug(INVALID))
+    if arguments == "None, occurrences={0: 1}":
+        request.applymarker(bug(NO_TERM))
     assert_fails(run(X4 + f"satisfy(Cardinality({arguments}))"))
 
 @pytest.mark.parametrize("arguments, message", [
@@ -775,6 +772,13 @@ def test_invalid_cardinality(run, request, arguments):
     ("x, occurrences={0: range(3, 1)}", "which is not the case of range(3, 1)"),
     ("x, occurrences={0: [1, 3]}", "which is not the case of [1, 3]"),
     ("x, occurrences={0: set()}", "which is not the case of set()"),
+    ("x, occurrences=3", "The parameter occurrences of Cardinality() must be given a dictionary (or a list or a tuple t, seen as dict(enumerate(t))), "
+                         "which is not the case of 3"),
+    ("x, occurrences={'a': 1}", "The values of Cardinality() (keys of occurrences) must be integers, variables or expressions, which is not the case of 'a'"),
+    ("x, occurrences={True: 1}", "The values of Cardinality() (keys of occurrences) must be integers, variables or expressions, which is not the case of True"),
+    ("x, occurrences={0: True}", "A number of occurrences of Cardinality() must be given by an integer, a variable, an expression, or a non-empty range "
+                                 "(or collection) of contiguous integers, which is not the case of True"),
+    ("x, occurrences={0: [x[0], 1]}", "which is not the case of [x[0], 1]"),
 ])
 def test_invalid_cardinality_message(run, arguments, message):
     r = run(X4 + f"satisfy(Cardinality({arguments}))")

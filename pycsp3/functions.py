@@ -3377,6 +3377,10 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
            Cardinality(x, occurrences={0: z, 1: range(2, 5), 2: range(2, 5)})
         )
     """
+    if not isinstance(occurrences, (dict, list, tuple)):
+        error("The parameter occurrences of Cardinality() must be given a dictionary (or a list or a tuple t, seen as dict(enumerate(t))), "
+              "which is not the case of " + repr(occurrences))
+    checkType(closed, (bool, type(None)))
     terms = flatten(within, within_complement)
     if len(terms) == 0:
         assert all((isinstance(v, int) and v == 0) or (isinstance(v, range) and 0 in v) for k, v in occurrences.items())  # TODO and for Var ?
@@ -3391,11 +3395,8 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     checkType(terms, [Variable])
     if isinstance(occurrences, (tuple, list)):
         occurrences = dict(enumerate(occurrences))
-    assert isinstance(occurrences, dict)
     values = [_cardinality_value(v) for v in occurrences.keys()]
-    assert all(isinstance(value, (int, Variable)) for value in values)
     occurs = [_cardinality_occurrences(occ) for occ in occurrences.values()]
-    checkType(closed, (bool, type(None)))
     return ECtr(ConstraintCardinality(terms, values, occurs, closed))
 
 
@@ -3403,6 +3404,8 @@ def _cardinality_value(v):
     # a value of Cardinality(): an integer or a variable (an expression being replaced by an auxiliary variable)
     if isinstance(v, (Node, PartialConstraint)):
         return auxiliary().replace_node(v) if isinstance(v, Node) else auxiliary().replace_partial_constraint(v)
+    if not isinstance(v, (int, Variable)) or isinstance(v, bool):
+        error("The values of Cardinality() (keys of occurrences) must be integers, variables or expressions, which is not the case of " + repr(v))
     return v
 
 
@@ -3410,13 +3413,14 @@ def _cardinality_occurrences(occ):
     # a number of occurrences of Cardinality(): an integer, a variable (an expression being replaced by an auxiliary variable) or a range (an interval)
     if isinstance(occ, (Node, PartialConstraint)):
         return auxiliary().replace_node(occ) if isinstance(occ, Node) else auxiliary().replace_partial_constraint(occ)
-    if isinstance(occ, (range, list, tuple, set, frozenset)):
-        t = sorted(set(occ)) if all(isinstance(v, int) and not isinstance(v, bool) for v in occ) else None
-        if t is None or len(t) == 0 or t[-1] - t[0] + 1 != len(t):
-            error("A range (or a collection) of occurrences of Cardinality() must be a non-empty set of contiguous integers, which is not the case of "
-                  + repr(occ))
-        return t[0] if len(t) == 1 else range(t[0], t[-1] + 1)
-    return occ
+    if isinstance(occ, Variable) or (isinstance(occ, int) and not isinstance(occ, bool)):
+        return occ
+    t = list(occ) if isinstance(occ, (range, list, tuple, set, frozenset)) else None
+    t = sorted(set(t)) if t is not None and all(isinstance(v, int) and not isinstance(v, bool) for v in t) else None
+    if t is None or len(t) == 0 or t[-1] - t[0] + 1 != len(t):
+        error("A number of occurrences of Cardinality() must be given by an integer, a variable, an expression, or a non-empty range (or collection) "
+              "of contiguous integers, which is not the case of " + repr(occ))
+    return t[0] if len(t) == 1 else range(t[0], t[-1] + 1)
 
 
 ''' Connection Constraints '''
