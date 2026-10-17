@@ -17,8 +17,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-LOGICAL = ("#235: Cardinality() in a logical expression gives a meta-constraint (or, and, iff, xor), an assert without message or a TypeError, "
-           "and is silently discarded by both(), either(), conjunction() and disjunction()")
 ACE_ALL = ("xcsp3team/ACE#29: ACE finds wrong solutions when the number of occurrences of a value is the number of variables, the value not being the "
            "smallest one of the domains")
 ACE_ALLDIFFERENT = ("xcsp3team/ACE#30: ACE posts allDifferent when each value can be assigned at most once (with closed, or domains included in the "
@@ -37,6 +35,7 @@ CHOCO_VALUES_CLOSED = ("chocoteam/choco-solver#1260: CHOCO 4.10.15-beta (embedde
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
 ACE_VALUES_CLOSED = "ACE does not handle cardinality with variables as values and closed (unimplemented case for the moment)"
 COSOCO_VALUES = "cosoco does not handle cardinality with variables as values (not yet supported, s UNSUPPORTED)"
+COSOCO_COUNT_VALUES = "cosoco does not handle count with variables as values (not yet supported), used when cardinality is in a logical expression"
 SYMBOLIC = "cardinality on symbolic variables is not part of XCSP3-core"
 ALL = ("ACE", "CHOCO", "COSOCO")
 
@@ -621,9 +620,19 @@ def test_cardinality_with_occurrences_given_by_variables_in_groups(run, solver):
     ("both(Cardinality(x[:3], occurrences={0: 1}), Cardinality(x[1:], occurrences={1: 1}))", lambda *t: card(t[:3], [(0, 1)]) and card(t[1:], [(1, 1)])),
     ("disjunction(Cardinality(x, occurrences={0: 2}), x[0] == 1)", lambda *t: card(t, [(0, 2)]) or t[0] == 1),
     ("conjunction(Cardinality(x, occurrences={0: 2}), x[0] == 1)", lambda *t: card(t, [(0, 2)]) and t[0] == 1),
+    ("Cardinality(x, occurrences={0: 1}) == 1", lambda *t: card(t, [(0, 1)])),
+    ("Cardinality(x, occurrences={0: 1}) == 0", lambda *t: not card(t, [(0, 1)])),
+    ("Cardinality(x, occurrences={0: z, 1: range(1, 3)}) | (x[0] == 2)", lambda *t: card(t[:4], [(0, t[4]), (1, range(1, 3))]) or t[0] == 2),
+    ("~Cardinality(x, occurrences={v[0]: 1, v[1]: range(0, 2)}, closed=True)", lambda *t: not card(t[:4], [(t[5], 1), (t[6], range(0, 2))], closed=True)),
+    ("(Cardinality(x, occurrences={0: 1}, closed=True) == 0) | (x[0] == 2)", lambda *t: not card(t, [(0, 1)], closed=True) or t[0] == 2),
 ])
-def test_cardinality_in_logical_expressions(run, solver, request, constraint, predicate):
-    bug_for(request, ("CHOCO", "COSOCO") if constraint.startswith("Cardinality(x, occurrences={0: 1}) &") else ALL, LOGICAL)
+def test_cardinality_in_logical_expressions(run, solver, constraint, predicate):
+    # a decomposition: a count for each value (and for all the values, with closed) (#235)
+    if solver == "COSOCO" and "v[0]" in constraint:
+        pytest.skip(COSOCO_COUNT_VALUES)
+    if "z" in constraint or "v[0]" in constraint:
+        check(run, solver, XZ + "v = VarArray(size=2, dom=range(2))\n" + f"satisfy({constraint})", DZ + [range(2)] * 2, predicate)
+        return
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 
@@ -772,7 +781,6 @@ def test_invalid_cardinality_message(run, arguments, message):
 
 @pytest.mark.parametrize("code", [
     "minimize(Cardinality(x, occurrences={0: 1}))",
-    "satisfy(Cardinality(x, occurrences={0: 1}) == 1)",
     "satisfy(Cardinality(x, occurrences={0: 1}) + 1 == 2)",
 ])
 def test_cardinality_is_not_a_term(run, code):

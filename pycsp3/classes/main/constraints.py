@@ -753,14 +753,29 @@ class ConstraintNValues(ConstraintWithCondition):
 
 
 class ConstraintCardinality(Constraint):
-    def __init__(self, lst, values, occurs, closed=False):
+    def __init__(self, lst, values, occurs, closed=False, decomposition=None):
         super().__init__(TypeCtr.CARDINALITY)
         self.arg(TypeCtrArg.LIST, lst)
         assert len(values) == len(occurs)
+        self._decomposition_args = (lst, values, occurs, closed) if decomposition is None else decomposition
         #  values = integers_to_string(values)  TODO (and compact form for occurs)
         self.arg(TypeCtrArg.VALUES, values, content_ordered=True, attributes=[(TypeXML.CLOSED, "true")] if closed else [])
         occurs = [str(occ.start) + ".." + str(occ.stop - 1) if isinstance(occ, range) else occ for occ in occurs]  # a range is an interval
         self.arg(TypeCtrArg.OCCURS, occurs, content_ordered=True)
+
+    def to_list(self):
+        # a count for each value (and for all the values, with closed), as when the constraint is in a logical expression
+        lst, values, occurs, closed = self._decomposition_args
+        t = [functions.Count(lst, value=v, condition=(TypeConditionOperator.IN if isinstance(occ, range) else TypeConditionOperator.EQ, occ))
+             for v, occ in zip(values, occurs)]
+        if closed:
+            if any(isinstance(v, Variable) for v in values) and not all(isinstance(v, Variable) for v in values):
+                values = [v if isinstance(v, Variable) else auxiliary().replace_int(v) for v in values]
+            t.append(functions.Count(lst, values=values, condition=(TypeConditionOperator.EQ, len(lst))))
+        return t
+
+    def to_intension(self):
+        return functions.conjunction(self.to_list())
 
 
 ''' Connection Constraints '''
@@ -1771,7 +1786,7 @@ def global_indirection(c):
         return c.to_intension()
     if isinstance(c, ConstraintRefutation):  # we transform a refutation into a conjunction (Node)
         return c.to_intension()
-    if isinstance(c, (ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence)):
+    if isinstance(c, (ConstraintOrdered, ConstraintLex, ConstraintLexMatrix, ConstraintPrecedence, ConstraintCardinality)):
         return c.to_intension()
     if isinstance(c, ConstraintWithCondition):
         reif = next((attribute for attribute in c.attributes if attribute[0] == TypeXML.REIFIED_BY), None)
