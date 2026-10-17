@@ -759,6 +759,7 @@ class ConstraintCardinality(Constraint):
         assert len(values) == len(occurs)
         #  values = integers_to_string(values)  TODO (and compact form for occurs)
         self.arg(TypeCtrArg.VALUES, values, content_ordered=True, attributes=[(TypeXML.CLOSED, "true")] if closed else [])
+        occurs = [str(occ.start) + ".." + str(occ.stop - 1) if isinstance(occ, range) else occ for occ in occurs]  # a range is an interval
         self.arg(TypeCtrArg.OCCURS, occurs, content_ordered=True)
 
 

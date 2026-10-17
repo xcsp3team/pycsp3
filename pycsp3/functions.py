@@ -3392,19 +3392,26 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     assert isinstance(occurrences, dict)
     values = list(occurrences.keys())
     assert all(isinstance(value, (int, Variable)) for value in values)
-    occurs = list(occurrences.values())
+    occurs = [_cardinality_occurrences(occ) for occ in occurrences.values()]
     checkType(closed, (bool, type(None)))
-    for i, occ in enumerate(occurs):
-        if isinstance(occ, range):
-            occurs[i] = 0 if len(occ) == 0 else min(occ) if len(occ) == 1 else str(min(occ)) + ".." + str(max(occ))
-        if isinstance(occ, list):
-            flat = flatten(occ)
-            if len(flat) == 1:
-                flat = flat[0]
-            elif all(isinstance(e, int) for e in flat) and flat == list(range(min(flat), max(flat) + 1)):
-                flat = str(min(flat)) + ".." + str(max(flat))
-            occurs[i] = flat
     return ECtr(ConstraintCardinality(terms, values, occurs, closed))
+
+
+def _cardinality_occurrences(occ):
+    # a number of occurrences of Cardinality(): an integer, a variable or a range (an interval)
+    if isinstance(occ, range):
+        t = sorted(occ)
+        if len(t) == 0 or t[-1] - t[0] + 1 != len(t):
+            error("A range of occurrences of Cardinality() must be non-empty, with contiguous integers, which is not the case of " + repr(occ))
+        return t[0] if len(t) == 1 else range(t[0], t[-1] + 1)
+    if isinstance(occ, list):
+        flat = flatten(occ)
+        if len(flat) == 1:
+            return flat[0]
+        if all(isinstance(e, int) for e in flat) and flat == list(range(min(flat), max(flat) + 1)):
+            return str(min(flat)) + ".." + str(max(flat))
+        return flat
+    return occ
 
 
 ''' Connection Constraints '''

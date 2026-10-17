@@ -17,8 +17,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-RANGES = ("#227: a number of occurrences given by an empty range is written 0, and by a range with a step as an interval (the step "
-          "being ignored), instead of an explicit error (decision A of #226)")
 COLLECTIONS = ("#228: a number of occurrences given by a collection of integers (list, tuple, set) is written as in Python (e.g. [1, 3]) in the "
                "element <occurs>, unless it is a sorted list of contiguous integers; an empty or non-contiguous collection must be refused (decision A "
                "of #226)")
@@ -325,11 +323,11 @@ def test_xcsp3_cardinality_known_when_compiling(run, occurrences, written):
 
 
 @pytest.mark.parametrize("occurrences", [
-    pytest.param("{0: range(0)}", marks=bug(RANGES)),
-    pytest.param("{0: range(3, 1)}", marks=bug(RANGES)),
-    pytest.param("{0: range(1, 3), 1: range(2, 2)}", marks=bug(RANGES)),
-    pytest.param("{0: range(0, 5, 2)}", marks=bug(RANGES)),
-    pytest.param("{0: range(1, 4, 2), 1: 1}", marks=bug(RANGES)),
+    "{0: range(0)}",
+    "{0: range(3, 1)}",
+    "{0: range(1, 3), 1: range(2, 2)}",
+    "{0: range(0, 5, 2)}",
+    "{0: range(1, 4, 2), 1: 1}",
     pytest.param("{0: []}", marks=bug(COLLECTIONS)),
     pytest.param("{0: set()}", marks=bug(COLLECTIONS)),
     pytest.param("{0: ()}", marks=bug(COLLECTIONS)),
@@ -778,6 +776,14 @@ def test_invalid_cardinality(run, request, arguments):
                          "x[0], {'a': x[1]}, occurrences={0: 1}"):
         request.applymarker(bug(INVALID))
     assert_fails(run(X4 + f"satisfy(Cardinality({arguments}))"))
+
+@pytest.mark.parametrize("arguments, message", [
+    ("x, occurrences={0: range(0, 5, 2)}", "which is not the case of range(0, 5, 2)"),
+    ("x, occurrences={0: range(3, 1)}", "which is not the case of range(3, 1)"),
+])
+def test_invalid_cardinality_message(run, arguments, message):
+    r = run(X4 + f"satisfy(Cardinality({arguments}))")
+    assert not r.ok and message in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("code", [
