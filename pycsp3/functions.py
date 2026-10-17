@@ -3399,8 +3399,23 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     occurs = [_cardinality_occurrences(occ) for occ in occurrences.values()]
     if len(terms) < 2:  # XCSP3 requires at least two terms
         return _cardinality_on_few_terms(terms, values, occurs, closed)
-    if len(values) == 0:  # no value: nothing is required, except with closed
+    # the numbers of occurrences known when compiling, from 0 to the number of terms (and 0 for a value that no term can take)
+    kept = []
+    for v, occ in zip(values, occurs):
+        lo, hi = (0, 0) if isinstance(v, int) and all(v not in t.dom for t in terms) else (0, len(terms))
+        if isinstance(occ, int):
+            if not lo <= occ <= hi:
+                return ConstraintDummyConstant(0)
+        elif isinstance(occ, range):
+            occ = range(max(occ.start, lo), min(occ.stop, hi + 1))
+            if len(occ) == 0:
+                return ConstraintDummyConstant(0)
+            occ = occ.start if len(occ) == 1 else occ
+        if not (hi == 0 and isinstance(occ, int)):  # a value that no term can take is discarded (when its number of occurrences can be 0)
+            kept.append((v, occ))
+    if len(kept) == 0:  # no value: nothing is required, except with closed
         return ConstraintDummyConstant(0 if closed else 1)
+    values, occurs = [v for v, _ in kept], [occ for _, occ in kept]
     return ECtr(ConstraintCardinality(terms, values, occurs, closed))
 
 

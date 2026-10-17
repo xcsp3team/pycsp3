@@ -25,8 +25,6 @@ ACE_ALL = ("xcsp3team/ACE#29: ACE finds wrong solutions when the number of occur
            "smallest one of the domains")
 ACE_ALLDIFFERENT = ("xcsp3team/ACE#30: ACE posts allDifferent when each value can be assigned at most once (with closed, or domains included in the "
                     "values), ignoring that some values must be assigned")
-KNOWN = ("#237: numbers of occurrences known when compiling (negative, greater than the number of terms, values that no term can take) are written as "
-         "such: ACE fails without message, cosoco crashes on values greater than the values of the domains")
 ACE_FAILS = ("xcsp3team/ACE#33: ACE fails without message when the number of occurrences is 0 for all the values, or when a value in no domain has a "
              "variable as number of occurrences")
 ACE_RANGE = "xcsp3team/ACE#31: ACE excludes the upper bound of an interval of occurrences when the values are variables (Range is half-open)"
@@ -96,8 +94,6 @@ DV = [range(3)] * 5
 def test_cardinality_occurrences(run, solver, request, occurrences, expected):
     if occurrences in ("{0: 0}", "{0: 0, 1: 0}"):
         bug_for(request, "ACE", ACE_FAILS)
-    if occurrences == "{0: 1, 7: 0}":
-        bug_for(request, "COSOCO", KNOWN)
     check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}))", D4, lambda *t: card(t, expected))
 
 
@@ -114,8 +110,8 @@ def test_cardinality_occurrences(run, solver, request, occurrences, expected):
     ("{0: 1, 7: 3}", [(0, 1), (7, 3)]),
 ])
 def test_cardinality_closed(run, solver, request, occurrences, expected):
-    if occurrences == "{0: 1, 7: 3}":
-        bug_for(request, ("ACE", "COSOCO"), KNOWN)
+    if occurrences == "{0: 1, 7: 3}":  # (the value 7 cannot be assigned 3 times: the constraint false, #237)
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     if occurrences in ("{0: 1, 1: 2}", "{0: range(1, 3), 1: range(1, 3)}", "{0: range(0, 5)}", "{1: range(0, 5), 2: range(0, 5)}"):
         bug_for(request, "COSOCO", COSOCO_CLOSED)
     check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}, closed=True))", D4, lambda *t: card(t, expected, closed=True))
@@ -283,8 +279,10 @@ def test_cardinality_values_given_by_variables_of_the_list(run, solver):
 ])
 def test_cardinality_with_unreachable_occurrences(run, solver, request, occurrences, expected):
     # numbers of occurrences that cannot be reached (negative, greater than the number of terms) or always reached
-    if "-" in occurrences or "7" in occurrences:
-        bug_for(request, "ACE", KNOWN)
+    if occurrences in ("{0: 5}", "{0: -1}", "{0: 1, 1: -1}", "{7: 2}", "{0: range(5, 8)}"):  # (the constraint false, #237)
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
+    if occurrences == "{0: range(-2, 1)}":  # (written with 0 occurrences of 0, #237)
+        bug_for(request, "ACE", ACE_FAILS)
     check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}), x[3] != 1)", D4, lambda *t: card(t, expected) and t[3] != 1)
 
 
@@ -299,7 +297,6 @@ def test_cardinality_with_unreachable_occurrences(run, solver, request, occurren
     ("{0: 1, 7: 0}", ("0", "1")),
     ("{0: 1, 7: range(0, 2)}", ("0", "1")),
 ])
-@bug(KNOWN)
 def test_xcsp3_cardinality_known_when_compiling(run, occurrences, written):
     # the numbers of occurrences are between 0 and the number of terms, and a value that no term can take has 0 occurrences: the constraint is false
     # (None), or written with intervals restricted to 0..len(X) and without the values that no term can take (decision C of #226)
