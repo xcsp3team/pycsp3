@@ -12,6 +12,7 @@
 [![MacOS tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-macos.yml?label=MacOS%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-macos.yml)
 [![Build Linux](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-linux.yml?branch=master&label=Build%20Linux&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-linux.yml)
 [![Build MacOS](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-macos.yml?branch=master&label=Build%20MacOS&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-macos.yml)
+[![Build Windows](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-windows.yml?branch=master&label=Build%20Windows&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-windows.yml)
 
 </div>
 
