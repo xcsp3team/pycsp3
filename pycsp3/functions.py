@@ -3339,13 +3339,14 @@ def NotAllEqual(term, *others):
 def Cardinality(within, *within_complement, occurrences, closed=False):
     """
     Builds and returns a constraint Cardinality.
-    For each value (key of occurrences), the number of variables assigned this value must be as specified (a constant, a range or a variable).
+    For each value (key of occurrences), the number of terms assigned this value must be as specified: an integer, a range (or a collection)
+    of contiguous integers, or a variable.
 
     When occurrences is given under the form of a list or tuple t, a dictionary is computed as dict(enumerate(t)).
 
     :param within: the (first) term, typically a list of variables, on which the constraint applies
     :param within_complement: the other terms (if any) on which the constraint applies
-    :param occurrences: a dictionary indicating the restriction (constant, range or variable) of occurrences per value
+    :param occurrences: a dictionary indicating the restriction (integer, range of contiguous integers, or variable) of occurrences per value
     :param closed: if True, variables must be assigned to values (keys of the dictionary)
     :return: a Cardinality constraint
     :example:
@@ -3399,18 +3400,12 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
 
 def _cardinality_occurrences(occ):
     # a number of occurrences of Cardinality(): an integer, a variable or a range (an interval)
-    if isinstance(occ, range):
-        t = sorted(occ)
-        if len(t) == 0 or t[-1] - t[0] + 1 != len(t):
-            error("A range of occurrences of Cardinality() must be non-empty, with contiguous integers, which is not the case of " + repr(occ))
+    if isinstance(occ, (range, list, tuple, set, frozenset)):
+        t = sorted(set(occ)) if all(isinstance(v, int) and not isinstance(v, bool) for v in occ) else None
+        if t is None or len(t) == 0 or t[-1] - t[0] + 1 != len(t):
+            error("A range (or a collection) of occurrences of Cardinality() must be a non-empty set of contiguous integers, which is not the case of "
+                  + repr(occ))
         return t[0] if len(t) == 1 else range(t[0], t[-1] + 1)
-    if isinstance(occ, list):
-        flat = flatten(occ)
-        if len(flat) == 1:
-            return flat[0]
-        if all(isinstance(e, int) for e in flat) and flat == list(range(min(flat), max(flat) + 1)):
-            return str(min(flat)) + ".." + str(max(flat))
-        return flat
     return occ
 
 
