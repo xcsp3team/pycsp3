@@ -3377,16 +3377,12 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
            Cardinality(x, occurrences={0: z, 1: range(2, 5), 2: range(2, 5)})
         )
     """
+    error_if(within is None, "Cardinality() requires variables (or expressions), which is not the case of None")
     if not isinstance(occurrences, (dict, list, tuple)):
         error("The parameter occurrences of Cardinality() must be given a dictionary (or a list or a tuple t, seen as dict(enumerate(t))), "
               "which is not the case of " + repr(occurrences))
     checkType(closed, (bool, type(None)))
     terms = flatten(within, within_complement)
-    if len(terms) == 0:
-        assert all((isinstance(v, int) and v == 0) or (isinstance(v, range) and 0 in v) for k, v in occurrences.items())  # TODO and for Var ?
-        warning("A constraint Cardinality discarded because defined with 0 term", "cardinality_0_term")
-        return ConstraintDummyConstant(1)
-    assert len(terms) > 0, "Cardinality constraint posted over a sequence of zero variable"
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
@@ -3397,6 +3393,8 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
         occurrences = dict(enumerate(occurrences))
     values = [_cardinality_value(v) for v in occurrences.keys()]
     occurs = [_cardinality_occurrences(occ) for occ in occurrences.values()]
+    if len(terms) == 0:
+        return _cardinality_on_few_terms(terms, values, occurs, closed)
     return ECtr(ConstraintCardinality(terms, values, occurs, closed))
 
 
@@ -3421,6 +3419,20 @@ def _cardinality_occurrences(occ):
         error("A number of occurrences of Cardinality() must be given by an integer, a variable, an expression, or a non-empty range (or collection) "
               "of contiguous integers, which is not the case of " + repr(occ))
     return t[0] if len(t) == 1 else range(t[0], t[-1] + 1)
+
+
+def _cardinality_on_few_terms(terms, values, occurs, closed):
+    # Cardinality() on no term: the number of occurrences of any value is 0
+    assert len(terms) == 0
+    parts = []
+    for occ in occurs:
+        if isinstance(occ, Variable):
+            parts.append(occ == 0)
+        elif 0 not in (occ if isinstance(occ, range) else [occ]):
+            return ConstraintDummyConstant(0)
+    if len(parts) == 0:
+        warning("A constraint Cardinality discarded because defined with 0 term", "cardinality_0_term")
+    return conjunction(parts) if len(parts) > 0 else ConstraintDummyConstant(1)
 
 
 ''' Connection Constraints '''

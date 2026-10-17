@@ -20,7 +20,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 MIXED = ("#230: occurrences mixing variables with integers or intervals, and values mixing variables and integers, are not XCSP3-core: ACE "
          "and CHOCO fail (Pb, ClassCastException), cosoco crashes or ignores the variables")
 SINGLE_TERM = "#231: a constraint cardinality is written on a single term, whereas XCSP3-core requires at least two"
-NO_TERM = "#232: Cardinality() on no term fails with an assert without message, unless each number of occurrences can be 0"
 NO_VALUE = "#233: Cardinality() without value writes empty elements <values> and <occurs>, whereas XCSP3-core requires at least one value"
 LOGICAL = ("#235: Cardinality() in a logical expression gives a meta-constraint (or, and, iff, xor), an assert without message or a TypeError, "
            "and is silently discarded by both(), either(), conjunction() and disjunction()")
@@ -37,6 +36,8 @@ ACE_RANGE = "xcsp3team/ACE#31: ACE excludes the upper bound of an interval of oc
 COSOCO_CLOSED = "xcsp3team/cosoco#98: cosoco ignores closed=\"true\""
 COSOCO_OUTSIDE = ("xcsp3team/cosoco#98: cosoco crashes (heap overflow: malloc(): corrupted top size) when a value greater than the values of the domains "
                   "has a variable as number of occurrences")
+EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
+                  "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 CHOCO_VALUES_CLOSED = ("chocoteam/choco-solver#1260: CHOCO 4.10.15-beta (embedded in PyCSP3) finds solutions several times with variables as values and closed, "
                        "and CHOCO 6.0.2 fails (ClassCastException: SetVarImpl cannot be cast to IntVar)")
 
@@ -538,8 +539,8 @@ def test_xcsp3_cardinality_has_at_least_two_terms(run, constraint):
 ])
 def test_cardinality_on_no_term(run, solver, request, constraint, predicate):
     # the number of occurrences of any value in no term is 0
-    if "{0: 1}" in constraint or "z" in constraint or "range(1, 3)" in constraint:
-        bug_for(request, ALL, NO_TERM)
+    if constraint in ("Cardinality([], occurrences={0: 1})", "Cardinality([], occurrences={0: 0, 1: range(1, 3)})"):  # (the constraint false)
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     check(run, solver, XZ + f"satisfy({constraint}, x[3] != 1)", DZ, lambda *t: predicate(*t) and t[3] != 1)
 
 
@@ -762,9 +763,7 @@ def test_xcsp3_cardinality_in_a_group(run):
     "x[0], True, occurrences={0: 1}",
     "x[0], {'a': x[1]}, occurrences={0: 1}",
 ])
-def test_invalid_cardinality(run, request, arguments):
-    if arguments == "None, occurrences={0: 1}":
-        request.applymarker(bug(NO_TERM))
+def test_invalid_cardinality(run, arguments):
     assert_fails(run(X4 + f"satisfy(Cardinality({arguments}))"))
 
 @pytest.mark.parametrize("arguments, message", [
@@ -779,6 +778,7 @@ def test_invalid_cardinality(run, request, arguments):
     ("x, occurrences={0: True}", "A number of occurrences of Cardinality() must be given by an integer, a variable, an expression, or a non-empty range "
                                  "(or collection) of contiguous integers, which is not the case of True"),
     ("x, occurrences={0: [x[0], 1]}", "which is not the case of [x[0], 1]"),
+    ("None, occurrences={0: 1}", "Cardinality() requires variables (or expressions), which is not the case of None"),
 ])
 def test_invalid_cardinality_message(run, arguments, message):
     r = run(X4 + f"satisfy(Cardinality({arguments}))")
