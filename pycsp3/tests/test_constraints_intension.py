@@ -482,6 +482,21 @@ LOGICAL_CONTEXTS = ["({g}) | (z == 1)", "({g}) & (z == 1)", "~({g})", "imply(z =
                     "either({g}, z == 1)", "both({g}, z == 1)", "conjunction({g}, z == 1)", "disjunction({g}, z == 1)", "And({g}, z == 1)", "Or({g}, z == 1)"]
 
 
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Count(x, value=0, condition=('in', range(1, 3))) | (z == 1)", lambda *t: t[:3].count(0) in (1, 2) or t[3] == 1),
+    ("Count(x, value=0, condition=('notin', range(1, 3))) | (z == 1)", lambda *t: t[:3].count(0) not in (1, 2) or t[3] == 1),
+    ("Count(x, value=0, condition=('in', {0, 3})) & (z != 1)", lambda *t: t[:3].count(0) in (0, 3) and t[3] != 1),
+    ("Sum(x, condition=('in', range(2, 4))) | (z == 1)", lambda *t: sum(t[:3]) in (2, 3) or t[3] == 1),
+    ("Sum(x, condition=('notin', {1, 4})) | (z == 1)", lambda *t: sum(t[:3]) not in (1, 4) or t[3] == 1),
+    ("NValues(x, condition=('in', range(2, 4))) | (z == 1)", lambda *t: len(set(t[:3])) in (2, 3) or t[3] == 1),
+])
+def test_condition_in_or_notin_in_a_logical_expression(run, solver, constraint, predicate):
+    # a component with the parameter condition (in or notin) in a logical expression is replaced by an auxiliary variable, which must belong to (or not
+    # belong to) a set written in XCSP3 with set(...) (#240)
+    r = run("x = VarArray(size=3, dom=range(3))\nz = Var(range(3))\n" + f"satisfy({constraint})", solver=solver)
+    assert_solutions(r, brute_force([range(3)] * 4, predicate))
+
+
 @pytest.mark.parametrize("context", LOGICAL_CONTEXTS)
 @pytest.mark.parametrize("name", GLOBAL_CONSTRAINTS)
 def test_global_constraint_in_a_logical_expression(run, request, name, context):

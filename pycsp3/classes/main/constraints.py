@@ -1835,7 +1835,11 @@ def global_indirection(c):
                 "\tHence a meta-constraint function (Or, And, Not, IfThen, IfThenElse, Iff) is automatically called.\n" +
                 "\tCheck that it is relevant, or modify your model.\n")
         return None
-    return Node.build(condition.operator, auxiliary().replace_partial_constraint(pc), condition.right_operand())
+    aux = auxiliary().replace_partial_constraint(pc)
+    if isinstance(condition, (ConditionInterval, ConditionSet)):  # in or notin, written with a set in an expression
+        values = range(condition.min, condition.max + 1) if isinstance(condition, ConditionInterval) else condition.t
+        return functions.belong(aux, values) if condition.operator == TypeConditionOperator.IN else functions.not_belong(aux, values)
+    return Node.build(condition.operator, aux, condition.right_operand())
 
 
 def manage_global_indirection(*args, also_pc=False):
