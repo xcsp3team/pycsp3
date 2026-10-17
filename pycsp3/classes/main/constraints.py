@@ -1845,11 +1845,10 @@ def global_indirection(c):
             auxiliary().collect_table(lst, var, to_reified_ordinary_table(c.original_small_ordinary_table, [x.dom for x in lst]))
             return var
     if pc is None:
-        warning("You use a global constraint/function in a complex expression.\n" +
-                "\tHowever, this constraint cannot be externalized by introducing an auxiliary variable.\n" +
-                "\tHence a meta-constraint function (Or, And, Not, IfThen, IfThenElse, Iff) is automatically called.\n" +
-                "\tCheck that it is relevant, or modify your model.\n")
-        return None
+        # no solver handles the meta-constraints (Or, And, Not, Xor, Iff, ...), which are only built when they are explicitly asked for (#239)
+        error("A constraint " + str(c.name) + " cannot be in a logical expression: it cannot be replaced by an expression, and the meta-constraints "
+              "(that are needed) are not handled by the solvers; post it separately, or use the option -use_meta (or meta=True) to build a "
+              "meta-constraint anyway")
     aux = auxiliary().replace_partial_constraint(pc)
     if isinstance(condition, (ConditionInterval, ConditionSet)):  # in or notin, written with a set in an expression
         values = range(condition.min, condition.max + 1) if isinstance(condition, ConditionInterval) else condition.t
@@ -1878,6 +1877,9 @@ def manage_global_indirection(*args, also_pc=False):
         if arg is True:  # means that we must have a unary subexpression of the form 'x in S' in a more general expression, or a table constraint to be reified
             error_if(len(curser.queue_in) == 0, msg)
             (table, scp) = curser.queue_in.pop()
+            if not options.use_meta and hasattr(table, "transitions"):  # an automaton or an MDD (#239)
+                error("A constraint " + ("regular" if type(table).__name__ == "Automaton" else "mdd") + " cannot be in a logical expression: it cannot be "
+                      "replaced by an expression, and the meta-constraints (that are needed) are not handled by the solvers; post it separately")
             if isinstance(scp, ConstraintDummyConstant):  # a constant (as the count of no term) in a set of values
                 arg = int(scp.val in table)
             elif isinstance(scp, (tuple, list)):

@@ -595,6 +595,15 @@ def Or(*args, meta=False):
     return disjunction(*args)
 
 
+def _meta_and(*args):
+    # (for both() and either(), whose parameters hide And and Or)
+    return And(*args, meta=True)
+
+
+def _meta_or(*args):
+    return Or(*args, meta=True)
+
+
 def Not(arg, meta=False):
     """
     Builds a meta-constraint Not from the specified argument.
@@ -1384,6 +1393,13 @@ def max(*args, **kwargs):
     return maxPython(args, **kwargs) if expanded else maxPython(*args, **kwargs)
 
 
+def _check_no_membership_operand(name):
+    # an operand given by 'in' (with a table, an automaton or an MDD) is evaluated as a Boolean by Python: it cannot be an argument of the function
+    if len(queue_in) > 0:
+        error("An operand given by 'in' (as x in {1, 2}, or x in an automaton) is evaluated as a Boolean by Python, and cannot be an argument of "
+              + name + "(): use belong() for a set of values, or post the constraint separately")
+
+
 def xor(*args):
     """
     Builds and returns a node 'xor', root of a tree expression where specified arguments are children.
@@ -1406,7 +1422,7 @@ def xor(*args):
     check_no_negated_membership(args)
     args = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args]
     if any(isinstance(v, bool) for v in args):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        _check_no_membership_operand("xor")
         inverted = sum(1 for v in args if v is True) % 2 == 1  # each True inverts the result, while False has no effect
         args = [v for v in args if not isinstance(v, bool)]
         if len(args) == 0:
@@ -1442,7 +1458,7 @@ def iff(*args):
     error_if(len(args) < 2, "iff() must have at least two arguments (possibly given in a list), which is not the case of " + str(len(args)))
 
     if any(isinstance(v, bool) for v in args):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        _check_no_membership_operand("iff")
         booleans = {v for v in args if isinstance(v, bool)}
         others = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args if not isinstance(v, bool)]
         if len(booleans) == 2:  # True and False cannot be equivalent
@@ -1484,7 +1500,7 @@ def imply(*args):
     check_no_negated_membership(args)
     cnd, tp = args  # condition and then part
     if isinstance(cnd, bool) or isinstance(tp, bool):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        _check_no_membership_operand("imply")
         if cnd is False or tp is True:
             return ConstraintDummyConstant(1)  # True
         if cnd is True:
@@ -1536,7 +1552,7 @@ def ift(test, Then, Else):
         assert test.val in (0, 1)
         return Then if test.val == 1 else Else
     if isinstance(test, bool):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        _check_no_membership_operand("ift")
         return Then if test else Else
 
     if Else is None:
@@ -1752,7 +1768,8 @@ def conjunction(*args):
     res = _simplify_expression(args, False)
     if isinstance(res, ConstraintDummyConstant):
         return res
-    return Node.conjunction(manage_global_indirection(*res))
+    t = manage_global_indirection(*res)
+    return And(*res, meta=True) if t is None else Node.conjunction(t)  # (a meta-constraint only when explicitly asked for, #239)
 
 
 def both(this, And):
@@ -1784,7 +1801,8 @@ def both(this, And):
     assert len(res) in (1, 2)
     if len(res) == 1:
         return res[0]
-    return Node.conjunction(manage_global_indirection(*res))  # res[0] & res[1]
+    t = manage_global_indirection(*res)
+    return _meta_and(*res) if t is None else Node.conjunction(t)  # res[0] & res[1] (a meta-constraint only when explicitly asked for, #239)
 
 
 def disjunction(*args):
@@ -1816,7 +1834,8 @@ def disjunction(*args):
     res = _simplify_expression(args, True)
     if isinstance(res, ConstraintDummyConstant):
         return res
-    return Node.disjunction(manage_global_indirection(*res))
+    t = manage_global_indirection(*res)
+    return Or(*res, meta=True) if t is None else Node.disjunction(t)  # (a meta-constraint only when explicitly asked for, #239)
 
 
 def either(this, Or):
@@ -1848,7 +1867,8 @@ def either(this, Or):
     assert len(res) in (1, 2)
     if len(res) == 1:
         return res[0]
-    return Node.disjunction(manage_global_indirection(*res))  # res[0] | res[1]
+    t = manage_global_indirection(*res)
+    return _meta_or(*res) if t is None else Node.disjunction(t)  # res[0] | res[1] (a meta-constraint only when explicitly asked for, #239)
 
 
 ''' Language-based Constraints '''
