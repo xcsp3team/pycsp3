@@ -19,7 +19,6 @@ from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 MIXED = ("#230: occurrences mixing variables with integers or intervals, and values mixing variables and integers, are not XCSP3-core: ACE "
          "and CHOCO fail (Pb, ClassCastException), cosoco crashes or ignores the variables")
-NO_VALUE = "#233: Cardinality() without value writes empty elements <values> and <occurs>, whereas XCSP3-core requires at least one value"
 LOGICAL = ("#235: Cardinality() in a logical expression gives a meta-constraint (or, and, iff, xor), an assert without message or a TypeError, "
            "and is silently discarded by both(), either(), conjunction() and disjunction()")
 ACE_ALL = ("xcsp3team/ACE#29: ACE finds wrong solutions when the number of occurrences of a value is the number of variables, the value not being the "
@@ -546,7 +545,8 @@ def test_cardinality_on_no_term(run, solver, request, constraint, predicate):
 ])
 def test_cardinality_with_no_value(run, solver, request, occurrences, closed, predicate):
     # no value: nothing is required, except with closed (no term can be assigned a value)
-    bug_for(request, ALL if closed else ("ACE", "CHOCO"), NO_VALUE)
+    if closed:  # (the constraint false)
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     check(run, solver, X4 + f"satisfy(Cardinality(x, occurrences={occurrences}, closed={closed}), x[3] != 1)", D4, lambda *t: predicate(*t) and t[3] != 1)
 
 

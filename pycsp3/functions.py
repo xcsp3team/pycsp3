@@ -3399,6 +3399,8 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     occurs = [_cardinality_occurrences(occ) for occ in occurrences.values()]
     if len(terms) < 2:  # XCSP3 requires at least two terms
         return _cardinality_on_few_terms(terms, values, occurs, closed)
+    if len(values) == 0:  # no value: nothing is required, except with closed
+        return ConstraintDummyConstant(0 if closed else 1)
     return ECtr(ConstraintCardinality(terms, values, occurs, closed))
 
 
