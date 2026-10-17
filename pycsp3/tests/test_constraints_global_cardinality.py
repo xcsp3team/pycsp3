@@ -17,8 +17,6 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-EXPRESSIONS = ("#229: a number of occurrences given by an expression is written as such in the element <occurs>, and a value given by an "
-               "expression is refused by an assert without message, instead of being replaced by an auxiliary variable")
 MIXED = ("#230: occurrences mixing variables with integers or intervals, and values mixing variables and integers, are not XCSP3-core: ACE "
          "and CHOCO fail (Pb, ClassCastException), cosoco crashes or ignores the variables")
 SINGLE_TERM = "#231: a constraint cardinality is written on a single term, whereas XCSP3-core requires at least two"
@@ -206,8 +204,7 @@ def test_cardinality_occurrences_given_by_variables_of_the_list(run, solver, con
     ("{0: z, 1: z - 1}", lambda *t: card(t[:4], [(0, t[4]), (1, t[4] - 1)])),
     ("{0: Sum(x[:2])}", lambda *t: card(t[:4], [(0, t[0] + t[1])])),
 ])
-def test_cardinality_occurrences_given_by_expressions(run, solver, request, occurrences, predicate):
-    bug_for(request, ALL, EXPRESSIONS)
+def test_cardinality_occurrences_given_by_expressions(run, solver, occurrences, predicate):
     check(run, solver, XZ + f"satisfy(Cardinality(x, occurrences={occurrences}))", DZ, predicate)
 
 
@@ -262,10 +259,9 @@ def test_cardinality_values_given_by_variables_closed(run, solver, request, occu
     ("{v[0] + 1: 1}", lambda *t: card(t[:3], [(t[3] + 1, 1)])),
     ("{abs(v[0] - v[1]): 2}", lambda *t: card(t[:3], [(abs(t[3] - t[4]), 2)])),
 ])
-def test_cardinality_values_given_by_expressions(run, solver, request, occurrences, predicate):
+def test_cardinality_values_given_by_expressions(run, solver, occurrences, predicate):
     if solver == "COSOCO":
         pytest.skip(COSOCO_VALUES)
-    bug_for(request, ("ACE", "CHOCO"), EXPRESSIONS)
     check(run, solver, XV + f"satisfy(Cardinality(x, occurrences={occurrences}))", DV, predicate)
 
 

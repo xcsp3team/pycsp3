@@ -3340,9 +3340,10 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     """
     Builds and returns a constraint Cardinality.
     For each value (key of occurrences), the number of terms assigned this value must be as specified: an integer, a range (or a collection)
-    of contiguous integers, or a variable.
+    of contiguous integers, a variable or an expression.
 
     When occurrences is given under the form of a list or tuple t, a dictionary is computed as dict(enumerate(t)).
+    The values (keys of occurrences) can be integers, variables or expressions.
 
     :param within: the (first) term, typically a list of variables, on which the constraint applies
     :param within_complement: the other terms (if any) on which the constraint applies
@@ -3391,15 +3392,24 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     if isinstance(occurrences, (tuple, list)):
         occurrences = dict(enumerate(occurrences))
     assert isinstance(occurrences, dict)
-    values = list(occurrences.keys())
+    values = [_cardinality_value(v) for v in occurrences.keys()]
     assert all(isinstance(value, (int, Variable)) for value in values)
     occurs = [_cardinality_occurrences(occ) for occ in occurrences.values()]
     checkType(closed, (bool, type(None)))
     return ECtr(ConstraintCardinality(terms, values, occurs, closed))
 
 
+def _cardinality_value(v):
+    # a value of Cardinality(): an integer or a variable (an expression being replaced by an auxiliary variable)
+    if isinstance(v, (Node, PartialConstraint)):
+        return auxiliary().replace_node(v) if isinstance(v, Node) else auxiliary().replace_partial_constraint(v)
+    return v
+
+
 def _cardinality_occurrences(occ):
-    # a number of occurrences of Cardinality(): an integer, a variable or a range (an interval)
+    # a number of occurrences of Cardinality(): an integer, a variable (an expression being replaced by an auxiliary variable) or a range (an interval)
+    if isinstance(occ, (Node, PartialConstraint)):
+        return auxiliary().replace_node(occ) if isinstance(occ, Node) else auxiliary().replace_partial_constraint(occ)
     if isinstance(occ, (range, list, tuple, set, frozenset)):
         t = sorted(set(occ)) if all(isinstance(v, int) and not isinstance(v, bool) for v in occ) else None
         if t is None or len(t) == 0 or t[-1] - t[0] + 1 != len(t):
