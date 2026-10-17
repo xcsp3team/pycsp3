@@ -28,7 +28,6 @@ ACE_ALLDIFFERENT = ("xcsp3team/ACE#30: ACE posts allDifferent when each value ca
                     "values), ignoring that some values must be assigned")
 KNOWN = ("#237: numbers of occurrences known when compiling (negative, greater than the number of terms, values that no term can take) are written as "
          "such: ACE fails without message, cosoco crashes on values greater than the values of the domains")
-REPEATED = "#238: a variable given several times in the list of Cardinality() is accepted (ACE gives wrong solutions), instead of an explicit error"
 ACE_FAILS = ("xcsp3team/ACE#33: ACE fails without message when the number of occurrences is 0 for all the values, or when a value in no domain has a "
              "variable as number of occurrences")
 ACE_RANGE = "xcsp3team/ACE#31: ACE excludes the upper bound of an interval of occurrences when the values are variables (Range is half-open)"
@@ -559,7 +558,6 @@ def test_cardinality_with_no_value(run, solver, request, occurrences, closed, pr
     "Cardinality(x[:2], x[1:], occurrences={0: z})",
     "Cardinality(Sum(x[:2]), Sum(x[:2]), x[2], occurrences={1: 2})",
 ])
-@bug(REPEATED)
 def test_cardinality_with_a_repeated_variable(run, constraint):
     # a variable given several times in the list is refused with an explicit error (decision D of #226), also when it replaces a component given
     # several times
@@ -775,6 +773,7 @@ def test_invalid_cardinality(run, arguments):
                                  "(or collection) of contiguous integers, which is not the case of True"),
     ("x, occurrences={0: [x[0], 1]}", "which is not the case of [x[0], 1]"),
     ("None, occurrences={0: 1}", "Cardinality() requires variables (or expressions), which is not the case of None"),
+    ("x[0], x[1], x[0], occurrences={0: 1}", "A variable is given several times in the list of Cardinality()"),
 ])
 def test_invalid_cardinality_message(run, arguments, message):
     r = run(X4 + f"satisfy(Cardinality({arguments}))")

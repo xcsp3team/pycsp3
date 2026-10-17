@@ -3343,7 +3343,7 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
     of contiguous integers, a variable or an expression.
 
     When occurrences is given under the form of a list or tuple t, a dictionary is computed as dict(enumerate(t)).
-    The values (keys of occurrences) can be integers, variables or expressions.
+    The values (keys of occurrences) can be integers, variables or expressions. A variable cannot be given several times in the list.
 
     :param within: the (first) term, typically a list of variables, on which the constraint applies
     :param within_complement: the other terms (if any) on which the constraint applies
@@ -3389,6 +3389,10 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
         elif isinstance(t, Node):
             terms[i] = auxiliary().replace_node(t)  # (the auxiliary variable was put in a list, written [aux_gb[0]])
     checkType(terms, [Variable])
+    if len({id(t) for t in terms}) < len(terms):
+        repeated = [t for i, t in enumerate(terms) if any(u is t for u in terms[:i])]
+        error("A variable is given several times in the list of Cardinality() (a component given several times, such as Sum(), being replaced by "
+              "the same auxiliary variable): " + ", ".join(dict.fromkeys(str(t) for t in repeated)))
     if isinstance(occurrences, (tuple, list)):
         occurrences = dict(enumerate(occurrences))
     values = [_cardinality_value(v) for v in occurrences.keys()]
