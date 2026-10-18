@@ -243,7 +243,7 @@ def assert_fails(r):
     statement = lines[frames[-1] + 1].strip() if frames and frames[-1] + 1 < len(lines) else ""
     message = lines[-1].partition(":")[2].strip()
     explicit = ((statement.startswith("assert") and r.exception == "AssertionError" or statement.startswith("raise")) and message) \
-               or '/model.py", line' in location or r.exception in ("IndexError", "KeyError")
+               or re.search(r'[\\/]model\.py", line', location) or r.exception in ("IndexError", "KeyError")
     assert explicit, "the error is not explicit: " + lines[-1] + " (raised by: " + statement + ")\n" + r.report()
 
 
