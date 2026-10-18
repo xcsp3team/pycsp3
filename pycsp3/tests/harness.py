@@ -11,6 +11,7 @@ solvers (a missing solution, a wrong solution, a solution found twice):
    in another process, an optimal solution.
 """
 
+import importlib.util
 import json
 import os
 import re
@@ -27,6 +28,9 @@ from lxml import etree
 ROOT = Path(__file__).resolve().parents[2]  # the root of the repository, containing the package pycsp3
 
 SOLVERS = ("ACE", "CHOCO", "COSOCO")
+
+# cosoco is installed from PyPI (package cosoco), which has no version for Windows: there, the tests run with COSOCO are skipped
+COSOCO_UNAVAILABLE = sys.platform == "win32" and importlib.util.find_spec("cosoco_bin") is None
 
 TIMEOUT = 60  # in seconds, for running a model (solving included)
 

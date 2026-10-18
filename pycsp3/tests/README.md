@@ -17,7 +17,8 @@ python3 -m venv .venv
 .venv/bin/pip install lxml "cosoco>=2.6.1" pytest pytest-xdist pytest-timeout
 ```
 
-Java is required by ACE and CHOCO.
+Java is required by ACE and CHOCO. The package cosoco has no version for Windows: there, it is not
+installed and the tests run with COSOCO are skipped.
 
 ## Running the tests
 
