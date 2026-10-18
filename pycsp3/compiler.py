@@ -165,7 +165,7 @@ def _load_data():
             else:
                 assert arg.endswith("json")
                 assert os.path.exists(arg), "The file " + arg + " does not exist (in the specified directory)." + str(os.path)
-                with open(arg) as f:
+                with open(arg, encoding="utf-8") as f:
                     compilation_data.update(json.loads(f.read(), object_pairs_hook=OrderedDict))
                     s += "-" + _basic_token(arg)
         return compilation_data, s
@@ -179,7 +179,7 @@ def _load_data():
             # example: python Nonogram.py -data=https://www.cril.univ-artois.fr/~lecoutre/heart.json
             return json.loads(urlopen(data).read(), object_pairs_hook=OrderedDict), "-" + _basic_token(data)
         assert os.path.exists(data), "The file " + data + " does not exist (in the specified directory)."
-        with open(data) as f:
+        with open(data, encoding="utf-8") as f:
             return json.loads(f.read(), object_pairs_hook=OrderedDict), "-" + _basic_token(data)
     compilation_data = OrderedDict()  # the object used for recording the data, available in the model
     # if '{' in data and '}' in data:
@@ -306,7 +306,7 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
         assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
         if record_string_data:
             Compilation.string_data = "-" + filename[0 if os.sep not in filename else filename.rindex(os.sep) + 1:-5]
-        with open(fn) as f:
+        with open(fn, encoding="utf-8") as f:
             data = json.loads(f.read(), object_pairs_hook=OrderedDict)
     data = convert_to_namedtuples(data)
     data = _simplified_data(data)
@@ -401,7 +401,7 @@ def _compile(disabling_opoverrider=False, verbose=1):
             if options.display:
                 print("\n", pretty_text)
             else:
-                with open(fullname, "w") as f:  # TODO: should we add encoding='utf-16'
+                with open(fullname, "w", encoding="utf-8") as f:  # whatever the system (the symbols of the hybrid tables are not in cp1252)
                     f.write(pretty_text)
                     if verbose > 0:
                         print("  * Generating the file " + fullname + " completed in " + GREEN + Compilation.stopwatch.elapsed_time() + WHITE + " seconds.")

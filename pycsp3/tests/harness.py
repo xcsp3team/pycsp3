@@ -34,6 +34,10 @@ COSOCO_UNAVAILABLE = sys.platform == "win32" and importlib.util.find_spec("cosoc
 
 TIMEOUT = 60  # in seconds, for running a model (solving included)
 
+# Variables of the environment for running a model as on a system whose encoding is not UTF-8 (the encoding is then ASCII on Linux, and remains
+# the one of the system on Windows, e.g., cp1252), so as to check that PyCSP3 does not depend on the encoding of the system
+NOT_UTF8 = {"LC_ALL": "C", "PYTHONCOERCECLOCALE": "0", "PYTHONUTF8": "0"}
+
 # The Java solvers (ACE, CHOCO) start faster with an archive of their classes (AppCDS), built once at the start of each session (see
 # build_java_archives()), and with the compiler C1 only (the models of the tests are small): about 0.26 s instead of 0.50 s for ACE
 JARS = {"ACE": (ROOT / "pycsp3" / "solvers" / "ace" / "ACE-2.6.jar", ["-jar"], []),
@@ -153,12 +157,12 @@ def _java_options(solver):
     return "-XX:SharedArchiveFile=" + str(archive) + " -Xshare:auto -XX:TieredStopAtLevel=1"
 
 
-def _execute(code, directory, args, files, timeout, solver=None):
+def _execute(code, directory, args, files, timeout, solver=None, variables=None):
     (directory / "model.py").write_text(code, encoding="utf-8")  # the encoding of the Python files, whatever the system (cp1252 on Windows)
     for name, content in (files or {}).items():
         (directory / name).parent.mkdir(parents=True, exist_ok=True)  # the name may contain subdirectories, as in "instances/a.txt"
         (directory / name).write_text(content, encoding="utf-8")
-    env = dict(os.environ)
+    env = dict(os.environ, **(variables or {}))
     env["PYTHONPATH"] = str(ROOT) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     if (options := _java_options(solver)) is not None:
         env["JDK_JAVA_OPTIONS"] = options
@@ -180,7 +184,7 @@ def _execute(code, directory, args, files, timeout, solver=None):
     return r
 
 
-def run_model(code, directory, *, solver=None, args=(), files=None, header=True, timeout=TIMEOUT):
+def run_model(code, directory, *, solver=None, args=(), files=None, header=True, env=None, timeout=TIMEOUT):
     """
     Writes the specified code in the file model.py of the specified directory, and executes it.
 
@@ -190,6 +194,7 @@ def run_model(code, directory, *, solver=None, args=(), files=None, header=True,
     :param args: the arguments of the command line, as in ["-data=[3,4]", "-variant=table"]
     :param files: other files to be written in the directory (e.g., JSON data), as a dict name -> content
     :param header: True if the line "from pycsp3 import *" must be inserted at the top of the model
+    :param env: variables of the environment set for running the model (e.g., NOT_UTF8), as a dict name -> value
     :param timeout: the maximal time (in seconds) for running the model
     """
     assert solver is None or solver in SOLVERS, solver
@@ -197,12 +202,12 @@ def run_model(code, directory, *, solver=None, args=(), files=None, header=True,
     if header:
         code = "from pycsp3 import *\n\n" + code
     if solver is None:
-        return _execute(code, directory, args, files, timeout)
-    r = _execute(code + SOLVING.format(solver=solver, marker=MARKER, enumerating=True), directory, args, files, timeout, solver)
+        return _execute(code, directory, args, files, timeout, variables=env)
+    r = _execute(code + SOLVING.format(solver=solver, marker=MARKER, enumerating=True), directory, args, files, timeout, solver, env)
     if r.cop:
         (directory / "optimization").mkdir()
         r.optimization = _execute(code + SOLVING.format(solver=solver, marker=MARKER, enumerating=False),
-                                  directory / "optimization", args, files, timeout, solver)
+                                  directory / "optimization", args, files, timeout, solver, env)
     return r
 
 

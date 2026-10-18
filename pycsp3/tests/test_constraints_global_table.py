@@ -10,7 +10,7 @@ from itertools import product
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug_for
+from harness import NOT_UTF8, assert_fails, assert_solutions, brute_force, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 
@@ -372,11 +372,14 @@ def test_xcsp3_tables(run, constraint, tag, text):
     assert extension.find(tag).text.strip() == text
 
 
-def test_xcsp3_hybrid_table_kept(run):
-    r = run(X3 + "satisfy(x in [(lt(2), ANY, eq(col(0) + 1))])", args=["-keep_hybrid"])
+@pytest.mark.parametrize("env", [None, NOT_UTF8], ids=["system", "system not in UTF-8"])
+def test_xcsp3_hybrid_table_kept(run, env):
+    # the XCSP3 file is written in UTF-8, whatever the system (the symbols of the hybrid tables, as ≤ here, are not in cp1252 or ASCII)
+    r = run(X3 + "satisfy(x in [(lt(2), ANY, eq(col(0) + 1))])", args=["-keep_hybrid"], env=env)
     assert r.ok, r.report()
     extension = r.xml.find("constraints/extension")
     assert extension.get("type") == "hybrid-2", r.report()
+    assert extension.find("supports").text.strip() == "(≤1,*,c0+1)", r.report()
 
 
 CYCLE_WARNING = "of a hybrid table refer to columns in a cycle, which is not handled by the solvers"
