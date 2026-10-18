@@ -6,6 +6,7 @@ and the function Table(), with ordinary, starred, hybrid and symbolic tables.
 Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being compared with the ones computed by brute force.
 """
 
+import sys
 from itertools import product
 
 import pytest
@@ -342,6 +343,7 @@ def test_tables_inside_comprehensions(run, solver, definitions, constraints, pre
     check(run, solver, X3 + definitions + f"satisfy({constraints}, x[0] != 1)", D3, lambda *t: predicate(*t) and t[0] != 1)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="the start method fork, used for building the tables in parallel, does not exist on Windows")
 def test_large_table_built_in_parallel(run):
     # a table of at least 100,000 tuples is built in parallel, unless -safe; with the default start method of multiprocessing from Python 3.14
     # (forkserver), the processes executed the model again (see #168)
