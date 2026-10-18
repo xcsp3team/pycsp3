@@ -60,7 +60,7 @@ class DataParser:
                 for ln in urlopen(value):
                     self.lines += [ln.decode("utf-8").strip()]
             elif os.path.isfile(value):
-                with open(value) as f:
+                with open(value, encoding="utf-8") as f:  # as the URLs above, whatever the system (cp1252 on Windows)
                     self.lines += [ln[:-1].strip() if ln[-1] == '\n' else ln.strip() for ln in f.readlines() if len(ln.strip()) > 0]
             else:
                 self.lines += [str(value)]

@@ -512,6 +512,13 @@ def test_parser_lines(run):
     assert "data (a='first', b='second', c='third', d='third')" in r.lines, r.report()  # empty lines discarded, lines stripped
 
 
+@pytest.mark.parametrize("env", [None, NOT_UTF8], ids=["system", "system not in UTF-8"])
+def test_parser_lines_with_non_ascii_characters(run, env):
+    # a text file of data is read in UTF-8, whatever the system
+    r = run_parser(run, 'data["s"] = line()\ndata["n"] = 0', "é≠ ok\n", model='print("line", ascii(data.s))', env=env)
+    assert "line '\\xe9\\u2260 ok'" in r.lines, r.report()
+
+
 def test_parser_next_line_repeat(run):
     r = run_parser(run, """
         data["a"] = next_line(repeat=1)
