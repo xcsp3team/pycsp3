@@ -154,10 +154,10 @@ def _java_options(solver):
 
 
 def _execute(code, directory, args, files, timeout, solver=None):
-    (directory / "model.py").write_text(code)
+    (directory / "model.py").write_text(code, encoding="utf-8")  # the encoding of the Python files, whatever the system (cp1252 on Windows)
     for name, content in (files or {}).items():
         (directory / name).parent.mkdir(parents=True, exist_ok=True)  # the name may contain subdirectories, as in "instances/a.txt"
-        (directory / name).write_text(content)
+        (directory / name).write_text(content, encoding="utf-8")
     env = dict(os.environ)
     env["PYTHONPATH"] = str(ROOT) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
     if (options := _java_options(solver)) is not None:
