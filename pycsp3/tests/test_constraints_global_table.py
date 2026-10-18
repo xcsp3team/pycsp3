@@ -400,10 +400,13 @@ def test_xcsp3_hybrid_table_kept_with_a_cycle(run, constraint, cycle):
     assert (CYCLE_WARNING in r.stdout) == cycle, r.report()
 
 
-def test_xcsp3_hybrid_table_kept_with_a_cycle_message(run):
-    r = run(X6 + "satisfy(x in [(ne(col(1)), ne(col(2)), ne(col(0)))], x in [(lt(col(1)), lt(col(2)), gt(col(0)))])", args=["-keep_hybrid"])
+@pytest.mark.parametrize("env", [None, {"PYTHONIOENCODING": "cp1252"}], ids=["output of the system", "output in cp1252"])
+def test_xcsp3_hybrid_table_kept_with_a_cycle_message(run, env):
+    # a character that the output cannot encode (≠ with cp1252, the encoding of a redirected output on Windows) is escaped
+    r = run(X6 + "satisfy(x in [(ne(col(1)), ne(col(2)), ne(col(0)))], x in [(lt(col(1)), lt(col(2)), gt(col(0)))])", args=["-keep_hybrid"], env=env)
     assert r.ok, r.report()
-    assert "Warning: The restrictions of the tuple (≠c1,≠c2,≠c0) " + CYCLE_WARNING in r.stdout, r.report()
+    message = "Warning: The restrictions of the tuple (≠c1,≠c2,≠c0) " + CYCLE_WARNING
+    assert message in r.stdout or message.replace("≠", "\\u2260") in r.stdout, r.report()
     assert r.stdout.count(CYCLE_WARNING) == 1, r.report()  # other similar cases are not displayed
 
 
