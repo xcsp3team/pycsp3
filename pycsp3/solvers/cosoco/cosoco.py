@@ -3,18 +3,22 @@ import subprocess
 import sys
 
 from pycsp3.solvers.solver import SolverProcess  # , SolverPy4J
+from pycsp3.tools.utilities import is_windows
 
 
 def _cosoco_binary():
     # cosoco ships as the separate PyPI package "cosoco", which exposes the
     # path of its bundled executable as cosoco_bin.PATH. It is an optional
     # dependency (extra [cosoco]); when a plain install lacks it, fetch it on
-    # demand, the first time the solver is actually asked for.
+    # demand, the first time the solver is actually asked for (except on
+    # Windows, for which the package has no version).
     try:
         from cosoco_bin import PATH
         return PATH
     except ImportError:
         pass
+    if is_windows():
+        raise ImportError("cosoco is not available on Windows (the package cosoco has no version for Windows): use ACE or CHOCO")
     print("cosoco is not installed; installing it now (pip install cosoco) ...", file=sys.stderr)
     try:
         subprocess.run([sys.executable, "-m", "pip", "install", "cosoco>=2.6.1"], check=True)
