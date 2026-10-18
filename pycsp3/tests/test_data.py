@@ -110,10 +110,11 @@ def test_data_command_line_named_solutions(run, solver):
     (["-data=[3,4]", "-dataformat={:02d}"], "model-03-04.xml"),
     (["-data=[3,4]", "-dataformat={:02d}-{:03d}"], "model-03-004.xml"),
     (["-data=data.json"], "model-data.xml"),
+    (["-data=sub/data.json"], "model-data.xml"),
     (["-data=[data.json,k=5]"], "model-data-5.xml"),
 ])
 def test_data_filename(run, args, name):
-    assert xml_names(run("x = Var(dom=range(2))", args=args, files={"data.json": '{"n": 3, "m": 4}'})) == [name]
+    assert xml_names(run("x = Var(dom=range(2))", args=args, files={"data.json": '{"n": 3, "m": 4}', "sub/data.json": '{"n": 3, "m": 4}'})) == [name]
 
 
 def test_data_leading_zeros(run):

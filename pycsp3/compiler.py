@@ -84,9 +84,7 @@ def _load_options(console=False):
 
 
 def _basic_token(name):
-    pos = name.rfind(os.sep)
-    if pos != -1:
-        name = name[pos + 1:]
+    name = os.path.basename(name)  # with "/" or os.sep
     pos = name.rfind(".")
     if pos != -1:
         name = name[:pos]
@@ -298,14 +296,14 @@ def load_json_data(filename, *, storing=False, record_string_data=True):
             fn = os.path.abspath(filename)
         else:
             # is file in the directory of the model file?
-            path = "." if os.sep not in sys.argv[0] else sys.argv[0][:sys.argv[0].rindex(os.sep)]
-            if os.path.exists(path + os.sep + filename):
-                fn = path + os.sep + filename
+            path = os.path.dirname(sys.argv[0]) or "."  # with "/" or os.sep
+            if os.path.exists(os.path.join(path, filename)):
+                fn = os.path.join(path, filename)
             else:
                 fn = os.path.dirname(os.path.realpath(__file__)) + os.sep + "problems" + os.sep + "data" + os.sep + "json" + os.sep + filename
         assert os.path.exists(fn), "The file " + fn + " does not exist (in the specified directory)."
         if record_string_data:
-            Compilation.string_data = "-" + filename[0 if os.sep not in filename else filename.rindex(os.sep) + 1:-5]
+            Compilation.string_data = "-" + os.path.basename(filename)[:-5]
         with open(fn, encoding="utf-8") as f:
             data = json.loads(f.read(), object_pairs_hook=OrderedDict)
     data = convert_to_namedtuples(data)
