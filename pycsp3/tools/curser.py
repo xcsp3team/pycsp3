@@ -125,8 +125,7 @@ def cursing():
         if isinstance(other, Node):
             other = _replace_node_in(other, self)
         if isinstance(other, PartialConstraint):
-            # the values of the condition of the component (a variable among them being reported when posting, as these values must be integers)
-            if len(self) > 0 and all(isinstance(v, int) for v in self) or any(isinstance(v, (Variable, Node)) for v in self):  # TODO more cases?
+            if len(self) > 0:  # the values of the condition of the component (any value other than an integer being reported when posting)
                 queue_in.append((list(self), other))
             else:
                 queue_in.append((list(self), auxiliary().replace_partial_constraint(other)))
@@ -162,7 +161,7 @@ def cursing():
         if isinstance(other, Node):
             other = auxiliary().replace_node(other)
         if isinstance(other, PartialConstraint):
-            if any(isinstance(v, (Variable, Node)) for v in self):  # reported when posting, as the values of a condition must be integers
+            if not all(isinstance(v, int) for v in self):  # reported when posting, as the values of a condition must be integers
                 queue_in.append((list(self), other))
             else:
                 queue_in.append((list(self), auxiliary().replace_partial_constraint(other)))

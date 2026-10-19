@@ -635,6 +635,24 @@ def test_variable_in_the_values_of_in_with_a_component(run, component, values):
         assert not r.ok and "must be integers" in r.stdout, r.report()
 
 
+@pytest.mark.parametrize("values", ["{1.5, 2}", "{'a', 2}", "['a', 2]", "('a', 'b')", "{None, 2}", "[(1, 2)]", "condition=('in', {2.0, 3})"])
+@pytest.mark.parametrize("component", ["Maximum(x)", "Sum(x)", "Count(x, value=1)", "x[z]"])
+def test_non_integer_in_the_values_of_in_with_a_component(run, component, values):
+    # the values of the condition of a constraint are integers (not floats, symbols, None or tuples)
+    if values.startswith("condition=") and component == "x[z]":
+        pytest.skip("no parameter condition")
+    constraint = component[:-1] + ", " + values + ")" if values.startswith("condition=") else f"{component} in {values}"
+    r = run(XY + "z = Var(dom=range(3))\n" + f"satisfy({constraint})")
+    assert not r.ok and "must be integers" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("name, f", FUNCTIONS)
+def test_symbol_in_the_values_of_in_with_an_element(run, name, f):
+    # the parser of XCSP3 (ACE, CHOCO) does not accept symbols in a condition (NumberFormatException)
+    r = run(X3 + f"s = VarArray(size=3, dom={{'a', 'b', 'c'}})\ni = Var(dom=range(3))\nsatisfy(s[i] in {{'a', 'b'}}, {name}(x) == 1)")
+    assert not r.ok and "must be integers, which is not the case of" in r.stdout, r.report()
+
+
 @pytest.mark.parametrize("constraint, predicate", [
     ("x[0] in {y, 2}", lambda *t: t[0] in (t[3], 2)),
     ("x[0] not in {y, z}", lambda *t: t[0] not in (t[3], t[4])),
