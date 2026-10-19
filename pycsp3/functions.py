@@ -3473,7 +3473,8 @@ def _extremum_terms(term, others):
 def _extremum(name, term, others, condition):
     # the component Maximum (or Minimum, whose name is given) of the terms, possibly subject to the specified condition
     terms = _extremum_terms(term, others)
-    assert len(terms) > 0
+    if len(terms) == 0:
+        error(name + "() requires at least one term")
     condition = Condition.build_condition(condition)
     if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
         # the extremum never belongs to an empty set: false with 'in', and always true with 'not in'

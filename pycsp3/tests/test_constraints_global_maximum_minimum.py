@@ -17,7 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-NO_TERM = "#246: Maximum() and Minimum() of no term fail with an assert without message"
 SYMBOLIC = "#247: Maximum() and Minimum() accept symbolic variables"
 BOOLEAN = "#247: a Boolean among the terms of Maximum() and Minimum() is reported as a value of a domain"
 INTEGERS = "#248: Maximum() and Minimum() of integers only are not evaluated (an auxiliary variable for each integer)"
@@ -576,8 +575,6 @@ def test_xcsp3_extremum_in_a_group(run, name, f):
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_invalid_extremum(run, request, name, f, arguments):
-    if arguments in ("[]", "x[i] for i in range(0)", "None", "[None, None]"):
-        request.applymarker(bug(NO_TERM))
     if arguments in ("s", "x[0], s[0]"):
         request.applymarker(bug(SYMBOLIC))
     code = X3 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({name}({arguments}) == 1)"
@@ -598,12 +595,15 @@ def test_invalid_extremum_operand(run, request, name, f, operand):
 @pytest.mark.parametrize("arguments, message", [
     ("[]", "() requires at least one term"),
     ("None", "() requires at least one term"),
+    ("[None, None]", "() requires at least one term"),
+    ("x[i] for i in range(0)", "() requires at least one term"),
     ("True, x[0]", "() does not accept Booleans as terms, which is the case of True"),
     ("s", "() requires integer variables (or expressions), which is not the case of s[0]"),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_invalid_extremum_message(run, request, name, f, arguments, message):
-    request.applymarker(bug(SYMBOLIC if arguments == "s" else BOOLEAN if "True" in arguments else NO_TERM))
+    if arguments == "s" or "True" in arguments:
+        request.applymarker(bug(SYMBOLIC if arguments == "s" else BOOLEAN))
     r = run(X3 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({name}({arguments}) == 1)")
     assert not r.ok and name + message in r.stdout, r.report()
 
