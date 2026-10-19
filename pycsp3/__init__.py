@@ -55,7 +55,7 @@ CHOCO = TypeSolver.CHOCO
 """ Solver Choco """
 
 COSOCO = TypeSolver.COSOCO
-""" Solver cosoco """
+""" Solver cosoco (not available on Windows) """
 
 Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
 """ Task is a predefined named tuple, as involved in the constraint Cumulative: its origin (starting time), its length (duration) and its height (amount of consumed resource)
