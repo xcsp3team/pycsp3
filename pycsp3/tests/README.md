@@ -17,7 +17,8 @@ python3 -m venv .venv
 .venv/bin/pip install lxml "cosoco>=2.6.1" pytest pytest-xdist pytest-timeout
 ```
 
-Java is required by ACE and CHOCO.
+Java is required by ACE and CHOCO. The package cosoco has no version for Windows: there, it is not
+installed and the tests run with COSOCO are skipped.
 
 ## Running the tests
 
@@ -76,8 +77,9 @@ def test_size_zero(run):  # no solver: the model is only executed (and compiled 
     assert not r.ok and "dimension" in r.error
 ```
 
-- `run(code, solver=None, args=(), files=None, header=True)` executes the model; the line
-  `from pycsp3 import *` is inserted at its top (unless `header=False`).
+- `run(code, solver=None, args=(), files=None, header=True, env=None)` executes the model; the line
+  `from pycsp3 import *` is inserted at its top (unless `header=False`); `env` gives variables of the
+  environment, e.g. `NOT_UTF8` for running the model as on a system whose encoding is not UTF-8.
 - The result gives `ok`, `stdout`, `stderr`, `error` (message of PyCSP3), `exception` (name of an uncaught
   exception), `xml` (the generated XCSP3 file) and, when a solver is specified, `status`, `variables`,
   `solutions`, `n_solutions` and `bound`.

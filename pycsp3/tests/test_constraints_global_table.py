@@ -6,11 +6,12 @@ and the function Table(), with ordinary, starred, hybrid and symbolic tables.
 Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being compared with the ones computed by brute force.
 """
 
+import sys
 from itertools import product
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug_for
+from harness import NOT_UTF8, assert_fails, assert_solutions, brute_force, bug_for
 
 COSOCO_SYMBOLIC = "xcsp3team/cosoco#71: cosoco does not handle symbolic variables (XCSP3Core expected type=integer)"
 
@@ -342,6 +343,7 @@ def test_tables_inside_comprehensions(run, solver, definitions, constraints, pre
     check(run, solver, X3 + definitions + f"satisfy({constraints}, x[0] != 1)", D3, lambda *t: predicate(*t) and t[0] != 1)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="the start method fork, used for building the tables in parallel, does not exist on Windows")
 def test_large_table_built_in_parallel(run):
     # a table of at least 100,000 tuples is built in parallel, unless -safe; with the default start method of multiprocessing from Python 3.14
     # (forkserver), the processes executed the model again (see #168)
@@ -372,11 +374,14 @@ def test_xcsp3_tables(run, constraint, tag, text):
     assert extension.find(tag).text.strip() == text
 
 
-def test_xcsp3_hybrid_table_kept(run):
-    r = run(X3 + "satisfy(x in [(lt(2), ANY, eq(col(0) + 1))])", args=["-keep_hybrid"])
+@pytest.mark.parametrize("env", [None, NOT_UTF8], ids=["system", "system not in UTF-8"])
+def test_xcsp3_hybrid_table_kept(run, env):
+    # the XCSP3 file is written in UTF-8, whatever the system (the symbols of the hybrid tables, as ≤ here, are not in cp1252 or ASCII)
+    r = run(X3 + "satisfy(x in [(lt(2), ANY, eq(col(0) + 1))])", args=["-keep_hybrid"], env=env)
     assert r.ok, r.report()
     extension = r.xml.find("constraints/extension")
     assert extension.get("type") == "hybrid-2", r.report()
+    assert extension.find("supports").text.strip() == "(≤1,*,c0+1)", r.report()
 
 
 CYCLE_WARNING = "of a hybrid table refer to columns in a cycle, which is not handled by the solvers"
@@ -397,10 +402,13 @@ def test_xcsp3_hybrid_table_kept_with_a_cycle(run, constraint, cycle):
     assert (CYCLE_WARNING in r.stdout) == cycle, r.report()
 
 
-def test_xcsp3_hybrid_table_kept_with_a_cycle_message(run):
-    r = run(X6 + "satisfy(x in [(ne(col(1)), ne(col(2)), ne(col(0)))], x in [(lt(col(1)), lt(col(2)), gt(col(0)))])", args=["-keep_hybrid"])
+@pytest.mark.parametrize("env", [None, {"PYTHONIOENCODING": "cp1252"}], ids=["output of the system", "output in cp1252"])
+def test_xcsp3_hybrid_table_kept_with_a_cycle_message(run, env):
+    # a character that the output cannot encode (≠ with cp1252, the encoding of a redirected output on Windows) is escaped
+    r = run(X6 + "satisfy(x in [(ne(col(1)), ne(col(2)), ne(col(0)))], x in [(lt(col(1)), lt(col(2)), gt(col(0)))])", args=["-keep_hybrid"], env=env)
     assert r.ok, r.report()
-    assert "Warning: The restrictions of the tuple (≠c1,≠c2,≠c0) " + CYCLE_WARNING in r.stdout, r.report()
+    message = "Warning: The restrictions of the tuple (≠c1,≠c2,≠c0) " + CYCLE_WARNING
+    assert message in r.stdout or message.replace("≠", "\\u2260") in r.stdout, r.report()
     assert r.stdout.count(CYCLE_WARNING) == 1, r.report()  # other similar cases are not displayed
 
 

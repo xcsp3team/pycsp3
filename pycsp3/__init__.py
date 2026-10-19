@@ -8,6 +8,10 @@ from itertools import product, permutations
 __python_version__ = str(sys.version).split(os.linesep)[0].split(' ')[0]
 __pycsp3_version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt'), encoding='utf-8').read()
 
+for _stream in (sys.stdout, sys.stderr):  # a character that the output cannot encode (e.g., the symbol of ne with cp1252 on Windows) is escaped
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(errors="backslashreplace")
+
 if sys.version_info[0] < 3 or sys.version_info[1] < 10:
     raise Exception(os.linesep + " Python should be at least 3.10" + os.linesep + " Your version is Python " + __python_version__)
 

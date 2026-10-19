@@ -10,6 +10,9 @@ on:
 jobs:
   tests:
     runs-on: ${{ inputs.os }}
+    defaults:
+      run:
+        shell: bash  # also on Windows (Git Bash), so that the commands are the same on all the systems
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,10 +28,12 @@ jobs:
           java-version: "21"
 
       - name: Install the dependencies
-        run: pip install lxml "cosoco>=2.6.1" pytest pytest-xdist pytest-timeout
+        run: |
+          pip install lxml pytest pytest-xdist pytest-timeout
+          if [ "$RUNNER_OS" != Windows ]; then pip install "cosoco>=2.6.1"; fi  # no version of cosoco for Windows (its tests are skipped)
 
       - name: Run the unit tests
-        run: python -m pytest pycsp3/tests -n auto
+        run: python -m pytest pycsp3/tests -n auto --junitxml=pycsp3/tests/output/junit.xml  # all the results, kept with the files of the tests
 
       - name: Keep the files of the tests (models, XCSP3 files, solver logs)
         if: failure()

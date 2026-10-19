@@ -9,7 +9,7 @@ import textwrap
 
 import pytest
 
-from harness import assert_fails, assert_solutions, brute_force, bug_for
+from harness import NOT_UTF8, assert_fails, assert_solutions, brute_force, bug_for
 
 # Known bugs shared by several tests (each bug is reported in the issue given at the start of its reason)
 # Displays the variable data, the named tuples built from data (nt0, nt1, ...) being displayed without their names
@@ -110,10 +110,11 @@ def test_data_command_line_named_solutions(run, solver):
     (["-data=[3,4]", "-dataformat={:02d}"], "model-03-04.xml"),
     (["-data=[3,4]", "-dataformat={:02d}-{:03d}"], "model-03-004.xml"),
     (["-data=data.json"], "model-data.xml"),
+    (["-data=sub/data.json"], "model-data.xml"),
     (["-data=[data.json,k=5]"], "model-data-5.xml"),
 ])
 def test_data_filename(run, args, name):
-    assert xml_names(run("x = Var(dom=range(2))", args=args, files={"data.json": '{"n": 3, "m": 4}'})) == [name]
+    assert xml_names(run("x = Var(dom=range(2))", args=args, files={"data.json": '{"n": 3, "m": 4}', "sub/data.json": '{"n": 3, "m": 4}'})) == [name]
 
 
 def test_data_leading_zeros(run):
@@ -304,6 +305,18 @@ def test_load_json_data_in_directory_of_model(run):
 def test_load_json_data_filename(run, code, name):
     r = run(code + "\nx = Var(dom=range(2))", files={"data.json": '{"n": 3, "m": 4}', "sub/data.json": '{"n": 3, "m": 4}'})
     assert xml_names(r) == [name]
+
+
+@pytest.mark.parametrize("env", [None, NOT_UTF8], ids=["system", "system not in UTF-8"])
+@pytest.mark.parametrize("code, args", [
+    ('d = data', ["-data=data.json"]),
+    ('d = data', ["-data=[data.json,k=5]"]),
+    ('d = load_json_data("data.json")', []),
+])
+def test_json_data_with_non_ascii_characters(run, code, args, env):
+    # a JSON file is read in UTF-8, whatever the system
+    r = run(code + "\nprint('name', ascii(d.name))", args=args, files={"data.json": '{"name": "é≠", "n": 2}'}, env=env)
+    assert "name '\\xe9\\u2260'" in r.lines, r.report()
 
 
 def test_default_data_solutions(run, solver):
@@ -497,6 +510,13 @@ def test_parser_lines(run):
         data["d"] = line()
     """, "first\n\n   second  \nthird\n")
     assert "data (a='first', b='second', c='third', d='third')" in r.lines, r.report()  # empty lines discarded, lines stripped
+
+
+@pytest.mark.parametrize("env", [None, NOT_UTF8], ids=["system", "system not in UTF-8"])
+def test_parser_lines_with_non_ascii_characters(run, env):
+    # a text file of data is read in UTF-8, whatever the system
+    r = run_parser(run, 'data["s"] = line()\ndata["n"] = 0', "é≠ ok\n", model='print("line", ascii(data.s))', env=env)
+    assert "line '\\xe9\\u2260 ok'" in r.lines, r.report()
 
 
 def test_parser_next_line_repeat(run):
