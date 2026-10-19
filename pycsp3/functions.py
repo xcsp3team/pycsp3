@@ -3459,7 +3459,7 @@ def _cardinality_on_few_terms(terms, values, occurs, closed):
 
 
 def _extremum_terms(term, others):
-    terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    terms = flatten(term, others)
     terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have PartialConstraints
     # if len(terms) == 0:
     #     return None
@@ -3472,7 +3472,7 @@ def _extremum_terms(term, others):
 
 def _extremum(name, term, others, condition):
     # the component Maximum (or Minimum, whose name is given) of the terms, possibly subject to the specified condition
-    terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    terms = flatten(term, others)
     terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have partial constraints
     # a constant (as Sum([]), or x >= x simplified into 1 by Node.build()) is an integer
     terms = [t.val if isinstance(t, ConstraintDummyConstant) else t.cnt if type(t) is Node and t.type is TypeNode.INT else t for t in terms]

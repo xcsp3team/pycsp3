@@ -140,7 +140,7 @@ def test_extremum_with_the_parameter_condition(run, solver, request, name, f, co
 
 @pytest.mark.parametrize("terms", [
     "x", "x[0], x[1], x[2]", "[x[0], x[1], x[2]]", "(x[0], x[1], x[2])", "x[i] for i in range(3)", "[x[i] for i in range(3)]",
-    "x[:2], x[2]", "x[0], x[1:]", "[x[:1], [x[1], [x[2]]]]", "x[0], [x[1], x[2]]",
+    "x[:2], x[2]", "x[0], x[1:]", "[x[:1], [x[1], [x[2]]]]", "x[0], [x[1], x[2]]", "(x[i] for i in range(2)), x[2]", "(x[i] for i in range(1)), x[1:]",
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_forms(run, solver, name, f, terms):
@@ -559,6 +559,7 @@ def test_xcsp3_extremum(run, name, f, constraint, expected):
     ("minimize(F(x))", ("minimize", "x[]")),
     ("maximize(F(x))", ("maximize", "x[]")),
     ("minimize(F(x[0] * 2, x[1]))", ("minimize", "mul(x[0],2) x[1]")),
+    ("minimize(F((x[i] for i in range(2)), x[2]))", ("minimize", "x[]")),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_xcsp3_extremum_as_objective(run, name, f, objective, expected):
