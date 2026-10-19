@@ -17,7 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-CONDITION_PARAMETER = "#244: the parameter condition of Maximum() and Minimum() is not built: a tuple is written as it is (eq 2)"
 SINGLE_TERM_CONDITION = "#245: Maximum() and Minimum() of a single term with the parameter condition give a constraint on one term"
 NO_TERM = "#246: Maximum() and Minimum() of no term fail with an assert without message"
 SYMBOLIC = "#247: Maximum() and Minimum() accept symbolic variables"
@@ -39,8 +38,6 @@ CHOCO_INTERVAL = ("CHOCO 4.10.15-beta (embedded in PyCSP3) and CHOCO 6.0.2 find 
 # The cases that a solver says it does not handle (not reported)
 COSOCO_EXPRESSIONS = "cosoco does not handle maximum and minimum on expressions, except with (eq,y) (Maximum over set is not yet supported, s UNSUPPORTED)"
 COSOCO_REPEATED = "cosoco does not accept a variable given several times in the list of minimum (scope contains variable x[0] many times)"
-
-ALL = ("ACE", "CHOCO", "COSOCO")
 
 FUNCTIONS = [pytest.param("Maximum", max, id="Maximum"), pytest.param("Minimum", min, id="Minimum")]
 
@@ -119,11 +116,13 @@ def test_extremum_conditions(run, solver, request, name, f, constraint, predicat
     ("F(x) in []", lambda *t: False),
     ("F(x) not in set()", lambda *t: True),
     ("F(x) not in range(2, 2)", lambda *t: True),
+    ("F(x, condition=('in', set()))", lambda *t: False),
+    ("F(x, condition=('notin', range(2, 2)))", lambda *t: True),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_with_an_empty_set_of_values(run, solver, request, name, f, constraint, predicate):
     # never in an empty set: the constraint is false with 'in' (a table without support), and always true with 'not in'
-    if " in " in constraint and "not in" not in constraint:
+    if " in " in constraint and "not in" not in constraint or "'in'" in constraint:
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     check(run, solver, X3 + "satisfy(" + code_of(constraint, name) + ", x[0] != 3)", D3, lambda *t: predicate(*t) and t[0] != 3)
 
@@ -141,7 +140,6 @@ def test_extremum_with_an_empty_set_of_values(run, solver, request, name, f, con
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_with_the_parameter_condition(run, solver, request, name, f, condition, predicate):
-    bug_for(request, ALL, CONDITION_PARAMETER)
     mark_conditions(request, condition)
     check(run, solver, XY + f"satisfy({name}(x, condition={condition}), y != 4)", DY, lambda *t: predicate(f, *t) and t[3] != 4)
 
@@ -288,8 +286,7 @@ def test_xcsp3_extremum_has_at_least_two_terms(run, request, name, f, constraint
 
 
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_extremum_on_a_single_term_with_the_parameter_condition(run, solver, request, name, f):
-    bug_for(request, ALL, SINGLE_TERM_CONDITION)
+def test_extremum_on_a_single_term_with_the_parameter_condition(run, solver, name, f):
     check(run, solver, X3 + f"satisfy({name}(x[0], condition=('ge', 2)), x[1] == x[2])", D3, lambda *t: t[0] >= 2 and t[1] == t[2])
 
 
@@ -518,9 +515,7 @@ def test_minimum_example(run, solver):
     ("F(x, condition=('in', range(1, 3)))", ("x[]", "(in,1..2)")),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_xcsp3_extremum(run, request, name, f, constraint, expected):
-    if "condition=" in constraint:
-        request.applymarker(bug(CONDITION_PARAMETER))
+def test_xcsp3_extremum(run, name, f, constraint, expected):
     r = run(XY + "satisfy(" + code_of(constraint, name) + ")")
     assert r.ok, r.report()
     c = r.xml.find("constraints/" + name.lower())
@@ -567,14 +562,15 @@ def test_xcsp3_extremum_in_a_group(run, name, f):
     "x, condition=('foo', 2)",
     "x, condition=('eq', 'a')",
     "x, condition=('eq', True)",
+    "x, condition=('in', 2)",
+    "x, condition=('eq', {1, 2})",
+    "x, condition=('lt', range(3))",
     "x, foo=2",
     "s",
     "x[0], s[0]",
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_invalid_extremum(run, request, name, f, arguments):
-    if "condition=" in arguments:
-        request.applymarker(bug(CONDITION_PARAMETER))
     if arguments in ("[]", "x[i] for i in range(0)", "None", "[None, None]"):
         request.applymarker(bug(NO_TERM))
     if arguments in ("s", "x[0], s[0]"):
