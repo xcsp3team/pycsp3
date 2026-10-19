@@ -17,8 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-SYMBOLIC = "#247: Maximum() and Minimum() accept symbolic variables"
-BOOLEAN = "#247: a Boolean among the terms of Maximum() and Minimum() is reported as a value of a domain"
 INTEGERS = "#248: Maximum() and Minimum() of integers only are not evaluated (an auxiliary variable for each integer)"
 VARIABLE_IN_A_SET = "#249: a variable in the set of values of 'in' fails with an assert without message"
 REPEATED = ("#250: a term given several times to Maximum() and Minimum() is written several times (ACE finds wrong solutions for "
@@ -574,9 +572,7 @@ def test_xcsp3_extremum_in_a_group(run, name, f):
     "x[0], s[0]",
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_invalid_extremum(run, request, name, f, arguments):
-    if arguments in ("s", "x[0], s[0]"):
-        request.applymarker(bug(SYMBOLIC))
+def test_invalid_extremum(run, name, f, arguments):
     code = X3 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({name}({arguments}) == 1)"
     if "condition=" in arguments:
         code = X3 + f"satisfy({name}({arguments}))"
@@ -598,12 +594,12 @@ def test_invalid_extremum_operand(run, request, name, f, operand):
     ("[None, None]", "() requires at least one term"),
     ("x[i] for i in range(0)", "() requires at least one term"),
     ("True, x[0]", "() does not accept Booleans as terms, which is the case of True"),
+    ("x[0], False", "() does not accept Booleans as terms, which is the case of False"),
     ("s", "() requires integer variables (or expressions), which is not the case of s[0]"),
+    ("x[0], s[1]", "() requires integer variables (or expressions), which is not the case of s[1]"),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_invalid_extremum_message(run, request, name, f, arguments, message):
-    if arguments == "s" or "True" in arguments:
-        request.applymarker(bug(SYMBOLIC if arguments == "s" else BOOLEAN))
+def test_invalid_extremum_message(run, name, f, arguments, message):
     r = run(X3 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({name}({arguments}) == 1)")
     assert not r.ok and name + message in r.stdout, r.report()
 
