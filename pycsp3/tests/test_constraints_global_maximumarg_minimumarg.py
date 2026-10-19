@@ -19,15 +19,15 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-CONDITION_PARAMETER = "(to be reported) the parameter condition of MaximumArg() and MinimumArg() is not built: a tuple is written as it is (eq 1)"
-SINGLE_TERM = "(to be reported) MaximumArg() and MinimumArg() of a single term give a constraint on one term"
-NO_TERM = "(to be reported) MaximumArg() and MinimumArg() of no term give a constraint with an empty list"
-INVALID_TERMS = "(to be reported) MaximumArg() and MinimumArg() accept Booleans and symbolic variables among the terms"
-INTEGERS = ("(to be reported) the integers among the terms of MaximumArg() and MinimumArg() are written in the list: the parser of ACE and CHOCO "
+CONDITION_PARAMETER = "#253: the parameter condition of MaximumArg() and MinimumArg() is not built: a tuple is written as it is (eq 1)"
+SINGLE_TERM = "#254: MaximumArg() and MinimumArg() of a single term give a constraint on one term"
+NO_TERM = "#255: MaximumArg() and MinimumArg() of no term give a constraint with an empty list"
+INVALID_TERMS = "#256: MaximumArg() and MinimumArg() accept Booleans and symbolic variables among the terms"
+INTEGERS = ("#257: the integers among the terms of MaximumArg() and MinimumArg() are written in the list: the parser of ACE and CHOCO "
             "fails (ClassCastException in CtrLoaderInteger.minimumMaximumArg()), and cosoco crashes")
-SEVERAL_INDEXES = ("(question) with rank any, the auxiliary variable replacing MaximumArg() or MinimumArg() in an expression can take several "
+SEVERAL_INDEXES = ("#259: with rank any, the auxiliary variable replacing MaximumArg() or MinimumArg() in an expression can take several "
                    "values (the indexes of all the extrema): a solution is found several times")
-OBJECTIVE = "(to be reported) an objective MaximumArg() or MinimumArg() is written with the type maximumArg (not in XCSP3), its rank being lost"
+OBJECTIVE = "#258: an objective MaximumArg() or MinimumArg() is written with the type maximumArg (not in XCSP3), its rank being lost"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_INDEX = ("(to be reported) ACE fails without message on maximumArg and minimumArg with (eq,y) when the domain of y is not the range of the "
