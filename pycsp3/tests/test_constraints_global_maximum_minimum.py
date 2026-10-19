@@ -17,13 +17,13 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-CONDITION_PARAMETER = "(to be reported) the parameter condition of Maximum() and Minimum() is not built: a tuple is written as it is (eq 2)"
-SINGLE_TERM_CONDITION = "(to be reported) Maximum() and Minimum() of a single term with the parameter condition give a constraint on one term"
-NO_TERM = "(to be reported) Maximum() and Minimum() of no term fail with an assert without message"
-SYMBOLIC = "(to be reported) Maximum() and Minimum() accept symbolic variables"
-BOOLEAN = "(to be reported) a Boolean among the terms of Maximum() and Minimum() is reported as a value of a domain"
-INTEGERS = "(to be reported) Maximum() and Minimum() of integers only are not evaluated (an auxiliary variable for each integer)"
-VARIABLE_IN_A_SET = "(to be reported) a variable in the set of values of 'in' fails with an assert without message"
+CONDITION_PARAMETER = "#244: the parameter condition of Maximum() and Minimum() is not built: a tuple is written as it is (eq 2)"
+SINGLE_TERM_CONDITION = "#245: Maximum() and Minimum() of a single term with the parameter condition give a constraint on one term"
+NO_TERM = "#246: Maximum() and Minimum() of no term fail with an assert without message"
+SYMBOLIC = "#247: Maximum() and Minimum() accept symbolic variables"
+BOOLEAN = "#247: a Boolean among the terms of Maximum() and Minimum() is reported as a value of a domain"
+INTEGERS = "#248: Maximum() and Minimum() of integers only are not evaluated (an auxiliary variable for each integer)"
+VARIABLE_IN_A_SET = "#249: a variable in the set of values of 'in' fails with an assert without message"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_NE = "(to be reported) ACE fails on maximum and minimum with (ne,k): ERROR (ExtremumCst.buildFrom(): AssertionError: NE is not implemented)"
