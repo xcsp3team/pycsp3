@@ -595,15 +595,6 @@ def Or(*args, meta=False):
     return disjunction(*args)
 
 
-def _meta_and(*args):
-    # (for both() and either(), whose parameters hide And and Or)
-    return And(*args, meta=True)
-
-
-def _meta_or(*args):
-    return Or(*args, meta=True)
-
-
 def Not(arg, meta=False):
     """
     Builds a meta-constraint Not from the specified argument.
@@ -1772,13 +1763,15 @@ def conjunction(*args):
     return And(*res, meta=True) if t is None else Node.conjunction(t)  # (a meta-constraint only when explicitly asked for, #239)
 
 
-def both(this, And):
+def both(this, that):
     """
     Builds and returns a node 'and', root of a tree expression where the two specified arguments are children.
     The expression holds iff the two arguments hold.
     Without any parent, it becomes a constraint.
 
-    :return: a node, root of a tree expression
+    :param this: the first argument (an expression or a constraint), or None
+    :param that: the second argument (an expression or a constraint), or None
+    :return: a node, root of a tree expression (the other argument if one of them is None)
     :example:
         # a task is critical when it is long and scheduled late
         s = Var(dom=range(20))  # s is the starting time of the task
@@ -1790,19 +1783,19 @@ def both(this, And):
 
         # a solution: [10]
     """
-    check_no_negated_membership((this, And))
+    check_no_negated_membership((this, that))
     if this is None:
-        return And
-    if And is None:
+        return that
+    if that is None:
         return this
-    res = _simplify_expression([this, And], False)
+    res = _simplify_expression([this, that], False)
     if isinstance(res, ConstraintDummyConstant):
         return res
     assert len(res) in (1, 2)
     if len(res) == 1:
         return res[0]
     t = manage_global_indirection(*res)
-    return _meta_and(*res) if t is None else Node.conjunction(t)  # res[0] & res[1] (a meta-constraint only when explicitly asked for, #239)
+    return And(*res, meta=True) if t is None else Node.conjunction(t)  # res[0] & res[1] (a meta-constraint only when explicitly asked for, #239)
 
 
 def disjunction(*args):
@@ -1838,13 +1831,15 @@ def disjunction(*args):
     return Or(*res, meta=True) if t is None else Node.disjunction(t)  # (a meta-constraint only when explicitly asked for, #239)
 
 
-def either(this, Or):
+def either(this, that):
     """
     Builds and returns a node 'or', root of a tree expression where the two specified arguments are children.
     The expression holds iff at least one of the two arguments holds.
     Without any parent, it becomes a constraint.
 
-    :return: a node, root of a tree expression
+    :param this: the first argument (an expression or a constraint), or None
+    :param that: the second argument (an expression or a constraint), or None
+    :return: a node, root of a tree expression (the other argument if one of them is None)
     :example:
         # two tasks sharing the same machine must be scheduled one before the other
         s = VarArray(size=2, dom=range(20))  # s[i] is the starting time of the ith task
@@ -1856,19 +1851,19 @@ def either(this, Or):
 
         # a solution: [0, 4]
     """
-    check_no_negated_membership((this, Or))
+    check_no_negated_membership((this, that))
     if this is None:
-        return Or
-    if Or is None:
+        return that
+    if that is None:
         return this
-    res = _simplify_expression([this, Or], True)
+    res = _simplify_expression([this, that], True)
     if isinstance(res, ConstraintDummyConstant):
         return res
     assert len(res) in (1, 2)
     if len(res) == 1:
         return res[0]
     t = manage_global_indirection(*res)
-    return _meta_or(*res) if t is None else Node.disjunction(t)  # res[0] | res[1] (a meta-constraint only when explicitly asked for, #239)
+    return Or(*res, meta=True) if t is None else Node.disjunction(t)  # res[0] | res[1] (a meta-constraint only when explicitly asked for, #239)
 
 
 ''' Language-based Constraints '''

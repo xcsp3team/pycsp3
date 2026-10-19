@@ -447,6 +447,7 @@ def test_ift(run, solver, request, constraint, predicate):
     ("both(x > 0, None)", lambda x, y: x > 0),
     ("both(x > 0, True)", lambda x, y: x > 0),
     ("both(x > 0, False)", lambda x, y: False),
+    ("both(x > 0, that=y > 0)", lambda x, y: x > 0 and y > 0),
     ("disjunction(x > 1, y > 1, x == y)", lambda x, y: x > 1 or y > 1 or x == y),
     ("disjunction([x > 1, y > 1])", lambda x, y: x > 1 or y > 1),
     ("disjunction(x == v for v in [1, 3, -2])", lambda x, y: x in (1, 3, -2)),
@@ -460,6 +461,7 @@ def test_ift(run, solver, request, constraint, predicate):
     ("either(x > 0, None)", lambda x, y: x > 0),
     ("either(x > 0, False)", lambda x, y: x > 0),
     ("either(x > 0, True)", lambda x, y: True),
+    ("either(this=x + 2 <= y, that=y + 3 <= x)", lambda x, y: x + 2 <= y or y + 3 <= x),
 ])
 def test_conjunction_disjunction(run, solver, request, constraint, predicate):
     check(request, run, solver,[constraint, "y != 1"], XY, lambda x, y: predicate(x, y) and y != 1)
