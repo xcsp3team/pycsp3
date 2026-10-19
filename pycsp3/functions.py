@@ -3478,8 +3478,8 @@ def _extremum(name, term, others, condition):
     if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
         # the extremum never belongs to an empty set: false with 'in', and always true with 'not in'
         return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
-    if len(terms) == 1 and condition is None:
-        return terms[0]
+    if len(terms) == 1:  # no constraint (XCSP3-core requires at least two terms): the term, possibly subject to the condition
+        return terms[0] if condition is None else _term_with_condition(terms[0], condition)
     return _wrapping_by_complete_or_partial_constraint((ConstraintMaximum if name == "Maximum" else ConstraintMinimum)(terms, condition))
 
 

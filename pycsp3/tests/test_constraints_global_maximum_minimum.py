@@ -17,7 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-SINGLE_TERM_CONDITION = "#245: Maximum() and Minimum() of a single term with the parameter condition give a constraint on one term"
 NO_TERM = "#246: Maximum() and Minimum() of no term fail with an assert without message"
 SYMBOLIC = "#247: Maximum() and Minimum() accept symbolic variables"
 BOOLEAN = "#247: a Boolean among the terms of Maximum() and Minimum() is reported as a value of a domain"
@@ -274,20 +273,26 @@ def test_extremum_on_a_single_term(run, solver, name, f, constraint, predicate):
     check(run, solver, X3 + "satisfy(" + code_of(constraint, name) + ", x[1] == x[2])", D3, lambda *t: predicate(f, *t) and t[1] == t[2])
 
 
-@pytest.mark.parametrize("constraint", ["F(x[0]) == 2", "F(x[0], condition=('eq', 2))", "F(x[0] + 1, condition=('le', 2))", "F(3) == x[0]"])
+@pytest.mark.parametrize("constraint", ["F(x[0]) == 2", "F(x[0], condition=('eq', 2))", "F(x[0] + 1, condition=('le', 2))", "F(3) == x[0]",
+                                        "F(x[0], condition=('in', {1, 3}))", "F([x[0]], condition=('notin', range(1, 3)))"])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_xcsp3_extremum_has_at_least_two_terms(run, request, name, f, constraint):
+def test_xcsp3_extremum_has_at_least_two_terms(run, name, f, constraint):
     # XCSP3-core requires at least two terms: a single term subject to a condition is an expression
-    if "condition=" in constraint:
-        request.applymarker(bug(SINGLE_TERM_CONDITION))
     r = run(X3 + "satisfy(" + code_of(constraint, name) + ")")
     assert r.ok, r.report()
     assert r.xml.find("constraints/" + name.lower()) is None, r.report()
 
 
+@pytest.mark.parametrize("condition, predicate", [
+    ("('ge', 2)", lambda *t: t[0] >= 2),
+    ("('ne', x[1])", lambda *t: t[0] != t[1]),
+    ("('in', {1, 3})", lambda *t: t[0] in (1, 3)),
+    ("('notin', range(1, 3))", lambda *t: t[0] not in (1, 2)),
+])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_extremum_on_a_single_term_with_the_parameter_condition(run, solver, name, f):
-    check(run, solver, X3 + f"satisfy({name}(x[0], condition=('ge', 2)), x[1] == x[2])", D3, lambda *t: t[0] >= 2 and t[1] == t[2])
+def test_extremum_on_a_single_term_with_the_parameter_condition(run, solver, name, f, condition, predicate):
+    # the condition is applied to the term
+    check(run, solver, X3 + f"satisfy({name}(x[0], condition={condition}), x[1] == x[2])", D3, lambda *t: predicate(*t) and t[1] == t[2])
 
 
 @pytest.mark.parametrize("terms, values", [
