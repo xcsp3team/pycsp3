@@ -1384,6 +1384,13 @@ def max(*args, **kwargs):
     return maxPython(args, **kwargs) if expanded else maxPython(*args, **kwargs)
 
 
+def _check_no_membership_operand(name):
+    # an operand given by 'in' (with a table, an automaton or an MDD) is evaluated as a Boolean by Python: it cannot be an argument of the function
+    if len(queue_in) > 0:
+        error("An operand given by 'in' (as x in {1, 2}, or x in an automaton) is evaluated as a Boolean by Python, and cannot be an argument of "
+              + name + "(): use belong() for a set of values, or post the constraint separately")
+
+
 def xor(*args):
     """
     Builds and returns a node 'xor', root of a tree expression where specified arguments are children.
@@ -1406,7 +1413,7 @@ def xor(*args):
     check_no_negated_membership(args)
     args = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args]
     if any(isinstance(v, bool) for v in args):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        _check_no_membership_operand("xor")
         inverted = sum(1 for v in args if v is True) % 2 == 1  # each True inverts the result, while False has no effect
         args = [v for v in args if not isinstance(v, bool)]
         if len(args) == 0:
@@ -1442,7 +1449,7 @@ def iff(*args):
     error_if(len(args) < 2, "iff() must have at least two arguments (possibly given in a list), which is not the case of " + str(len(args)))
 
     if any(isinstance(v, bool) for v in args):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        _check_no_membership_operand("iff")
         booleans = {v for v in args if isinstance(v, bool)}
         others = [v if not isinstance(v, (tuple, list)) else v[0] if len(v) == 1 else conjunction(v) for v in args if not isinstance(v, bool)]
         if len(booleans) == 2:  # True and False cannot be equivalent
@@ -1484,7 +1491,7 @@ def imply(*args):
     check_no_negated_membership(args)
     cnd, tp = args  # condition and then part
     if isinstance(cnd, bool) or isinstance(tp, bool):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        _check_no_membership_operand("imply")
         if cnd is False or tp is True:
             return ConstraintDummyConstant(1)  # True
         if cnd is True:
@@ -1536,7 +1543,7 @@ def ift(test, Then, Else):
         assert test.val in (0, 1)
         return Then if test.val == 1 else Else
     if isinstance(test, bool):
-        assert len(queue_in) == 0  # to avoid confusion with e.g. table constraints used as argument of this function
+        _check_no_membership_operand("ift")
         return Then if test else Else
 
     if Else is None:
@@ -1752,16 +1759,19 @@ def conjunction(*args):
     res = _simplify_expression(args, False)
     if isinstance(res, ConstraintDummyConstant):
         return res
-    return Node.conjunction(manage_global_indirection(*res))
+    t = manage_global_indirection(*res)
+    return And(*res, meta=True) if t is None else Node.conjunction(t)  # (a meta-constraint only when explicitly asked for, #239)
 
 
-def both(this, And):
+def both(this, that):
     """
     Builds and returns a node 'and', root of a tree expression where the two specified arguments are children.
     The expression holds iff the two arguments hold.
     Without any parent, it becomes a constraint.
 
-    :return: a node, root of a tree expression
+    :param this: the first argument (an expression or a constraint), or None
+    :param that: the second argument (an expression or a constraint), or None
+    :return: a node, root of a tree expression (the other argument if one of them is None)
     :example:
         # a task is critical when it is long and scheduled late
         s = Var(dom=range(20))  # s is the starting time of the task
@@ -1773,18 +1783,19 @@ def both(this, And):
 
         # a solution: [10]
     """
-    check_no_negated_membership((this, And))
+    check_no_negated_membership((this, that))
     if this is None:
-        return And
-    if And is None:
+        return that
+    if that is None:
         return this
-    res = _simplify_expression([this, And], False)
+    res = _simplify_expression([this, that], False)
     if isinstance(res, ConstraintDummyConstant):
         return res
     assert len(res) in (1, 2)
     if len(res) == 1:
         return res[0]
-    return Node.conjunction(manage_global_indirection(*res))  # res[0] & res[1]
+    t = manage_global_indirection(*res)
+    return And(*res, meta=True) if t is None else Node.conjunction(t)  # res[0] & res[1] (a meta-constraint only when explicitly asked for, #239)
 
 
 def disjunction(*args):
@@ -1816,16 +1827,19 @@ def disjunction(*args):
     res = _simplify_expression(args, True)
     if isinstance(res, ConstraintDummyConstant):
         return res
-    return Node.disjunction(manage_global_indirection(*res))
+    t = manage_global_indirection(*res)
+    return Or(*res, meta=True) if t is None else Node.disjunction(t)  # (a meta-constraint only when explicitly asked for, #239)
 
 
-def either(this, Or):
+def either(this, that):
     """
     Builds and returns a node 'or', root of a tree expression where the two specified arguments are children.
     The expression holds iff at least one of the two arguments holds.
     Without any parent, it becomes a constraint.
 
-    :return: a node, root of a tree expression
+    :param this: the first argument (an expression or a constraint), or None
+    :param that: the second argument (an expression or a constraint), or None
+    :return: a node, root of a tree expression (the other argument if one of them is None)
     :example:
         # two tasks sharing the same machine must be scheduled one before the other
         s = VarArray(size=2, dom=range(20))  # s[i] is the starting time of the ith task
@@ -1837,18 +1851,19 @@ def either(this, Or):
 
         # a solution: [0, 4]
     """
-    check_no_negated_membership((this, Or))
+    check_no_negated_membership((this, that))
     if this is None:
-        return Or
-    if Or is None:
+        return that
+    if that is None:
         return this
-    res = _simplify_expression([this, Or], True)
+    res = _simplify_expression([this, that], True)
     if isinstance(res, ConstraintDummyConstant):
         return res
     assert len(res) in (1, 2)
     if len(res) == 1:
         return res[0]
-    return Node.disjunction(manage_global_indirection(*res))  # res[0] | res[1]
+    t = manage_global_indirection(*res)
+    return Or(*res, meta=True) if t is None else Node.disjunction(t)  # res[0] | res[1] (a meta-constraint only when explicitly asked for, #239)
 
 
 ''' Language-based Constraints '''
@@ -3302,13 +3317,15 @@ def NotAllEqual(term, *others):
 def Cardinality(within, *within_complement, occurrences, closed=False):
     """
     Builds and returns a constraint Cardinality.
-    For each value (key of occurrences), the number of variables assigned this value must be as specified (a constant, a range or a variable).
+    For each value (key of occurrences), the number of terms assigned this value must be as specified: an integer, a range (or a collection)
+    of contiguous integers, a variable or an expression.
 
     When occurrences is given under the form of a list or tuple t, a dictionary is computed as dict(enumerate(t)).
+    The values (keys of occurrences) can be integers, variables or expressions. A variable cannot be given several times in the list.
 
     :param within: the (first) term, typically a list of variables, on which the constraint applies
     :param within_complement: the other terms (if any) on which the constraint applies
-    :param occurrences: a dictionary indicating the restriction (constant, range or variable) of occurrences per value
+    :param occurrences: a dictionary indicating the restriction (integer, range of contiguous integers, or variable) of occurrences per value
     :param closed: if True, variables must be assigned to values (keys of the dictionary)
     :return: a Cardinality constraint
     :example:
@@ -3338,36 +3355,104 @@ def Cardinality(within, *within_complement, occurrences, closed=False):
            Cardinality(x, occurrences={0: z, 1: range(2, 5), 2: range(2, 5)})
         )
     """
+    error_if(within is None, "Cardinality() requires variables (or expressions), which is not the case of None")
+    if not isinstance(occurrences, (dict, list, tuple)):
+        error("The parameter occurrences of Cardinality() must be given a dictionary (or a list or a tuple t, seen as dict(enumerate(t))), "
+              "which is not the case of " + repr(occurrences))
+    checkType(closed, (bool, type(None)))
     terms = flatten(within, within_complement)
-    if len(terms) == 0:
-        assert all((isinstance(v, int) and v == 0) or (isinstance(v, range) and 0 in v) for k, v in occurrences.items())  # TODO and for Var ?
-        warning("A constraint Cardinality discarded because defined with 0 term", "cardinality_0_term")
-        return ConstraintDummyConstant(1)
-    assert len(terms) > 0, "Cardinality constraint posted over a sequence of zero variable"
     for i, t in enumerate(terms):
         if isinstance(t, PartialConstraint):
             terms[i] = auxiliary().replace_partial_constraint(t)
         elif isinstance(t, Node):
             terms[i] = auxiliary().replace_node(t)  # (the auxiliary variable was put in a list, written [aux_gb[0]])
     checkType(terms, [Variable])
+    if len({id(t) for t in terms}) < len(terms):
+        repeated = [t for i, t in enumerate(terms) if any(u is t for u in terms[:i])]
+        error("A variable is given several times in the list of Cardinality() (a component given several times, such as Sum(), being replaced by "
+              "the same auxiliary variable): " + ", ".join(dict.fromkeys(str(t) for t in repeated)))
     if isinstance(occurrences, (tuple, list)):
         occurrences = dict(enumerate(occurrences))
-    assert isinstance(occurrences, dict)
-    values = list(occurrences.keys())
-    assert all(isinstance(value, (int, Variable)) for value in values)
-    occurs = list(occurrences.values())
-    checkType(closed, (bool, type(None)))
-    for i, occ in enumerate(occurs):
-        if isinstance(occ, range):
-            occurs[i] = 0 if len(occ) == 0 else min(occ) if len(occ) == 1 else str(min(occ)) + ".." + str(max(occ))
-        if isinstance(occ, list):
-            flat = flatten(occ)
-            if len(flat) == 1:
-                flat = flat[0]
-            elif all(isinstance(e, int) for e in flat) and flat == list(range(min(flat), max(flat) + 1)):
-                flat = str(min(flat)) + ".." + str(max(flat))
-            occurs[i] = flat
-    return ECtr(ConstraintCardinality(terms, values, occurs, closed))
+    values = [_cardinality_value(v) for v in occurrences.keys()]
+    occurs = [_cardinality_occurrences(occ) for occ in occurrences.values()]
+    if len(terms) < 2:  # XCSP3 requires at least two terms
+        return _cardinality_on_few_terms(terms, values, occurs, closed)
+    # the numbers of occurrences known when compiling, from 0 to the number of terms (and 0 for a value that no term can take)
+    kept = []
+    for v, occ in zip(values, occurs):
+        lo, hi = (0, 0) if isinstance(v, int) and all(v not in t.dom for t in terms) else (0, len(terms))
+        if isinstance(occ, int):
+            if not lo <= occ <= hi:
+                return ConstraintDummyConstant(0)
+        elif isinstance(occ, range):
+            occ = range(max(occ.start, lo), min(occ.stop, hi + 1))
+            if len(occ) == 0:
+                return ConstraintDummyConstant(0)
+            occ = occ.start if len(occ) == 1 else occ
+        if not (hi == 0 and isinstance(occ, int)):  # a value that no term can take is discarded (when its number of occurrences can be 0)
+            kept.append((v, occ))
+    if len(kept) == 0:  # no value: nothing is required, except with closed
+        return ConstraintDummyConstant(0 if closed else 1)
+    values, occurs = [v for v, _ in kept], [occ for _, occ in kept]
+    decomposition = (terms, values, occurs, closed)  # (used when the constraint is in a logical expression, without the auxiliary variables below)
+    # XCSP3-core does not allow variables mixed with integers or intervals
+    if any(isinstance(occ, Variable) for occ in occurs) and not all(isinstance(occ, Variable) for occ in occurs):
+        occurs = [occ if isinstance(occ, Variable) else auxiliary().new_var(occ) if isinstance(occ, range) else auxiliary().replace_int(occ) for occ in occurs]
+    if any(isinstance(v, Variable) for v in values) and not all(isinstance(v, Variable) for v in values):
+        values = [v if isinstance(v, Variable) else auxiliary().replace_int(v) for v in values]
+    return ECtr(ConstraintCardinality(terms, values, occurs, closed, decomposition))
+
+
+def _cardinality_value(v):
+    # a value of Cardinality(): an integer or a variable (an expression being replaced by an auxiliary variable)
+    if isinstance(v, (Node, PartialConstraint)):
+        return auxiliary().replace_node(v) if isinstance(v, Node) else auxiliary().replace_partial_constraint(v)
+    if not isinstance(v, (int, Variable)) or isinstance(v, bool):
+        error("The values of Cardinality() (keys of occurrences) must be integers, variables or expressions, which is not the case of " + repr(v))
+    return v
+
+
+def _cardinality_occurrences(occ):
+    # a number of occurrences of Cardinality(): an integer, a variable (an expression being replaced by an auxiliary variable) or a range (an interval)
+    if isinstance(occ, (Node, PartialConstraint)):
+        return auxiliary().replace_node(occ) if isinstance(occ, Node) else auxiliary().replace_partial_constraint(occ)
+    if isinstance(occ, Variable) or (isinstance(occ, int) and not isinstance(occ, bool)):
+        return occ
+    t = list(occ) if isinstance(occ, (range, list, tuple, set, frozenset)) else None
+    t = sorted(set(t)) if t is not None and all(isinstance(v, int) and not isinstance(v, bool) for v in t) else None
+    if t is None or len(t) == 0 or t[-1] - t[0] + 1 != len(t):
+        error("A number of occurrences of Cardinality() must be given by an integer, a variable, an expression, or a non-empty range (or collection) "
+              "of contiguous integers, which is not the case of " + repr(occ))
+    return t[0] if len(t) == 1 else range(t[0], t[-1] + 1)
+
+
+def _cardinality_on_few_terms(terms, values, occurs, closed):
+    # Cardinality() on no term or a single term t: the number of occurrences of a value v is 0, or (t == v)
+    assert len(terms) < 2
+    parts = []
+    for v, occ in zip(values, occurs):
+        if len(terms) == 0:
+            if isinstance(occ, Variable):
+                parts.append(occ == 0)
+            elif 0 not in (occ if isinstance(occ, range) else [occ]):
+                return ConstraintDummyConstant(0)
+            continue
+        t = terms[0]
+        if isinstance(occ, Variable):
+            parts.append(Node.build(TypeNode.EQ, occ, Node.build(TypeNode.EQ, t, v)))
+            continue
+        possible = [k for k in (0, 1) if k in (occ if isinstance(occ, range) else [occ])]
+        if len(possible) == 0:
+            return ConstraintDummyConstant(0)
+        if len(possible) == 1:
+            parts.append(Node.build(TypeNode.EQ if possible[0] == 1 else TypeNode.NE, t, v))
+    if closed and len(terms) == 1:
+        if len(values) == 0:
+            return ConstraintDummyConstant(0)
+        parts.append(belong(terms[0], values) if all(isinstance(v, int) for v in values) else disjunction(terms[0] == v for v in values))
+    if len(terms) == 0 and len(parts) == 0:
+        warning("A constraint Cardinality discarded because defined with 0 term", "cardinality_0_term")
+    return conjunction(parts) if len(parts) > 0 else ConstraintDummyConstant(1)
 
 
 ''' Connection Constraints '''
