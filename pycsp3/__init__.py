@@ -76,7 +76,9 @@ Task = namedtuple("Task", ("origin", "length", "height"), defaults=(None,))
 """
 
 Item = namedtuple("Item", ("bin", "size"))
-""" Item is a predefined named tuple, as involved in bin-packing problems: the bin it is put in, and its size
+""" Item is a predefined named tuple, a handy data structure for bin-packing problems: the bin it is put in, and its size.
+It is not used by the constraints for the moment: in particular, BinPacking does not accept items, but a list of variables and
+the sizes (given by the parameter sizes).
 
 :example:
     # three items, of sizes 1, 2 and 3, can be put in two bins
