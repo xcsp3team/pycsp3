@@ -1362,14 +1362,14 @@ def max(*args, **kwargs):
     The node represents the largest value among the arguments, as in z == max(x).
     :return: either a node, root of a tree expression, or the largest item of the specified arguments
     :example:
-         # the workshop closes when the last machine has finished
-         x = VarArray(size=3, dom=range(20))  # x[i] is the completion time of the ith machine
-         z = Var(dom=range(20))  # z is the closing time of the workshop
+        # the workshop closes when the last machine has finished
+        x = VarArray(size=3, dom=range(20))  # x[i] is the completion time of the ith machine
+        z = Var(dom=range(20))  # z is the closing time of the workshop
 
-         satisfy(
-            x[0] == 8, x[1] == 5, x[2] == 11,
+        satisfy(
+           x[0] == 8, x[1] == 5, x[2] == 11,
 
-            z == max(x)
+           z == max(x)
         )
 
         # a solution: [8, 5, 11] 11
@@ -1936,6 +1936,16 @@ def Mdd(*, scope, mdd):
 
         satisfy(
            x in m
+        )
+
+        # a solution: [0, 2, 0]
+    :example:
+        # the same constraint, posted by calling Mdd() with the scope and the diagram
+        x = VarArray(size=3, dom=range(3))
+        m = MDD([("r", 0, "n1"), ("r", 1, "n2"), ("n1", 2, "n3"), ("n2", 2, "n3"), ("n3", 0, "t"), ("n3", 1, "t")])
+
+        satisfy(
+           Mdd(scope=x, mdd=m)
         )
 
         # a solution: [0, 2, 0]
