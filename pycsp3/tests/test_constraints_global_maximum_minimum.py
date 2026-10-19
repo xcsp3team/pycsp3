@@ -17,7 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-INTEGERS = "#248: Maximum() and Minimum() of integers only are not evaluated (an auxiliary variable for each integer)"
 VARIABLE_IN_A_SET = "#249: a variable in the set of values of 'in' fails with an assert without message"
 REPEATED = ("#250: a term given several times to Maximum() and Minimum() is written several times (ACE finds wrong solutions for "
             "maximum on a list made of a single variable given several times)")
@@ -226,18 +225,58 @@ def test_extremum_on_expressions(run, solver, request, name, f, terms, values):
     ("x[0], -1", lambda t: (t[0], -1)),
     ("x[0], 2, 2", lambda t: (t[0], 2, 2)),
     ("x[0] + 1, 2", lambda t: (t[0] + 1, 2)),
+    ("x[0], 3, 1, x[1], 2", lambda t: (t[0], 3, 1, t[1], 2)),
+    ("x[0], x[1] >= x[1]", lambda t: (t[0], 1)),
+    ("x[0], Sum([])", lambda t: (t[0], 0)),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_with_integers(run, solver, name, f, terms, values):
-    # an integer is replaced by an auxiliary variable whose domain is this integer
+    # the integers are reduced to the largest one (the smallest one for Minimum()), replaced by an auxiliary variable whose domain is this integer
     check(run, solver, XY + f"satisfy({name}({terms}) == y)", DY, lambda *t: f(values(t)) == t[3])
 
 
-@pytest.mark.parametrize("terms", ["3, 1", "1, 3, 2", "-2, 0"])
+@pytest.mark.parametrize("terms", ["3, 1", "1, 3, 2", "-2, 0", "[2, 2]", "3"])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_of_integers(run, solver, name, f, terms):
-    values = eval("(" + terms + ")")
+    values = eval("(" + terms + ",)")
+    values = values[0] if isinstance(values[0], list) else values
     check(run, solver, "y = Var(dom=range(-3, 5))\n" + f"satisfy({name}({terms}) == y)", [range(-3, 5)], lambda v: f(values) == v)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("F(3, 1, condition=('eq', y))", lambda f, v: v == f(3, 1)),
+    ("F(3, 1, condition=('ge', y))", lambda f, v: v <= f(3, 1)),
+    ("F(3, 1) in {1, 3}", lambda f, v: True),
+    ("F(3, 1, condition=('ne', 3)) | (y == 0)", lambda f, v: f(3, 1) != 3 or v == 0),
+])
+@pytest.mark.parametrize("name, f", FUNCTIONS)
+def test_extremum_of_integers_with_a_condition(run, solver, name, f, constraint, predicate):
+    # the extremum of integers is known: the condition is evaluated, or applied to the variable
+    check(run, solver, "y = Var(dom=range(5))\n" + "satisfy(" + code_of(constraint, name) + ", y != 4)", [range(5)], lambda v: predicate(f, v) and v != 4)
+
+
+@pytest.mark.parametrize("terms, expected, values", [
+    ("x[0], 3, 1", "x[0] aux_gb[0]", (3, 1)),
+    ("1, x[0], 3, x[1]", "aux_gb[0] x[0] x[1]", (3, 1)),
+    ("x[0], x[1] >= x[1]", "x[0] aux_gb[0]", (1, 1)),
+    ("x[0], Sum([]), 2", "x[0] aux_gb[0]", (2, 0)),
+])
+@pytest.mark.parametrize("name, f", FUNCTIONS)
+def test_xcsp3_extremum_with_integers(run, name, f, terms, expected, values):
+    # a single auxiliary variable, whose domain is the largest integer (the smallest one for Minimum())
+    r = run(XY + f"satisfy({name}({terms}) == y)")
+    assert r.ok, r.report()
+    c, aux = r.xml.find("constraints/" + name.lower()), r.xml.find("variables/array[@id='aux_gb']")
+    assert c is not None and c.find("list").text.strip() == expected, r.report()
+    assert aux is not None and aux.get("size") == "[1]" and aux.text.strip() == str(values[0] if name == "Maximum" else values[1]), r.report()
+
+
+@pytest.mark.parametrize("name, f", FUNCTIONS)
+def test_xcsp3_extremum_of_integers(run, name, f):
+    # the extremum of integers is known: neither constraint maximum (or minimum), nor auxiliary variable
+    r = run(XY + f"satisfy({name}(3, 1, 2) == y, {name}(x[0], 1) == 1)")
+    assert r.ok, r.report()
+    assert len(r.xml.findall("constraints/" + name.lower())) == 1 and len(r.xml.findall("variables/array[@id='aux_gb']")) == 1, r.report()
 
 
 @pytest.mark.parametrize("terms, values", [
@@ -473,10 +512,10 @@ def test_extremum_as_objective(run, solver, name, f, objective, function):
 
 
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-@bug(INTEGERS)
 def test_extremum_of_integers_as_objective(run, name, f):
     # the extremum of integers is a constant: there is nothing to optimize
-    assert_fails(run(X3 + f"satisfy(x[0] != x[1])\nminimize({name}(3, 1))"))
+    r = run(X3 + f"satisfy(x[0] != x[1])\nminimize({name}(3, 1))")
+    assert not r.ok and f"The objective is the constant {f(3, 1)}: there is nothing to optimize" in r.stdout, r.report()
 
 
 # ------------------------------------------------------------------------------------------------ examples of the doc

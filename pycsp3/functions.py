@@ -3472,7 +3472,10 @@ def _extremum_terms(term, others):
 
 def _extremum(name, term, others, condition):
     # the component Maximum (or Minimum, whose name is given) of the terms, possibly subject to the specified condition
-    terms = _extremum_terms(term, others)
+    terms = list(term) if isinstance(term, types.GeneratorType) else flatten(term, others)
+    terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have partial constraints
+    # a constant (as Sum([]), or x >= x simplified into 1 by Node.build()) is an integer
+    terms = [t.val if isinstance(t, ConstraintDummyConstant) else t.cnt if type(t) is Node and t.type is TypeNode.INT else t for t in terms]
     if len(terms) == 0:
         error(name + "() requires at least one term")
     for t in terms:
@@ -3480,10 +3483,19 @@ def _extremum(name, term, others, condition):
             error(name + "() does not accept Booleans as terms, which is the case of " + str(t))
         if isinstance(t, Variable) and t.dom.type != TypeVar.INTEGER:
             error(name + "() requires integer variables (or expressions), which is not the case of " + str(t))
+    checkType(terms, ([Variable, Node, int], [PartialConstraint]))
     condition = Condition.build_condition(condition)
     if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
         # the extremum never belongs to an empty set: false with 'in', and always true with 'not in'
         return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
+    best = maxPython if name == "Maximum" else minPython
+    integers = [t for t in terms if isinstance(t, int)]
+    if len(integers) == len(terms):  # the extremum of integers is known
+        return _constant_with_condition(best(integers), condition)
+    if len(integers) > 1:  # the integers are reduced to the largest one (the smallest one for Minimum()), at the place of the first one
+        first = next(i for i, t in enumerate(terms) if isinstance(t, int))
+        terms = [best(integers) if i == first else t for i, t in enumerate(terms) if i == first or not isinstance(t, int)]
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms)
     if len(terms) == 1:  # no constraint (XCSP3-core requires at least two terms): the term, possibly subject to the condition
         return terms[0] if condition is None else _term_with_condition(terms[0], condition)
     return _wrapping_by_complete_or_partial_constraint((ConstraintMaximum if name == "Maximum" else ConstraintMinimum)(terms, condition))
