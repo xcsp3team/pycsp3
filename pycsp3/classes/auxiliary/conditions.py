@@ -65,6 +65,9 @@ class Condition:
         if isinstance(right_operand, main.constraints.Parameter):
             return ConditionParameter(operator, right_operand)
         if isinstance(right_operand, (list, tuple, set, frozenset)):
+            for v in right_operand:
+                if isinstance(v, (Variable, Node)):
+                    error("The values of the condition " + str(operator) + " " + str(condition[1]) + " must be integers, which is not the case of " + str(v))
             return ConditionSet(operator, set(right_operand))
         error("The operand of the condition " + str(condition) + " must be an integer, a variable, a range or a set of integers")
 

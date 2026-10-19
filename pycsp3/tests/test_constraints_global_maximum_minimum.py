@@ -17,7 +17,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-VARIABLE_IN_A_SET = "#249: a variable in the set of values of 'in' fails with an assert without message"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_NE = "xcsp3team/ACE#34: ACE fails on maximum and minimum with (ne,k): ERROR (ExtremumCst.buildFrom(): AssertionError: NE is not implemented)"
@@ -610,13 +609,43 @@ def test_invalid_extremum(run, name, f, arguments):
     assert_fails(run(code))
 
 
-@pytest.mark.parametrize("operand", ["2.5", "'a'", "True", "None", "[y, 2]", "{1: 2}"])
+@pytest.mark.parametrize("operand", ["2.5", "'a'", "True", "None", "{1: 2}"])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_invalid_extremum_operand(run, request, name, f, operand):
-    if operand == "[y, 2]":
-        request.applymarker(bug(VARIABLE_IN_A_SET))
-    constraint = f"{name}(x) in {operand}" if operand == "[y, 2]" else f"{name}(x) == {operand}"
-    assert_fails(run(XY + f"satisfy({constraint})"))
+def test_invalid_extremum_operand(run, name, f, operand):
+    assert_fails(run(XY + f"satisfy({name}(x) == {operand})"))
+
+
+@pytest.mark.parametrize("values", ["{y, 2}", "{y}", "[y, 2]", "[y, z]", "(y, z)", "[y, z, x[0], x[1]]", "[2, y + 1]",
+                                    "condition=('in', {y, 2})", "condition=('in', [y, z])"])
+@pytest.mark.parametrize("component", [
+    "Maximum(x)", "Minimum(x)", "Sum(x)", "Count(x, value=1)", "NValues(x)", "MaximumArg(x)", "MinimumArg(x)", "x[z]",
+    "Cumulative(origins=x, lengths=[1, 1, 1], heights=[1, 2, 1])", "BinPacking(x, sizes=[1, 2, 3])",
+    "Flow(x, balance=[2, 0, -2], arcs=[(0, 1), (1, 2), (0, 2)], weights=[1, 1, 1])",
+])
+def test_variable_in_the_values_of_in_with_a_component(run, component, values):
+    # the values of the condition of a constraint (maximum, sum, count, element, ...) are integers, also with 'in' and 'not in'
+    if values.startswith("condition=") and (component.startswith(("MaximumArg", "MinimumArg")) or component == "x[z]"):
+        pytest.skip("no parameter condition (or a parameter condition not built yet, see the tests of MaximumArg and MinimumArg)")
+    for op in ("in", "not in"):
+        if values.startswith("condition="):
+            constraint = component[:-1] + ", " + (values if op == "in" else values.replace("'in'", "'notin'")) + ")"
+        else:
+            constraint = f"{component} {op} {values}"
+        r = run(XY + "z = Var(dom=range(3))\n" + f"satisfy({constraint})")
+        assert not r.ok and "must be integers" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("x[0] in {y, 2}", lambda *t: t[0] in (t[3], 2)),
+    ("x[0] not in {y, z}", lambda *t: t[0] not in (t[3], t[4])),
+    ("x[0] + 1 in {y, 2}", lambda *t: t[0] + 1 in (t[3], 2)),
+    ("x[0] * 2 in {y, 2}", lambda *t: t[0] * 2 in (t[3], 2)),
+    ("x[0] * 2 not in {y, z, 1}", lambda *t: t[0] * 2 not in (t[3], t[4], 1)),
+])
+def test_variable_in_the_values_of_in_with_an_expression(run, solver, constraint, predicate):
+    # in intension, the values of 'in' (and 'not in') may be variables (a variable with a coefficient gives a sum of one term only with integers)
+    check(run, solver, XY + f"z = Var(dom=range(5))\nsatisfy({constraint}, x[1] == 0, x[2] == 0)", DY + [range(5)],
+          lambda *t: predicate(*t) and t[1] == 0 and t[2] == 0)
 
 
 @pytest.mark.parametrize("arguments, message", [
