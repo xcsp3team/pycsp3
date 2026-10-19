@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from harness import SOLVERS, build_java_archives, run_model
+from harness import COSOCO_UNAVAILABLE, SOLVERS, build_java_archives, run_model
 
 # The files of each test (models, XCSP3 files, solver logs, outputs) are kept in output/<test file>/<test>,
 # this directory being emptied at the start of each session.
@@ -48,3 +48,5 @@ def pytest_collection_modifyitems(items):
     for item in items:
         if "solver" in getattr(item, "fixturenames", ()):
             item.add_marker(pytest.mark.solving)
+            if COSOCO_UNAVAILABLE and item.callspec.params.get("solver") == "COSOCO":
+                item.add_marker(pytest.mark.skip(reason="cosoco is not available on Windows (no package on PyPI)"))

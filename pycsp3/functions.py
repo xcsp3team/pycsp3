@@ -3288,43 +3288,6 @@ def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
     return _wrapping_by_complete_or_partial_constraint(ctr) if condition is None else PartialConstraint.complete(ctr)
 
 
-def NumberDistinctValues(within, *within_complement, excepting=None, condition=None):
-    """
-    Builds and returns a component NValues (that becomes a constraint when subject to a condition).
-    It represents the number of distinct values taken by the terms; this function is an alias for the function 'NValues()'.
-
-    :param within: the (first) term, typically a list of variables, on which the NValues applies
-    :param within_complement: the other terms (if any) on which the NValues applies
-    :param excepting: the value(s) that must be ignored (None, most of the time)
-    :param condition: a condition directly specified for the count (typically, None)
-    :return: a component/constraint NValues
-    :example:
-        # counting the number of different colours used for colouring the nodes of a graph
-        x = VarArray(size=6, dom=range(6))  # x[i] is the colour of the ith node
-        edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
-
-        satisfy(
-           [x[i] != x[j] for (i, j) in edges],
-
-           NumberDistinctValues(x) <= 3
-        )
-
-        # a solution: [0, 1, 0, 1, 0, 1]
-    :example:
-        # with 'excepting', the value 0 (here, meaning 'no colour yet') is not counted
-        x = VarArray(size=6, dom=range(4))  # x[i] is the colour of the ith node
-
-        satisfy(
-           Count(x, value=0) == 2,
-
-           NumberDistinctValues(x, excepting=0) == 2
-        )
-
-        # a solution: [0, 0, 1, 1, 1, 2]
-    """
-    return NValues(within, *within_complement, excepting=excepting, condition=condition)
-
-
 def NotAllEqual(term, *others):
     """
     Builds and returns a component NValues (capturing NotAllEqual).

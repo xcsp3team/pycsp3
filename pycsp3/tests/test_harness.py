@@ -3,8 +3,11 @@ Checks of the test harness itself (harness.py).
 """
 
 from itertools import permutations
+from pathlib import Path
 
-from harness import brute_force, assert_solutions, assert_optimum
+import pytest
+
+from harness import Run, brute_force, assert_fails, assert_solutions, assert_optimum
 
 
 def test_all_solutions(run, solver):
@@ -70,6 +73,14 @@ def test_uncaught_exception(run):
     r = run("raise ValueError('bad value')")
     assert not r.ok
     assert r.exception == "ValueError"
+
+
+@pytest.mark.parametrize("path", ["/tmp/output/run0/model.py", "D:\\a\\output\\run0\\model.py"], ids=["Linux and macOS", "Windows"])
+def test_assert_fails_with_an_exception_raised_on_a_line_of_the_model(path):
+    # an exception raised by Python on a line of the model itself (here, a missing argument) is explicit, whatever the separator of the path
+    stderr = ('Traceback (most recent call last):\n  File "' + path + '", line 3, in <module>\n    satisfy(Sum() == 0)\n'
+              "TypeError: Sum() missing 1 required positional argument: 'term'\n")
+    assert_fails(Run(1, "", stderr, Path(path).parent))
 
 
 def test_compilation_without_solving(run):
