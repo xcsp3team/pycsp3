@@ -52,6 +52,10 @@ class Condition:
         # checkType(right_operand, (int, Variable, range, [int, Variable]))
         if isinstance(right_operand, range) and right_operand.step != 1:
             right_operand = list(right_operand)
+        if isinstance(operator, TypeConditionOperator) and (isinstance(right_operand, (int, Variable)) and not operator.is_rel()
+                                                            or isinstance(right_operand, (range, list, tuple, set, frozenset)) and not operator.is_set()):
+            error("The operator " + str(operator) + " of the condition " + str(condition) + " cannot be applied to " + str(condition[1]) + " (" +
+                  ("lt, le, ge, gt, eq or ne for an integer or a variable)" if operator.is_set() else "in or notin for a range or a set of integers)"))
         if isinstance(right_operand, int):
             return ConditionValue(operator, right_operand)
         if isinstance(right_operand, Variable):
@@ -61,6 +65,9 @@ class Condition:
         if isinstance(right_operand, main.constraints.Parameter):
             return ConditionParameter(operator, right_operand)
         if isinstance(right_operand, (list, tuple, set, frozenset)):
+            for v in right_operand:
+                if not isinstance(v, int):
+                    error("The values of the condition " + str(operator) + " " + str(condition[1]) + " must be integers, which is not the case of " + str(v))
             return ConditionSet(operator, set(right_operand))
         error("The operand of the condition " + str(condition) + " must be an integer, a variable, a range or a set of integers")
 

@@ -8,13 +8,13 @@
 [![PyPI version](https://img.shields.io/pypi/v/pycsp3?label=pypi)](https://pypi.org/project/pycsp3/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://pypi.org/project/pycsp3/)
 
-[![Linux tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-linux.yml?label=Linux%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-linux.yml)
-[![MacOS tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-macos.yml?label=MacOS%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-macos.yml)
-[![Windows tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-windows.yml?label=Windows%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-windows.yml)
-
 [![Build Linux](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-linux.yml?branch=master&label=Build%20Linux&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-linux.yml)
 [![Build MacOS](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-macos.yml?branch=master&label=Build%20MacOS&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-macos.yml)
 [![Build Windows](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-windows.yml?branch=master&label=Build%20Windows&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-windows.yml)
+
+[![Linux tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-linux.yml?label=Linux%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-linux.yml)
+[![MacOS tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-macos.yml?label=MacOS%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-macos.yml)
+[![Windows tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-windows.yml?label=Windows%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-windows.yml)
 
 </div>
 

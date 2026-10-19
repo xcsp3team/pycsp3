@@ -12,6 +12,8 @@ with variables are replaced by auxiliary variables (B), the numbers of occurrenc
 cannot be given several times in the list (D).
 """
 
+import sys
+
 import pytest
 
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
@@ -157,6 +159,8 @@ def test_cardinality_occurrences_given_by_variables(run, solver, request, occurr
     if "7" in occurrences:
         bug_for(request, "ACE", ACE_FAILS)
     if occurrences == "{0: z, 7: z}":
+        if solver == "COSOCO" and sys.platform != "linux":
+            pytest.skip("xcsp3team/cosoco#98: the heap overflow is detected only by the allocator of glibc (Linux); elsewhere, the result is undefined")
         bug_for(request, "COSOCO", COSOCO_OUTSIDE)
     check(run, solver, XZ + f"satisfy(Cardinality(x, occurrences={occurrences}))", DZ, predicate)
 

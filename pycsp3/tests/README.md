@@ -115,13 +115,15 @@ thus a commit that corrects the bug, removes the mark, and closes the issue with
 
 The workflows of `.github/workflows` are the following (their status is displayed by the badges of the main README):
 
-- `tests-linux.yml` and `tests-macos.yml` run the tests on Linux and macOS, only when a pull request is merged
-  and when a tag is pushed (not for each commit); when a test fails, the files of the tests are kept as an
-  artifact of the run (`files-of-the-tests-<os>`);
-- `build-linux.yml` and `build-macos.yml`, run for each pull request and each push on master, build the package,
-  install it in a new environment and solve a model with it.
+- `tests-linux.yml`, `tests-macos.yml` and `tests-windows.yml` run the tests on Linux, macOS and Windows, only when
+  a pull request is merged and when a tag is pushed (not for each commit); when a test fails, the files of the tests
+  are kept as an artifact of the run (`files-of-the-tests-<os>`);
+- `build-linux.yml`, `build-macos.yml` and `build-windows.yml` build the package, install it in a new environment and
+  solve a model with it, at each push on master (so when a pull request is merged) and when a tag is pushed (not for
+  each commit of a pull request).
 
-Both kinds of workflows are defined once, in `reusable-tests.yml` and `reusable-build.yml`.
+Both kinds of workflows can also be run on a pull request by adding the label `run-tests` to it, and on demand from the
+tab Actions (`workflow_dispatch`). They are defined once, in `reusable-tests.yml` and `reusable-build.yml`.
 
 ## Organization
 
