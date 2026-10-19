@@ -31,7 +31,7 @@ OBJECTIVE = "#258: an objective MaximumArg() or MinimumArg() is written with the
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_INDEX = ("(to be reported) ACE fails without message on maximumArg and minimumArg with (eq,y) when the domain of y is not the range of the "
-             "indexes, or when y is in the list (controls in the constructor of ExtremumArgVar)")
+             "indexes (control in the constructor of ExtremumArgVar)")
 COSOCO_INDEX = ("(to be reported) cosoco crashes (segmentation fault) on maximumArg with (eq,y) when y has a value that is not an index, and finds "
                 "wrong solutions when an index is not in the domain of y, when y is in the list, or when a variable is given several times")
 CHOCO_ANY = ("(to be reported) CHOCO handles maximumArg and minimumArg with rank any as with rank first (model.argmax and model.argmin give the "
@@ -45,7 +45,8 @@ CHOCO_INTERVAL = ("CHOCO 4.10.15-beta (embedded in PyCSP3) and CHOCO 6.0.2 find 
 
 # The cases that a solver says it does not handle (not reported)
 ACE_UNIMPLEMENTED = "ACE handles maximumArg and minimumArg only with (eq,y) (unimplemented case for maximumArg)"
-ACE_REPEATED = "ACE does not accept a variable given several times in the list of maximumArg and minimumArg (vector length = 3 list=...)"
+ACE_REPEATED = ("ACE does not accept a variable given several times in the scope of maximumArg and minimumArg, in the list or as index "
+                "(vector length = 3 list=...)")
 COSOCO_UNSUPPORTED = "cosoco handles maximumArg only with (eq,y), and does not handle minimumArg (s UNSUPPORTED)"
 
 FUNCTIONS = [pytest.param("MaximumArg", max, id="MaximumArg"), pytest.param("MinimumArg", min, id="MinimumArg")]
@@ -84,25 +85,26 @@ def differ(domains, predicate, rank1, rank2):
     return brute_force(domains, lambda *t: predicate(rank1, *t)) != brute_force(domains, lambda *t: predicate(rank2, *t))
 
 
-def mark(request, name, rank, domains, predicate, eq_var=True, index=True, repeated=False, several=False, cosoco_ok=False):
+def mark(request, name, rank, domains, predicate, eq_var=True, index=True, in_list=False, repeated=False, several=False, cosoco_ok=False):
     """
     Marks the running test (using the fixture solver) according to the cases of maximumArg/minimumArg that the solvers do not handle or get wrong:
-    eq_var for a condition (eq,y), index for a variable y whose domain is the range of the indexes (and which is not in the list), repeated for a
-    variable given several times in the list (cosoco_ok when cosoco handles it), and several when the index (rank any) is given by an auxiliary
-    variable that can take several values for the same solution. The predicate (of the brute force) receives the rank as first argument.
+    eq_var for a condition (eq,y), index for a variable y whose domain is the range of the indexes, in_list for a variable y also in the list,
+    repeated for a variable given several times in the list (cosoco_ok when cosoco handles it), and several when the index (rank any) is given by
+    an auxiliary variable that can take several values for the same solution. The predicate (of the brute force) receives the rank as first
+    argument.
     """
     solver = request.node.callspec.params["solver"]
     if solver == "ACE":
         if not eq_var:
             pytest.skip(ACE_UNIMPLEMENTED)
-        if repeated:
+        if repeated or in_list:
             pytest.skip(ACE_REPEATED)
         if not index:
             request.applymarker(bug(ACE_INDEX))
     elif solver == "COSOCO":
         if name == "MinimumArg" or not eq_var:
             pytest.skip(COSOCO_UNSUPPORTED)
-        if not index or (repeated and not cosoco_ok):
+        if not index or in_list or (repeated and not cosoco_ok):
             request.applymarker(bug(COSOCO_INDEX))
     elif rank == "last" and differ(domains, predicate, "last", "choco-last"):
         request.applymarker(bug(CHOCO_LAST))
@@ -377,7 +379,7 @@ def test_extremum_arg_with_a_repeated_term(run, solver, request, name, f, rank, 
 def test_extremum_arg_as_a_term(run, solver, request, name, f, rank, r, constraint, test):
     # the component is replaced by an auxiliary variable, equal to an index of an extremum (with rank any, the expression holds for one of them)
     predicate = lambda rk, *t: holds(f, t[:3], rk, lambda i: test(i, t))
-    mark(request, name, r, DY, predicate, index=constraint != "F(x) == x[0]", several=several_indexes(f, DY, test))
+    mark(request, name, r, DY, predicate, in_list=constraint == "F(x) == x[0]", several=several_indexes(f, DY, test))
     check(run, solver, XY + "satisfy(" + code_of(constraint, name, rank) + ")", DY, lambda *t: predicate(r, *t))
 
 
