@@ -24,14 +24,14 @@ SYMBOLIC = "#247: Maximum() and Minimum() accept symbolic variables"
 BOOLEAN = "#247: a Boolean among the terms of Maximum() and Minimum() is reported as a value of a domain"
 INTEGERS = "#248: Maximum() and Minimum() of integers only are not evaluated (an auxiliary variable for each integer)"
 VARIABLE_IN_A_SET = "#249: a variable in the set of values of 'in' fails with an assert without message"
+REPEATED = ("#250: a term given several times to Maximum() and Minimum() is written several times (ACE finds wrong solutions for "
+            "maximum on a list made of a single variable given several times)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-ACE_NE = "(to be reported) ACE fails on maximum and minimum with (ne,k): ERROR (ExtremumCst.buildFrom(): AssertionError: NE is not implemented)"
-ACE_REPEATED = ("(to be reported) ACE finds wrong solutions for maximum on a list made of a single variable given several times (MaximumCstEQ: "
-                "its two sentinels are the same variable)")
-COSOCO_CONDITIONS = ("(to be reported) cosoco finds wrong solutions for maximum and minimum with (ne,k) (posted as (eq,k)), (lt|le|gt|ge,y) (posted "
+ACE_NE = "xcsp3team/ACE#34: ACE fails on maximum and minimum with (ne,k): ERROR (ExtremumCst.buildFrom(): AssertionError: NE is not implemented)"
+COSOCO_CONDITIONS = ("xcsp3team/cosoco#99: cosoco finds wrong solutions for maximum and minimum with (ne,k) (posted as (eq,k)), (lt|le|gt|ge,y) (posted "
                      "as op(y,max(X))), an interval (bounds swapped, notin seen as in) and a set (seen as an interval)")
-COSOCO_SEGFAULT = ("(to be reported) cosoco crashes (segmentation fault) on maximum with (eq,y) when a value of y between the bounds of the list is "
+COSOCO_SEGFAULT = ("xcsp3team/cosoco#99: cosoco crashes (segmentation fault) on maximum with (eq,y) when a value of y between the bounds of the list is "
                    "in no domain of the list (MaximumVariableEQ: null sentinel, checked in MinimumVariableEQ)")
 CHOCO_INTERVAL = ("CHOCO 4.10.15-beta (embedded in PyCSP3) and CHOCO 6.0.2 find wrong solutions for maximum and minimum with (in,a..b) and "
                   "(notin,a..b), fixed in the develop version of CHOCO (859fdde, not reported)")
@@ -306,9 +306,35 @@ def test_extremum_with_a_repeated_term(run, solver, request, name, f, terms, val
     if solver == "COSOCO" and name == "Minimum":
         pytest.skip(COSOCO_REPEATED)
     if name == "Maximum" and terms == "x[0], x[0]":
-        bug_for(request, "ACE", ACE_REPEATED)
+        bug_for(request, "ACE", REPEATED)
     for k in (1, 2):
         check(run, solver, X3 + f"satisfy({name}({terms}) == {k})", D3, lambda *t: f(values(t)) == k)
+
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("F(x[0], x[0], x[1]) == 2", "x[0] x[1]"),
+    ("F(x[0], x[1], x[0], x[1]) == 2", "x[0] x[1]"),
+    ("F(x[0] + 1, x[0] + 1, x[1]) == 2", "x[1] add(x[0],1)"),
+    ("F(Sum(x[:2]), Sum(x[:2]), x[2]) == 2", "aux_gb[0] x[2]"),
+])
+@pytest.mark.parametrize("name, f", FUNCTIONS)
+@bug(REPEATED)
+def test_xcsp3_extremum_with_a_repeated_term(run, name, f, constraint, expected):
+    # each term is kept once (the extremum does not depend on repetitions)
+    r = run(X3 + "satisfy(" + code_of(constraint, name) + ")")
+    assert r.ok, r.report()
+    c = r.xml.find("constraints/" + name.lower())
+    assert c is not None and c.find("list").text.strip() == expected, r.report()
+
+
+@pytest.mark.parametrize("name, f", FUNCTIONS)
+@bug(REPEATED)
+def test_xcsp3_extremum_of_a_single_repeated_term(run, name, f):
+    # a single term remains: the extremum is this term
+    r = run(X3 + f"satisfy({name}(x[0], x[0]) == 2, x[1] != x[2])\nminimize({name}(x[1], x[1]))")
+    assert r.ok, r.report()
+    o = r.xml.find("objectives/minimize")
+    assert r.xml.find("constraints/" + name.lower()) is None and o.get("type") is None and o.text.strip() == "x[1]", r.report()
 
 
 # ------------------------------------------------------------------------------------------------ terms of expressions
