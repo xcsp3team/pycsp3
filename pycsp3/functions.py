@@ -3492,10 +3492,13 @@ def _extremum(name, term, others, condition):
     integers = [t for t in terms if isinstance(t, int)]
     if len(integers) == len(terms):  # the extremum of integers is known
         return _constant_with_condition(best(integers), condition)
-    if len(integers) > 1:  # the integers are reduced to the largest one (the smallest one for Minimum()), at the place of the first one
-        first = next(i for i, t in enumerate(terms) if isinstance(t, int))
-        terms = [best(integers) if i == first else t for i, t in enumerate(terms) if i == first or not isinstance(t, int)]
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms)
+    # each term is kept once (identical partial constraints being replaced by the same auxiliary variable), and the integers are reduced to
+    # the largest one (the smallest one for Minimum()), at the place of the first one; variables are compared by identity (== being redefined)
+    kept = {}
+    for t in terms:
+        kept.setdefault(int if isinstance(t, int) else id(t) if isinstance(t, Variable) else str(t), best(integers) if isinstance(t, int) else t)
+    terms = list(kept.values())
     if len(terms) == 1:  # no constraint (XCSP3-core requires at least two terms): the term, possibly subject to the condition
         return terms[0] if condition is None else _term_with_condition(terms[0], condition)
     return _wrapping_by_complete_or_partial_constraint((ConstraintMaximum if name == "Maximum" else ConstraintMinimum)(terms, condition))

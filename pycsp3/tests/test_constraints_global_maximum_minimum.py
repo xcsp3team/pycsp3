@@ -18,8 +18,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 VARIABLE_IN_A_SET = "#249: a variable in the set of values of 'in' fails with an assert without message"
-REPEATED = ("#250: a term given several times to Maximum() and Minimum() is written several times (ACE finds wrong solutions for "
-            "maximum on a list made of a single variable given several times)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_NE = "xcsp3team/ACE#34: ACE fails on maximum and minimum with (ne,k): ERROR (ExtremumCst.buildFrom(): AssertionError: NE is not implemented)"
@@ -32,7 +30,6 @@ CHOCO_INTERVAL = ("CHOCO 4.10.15-beta (embedded in PyCSP3) and CHOCO 6.0.2 find 
 
 # The cases that a solver says it does not handle (not reported)
 COSOCO_EXPRESSIONS = "cosoco does not handle maximum and minimum on expressions, except with (eq,y) (Maximum over set is not yet supported, s UNSUPPORTED)"
-COSOCO_REPEATED = "cosoco does not accept a variable given several times in the list of minimum (scope contains variable x[0] many times)"
 
 FUNCTIONS = [pytest.param("Maximum", max, id="Maximum"), pytest.param("Minimum", min, id="Minimum")]
 
@@ -336,15 +333,13 @@ def test_extremum_on_a_single_term_with_the_parameter_condition(run, solver, nam
     ("x[0], x[0], x[1]", lambda t: (t[0], t[1])),
     ("x[0], x[1], x[0], x[1]", lambda t: (t[0], t[1])),
     ("x[0] + 1, x[0] + 1, x[1]", lambda t: (t[0] + 1, t[1])),
+    ("Sum(x[:2]), x[2], Sum(x[:2])", lambda t: (t[0] + t[1], t[2])),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_extremum_with_a_repeated_term(run, solver, request, name, f, terms, values):
+def test_extremum_with_a_repeated_term(run, solver, name, f, terms, values):
+    # each term is kept once
     if solver == "COSOCO" and "+" in terms:
         pytest.skip(COSOCO_EXPRESSIONS)
-    if solver == "COSOCO" and name == "Minimum":
-        pytest.skip(COSOCO_REPEATED)
-    if name == "Maximum" and terms == "x[0], x[0]":
-        bug_for(request, "ACE", REPEATED)
     for k in (1, 2):
         check(run, solver, X3 + f"satisfy({name}({terms}) == {k})", D3, lambda *t: f(values(t)) == k)
 
@@ -352,11 +347,10 @@ def test_extremum_with_a_repeated_term(run, solver, request, name, f, terms, val
 @pytest.mark.parametrize("constraint, expected", [
     ("F(x[0], x[0], x[1]) == 2", "x[0] x[1]"),
     ("F(x[0], x[1], x[0], x[1]) == 2", "x[0] x[1]"),
-    ("F(x[0] + 1, x[0] + 1, x[1]) == 2", "x[1] add(x[0],1)"),
+    ("F(x[0] + 1, x[0] + 1, x[1]) == 2", "add(x[0],1) x[1]"),
     ("F(Sum(x[:2]), Sum(x[:2]), x[2]) == 2", "aux_gb[0] x[2]"),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-@bug(REPEATED)
 def test_xcsp3_extremum_with_a_repeated_term(run, name, f, constraint, expected):
     # each term is kept once (the extremum does not depend on repetitions)
     r = run(X3 + "satisfy(" + code_of(constraint, name) + ")")
@@ -366,7 +360,6 @@ def test_xcsp3_extremum_with_a_repeated_term(run, name, f, constraint, expected)
 
 
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-@bug(REPEATED)
 def test_xcsp3_extremum_of_a_single_repeated_term(run, name, f):
     # a single term remains: the extremum is this term
     r = run(X3 + f"satisfy({name}(x[0], x[0]) == 2, x[1] != x[2])\nminimize({name}(x[1], x[1]))")
@@ -503,8 +496,6 @@ def test_extremum_in_a_meta_constraint(run, name, f):
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_as_objective(run, solver, name, f, objective, function):
-    if solver == "COSOCO" and "x[0], x[0]" in objective:
-        pytest.skip(COSOCO_REPEATED + ", used for the bound of the objective")
     code = code_of(objective, name)
     r = run(X3 + "satisfy(x[0] != x[1], x[1] != x[2])\n" + code, solver=solver)
     expected = brute_force(D3, lambda *t: t[0] != t[1] and t[1] != t[2])
