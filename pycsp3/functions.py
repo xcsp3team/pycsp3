@@ -3565,6 +3565,8 @@ def _extremum_arg(name, term, others, rank, condition):
     if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
         # the index never belongs to an empty set: false with 'in', and always true with 'not in'
         return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
+    if len(terms) == 1:  # no constraint (XCSP3 requires at least two terms): the index of a single term is 0
+        return _constant_with_condition(0, condition)
     return _wrapping_by_complete_or_partial_constraint((ConstraintMaximumArg if name == "MaximumArg" else ConstraintMinimumArg)(terms, rank, condition))
 
 

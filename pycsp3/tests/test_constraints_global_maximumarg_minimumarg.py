@@ -19,7 +19,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-SINGLE_TERM = "#254: MaximumArg() and MinimumArg() of a single term give a constraint on one term"
 NO_TERM = "#255: MaximumArg() and MinimumArg() of no term give a constraint with an empty list"
 INVALID_TERMS = "#256: MaximumArg() and MinimumArg() accept Booleans and symbolic variables among the terms"
 INTEGERS = ("#257: the integers among the terms of MaximumArg() and MinimumArg() are written in the list: the parser of ACE and CHOCO "
@@ -330,20 +329,22 @@ def test_extremum_arg_on_components(run, solver, name, f, terms, values):
     ("F(x[0] + 1) == y", lambda *t: t[3] == 0),
     ("F(x[0], None) != 0", lambda *t: False),
     ("F(x[0]) in {0, 2}", lambda *t: True),
+    ("F(Sum(x), rank=TypeRank.LAST) == y", lambda *t: t[3] == 0),
+    ("F(x[0], condition=('ne', y))", lambda *t: t[3] != 0),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_arg_on_a_single_term(run, solver, request, name, f, constraint, predicate):
-    # the index of a single term is 0 (CHOCO handles a list of one term, but not ACE and cosoco)
-    bug_for(request, ("ACE", "COSOCO"), SINGLE_TERM)
+    # the index of a single term is 0
+    if constraint in ("F([x[0]]) == 1", "F(x[0], None) != 0"):  # the constraint false, posted by a table with an empty set of supports
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     check(run, solver, XY + "satisfy(" + code_of(constraint, name) + ", x[1] == x[2])", DY, lambda *t: predicate(*t) and t[1] == t[2])
 
 
 @pytest.mark.parametrize("constraint", ["F(x[0]) == 0", "F(x[0]) == y", "F(x[0], condition=('eq', 0))", "F(x[0] + 1, rank=TypeRank.LAST) != 0"])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_xcsp3_extremum_arg_has_at_least_two_terms(run, request, name, f, constraint):
-    # XCSP3 requires at least two terms
-    request.applymarker(bug(SINGLE_TERM))
-    r = run(XY + "satisfy(" + code_of(constraint, name) + ")")
+def test_xcsp3_extremum_arg_has_at_least_two_terms(run, name, f, constraint):
+    # XCSP3 requires at least two terms: the index of a single term is 0
+    r = run(XY + "satisfy(" + code_of(constraint, name) + ", y != 1)")
     assert r.ok, r.report()
     assert r.xml.find("constraints/" + name[0].lower() + name[1:]) is None, r.report()
 
@@ -474,7 +475,8 @@ def test_extremum_arg_as_objective(run, solver, request, name, f, objective, fun
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_arg_constant_as_objective(run, request, name, f, objective):
     # the index of a single term, or of an extremum of integers (with a rank), is a constant: there is nothing to optimize
-    request.applymarker(bug(SINGLE_TERM if "x[0]" in objective else INTEGERS))
+    if "x[0]" not in objective:
+        request.applymarker(bug(INTEGERS))
     r = run(X3 + "satisfy(x[0] != x[1])\n" + code_of(objective, name))
     assert not r.ok and "The objective is the constant" in r.stdout, r.report()
 
