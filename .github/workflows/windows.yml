@@ -1,12 +1,11 @@
 name: Windows
 
-# the package is built, then tested if the build succeeds, at each push on master (so when a pull request is merged) and when a tag
-# is pushed, not for each commit of a pull request; this can also be done on a pull request by adding the label run-tests to it, and
-# on demand from the tab Actions (workflow_dispatch)
+# the package is built, then tested if the build succeeds, at each push on master (so when a pull request is merged), not for each
+# commit of a pull request; this can also be done on a pull request by adding the label run-tests to it, and on demand from the tab
+# Actions (workflow_dispatch); the publication of a version (with its tag) is made by release.yml
 on:
   push:
     branches: [master]
-    tags: ['**']
   pull_request:
     types: [labeled]
   workflow_dispatch:

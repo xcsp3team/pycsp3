@@ -1,0 +1,83 @@
+name: Release
+
+# on demand only, from the tab Actions (workflow_dispatch) on master: the version of pycsp3/version.txt is checked, the package is
+# built and tested on Linux, macOS and Windows, then published on PyPI, and the tag and the GitHub release of this version are created
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the version (on master, neither tagged nor on PyPI yet, the same in CITATION.cff)
+        id: version
+        run: |
+          version=$(tr -d '[:space:]' < pycsp3/version.txt)
+          [ "$GITHUB_REF" = refs/heads/master ] || { echo "::error::a version is released from master, not from $GITHUB_REF"; exit 1; }
+          [ -z "$(git ls-remote --tags origin "refs/tags/$version")" ] || { echo "::error::the tag $version already exists"; exit 1; }
+          status=$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/pycsp3/$version/json")
+          [ "$status" = 404 ] || { echo "::error::the version $version is already on PyPI (or PyPI answered $status)"; exit 1; }
+          grep -q -x "version: $version" CITATION.cff || { echo "::error::the version in CITATION.cff is not $version"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: check
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      os: ${{ matrix.os }}
+      keep-dist: ${{ matrix.os == 'ubuntu-latest' }}  # the package is pure Python: the one built on Linux is published
+
+  tests:
+    needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    uses: ./.github/workflows/reusable-tests.yml
+    with:
+      os: ${{ matrix.os }}
+
+  publish:
+    needs: [check, tests]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/pycsp3/${{ needs.check.outputs.version }}/
+    permissions:
+      id-token: write  # trusted publishing: PyPI accepts this workflow (declared on pypi.org), no token is stored in GitHub
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  release:
+    needs: [check, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # for creating the tag and the GitHub release
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - name: Create the tag and the GitHub release (with the notes generated from the merged pull requests)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: gh release create "$VERSION" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Version $VERSION" --generate-notes

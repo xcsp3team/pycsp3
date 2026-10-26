@@ -6,6 +6,11 @@ on:
       os:
         required: true
         type: string
+      keep-dist:
+        description: whether the built package is kept as an artifact (dist), for its publication
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -53,3 +58,10 @@ jobs:
             "$RUNNER_TEMP/$venv/$VENV_BIN/python" --version
             "$RUNNER_TEMP/$venv/$VENV_BIN/python" model.py
           done
+
+      - name: Keep the built package (checked above)
+        if: inputs.keep-dist
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
