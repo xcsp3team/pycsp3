@@ -10,7 +10,7 @@ from pycsp3 import functions
 from pycsp3.classes.entities import ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintAllDifferentList, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
-    ConstraintRefutation, ConstraintDummyConstant, ConstraintMaximumArg, ConstraintMinimumArg, auxiliary, global_indirection, manage_global_indirection)
+    ConstraintRefutation, ConstraintDummyConstant, auxiliary, global_indirection, manage_global_indirection)
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger
 from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
@@ -158,12 +158,7 @@ def cursing():
         if isinstance(other, Node):
             other = auxiliary().replace_node(other)
         if isinstance(other, PartialConstraint):
-            if not all(isinstance(v, int) for v in self) or isinstance(other.constraint, (ConstraintMaximumArg, ConstraintMinimumArg)):
-                # the values of the condition of the component (any value other than an integer being reported when posting); always for MaximumArg()
-                # and MinimumArg(), which cannot be replaced by an auxiliary variable with rank any
-                queue_in.append((list(self), other))
-            else:
-                queue_in.append((list(self), auxiliary().replace_partial_constraint(other)))
+            queue_in.append((list(self), other))  # the values of the condition of the component (any value other than an integer reported when posting)
             return True
         if isinstance(other, types.GeneratorType):
             other = list(other)

@@ -665,6 +665,29 @@ def test_xcsp3_condition_with_a_set_in_increasing_order(run, constraint, tag, ex
     assert r.xml.find("constraints/" + tag + "/condition").text.strip() == expected, r.report()
 
 
+@pytest.mark.parametrize("values", ["v", "list(v)", "[k for k in v]", "[3, 1]"])
+@pytest.mark.parametrize("component, tag", [("Sum(x)", "sum"), ("Count(x, value=1)", "count"), ("NValues(x)", "nValues"), ("Maximum(x)", "maximum"),
+                                            ("x[y]", "element")])
+def test_xcsp3_component_in_a_list(run, component, tag, values):
+    # a list (given by a variable or built), as a list given literally (changed into a tuple by Python), is the operand of the condition
+    for op, condition in (("in", "(in,{1,3})"), ("not in", "(notin,{1,3})")):
+        r = run(X4 + "y = Var(dom=range(4))\nv = [3, 1]\n" + f"satisfy({component} {op} {values})")
+        assert r.ok, r.report()
+        c = r.xml.find("constraints/" + tag)
+        assert c is not None and c.find("condition").text.strip() == condition and r.xml.find("variables/array[@id='aux_gb']") is None, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Sum(x) in v", lambda *t: sum(t) in (1, 3)),
+    ("Sum(x) not in v", lambda *t: sum(t) not in (1, 3)),
+    ("Sum(x[:2]) in [k + 1 for k in v]", lambda *t: t[0] + t[1] in (2, 4)),
+    ("Count(x, value=2) in v", lambda *t: t.count(2) in (1, 3)),
+])
+def test_sum_in_a_list(run, solver, request, constraint, predicate):
+    notin_bugs(request, constraint)
+    check(run, solver, X4 + "v = [3, 1]\n" + f"satisfy({constraint})", D4, predicate)
+
+
 # --------------------------------------------------------------------------------------------------- invalid cases
 
 INVALID_CASES = [
