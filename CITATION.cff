@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use PyCSP3, please cite the guide below."
+type: software
+title: PyCSP3
+abstract: "A Python library for modeling combinatorial constrained problems (CSP, COP) in the XCSP3 format."
+authors:
+  - family-names: Lecoutre
+    given-names: Christophe
+    affiliation: "CRIL, Univ. Artois and CNRS"
+    orcid: "https://orcid.org/0000-0002-2205-6545"
+  - family-names: Szczepanski
+    given-names: Nicolas
+    affiliation: "CRIL, Univ. Artois and CNRS"
+    orcid: "https://orcid.org/0000-0001-7553-5657"
+version: 2.6.1
+license: MIT
+url: "https://pycsp.org"
+repository-code: "https://github.com/xcsp3team/pycsp3"
+keywords:
+  - constraint programming
+  - combinatorial optimization
+  - modeling
+  - CSP
+  - COP
+  - XCSP3
+preferred-citation:
+  type: article
+  title: "PyCSP3: Modeling Combinatorial Constrained Problems in Python"
+  authors:
+    - family-names: Lecoutre
+      given-names: Christophe
+      orcid: "https://orcid.org/0000-0002-2205-6545"
+    - family-names: Szczepanski
+      given-names: Nicolas
+      orcid: "https://orcid.org/0000-0001-7553-5657"
+  year: 2020
+  doi: 10.48550/arXiv.2009.00326
+  url: "https://arxiv.org/abs/2009.00326"

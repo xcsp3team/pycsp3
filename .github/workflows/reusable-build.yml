@@ -6,6 +6,11 @@ on:
       os:
         required: true
         type: string
+      keep-dist:
+        description: whether the built package is kept as an artifact (dist), for its publication
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -16,13 +21,18 @@ jobs:
     env:
       VENV_BIN: ${{ startsWith(inputs.os, 'windows') && 'Scripts' || 'bin' }}  # the directory of the executables of a virtual environment
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
+        id: oldest
         with:
-          python-version: "3.13"
+          python-version: "3.10"  # the oldest version of Python supported by PyCSP3
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.15"  # the newest version of Python, the one of the commands python and pip below
+
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
@@ -32,13 +42,26 @@ jobs:
           pip install build
           python -m build
 
-      - name: Install the package in a new environment
+      - name: Install the package in a new environment, with the oldest and the newest versions of Python
+        env:
+          PYTHON_OLDEST: ${{ steps.oldest.outputs.python-path }}
         run: |
-          python -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/$VENV_BIN/pip" install dist/*.whl
+          "$PYTHON_OLDEST" -m venv "$RUNNER_TEMP/venv-oldest"
+          python -m venv "$RUNNER_TEMP/venv-newest"
+          for venv in venv-oldest venv-newest; do "$RUNNER_TEMP/$venv/$VENV_BIN/pip" install dist/*.whl; done
 
-      - name: Solve a model with the installed package
+      - name: Solve a model with the installed package, with the oldest and the newest versions of Python
         working-directory: ${{ runner.temp }}
         run: |
           printf 'from pycsp3 import *\n\nx = VarArray(size=3, dom=range(3))\n\nsatisfy(\n    AllDifferent(x)\n)\n\nassert solve() is SAT, status()\nprint(values(x))\n' > model.py
-          "$RUNNER_TEMP/venv/$VENV_BIN/python" model.py
+          for venv in venv-oldest venv-newest; do
+            "$RUNNER_TEMP/$venv/$VENV_BIN/python" --version
+            "$RUNNER_TEMP/$venv/$VENV_BIN/python" model.py
+          done
+
+      - name: Keep the built package (checked above)
+        if: inputs.keep-dist
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/

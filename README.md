@@ -4,17 +4,18 @@
 
 <div align="center">
 
-[![PyPI downloads](https://img.shields.io/pypi/dm/pycsp3?label=PyPI%20downloads&color=brightgreen)](https://pypistats.org/packages/pycsp3)
+[![License](https://img.shields.io/github/license/xcsp3team/pycsp3?label=License&color=yellow)](https://github.com/xcsp3team/pycsp3/blob/master/LICENSE)
+[![PyPI downloads](https://img.shields.io/pypi/dm/pycsp3?label=PyPI%20downloads&color=yellow)](https://pypistats.org/packages/pycsp3)
 [![PyPI version](https://img.shields.io/pypi/v/pycsp3?label=pypi)](https://pypi.org/project/pycsp3/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://pypi.org/project/pycsp3/)
 
-[![Build Linux](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-linux.yml?branch=master&label=Build%20Linux&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-linux.yml)
-[![Build MacOS](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-macos.yml?branch=master&label=Build%20MacOS&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-macos.yml)
-[![Build Windows](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-windows.yml?branch=master&label=Build%20Windows&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-windows.yml)
+[![Linux](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/linux.yml?branch=master&label=Linux&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/linux.yml)
+[![MacOS](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/macos.yml?branch=master&label=MacOS&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/macos.yml)
+[![Windows](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/windows.yml?branch=master&label=Windows&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/windows.yml)
 
-[![Linux tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-linux.yml?label=Linux%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-linux.yml)
-[![MacOS tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-macos.yml?label=MacOS%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-macos.yml)
-[![Windows tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-windows.yml?label=Windows%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-windows.yml)
+[![Guide DOI](https://img.shields.io/badge/Guide%20DOI-10.48550%2FarXiv.2009.00326-blue?logo=arxiv&logoColor=white)](https://doi.org/10.48550/arXiv.2009.00326)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
+[![Software Heritage](https://img.shields.io/badge/Software%20Heritage-archived-blue)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/xcsp3team/pycsp3)
 
 </div>
 
@@ -60,10 +61,53 @@ while replacing YY and MM with the current values that are present in the name o
 
 Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](https://pycsp.org/documentation/solving-process/).
 
+# Quick Start
+
+Install PyCSP3 (Python 3.10 or later; Java 11 or later is needed for the embedded solvers ACE and Choco):
+
+```console
+pip install pycsp3
+```
+
+Write a model, for example the problem of the 8 queens (no two queens on the same row, column or diagonal) in a file `Queens.py`:
+
+```python
+from pycsp3 import *
+
+n = 8
+
+# q[i] is the column of the queen in row i
+q = VarArray(size=n, dom=range(n))
+
+satisfy(
+    AllDifferent(q),
+    AllDifferent(q[i] + i for i in range(n)),
+    AllDifferent(q[i] - i for i in range(n))
+)
+
+if solve() is SAT:
+    print(values(q))
+```
+
+Then run it:
+
+```console
+python Queens.py
+```
+
+The XCSP3 instance `Queens.xml` is generated, the embedded solver ACE is run on it, and a solution is displayed:
+
+```
+[0, 6, 3, 5, 7, 1, 4, 2]
+```
+
+The sections below give the details of the installation and more examples; the [website](https://pycsp.org/) gives the documentation.
+
 # 0) Zero Installation from Google Colab
 
 This is an immediate solution for using PyCSP3, with no installation required (*you are ready to work in exactly 2 minutes*).
-What you have to do is:
+The quickest way is to open this [notebook](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb) on Colab, and to run its cells.
+Otherwise, what you have to do is:
 
 1. build a new notebook on [Google colab](https://colab.research.google.com/)
 2. insert a first code cell for being able to use PyCSP3 in your notebook:
@@ -851,4 +895,22 @@ With this new file, you can directly generate the XCSP3 file with:
 
  ```console
 python3 Nonogram.py -data=Nonogram_example.json
+```
+
+# Citing PyCSP3
+
+If you use PyCSP3 in your work, please cite the guide (GitHub also gives this reference, from the file
+[CITATION.cff](https://github.com/xcsp3team/pycsp3/blob/master/CITATION.cff), with the button "Cite this repository"):
+
+```bibtex
+@misc{lecoutre2020pycsp3,
+  title         = {{PyCSP3}: Modeling Combinatorial Constrained Problems in Python},
+  author        = {Lecoutre, Christophe and Szczepanski, Nicolas},
+  year          = {2020},
+  eprint        = {2009.00326},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  doi           = {10.48550/arXiv.2009.00326},
+  url           = {https://arxiv.org/abs/2009.00326}
+}
 ```
