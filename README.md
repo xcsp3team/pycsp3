@@ -298,9 +298,13 @@ Among the options, we find:
 
 * ```-output=<file_name>```: sets the filename of the generated XCSP3 instance (think about the extension .xml)
 
+* ```-ev```: displays the trace of an error (the traceback of Python), in addition to its message
+
 By default, a file containing the XCSP3 instance is generated, unless you use the option:
 
 * ```-display```: displays the XCSP3 instance in the system standard output, instead of generating an XCSP3 file
+
+The other options are given in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website.
 
 ## Example 1: in console mode
 
