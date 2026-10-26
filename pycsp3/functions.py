@@ -3560,6 +3560,8 @@ def Minimum(term, *others, condition=None):
 def _extremum_arg(name, term, others, rank, condition):
     # the component MaximumArg (or MinimumArg, whose name is given) of the terms, possibly subject to the specified condition
     terms = _extremum_terms(term, others)
+    if len(terms) == 0:
+        error(name + "() requires at least one term")
     checkType(rank, (type(None), TypeRank))
     condition = Condition.build_condition(condition)
     if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
