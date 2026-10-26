@@ -3562,6 +3562,11 @@ def _extremum_arg(name, term, others, rank, condition):
     terms = _extremum_terms(term, others)
     if len(terms) == 0:
         error(name + "() requires at least one term")
+    for t in terms:
+        if type(t) is bool:
+            error(name + "() does not accept Booleans as terms, which is the case of " + str(t))
+        if isinstance(t, Variable) and t.dom.type != TypeVar.INTEGER:
+            error(name + "() requires integer variables (or expressions), which is not the case of " + str(t))
     checkType(rank, (type(None), TypeRank))
     condition = Condition.build_condition(condition)
     if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:

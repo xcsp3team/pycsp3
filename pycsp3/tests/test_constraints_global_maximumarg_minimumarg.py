@@ -19,7 +19,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-INVALID_TERMS = "#256: MaximumArg() and MinimumArg() accept Booleans and symbolic variables among the terms"
 INTEGERS = ("#257: the integers among the terms of MaximumArg() and MinimumArg() are written in the list: the parser of ACE and CHOCO "
             "fails (ClassCastException in CtrLoaderInteger.minimumMaximumArg()), and cosoco crashes")
 SEVERAL_INDEXES = ("#259: with rank any, the auxiliary variable replacing MaximumArg() or MinimumArg() in an expression can take several "
@@ -597,9 +596,7 @@ def test_xcsp3_extremum_arg_in_a_group(run, name, f):
     "x, foo=2",
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_invalid_extremum_arg(run, request, name, f, arguments):
-    if arguments in ("True, x[0]", "x[0], False", "s", "x[0], s[0]"):
-        request.applymarker(bug(INVALID_TERMS))
+def test_invalid_extremum_arg(run, name, f, arguments):
     code = XY + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({name}({arguments}) == 1)"
     if "condition=" in arguments:
         code = XY + f"satisfy({name}({arguments}))"
@@ -619,12 +616,12 @@ def test_invalid_extremum_arg_operand(run, name, f, operand):
     ("[None, None]", "() requires at least one term"),
     ("x[i] for i in range(0)", "() requires at least one term"),
     ("True, x[0]", "() does not accept Booleans as terms, which is the case of True"),
+    ("x[0], False", "() does not accept Booleans as terms, which is the case of False"),
     ("s", "() requires integer variables (or expressions), which is not the case of s[0]"),
+    ("x[0], s[1]", "() requires integer variables (or expressions), which is not the case of s[1]"),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_invalid_extremum_arg_message(run, request, name, f, arguments, message):
-    if "requires at least one term" not in message:
-        request.applymarker(bug(INVALID_TERMS))
+def test_invalid_extremum_arg_message(run, name, f, arguments, message):
     r = run(X3 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({name}({arguments}) == 1)")
     assert not r.ok and name + message in r.stdout, r.report()
 
