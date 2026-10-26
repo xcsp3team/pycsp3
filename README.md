@@ -251,21 +251,20 @@ python single\Zebra\Zebra.py (For Windows)
 
 # 2) Installation (alternative) by Cloning from GitHub
 
-An alternative to PyPi is to clone the code from GitHub.
-Here is an illustration for MAC OS.
-We assume that Python 3 is installed (otherwise, type `port install python38` for example), and consequently 'pip3' is also installed.
+An alternative to PyPI is to clone the code from GitHub, and to install it in editable mode (the changes of the code are then taken into
+account without installing it again), in a virtual environment.
+Here is an illustration for Linux and macOS, Python (version 3.10, or later) being installed.
 In a console, type:
 
 ```console
 git clone https://github.com/xcsp3team/pycsp3.git
-pip3 install lxml
+cd pycsp3
+python3 -m venv ~/pycsp3-env
+source ~/pycsp3-env/bin/activate
+pip install -e .
 ```
 
-You may need to update the environment variable 'PYTHONPATH', by typing for example:
-
-```console
-export PYTHONPATH=$PYTHONPATH:.
-```
+On Windows, the virtual environment is created with `python -m venv pycsp3-env`, and activated with `pycsp3-env\Scripts\activate`.
 
 # 3) Compilation and Examples
 
