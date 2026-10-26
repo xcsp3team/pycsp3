@@ -53,11 +53,10 @@ and  `pycsp3/solvers/choco`.
 For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
 
 ```console
-java -jar ACE-YY-MM.jar zebra.xml 
-
+java -jar ACE-2.6.jar zebra.xml
 ```
 
-while replacing YY and MM with the current values that are present in the name of the jar file.
+while replacing 2.6 with the version that is present in the name of the jar file.
 
 Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](https://pycsp.org/documentation/solving-process/).
 
