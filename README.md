@@ -4,6 +4,7 @@
 
 <div align="center">
 
+[![License](https://img.shields.io/github/license/xcsp3team/pycsp3?label=License&color=yellow)](https://github.com/xcsp3team/pycsp3/blob/master/LICENSE)
 [![PyPI downloads](https://img.shields.io/pypi/dm/pycsp3?label=PyPI%20downloads&color=yellow)](https://pypistats.org/packages/pycsp3)
 [![PyPI version](https://img.shields.io/pypi/v/pycsp3?label=pypi)](https://pypi.org/project/pycsp3/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://pypi.org/project/pycsp3/)
@@ -12,7 +13,6 @@
 [![MacOS](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/macos.yml?branch=master&label=MacOS&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/macos.yml)
 [![Windows](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/windows.yml?branch=master&label=Windows&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/windows.yml)
 
-[![License](https://img.shields.io/github/license/xcsp3team/pycsp3?label=License&color=yellow)](https://github.com/xcsp3team/pycsp3/blob/master/LICENSE)
 [![Guide DOI](https://img.shields.io/badge/Guide%20DOI-10.48550%2FarXiv.2009.00326-blue?logo=arxiv&logoColor=white)](https://doi.org/10.48550/arXiv.2009.00326)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
 [![Software Heritage](https://img.shields.io/badge/Software%20Heritage-archived-blue)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/xcsp3team/pycsp3)
