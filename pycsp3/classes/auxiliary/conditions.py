@@ -186,7 +186,7 @@ class ConditionSet(Condition):
         self.t = t
 
     def _key(self):
-        return super()._key() + tuple(self.t)
+        return super()._key() + tuple(sorted(self.t))
 
     def filtering(self, values):
         if self.operator == IN:
@@ -203,7 +203,8 @@ class ConditionSet(Condition):
         assert False
 
     def right_operand(self):
-        return "{" + ",".join(str(v) for v in self.t) + "}"
+        # the values in increasing order (as for domains), so that the written set does not depend on the iteration order of a Python set
+        return "{" + ",".join(str(v) for v in sorted(self.t)) + "}"
 
     def __repr__(self):
         return self.str_tuple()

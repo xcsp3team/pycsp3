@@ -23,8 +23,6 @@ COSOCO_BASIC = ("xcsp3team/cosoco#88: cosoco gives wrong solutions for a sum mix
                 "coefficients (matchParams() accepts any variable, while BasicNodeVar assumes a 0/1 variable)")
 COSOCO_CANCEL = ("xcsp3team/cosoco#88: cosoco gives an invalid solution (Solution Error) for a sum whose terms all cancel out, when the condition "
                  "cannot be satisfied")
-COSOCO_UNSORTED_SET = ("xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on a sum whose condition is in a set whose values are not in "
-                       "increasing order, as {-1,-2} written by PyCSP3 (buildVariableInteger(): the first and last values of the set taken as bounds)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
@@ -417,9 +415,7 @@ def test_sum_on_a_single_variable(run, solver, request, constraint, predicate):
     ("(x[0] * 2 in {0, 4}) | (x[1] == 1)", lambda a, b, c, d: 2 * a in (0, 4) or b == 1),
     ("5 // (x[:1] * [3]) == 1", lambda a, b, c, d: a == 1),
 ], ids=["expression in a set", "negated variable in a set", "group", "logical expression", "integer division"])
-def test_sum_of_one_term_in_other_contexts(run, solver, request, constraint, predicate):
-    if constraint == "Sum(-x[0]) in {-1, -2}":  # the set is written {-1,-2}
-        bug_for(request, "COSOCO", COSOCO_UNSORTED_SET)
+def test_sum_of_one_term_in_other_contexts(run, solver, constraint, predicate):
     check(run, solver, X4 + f"satisfy({constraint})", D4, predicate)
 
 
@@ -651,6 +647,22 @@ def test_xcsp3_sum_order_of_elements(run, constraint):
     for c in r.xml.iter("sum"):
         tags = [e.tag for e in c]
         assert tags in (["list", "condition"], ["list", "coeffs", "condition"]), constraint + "\n" + r.report()
+
+
+@pytest.mark.parametrize("constraint, tag, expected", [
+    ("Sum(x) in {42, 13, 7}", "sum", "(in,{7,13,42})"),
+    ("Sum(x[0], -x[1]) in {-1, -2}", "sum", "(in,{-2,-1})"),
+    ("Sum(x) not in {9, 5, 1}", "sum", "(notin,{1,5,9})"),
+    ("Sum(x, condition=('in', {16, 8, 0}))", "sum", "(in,{0,8,16})"),
+    ("Count(x, value=1) in {33, 1}", "count", "(in,{1,33})"),
+    ("NValues(x) in {3, -1}", "nValues", "(in,{-1,3})"),
+    ("Maximum(x) not in {10, 2}", "maximum", "(notin,{2,10})"),
+])
+def test_xcsp3_condition_with_a_set_in_increasing_order(run, constraint, tag, expected):
+    # the values of a set are written in increasing order, whatever the iteration order of the Python set (here, not increasing)
+    r = run(X4 + f"satisfy({constraint})")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/" + tag + "/condition").text.strip() == expected, r.report()
 
 
 # --------------------------------------------------------------------------------------------------- invalid cases

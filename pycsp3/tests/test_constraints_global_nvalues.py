@@ -27,7 +27,6 @@ CHOCO_LIMIT = ("CHOCO 4.10.15-beta (embedded in PyCSP3) finds solutions several 
                "solutions with ne (the limit variable built by condToVar() is not determined by the list); fixed since CHOCO 5.0.0 (checked with "
                "6.0.2), so not reported")
 CHOCO_DUPLICATES = "chocoteam/choco-solver#1248 (section 5): CHOCO finds solutions several times with nValues on expressions"
-COSOCO_UNSORTED_SET = "xcsp3team/cosoco#94: cosoco crashes (segmentation fault) on (in,set) when the values of the set are not in increasing order"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 
@@ -239,8 +238,6 @@ def test_nvalues_in_a_set_given_in_any_order(run, solver, request, condition):
     # the values of the set may be written in the order of Python, which is not always the increasing order (here, {-1, 3} is written {3,-1})
     if solver == "CHOCO":
         pytest.skip(CHOCO_IN)
-    if condition == "{-1, 3}":
-        bug_for(request, "COSOCO", COSOCO_UNSORTED_SET)
     check(run, solver, X4 + f"satisfy(NValues(x) in {condition})", D4, lambda *t: nv(t) in eval(condition))
 
 
