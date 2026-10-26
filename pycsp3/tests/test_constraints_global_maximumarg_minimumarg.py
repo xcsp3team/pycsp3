@@ -19,8 +19,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-SEVERAL_INDEXES = ("#259: with rank any, the auxiliary variable replacing MaximumArg() or MinimumArg() in an expression can take several "
-                   "values (the indexes of all the extrema): a solution is found several times")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_INDEX = ("xcsp3team/ACE#35: ACE fails without message on maximumArg and minimumArg with (eq,y) when the domain of y is not the range of the "
@@ -78,13 +76,12 @@ def differ(domains, predicate, rank1, rank2):
     return brute_force(domains, lambda *t: predicate(rank1, *t)) != brute_force(domains, lambda *t: predicate(rank2, *t))
 
 
-def mark(request, name, rank, domains, predicate, eq_var=True, index=True, in_list=False, repeated=False, several=False, cosoco_ok=False):
+def mark(request, name, rank, domains, predicate, eq_var=True, index=True, in_list=False, repeated=False, cosoco_ok=False):
     """
     Marks the running test (using the fixture solver) according to the cases of maximumArg/minimumArg that the solvers do not handle or get wrong:
     eq_var for a condition (eq,y), index for a variable y whose domain is the range of the indexes, in_list for a variable y also in the list,
-    repeated for a variable given several times in the list (cosoco_ok when cosoco handles it), and several when the index (rank any) is given by
-    an auxiliary variable that can take several values for the same solution. The predicate (of the brute force) receives the rank as first
-    argument.
+    repeated for a variable given several times in the list (cosoco_ok when cosoco handles it). The predicate (of the brute force) receives the
+    rank as first argument.
     """
     solver = request.node.callspec.params["solver"]
     if solver == "ACE":
@@ -103,13 +100,6 @@ def mark(request, name, rank, domains, predicate, eq_var=True, index=True, in_li
         request.applymarker(bug(CHOCO_LAST))
     elif rank == "any" and differ(domains, predicate, "any", "first"):
         request.applymarker(bug(CHOCO_ANY))  # CHOCO gives the solutions of rank first
-    if several and rank == "any" and solver in ("ACE", "COSOCO"):
-        request.applymarker(bug(SEVERAL_INDEXES))
-
-
-def several_indexes(f, domains, test):
-    """True iff, for a tuple of the domains (the three first values being the terms), several indexes of an extremum satisfy the test."""
-    return any(sum(1 for i in indexes(f, t[:3]) if test(i, t)) > 1 for t in brute_force(domains, lambda *t: True))
 
 
 def check(run, solver, code, domains, predicate, args=()):
@@ -136,6 +126,7 @@ def check(run, solver, code, domains, predicate, args=()):
     ("F(x) in {0, 2}", lambda i, y: i in (0, 2)),
     ("F(x) in range(1, 3)", lambda i, y: i in (1, 2)),
     ("F(x) in [0, 1]", lambda i, y: i in (0, 1)),
+    ("F(x) in list(range(2))", lambda i, y: i in (0, 1)),
     ("F(x) not in {0, 2}", lambda i, y: i not in (0, 2)),
     ("F(x) not in range(1, 3)", lambda i, y: i not in (1, 2)),
     ("F(x) == 3", lambda i, y: i == 3),  # never, 3 not being an index
@@ -368,12 +359,12 @@ def test_extremum_arg_with_a_repeated_term(run, solver, request, name, f, rank, 
     ("x[F(x)] == 2", lambda i, t: t[i] == 2),
     ("abs(F(x) - y) <= 1", lambda i, t: abs(i - t[3]) <= 1),
 ])
-@pytest.mark.parametrize("rank, r", RANKS)
+@pytest.mark.parametrize("rank, r", RANKS[1:])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_arg_as_a_term(run, solver, request, name, f, rank, r, constraint, test):
-    # the component is replaced by an auxiliary variable, equal to an index of an extremum (with rank any, the expression holds for one of them)
+    # the component (with a rank) is replaced by an auxiliary variable, equal to the first or last index of an extremum
     predicate = lambda rk, *t: holds(f, t[:3], rk, lambda i: test(i, t))
-    mark(request, name, r, DY, predicate, in_list=constraint == "F(x) == x[0]", several=several_indexes(f, DY, test))
+    mark(request, name, r, DY, predicate, in_list=constraint == "F(x) == x[0]")
     check(run, solver, XY + "satisfy(" + code_of(constraint, name, rank) + ")", DY, lambda *t: predicate(r, *t))
 
 
@@ -428,13 +419,25 @@ def test_extremum_arg_in_a_slide(run, solver, name, f):
     ("(F(x) in {0, 2}) | (y == 0)", lambda i, t: i in (0, 2) or t[3] == 0),
     ("(F(x) == y) | (x[0] == 0)", lambda i, t: i == t[3] or t[0] == 0),
 ])
-@pytest.mark.parametrize("rank, r", RANKS)
+@pytest.mark.parametrize("rank, r", RANKS[1:])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_arg_in_logical_expressions(run, solver, request, name, f, rank, r, constraint, test):
-    # the component is replaced by an auxiliary variable, equal to an index of an extremum (with rank any, the expression holds for one of them)
+    # the component (with a rank) is replaced by an auxiliary variable, equal to the first or last index of an extremum
     predicate = lambda rk, *t: holds(f, t[:3], rk, lambda i: test(i, t))
-    mark(request, name, r, DY, predicate, several=several_indexes(f, DY, test))
+    mark(request, name, r, DY, predicate)
     check(run, solver, XY + "satisfy(" + code_of(constraint, name, rank) + ")", DY, lambda *t: predicate(r, *t))
+
+
+@pytest.mark.parametrize("code", [
+    "satisfy(F(x) + 1 == y)", "satisfy(x[F(x)] == 2)", "satisfy((F(x) == 1) | (y == 0))", "satisfy(~(F(x) == 1))", "satisfy(imply(F(x) == 1, y == 0))",
+    "satisfy(F(x[:2], rank=TypeRank.FIRST) == F(x))", "satisfy(Maximum(F(x), y) == 2)", "satisfy(Sum(F(x), y) == 2)", "minimize(F(x) + y)",
+    "maximize(F(x, rank=TypeRank.ANY) * 2)",
+])
+@pytest.mark.parametrize("name, f", FUNCTIONS)
+def test_extremum_arg_without_rank_as_a_term(run, name, f, code):
+    # with rank any, the index is not unique when several terms take the extremum: a rank is required in an expression
+    r = run(XY + code_of(code, name))
+    assert not r.ok and name + "() without rank (or with TypeRank.ANY) has no single value" in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("name, f", FUNCTIONS)
