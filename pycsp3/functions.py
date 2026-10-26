@@ -3462,10 +3462,12 @@ def MaximumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MaximumArg (that becomes a constraint when subject to a condition).
     The component represents the index of a term taking the largest value (with 'rank', the first or the last such index).
+    It cannot be an objective (there is no objective of type maximumArg in XCSP3).
 
     :param term: the first term on which the maximum applies
     :param others: the other terms (if any) on which the maximum applies
-    :param rank: ranking condition on the index (ANY, FIRST or LAST); ANY if None
+    :param rank: ranking condition on the index (ANY, FIRST or LAST); ANY if None; with ANY, several indexes being possible, the component must be
+    directly subject to a condition (as in MaximumArg(x) == y), and cannot be a term of an expression
     :param condition: a condition directly specified for the maximum (typically, None)
     :return: a component/constraint MaximumArg
     :example:
@@ -3498,10 +3500,12 @@ def MinimumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MinimumArg (that becomes a constraint when subject to a condition).
     The component represents the index of a term taking the smallest value (with 'rank', the first or the last such index).
+    It cannot be an objective (there is no objective of type minimumArg in XCSP3).
 
     :param term: the first term on which the minimum applies
     :param others: the other terms (if any) on which the minimum applies
-    :param rank: ranking condition on the index (ANY, FIRST or LAST); ANY if None
+    :param rank: ranking condition on the index (ANY, FIRST or LAST); ANY if None; with ANY, several indexes being possible, the component must be
+    directly subject to a condition (as in MinimumArg(x) == y), and cannot be a term of an expression
     :param condition: a condition directly specified for the minimum (typically, None)
     :return: a component/constraint MinimumArg
     :example:
