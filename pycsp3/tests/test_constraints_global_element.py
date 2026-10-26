@@ -15,27 +15,27 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-IDENTICAL = ("(to be reported) a list of identical integers indexed by a variable is replaced by this integer, so that c[i] == 2 (two integers "
+IDENTICAL = ("#281: a list of identical integers indexed by a variable is replaced by this integer, so that c[i] == 2 (two integers "
              "compared by Python) fails, and c[i] cannot be an objective")
-OUTSIDE = ("(to be reported) an index that can take a value outside the list is not detected for a list of identical integers, a matrix of identical "
+OUTSIDE = ("#282: an index that can take a value outside the list is not detected for a list of identical integers, a matrix of identical "
            "rows and an expression as second index of a matrix (and is not restricted with -force_element_index for identical integers)")
-HOLES = ("(to be reported) the holes of an array indexed by a variable are removed from the list of the element, so that the index designates "
+HOLES = ("#283: the holes of an array indexed by a variable are removed from the list of the element, so that the index designates "
          "another variable, and None is written in the matrix of an element on a matrix with holes")
-LOGICAL_OUTSIDE = ("(to be reported) with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
+LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
-TABLE = "(to be reported) a component (element, sum, maximum) in the scope of a table makes PyCSP3 fail (badly formed, or SystemError)"
-MEMBER_TUPLE = "(to be reported) v in a list of variables written literally (a tuple for Python) fails (an argument of satisfy() is badly formed)"
-MEMBER_TERM = ("(to be reported) member of an expression or of a component (v + 1 in x, x[i] in x, Sum(y) in x) fails (badly formed), and member "
+TABLE = "#285: a component (element, sum, maximum) in the scope of a table makes PyCSP3 fail (badly formed, or SystemError)"
+MEMBER_TUPLE = "#286: v in a list of variables written literally (a tuple for Python) fails (an argument of satisfy() is badly formed)"
+MEMBER_TERM = ("#287: member of an expression or of a component (v + 1 in x, x[i] in x, Sum(y) in x) fails (badly formed), and member "
                "of a two-dimensional list too (bad form of predicate)")
-MEMBER_LOGICAL = "(to be reported) member in a logical expression fails with a message about the second argument of belong()"
-MEMBER_MINI = "(to be reported) with -mini, member gives an element without index, whereas the element <index> is required in the mini-tracks"
-MATRIX_OBJECTIVE = "(to be reported) an element on a matrix as objective gives an objective of type element, which does not exist in XCSP3"
-BOOLEAN = ("(to be reported) the element of a list of 0/1 variables cannot be used with | and ~ (TypeError), and the element of a list of 0/1 "
+MEMBER_LOGICAL = "#288: member in a logical expression fails with a message about the second argument of belong()"
+MEMBER_MINI = "#289: with -mini, member gives an element without index, whereas the element <index> is required in the mini-tracks"
+MATRIX_OBJECTIVE = "#290: an element on a matrix as objective gives an objective of type element, which does not exist in XCSP3"
+BOOLEAN = ("#291: the element of a list of 0/1 variables cannot be used with | and ~ (TypeError), and the element of a list of 0/1 "
            "integers cannot be posted alone (assert without message)")
-INVALID = ("(to be reported) invalid arguments of an element: assert without message, TypeError raised inside PyCSP3, or a symbolic variable "
+INVALID = ("#292: invalid arguments of an element: assert without message, TypeError raised inside PyCSP3, or a symbolic variable "
            "accepted as value")
-ROWS_TUPLE = "(to be reported) a row of integers indexed by a variable compared with a tuple of variables fails (whereas a list works)"
-INTEGER_OPERAND = ("(to be reported) an element on a list of integers whose condition has an integer as operand is not XCSP3-core (the condition "
+ROWS_TUPLE = "#293: a row of integers indexed by a variable compared with a tuple of variables fails (whereas a list works)"
+INTEGER_OPERAND = ("#294: an element on a list of integers whose condition has an integer as operand is not XCSP3-core (the condition "
                    "must contain a variable), and ACE does not handle it (unimplemented case for element), except with eq")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
