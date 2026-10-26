@@ -1,5 +1,5 @@
 <div id="logo" align="center">
-<img width="25%" src="https://www.cril.univ-artois.fr/~lecoutre/logoPyCSP3.gif" alt="logo"/>
+<img width="25%" src="https://raw.githubusercontent.com/xcsp3team/pycsp3/master/logo.gif" alt="logo"/>
 </div>
 
 <div align="center">
