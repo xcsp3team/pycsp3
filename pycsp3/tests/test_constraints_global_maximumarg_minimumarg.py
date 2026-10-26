@@ -25,10 +25,10 @@ ACE_INDEX = ("xcsp3team/ACE#35: ACE fails without message on maximumArg and mini
              "indexes (control in the constructor of ExtremumArgVar)")
 COSOCO_INDEX = ("xcsp3team/cosoco#104: cosoco crashes (segmentation fault) on maximumArg with (eq,y) when y has a value that is not an index, and finds "
                 "wrong solutions when an index is not in the domain of y, when y is in the list, or when a variable is given several times")
-CHOCO_ANY = ("(to be reported) CHOCO handles maximumArg and minimumArg with rank any as with rank first (model.argmax and model.argmin give the "
-             "first index), also in the develop version (859fdde)")
-CHOCO_LAST = ("(to be reported) CHOCO finds wrong solutions for maximumArg and minimumArg with rank last (on the reversed list, the view -i + n "
-              "instead of -i + n - 1), also in the develop version (859fdde)")
+CHOCO_ANY = ("chocoteam/choco-solver#1260: CHOCO handles maximumArg and minimumArg with rank any as with rank first (model.argmax and "
+             "model.argmin give the first index), also in the develop version (4e5f043)")
+CHOCO_LAST = ("chocoteam/choco-solver#1260: CHOCO finds wrong solutions for maximumArg and minimumArg with rank last (on the reversed list, the "
+              "view -i + n instead of -i + n - 1), also in the develop version (4e5f043)")
 CHOCO_REPEATED = ("CHOCO 4.10.15-beta (embedded in PyCSP3) finds a wrong solution for minimumArg with rank first on [x[0] x[1] x[1]], fixed in the "
                   "develop version of CHOCO (859fdde, not reported)")
 CHOCO_INTERVAL = ("CHOCO 4.10.15-beta (embedded in PyCSP3) and CHOCO 6.0.2 find wrong solutions for maximumArg and minimumArg with (in,a..b) and "
