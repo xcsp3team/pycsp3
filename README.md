@@ -39,10 +39,12 @@ constraints. Note that:
 * PyCSP3 is available as a [PyPi package](https://pypi.org/project/pycsp3/)
 * a GitHub repository with more than 400 models is available at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models)
 
-At this stage, one can run two embedded solvers:
+At this stage, one can run three embedded solvers:
 
 * the constraint solver [ACE](https://github.com/xcsp3team/ace), with the option -solve or the option -solver=ace
 * the constraint solver [Choco](https://choco-solver.org/), with the option -solver=choco
+* the constraint solver [cosoco](https://github.com/xcsp3team/cosoco), with the option -solver=cosoco (installed with `pip install pycsp3[cosoco]`,
+  or automatically at the first use; not available on Windows)
 
 <!-- Information about how to pilot these embedded solvers can be found in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website. -->
 
@@ -289,7 +291,7 @@ Among the options, we find:
 
 * ```-solve```: attempts to solve the instance with the embedded solver 'Ace'. It requires that Java (version 11, or later) is installed.
 
-* ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace' or 'choco'.
+* ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace', 'choco' or 'cosoco' (cosoco is not available on Windows).
   Important: it requires that Java (version 11, or later) is installed.
   Information about how to pilot these embedded solvers can be found
   in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website.
