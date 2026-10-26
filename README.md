@@ -16,6 +16,9 @@
 [![MacOS tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-macos.yml?label=MacOS%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-macos.yml)
 [![Windows tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-windows.yml?label=Windows%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-windows.yml)
 
+[![License](https://img.shields.io/github/license/xcsp3team/pycsp3?label=License)](https://github.com/xcsp3team/pycsp3/blob/master/LICENSE)
+[![DOI](https://img.shields.io/badge/DOI-10.48550%2FarXiv.2009.00326-blue?logo=arxiv&logoColor=white)](https://doi.org/10.48550/arXiv.2009.00326)
+
 </div>
 
 <br />
