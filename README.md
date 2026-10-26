@@ -322,20 +322,24 @@ In this example, we just post two variables and two simple binary constraints.
 
 ```console
 $ python3
-Python 3.5.2
 >>> from pycsp3 import *
 >>> x = Var(range(10))
 >>> y = Var(range(10))
 >>> satisfy(
-       x < y,
-       x + y > 15
-    )
+...    x < y,
+...    x + y > 15
+... )
+intension(function:lt(x,y))
+intension(function:gt(add(x,y),15))
 >>> compile()
+('Console.xml', False)
 >>> if solve() is SAT:
-       print(value(x),value(y)) 
+...    print(value(x), value(y))
+...
+7 9
 ```
 
-Note that to get an XCSP3 file, we call `compile()`.
+Note that to get an XCSP3 file (here, `Console.xml`), we call `compile()`.
 
 ## Example 2: Send+More=Money
 
