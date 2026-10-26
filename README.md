@@ -44,7 +44,7 @@ At this stage, one can run two embedded solvers:
 * the constraint solver [ACE](https://github.com/xcsp3team/ace), with the option -solve or the option -solver=ace
 * the constraint solver [Choco](https://choco-solver.org/), with the option -solver=choco
 
-<!-- Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf). -->
+<!-- Information about how to pilot these embedded solvers can be found in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website. -->
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
 For example, see the solvers involved in the [2022, 2023, 2024 and 2025 Competitions](https://www.xcsp.org/competitions/).
@@ -290,8 +290,8 @@ Among the options, we find:
 
 * ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace' or 'choco'.
   Important: it requires that Java (version 11, or later) is installed.
-  Information about how piloting these embedded solvers can be found
-  in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
+  Information about how to pilot these embedded solvers can be found
+  in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website.
 
 * ```-output=<file_name>```: sets the filename of the generated XCSP3 instance (think about the extension .xml)
 
