@@ -37,7 +37,7 @@ constraints. Note that:
 * a dedicated [website](https://pycsp.org/) with more than 60 Jupyter notebooks is available
 * a well-documented [guide](https://arxiv.org/abs/2009.00326) is available
 * PyCSP3 is available as a [PyPi package](https://pypi.org/project/pycsp3/)
-* a GitHub repository with more than 340 models is available at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models)
+* a GitHub repository with more than 400 models is available at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models)
 
 At this stage, one can run two embedded solvers:
 
@@ -47,7 +47,7 @@ At this stage, one can run two embedded solvers:
 <!-- Information about how to pilot these embedded solvers can be found in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website. -->
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-For example, see the solvers involved in the [2022, 2023, 2024 and 2025 Competitions](https://www.xcsp.org/competitions/).
+For example, see the solvers involved in the [XCSP3 Competitions](https://www.xcsp.org/competitions/) (every year since 2022).
 It is also immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are present in directories `pycsp3/solvers/ace`
 and  `pycsp3/solvers/choco`.
 For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
@@ -219,7 +219,7 @@ python -m pip install --upgrade git+https://github.com/xcsp3team/pycsp3.git
 
 ## Working with a Pool of Models
 
-A GitHub repository is now available with more than 340 models
+A GitHub repository is now available with more than 400 models
 at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models).
 
 And you can test the compilation of one of these models.
