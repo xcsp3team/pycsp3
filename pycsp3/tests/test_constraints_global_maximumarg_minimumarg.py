@@ -21,7 +21,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 SEVERAL_INDEXES = ("#259: with rank any, the auxiliary variable replacing MaximumArg() or MinimumArg() in an expression can take several "
                    "values (the indexes of all the extrema): a solution is found several times")
-OBJECTIVE = "#258: an objective MaximumArg() or MinimumArg() is written with the type maximumArg (not in XCSP3), its rank being lost"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_INDEX = ("xcsp3team/ACE#35: ACE fails without message on maximumArg and minimumArg with (eq,y) when the domain of y is not the range of the "
@@ -448,17 +447,26 @@ def test_extremum_arg_in_a_meta_constraint(run, name, f):
 
 # ------------------------------------------------------------------------------------------------------------ objectives
 
+@pytest.mark.parametrize("objective", ["minimize(F(x))", "maximize(F(x))", "minimize(F(x, rank=TypeRank.LAST))", "maximize(F(x, rank=TypeRank.FIRST))",
+                                       "minimize(F(x[0] + 1, x[1], x[2]))"])
+@pytest.mark.parametrize("name, f", FUNCTIONS)
+def test_extremum_arg_as_objective(run, name, f, objective):
+    # there is no type maximumArg (or minimumArg) of objectives in XCSP3: such an objective is refused (decision of #252)
+    r = run(X3 + "satisfy(x[0] != x[1])\n" + code_of(objective, name))
+    assert not r.ok and name + "() cannot be an objective" in r.stdout, r.report()
+
+
 @pytest.mark.parametrize("objective, function", [
-    ("minimize(F(x))", lambda f, t: indexes(f, t)[0]),
-    ("maximize(F(x))", lambda f, t: indexes(f, t)[-1]),
-    ("minimize(F(x, rank=TypeRank.LAST))", lambda f, t: indexes(f, t, "last")[0]),
-    ("maximize(F(x, rank=TypeRank.FIRST))", lambda f, t: indexes(f, t, "first")[0]),
-    ("minimize(F(x[0] + 1, x[1], x[2]))", lambda f, t: indexes(f, (t[0] + 1, t[1], t[2]))[0]),
+    ("maximize(F(x, rank=TypeRank.FIRST) + x[2])", lambda f, t: indexes(f, t, "first")[0] + t[2]),
+    ("minimize(F(x, rank=TypeRank.LAST) * 2 - x[0])", lambda f, t: indexes(f, t, "last")[0] * 2 - t[0]),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_extremum_arg_as_objective(run, solver, request, name, f, objective, function):
-    # with rank any, the index is chosen so as to optimize the objective
-    request.applymarker(bug(OBJECTIVE))
+def test_extremum_arg_in_an_objective_expression(run, solver, request, name, f, objective, function):
+    # a term (with a rank) of an expression to be optimized, replaced by an auxiliary variable
+    if solver == "COSOCO" and name == "MinimumArg":
+        pytest.skip(COSOCO_UNSUPPORTED)
+    if "LAST" in objective:
+        bug_for(request, "CHOCO", CHOCO_LAST)
     code = code_of(objective, name)
     r = run(X3 + "satisfy(x[0] != x[1])\n" + code, solver=solver)
     expected = brute_force(D3, lambda *t: t[0] != t[1])
@@ -541,16 +549,15 @@ def test_xcsp3_extremum_arg_with_integers(run, name, f, terms, expected):
     assert r.xml.find("constraints/" + name[0].lower() + name[1:] + "/list").text.strip() == expected, r.report()
 
 
-@pytest.mark.parametrize("objective, rank", [("minimize(F(x))", None), ("maximize(F(x, rank=TypeRank.LAST))", "last")])
+@pytest.mark.parametrize("objective, rank", [("maximize(F(x, rank=TypeRank.FIRST) + x[2])", "first"), ("minimize(F(x, rank=TypeRank.LAST) * 2)", "last")])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-@bug(OBJECTIVE)
-def test_xcsp3_extremum_arg_as_objective(run, name, f, objective, rank):
-    # the types of objectives are sum, minimum, maximum, nValues and lex: the index is given by an auxiliary variable
+def test_xcsp3_extremum_arg_in_an_objective_expression(run, name, f, objective, rank):
+    # the component is replaced by an auxiliary variable, its constraint keeping its rank
     r = run(X3 + code_of(objective, name))
     assert r.ok, r.report()
     o = r.xml.find("objectives/" + objective[:8])
     c = r.xml.find("constraints/" + name[0].lower() + name[1:])
-    assert o is not None and o.get("type") is None and c is not None and c.get("rank") == rank, r.report()
+    assert o is not None and "aux_gb[0]" in o.text and c is not None and c.get("rank") == rank, r.report()
 
 
 @pytest.mark.parametrize("name, f", FUNCTIONS)

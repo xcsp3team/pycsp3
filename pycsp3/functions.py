@@ -4273,6 +4273,8 @@ def _optimize(term, minimization):
 
     ObjEntities.items = []  # TODO currently, we overwrite the objective if one was posted
     if isinstance(term, PartialConstraint):
+        if isinstance(term.constraint, (ConstraintMaximumArg, ConstraintMinimumArg)):  # there is no type maximumArg (or minimumArg) of objectives
+            error(("MaximumArg()" if isinstance(term.constraint, ConstraintMaximumArg) else "MinimumArg()") + " cannot be an objective")
         if isinstance(term.constraint, (ConstraintElement, ConstraintCount)) \
                 or isinstance(term.constraint, ConstraintNValues) and term.constraint.arguments[TypeCtrArg.EXCEPT].content is not None:
             term = auxiliary().replace_partial_constraint(term)  # (an objective of type nValues has no element <except>)
