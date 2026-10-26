@@ -15,7 +15,7 @@
 [![License](https://img.shields.io/github/license/xcsp3team/pycsp3?label=License&color=yellow)](https://github.com/xcsp3team/pycsp3/blob/master/LICENSE)
 [![Guide DOI](https://img.shields.io/badge/Guide%20DOI-10.48550%2FarXiv.2009.00326-blue?logo=arxiv&logoColor=white)](https://doi.org/10.48550/arXiv.2009.00326)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
-[![Software Heritage](https://archive.softwareheritage.org/badge/origin/https://github.com/xcsp3team/pycsp3/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/xcsp3team/pycsp3)
+[![Software Heritage](https://img.shields.io/badge/Software%20Heritage-archived-blue)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/xcsp3team/pycsp3)
 
 </div>
 
