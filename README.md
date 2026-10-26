@@ -63,9 +63,11 @@ Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving 
 
 # Quick Start
 
-Install PyCSP3 (Python 3.10 or later; Java 11 or later is needed for the embedded solvers ACE and Choco):
+Install PyCSP3 (Python 3.10 or later; Java 11 or later is needed for the embedded solvers ACE and Choco), in a virtual environment:
 
 ```console
+python3 -m venv ~/pycsp3-env
+source ~/pycsp3-env/bin/activate      # on Windows: python -m venv pycsp3-env, then pycsp3-env\Scripts\activate
 pip install pycsp3
 ```
 
@@ -142,19 +144,17 @@ You can do it, for example, from [python.org](https://www.python.org/downloads/)
 
 ## Installing PyCSP3 (Linux)
 
-Check if 'pip3' is installed. If it is not the case, execute:
+Recent distributions do not allow installing packages with pip in the Python of the system (error `externally-managed-environment`):
+install PyCSP3 in a virtual environment (on Debian and Ubuntu, the module venv is given by the package python3-venv):
 
 ```console
-sudo apt install python3-pip
-
+sudo apt install python3-venv
+python3 -m venv ~/pycsp3-env
+source ~/pycsp3-env/bin/activate
+pip install pycsp3
 ```
 
-Then, install PyCSP3 with the command 'pip3':
-
-```console
-sudo pip3 install pycsp3
-
-```
+The virtual environment has to be activated (`source ~/pycsp3-env/bin/activate`) in each new console where PyCSP3 is used.
 
 For using the -solve or -solver options, you need to have Java (at least, version 11) installed:
 
@@ -164,29 +164,29 @@ sudo apt-get install openjdk-11-jdk
 
 ## Installing PyCSP3 (Mac OS)
 
-If Python 3 is installed on your system, the command 'pip3' should already be present.
-
-Install PyCSP3 with the command 'pip3':
+Install PyCSP3 in a virtual environment (the Python of Homebrew does not allow installing packages with pip outside of one):
 
 ```console
-sudo pip3 install pycsp3
+python3 -m venv ~/pycsp3-env
+source ~/pycsp3-env/bin/activate
+pip install pycsp3
 ```
+
+The virtual environment has to be activated (`source ~/pycsp3-env/bin/activate`) in each new console where PyCSP3 is used.
 
 For using the -solve or -solver options, you need to have Java (at least, version 11) installed.
 
 ## Installing PyCSP3 (Windows)
 
-You may need to upgrade 'pip'. Open the console and type:
+Install PyCSP3 in a virtual environment. Open the console and type:
 
 ```console
-python -m pip install --upgrade pip
-```
-
-Then, for installing pycsp3, type:
-
-```console
+python -m venv pycsp3-env
+pycsp3-env\Scripts\activate
 python -m pip install pycsp3
 ```
+
+The virtual environment has to be activated (`pycsp3-env\Scripts\activate`) in each new console where PyCSP3 is used.
 
 For using the -solve or -solver options, you need to install (at least) Java version 11:
 
@@ -206,15 +206,7 @@ java --version
 
 ## Updating the Version of PyCSP3 (for PyPi)
 
-For updating your version of PyCSP3, simply execute:
-
-For linux/Mac:
-
-```console
-sudo pip3 install --upgrade pycsp3
-```
-
-For Windows:
+For updating your version of PyCSP3, simply execute (in the virtual environment, activated):
 
 ```console
 python -m pip install --upgrade pycsp3
@@ -222,15 +214,8 @@ python -m pip install --upgrade pycsp3
 
 ## Using the development version via Github and pip
 
-You can install the current development version (the master branch of this repo) by explicitly indicating that you want to use the repo to pip.
-
-For linux/Mac:
-
-```console
-pip3 install --upgrade git+https://github.com/xcsp3team/pycsp3.git
-```
-
-For Windows:
+You can install the current development version (the master branch of this repo) by explicitly indicating that you want to use the repo to pip
+(in the virtual environment, activated):
 
 ```console
 python -m pip install --upgrade git+https://github.com/xcsp3team/pycsp3.git
