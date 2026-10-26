@@ -159,7 +159,7 @@ The virtual environment has to be activated (`source ~/pycsp3-env/bin/activate`)
 For using the -solve or -solver options, you need to have Java (at least, version 11) installed:
 
 ```console
-sudo apt-get install openjdk-11-jdk
+sudo apt install default-jre
 ```
 
 ## Installing PyCSP3 (Mac OS)
@@ -174,7 +174,11 @@ pip install pycsp3
 
 The virtual environment has to be activated (`source ~/pycsp3-env/bin/activate`) in each new console where PyCSP3 is used.
 
-For using the -solve or -solver options, you need to have Java (at least, version 11) installed.
+For using the -solve or -solver options, you need to have Java (at least, version 11) installed, for example with [Homebrew](https://brew.sh/):
+
+```console
+brew install --cask temurin
+```
 
 ## Installing PyCSP3 (Windows)
 
@@ -188,15 +192,8 @@ python -m pip install pycsp3
 
 The virtual environment has to be activated (`pycsp3-env\Scripts\activate`) in each new console where PyCSP3 is used.
 
-For using the -solve or -solver options, you need to install (at least) Java version 11:
-
-https://www.oracle.com/java/technologies/javase-downloads.html
-
-And add in the PATH the java command, for example, temporally, with the command:
-
-```console
-set path=%path%;C:/Program Files/Java/jdk-14.0.1/bin/
-```
+For using the -solve or -solver options, you need to install (at least) Java version 11, for example with the installer
+of [Adoptium](https://adoptium.net/) (the option that adds Java to the PATH being selected).
 
 You can check the java command by typing in your console:
 
@@ -290,10 +287,10 @@ Among the options, we find:
 * ```-variant=<variant_name>```: the name of a variant, to be used with function `variant()`.
   See Example AllInterval below, for an illustration.
 
-* ```-solve```: attempts to solve the instance with the embedded solver 'Ace'. It requires that Java version 8 (at least) is installed.
+* ```-solve```: attempts to solve the instance with the embedded solver 'Ace'. It requires that Java (version 11, or later) is installed.
 
 * ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace' or 'choco'.
-  Important: it requires that Java version 8 (at least) is installed.
+  Important: it requires that Java (version 11, or later) is installed.
   Information about how piloting these embedded solvers can be found
   in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
 
