@@ -19,8 +19,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-INTEGERS = ("#257: the integers among the terms of MaximumArg() and MinimumArg() are written in the list: the parser of ACE and CHOCO "
-            "fails (ClassCastException in CtrLoaderInteger.minimumMaximumArg()), and cosoco crashes")
 SEVERAL_INDEXES = ("#259: with rank any, the auxiliary variable replacing MaximumArg() or MinimumArg() in an expression can take several "
                    "values (the indexes of all the extrema): a solution is found several times")
 OBJECTIVE = "#258: an objective MaximumArg() or MinimumArg() is written with the type maximumArg (not in XCSP3), its rank being lost"
@@ -281,27 +279,25 @@ def test_extremum_arg_on_expressions(run, solver, request, name, f, rank, r, ter
     ("x[0], x[1], 0", lambda t: (t[0], t[1], 0)),
     ("x[0], 1, 1", lambda t: (t[0], 1, 1)),
     ("x[0], x[1], x[1] >= x[1]", lambda t: (t[0], t[1], 1)),
+    ("x[0], Sum([]), x[1]", lambda t: (t[0], 0, t[1])),
 ])
 @pytest.mark.parametrize("rank, r", RANKS)
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_arg_with_integers(run, solver, request, name, f, rank, r, terms, values):
     # each integer has an index, like the other terms
+    # each integer is replaced by an auxiliary variable (the parsers of XCSP3 not accepting integers in the list)
     predicate = lambda rk, *t: holds(f, values(t), rk, lambda i: i == t[3])
-    request.applymarker(bug(INTEGERS))
     mark(request, name, r, DY, predicate)
     check(run, solver, XY + f"satisfy({name}({terms}{rank}) == y)", DY, lambda *t: predicate(r, *t))
 
 
-@pytest.mark.parametrize("terms", ["3, 1", "1, 3, 2", "2, 2, 0", "-2, 0"])
-@pytest.mark.parametrize("rank, r", RANKS)
+@pytest.mark.parametrize("code", ["satisfy(F(3, 1) == y)", "satisfy(F(2, 2, 0, rank=TypeRank.LAST) == y)", "satisfy(F([1, 1], condition=('eq', y)))",
+                                  "satisfy(F(3) == 0)", "satisfy(F(x[0] >= x[0], 2) == y)", "maximize(F(3, 1))"])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_extremum_arg_of_integers(run, solver, request, name, f, rank, r, terms):
-    request.applymarker(bug(INTEGERS))
-    if solver == "COSOCO" and name == "MinimumArg":
-        pytest.skip(COSOCO_UNSUPPORTED)
-    values = eval("(" + terms + ")")
-    check(run, solver, f"y = Var(dom=range({len(values)}))\nsatisfy({name}({terms}{rank}) == y)", [range(len(values))],
-          lambda v: v in indexes(f, values, r))
+def test_extremum_arg_of_integers(run, name, f, code):
+    # the index of the extremum of integers only is refused
+    r = run(XY + code_of(code, name))
+    assert not r.ok and name + "() requires at least one variable (or expression), and not only integers" in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("terms, values", [
@@ -469,12 +465,10 @@ def test_extremum_arg_as_objective(run, solver, request, name, f, objective, fun
     assert_optimum(r, expected, lambda *t: function(f, t), maximize=code.startswith("maximize"))
 
 
-@pytest.mark.parametrize("objective", ["minimize(F(x[0]))", "maximize(F(3, 1))"])
+@pytest.mark.parametrize("objective", ["minimize(F(x[0]))", "maximize(F([x[1]], rank=TypeRank.LAST))"])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_extremum_arg_constant_as_objective(run, request, name, f, objective):
-    # the index of a single term, or of an extremum of integers (with a rank), is a constant: there is nothing to optimize
-    if "x[0]" not in objective:
-        request.applymarker(bug(INTEGERS))
+def test_extremum_arg_constant_as_objective(run, name, f, objective):
+    # the index of a single term is a constant: there is nothing to optimize
     r = run(X3 + "satisfy(x[0] != x[1])\n" + code_of(objective, name))
     assert not r.ok and "The objective is the constant" in r.stdout, r.report()
 
@@ -537,9 +531,9 @@ def test_xcsp3_extremum_arg(run, name, f, constraint, expected):
     assert (c.get("rank"), c.find("list").text.strip(), c.find("condition").text.strip()) == expected, r.report()
 
 
-@pytest.mark.parametrize("terms, expected", [("x[0], 1, x[1]", "x[0] aux_gb[0] x[1]"), ("x[0], x[1], x[1] >= x[1]", "x[0..1] aux_gb[0]")])
+@pytest.mark.parametrize("terms, expected", [("x[0], 1, x[1]", "x[0] aux_gb[0] x[1]"), ("x[0], x[1], x[1] >= x[1]", "x[0] x[1] aux_gb[0]"),
+                                             ("x[0], 1, 1", "x[0] aux_gb[0] aux_gb[1]")])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-@bug(INTEGERS)
 def test_xcsp3_extremum_arg_with_integers(run, name, f, terms, expected):
     # an integer is replaced by an auxiliary variable (the parser of XCSP3 does not accept integers in the list)
     r = run(XY + f"satisfy({name}({terms}) == y)")
