@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Check the version (on master, neither tagged nor on PyPI yet, the same in CITATION.cff)
+      - name: Check the version (on master, neither tagged nor on PyPI yet, the same in CITATION.cff and README.md)
         id: version
         run: |
           version=$(tr -d '[:space:]' < pycsp3/version.txt)
@@ -28,6 +28,8 @@ jobs:
           status=$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/pycsp3/$version/json")
           [ "$status" = 404 ] || { echo "::error::the version $version is already on PyPI (or PyPI answered $status)"; exit 1; }
           grep -q -x "version: $version" CITATION.cff || { echo "::error::the version in CITATION.cff is not $version"; exit 1; }
+          grep -q -F "<h2> PyCSP3 v$version " README.md && grep -q -F "This is Version $version of PyCSP3" README.md \
+            || { echo "::error::the version in README.md (title and first sentence) is not $version"; exit 1; }
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
   build:
