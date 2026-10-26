@@ -1647,6 +1647,12 @@ class _Auxiliary:
 
     def replace_partial_constraint(self, pc):
         assert isinstance(pc, PartialConstraint)
+        if isinstance(pc.constraint, (ConstraintMaximumArg, ConstraintMinimumArg)) and len(pc.constraint.attributes) == 0:
+            # with rank any, the index is not unique when several terms take the extremum: it cannot be the value of an auxiliary variable
+            name, value = ("MaximumArg", "largest") if isinstance(pc.constraint, ConstraintMaximumArg) else ("MinimumArg", "smallest")
+            error(name + "() without rank (or with TypeRank.ANY) has no single value when several terms take the " + value + " value: it cannot be "
+                  "a term of an expression; give rank=TypeRank.FIRST or rank=TypeRank.LAST, or subject it directly to a condition, "
+                  "as in " + name + "(x) == y")
         if isinstance(pc.constraint, ConstraintSum) and len(pc.constraint.arguments[TypeCtrArg.LIST].content) == 1:
             # a sum of one term replaced by an auxiliary variable (as in 5 // (x[:1] * [3]) or in a logical expression) is defined by an intension,
             # and not by a sum of one term with the condition (eq,aux): a sum of one term is only posted directly compared with 'in' or 'not in' (#208)

@@ -3557,6 +3557,35 @@ def Minimum(term, *others, condition=None):
     return _extremum("Minimum", term, others, condition)
 
 
+def _extremum_arg(name, term, others, rank, condition):
+    # the component MaximumArg (or MinimumArg, whose name is given) of the terms, possibly subject to the specified condition
+    terms = flatten(term, others)
+    terms = [Sum(t) if isinstance(t, ScalarProduct) else t for t in terms]  # to have partial constraints
+    # a constant (as Sum([]), or x >= x simplified into 1 by Node.build()) is an integer
+    terms = [t.val if isinstance(t, ConstraintDummyConstant) else t.cnt if type(t) is Node and t.type is TypeNode.INT else t for t in terms]
+    if len(terms) == 0:
+        error(name + "() requires at least one term")
+    for t in terms:
+        if type(t) is bool:
+            error(name + "() does not accept Booleans as terms, which is the case of " + str(t))
+        if isinstance(t, Variable) and t.dom.type != TypeVar.INTEGER:
+            error(name + "() requires integer variables (or expressions), which is not the case of " + str(t))
+    checkType(terms, ([Variable, Node, int], [PartialConstraint]))
+    checkType(rank, (type(None), TypeRank))
+    condition = Condition.build_condition(condition)
+    if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
+        # the index never belongs to an empty set: false with 'in', and always true with 'not in'
+        return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
+    if all(isinstance(t, int) for t in terms):
+        error(name + "() requires at least one variable (or expression), and not only integers, which is not the case of " + str(terms))
+    if len(terms) == 1:  # no constraint (XCSP3 requires at least two terms): the index of a single term is 0
+        return _constant_with_condition(0, condition)
+    # each integer (whose index counts) is replaced by its own auxiliary variable, the parsers of XCSP3 not accepting integers in the list
+    terms = auxiliary().replace_ints(terms)
+    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms)
+    return _wrapping_by_complete_or_partial_constraint((ConstraintMaximumArg if name == "MaximumArg" else ConstraintMinimumArg)(terms, rank, condition))
+
+
 def MaximumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MaximumArg (that becomes a constraint when subject to a condition).
@@ -3587,10 +3616,7 @@ def MaximumArg(term, *others, rank=None, condition=None):
            MaximumArg(z, rank=TypeRank.LAST) == 3
         )
     """
-    terms = _extremum_terms(term, others)
-    checkType(rank, (type(None), TypeRank))
-    c = ConstraintMaximumArg(terms, rank, condition)
-    return _wrapping_by_complete_or_partial_constraint(c) if isinstance(c, ConstraintMaximumArg) else c
+    return _extremum_arg("MaximumArg", term, others, rank, condition)
 
 
 def MinimumArg(term, *others, rank=None, condition=None):
@@ -3625,10 +3651,7 @@ def MinimumArg(term, *others, rank=None, condition=None):
            MinimumArg(x, rank=TypeRank.LAST) == 3
         )
     """
-    terms = _extremum_terms(term, others)
-    checkType(rank, (type(None), TypeRank))
-    c = ConstraintMinimumArg(terms, rank, condition)
-    return _wrapping_by_complete_or_partial_constraint(c) if isinstance(c, ConstraintMinimumArg) else c
+    return _extremum_arg("MinimumArg", term, others, rank, condition)
 
 
 def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
@@ -4250,6 +4273,8 @@ def _optimize(term, minimization):
 
     ObjEntities.items = []  # TODO currently, we overwrite the objective if one was posted
     if isinstance(term, PartialConstraint):
+        if isinstance(term.constraint, (ConstraintMaximumArg, ConstraintMinimumArg)):  # there is no type maximumArg (or minimumArg) of objectives
+            error(("MaximumArg()" if isinstance(term.constraint, ConstraintMaximumArg) else "MinimumArg()") + " cannot be an objective")
         if isinstance(term.constraint, (ConstraintElement, ConstraintCount)) \
                 or isinstance(term.constraint, ConstraintNValues) and term.constraint.arguments[TypeCtrArg.EXCEPT].content is not None:
             term = auxiliary().replace_partial_constraint(term)  # (an objective of type nValues has no element <except>)
