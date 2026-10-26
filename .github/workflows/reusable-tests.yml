@@ -15,8 +15,6 @@ jobs:
         shell: bash  # also on Windows (Git Bash), so that the commands are the same on all the systems
     steps:
       - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}  # for a merged pull request, the commit of the merge
 
       - uses: actions/setup-python@v7
         with:

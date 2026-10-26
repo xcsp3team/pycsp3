@@ -8,13 +8,9 @@
 [![PyPI version](https://img.shields.io/pypi/v/pycsp3?label=pypi)](https://pypi.org/project/pycsp3/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://pypi.org/project/pycsp3/)
 
-[![Build Linux](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-linux.yml?branch=master&label=Build%20Linux&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-linux.yml)
-[![Build MacOS](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-macos.yml?branch=master&label=Build%20MacOS&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-macos.yml)
-[![Build Windows](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/build-windows.yml?branch=master&label=Build%20Windows&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/build-windows.yml)
-
-[![Linux tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-linux.yml?label=Linux%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-linux.yml)
-[![MacOS tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-macos.yml?label=MacOS%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-macos.yml)
-[![Windows tests](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/tests-windows.yml?label=Windows%20tests&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/tests-windows.yml)
+[![Linux](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/linux.yml?branch=master&label=Linux&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/linux.yml)
+[![MacOS](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/macos.yml?branch=master&label=MacOS&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/macos.yml)
+[![Windows](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/windows.yml?branch=master&label=Windows&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/windows.yml)
 
 [![License](https://img.shields.io/github/license/xcsp3team/pycsp3?label=License)](https://github.com/xcsp3team/pycsp3/blob/master/LICENSE)
 [![Guide DOI](https://img.shields.io/badge/Guide%20DOI-10.48550%2FarXiv.2009.00326-blue?logo=arxiv&logoColor=white)](https://doi.org/10.48550/arXiv.2009.00326)
