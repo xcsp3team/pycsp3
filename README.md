@@ -226,9 +226,10 @@ And you can test the compilation of one of these models.
 For example, at the root of the directory pycsp3-models:
 
 ```console
-python single/Zebra/Zebra.py (For Linux/Mac)
-python single\Zebra\Zebra.py (For Windows)
+python single/Zebra/Zebra.py
 ```
+
+(with `single\Zebra\Zebra.py` on Windows).
 
 # 2) Installation (alternative) by Cloning from GitHub
 
