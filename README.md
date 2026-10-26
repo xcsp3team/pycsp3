@@ -63,6 +63,48 @@ while replacing YY and MM with the current values that are present in the name o
 
 Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](https://pycsp.org/documentation/solving-process/).
 
+# Quick Start
+
+Install PyCSP3 (Python 3.10 or later; Java 11 or later is needed for the embedded solvers ACE and Choco):
+
+```console
+pip install pycsp3
+```
+
+Write a model, for example the problem of the 8 queens (no two queens on the same row, column or diagonal) in a file `Queens.py`:
+
+```python
+from pycsp3 import *
+
+n = 8
+
+# q[i] is the column of the queen in row i
+q = VarArray(size=n, dom=range(n))
+
+satisfy(
+    AllDifferent(q),
+    AllDifferent(q[i] + i for i in range(n)),
+    AllDifferent(q[i] - i for i in range(n))
+)
+
+if solve() is SAT:
+    print(values(q))
+```
+
+Then run it:
+
+```console
+python Queens.py
+```
+
+The XCSP3 instance `Queens.xml` is generated, the embedded solver ACE is run on it, and a solution is displayed:
+
+```
+[0, 6, 3, 5, 7, 1, 4, 2]
+```
+
+The sections below give the details of the installation and more examples; the [website](https://pycsp.org/) gives the documentation.
+
 # 0) Zero Installation from Google Colab
 
 This is an immediate solution for using PyCSP3, with no installation required (*you are ready to work in exactly 2 minutes*).
