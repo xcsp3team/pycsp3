@@ -19,7 +19,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-CONDITION_PARAMETER = "#253: the parameter condition of MaximumArg() and MinimumArg() is not built: a tuple is written as it is (eq 1)"
 SINGLE_TERM = "#254: MaximumArg() and MinimumArg() of a single term give a constraint on one term"
 NO_TERM = "#255: MaximumArg() and MinimumArg() of no term give a constraint with an empty list"
 INVALID_TERMS = "#256: MaximumArg() and MinimumArg() accept Booleans and symbolic variables among the terms"
@@ -163,11 +162,13 @@ def test_extremum_arg_conditions(run, solver, request, name, f, rank, r, constra
     ("F(x) in set()", lambda *t: False),
     ("F(x) in range(1, 1)", lambda *t: False),
     ("F(x) not in set()", lambda *t: True),
+    ("F(x, condition=('in', set()))", lambda *t: False),
+    ("F(x, condition=('notin', range(1, 1)))", lambda *t: True),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_arg_with_an_empty_set_of_values(run, solver, request, name, f, constraint, predicate):
     # never in an empty set: the constraint is false with 'in' (a table without support), and always true with 'not in'
-    if "not in" not in constraint:
+    if "not in" not in constraint and "notin" not in constraint:
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     check(run, solver, X3 + "satisfy(" + code_of(constraint, name) + ", x[0] != 2)", D3, lambda *t: predicate(*t) and t[0] != 2)
 
@@ -184,7 +185,6 @@ def test_extremum_arg_with_an_empty_set_of_values(run, solver, request, name, f,
 @pytest.mark.parametrize("name, f", FUNCTIONS)
 def test_extremum_arg_with_the_parameter_condition(run, solver, request, name, f, rank, r, condition, test):
     predicate = lambda rk, *t: holds(f, t[:3], rk, lambda i: test(i, t[3]))
-    request.applymarker(bug(CONDITION_PARAMETER))
     mark(request, name, r, DY, predicate, eq_var=condition == "('eq', y)")
     check(run, solver, XY + f"satisfy({name}(x{rank}, condition={condition}))", DY, lambda *t: predicate(r, *t))
 
@@ -529,9 +529,7 @@ def test_minimumarg_example_with_rank(run, solver, request):
     ("F(x, rank=TypeRank.LAST, condition=('in', range(1, 3)))", ("last", "x[]", "(in,1..2)")),
 ])
 @pytest.mark.parametrize("name, f", FUNCTIONS)
-def test_xcsp3_extremum_arg(run, request, name, f, constraint, expected):
-    if "condition=" in constraint:
-        request.applymarker(bug(CONDITION_PARAMETER))
+def test_xcsp3_extremum_arg(run, name, f, constraint, expected):
     r = run(XY + "satisfy(" + code_of(constraint, name) + ")")
     assert r.ok, r.report()
     c = r.xml.find("constraints/" + name[0].lower() + name[1:])
@@ -603,9 +601,6 @@ def test_invalid_extremum_arg(run, request, name, f, arguments):
         request.applymarker(bug(NO_TERM))
     if arguments in ("True, x[0]", "x[0], False", "s", "x[0], s[0]"):
         request.applymarker(bug(INVALID_TERMS))
-    if arguments in ("x, condition='eq'", "x, condition=('eq',)", "x, condition=('foo', 2)", "x, condition=('eq', 'a')", "x, condition=('eq', True)",
-                     "x, condition=('in', 2)", "x, condition=('in', {y, 2})"):
-        request.applymarker(bug(CONDITION_PARAMETER))
     code = XY + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({name}({arguments}) == 1)"
     if "condition=" in arguments:
         code = XY + f"satisfy({name}({arguments}))"

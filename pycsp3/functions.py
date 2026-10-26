@@ -3557,6 +3557,17 @@ def Minimum(term, *others, condition=None):
     return _extremum("Minimum", term, others, condition)
 
 
+def _extremum_arg(name, term, others, rank, condition):
+    # the component MaximumArg (or MinimumArg, whose name is given) of the terms, possibly subject to the specified condition
+    terms = _extremum_terms(term, others)
+    checkType(rank, (type(None), TypeRank))
+    condition = Condition.build_condition(condition)
+    if isinstance(condition, ConditionSet) and len(condition.t) == 0 or isinstance(condition, ConditionInterval) and condition.min > condition.max:
+        # the index never belongs to an empty set: false with 'in', and always true with 'not in'
+        return ConstraintDummyConstant(0 if condition.operator == TypeConditionOperator.IN else 1)
+    return _wrapping_by_complete_or_partial_constraint((ConstraintMaximumArg if name == "MaximumArg" else ConstraintMinimumArg)(terms, rank, condition))
+
+
 def MaximumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MaximumArg (that becomes a constraint when subject to a condition).
@@ -3587,10 +3598,7 @@ def MaximumArg(term, *others, rank=None, condition=None):
            MaximumArg(z, rank=TypeRank.LAST) == 3
         )
     """
-    terms = _extremum_terms(term, others)
-    checkType(rank, (type(None), TypeRank))
-    c = ConstraintMaximumArg(terms, rank, condition)
-    return _wrapping_by_complete_or_partial_constraint(c) if isinstance(c, ConstraintMaximumArg) else c
+    return _extremum_arg("MaximumArg", term, others, rank, condition)
 
 
 def MinimumArg(term, *others, rank=None, condition=None):
@@ -3625,10 +3633,7 @@ def MinimumArg(term, *others, rank=None, condition=None):
            MinimumArg(x, rank=TypeRank.LAST) == 3
         )
     """
-    terms = _extremum_terms(term, others)
-    checkType(rank, (type(None), TypeRank))
-    c = ConstraintMinimumArg(terms, rank, condition)
-    return _wrapping_by_complete_or_partial_constraint(c) if isinstance(c, ConstraintMinimumArg) else c
+    return _extremum_arg("MinimumArg", term, others, rank, condition)
 
 
 def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
