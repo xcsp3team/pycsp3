@@ -30,9 +30,9 @@ SEVERAL_INDEXES = ("#259: with rank any, the auxiliary variable replacing Maximu
 OBJECTIVE = "#258: an objective MaximumArg() or MinimumArg() is written with the type maximumArg (not in XCSP3), its rank being lost"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
-ACE_INDEX = ("(to be reported) ACE fails without message on maximumArg and minimumArg with (eq,y) when the domain of y is not the range of the "
+ACE_INDEX = ("xcsp3team/ACE#35: ACE fails without message on maximumArg and minimumArg with (eq,y) when the domain of y is not the range of the "
              "indexes (control in the constructor of ExtremumArgVar)")
-COSOCO_INDEX = ("(to be reported) cosoco crashes (segmentation fault) on maximumArg with (eq,y) when y has a value that is not an index, and finds "
+COSOCO_INDEX = ("xcsp3team/cosoco#104: cosoco crashes (segmentation fault) on maximumArg with (eq,y) when y has a value that is not an index, and finds "
                 "wrong solutions when an index is not in the domain of y, when y is in the list, or when a variable is given several times")
 CHOCO_ANY = ("(to be reported) CHOCO handles maximumArg and minimumArg with rank any as with rank first (model.argmax and model.argmin give the "
              "first index), also in the develop version (859fdde)")
