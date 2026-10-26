@@ -62,6 +62,15 @@ while replacing 2.6 with the version that is present in the name of the jar file
 
 Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](https://pycsp.org/documentation/solving-process/).
 
+**Contents**
+
+- [Quick Start](#quick-start)
+- [Installation](#installation): [Google Colab](#google-colab-zero-installation), [PyPI](#pypi) (Linux, macOS, Windows),
+  [cloning from GitHub](#cloning-from-github), [pool of models](#working-with-a-pool-of-models)
+- [Compilation](#compilation): the options of the command line
+- [Examples](#examples): console mode, Send+More=Money, All-Interval Series, BIBD, Rack Configuration, Nonogram
+- [Citing PyCSP3](#citing-pycsp3)
+
 # Quick Start
 
 Install PyCSP3 (Python 3.10 or later; Java 11 or later is needed for the embedded solvers ACE and Choco), in a virtual environment:
@@ -106,7 +115,9 @@ The XCSP3 instance `Queens.xml` is generated, the embedded solver ACE is run on 
 
 The sections below give the details of the installation and more examples; the [website](https://pycsp.org/) gives the documentation.
 
-# 0) Zero Installation from Google Colab
+# Installation
+
+## Google Colab (zero installation)
 
 This is an immediate solution for using PyCSP3, with no installation required (*you are ready to work in exactly 2 minutes*).
 The quickest way is to open this [notebook](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb) on Colab, and to run its cells.
@@ -136,14 +147,14 @@ Just execute these code cells on Colab. It should display `[0, 1, 2, 3, 4]`.
 
 That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section.
 
-# 1) Installation from PyPI
+## PyPI
 
 This is the second easiest way of installing PyCSP3.
 
 Note that you first need Python (version 3.10, or later) to be installed.
 You can do it, for example, from [python.org](https://www.python.org/downloads/).
 
-## Installing PyCSP3 (Linux)
+### Linux
 
 Recent distributions do not allow installing packages with pip in the Python of the system (error `externally-managed-environment`):
 install PyCSP3 in a virtual environment (on Debian and Ubuntu, the module venv is given by the package python3-venv):
@@ -163,7 +174,7 @@ For using the -solve or -solver options, you need to have Java (at least, versio
 sudo apt install default-jre
 ```
 
-## Installing PyCSP3 (macOS)
+### macOS
 
 Install PyCSP3 in a virtual environment (the Python of Homebrew does not allow installing packages with pip outside of one):
 
@@ -181,7 +192,7 @@ For using the -solve or -solver options, you need to have Java (at least, versio
 brew install --cask temurin
 ```
 
-## Installing PyCSP3 (Windows)
+### Windows
 
 Install PyCSP3 in a virtual environment. Open the console and type:
 
@@ -202,7 +213,7 @@ You can check the java command by typing in your console:
 java --version
 ```
 
-## Updating the Version of PyCSP3 (for PyPI)
+### Updating the Version of PyCSP3
 
 For updating your version of PyCSP3, simply execute (in the virtual environment, activated):
 
@@ -210,7 +221,7 @@ For updating your version of PyCSP3, simply execute (in the virtual environment,
 python -m pip install --upgrade pycsp3
 ```
 
-## Using the development version via GitHub and pip
+### Using the development version via GitHub and pip
 
 You can install the current development version (the master branch of this repo) by explicitly indicating that you want to use the repo to pip
 (in the virtual environment, activated):
@@ -219,21 +230,7 @@ You can install the current development version (the master branch of this repo)
 python -m pip install --upgrade git+https://github.com/xcsp3team/pycsp3.git
 ```
 
-## Working with a Pool of Models
-
-A GitHub repository is now available with more than 400 models
-at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models).
-
-And you can test the compilation of one of these models.
-For example, at the root of the directory pycsp3-models:
-
-```console
-python single/Zebra/Zebra.py
-```
-
-(with `single\Zebra\Zebra.py` on Windows).
-
-# 2) Installation (alternative) by Cloning from GitHub
+## Cloning from GitHub
 
 An alternative to PyPI is to clone the code from GitHub, and to install it in editable mode (the changes of the code are then taken into
 account without installing it again), in a virtual environment.
@@ -250,15 +247,21 @@ pip install -e .
 
 On Windows, the virtual environment is created with `python -m venv pycsp3-env`, and activated with `pycsp3-env\Scripts\activate`.
 
-# 3) Compilation and Examples
+## Working with a Pool of Models
 
-We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
-However, note that many illustrations are available on [www.pycsp.org](https://pycsp.org/), notably many [models](https://pycsp.org/documentation/models/) with
-Jupyter notebooks.
+A GitHub repository is now available with more than 400 models
+at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models).
 
-First, we give some general information about compilation.
+And you can test the compilation of one of these models.
+For example, at the root of the directory pycsp3-models:
 
-## Compiling PyCSP3 Models
+```console
+python single/Zebra/Zebra.py
+```
+
+(with `single\Zebra\Zebra.py` on Windows).
+
+# Compilation
 
 For generating an XCSP3 instance from a PyCSP3 model, you have to execute:
 
@@ -305,6 +308,12 @@ By default, a file containing the XCSP3 instance is generated, unless you use th
 * ```-display```: displays the XCSP3 instance in the system standard output, instead of generating an XCSP3 file
 
 The other options are given in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website.
+
+# Examples
+
+We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
+However, note that many illustrations are available on [www.pycsp.org](https://pycsp.org/), notably many [models](https://pycsp.org/documentation/models/) with
+Jupyter notebooks.
 
 ## Example 1: in console mode
 
