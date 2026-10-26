@@ -18,6 +18,7 @@
 
 [![License](https://img.shields.io/github/license/xcsp3team/pycsp3?label=License)](https://github.com/xcsp3team/pycsp3/blob/master/LICENSE)
 [![Guide DOI](https://img.shields.io/badge/Guide%20DOI-10.48550%2FarXiv.2009.00326-blue?logo=arxiv&logoColor=white)](https://doi.org/10.48550/arXiv.2009.00326)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
 
 </div>
 
@@ -108,7 +109,8 @@ The sections below give the details of the installation and more examples; the [
 # 0) Zero Installation from Google Colab
 
 This is an immediate solution for using PyCSP3, with no installation required (*you are ready to work in exactly 2 minutes*).
-What you have to do is:
+The quickest way is to open this [notebook](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb) on Colab, and to run its cells.
+Otherwise, what you have to do is:
 
 1. build a new notebook on [Google colab](https://colab.research.google.com/)
 2. insert a first code cell for being able to use PyCSP3 in your notebook:
