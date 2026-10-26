@@ -855,3 +855,21 @@ With this new file, you can directly generate the XCSP3 file with:
  ```console
 python3 Nonogram.py -data=Nonogram_example.json
 ```
+
+# Citing PyCSP3
+
+If you use PyCSP3 in your work, please cite the guide (GitHub also gives this reference, from the file
+[CITATION.cff](https://github.com/xcsp3team/pycsp3/blob/master/CITATION.cff), with the button "Cite this repository"):
+
+```bibtex
+@misc{lecoutre2020pycsp3,
+  title         = {{PyCSP3}: Modeling Combinatorial Constrained Problems in Python},
+  author        = {Lecoutre, Christophe and Szczepanski, Nicolas},
+  year          = {2020},
+  eprint        = {2009.00326},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  doi           = {10.48550/arXiv.2009.00326},
+  url           = {https://arxiv.org/abs/2009.00326}
+}
+```
