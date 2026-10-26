@@ -448,10 +448,14 @@ def test_xcsp3_sum_has_at_least_two_terms(run, constraint, args):
     ("x[:1] * [2] in [0, 4]", ("2", "(in,{0,4})")),
     ("x[:1] * [2] not in range(1, 4)", ("2", "(notin,1..3)")),
     ("x[0] * 3 in {0, 3}", ("3", "(in,{0,3})")),
+    ("x[0] * 2 in v", ("2", "(in,{0,4})")),
+    ("x[0] * 2 not in list(v)", ("2", "(notin,{0,4})")),
+    ("x[:1] * [2] in v", ("2", "(in,{0,4})")),
 ])
 def test_xcsp3_sum_of_one_term_with_in(run, constraint, expected):
-    # a variable with a coefficient compared with in or not in gives a sum of one term, without auxiliary variable (#208)
-    r = run(X4 + f"satisfy({constraint})")
+    # a variable with a coefficient compared with in or not in gives a sum of one term, without auxiliary variable (#208), also with a list
+    # given by a variable (as v) or built, and not only given literally (changed into a tuple by Python)
+    r = run(X4 + "v = [4, 0]\n" + f"satisfy({constraint})")
     assert list(declared_variables(r)) == ["x[0]", "x[1]", "x[2]", "x[3]"], r.report()
     sums = list(r.xml.iter("sum"))
     assert len(sums) == 1 and len(list(r.xml.find("constraints"))) == 1, r.report()

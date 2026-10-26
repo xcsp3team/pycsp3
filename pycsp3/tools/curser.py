@@ -156,7 +156,7 @@ def cursing():
         # if len(self) == 0:
         #     return False
         if isinstance(other, Node):
-            other = auxiliary().replace_node(other)
+            other = _replace_node_in(other, self)
         if isinstance(other, PartialConstraint):
             queue_in.append((list(self), other))  # the values of the condition of the component (any value other than an integer reported when posting)
             return True
