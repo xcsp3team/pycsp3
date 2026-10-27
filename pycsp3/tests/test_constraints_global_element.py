@@ -15,8 +15,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-IDENTICAL = ("#281: a list of identical integers indexed by a variable is replaced by this integer, so that c[i] == 2 (two integers "
-             "compared by Python) fails, and c[i] cannot be an objective")
 OUTSIDE = ("#282: an index that can take a value outside the list is not detected for a list of identical integers, a matrix of identical "
            "rows and an expression as second index of a matrix (and is not restricted with -force_element_index for identical integers)")
 HOLES = ("#283: the holes of an array indexed by a variable are removed from the list of the element, so that the index designates "
@@ -223,14 +221,17 @@ def test_element_on_integers(run, solver, request, constraint, predicate):
     ("c[i] == v", lambda *t: t[1] == 2),
     ("c[i] != v", lambda *t: t[1] != 2),
     ("c[i] < v", lambda *t: 2 < t[1]),
-    pytest.param("c[i] == 2", lambda *t: True, marks=bug(IDENTICAL)),
-    pytest.param("c[i] == 3", lambda *t: False, marks=bug(IDENTICAL)),
-    pytest.param("c[i] in {1, 2}", lambda *t: True, marks=bug(IDENTICAL)),
+    ("c[i] == 2", lambda *t: True),
+    ("c[i] == 3", lambda *t: False),
+    ("c[i] in {1, 2}", lambda *t: True),
     ("c[i] + v == 5", lambda *t: t[1] == 3),
 ])
-def test_element_on_identical_integers(run, solver, constraint, predicate):
-    # all the integers of the list are equal: the element is this integer
-    check(run, solver, "c = cp_array([2, 2, 2])\ni = Var(dom=range(3))\nv = Var(dom=range(5))\n" + f"satisfy({constraint})", [range(3), range(5)], predicate)
+def test_element_on_identical_integers(run, solver, request, constraint, predicate):
+    # all the integers of the list are equal: the element is this integer, for any index (#281)
+    if constraint == "c[i] == 3":
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)  # the constraint false, posted by a table with an empty set of supports
+    check(run, solver, "c = cp_array([2, 2, 2])\ni = Var(dom=range(3))\nv = Var(dom=range(5))\n" + f"satisfy({constraint}, v != 4)", [range(3), range(5)],
+          lambda *t: predicate(*t) and t[1] != 4)
 
 
 @pytest.mark.parametrize("values, domain", [("[-2, 5, -2]", range(-3, 6)), ("[7, 1]", range(8)), ("[0, 1, 0, 1]", range(2))])
@@ -295,7 +296,7 @@ def test_element_with_expressions_as_indexes(run, solver, index, values, predica
     "x = VarArray(size=3, dom=range(3))\nj = Var(dom=range(3))\nsatisfy(x[j - 1] == 2)",
     "x = VarArray(size=3, dom=range(4))\nsatisfy(x[x[0]] == 2)",
     "t = cp_array([3, 0, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(t[i] == v)",
-    pytest.param("c = cp_array([2, 2, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(c[i] == v)", marks=bug(OUTSIDE)),
+    "c = cp_array([2, 2, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(c[i] == v)",
     "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(3))\nk = Var(dom=range(3))\nsatisfy(m[j][k] == 1)",
     "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(4))\nsatisfy(m[j][k] == 1)",
     pytest.param("m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j][k + 1] == 1)", marks=bug(OUTSIDE)),
@@ -315,8 +316,7 @@ def test_element_with_an_index_outside_the_list(run, code):
     ("x = VarArray(size=3, dom=range(3))\nj = Var(dom=range(3))\nsatisfy(x[j + 1] == 2)", [range(3)] * 4, lambda *t: t[3] < 2 and t[t[3] + 1] == 2),
     ("x = VarArray(size=3, dom=range(3))\nj = Var(dom=range(3))\nsatisfy(x[j - 1] == 2)", [range(3)] * 4, lambda *t: t[3] > 0 and t[t[3] - 1] == 2),
     ("t = cp_array([3, 0, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(t[i] == v)", [range(4)] * 2, lambda i, v: i < 3 and (3, 0, 2)[i] == v),
-    pytest.param("c = cp_array([2, 2, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(c[i] == v)", [range(4)] * 2, lambda i, v: i < 3 and v == 2,
-                 marks=bug(OUTSIDE)),
+    ("c = cp_array([2, 2, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(c[i] == v)", [range(4)] * 2, lambda i, v: i < 3 and v == 2),
     ("m = VarArray(size=[2, 2], dom=range(2))\nj = Var(dom=range(3))\nk = Var(dom=range(2))\nsatisfy(m[j][k] == 1)", [range(2)] * 4 + [range(3), range(2)],
      lambda *t: t[4] < 2 and t[2 * t[4] + t[5]] == 1),
     ("m = VarArray(size=[2, 2], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(2))\nsatisfy(m[j][k + 1] == 1)", [range(2)] * 6,
@@ -656,11 +656,10 @@ def test_element_on_a_matrix_as_objective(run, solver, request, objective, funct
     assert_optimum(r, brute_force(DM, lambda *t: t[0] != t[4] and t[8] != 1 and t[7] != 1), function, maximize=objective.startswith("maximize"))
 
 
-@bug(IDENTICAL)
-def test_element_on_identical_integers_as_objective(run):
-    # the element of identical integers is a constant: there is nothing to optimize
-    r = run("c = cp_array([2, 2, 2])\ni = Var(dom=range(3))\nminimize(c[i])")
-    assert not r.ok and "The objective is the constant 2: there is nothing to optimize" in r.stdout, r.report()
+def test_element_on_identical_integers_as_objective(run, solver):
+    # the element of identical integers is an objective as any element (#281)
+    r = run("c = cp_array([2, 2, 2])\ni = Var(dom=range(3))\nv = Var(dom=range(5))\nsatisfy(v != 4)\nminimize(c[i] + v)", solver=solver)
+    assert_optimum(r, brute_force([range(3), range(5)], lambda i, v: v != 4), lambda i, v: 2 + v)
 
 
 # ------------------------------------------------------------------------------------------------ methods of components
