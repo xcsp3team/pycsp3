@@ -18,6 +18,7 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/xcsp3team/pycsp3/master?labpath=notebooks%2FQuickStart.ipynb)
+[![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-GitHub%20Codespaces-blue?logo=github)](https://codespaces.new/xcsp3team/pycsp3?quickstart=1)
 
 </div>
 
@@ -67,8 +68,8 @@ Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving 
 **Contents**
 
 - [Quick Start](#quick-start)
-- [Installation](#installation): Linux, macOS, Windows, Google Colab, Binder, [cloning from GitHub](#cloning-from-github),
-  [pool of models](#working-with-a-pool-of-models)
+- [Installation](#installation): Linux, macOS, Windows, Google Colab, Binder, GitHub Codespaces,
+  [cloning from GitHub](#cloning-from-github), [pool of models](#working-with-a-pool-of-models)
 - [Compilation](#compilation): the options of the command line
 - [Examples](#examples): console mode, Send+More=Money, All-Interval Series, BIBD, Rack Configuration, Nonogram
 - [Citing PyCSP3](#citing-pycsp3)
@@ -188,6 +189,9 @@ Install PyCSP3 without a virtual environment or with one, once the dependencies 
 - On Binder, the [notebook](https://mybinder.org/v2/gh/xcsp3team/pycsp3/master?labpath=notebooks%2FQuickStart.ipynb) opens in
   JupyterLab with PyCSP3 and Java already installed; Binder is free and needs no account, but the session stops after about 10 minutes of
   inactivity, and the first launch after a change of this repository takes a few minutes.
+- On GitHub Codespaces, a [development environment](https://codespaces.new/xcsp3team/pycsp3?quickstart=1) (VS Code in the browser, with a
+  copy of this repository) is created with Python 3.13, Java 21, and PyCSP3 installed in editable mode with the tools of the unit tests;
+  it needs a GitHub account, and uses its free monthly quota.
 - For updating PyCSP3, add `--upgrade` to the command (e.g., `pip install --upgrade pycsp3`), and for the development version (the master branch
   of this repository), replace `pycsp3` by `git+https://github.com/xcsp3team/pycsp3.git`.
 
