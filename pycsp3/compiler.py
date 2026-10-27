@@ -233,11 +233,22 @@ def _load_dataparser(parser_file, data_value):
         raise
 
 
+def _check_solving_options():
+    # the solver of the options -solve and -solver is run at exit, where an error would not change the exit code: so, Java is checked here
+    solving = "ace" if options.solve else options.solver
+    if solving:
+        from pycsp3.solvers.solver import check_java, process_options
+        name = process_options(solving)[0].lower()
+        if name in ("ace", "choco"):
+            check_java("ACE" if name == "ace" else "Choco")
+
+
 def _load(*, console=False):
     Compilation.stopwatch = Stopwatch()
 
     _load_options(console=console)
     if console is False:
+        _check_solving_options()
         Compilation.model, Compilation.string_model = _load_model()
         if options.dataparser:
             Compilation.data, Compilation.string_data = _load_dataparser(options.dataparser, options.data)
