@@ -17,7 +17,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
-TABLE = "#285: a component (element, sum, maximum) in the scope of a table makes PyCSP3 fail (badly formed, or SystemError)"
 MEMBER_TUPLE = "#286: v in a list of variables written literally (a tuple for Python) fails (an argument of satisfy() is badly formed)"
 MEMBER_TERM = ("#287: member of an expression or of a component (v + 1 in x, x[i] in x, Sum(y) in x) fails (badly formed), and member "
                "of a two-dimensional list too (bad form of predicate)")
@@ -511,11 +510,11 @@ def test_elements_in_global_constraints(run, solver, request, constraint, predic
     check(run, solver, "t = cp_array([2, 0, 1])\nx = VarArray(size=3, dom=range(3))\n" + f"satisfy({constraint})", [range(3)] * 3, predicate)
 
 
-@bug(TABLE)
+@pytest.mark.parametrize("table, positive", [("in {(1, 2), (2, 3)}", True), ("in [(1, 2), (2, 3)]", True), ("not in {(1, 2), (2, 3)}", False)])
 @pytest.mark.parametrize("term, value", [("x[i]", xi), ("Sum(x[:2])", lambda t: t[0] + t[1]), ("Maximum(x[:2])", lambda t: max(t[:2]))])
-def test_element_in_a_table(run, solver, term, value):
-    # a component in the scope of a table is replaced by an auxiliary variable
-    check(run, solver, X3 + f"satisfy(({term}, v) in {{(1, 2), (2, 3)}})", DX, lambda *t: (value(t), t[4]) in ((1, 2), (2, 3)))
+def test_element_in_a_table(run, solver, term, value, table, positive):
+    # a component in the scope of a table is replaced by an auxiliary variable, as an expression (#285)
+    check(run, solver, X3 + f"satisfy(({term}, v) {table})", DX, lambda *t: ((value(t), t[4]) in ((1, 2), (2, 3))) == positive)
 
 
 def test_element_in_a_function(run, solver):

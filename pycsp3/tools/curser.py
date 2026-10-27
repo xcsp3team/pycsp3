@@ -53,9 +53,17 @@ def check_index_expression(node, n):
         error("Problem with an index ; maybe -force_element_index is appropriate!")
 
 
+def _replace_components_in(t):
+    # the components (as x[i] or Sum(x)) of a tuple on the left of 'in' with a table are replaced by auxiliary variables, as the expressions (#285)
+    if isinstance(t, (tuple, list)) and any(isinstance(v, PartialConstraint) for v in t):
+        return type(t)(auxiliary().replace_partial_constraint(v) if isinstance(v, PartialConstraint) else v for v in t)
+    return t
+
+
 def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
     if not OpOverrider.activated:
         return self.__contains__(other)
+    other = _replace_components_in(other)
     if isinstance(other, (int, str)) and (len(self) == 0 or not isinstance(next(iter(self)), Variable)):
         return self.__contains__(other)  # a value and a set of values (not of variables): an ordinary membership
     if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
@@ -122,6 +130,7 @@ def cursing():
         # because sometimes Python changes lists into tuples in comprehension expressions
         if not OpOverrider.activated:
             return self.__contains__(other)
+        other = _replace_components_in(other)
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
@@ -155,6 +164,7 @@ def cursing():
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        other = _replace_components_in(other)
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
@@ -1010,6 +1020,7 @@ class ListInt(list):
         if isinstance(other, PartialConstraint):
             queue_in.append((list(self), other))
             return True
+        other = _replace_components_in(other)
         if len(self) == 0 and isinstance(other, Variable):
             queue_in.append((list(self), other))
             return False
