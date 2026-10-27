@@ -1436,7 +1436,9 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         elif isinstance(i, int):
             self.constraint = ConstraintElement(lst[:, i], index=index)
         elif isinstance(i, Node):
-            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i, values=range(max(len(row) for row in lst))))
+            m = max(len(row) for row in lst)
+            curser.check_index_expression(i, m)
+            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i, values=range(m)))
 
         return self
 

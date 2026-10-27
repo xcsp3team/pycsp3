@@ -15,8 +15,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-OUTSIDE = ("#282: an index that can take a value outside the list is not detected for a list of identical integers, a matrix of identical "
-           "rows and an expression as second index of a matrix (and is not restricted with -force_element_index for identical integers)")
 HOLES = ("#283: the holes of an array indexed by a variable are removed from the list of the element, so that the index designates "
          "another variable, and None is written in the matrix of an element on a matrix with holes")
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
@@ -299,10 +297,13 @@ def test_element_with_expressions_as_indexes(run, solver, index, values, predica
     "c = cp_array([2, 2, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(c[i] == v)",
     "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(3))\nk = Var(dom=range(3))\nsatisfy(m[j][k] == 1)",
     "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(4))\nsatisfy(m[j][k] == 1)",
-    pytest.param("m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j][k + 1] == 1)", marks=bug(OUTSIDE)),
+    "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j][k + 1] == 1)",
+    "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j, k + 1] == 1)",
+    "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j + 1, k] == 1)",
+    "x = VarArray(size=3, dom=range(3))\nj = Var(dom=range(3))\nsatisfy(x[abs(j - 3)] == 2)",
     "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j + 1][k] == 1)",
-    pytest.param("t = cp_array([[1, 2, 0], [1, 2, 0]])\nj = Var(dom=range(3))\nk = Var(dom=range(3))\nv = Var(dom=range(3))\nsatisfy(t[j][k] == v)",
-                 marks=bug(OUTSIDE)),
+    "t = cp_array([[1, 2, 0], [1, 2, 0]])\nj = Var(dom=range(3))\nk = Var(dom=range(3))\nv = Var(dom=range(3))\nsatisfy(t[j][k] == v)",
+    "t = cp_array([[1, 2, 0], [1, 2, 0]])\nj = Var(dom=range(3))\nk = Var(dom=range(3))\nv = Var(dom=range(3))\nsatisfy(t[j, k] == v)",
 ])
 def test_element_with_an_index_outside_the_list(run, code):
     # an index (variable or expression) that can take a value outside the indexes of the list is an error, unless -force_element_index is given
@@ -321,6 +322,10 @@ def test_element_with_an_index_outside_the_list(run, code):
      lambda *t: t[4] < 2 and t[2 * t[4] + t[5]] == 1),
     ("m = VarArray(size=[2, 2], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(2))\nsatisfy(m[j][k + 1] == 1)", [range(2)] * 6,
      lambda *t: t[5] < 1 and t[2 * t[4] + t[5] + 1] == 1),
+    ("m = VarArray(size=[2, 2], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(2))\nsatisfy(m[j, k + 1] == 1)", [range(2)] * 6,
+     lambda *t: t[5] < 1 and t[2 * t[4] + t[5] + 1] == 1),
+    ("t = cp_array([[1, 2], [1, 2]])\nj = Var(dom=range(3))\nk = Var(dom=range(2))\nv = Var(dom=range(3))\nsatisfy(t[j][k] == v)", [range(3), range(2), range(3)],
+     lambda j, k, v: j < 2 and (1, 2)[k] == v),
 ])
 def test_element_with_an_index_outside_the_list_and_the_option(run, solver, code, domains, predicate):
     # with -force_element_index, the index cannot take a value outside the indexes of the list

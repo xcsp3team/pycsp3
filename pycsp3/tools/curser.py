@@ -46,6 +46,13 @@ def _replace_node_in(node, values):
     return auxiliary().replace_node(node)
 
 
+def check_index_expression(node, n):
+    # an expression given as index of a list of n elements must take only indexes of this list, unless -force_element_index (#282)
+    values = node.possible_values()
+    if not options.force_element_index and (min(values) < 0 or max(values) >= n):
+        error("Problem with an index ; maybe -force_element_index is appropriate!")
+
+
 def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
     if not OpOverrider.activated:
         return self.__contains__(other)
@@ -901,32 +908,24 @@ class OpOverrider:
                 if res is not None and res[1] == 1:  # in case we had x*1 or 1*x, we replace by x
                     indexes = res[0]
                 else:
-                    values = indexes.possible_values()
                     n = len(array)  # note that we force the domain of the aux variable with the parameter values
-                    if not options.force_element_index:
-                        if isinstance(values, range):
-                            error_if(not( 0 <= values.start and values.stop <= n), "Problem with an index ; maybe -force_element_index is appropriate!")
-                        else:
-                            assert is_1d_list(values, int) and len(values) > 0 and 0 <= values[0] and values[-1] < n
+                    check_index_expression(indexes, n)
                     indexes = auxiliary().replace_node(indexes, values=range(n))
         if isinstance(indexes, Variable):
             if indexes.dom.is_infinite():
                 indexes.dom = Domain(range(len(array)))
-            if isinstance(array, ListInt) and is_2d_list(array, int):
-                if all(array[0] == t for t in array):  # all rows are identical
-                    return array[0]
             return PartialConstraint(ConstraintElement(array, index=indexes))
         if isinstance(indexes, tuple):
             assert len(indexes) > 1
             if any(isinstance(i, (Variable, Node, PartialConstraint, ECtr)) for i in indexes):  # this must be a constraint Element or Element-Matrix
                 assert is_matrix(array) and len(indexes) == 2, "A matrix is expected, with two indexes" + str(array) + " " + str(indexes)
                 n, m = len(array), max(len(row) for row in array)
+                for idx, size in zip(indexes, (n, m)):
+                    if isinstance(idx, Node):
+                        check_index_expression(idx, size)
                 index0 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[0], node_too=True, values=range(n))
                 index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True, values=range(m))
                 if all(isinstance(i, Variable) for i in (index0, index1)):
-                    if is_2d_list(array, int):
-                        if all(array[0] == t for t in array):  # because all rows are identical, we keep only one dimension
-                            return array[0][index1]
                     return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
                 if isinstance(index0, Variable) and isinstance(index1, int):
                     return PartialConstraint(ConstraintElement(array[:, index1], index=index0))
