@@ -17,7 +17,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
-MEMBER_MINI = "#289: with -mini, member gives an element without index, whereas the element <index> is required in the mini-tracks"
 MATRIX_OBJECTIVE = "#290: an element on a matrix as objective gives an objective of type element, which does not exist in XCSP3"
 BOOLEAN = ("#291: the element of a list of 0/1 variables cannot be used with | and ~ (TypeError), and the element of a list of 0/1 "
            "integers cannot be posted alone (assert without message)")
@@ -811,13 +810,11 @@ def test_element_examples_in_a_conditional_structure(run, solver, request, code,
     (X3 + "satisfy(x[i] < v)", DX, lambda *t: xi(t) < t[4]),
     (T4 + "satisfy(t[i] == v)", DT, lambda *t: ti(t) == t[1]),
     (M23 + "satisfy(m[j][k] == v)", DM, lambda *t: mjk(t) == t[8]),
-    ("x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\nsatisfy(v in x)", [range(2)] * 4 + [range(3)], lambda *t: t[4] in t[:4]),
+    ("x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\nsatisfy(v not in x)", [range(2)] * 4 + [range(3)], lambda *t: t[4] not in t[:4]),
 ])
 def test_element_with_mini(run, solver, request, code, domains, predicate):
     if "m[j][k]" in code:
         bug_for(request, "CHOCO", CHOCO_MATRIX)
-    if "v in x" in code:
-        mark(request, solver, {"ACE": ACE_MEMBER, "CHOCO": CHOCO_MEMBER, "COSOCO": COSOCO_UNSUPPORTED_MEMBER})
     check(run, solver, code, domains, predicate, args=("-mini",))
 
 
@@ -903,12 +900,11 @@ def test_xcsp3_element_member(run):
     assert c is not None and (_text(c.find("list")), c.find("index"), _text(c.find("value"))) == ("x[]", None, "v"), r.report()
 
 
-@bug(MEMBER_MINI)
-def test_xcsp3_element_member_with_mini(run):
-    # in the mini-tracks, the element <index> is necessarily present
-    r = run("x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\nsatisfy(v in x)", args=("-mini",))
-    assert r.ok, r.report()
-    assert all(c.find("index") is not None for c in r.xml.iter("element")), r.report()
+@pytest.mark.parametrize("constraint", ["v in x", "v in x[:2]", "v in [x[0], 2]"])
+def test_element_member_with_mini(run, constraint):
+    # in the mini-tracks, the element <index> is necessarily present, and the only forms of intension are primitive: member is refused (#289)
+    r = run("x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})", args=("-mini",))
+    assert not r.ok and "is not accepted in the mini-tracks" in r.stdout, r.report()
 
 
 @pytest.mark.parametrize("objective", [pytest.param("maximize(m[j][k])", marks=bug(MATRIX_OBJECTIVE)),

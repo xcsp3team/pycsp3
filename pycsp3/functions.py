@@ -444,6 +444,10 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         if isinstance(right_operand, (tuple, list)):  # the variables of a multi-dimensional list (#287), without holes
             right_operand = flatten(right_operand)
         if isinstance(right_operand, (tuple, list, set, frozenset)) and any(isinstance(v, Variable) for v in right_operand):
+            if options.mini:  # in the mini-tracks, the element <index> is required, and the only forms of intension are primitive (#289)
+                error_if(bool_value, "With -mini, " + str(left_operand) + " in " + str(right_operand) + " cannot be posted: the constraint Element "
+                         "without index (member) is not accepted in the mini-tracks, where the element <index> is required")
+                return [_Intension(Node.build(NE, left_operand, y)) for y in right_operand]
             if len(right_operand) < 4 or not is_containing(right_operand, Variable):  # with integers among the variables, an intension (#286)
                 st = Node.build(SET, right_operand)
                 return _Intension(Node.build(IN, left_operand, st) if bool_value else Node.build(NOTIN, left_operand, st))
