@@ -65,19 +65,18 @@ Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving 
 **Contents**
 
 - [Quick Start](#quick-start)
-- [Installation](#installation): [Google Colab](#google-colab-zero-installation), [PyPI](#pypi) (Linux, macOS, Windows),
-  [cloning from GitHub](#cloning-from-github), [pool of models](#working-with-a-pool-of-models)
+- [Installation](#installation): Linux, macOS, Windows, Google Colab, [cloning from GitHub](#cloning-from-github),
+  [pool of models](#working-with-a-pool-of-models)
 - [Compilation](#compilation): the options of the command line
 - [Examples](#examples): console mode, Send+More=Money, All-Interval Series, BIBD, Rack Configuration, Nonogram
 - [Citing PyCSP3](#citing-pycsp3)
 
 # Quick Start
 
-Install PyCSP3 (Python 3.10 or later; Java 11 or later is needed for the embedded solvers ACE and Choco), in a virtual environment:
+Install PyCSP3 (Python 3.10 or later; Java 11 or later is needed for the embedded solvers ACE and Choco), for example in a virtual environment
+(see [Installation](#installation) for your system):
 
 ```console
-python3 -m venv ~/pycsp3-env
-source ~/pycsp3-env/bin/activate      # on Windows: python -m venv pycsp3-env, then pycsp3-env\Scripts\activate
 pip install pycsp3
 ```
 
@@ -117,135 +116,64 @@ The sections below give the details of the installation and more examples; the [
 
 # Installation
 
-## Google Colab (zero installation)
+PyCSP3 requires Python (version 3.10, or later), and Java (version 11, or later) for the embedded solvers ACE and Choco (options -solve and -solver).
+Install PyCSP3 with the command of the first row (without a virtual environment) or of the second row (with a virtual environment), once the
+dependencies of the third row are installed:
 
-This is an immediate solution for using PyCSP3, with no installation required (*you are ready to work in exactly 2 minutes*).
-The quickest way is to open this [notebook](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb) on Colab, and to run its cells.
-Otherwise, what you have to do is:
-
-1. build a new notebook on [Google Colab](https://colab.research.google.com/)
-2. insert a first code cell for being able to use PyCSP3 in your notebook:
-   ```
-   pip install pycsp3
-   ```
-3. test a very basic model by inserting in a second code cell something like:
-   ```python
-   from pycsp3 import *
-
-   x = VarArray(size=5, dom=range(5))
-
-   satisfy(
-       AllDifferent(x)
-   )
-
-   if solve() is SAT:
-       print(values(x))
-   ```
-
-Here, we have an array with 5 variables, we enforce them to be all different, and we display the first solution found by the underlying solver.
-Just execute these code cells on Colab. It should display `[0, 1, 2, 3, 4]`.
-
-That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section.
-
-## PyPI
-
-This is the second easiest way of installing PyCSP3.
-
-Note that you first need Python (version 3.10, or later) to be installed.
-You can do it, for example, from [python.org](https://www.python.org/downloads/).
-
-### Linux
-
-Recent distributions do not allow installing packages with pip in the Python of the system (error `externally-managed-environment`):
-install PyCSP3 in a virtual environment (on Debian and Ubuntu, the module venv is given by the package python3-venv):
-
-```console
-sudo apt install python3-venv
-python3 -m venv ~/pycsp3-env
+<table>
+  <tr>
+    <th></th>
+    <th>Linux</th>
+    <th>macOS</th>
+    <th>Windows</th>
+    <th>Google Colab</th>
+  </tr>
+  <tr>
+    <th>Without a virtual environment</th>
+    <td colspan="2"><pre><code>python3 -m pip install --user --break-system-packages pycsp3</code></pre></td>
+    <td><pre><code>python -m pip install pycsp3</code></pre></td>
+    <td><pre><code>%pip install pycsp3</code></pre>in a first cell</td>
+  </tr>
+  <tr>
+    <th>With a virtual environment</th>
+    <td colspan="2"><pre><code>python3 -m venv ~/pycsp3-env
 source ~/pycsp3-env/bin/activate
-pip install pycsp3
-```
-
-The virtual environment has to be activated (`source ~/pycsp3-env/bin/activate`) in each new console where PyCSP3 is used.
-
-For using the -solve or -solver options, you need to have Java (at least, version 11) installed:
-
-```console
-sudo apt install default-jre
-```
-
-### macOS
-
-Install PyCSP3 in a virtual environment (the Python of Homebrew does not allow installing packages with pip outside of one):
-
-```console
-python3 -m venv ~/pycsp3-env
-source ~/pycsp3-env/bin/activate
-pip install pycsp3
-```
-
-The virtual environment has to be activated (`source ~/pycsp3-env/bin/activate`) in each new console where PyCSP3 is used.
-
-For using the -solve or -solver options, you need to have Java (at least, version 11) installed, for example with [Homebrew](https://brew.sh/):
-
-```console
-brew install --cask temurin
-```
-
-### Windows
-
-Install PyCSP3 in a virtual environment. Open the console and type:
-
-```console
-python -m venv pycsp3-env
+pip install pycsp3</code></pre></td>
+    <td><pre><code>python -m venv pycsp3-env
 pycsp3-env\Scripts\activate
-python -m pip install pycsp3
-```
+pip install pycsp3</code></pre></td>
+    <td>not needed</td>
+  </tr>
+  <tr>
+    <th>Dependencies</th>
+    <td>Debian, Ubuntu:<pre><code>sudo apt install python3-pip python3-venv default-jre</code></pre></td>
+    <td>Python from <a href="https://www.python.org/downloads/">python.org</a>, and Java:<pre><code>brew install --cask temurin</code></pre></td>
+    <td>Python from <a href="https://www.python.org/downloads/">python.org</a>, and Java:<pre><code>winget install EclipseAdoptium.Temurin.21.JRE</code></pre></td>
+    <td>already installed</td>
+  </tr>
+</table>
 
-The virtual environment has to be activated (`pycsp3-env\Scripts\activate`) in each new console where PyCSP3 is used.
-
-For using the -solve or -solver options, you need to install (at least) Java version 11, for example with the installer
-of [Adoptium](https://adoptium.net/) (the option that adds Java to the PATH being selected).
-
-You can check the java command by typing in your console:
-
-```console
-java --version
-```
-
-### Updating the Version of PyCSP3
-
-For updating your version of PyCSP3, simply execute (in the virtual environment, activated):
-
-```console
-python -m pip install --upgrade pycsp3
-```
-
-### Using the development version via GitHub and pip
-
-You can install the current development version (the master branch of this repo) by explicitly indicating that you want to use the repo to pip
-(in the virtual environment, activated):
-
-```console
-python -m pip install --upgrade git+https://github.com/xcsp3team/pycsp3.git
-```
+- Without a virtual environment, the option `--break-system-packages` is needed on recent systems, whose Python refuses the packages installed
+  with pip outside of a virtual environment (PEP 668); with `--user`, PyCSP3 is installed in the directory of the user, not in the one of the
+  system (never use sudo).
+- With a virtual environment, it has to be activated (second command) in each new console where PyCSP3 is used.
+- The Java given in the third row is OpenJDK, free and open source: the package default-jre of Debian and Ubuntu, and Eclipse Temurin (the
+  OpenJDK of the Eclipse Foundation, [Adoptium](https://adoptium.net/)) on macOS and Windows. The command `java --version` checks that Java is installed.
+- On Google Colab, the [notebook](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
+  can be opened directly: it installs PyCSP3 in its first cell.
+- For updating PyCSP3, add `--upgrade` to the command (e.g., `pip install --upgrade pycsp3`), and for the development version (the master branch
+  of this repository), replace `pycsp3` by `git+https://github.com/xcsp3team/pycsp3.git`.
 
 ## Cloning from GitHub
 
 An alternative to PyPI is to clone the code from GitHub, and to install it in editable mode (the changes of the code are then taken into
-account without installing it again), in a virtual environment.
-Here is an illustration for Linux and macOS, Python (version 3.10, or later) being installed.
-In a console, type:
+account without installing it again), for example in a virtual environment (created and activated as in the table above):
 
 ```console
 git clone https://github.com/xcsp3team/pycsp3.git
 cd pycsp3
-python3 -m venv ~/pycsp3-env
-source ~/pycsp3-env/bin/activate
 pip install -e .
 ```
-
-On Windows, the virtual environment is created with `python -m venv pycsp3-env`, and activated with `pycsp3-env\Scripts\activate`.
 
 ## Working with a Pool of Models
 
