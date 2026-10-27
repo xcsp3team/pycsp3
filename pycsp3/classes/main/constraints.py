@@ -858,6 +858,7 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         super().__init__(TypeCtr.ELEMENT)
         if len(lst) == 0:
             error("A constraint Element on an empty list of variables is encountered. Did you write something like x[:j] instead of x[:,j]?")
+        error_if(index is not None and index.dom.type != TypeVar.INTEGER, "The index of a list must be an integer variable, which is not the case of " + str(index))
         if index is not None and any(v is None for v in lst):  # the index of a variable in the list would not be its index in the array (#283)
             error("The list " + str(lst) + " has holes (None), and so, cannot be indexed by a variable (constraint Element)")
         smallest = [] if index is None else index.dom.smallest_value()  # if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
@@ -909,6 +910,8 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
 class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
+        for index in (index1, index2):
+            error_if(index.dom.type != TypeVar.INTEGER, "The index of a matrix must be an integer variable, which is not the case of " + str(index))
         if any(v is None for row in lst for v in row):  # the indexes of a variable in the matrix would not be its indexes in the array (#283)
             error("The matrix " + str(lst) + " has holes (None), and so, cannot be indexed by variables (constraint Element)")
         self.matrix = lst
@@ -1322,7 +1325,9 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             tab = self.constraint.arguments[TypeCtrArg.LIST].content
             idx = self.constraint.arguments[TypeCtrArg.INDEX].content
             if is_1d_list(other, (int, Variable)):
-                assert isinstance(tab, list) and all(isinstance(row, (tuple, list)) and len(row) == len(other) for row in tab)
+                if not isinstance(tab, list) or any(not isinstance(row, (tuple, list)) or len(row) != len(other) for row in tab):  # #292
+                    error("The element " + str(self) + " cannot be compared with the list " + str(other) + ": only an element on a list of rows (of "
+                          + str(len(other)) + " integers) can be compared with a list")
                 if isinstance(tab[0], tuple):
                     tab = curser.cp_array([curser.cp_array(row) for row in tab])
                 return [tab[:, i][idx] == other[i] for i in range(len(other))]

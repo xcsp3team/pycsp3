@@ -17,8 +17,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
-INVALID = ("#292: invalid arguments of an element: assert without message, TypeError raised inside PyCSP3, or a symbolic variable "
-           "accepted as value")
 ROWS_TUPLE = "#293: a row of integers indexed by a variable compared with a tuple of variables fails (whereas a list works)"
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
@@ -938,16 +936,16 @@ def test_xcsp3_element_in_a_group(run):
     "x[i] == 'a'",
     "x[i] == 2.5",
     "x[i] == True",
-    pytest.param("x[i] == [1, 2]", marks=bug(INVALID)),
+    "x[i] == [1, 2]",
     "x[i] == {1: 2}",
     "x[i]",
     "t[i]",
     "x[i] | v",
     "~x[i]",
-    pytest.param("x[i] == s[0]", marks=bug(INVALID)),
+    "x[i] == s[0]",
     "s[i] == 'a'",
-    pytest.param("x[s[0]] == 2", marks=bug(INVALID)),
-    pytest.param("x[2.5] == 2", marks=bug(INVALID)),
+    "x[s[0]] == 2",
+    "x[2.5] == 2",
     "x[:0][i] == 2",
     "[x[0], x[1]][i] == 2",
     "(x[0], x[1])[i] == 2",
@@ -970,9 +968,15 @@ def test_invalid_element(run, constraint):
     ("x[i] | (v == 1)", "is not a constraint: it must be subject to a condition"),
     ("~t[i]", "is not a constraint: it must be subject to a condition"),
     ("x[i] in {y, 2}", "must be integers, which is not the case of y"),
+    ("x[i] == [1, 2]", "cannot be compared with the list [1, 2]"),
+    ("x[s[0]] == 2", "The index of a list must be an integer variable, which is not the case of s[0]"),
+    ("m[i][s[0]] == 1", "The index of a matrix must be an integer variable, which is not the case of s[0]"),
+    ("x[2.5] == 2", "The index of a list must be an integer, a variable or an expression, which is not the case of 2.5"),
+    ("x[i] == s[0]", "A symbolic variable cannot be the operand of a condition, which is the case of s[0]"),
 ])
 def test_invalid_element_message(run, constraint, message):
-    r = run(X3 + "t = cp_array([3, 0, 2])\ny = Var(dom=range(3))\n" + f"satisfy({constraint})")
+    code = X3 + "t = cp_array([3, 0, 2])\ny = Var(dom=range(3))\ns = VarArray(size=3, dom={'a', 'b'})\nm = VarArray(size=[2, 2], dom=range(2))\n"
+    r = run(code + f"satisfy({constraint})")
     assert not r.ok and message in r.stdout, r.report()
 
 

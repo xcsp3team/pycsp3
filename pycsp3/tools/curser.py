@@ -952,6 +952,8 @@ class OpOverrider:
                 return ListInt(result) if is_1d_list(result, int) else ListVar(result)
             except TypeError:
                 return result
+        if isinstance(indexes, float):  # (#292)
+            error("The index of a list must be an integer, a variable or an expression, which is not the case of " + str(indexes))
         result = list.__getitem__(array, indexes)
         try:
             return ListVar(result) if lv else ListInt(result)
