@@ -1,5 +1,5 @@
 <div id="logo" align="center">
-<img width="25%" src="https://www.cril.univ-artois.fr/~lecoutre/logoPyCSP3.gif" alt="logo"/>
+<img width="25%" src="https://raw.githubusercontent.com/xcsp3team/pycsp3/master/logo.gif" alt="logo"/>
 </div>
 
 <div align="center">
@@ -20,7 +20,7 @@
 </div>
 
 <br />
-<h2> PyCSP3 v2.6 <sub><sup>(March 1, 2026)</sup></sub> </h2> 
+<h2> PyCSP3 v2.6 <sub><sup>(March 1, 2026)</sup></sub> </h2>
 
 <!-- PyCSP3 is inspired from both [JvCSP3](https://github.com/xcsp3team/XCSP3-Java-Tools/blob/master/doc/JvCSP3v1-1.pdf) (a Java-based API) and [Numberjack](https://github.com/eomahony/Numberjack). -->
 
@@ -30,40 +30,51 @@ see [www.pycsp.org](https://pycsp.org). With PyCSP3, it is possible to generate 
 1. CSP (Constraint Satisfaction Problem)
 1. COP (Constraint Optimization Problem)
 
-in format XCSP3; see [www.xcsp.org](https://xcsp.org).
-Currently, PyCSP3 is targeted to [XCSP3-core](https://arxiv.org/abs/2009.00514), which allows us to use integer variables (with finite domains) and popular
+in the XCSP3 format; see [www.xcsp.org](https://xcsp.org).
+Currently, PyCSP3 is targeted at [XCSP3-core](https://arxiv.org/abs/2009.00514), which allows us to use integer variables (with finite domains) and popular
 constraints. Note that:
 
 * a dedicated [website](https://pycsp.org/) with more than 60 Jupyter notebooks is available
 * a well-documented [guide](https://arxiv.org/abs/2009.00326) is available
-* PyCSP3 is available as a [PyPi package](https://pypi.org/project/pycsp3/)
-* a GitHub repository with more than 340 models is available at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models)
+* PyCSP3 is available as a [PyPI package](https://pypi.org/project/pycsp3/)
+* a GitHub repository with more than 400 models is available at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models)
 
-At this stage, one can run two embedded solvers:
+At this stage, one can run three embedded solvers:
 
 * the constraint solver [ACE](https://github.com/xcsp3team/ace), with the option -solve or the option -solver=ace
 * the constraint solver [Choco](https://choco-solver.org/), with the option -solver=choco
+* the constraint solver [cosoco](https://github.com/xcsp3team/cosoco), with the option -solver=cosoco (installed with `pip install pycsp3[cosoco]`,
+  or automatically at the first use; not available on Windows)
 
-<!-- Information about how piloting these embedded solvers can be found in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf). -->
+<!-- Information about how to pilot these embedded solvers can be found in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website. -->
 
 Of course, it is possible to launch on generated XCSP3 instances (files) any solver that recognizes the XCSP3 format.
-For example, see the solvers involved in the [2022, 2023, 2024 and 2025 Competitions](https://www.xcsp.org/competitions/).
+For example, see the solvers involved in the [XCSP3 Competitions](https://www.xcsp.org/competitions/) (every year since 2022).
 It is also immediate to run ACE or Choco on XCSP3 instances (files) as the respective executables (jar files) are present in directories `pycsp3/solvers/ace`
-and  `pycsp3/solvers/choco`.
+and `pycsp3/solvers/choco`.
 For example, for running ACE on the XCSP3 instance 'zebra.xml', just execute:
 
 ```console
-java -jar ACE-YY-MM.jar zebra.xml 
-
+java -jar ACE-2.6.jar zebra.xml
 ```
 
-while replacing YY and MM with the current values that are present in the name of the jar file.
+while replacing 2.6 with the version that is present in the name of the jar file.
 
 Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving Process](https://pycsp.org/documentation/solving-process/).
 
+**Contents**
+
+- [Quick Start](#quick-start)
+- [Installation](#installation): Linux, macOS, Windows, Google Colab, [cloning from GitHub](#cloning-from-github),
+  [pool of models](#working-with-a-pool-of-models)
+- [Compilation](#compilation): the options of the command line
+- [Examples](#examples): console mode, Send+More=Money, All-Interval Series, BIBD, Rack Configuration, Nonogram
+- [Citing PyCSP3](#citing-pycsp3)
+
 # Quick Start
 
-Install PyCSP3 (Python 3.10 or later; Java 11 or later is needed for the embedded solvers ACE and Choco):
+Install PyCSP3 (Python 3.10 or later; Java 11 or later is needed for the embedded solvers ACE and Choco), for example in a virtual environment
+(see [Installation](#installation) for your system):
 
 ```console
 pip install pycsp3
@@ -103,179 +114,104 @@ The XCSP3 instance `Queens.xml` is generated, the embedded solver ACE is run on 
 
 The sections below give the details of the installation and more examples; the [website](https://pycsp.org/) gives the documentation.
 
-# 0) Zero Installation from Google Colab
+# Installation
 
-This is an immediate solution for using PyCSP3, with no installation required (*you are ready to work in exactly 2 minutes*).
-The quickest way is to open this [notebook](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb) on Colab, and to run its cells.
-Otherwise, what you have to do is:
+PyCSP3 requires Python (version 3.10, or later), and Java (version 11, or later) for the embedded solvers ACE and Choco (options -solve and -solver).
+Install PyCSP3 without a virtual environment or with one, once the dependencies are installed:
 
-1. build a new notebook on [Google colab](https://colab.research.google.com/)
-2. insert a first code cell for being able to use PyCSP3 in your notebook:
-   ```
-   pip install pycsp3
-   ```
-3. test a very basic model by inserting in a second code cell something like:
-   ```
-   from pycsp3 import *
-   
-   x = VarArray(size=5, dom=range(5))
-   
-   satisfy(
-       AllDifferent(x)
-   )  
-   
-   if solve() is SAT:
-       print(values(x))
-   ```
+<table>
+  <tr>
+    <th>Linux</th>
+    <th>macOS</th>
+    <th>Windows</th>
+    <th>Google Colab</th>
+  </tr>
+  <tr>
+    <td colspan="4"><b>Without a virtual environment</b></td>
+  </tr>
+  <tr>
+    <td colspan="2"><code>python3 -m pip install --user \</code><br><code>  --break-system-packages pycsp3</code></td>
+    <td><code>python -m pip install pycsp3</code></td>
+    <td width="190"><code>%pip install pycsp3</code></td>
+  </tr>
+  <tr>
+    <td colspan="4"><b>With a virtual environment</b></td>
+  </tr>
+  <tr>
+    <td colspan="2"><code>python3 -m venv ~/pycsp3-env</code><br><code>source ~/pycsp3-env/bin/activate</code><br><code>pip install pycsp3</code></td>
+    <td><code>python -m venv pycsp3-env</code><br><code>pycsp3-env\Scripts\activate</code><br><code>pip install pycsp3</code></td>
+    <td>not needed</td>
+  </tr>
+  <tr>
+    <td colspan="4"><b>Dependencies</b>: Python, and Java (only for the embedded solvers) with one of the two JDKs</td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><b>Python</b></td>
+    <td rowspan="6">already installed (Python and OpenJDK)</td>
+  </tr>
+  <tr>
+    <td><code>sudo apt install python3-pip</code><br><code>sudo apt install python3-venv</code></td>
+    <td><a href="https://www.python.org/downloads/">python.org</a></td>
+    <td><a href="https://www.python.org/downloads/">python.org</a></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><b>OpenJDK</b></td>
+  </tr>
+  <tr>
+    <td><code>sudo apt install openjdk-25-jre</code></td>
+    <td><code>brew install temurin@25</code></td>
+    <td><code>winget install EclipseAdoptium.Temurin.25.JRE</code></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><b>Oracle JDK</b></td>
+  </tr>
+  <tr>
+    <td>package .deb of <a href="https://www.oracle.com/java/technologies/downloads/">oracle.com</a>, then<br><code>sudo apt install ./jdk*.deb</code></td>
+    <td><code>brew install oracle-jdk@25</code></td>
+    <td><code>winget install Oracle.JDK.25</code></td>
+  </tr>
+</table>
 
-Here, we have an array with 5 variables, we enforce them to be all different, and we display the first solution found by the underlying solver.
-Just execute these cell codes on Colab. It should return `[0, 1, 2, 3, 4]`.
+- Without a virtual environment, the option `--break-system-packages` is needed on recent systems, whose Python refuses the packages installed
+  with pip outside of a virtual environment (PEP 668); with `--user`, PyCSP3 is installed in the directory of the user, not in the one of the
+  system (never use sudo).
+- With a virtual environment, it has to be activated (second command) in each new console where PyCSP3 is used.
+- Java: `java --version` checks that Java is installed. OpenJDK (the package of Debian and Ubuntu, or Eclipse Temurin of
+  [Adoptium](https://adoptium.net/)) is free and open source; the Oracle JDK 25 is free under the Oracle No-Fee Terms and Conditions until
+  September 2028, and then under the license OTN, which is not free for a use in production
+  ([conditions](https://www.oracle.com/java/technologies/downloads/)). The performances of the solvers may differ with the two JDKs.
+  The package openjdk-25-jre is given by Ubuntu 24.04 and Debian 13, and later versions (otherwise, default-jre installs an older Java, 17 or 21).
+- On Google Colab, the [notebook](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
+  can be opened directly: it installs PyCSP3 in its first cell.
+- For updating PyCSP3, add `--upgrade` to the command (e.g., `pip install --upgrade pycsp3`), and for the development version (the master branch
+  of this repository), replace `pycsp3` by `git+https://github.com/xcsp3team/pycsp3.git`.
 
-That's it. However, note that for intensive use, it is better to install PyCSP3 on your computer; see next section.
+## Cloning from GitHub
 
-# 1) Installation from PyPi
-
-This is the second easiest way of installing PyCSP3.
-
-Note that you need first Python (version 3.10, or later) to be installed.
-You can do it, for example, from [python.org](https://www.python.org/downloads/)
-
-## Installing PyCSP3 (Linux)
-
-Check if 'pip3' is installed. If it is not the case, execute:
-
-```console
-sudo apt install python3-pip
-
-```
-
-Then, install PyCSP3 with the command 'pip3':
-
-```console
-sudo pip3 install pycsp3
-
-```
-
-For using the -solve or -solver options, you need to have Java (at least, version 11) installed:
-
-```console
-sudo apt-get install openjdk-11-jdk
-```
-
-## Installing PyCSP3 (Mac OS)
-
-If Python 3 is installed on your system, the command 'pip3' should already be present.
-
-Install PyCSP3 with the command 'pip3':
-
-```console
-sudo pip3 install pycsp3
-```
-
-For using the -solve or -solver options, you need to have Java (at least, version 11) installed.
-
-## Installing PyCSP3 (Windows)
-
-You may need to upgrade 'pip'. Open the console and type:
-
-```console
-python -m pip install --upgrade pip
-```
-
-Then, for installing pycsp3, type:
+An alternative to PyPI is to clone the code from GitHub, and to install it in editable mode (the changes of the code are then taken into
+account without installing it again), for example in a virtual environment (created and activated as in the table above):
 
 ```console
-python -m pip install pycsp3
-```
-
-For using the -solve or -solver options, you need to install (at least) Java version 11:
-
-https://www.oracle.com/java/technologies/javase-downloads.html
-
-And add in the PATH the java command, for example, temporally, with the command:
-
-```console
-set path=%path%;C:/Program Files/Java/jdk-14.0.1/bin/
-```
-
-You can check the java command by typing in your console:
-
-```console
-java --version
-```
-
-## Updating the Version of PyCSP3 (for PyPi)
-
-For updating your version of PyCSP3, simply execute:
-
-For linux/Mac:
-
-```console
-sudo pip3 install --upgrade pycsp3
-```
-
-For Windows:
-
-```console
-python -m pip install --upgrade pycsp3
-```
-
-## Using the development version via Github and pip
-
-You can install the current development version (the master branch of this repo) by explicitly indicating that you want to use the repo to pip.
-
-For linux/Mac:
-
-```console
-pip3 install --upgrade git+https://github.com/xcsp3team/pycsp3.git
-```
-
-For Windows:
-
-```console
-python -m pip install --upgrade git+https://github.com/xcsp3team/pycsp3.git
+git clone https://github.com/xcsp3team/pycsp3.git
+cd pycsp3
+pip install -e .
 ```
 
 ## Working with a Pool of Models
 
-A GitHub repository is now available with more than 340 models
+A GitHub repository is now available with more than 400 models
 at [pycsp3-models](https://github.com/xcsp3team/pycsp3-models).
 
 And you can test the compilation of one of these models.
 For example, at the root of the directory pycsp3-models:
 
 ```console
-python single/Zebra/Zebra.py (For Linux/Mac)
-python single\Zebra\Zebra.py (For Windows)
+python single/Zebra/Zebra.py
 ```
 
-# 2) Installation (alternative) by Cloning from GitHub
+(with `single\Zebra\Zebra.py` on Windows).
 
-An alternative to PyPi is to clone the code from GitHub.
-Here is an illustration for MAC OS.
-We assume that Python 3 is installed (otherwise, type `port install python38` for example), and consequently 'pip3' is also installed.
-In a console, type:
-
-```console
-git clone https://github.com/xcsp3team/pycsp3.git
-pip3 install lxml
-```
-
-You may need to update the environment variable 'PYTHONPATH', by typing for example:
-
-```console
-export PYTHONPATH=$PYTHONPATH:.
-```
-
-# 3) Compilation and Examples
-
-We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
-However, note that many illustrations are available on [www.pycsp.org](https://pycsp.org/), notably many [models](https://pycsp.org/documentation/models/) with
-Jupyter notebooks.
-
-First, we give some general information about compilation.
-
-## Compiling PyCSP3 Models
+# Compilation
 
 For generating an XCSP3 instance from a PyCSP3 model, you have to execute:
 
@@ -306,45 +242,59 @@ Among the options, we find:
 * ```-variant=<variant_name>```: the name of a variant, to be used with function `variant()`.
   See Example AllInterval below, for an illustration.
 
-* ```-solve```: attempts to solve the instance with the embedded solver 'Ace'. It requires that Java version 8 (at least) is installed.
+* ```-solve```: attempts to solve the instance with the embedded solver 'ACE'. It requires that Java (version 11, or later) is installed.
 
-* ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace' or 'choco'.
-  Important: it requires that Java version 8 (at least) is installed.
-  Information about how piloting these embedded solvers can be found
-  in [this document](https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf).
+* ```-solver=<solver_name>```: attempts to solve the instance with the solver whose name is given. Currently, it can be 'ace', 'choco' or 'cosoco' (cosoco is not available on Windows).
+  Important: it requires that Java (version 11, or later) is installed.
+  Information about how to pilot these embedded solvers can be found
+  in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website.
 
 * ```-output=<file_name>```: sets the filename of the generated XCSP3 instance (think about the extension .xml)
+
+* ```-ev```: displays the trace of an error (the traceback of Python), in addition to its message
 
 By default, a file containing the XCSP3 instance is generated, unless you use the option:
 
 * ```-display```: displays the XCSP3 instance in the system standard output, instead of generating an XCSP3 file
 
+The other options are given in the page [Command Interface](https://pycsp.org/documentation/interface/CommandInterface/) of the website.
+
+# Examples
+
+We succinctly introduce a few PyCSP3 models, showing how to compile them with different options.
+However, note that many illustrations are available on [www.pycsp.org](https://pycsp.org/), notably many [models](https://pycsp.org/documentation/models/) with
+Jupyter notebooks.
+
 ## Example 1: in console mode
 
 Our first example shows how you can build basic models in console mode.
-In this example, we just post two variable and two simple binary constraints.
+In this example, we just post two variables and two simple binary constraints.
 
 ```console
 $ python3
-Python 3.5.2
 >>> from pycsp3 import *
 >>> x = Var(range(10))
 >>> y = Var(range(10))
 >>> satisfy(
-       x < y,
-       x + y > 15
-    )
+...    x < y,
+...    x + y > 15
+... )
+intension(function:lt(x,y))
+intension(function:gt(add(x,y),15))
 >>> compile()
+('Console.xml', False)
 >>> if solve() is SAT:
-       print(value(x),value(y)) 
+...    print(value(x), value(y))
+...
+7 9
 ```
 
-Note that to get an XCSP3 file, we call `compile()`.
+Note that to get an XCSP3 file (here, `Console.xml`), we call `compile()`.
 
 ## Example 2: Send+More=Money
 
 This example shows how you can define a model when no data is required from the user.
-This is the classical crypto-arithmetic puzzle 'Send+More=Money'.
+This is the classical cryptarithmetic puzzle 'Send+More=Money'.
 
 #### File **`SendMore.py`**
 
@@ -599,7 +549,7 @@ fields are exactly those of the main object in the JSON file.
 from pycsp3 import *
 
 nRacks, models, cardTypes = data
-models.append([0, 0, 0])  # we add first a dummy model (0,0,0)
+models.append([0, 0, 0])  # we add a dummy model (0,0,0) at the end
 powers, sizes, costs = zip(*models)
 cardPowers, cardDemands = zip(*cardTypes)
 nModels, nTypes = len(models), len(cardTypes)
@@ -674,14 +624,14 @@ One might want to have the data in the JSON file with another structure, as for 
     {"power": 75, "demand": 2}
   ]
 }
-  ```
+```
 
 We only need to modify one line from the previous model:
 
 #### File **`Rack2.py`**
 
 ```python
-models.append(models[0].__class__(0, 0, 0))  # we add first a dummy model (0,0,0) ; we get the class of the used named tuples to build a new one
+models.append(models[0].__class__(0, 0, 0))  # we add a dummy model (0,0,0) at the end; we get the class of the used named tuples to build a new one
 ```
 
 To generate an XCSP3 instance (file), we execute the command:
@@ -700,7 +650,7 @@ The data (for a specific Nonogram puzzle) are initially given in a text file as 
 1. then, for each row a line stating the number of blocks followed by the sizes of all these blocks (on the same line),
 1. then, for each column a line stating the number of blocks followed by the sizes of all these blocks (on the same line).
 
-Below, here is an example of such a text file.
+Here is an example of such a text file.
 
 #### File **`Nonogram_example.txt`**
 
@@ -759,7 +709,7 @@ Below, here is an example of such a text file.
 
 First, we need to write a piece of code in Python for building a dictionary `data` that will be then used in our model (after having been automatically
 converted to a named tuple).
-We have first to import everything (*) from `pycsp3.problems.data.parsing`.
+We first have to import everything (*) from `pycsp3.problems.data.parsing`.
 We can then add any new arbitrary item to the dictionary `data` (which is initially empty).
 This is what we do below with two items whose keys are called `rowPatterns` and `colPatterns`.
 The values associated with these two keys are defined as two-dimensional arrays (lists) of integers, defining the sizes of blocks.
@@ -772,7 +722,7 @@ from pycsp3.problems.data.parsing import *
 
 nRows, nCols = next_int(), next_int()
 data["rowPatterns"] = [[next_int() for _ in range(next_int())] for _ in range(nRows)]
-data["colPatterns"] = [[next_int() for _ in range(next_int())] for _ in range(nRows)]
+data["colPatterns"] = [[next_int() for _ in range(next_int())] for _ in range(nCols)]
 ```
 
 Then, we just write the model by getting data from the variable `data`.
@@ -786,7 +736,7 @@ Finally, `x[:, j]` denotes the jth column of `x`.
 ```python
 from pycsp3 import *
 
-rows, cols = data  # patterns for row and columns 
+rows, cols = data  # patterns for rows and columns
 nRows, nCols = len(rows), len(cols)
 
 
@@ -817,8 +767,8 @@ satisfy(
 )
 ```
 
-To generate the XCSP3 instance (file), we just need to specify the name of the text file (option `-data`) and the name of the Python parser (
-option `-dataparser`).
+To generate the XCSP3 instance (file), we just need to specify the name of the text file (option `-data`) and the name of the Python parser
+(option `-dataparser`).
 
 ```console
 python3 Nonogram.py -data=Nonogram_example.txt -dataparser=Nonogram_Parser.py
@@ -836,32 +786,6 @@ A file `Nonogram_example.json` is generated, whose content is:
 
 ```json
 {
-  "colPatterns": [
-    [],
-    [],
-    [],
-    [1],
-    [2],
-    [2],
-    [6, 1],
-    [3, 1, 3],
-    [1, 1, 4],
-    [2, 1, 1, 7],
-    [1, 1, 1, 1, 1],
-    [1, 12, 1],
-    [1, 1, 1, 1, 1],
-    [2, 1, 1, 7],
-    [1, 1, 4, 1],
-    [2, 1, 2, 2],
-    [8, 3],
-    [1, 1],
-    [1, 2],
-    [4],
-    [3],
-    [2],
-    [1],
-    []
-  ],
   "rowPatterns": [
     [],
     [5],
@@ -887,13 +811,39 @@ A file `Nonogram_example.json` is generated, whose content is:
     [1, 2],
     [2, 2, 4],
     [4, 9]
+  ],
+  "colPatterns": [
+    [],
+    [],
+    [],
+    [1],
+    [2],
+    [2],
+    [6, 1],
+    [3, 1, 3],
+    [1, 1, 4],
+    [2, 1, 1, 7],
+    [1, 1, 1, 1, 1],
+    [1, 12, 1],
+    [1, 1, 1, 1, 1],
+    [2, 1, 1, 7],
+    [1, 1, 4, 1],
+    [2, 1, 2, 2],
+    [8, 3],
+    [1, 1],
+    [1, 2],
+    [4],
+    [3],
+    [2],
+    [1],
+    []
   ]
 }
 ```
 
 With this new file, you can directly generate the XCSP3 file with:
 
- ```console
+```console
 python3 Nonogram.py -data=Nonogram_example.json
 ```
 

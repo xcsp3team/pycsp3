@@ -15,12 +15,32 @@ if not is_windows():
             s = 'Problem when importing the module readline'
         raise ImportError(s)
 
-fileToTrace = [arg for arg in sys.argv if arg.endswith(".py") and "compiler.py" not in arg] + ["<stdin>"]
+fileToTrace = [arg for arg in sys.argv if arg.endswith(".py") and "compiler.py" not in arg]
+
+# The names given to the code typed in the console (interactive interpreter): "<stdin>" up to Python 3.12, "<stdin>-N" (3.13) or "<stdin-N>"
+# (from 3.14) in the basic interpreter, and "<python-input-N>" in the new interpreter (from 3.13)
+CONSOLE_FILENAMES = re.compile(r"<stdin>(-\d+)?|<stdin-\d+>|<python-input-\d+>")
+
+
+def _is_console(filename):
+    return CONSOLE_FILENAMES.fullmatch(filename) is not None
+
+
+def _console_lines():
+    # the lines typed in the console, given by readline, except in the new interpreter of Python 3.13+ (which keeps its own history)
+    lines = [readline.get_history_item(i + 1) for i in range(readline.get_current_history_length())]
+    if len(lines) == 0 and "_pyrepl.readline" in sys.modules:
+        history = sys.modules["_pyrepl.readline"]
+        try:
+            lines = [line for i in range(history.get_current_history_length()) for line in history.get_history_item(i + 1).split("\n")]
+        except Exception:  # for example, when the terminal does not allow the new interpreter
+            pass
+    return lines
 
 
 def _global_value_of(variable):
     stack = list(reversed(inspect.stack(context=1)))
-    frames = [frame for frame in stack for trace in fileToTrace if trace in frame.filename]
+    frames = [frame for frame in stack if _is_console(frame.filename) or any(trace in frame.filename for trace in fileToTrace)]
     # frames = [frame for frame in stack if frame.filename in fileToTrace]
     if len(frames) == 0:
         return None
@@ -106,11 +126,10 @@ def _extract_correct_frame(function_name):
 
 def _extract_code(function_name):
     index, frame_info = _extract_correct_frame(function_name)  # getting the good frame
-    if frame_info.filename == "<stdin>":  # Console case
+    if _is_console(frame_info.filename):  # Console case
         if is_windows():
             assert False, "Console mode is not available on Windows"
-        lines = reversed(list(readline.get_history_item(i + 1) for i in range(readline.get_current_history_length())))
-        return browse_code_bottom_to_top(lines, function_name)
+        return browse_code_bottom_to_top(reversed(_console_lines()), function_name)
 
     # The index of the line in the stack of the inspector changes between python 3.7 and 3.8:
     # In 3.8 the index is the line where the function name appears
