@@ -144,6 +144,9 @@ def cursing():
             queue_in.append((list(self), other))  # the values of the condition of the component (any value other than an integer reported when posting)
             return True
         # note that Python changes into a tuple a list given literally on the right of 'in', as in x in [[0, 1], [1, 0]] or x in ['a', 'b']
+        if isinstance(other, Variable) and any(isinstance(v, Variable) for v in self):  # member, as in v in [x[0], x[1]] (#286)
+            queue_in.append((list(self), other))
+            return True
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, list, int, str)):
             queue_in.append((list(self), other))
             return True

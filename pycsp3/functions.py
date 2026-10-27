@@ -441,8 +441,8 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             # no value is allowed: a table constraint with an empty set of supports is posted (the model is unsatisfiable)
             warning("A table constraint with an empty set of supports is posted for " + str(left_operand) + ": the model is unsatisfiable", "empty_supports")
             return ECtr(ConstraintExtension([left_operand], [], True, options.keep_hybrid, options.restrict_tables_wrt_domains))
-        if isinstance(right_operand, (tuple, list, set, frozenset)) and is_containing(right_operand, Variable):
-            if len(right_operand) < 4:  # TODO hard coding (introducing an option to adjust that?)
+        if isinstance(right_operand, (tuple, list, set, frozenset)) and any(isinstance(v, Variable) for v in right_operand):
+            if len(right_operand) < 4 or not is_containing(right_operand, Variable):  # with integers among the variables, an intension (#286)
                 st = Node.build(SET, right_operand)
                 return _Intension(Node.build(IN, left_operand, st) if bool_value else Node.build(NOTIN, left_operand, st))
             if bool_value:

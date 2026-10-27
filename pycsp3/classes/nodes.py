@@ -682,7 +682,8 @@ class Node(Entity):
         if tn is SET:
             assert len(args) == 1
             elements = list(args[0])
-            sorted_sons = sorted(elements, key=lambda v: str(v)) if len(elements) > 0 and not isinstance(elements[0], int) else sorted(elements)
+            # with variables (possibly with integers) among the elements, sorted by their names (comparing an integer with a variable would build a node)
+            sorted_sons = sorted(elements, key=lambda v: str(v)) if any(not isinstance(v, int) for v in elements) else sorted(elements)
             return Node(tn, Node._create_sons(*sorted_sons))  # *sorted(args[0])))
         args = flatten([Node.build(SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args])
         assert tn.is_valid_arity(len(args)), ("Problem: Bad arity for node " + tn.name + ". It is " + str(len(args))

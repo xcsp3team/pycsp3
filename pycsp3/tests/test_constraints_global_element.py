@@ -17,7 +17,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
-MEMBER_TUPLE = "#286: v in a list of variables written literally (a tuple for Python) fails (an argument of satisfy() is badly formed)"
 MEMBER_TERM = ("#287: member of an expression or of a component (v + 1 in x, x[i] in x, Sum(y) in x) fails (badly formed), and member "
                "of a two-dimensional list too (bad form of predicate)")
 MEMBER_LOGICAL = "#288: member in a logical expression fails with a message about the second argument of belong()"
@@ -599,12 +598,15 @@ def test_element_with_an_index_outside_the_list_in_logical_expressions(run, solv
     ("v in x[:3]", lambda *t: t[4] in t[:3]),
     ("v in x[:2]", lambda *t: t[4] in t[:2]),
     pytest.param("v in {x[0], x[1], x[2], x[3]}", lambda *t: t[4] in t[:4], id="v in a set"),
-    pytest.param("v in [x[0], x[1], x[2], x[3]]", lambda *t: t[4] in t[:4], marks=bug(MEMBER_TUPLE)),
-    pytest.param("v in [x[0], x[1]]", lambda *t: t[4] in t[:2], marks=bug(MEMBER_TUPLE)),
-    pytest.param("v in (x[0], x[1], x[2], x[3])", lambda *t: t[4] in t[:4], marks=bug(MEMBER_TUPLE)),
-    pytest.param("v in [x[0], x[1], x[2], x[3], 2]", lambda *t: t[4] in t[:4] + (2,), marks=bug(MEMBER_TUPLE)),
+    ("v in [x[0], x[1], x[2], x[3]]", lambda *t: t[4] in t[:4]),
+    ("v in [x[0], x[1]]", lambda *t: t[4] in t[:2]),
+    ("v in (x[0], x[1], x[2], x[3])", lambda *t: t[4] in t[:4]),
+    ("v in [x[0], x[1], x[2], x[3], 2]", lambda *t: t[4] in t[:4] + (2,)),
+    ("v in [2, x[0]]", lambda *t: t[4] in (2, t[0])),
+    ("v in {x[0], 2}", lambda *t: t[4] in (2, t[0])),
+    ("v not in [x[0], 2]", lambda *t: t[4] not in (2, t[0])),
     ("v not in x", lambda *t: t[4] not in t[:4]),
-    pytest.param("v not in [x[0], x[1], x[2], x[3]]", lambda *t: t[4] not in t[:4], marks=bug(MEMBER_TUPLE)),
+    ("v not in [x[0], x[1], x[2], x[3]]", lambda *t: t[4] not in t[:4]),
     ("1 in x", lambda *t: 1 in t[:4]),
     ("1 not in x", lambda *t: 1 not in t[:4]),
     pytest.param("v + 1 in x", lambda *t: t[4] + 1 in t[:4], marks=bug(MEMBER_TERM)),
@@ -613,7 +615,7 @@ def test_element_with_an_index_outside_the_list_in_logical_expressions(run, solv
 ])
 def test_element_member(run, solver, request, constraint, predicate):
     # v in x (without index) holds iff v is equal to one variable of x
-    if constraint in ("v in x", "v in {x[0], x[1], x[2], x[3]}"):  # an element without index
+    if constraint in ("v in x", "v in {x[0], x[1], x[2], x[3]}", "v in [x[0], x[1], x[2], x[3]]", "v in (x[0], x[1], x[2], x[3])"):  # an element without index
         mark(request, solver, {"ACE": ACE_MEMBER, "CHOCO": CHOCO_MEMBER, "COSOCO": COSOCO_UNSUPPORTED_MEMBER})
     check(run, solver, "x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})", [range(2)] * 4 + [range(3)], predicate)
 
