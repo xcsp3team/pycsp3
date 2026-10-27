@@ -17,7 +17,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
-MATRIX_OBJECTIVE = "#290: an element on a matrix as objective gives an objective of type element, which does not exist in XCSP3"
 BOOLEAN = ("#291: the element of a list of 0/1 variables cannot be used with | and ~ (TypeError), and the element of a list of 0/1 "
            "integers cannot be posted alone (assert without message)")
 INVALID = ("#292: invalid arguments of an element: assert without message, TypeError raised inside PyCSP3, or a symbolic variable "
@@ -698,8 +697,8 @@ def test_element_on_integers_as_objective(run, solver, objective, function):
     ("maximize(u[j][k])", lambda *t: ((1, 4, 2), (3, 0, 5))[t[6]][t[7]]),
 ])
 def test_element_on_a_matrix_as_objective(run, solver, request, objective, function):
-    mark(request, solver, {"maximize(m[j][k])": {"*": MATRIX_OBJECTIVE}, "maximize(u[j][k])": {"*": MATRIX_OBJECTIVE},
-                           "minimize(m[j][k] + v)": {"CHOCO": CHOCO_MATRIX}}.get(objective, {}))
+    if "m[j][k]" in objective:
+        bug_for(request, "CHOCO", CHOCO_MATRIX)
     r = run(M23 + "u = cp_array([[1, 4, 2], [3, 0, 5]])\nsatisfy(m[0][0] != m[1][1], v != 1, k != 1)\n" + objective, solver=solver)
     assert_optimum(r, brute_force(DM, lambda *t: t[0] != t[4] and t[8] != 1 and t[7] != 1), function, maximize=objective.startswith("maximize"))
 
@@ -907,10 +906,9 @@ def test_element_member_with_mini(run, constraint):
     assert not r.ok and "is not accepted in the mini-tracks" in r.stdout, r.report()
 
 
-@pytest.mark.parametrize("objective", [pytest.param("maximize(m[j][k])", marks=bug(MATRIX_OBJECTIVE)),
-                                       pytest.param("minimize(t[j][k])", marks=bug(MATRIX_OBJECTIVE)), "maximize(m[j][k] + v)"])
+@pytest.mark.parametrize("objective", ["maximize(m[j][k])", "minimize(t[j][k])", "maximize(m[j, k])", "maximize(m[j][k] + v)"])
 def test_xcsp3_element_on_a_matrix_as_objective(run, objective):
-    # there is no objective of type element in XCSP3: the element is replaced by an auxiliary variable
+    # there is no objective of type element in XCSP3: the element is replaced by an auxiliary variable (#290)
     r = run(M23 + "t = cp_array([[1, 2, 3], [4, 5, 6]])\n" + objective)
     assert r.ok, r.report()
     o = r.xml.find("objectives")[0]

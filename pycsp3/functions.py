@@ -16,8 +16,8 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
     ConstraintDisjoint, ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
-    ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
-    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
+    ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintElementMatrix, ConstraintChannel, ConstraintNoOverlap,
+    ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
     ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic, check_no_boolean
@@ -4290,7 +4290,7 @@ def _optimize(term, minimization):
     if isinstance(term, PartialConstraint):
         if isinstance(term.constraint, (ConstraintMaximumArg, ConstraintMinimumArg)):  # there is no type maximumArg (or minimumArg) of objectives
             error(("MaximumArg()" if isinstance(term.constraint, ConstraintMaximumArg) else "MinimumArg()") + " cannot be an objective")
-        if isinstance(term.constraint, (ConstraintElement, ConstraintCount)) \
+        if isinstance(term.constraint, (ConstraintElement, ConstraintElementMatrix, ConstraintCount)) \
                 or isinstance(term.constraint, ConstraintNValues) and term.constraint.arguments[TypeCtrArg.EXCEPT].content is not None:
             term = auxiliary().replace_partial_constraint(term)  # (an objective of type nValues has no element <except>)
         elif isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):
