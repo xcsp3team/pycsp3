@@ -15,8 +15,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
-                   "even when the element is in a logical expression (as said in the page Element of the documentation)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_EQ = ("xcsp3team/ACE#26: ACE gives wrong solutions for nValues with the condition (eq,k), 1 < k < |X|, and fails when the variables have "
@@ -576,16 +574,87 @@ def test_element_on_01_variables_in_logical_expressions(run, solver, constraint,
     check(run, solver, "b = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(3))\n" + f"satisfy({constraint})", [range(2)] * 3 + [range(3)], predicate)
 
 
-@bug(LOGICAL_OUTSIDE)
+def at(t, k):
+    """The value of x[k] in a tuple (x[0], x[1], x[2], j, v), or None when k is not an index of x."""
+    return t[k] if 0 <= k < 3 else None
+
+
+def ne(a, b):
+    """a != b for the value a of an element, which is false when the element is not defined (its index being outside the list)."""
+    return a is not None and a != b
+
+
 @pytest.mark.parametrize("constraint, predicate", [
-    ("(x[j] == 2) | (j == 3)", lambda *t: t[3] == 3 or t[t[3]] == 2),
-    ("If(j >= 1, Then=x[j - 1] == 2)", lambda *t: t[3] == 0 or t[t[3] - 1] == 2),
-    ("imply(j < 3, x[j] == 2)", lambda *t: t[3] == 3 or t[t[3]] == 2),
+    ("(x[j] == 2) | (j == 3)", lambda t: at(t, t[3]) == 2 or t[3] == 3),
+    ("(x[j] == v) | (v == 0)", lambda t: at(t, t[3]) == t[4] or t[4] == 0),
+    ("~(x[j] == 2)", lambda t: not at(t, t[3]) == 2),
+    ("~(x[j] == 2) | (x[0] == 0)", lambda t: not at(t, t[3]) == 2 or t[0] == 0),
+    ("iff(x[j] == 2, v == 1)", lambda t: (at(t, t[3]) == 2) == (t[4] == 1)),
+    ("xor(x[j] == 2, v == 1)", lambda t: (at(t, t[3]) == 2) != (t[4] == 1)),
+    ("imply(j < 3, x[j] == 2)", lambda t: t[3] >= 3 or at(t, t[3]) == 2),
+    ("If(j >= 1, Then=x[j - 1] == 2)", lambda t: t[3] < 1 or at(t, t[3] - 1) == 2),
+    ("If(j >= 1, Then=x[j - 1] == 2, Else=x[j + 1] == 0)", lambda t: at(t, t[3] - 1) == 2 if t[3] >= 1 else at(t, t[3] + 1) == 0),
+    ("(x[j] != 2) | (j == 0)", lambda t: ne(at(t, t[3]), 2) or t[3] == 0),
+    ("(x[j] < v) | (j == 3)", lambda t: (at(t, t[3]) is not None and at(t, t[3]) < t[4]) or t[3] == 3),
+    ("(x[j] in {1, 2}) | (j == 3)", lambda t: at(t, t[3]) in (1, 2) or t[3] == 3),
+    ("(x[j] not in {1, 2}) | (j == 3)", lambda t: (at(t, t[3]) is not None and at(t, t[3]) not in (1, 2)) or t[3] == 3),
+    ("((x[j] == 2) & (x[j - 1] == 1)) | (v == 2)", lambda t: (at(t, t[3]) == 2 and at(t, t[3] - 1) == 1) or t[4] == 2),
+    ("(x[j] == 2) | (x[2 - j] == 2)", lambda t: at(t, t[3]) == 2 or at(t, 2 - t[3]) == 2),
+    ("either(x[j] == 2, j == -1)", lambda t: at(t, t[3]) == 2 or t[3] == -1),
+    ("both(x[j] >= 1, v == 1) | (j == 3)", lambda t: ((at(t, t[3]) or 0) >= 1 and t[4] == 1) or t[3] == 3),
+    ("(x[j] == x[0]) | (j == 3)", lambda t: at(t, t[3]) == t[0] or t[3] == 3),
+    ("(x[j] == j) | (v == 0)", lambda t: at(t, t[3]) == t[3] or t[4] == 0),
+    ("x[j] == 2", lambda t: at(t, t[3]) == 2),
+    ("x[j] != 2", lambda t: ne(at(t, t[3]), 2)),
+    ("x[j] + 1 == v", lambda t: at(t, t[3]) is not None and at(t, t[3]) + 1 == t[4]),
+    ("Sum(x[j], v) == 3", lambda t: at(t, t[3]) is not None and at(t, t[3]) + t[4] == 3),
+    ("x[j] in {1, 2}", lambda t: at(t, t[3]) in (1, 2)),
 ])
 def test_element_with_an_index_outside_the_list_in_logical_expressions(run, solver, constraint, predicate):
-    # with -force_element_index, the index is restricted to the indexes of the list only where the element is (as in the doc of Element)
-    check(run, solver, "x = VarArray(size=3, dom=range(3))\nj = Var(dom=range(4))\n" + f"satisfy({constraint})", [range(3)] * 3 + [range(4)], predicate,
-          args=("-force_element_index",))
+    # with -force_element_index, an element whose index is outside the list is false in a logical expression, and its index is restricted to the
+    # list at the top level, the new index being the index when it is valid, and the first index otherwise (#284)
+    check(run, solver, "x = VarArray(size=3, dom=range(3))\nj = Var(dom=range(-1, 4))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})",
+          [range(3)] * 3 + [range(-1, 4), range(3)], lambda *t: predicate(t), args=("-force_element_index",))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(t[j] == 2) | (j == 3)", lambda j, v: (0, 2)[j] == 2 if 0 <= j < 2 else j == 3),
+    ("If(j >= 2, Then=t[j - 2] == 2)", lambda j, v: j < 2 or (0 <= j - 2 < 2 and (0, 2)[j - 2] == 2)),
+    ("~(t[j] == 0)", lambda j, v: not (0 <= j < 2 and (0, 2)[j] == 0)),
+    ("(t[j] in {0, 2}) | (v == 1)", lambda j, v: 0 <= j < 2 or v == 1),
+    ("(t[j] == v) | (v == 1)", lambda j, v: (0 <= j < 2 and (0, 2)[j] == v) or v == 1),
+    ("t[j] == 2", lambda j, v: 0 <= j < 2 and (0, 2)[j] == 2),
+])
+def test_element_on_integers_with_an_index_outside_the_list_in_logical_expressions(run, solver, constraint, predicate):
+    check(run, solver, "t = cp_array([0, 2])\nj = Var(dom=range(-1, 4))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})", [range(-1, 4), range(3)],
+          predicate, args=("-force_element_index",))
+
+
+def mat(t, j, k):
+    """The value of m[j][k] in a tuple (m[0][0], m[0][1], m[1][0], m[1][1], j, k), or None when (j, k) is not a cell of m."""
+    return t[2 * j + k] if 0 <= j < 2 and 0 <= k < 2 else None
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(m[j][k] == 1) | (j == 2)", lambda t: mat(t, t[4], t[5]) == 1 or t[4] == 2),
+    ("(m[j][k] == 1) | (k == 2)", lambda t: mat(t, t[4], t[5]) == 1 or t[5] == 2),
+    ("~(m[j, k] == 1)", lambda t: not mat(t, t[4], t[5]) == 1),
+    ("If(j <= 1, Then=m[j][k] == 1)", lambda t: t[4] > 1 or mat(t, t[4], t[5]) == 1),
+    ("(m[j][1] == 0) | (j == 2)", lambda t: mat(t, t[4], 1) == 0 or t[4] == 2),
+    ("m[j][k] == 1", lambda t: mat(t, t[4], t[5]) == 1),
+])
+def test_element_on_a_matrix_with_an_index_outside_the_matrix_in_logical_expressions(run, solver, request, constraint, predicate):
+    if constraint != "m[j][k] == 1" and ("m[j][k]" in constraint or "m[j, k]" in constraint):  # in a logical expression, the value is a variable
+        bug_for(request, "CHOCO", CHOCO_MATRIX)
+    check(run, solver, "m = VarArray(size=[2, 2], dom=range(2))\nj = Var(dom=range(3))\nk = Var(dom=range(3))\n" + f"satisfy({constraint})",
+          [range(2)] * 4 + [range(3), range(3)], lambda *t: predicate(t), args=("-force_element_index",))
+
+
+@pytest.mark.parametrize("constraint", ["(x[j] + 1 == v) | (j == 3)", "imply(v == 1, x[j] * 2 == v)", "(x[j] == x[j - 1]) | (j == 3)"])
+def test_element_with_an_index_outside_the_list_as_a_term_in_logical_expressions(run, constraint):
+    # an element whose index can be outside the list, used as a term (its index being then restricted to the list), cannot be in a logical expression
+    r = run("x = VarArray(size=3, dom=range(3))\nj = Var(dom=range(4))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})", args=("-force_element_index",))
+    assert not r.ok and "cannot be a term of an expression in a logical expression" in r.stdout, r.report()
 
 
 # ------------------------------------------------------------------------------------------------------------ member
@@ -795,8 +864,6 @@ IDX3 = ("x = Var(range(4))\nstart = cp_array([0, 2])\nif not variant():\n    sat
 def test_element_examples_in_a_conditional_structure(run, solver, request, code, expected, variant):
     # the models TestElementIdx2 and TestElementIdx3 of the page Element: an element in the part Then of If(), whose index can be outside
     # the list (-force_element_index needed without variant)
-    if variant == "":
-        request.applymarker(bug(LOGICAL_OUTSIDE))
     r = run(code, solver=solver, args=(variant,) if variant else ("-force_element_index",))
     if variant:  # the variable y (or aux) is free when x does not satisfy the condition of If(), so a value of x can be given several times
         assert r.ok and r.status == "SAT" and set(r.solutions) == expected, r.report()
@@ -976,7 +1043,7 @@ def test_invalid_element(run, constraint):
     ("x[i] == s[0]", "A symbolic variable cannot be the operand of a condition, which is the case of s[0]"),
 ])
 def test_invalid_element_message(run, constraint, message):
-    code = X3 + "t = cp_array([3, 0, 2])\ny = Var(dom=range(3))\ns = VarArray(size=3, dom={'a', 'b'})\nm = VarArray(size=[2, 2], dom=range(2))\n"
+    code = X3 + "t = cp_array([3, 0, 2])\ny = Var(dom=range(3))\ns = VarArray(size=3, dom={'a', 'b'})\nm = VarArray(size=[3, 3], dom=range(2))\n"
     r = run(code + f"satisfy({constraint})")
     assert not r.ok and message in r.stdout, r.report()
 

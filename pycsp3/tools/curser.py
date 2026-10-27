@@ -628,7 +628,7 @@ class OpOverrider:
             other = other.val
         if isinstance(self, Node) and self.type.is_predicate_operator() and isinstance(other,int) and other == 1:
             return self
-        res = manage_global_indirection(self, other)
+        res = manage_global_indirection(self, other, logical=False)
         if res is None:
             return functions.Iff(self, other, meta=True)
         self, other = res
@@ -658,7 +658,7 @@ class OpOverrider:
             other = other.val
         if isinstance(self, Node) and self.type.is_predicate_operator() and isinstance(other,int) and other == 0:
             return self
-        res = manage_global_indirection(self, other)
+        res = manage_global_indirection(self, other, logical=False)
         if res is None:
             return functions.Xor(self, other, meta=True)  # TODO: is it always appropriate?
         self, other = res
@@ -923,7 +923,7 @@ class OpOverrider:
                 else:
                     n = len(array)  # note that we force the domain of the aux variable with the parameter values
                     check_index_expression(indexes, n)
-                    indexes = auxiliary().replace_node(indexes, values=range(n))
+                    indexes = auxiliary().replace_node(indexes, values=None if options.force_element_index else range(n))  # (outside the list, #284)
         if isinstance(indexes, Variable):
             if indexes.dom.is_infinite():
                 indexes.dom = Domain(range(len(array)))
@@ -936,8 +936,11 @@ class OpOverrider:
                 for idx, size in zip(indexes, (n, m)):
                     if isinstance(idx, Node):
                         check_index_expression(idx, size)
-                index0 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[0], node_too=True, values=range(n))
-                index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True, values=range(m))
+                force = options.force_element_index  # the indexes are then possibly outside the matrix (#284)
+                index0 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[0], node_too=True,
+                                                                                                               values=None if force else range(n))
+                index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True,
+                                                                                                               values=None if force else range(m))
                 if all(isinstance(i, Variable) for i in (index0, index1)):
                     return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
                 if isinstance(index0, Variable) and isinstance(index1, int):

@@ -863,14 +863,9 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             error("The list " + str(lst) + " has holes (None), and so, cannot be indexed by a variable (constraint Element)")
         smallest = [] if index is None else index.dom.smallest_value()  # if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
+        self.guards = []  # with -force_element_index, the conditions on the original indexes for which the element is defined (#284)
         if index is not None:
-            lst_flatten = flatten(lst)
-            # if index.dom.smallest_value() < 0 or index.dom.greatest_value() >= len(lst_flatten):  # if value outside possible indexes
-            #     if not options.force_element_index:
-            #         error("Problem with an index ; maybe -force_element_index is appropriate!")
-            #     # else:
-            #     #     functions.satisfy(index != v for v in index.dom if v < 0 or v >= len(lst_flatten))
-            aux = auxiliary().replace_element_index(len(lst_flatten), index)
+            aux = auxiliary().replace_element_index(len(lst), index, self)  # (for a list of rows, the index is the one of a row)
             index = index if aux is None else aux  # aux is the case when we need another variable to have a correct indexing
             self.arg(TypeCtrArg.INDEX, index, attributes=[(TypeCtrArg.RANK, type_rank)] if type_rank else [])
         if condition:
@@ -919,9 +914,10 @@ class ConstraintElementMatrix(ConstraintWithCondition):
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
                      [(TypeCtrArg.START_COL_INDEX, start_col_index)] if start_col_index else []))
 
-        aux1 = auxiliary().replace_element_index(len(lst), index1)
+        self.guards = []  # with -force_element_index, the conditions on the original indexes for which the element is defined (#284)
+        aux1 = auxiliary().replace_element_index(len(lst), index1, self)
         index1 = index1 if aux1 is None else aux1  # aux1 is the case when we need another variable to have a correct indexing
-        aux2 = auxiliary().replace_element_index(len(lst[0]), index2)
+        aux2 = auxiliary().replace_element_index(len(lst[0]), index2, self)
         index2 = index2 if aux2 is None else aux2  # aux2 is the case when we need another variable to have a correct indexing
 
         self.arg(TypeCtrArg.INDEX, [index1, index2], content_ordered=True)
@@ -1280,11 +1276,15 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             indexes = c.satisfying_indexes()
             if indexes is not None:
                 index = c.arguments[TypeCtrArg.INDEX].content
-                if len(indexes) in (0, len(index.dom.all_values())):
-                    return ConstraintDummyConstant(1 if len(indexes) > 0 else 0)
-                if options.mini:  # in the mini-tracks, 'in' is not a primitive form of intension, whereas a unary table is accepted
+                guards, c.guards = c.guards, []  # when the index can be outside the list, the conditions for which the element is defined (#284)
+                if len(indexes) == 0:
+                    return ConstraintDummyConstant(0)
+                if len(indexes) == len(index.dom.all_values()):
+                    return ConstraintDummyConstant(1) if len(guards) == 0 else Node.build(TypeNode.AND, *guards) if len(guards) > 1 else guards[0]
+                if options.mini and len(guards) == 0:  # in the mini-tracks, 'in' is not a primitive form of intension, whereas a unary table is accepted
                     return ECtr(ConstraintExtension([index], indexes, True, options.keep_hybrid, options.restrict_tables_wrt_domains))
-                return Node.build(TypeNode.EQ, index, indexes[0]) if len(indexes) == 1 else Node.build(TypeNode.IN, index, set(indexes))
+                node = Node.build(TypeNode.EQ, index, indexes[0]) if len(indexes) == 1 else Node.build(TypeNode.IN, index, set(indexes))
+                return Node.build(TypeNode.AND, *guards, node) if len(guards) > 0 else node
         return ECtr(c)
 
     def add_condition(self, operator, right_operand):
@@ -1472,6 +1472,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
         assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
+        guards = self.constraint.guards  # (of the row index, when it can be outside the list, #284)
         if isinstance(i, Variable):
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
             self.constraint = ConstraintElementMatrix(lst, index, i)
@@ -1480,7 +1481,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         elif isinstance(i, Node):
             m = max(len(row) for row in lst)
             curser.check_index_expression(i, m)
-            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i, values=range(m)))
+            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i, values=None if options.force_element_index else range(m)))
+        self.constraint.guards = guards + self.constraint.guards
 
         return self
 
@@ -1680,6 +1682,8 @@ class _Auxiliary:
         self.prefix = "aux_gb"
         self.cache = []
         self.declared = set()  # the ids of the auxiliary variables declared by the user (Var() without domain), which are always written
+        self.restricted_terms = set()  # the auxiliary variables of the elements whose indexes have been restricted to their lists (#284)
+        self.outside_indexes = dict()  # the new indexes (auxiliary variables) of the indexes that can be outside lists, for (id of index, length) (#284)
 
     def new_var(self, *args):
         dom = args[0] if len(args) == 1 and isinstance(args[0], Domain) else Domain(*args)
@@ -1716,6 +1720,13 @@ class _Auxiliary:
             error(name + "() without rank (or with TypeRank.ANY) has no single value when several terms take the " + value + " value: it cannot be "
                   "a term of an expression; give rank=TypeRank.FIRST or rank=TypeRank.LAST, or subject it directly to a condition, "
                   "as in " + name + "(x) == y")
+        guards = getattr(pc.constraint, "guards", None)
+        if guards:  # an element whose index can be outside the list, used as a term: its index is restricted to the list (#284)
+            pc.constraint.guards = []
+            functions.satisfy(guards)
+            aux = self.replace_partial_constraint(pc)
+            self.restricted_terms.add(aux)
+            return aux
         if isinstance(pc.constraint, ConstraintSum) and len(pc.constraint.arguments[TypeCtrArg.LIST].content) == 1:
             # a sum of one term replaced by an auxiliary variable (as in 5 // (x[:1] * [3]) or in a logical expression) is defined by an intension,
             # and not by a sum of one term with the condition (eq,aux): a sum of one term is only posted directly compared with 'in' or 'not in' (#208)
@@ -1792,19 +1803,24 @@ class _Auxiliary:
             terms[i] = self.replace_partial_constraint_and_constraint_with_condition_and_possibly_node(term, node_too=nodes_too, int_too=int_too, values=values)
         return terms
 
-    def replace_element_index(self, length, index):
+    def replace_element_index(self, length, index, ctr=None):
         if index.dom.smallest_value() >= 0 and index.dom.greatest_value() < length:  # if value not outside possible indexes
             return None
         if not options.force_element_index:
             error("Problem with an indexing expression ; maybe -force_element_index is appropriate, "
                   "or maybe replace array[index] by array[aux] after having posed ((aux := Var()) == index)")
-        aux = self.new_var(possible_range({v for v in index.dom if 0 <= v < length}))
-        functions.satisfy(index == aux)
-
-        # below, should we replace ANY by a specific value (for avoiding interchangeable values)?
-        # self.collect_table(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
-        # self.collect_table(index, aux, {(v, v) for v in index.dom if 0 <= v < length})
-        # functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
+        valid = [v for v in index.dom if 0 <= v < length]
+        error_if(len(valid) == 0, "No value of the index " + str(index) + " is an index of the list (of length " + str(length) + ")")
+        # the new index aux is the index when it is valid, and the first valid index otherwise, so that the index is not restricted by this table
+        # (which also avoids interchangeable values); the element is guarded by the validity of the index: in a logical expression, it is false
+        # when the index is outside the list, and at the top level, the index is restricted to the list (#284)
+        aux = self.outside_indexes.get((id(index), length))  # (an id, == being overridden for variables)
+        if aux is None:
+            aux = self.outside_indexes[(id(index), length)] = self.new_var(possible_range(set(valid)))
+            # (a list, and not a set, whose membership could be specialized from Python 3.13 when posted, without calling the cursed __contains__)
+            self.collect_table(index, aux, [(v, v if 0 <= v < length else valid[0]) for v in index.dom])
+        if ctr is not None:
+            ctr.guards.append(functions.belong(index, valid))
         return aux
 
     def replace_int(self, v):
@@ -1849,6 +1865,7 @@ def auxiliary():
 
 def global_indirection(c):
     pc = None
+    guards = []  # for an element whose index can be outside the list (#284)
     if options.use_meta:
         return None  # to force using meta-constraints
     if isinstance(c, ConstraintInstantiation):  # we transform an instantiation into a conjunction (Node)
@@ -1867,12 +1884,7 @@ def global_indirection(c):
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
         pc = PartialConstraint(c)
-        if isinstance(c, ConstraintElement):
-            index = c.arguments[TypeCtrArg.INDEX].content
-            length = len(c.arguments[TypeCtrArg.LIST].content)
-            aux = auxiliary().replace_element_index(length, index)
-            if aux:  # this is the case when we need another variable to have a correct indexing
-                c.arguments[TypeCtrArg.INDEX].content = aux
+        guards, c.guards = getattr(c, "guards", []), []  # an element whose index can be outside the list is false then (#284)
     else:
         if isinstance(c, ConstraintAllDifferent):
             lst = c.arguments[TypeCtrArg.LIST].content
@@ -1921,16 +1933,25 @@ def global_indirection(c):
     aux = auxiliary().replace_partial_constraint(pc)
     if isinstance(condition, (ConditionInterval, ConditionSet)):  # in or notin, written with a set in an expression
         values = range(condition.min, condition.max + 1) if isinstance(condition, ConditionInterval) else condition.t
-        return functions.belong(aux, values) if condition.operator == TypeConditionOperator.IN else functions.not_belong(aux, values)
-    return Node.build(condition.operator, aux, condition.right_operand())
+        node = functions.belong(aux, values) if condition.operator == TypeConditionOperator.IN else functions.not_belong(aux, values)
+    else:
+        node = Node.build(condition.operator, aux, condition.right_operand())
+    return Node.build(TypeNode.AND, *guards, node) if guards else node
 
 
-def manage_global_indirection(*args, also_pc=False):
+def manage_global_indirection(*args, also_pc=False, logical=True):
     if len(args) == 1 and isinstance(args[0], (tuple, list)):
         args = args[0]
     assert len(args) >= 1
     if any(isinstance(arg, EMetaCtr) for arg in args):
         return None
+    if logical and len(auxiliary().restricted_terms) > 0:
+        for arg in args:
+            terms = arg.scope() if isinstance(arg, Node) else [arg.constraint.arguments[TypeCtrArg.CONDITION].content.right_operand()] if isinstance(
+                arg, ECtr) and isinstance(arg.constraint, ConstraintWithCondition) and arg.constraint.arguments.get(TypeCtrArg.CONDITION) else []
+            if any(x in auxiliary().restricted_terms for x in terms if isinstance(x, Variable)):
+                error("An element whose index can be outside the list (with -force_element_index) cannot be a term of an expression in a logical "
+                      "expression, its index being restricted to the list: compare it directly with a value or a variable, as in x[i] == y")
 
     msg = ("A subexpression node is evaluated as a Boolean (False or True)" +
            "\n\tIt is likely a problem with the use of logical operators" +
@@ -1959,6 +1980,9 @@ def manage_global_indirection(*args, also_pc=False):
             elif isinstance(scp, int):
                 assert is_1d_list(table, Variable)
                 arg = functions.disjunction(x == scp for x in table if x)
+            elif isinstance(scp, PartialConstraint) and len(getattr(scp.constraint, "guards", [])) > 0:  # an element false when its index is outside (#284)
+                guards, scp.constraint.guards = scp.constraint.guards, []
+                arg = Node.build(TypeNode.AND, *guards, functions.belong(auxiliary().replace_partial_constraint(scp), table))
             else:
                 # unary table constraint transformed into an intensional expression/tree
                 arg = functions.belong(scp, table)
@@ -1977,6 +2001,9 @@ def manage_global_indirection(*args, also_pc=False):
             elif isinstance(scp, int):
                 assert is_1d_list(table, Variable)
                 arg = functions.conjunction(x != scp for x in table if x)
+            elif isinstance(scp, PartialConstraint) and len(getattr(scp.constraint, "guards", [])) > 0:  # an element false when its index is outside (#284)
+                guards, scp.constraint.guards = scp.constraint.guards, []
+                arg = Node.build(TypeNode.AND, *guards, functions.not_belong(auxiliary().replace_partial_constraint(scp), table))
             else:
                 arg = functions.not_belong(scp, table)
         elif isinstance(arg, ECtr):

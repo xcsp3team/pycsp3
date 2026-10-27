@@ -1030,6 +1030,17 @@ def _group(*_args, block=False):
     return EBlock(_block_reorder(entities)) if block else EToGather(entities)
 
 
+def _claim_guards(arg):
+    # the conditions on the indexes of the elements of arg (a constraint or a list) that can be outside their lists (-force_element_index), for which
+    # the elements are defined: they are posted with the elements at the top level, restricting the indexes to the lists (#284)
+    if isinstance(arg, ECtr) and len(getattr(arg.constraint, "guards", [])) > 0:
+        guards, arg.constraint.guards = arg.constraint.guards, []
+        return guards
+    if isinstance(arg, (list, tuple)):
+        return [g for a in arg for g in _claim_guards(a)]
+    return []
+
+
 def satisfy_from_auxiliary(t):
     if t is None:
         t = []
@@ -1166,6 +1177,9 @@ def satisfy(*args, no_comment_tags_extraction=False):
             # if len(to_post_aux) > 0:
             #     to_post = EBlock(flatten(to_post, to_post_aux))
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
+        guards = _claim_guards(arg if isinstance(arg, (ECtr, list)) else to_post)
+        if len(guards) > 0:
+            t.append(_group(guards))
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
             #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
     # return EToSatisfy(t)
@@ -2903,7 +2917,7 @@ def _count(name, terms, value, values, condition):
     condition = Condition.build_condition(condition)
     if len(terms) == 0:  # the count of no term is 0
         return _constant_with_condition(0, condition)
-    terms = manage_global_indirection(terms, also_pc=True)
+    terms = manage_global_indirection(terms, also_pc=True, logical=False)
     assert terms is not None
     if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
         s = frozenset(values) if isinstance(values[0], int) else None
