@@ -14,8 +14,10 @@
 [![Windows](https://img.shields.io/github/actions/workflow/status/xcsp3team/pycsp3/windows.yml?branch=master&label=Windows&logo=github)](https://github.com/xcsp3team/pycsp3/actions/workflows/windows.yml)
 
 [![Guide DOI](https://img.shields.io/badge/Guide%20DOI-10.48550%2FarXiv.2009.00326-blue?logo=arxiv&logoColor=white)](https://doi.org/10.48550/arXiv.2009.00326)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
 [![Software Heritage](https://img.shields.io/badge/Software%20Heritage-archived-blue)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/xcsp3team/pycsp3)
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/xcsp3team/pycsp3/master?labpath=notebooks%2FQuickStart.ipynb)
 
 </div>
 
@@ -65,7 +67,7 @@ Note that it is also possible to pilot solvers with Python; see [PyCSP3 Solving 
 **Contents**
 
 - [Quick Start](#quick-start)
-- [Installation](#installation): Linux, macOS, Windows, Google Colab, [cloning from GitHub](#cloning-from-github),
+- [Installation](#installation): Linux, macOS, Windows, Google Colab, Binder, [cloning from GitHub](#cloning-from-github),
   [pool of models](#working-with-a-pool-of-models)
 - [Compilation](#compilation): the options of the command line
 - [Examples](#examples): console mode, Send+More=Money, All-Interval Series, BIBD, Rack Configuration, Nonogram
@@ -183,6 +185,9 @@ Install PyCSP3 without a virtual environment or with one, once the dependencies 
   The package openjdk-25-jre is given by Ubuntu 24.04 and Debian 13, and later versions (otherwise, default-jre installs an older Java, 17 or 21).
 - On Google Colab, the [notebook](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
   can be opened directly: it installs PyCSP3 in its first cell.
+- On Binder, the [notebook](https://mybinder.org/v2/gh/xcsp3team/pycsp3/master?labpath=notebooks%2FQuickStart.ipynb) opens in
+  JupyterLab with PyCSP3 and Java already installed; Binder is free and needs no account, but the session stops after about 10 minutes of
+  inactivity, and the first launch after a change of this repository takes a few minutes.
 - For updating PyCSP3, add `--upgrade` to the command (e.g., `pip install --upgrade pycsp3`), and for the development version (the master branch
   of this repository), replace `pycsp3` by `git+https://github.com/xcsp3team/pycsp3.git`.
 
