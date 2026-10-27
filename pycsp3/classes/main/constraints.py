@@ -858,6 +858,8 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         super().__init__(TypeCtr.ELEMENT)
         if len(lst) == 0:
             error("A constraint Element on an empty list of variables is encountered. Did you write something like x[:j] instead of x[:,j]?")
+        if index is not None and any(v is None for v in lst):  # the index of a variable in the list would not be its index in the array (#283)
+            error("The list " + str(lst) + " has holes (None), and so, cannot be indexed by a variable (constraint Element)")
         smallest = [] if index is None else index.dom.smallest_value()  # if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
         if index is not None:
@@ -903,6 +905,8 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
 class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
+        if any(v is None for row in lst for v in row):  # the indexes of a variable in the matrix would not be its indexes in the array (#283)
+            error("The matrix " + str(lst) + " has holes (None), and so, cannot be indexed by variables (constraint Element)")
         self.matrix = lst
         self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst,  # side-effect use of content_compressible for matrix
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (

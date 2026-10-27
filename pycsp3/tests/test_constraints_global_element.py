@@ -15,8 +15,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-HOLES = ("#283: the holes of an array indexed by a variable are removed from the list of the element, so that the index designates "
-         "another variable, and None is written in the matrix of an element on a matrix with holes")
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
 TABLE = "#285: a component (element, sum, maximum) in the scope of a table makes PyCSP3 fail (badly formed, or SystemError)"
@@ -368,18 +366,33 @@ def test_element_lists(run, solver, request, code, domains, predicate):
     check(run, solver, code, domains, predicate)
 
 
-@bug(HOLES)
-@pytest.mark.parametrize("dom, domain", [("{0, 2}", [0, 2]), ("range(2)", range(2))])
-def test_element_on_an_array_with_holes(run, solver, dom, domain):
-    # x[j] is the variable of x at index j (the index of a hole, as 1, being impossible)
-    check(run, solver, f"x = VarArray(size=3, dom=lambda a: None if a == 1 else range(3))\nj = Var(dom={dom})\nsatisfy(x[j] == 2)",
-          [range(3)] * 2 + [domain], lambda x0, x2, j: j != 1 and (x0 if j == 0 else x2) == 2)
+HOLES_1D = "x = VarArray(size=3, dom=lambda a: None if a == 1 else range(3))\n"  # x[1] is a hole
+HOLES_2D = "m = VarArray(size=[2, 2], dom=lambda a, b: None if b > a else range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(2))\n"  # m[0][1] is a hole
 
 
-def test_element_on_an_array_with_holes_and_an_index_on_the_hole(run):
-    # the index cannot designate a hole
-    r = run("x = VarArray(size=3, dom=lambda a: None if a == 1 else range(3))\nj = Var(dom=range(3))\nsatisfy(x[j] == 2)")
-    assert not r.ok, r.report()
+@pytest.mark.parametrize("code", [
+    HOLES_1D + "j = Var(dom={0, 2})\nsatisfy(x[j] == 2)",
+    HOLES_1D + "j = Var(dom=range(2))\nsatisfy(x[j] == 2)",
+    HOLES_1D + "j = Var(dom=range(3))\nsatisfy(x[j] == 2)",
+    HOLES_1D + "j = Var(dom=range(3))\nsatisfy((x[j] == 2) | (j == 1))",
+    HOLES_2D + "satisfy(m[j][k] == 1)",
+    HOLES_2D + "satisfy(m[j, k] == 1)",
+    HOLES_2D + "satisfy(m[j][1] == 1)",
+    HOLES_2D + "satisfy(m[0][k] == 1)",
+])
+def test_element_on_an_array_with_holes(run, code):
+    # an array with holes (None) cannot be indexed by a variable, the index of a variable in the list without holes being not its index (#283)
+    r = run(code)
+    assert not r.ok and "has holes (None)" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("code, domains, predicate", [
+    (HOLES_1D + "j = Var(dom=range(2))\nsatisfy(x[::2][j] == 2)", [range(3)] * 2 + [range(2)], lambda x0, x2, j: (x0, x2)[j] == 2),
+    (HOLES_2D + "satisfy(m[j][0] == 1)", [range(2)] * 5, lambda m00, m10, m11, j, k: (m00, m10)[j] == 1),
+    (HOLES_2D + "satisfy(m[1][k] == 1)", [range(2)] * 5, lambda m00, m10, m11, j, k: (m10, m11)[k] == 1),
+])
+def test_element_on_a_part_without_holes_of_an_array_with_holes(run, solver, code, domains, predicate):
+    check(run, solver, code, domains, predicate)
 
 
 # ------------------------------------------------------------------------------------------------------------ matrices
@@ -455,14 +468,6 @@ def test_element_on_a_matrix_of_integers(run, solver, request, constraint, predi
                            "t[j][k] < v": {"COSOCO": COSOCO_UNSUPPORTED_MATRIX}}.get(constraint, {}))
     code = "t = cp_array([[1, 2, 3], [4, 5, 6]])\nu = cp_array([[1, 2, 0], [1, 2, 0]])\nj = Var(dom=range(2))\nk = Var(dom=range(3))\nv = Var(dom=range(7))\n"
     check(run, solver, code + f"satisfy({constraint})", [range(2), range(3), range(7)], predicate)
-
-
-@bug(HOLES)
-def test_element_on_a_matrix_with_holes(run, solver):
-    # m[j][k] is the variable of m at row j and column k (the indexes of a hole being impossible)
-    check(run, solver, "m = VarArray(size=[2, 2], dom=lambda a, b: None if b > a else range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(2))\n"
-                       "satisfy(m[j][k] == 1)", [range(2)] * 3 + [range(2)] * 2,
-          lambda m00, m10, m11, j, k: (j, k) != (0, 1) and ((m00,), (m10, m11))[j][k] == 1)
 
 
 # ------------------------------------------------------------------------------------------------ terms of expressions
