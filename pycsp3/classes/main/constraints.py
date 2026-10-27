@@ -1324,6 +1324,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         if isinstance(self.constraint, ConstraintElement):
             tab = self.constraint.arguments[TypeCtrArg.LIST].content
             idx = self.constraint.arguments[TypeCtrArg.INDEX].content
+            if isinstance(other, tuple) and len(other) > 0:  # a tuple is compared as a list (#293)
+                other = list(other)
             if is_1d_list(other, (int, Variable)):
                 if not isinstance(tab, list) or any(not isinstance(row, (tuple, list)) or len(row) != len(other) for row in tab):  # #292
                     error("The element " + str(self) + " cannot be compared with the list " + str(other) + ": only an element on a list of rows (of "
