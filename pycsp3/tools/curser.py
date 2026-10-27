@@ -1094,7 +1094,9 @@ class ListVar(list):
     __rmul__ = __mul__
 
     def __contains__(self, other):
-        if isinstance(other, (int, Variable)):  # member constraint
+        if isinstance(other, Node):  # an expression is replaced by an auxiliary variable (#287)
+            other = _replace_node_in(other, self)
+        if isinstance(other, (int, Variable, PartialConstraint)):  # member constraint (the variables being refused as values of a component, #249)
             queue_in.append((self, other))
             return True
         return list.__contains__(self, other)

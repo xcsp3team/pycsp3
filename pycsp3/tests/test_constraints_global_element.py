@@ -17,8 +17,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
-MEMBER_TERM = ("#287: member of an expression or of a component (v + 1 in x, x[i] in x, Sum(y) in x) fails (badly formed), and member "
-               "of a two-dimensional list too (bad form of predicate)")
 MEMBER_LOGICAL = "#288: member in a logical expression fails with a message about the second argument of belong()"
 MEMBER_MINI = "#289: with -mini, member gives an element without index, whereas the element <index> is required in the mini-tracks"
 MATRIX_OBJECTIVE = "#290: an element on a matrix as objective gives an objective of type element, which does not exist in XCSP3"
@@ -609,26 +607,37 @@ def test_element_with_an_index_outside_the_list_in_logical_expressions(run, solv
     ("v not in [x[0], x[1], x[2], x[3]]", lambda *t: t[4] not in t[:4]),
     ("1 in x", lambda *t: 1 in t[:4]),
     ("1 not in x", lambda *t: 1 not in t[:4]),
-    pytest.param("v + 1 in x", lambda *t: t[4] + 1 in t[:4], marks=bug(MEMBER_TERM)),
+    ("v + 1 in x", lambda *t: t[4] + 1 in t[:4]),
+    ("v + 1 not in x", lambda *t: t[4] + 1 not in t[:4]),
+    ("abs(v - 1) in x[:2]", lambda *t: abs(t[4] - 1) in t[:2]),
     ("x[0] in x[1:]", lambda *t: t[0] in t[1:4]),
     pytest.param("(v in x) | (v == 0)", lambda *t: t[4] in t[:4] or t[4] == 0, marks=bug(MEMBER_LOGICAL)),
 ])
 def test_element_member(run, solver, request, constraint, predicate):
     # v in x (without index) holds iff v is equal to one variable of x
-    if constraint in ("v in x", "v in {x[0], x[1], x[2], x[3]}", "v in [x[0], x[1], x[2], x[3]]", "v in (x[0], x[1], x[2], x[3])"):  # an element without index
+    if constraint in ("v in x", "v in {x[0], x[1], x[2], x[3]}", "v in [x[0], x[1], x[2], x[3]]", "v in (x[0], x[1], x[2], x[3])", "v + 1 in x"):  # element without index
         mark(request, solver, {"ACE": ACE_MEMBER, "CHOCO": CHOCO_MEMBER, "COSOCO": COSOCO_UNSUPPORTED_MEMBER})
     check(run, solver, "x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})", [range(2)] * 4 + [range(3)], predicate)
 
 
-@bug(MEMBER_TERM)
 @pytest.mark.parametrize("constraint, predicate", [
-    ("x[i] in x[1:]", lambda *t: t[t[4]] in t[1:4]),
-    ("Sum(x[:2]) in x[2:]", lambda *t: t[0] + t[1] in t[2:4]),
-    ("v in m", lambda *t: t[5] in t[:4]),
+    ("v in m", lambda *t: t[4] in t[:4]),
+    ("v in [m[0], m[1]]", lambda *t: t[4] in t[:4]),
+    ("v not in m", lambda *t: t[4] not in t[:4]),
+    ("1 in m", lambda *t: 1 in t[:4]),
 ])
-def test_element_member_of_components(run, solver, constraint, predicate):
-    code = "x = VarArray(size=4, dom=range(2))\ni = Var(dom=range(4))\nv = Var(dom=range(3))\nm = [x[:2], x[2:]]\n"
-    check(run, solver, code + f"satisfy({constraint})", [range(2)] * 4 + [range(4), range(3)], predicate)
+def test_element_member_of_a_two_dimensional_list(run, solver, request, constraint, predicate):
+    # the variables of a two-dimensional list are considered (#287)
+    if constraint in ("v in m", "v in [m[0], m[1]]"):  # an element without index
+        mark(request, solver, {"ACE": ACE_MEMBER, "CHOCO": CHOCO_MEMBER, "COSOCO": COSOCO_UNSUPPORTED_MEMBER})
+    check(run, solver, "m = VarArray(size=[2, 2], dom=range(2))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})", [range(2)] * 4 + [range(3)], predicate)
+
+
+@pytest.mark.parametrize("constraint", ["x[i] in x[1:]", "Sum(x[:2]) in x[2:]", "x[i] not in x[1:]", "Maximum(x[:2]) in (x[2], x[3])"])
+def test_element_member_of_a_component(run, constraint):
+    # the values of the condition of a component (element, sum, ...) are integers (#249): a component cannot be a member of a list of variables
+    r = run("x = VarArray(size=4, dom=range(2))\ni = Var(dom=range(4))\n" + f"satisfy({constraint})")
+    assert not r.ok and "must be integers" in r.stdout, r.report()
 
 
 # ------------------------------------------------------------------------------------------------------------ objectives

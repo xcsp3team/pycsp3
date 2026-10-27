@@ -441,6 +441,8 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             # no value is allowed: a table constraint with an empty set of supports is posted (the model is unsatisfiable)
             warning("A table constraint with an empty set of supports is posted for " + str(left_operand) + ": the model is unsatisfiable", "empty_supports")
             return ECtr(ConstraintExtension([left_operand], [], True, options.keep_hybrid, options.restrict_tables_wrt_domains))
+        if isinstance(right_operand, (tuple, list)):  # the variables of a multi-dimensional list (#287), without holes
+            right_operand = flatten(right_operand)
         if isinstance(right_operand, (tuple, list, set, frozenset)) and any(isinstance(v, Variable) for v in right_operand):
             if len(right_operand) < 4 or not is_containing(right_operand, Variable):  # with integers among the variables, an intension (#286)
                 st = Node.build(SET, right_operand)
@@ -480,9 +482,9 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
     elif isinstance(right_operand, MDD):  # it is an MDD constraint
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an MDD: only 'x in M' is possible (constraint MDD)")
         ctr = Mdd(scope=left_operand, mdd=right_operand)
-    elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
-        # at least one variable takes the value with 'in' (atLeast1), and none with 'not in' TODO to be replaced by a member/element constraint ?
-        ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1) if bool_value else (TypeConditionOperator.EQ, 0))
+    elif isinstance(left_operand, int) and isinstance(right_operand, (tuple, list)) and is_1d_list(flatten(right_operand), Variable):
+        # at least one variable takes the value with 'in' (atLeast1), and none with 'not in', the list being possibly multi-dimensional (#287)
+        ctr = Count(flatten(right_operand), value=left_operand, condition=(TypeConditionOperator.GE, 1) if bool_value else (TypeConditionOperator.EQ, 0))
         if isinstance(ctr, Node):  # a single variable
             ctr = _Intension(ctr)
     # elif isinstance(left_operand, Node):
