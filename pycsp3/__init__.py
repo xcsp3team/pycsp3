@@ -248,8 +248,8 @@ def solve(*, solver=ACE, options="", filename=None, verbose=-1, sols=None, extra
     """
     Solves the current model (after compiling it) and returns the status of this operation.
 
-    :param solver: name of the solver (ACE or CHOCO), possibly accompanied by general options
-                   as defined in https://github.com/xcsp3team/pycsp3/blob/master/docs/optionsSolvers.pdf
+    :param solver: name of the solver (ACE, CHOCO or COSOCO), possibly accompanied by general options, as for the option -solver
+                   (see https://pycsp.org/documentation/interface/CommandInterface/)
     :param options: specific options for the solver
     :param filename: the filename of the compiled problem instance
     :param verbose: verbosity level from -1 to 2
