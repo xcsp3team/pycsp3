@@ -889,6 +889,16 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             return max(v for v in self.arguments[TypeCtrArg.LIST].content)
         return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
+    def satisfying_indexes(self):
+        # for a list of integers and a condition whose operand is not a variable (which XCSP3-core does not allow, #294), the indexes (in the domain
+        # of the index) of the integers satisfying the condition, and None otherwise
+        lst = self.arguments[TypeCtrArg.LIST].content
+        condition = self.arguments[TypeCtrArg.CONDITION].content
+        if TypeCtrArg.INDEX not in self.arguments or not isinstance(lst[0], int) or not isinstance(condition, (ConditionValue, ConditionInterval, ConditionSet)):
+            return None
+        values = set(condition.filtering(set(lst)))
+        return [k for k in self.arguments[TypeCtrArg.INDEX].content.dom.all_values() if lst[k] in values]
+
 
 class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
@@ -1255,6 +1265,15 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             k = c.known_result()
             if k is not None:
                 return ConstraintDummyConstant(k)
+        if isinstance(c, ConstraintElement):  # an element on integers compared with integers is a unary constraint on its index (#294)
+            indexes = c.satisfying_indexes()
+            if indexes is not None:
+                index = c.arguments[TypeCtrArg.INDEX].content
+                if len(indexes) in (0, len(index.dom.all_values())):
+                    return ConstraintDummyConstant(1 if len(indexes) > 0 else 0)
+                if options.mini:  # in the mini-tracks, 'in' is not a primitive form of intension, whereas a unary table is accepted
+                    return ECtr(ConstraintExtension([index], indexes, True, options.keep_hybrid, options.restrict_tables_wrt_domains))
+                return Node.build(TypeNode.EQ, index, indexes[0]) if len(indexes) == 1 else Node.build(TypeNode.IN, index, set(indexes))
         return ECtr(c)
 
     def add_condition(self, operator, right_operand):
@@ -1318,7 +1337,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
                 arg = self.constraint.arguments[TypeCtrArg.LIST]
                 arg.content = flatten(arg.content)  # we need to flatten now because it has not been done before
             # return ECtr(self.constraint.set_value(other))  # only value must be replaced for these constraints
-            return ECtr(self.constraint.set_condition(TypeConditionOperator.EQ, other))  # the condition must be replaced
+            return PartialConstraint.complete(self.constraint.set_condition(TypeConditionOperator.EQ, other))  # the condition must be replaced
         return self.add_condition(TypeConditionOperator.EQ, other)
         # pair = self._simplify_with_auxiliary_variables(other)
         # return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
@@ -1429,16 +1448,16 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return (index, item) in sorted([(i, v) for i, t in enumerate(lst) for v in t])
 
     def among(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
+        return PartialConstraint.complete(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
 
     def is_in(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
+        return PartialConstraint.complete(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
 
     def not_among(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
+        return PartialConstraint.complete(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
 
     def is_not_in(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
+        return PartialConstraint.complete(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
 
     def __str__(self):
         c = self.constraint

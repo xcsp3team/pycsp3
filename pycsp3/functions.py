@@ -472,6 +472,8 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             ctr = _sum_for_mini(left_operand, Condition.build_condition((operator, right_operand)))
             return ctr if not isinstance(ctr, ConstraintDummyConstant) else _false_constraint() if ctr.val == 0 else None
         ctr = PartialConstraint.complete(left_operand.constraint.set_condition(operator, right_operand))  # a constant if the result is known
+        if isinstance(ctr, Node):  # an element on integers, which is a unary constraint on its index (#294)
+            ctr = _Intension(ctr)
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)")
         ctr = Regular(scope=left_operand, automaton=right_operand)

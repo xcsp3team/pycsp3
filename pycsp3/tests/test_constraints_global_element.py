@@ -35,8 +35,6 @@ BOOLEAN = ("#291: the element of a list of 0/1 variables cannot be used with | a
 INVALID = ("#292: invalid arguments of an element: assert without message, TypeError raised inside PyCSP3, or a symbolic variable "
            "accepted as value")
 ROWS_TUPLE = "#293: a row of integers indexed by a variable compared with a tuple of variables fails (whereas a list works)"
-INTEGER_OPERAND = ("#294: an element on a list of integers whose condition has an integer as operand is not XCSP3-core (the condition "
-                   "must contain a variable), and ACE does not handle it (unimplemented case for element), except with eq")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_EQ = ("xcsp3team/ACE#26: ACE gives wrong solutions for nValues with the condition (eq,k), 1 < k < |X|, and fails when the variables have "
@@ -193,13 +191,8 @@ def test_element_with_an_empty_set_of_values(run, solver, request, constraint, p
 # ------------------------------------------------------------------------------------------------ conditions (integers)
 
 INTEGERS_MARKS = {
-    "t[i] != 0": {"ACE": INTEGER_OPERAND},
-    "t[i] < 2": {"ACE": INTEGER_OPERAND},
-    "t[i] >= 2": {"ACE": INTEGER_OPERAND},
-    "t[i] in {0, 2}": {"ACE": INTEGER_OPERAND},
-    "t[i] not in {0, 2}": {"ACE": INTEGER_OPERAND, "COSOCO": COSOCO_NOTIN},
-    "t[i] in range(1, 3)": {"ACE": INTEGER_OPERAND, "CHOCO": CHOCO_INTERVAL, "COSOCO": COSOCO_IN_INTERVAL},
     "t[i] == i": {"ACE": ACE_INDEX_AS_VALUE, "COSOCO": COSOCO_INDEX_AS_VALUE},
+    "t[i] == 7": {"ACE": EMPTY_SUPPORTS, "CHOCO": EMPTY_SUPPORTS},  # the constraint false, posted by a table with an empty set of supports
 }
 
 
@@ -808,6 +801,29 @@ def test_xcsp3_element(run, constraint, expected):
 
 
 @pytest.mark.parametrize("constraint, expected", [
+    ("t[i] == 0", "in(i,set(1,3))"),
+    ("t[i] < 2", "in(i,set(1,3))"),
+    ("t[i] in {0, 2}", "in(i,set(1,2,3))"),
+    ("t[i] not in range(1, 3)", "in(i,set(0,1,3))"),
+    ("t[i].is_not_in({3})", "in(i,set(1,2,3))"),
+    ("t[i] == 3", "eq(i,0)"),
+    ("t[i] > 2", "eq(i,0)"),
+])
+def test_xcsp3_element_on_integers_with_an_integer(run, constraint, expected):
+    # XCSP3-core requires a variable in the condition of an element on integers: the element is a unary constraint on the index (#294)
+    r = run(T4 + f"satisfy({constraint})")
+    assert r.ok and r.xml.find("constraints/element") is None and _text(r.xml.find("constraints/intension")) == expected, r.report()
+
+
+def test_xcsp3_element_on_integers_with_an_integer_with_mini(run):
+    # in the mini-tracks, 'in' is not a primitive form of intension: a unary table is posted
+    r = run(T4 + "satisfy(t[i] < 2)", args=("-mini",))
+    assert r.ok and r.xml.find("constraints/element") is None, r.report()
+    c = r.xml.find("constraints/extension")
+    assert c is not None and (_text(c.find("list")), _text(c.find("supports"))) == ("i", "1 3"), r.report()
+
+
+@pytest.mark.parametrize("constraint, expected", [
     ("m[j][k] == v", ("m[][]", "j k", "v")),
     ("m[j, k] == 1", ("m[][]", "j k", "1")),
     ("t[j][k] == v", ("(1,2,3)(4,5,6)", "j k", "v")),
@@ -865,7 +881,7 @@ def test_xcsp3_element_with_an_expression_as_index(run):
 
 
 def test_xcsp3_element_in_a_group(run):
-    r = run("t = cp_array([2, 0, 1])\nx = VarArray(size=3, dom=range(3))\nsatisfy(t[x[a]] == a for a in range(3))")
+    r = run("x = VarArray(size=3, dom=range(3))\ny = VarArray(size=3, dom=range(3))\nsatisfy(y[x[a]] == a for a in range(3))")
     assert r.ok, r.report()
     assert r.xml.find("constraints/group/element") is not None and len(r.xml.findall("constraints/group/args")) == 3, r.report()
 
