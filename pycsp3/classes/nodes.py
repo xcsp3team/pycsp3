@@ -686,6 +686,8 @@ class Node(Entity):
             sorted_sons = sorted(elements, key=lambda v: str(v)) if any(not isinstance(v, int) for v in elements) else sorted(elements)
             return Node(tn, Node._create_sons(*sorted_sons))  # *sorted(args[0])))
         args = flatten([Node.build(SET, arg) if isinstance(arg, (set, range, frozenset)) else arg for arg in args])
+        if tn in (IN, NOTIN) and len(args) == 2 and isinstance(args[1], Node) and args[1].type is SET and len(args[1].cnt) == 1:
+            return Node.build(EQ if tn is IN else NE, args[0], args[1].cnt[0])  # a set of a single value (or variable): eq or ne
         assert tn.is_valid_arity(len(args)), ("Problem: Bad arity for node " + tn.name + ". It is " + str(len(args))
                                               + " but it should be between " + str(tn.min_arity) + " and " + str(tn.max_arity))
         # Do we activate these simple modifications below?

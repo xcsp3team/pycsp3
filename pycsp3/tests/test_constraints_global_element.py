@@ -663,6 +663,8 @@ def test_element_with_an_index_outside_the_list_as_a_term_in_logical_expressions
     pytest.param("v in x", lambda *t: t[4] in t[:4], id="v in x"),
     ("v in x[:3]", lambda *t: t[4] in t[:3]),
     ("v in x[:2]", lambda *t: t[4] in t[:2]),
+    ("v in x[:1]", lambda *t: t[4] == t[0]),
+    ("v not in [x[0]]", lambda *t: t[4] != t[0]),
     pytest.param("v in {x[0], x[1], x[2], x[3]}", lambda *t: t[4] in t[:4], id="v in a set"),
     ("v in [x[0], x[1], x[2], x[3]]", lambda *t: t[4] in t[:4]),
     ("v in [x[0], x[1]]", lambda *t: t[4] in t[:2]),
@@ -958,6 +960,18 @@ def test_xcsp3_element_on_a_row_or_a_column(run, constraint, expected):
     assert r.ok, r.report()
     c = r.xml.find("constraints/element")
     assert c is not None and _text(c.find("list")) == expected and c.find("matrix") is None, r.report()
+
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("v in x[:1]", "eq(v,x[0])"),
+    ("v not in [x[0]]", "ne(v,x[0])"),
+    ("(v in x[:1]) | (x[1] == 0)", "or(eq(x[1],0),eq(v,x[0]))"),
+    ("imply(v == 0, belong(v, [x[0]]))", "imp(eq(v,0),eq(v,x[0]))"),
+])
+def test_xcsp3_element_member_of_a_single_variable(run, constraint, expected):
+    # a set of a single variable (or value) in an intension gives eq (or ne)
+    r = run("x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})")
+    assert r.ok and _text(r.xml.find("constraints/intension")) == expected, r.report()
 
 
 def test_xcsp3_element_member(run):
