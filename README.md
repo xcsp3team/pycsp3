@@ -117,39 +117,49 @@ The sections below give the details of the installation and more examples; the [
 # Installation
 
 PyCSP3 requires Python (version 3.10, or later), and Java (version 11, or later) for the embedded solvers ACE and Choco (options -solve and -solver).
-Install PyCSP3 with the command of the first row (without a virtual environment) or of the second row (with a virtual environment), once the
-dependencies of the third row are installed:
+Install PyCSP3 without a virtual environment or with one, once the dependencies are installed:
 
 <table>
   <tr>
-    <th></th>
     <th>Linux</th>
     <th>macOS</th>
     <th>Windows</th>
     <th>Google Colab</th>
   </tr>
   <tr>
-    <th>Without a virtual environment</th>
-    <td colspan="2"><pre><code>python3 -m pip install --user --break-system-packages pycsp3</code></pre></td>
-    <td><pre><code>python -m pip install pycsp3</code></pre></td>
-    <td><pre><code>%pip install pycsp3</code></pre>in a first cell</td>
+    <td colspan="4"><b>Without a virtual environment</b></td>
   </tr>
   <tr>
-    <th>With a virtual environment</th>
-    <td colspan="2"><pre><code>python3 -m venv ~/pycsp3-env
-source ~/pycsp3-env/bin/activate
-pip install pycsp3</code></pre></td>
-    <td><pre><code>python -m venv pycsp3-env
-pycsp3-env\Scripts\activate
-pip install pycsp3</code></pre></td>
+    <td colspan="2"><code>python3 -m pip install --user \</code><br><code>  --break-system-packages pycsp3</code></td>
+    <td><code>python -m pip install pycsp3</code></td>
+    <td><code>%pip install pycsp3</code> in a first cell</td>
+  </tr>
+  <tr>
+    <td colspan="4"><b>With a virtual environment</b></td>
+  </tr>
+  <tr>
+    <td colspan="2"><code>python3 -m venv ~/pycsp3-env</code><br><code>source ~/pycsp3-env/bin/activate</code><br><code>pip install pycsp3</code></td>
+    <td><code>python -m venv pycsp3-env</code><br><code>pycsp3-env\Scripts\activate</code><br><code>pip install pycsp3</code></td>
     <td>not needed</td>
   </tr>
   <tr>
-    <th>Dependencies</th>
-    <td>Debian, Ubuntu:<pre><code>sudo apt install python3-pip python3-venv default-jre</code></pre></td>
-    <td>Python from <a href="https://www.python.org/downloads/">python.org</a>, and Java:<pre><code>brew install --cask temurin</code></pre></td>
-    <td>Python from <a href="https://www.python.org/downloads/">python.org</a>, and Java:<pre><code>winget install EclipseAdoptium.Temurin.21.JRE</code></pre></td>
-    <td>already installed</td>
+    <td colspan="4"><b>Dependencies</b>: Python, and Java (only for the embedded solvers) with one of the two JDKs</td>
+  </tr>
+  <tr>
+    <td>Python:<br><code>sudo apt install python3-pip</code><br><code>sudo apt install python3-venv</code></td>
+    <td>Python:<br><a href="https://www.python.org/downloads/">python.org</a></td>
+    <td>Python:<br><a href="https://www.python.org/downloads/">python.org</a></td>
+    <td rowspan="3">already installed (Python and OpenJDK)</td>
+  </tr>
+  <tr>
+    <td>OpenJDK:<br><code>sudo apt install openjdk-25-jre</code></td>
+    <td>OpenJDK:<br><code>brew install temurin@25</code></td>
+    <td>OpenJDK:<br><code>winget install EclipseAdoptium.Temurin.25.JRE</code></td>
+  </tr>
+  <tr>
+    <td>Oracle JDK: package .deb of <a href="https://www.oracle.com/java/technologies/downloads/">oracle.com</a>, then<br><code>sudo apt install ./jdk-25*.deb</code></td>
+    <td>Oracle JDK:<br><code>brew install oracle-jdk@25</code></td>
+    <td>Oracle JDK:<br><code>winget install Oracle.JDK.25</code></td>
   </tr>
 </table>
 
@@ -157,8 +167,11 @@ pip install pycsp3</code></pre></td>
   with pip outside of a virtual environment (PEP 668); with `--user`, PyCSP3 is installed in the directory of the user, not in the one of the
   system (never use sudo).
 - With a virtual environment, it has to be activated (second command) in each new console where PyCSP3 is used.
-- The Java given in the third row is OpenJDK, free and open source: the package default-jre of Debian and Ubuntu, and Eclipse Temurin (the
-  OpenJDK of the Eclipse Foundation, [Adoptium](https://adoptium.net/)) on macOS and Windows. The command `java --version` checks that Java is installed.
+- Java: `java --version` checks that Java is installed. OpenJDK (the package of Debian and Ubuntu, or Eclipse Temurin of
+  [Adoptium](https://adoptium.net/)) is free and open source; the Oracle JDK 25 is free under the Oracle No-Fee Terms and Conditions until
+  September 2028, and then under the license OTN, which is not free for a use in production
+  ([conditions](https://www.oracle.com/java/technologies/downloads/)). The performances of the solvers may differ with the two JDKs.
+  The package openjdk-25-jre is given by Ubuntu 24.04 and Debian 13, and later versions (otherwise, default-jre installs an older Java, 17 or 21).
 - On Google Colab, the [notebook](https://colab.research.google.com/github/xcsp3team/pycsp3/blob/master/notebooks/QuickStart.ipynb)
   can be opened directly: it installs PyCSP3 in its first cell.
 - For updating PyCSP3, add `--upgrade` to the command (e.g., `pip install --upgrade pycsp3`), and for the development version (the master branch
