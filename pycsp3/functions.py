@@ -977,10 +977,9 @@ def _01_to_node(arg):
     if isinstance(arg, Variable):
         assert arg.dom.is_binary()
         return Node.build(TypeNode.EQ, arg, 1)  # transformed into a basic logical equation
-    if isinstance(arg, PartialConstraint):
-        if not isinstance(arg.constraint, ConstraintElement):  # TODO to be extended (other cases should be possible)
+    if isinstance(arg, PartialConstraint):  # the element of a list of 0/1 terms (variables or integers) is a Boolean (#291)
+        if not isinstance(arg.constraint, ConstraintElement) or not arg.constraint.on_01_terms():
             error("The component " + str(arg) + " is not a constraint: it must be subject to a condition, as in Sum(x) > 10")
-        assert all(isinstance(t, Variable) and t.dom.is_binary() for t in arg.constraint.arguments[TypeCtrArg.LIST].content)  # TODO to be extended
         return arg == 1
     return arg
 

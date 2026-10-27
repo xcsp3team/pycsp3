@@ -17,8 +17,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
-BOOLEAN = ("#291: the element of a list of 0/1 variables cannot be used with | and ~ (TypeError), and the element of a list of 0/1 "
-           "integers cannot be posted alone (assert without message)")
 INVALID = ("#292: invalid arguments of an element: assert without message, TypeError raised inside PyCSP3, or a symbolic variable "
            "accepted as value")
 ROWS_TUPLE = "#293: a row of integers indexed by a variable compared with a tuple of variables fails (whereas a list works)"
@@ -351,7 +349,7 @@ def test_element_with_an_index_outside_the_list_and_the_option(run, solver, code
      [range(-2, 2)] * 3 + [range(3), range(-3, 3)], lambda *t: t[t[3]] == t[4]),
     ("b = VarArray(size=3, dom={0, 1})\nj = Var(dom=range(3))\nsatisfy(b[j] == 1)", [range(2)] * 3 + [range(3)], lambda *t: t[t[3]] == 1),
     ("b = VarArray(size=3, dom={0, 1})\nj = Var(dom=range(3))\nsatisfy(b[j])", [range(2)] * 3 + [range(3)], lambda *t: t[t[3]] == 1),
-    pytest.param("t = cp_array([0, 1, 1])\nj = Var(dom=range(3))\nsatisfy(t[j])", [range(3)], lambda j: j > 0, marks=bug(BOOLEAN)),
+    ("t = cp_array([0, 1, 1])\nj = Var(dom=range(3))\nsatisfy(t[j])", [range(3)], lambda j: j > 0),
     ("z = VarArray(size=3, dom={0, 2, 5})\nj = Var(dom=range(3))\nv = Var(dom=range(6))\nsatisfy(z[j] == v)", [[0, 2, 5]] * 3 + [range(3), range(6)],
      lambda *t: t[t[3]] == t[4]),
 ])
@@ -566,13 +564,18 @@ def test_element_on_a_matrix_in_logical_expressions(run, solver, request, constr
 
 
 @pytest.mark.parametrize("constraint, predicate", [
-    pytest.param("b[i] | b[2 - i]", lambda *t: t[t[3]] == 1 or t[2 - t[3]] == 1, marks=bug(BOOLEAN)),
+    ("b[i] | b[2 - i]", lambda *t: t[t[3]] == 1 or t[2 - t[3]] == 1),
     ("b[i] & (b[0] == 0)", lambda *t: t[t[3]] == 1 and t[0] == 0),
-    pytest.param("~b[i]", lambda *t: t[t[3]] == 0, marks=bug(BOOLEAN)),
+    ("b[i] & b[2 - i]", lambda *t: t[t[3]] == 1 and t[2 - t[3]] == 1),
+    ("~b[i]", lambda *t: t[t[3]] == 0),
+    ("b[i] ^ b[0]", lambda *t: t[t[3]] != t[0]),
+    ("b[0] | b[i]", lambda *t: t[0] == 1 or t[t[3]] == 1),
     ("imply(b[0], b[i])", lambda *t: t[0] == 0 or t[t[3]] == 1),
+    ("cp_array([0, 1, 1])[i] | b[0]", lambda *t: t[3] > 0 or t[0] == 1),
+    ("~cp_array([0, 1, 1])[i]", lambda *t: t[3] == 0),
 ])
 def test_element_on_01_variables_in_logical_expressions(run, solver, constraint, predicate):
-    # the element of a list of 0/1 variables is a Boolean
+    # the element of a list of 0/1 variables (or integers) is a Boolean (#291)
     check(run, solver, "b = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(3))\n" + f"satisfy({constraint})", [range(2)] * 3 + [range(3)], predicate)
 
 
@@ -937,8 +940,10 @@ def test_xcsp3_element_in_a_group(run):
     "x[i] == True",
     pytest.param("x[i] == [1, 2]", marks=bug(INVALID)),
     "x[i] == {1: 2}",
-    pytest.param("x[i]", marks=bug(INVALID)),
-    pytest.param("t[i]", marks=bug(INVALID)),
+    "x[i]",
+    "t[i]",
+    "x[i] | v",
+    "~x[i]",
     pytest.param("x[i] == s[0]", marks=bug(INVALID)),
     "s[i] == 'a'",
     pytest.param("x[s[0]] == 2", marks=bug(INVALID)),
@@ -960,8 +965,10 @@ def test_invalid_element(run, constraint):
 
 @pytest.mark.parametrize("constraint, message", [
     ("x[:0][i] == 2", "A constraint Element on an empty list of variables is encountered"),
-    pytest.param("x[i]", "is not a constraint: it must be subject to a condition", marks=bug(INVALID)),
-    pytest.param("t[i]", "is not a constraint: it must be subject to a condition", marks=bug(INVALID)),
+    ("x[i]", "is not a constraint: it must be subject to a condition"),
+    ("t[i]", "is not a constraint: it must be subject to a condition"),
+    ("x[i] | (v == 1)", "is not a constraint: it must be subject to a condition"),
+    ("~t[i]", "is not a constraint: it must be subject to a condition"),
     ("x[i] in {y, 2}", "must be integers, which is not the case of y"),
 ])
 def test_invalid_element_message(run, constraint, message):

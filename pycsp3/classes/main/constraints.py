@@ -891,6 +891,10 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             return max(v for v in self.arguments[TypeCtrArg.LIST].content)
         return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
+    def on_01_terms(self):
+        # True iff the list contains only 0/1 variables and integers 0 and 1, so that the element is a Boolean (#291)
+        return all(t in (0, 1) if isinstance(t, int) else isinstance(t, Variable) and t.dom.is_binary() for t in flatten(self.arguments[TypeCtrArg.LIST].content))
+
     def satisfying_indexes(self):
         # for a list of integers and a condition whose operand is not a variable (which XCSP3-core does not allow, #294), the indexes (in the domain
         # of the index) of the integers satisfying the condition, and None otherwise
@@ -1426,6 +1430,33 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     def __rmod__(self, other):  # other // self
         return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+
+    def _boolean(self):
+        # the element of a list of 0/1 terms, used as a Boolean, is replaced by an auxiliary variable (#291)
+        if not isinstance(self.constraint, ConstraintElement) or not self.constraint.on_01_terms():
+            error("The component " + str(self) + " is not a constraint: it must be subject to a condition, as in Sum(x) > 10")
+        return auxiliary().replace_partial_constraint(self)
+
+    def __and__(self, other):
+        return self._boolean() & other
+
+    def __rand__(self, other):
+        return other & self._boolean()
+
+    def __or__(self, other):
+        return self._boolean() | other
+
+    def __ror__(self, other):
+        return other | self._boolean()
+
+    def __xor__(self, other):
+        return self._boolean() ^ other
+
+    def __rxor__(self, other):
+        return other ^ self._boolean()
+
+    def __invert__(self):
+        return ~self._boolean()
 
     def __getitem__(self, i):
         assert isinstance(self.constraint, ConstraintElement), (
