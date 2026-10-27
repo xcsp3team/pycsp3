@@ -132,7 +132,7 @@ Install PyCSP3 without a virtual environment or with one, once the dependencies 
   <tr>
     <td colspan="2"><code>python3 -m pip install --user \</code><br><code>  --break-system-packages pycsp3</code></td>
     <td><code>python -m pip install pycsp3</code></td>
-    <td><code>%pip install pycsp3</code> in a first cell</td>
+    <td width="190"><code>%pip install pycsp3</code></td>
   </tr>
   <tr>
     <td colspan="4"><b>With a virtual environment</b></td>
@@ -146,20 +146,29 @@ Install PyCSP3 without a virtual environment or with one, once the dependencies 
     <td colspan="4"><b>Dependencies</b>: Python, and Java (only for the embedded solvers) with one of the two JDKs</td>
   </tr>
   <tr>
-    <td>Python:<br><code>sudo apt install python3-pip</code><br><code>sudo apt install python3-venv</code></td>
-    <td>Python:<br><a href="https://www.python.org/downloads/">python.org</a></td>
-    <td>Python:<br><a href="https://www.python.org/downloads/">python.org</a></td>
-    <td rowspan="3">already installed (Python and OpenJDK)</td>
+    <td colspan="3" align="center"><b>Python</b></td>
+    <td rowspan="6">already installed (Python and OpenJDK)</td>
   </tr>
   <tr>
-    <td>OpenJDK:<br><code>sudo apt install openjdk-25-jre</code></td>
-    <td>OpenJDK:<br><code>brew install temurin@25</code></td>
-    <td>OpenJDK:<br><code>winget install EclipseAdoptium.Temurin.25.JRE</code></td>
+    <td><code>sudo apt install python3-pip</code><br><code>sudo apt install python3-venv</code></td>
+    <td><a href="https://www.python.org/downloads/">python.org</a></td>
+    <td><a href="https://www.python.org/downloads/">python.org</a></td>
   </tr>
   <tr>
-    <td>Oracle JDK: package .deb of <a href="https://www.oracle.com/java/technologies/downloads/">oracle.com</a>, then<br><code>sudo apt install ./jdk-25*.deb</code></td>
-    <td>Oracle JDK:<br><code>brew install oracle-jdk@25</code></td>
-    <td>Oracle JDK:<br><code>winget install Oracle.JDK.25</code></td>
+    <td colspan="3" align="center"><b>OpenJDK</b></td>
+  </tr>
+  <tr>
+    <td><code>sudo apt install openjdk-25-jre</code></td>
+    <td><code>brew install temurin@25</code></td>
+    <td><code>winget install EclipseAdoptium.Temurin.25.JRE</code></td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><b>Oracle JDK</b></td>
+  </tr>
+  <tr>
+    <td>package .deb of <a href="https://www.oracle.com/java/technologies/downloads/">oracle.com</a>, then<br><code>sudo apt install ./jdk*.deb</code></td>
+    <td><code>brew install oracle-jdk@25</code></td>
+    <td><code>winget install Oracle.JDK.25</code></td>
   </tr>
 </table>
 
