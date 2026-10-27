@@ -10,7 +10,7 @@ from pycsp3 import functions
 from pycsp3.classes.entities import ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintAllDifferentList, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
-    ConstraintRefutation, ConstraintDummyConstant, auxiliary, global_indirection, manage_global_indirection)
+    ConstraintRefutation, ConstraintDummyConstant, auxiliary, global_indirection, manage_global_indirection, element_on_matrix)
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger
 from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
@@ -942,7 +942,7 @@ class OpOverrider:
                 index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True,
                                                                                                                values=None if force else range(m))
                 if all(isinstance(i, Variable) for i in (index0, index1)):
-                    return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
+                    return PartialConstraint(element_on_matrix(array, index0, index1))
                 if isinstance(index0, Variable) and isinstance(index1, int):
                     return PartialConstraint(ConstraintElement(array[:, index1], index=index0))
                 if isinstance(index0, int) and isinstance(index1, Variable):

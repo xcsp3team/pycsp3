@@ -891,6 +891,9 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         # True iff the list contains only 0/1 variables and integers 0 and 1, so that the element is a Boolean (#291)
         return all(t in (0, 1) if isinstance(t, int) else isinstance(t, Variable) and t.dom.is_binary() for t in flatten(self.arguments[TypeCtrArg.LIST].content))
 
+    def on_one_term(self):
+        return TypeCtrArg.INDEX in self.arguments and len(self.arguments[TypeCtrArg.LIST].content) == 1
+
     def satisfying_indexes(self):
         # for a list of integers and a condition whose operand is not a variable (which XCSP3-core does not allow, #294), the indexes (in the domain
         # of the index) of the integers satisfying the condition, and None otherwise
@@ -900,6 +903,16 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             return None
         values = set(condition.filtering(set(lst)))
         return [k for k in self.arguments[TypeCtrArg.INDEX].content.dom.all_values() if lst[k] in values]
+
+
+def element_on_matrix(lst, index0, index1):
+    # XCSP3-core requires at least two rows and two columns in the matrix of an element: an element on the row or on the column otherwise (#298)
+    n, m = len(lst), max(len(row) for row in lst)
+    if n > 1 and m > 1:
+        return ConstraintElementMatrix(lst, index0, index1)
+    c = ConstraintElement(lst[0] if n == 1 else lst[:, 0], index=index1 if n == 1 else index0)
+    auxiliary().replace_element_index(1, index0 if n == 1 else index1, c)  # the other index is 0 (guarded with -force_element_index)
+    return c
 
 
 class ConstraintElementMatrix(ConstraintWithCondition):
@@ -1285,6 +1298,10 @@ class PartialConstraint:  # constraint whose condition has not been given such a
                     return ECtr(ConstraintExtension([index], indexes, True, options.keep_hybrid, options.restrict_tables_wrt_domains))
                 node = Node.build(TypeNode.EQ, index, indexes[0]) if len(indexes) == 1 else Node.build(TypeNode.IN, index, set(indexes))
                 return Node.build(TypeNode.AND, *guards, node) if len(guards) > 0 else node
+            if c.on_one_term():  # XCSP3-core requires at least two terms in the list: the term itself, its index being 0 (#298)
+                guards, c.guards = c.guards, []  # (with -force_element_index, the index is 0 at the top level, and the element false otherwise, #284)
+                node = functions._term_with_condition(c.arguments[TypeCtrArg.LIST].content[0], c.arguments[TypeCtrArg.CONDITION].content)
+                return Node.build(TypeNode.AND, *guards, node) if len(guards) > 0 else node
         return ECtr(c)
 
     def add_condition(self, operator, right_operand):
@@ -1472,16 +1489,17 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
         assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
-        guards = self.constraint.guards  # (of the row index, when it can be outside the list, #284)
+        # (of the row index, when it can be outside the list, #284; for a matrix of one row, it is given again below, the index being kept, #298)
+        guards = self.constraint.guards if len(lst) > 1 else []
         if isinstance(i, Variable):
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
-            self.constraint = ConstraintElementMatrix(lst, index, i)
+            self.constraint = element_on_matrix(lst, index, i)
         elif isinstance(i, int):
             self.constraint = ConstraintElement(lst[:, i], index=index)
         elif isinstance(i, Node):
             m = max(len(row) for row in lst)
             curser.check_index_expression(i, m)
-            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i, values=None if options.force_element_index else range(m)))
+            self.constraint = element_on_matrix(lst, index, auxiliary().replace_node(i, values=None if options.force_element_index else range(m)))
         self.constraint.guards = guards + self.constraint.guards
 
         return self
@@ -1732,6 +1750,10 @@ class _Auxiliary:
             # and not by a sum of one term with the condition (eq,aux): a sum of one term is only posted directly compared with 'in' or 'not in' (#208)
             term = pc.constraint.to_terms()[0]
             return term if isinstance(term, Variable) else self.replace_node(term)
+        if isinstance(pc.constraint, ConstraintElement) and pc.constraint.on_one_term():
+            # the element of a list of one term replaced by an auxiliary variable is this term, its index being 0 (#298)
+            term = pc.constraint.arguments[TypeCtrArg.LIST].content[0]
+            return term if isinstance(term, Variable) else self.replace_int(term)
         if not options.dont_use_aux_cache:
             for c, x in self.cache:
                 if pc.constraint.equal_except_condition(c):
@@ -1811,6 +1833,10 @@ class _Auxiliary:
                   "or maybe replace array[index] by array[aux] after having posed ((aux := Var()) == index)")
         valid = [v for v in index.dom if 0 <= v < length]
         error_if(len(valid) == 0, "No value of the index " + str(index) + " is an index of the list (of length " + str(length) + ")")
+        if length == 1:  # the element of a list of one term is replaced by this term (#298): only its guard is needed
+            if ctr is not None:
+                ctr.guards.append(functions.belong(index, valid))
+            return None
         # the new index aux is the index when it is valid, and the first valid index otherwise, so that the index is not restricted by this table
         # (which also avoids interchangeable values); the element is guarded by the validity of the index: in a logical expression, it is false
         # when the index is outside the list, and at the top level, the index is restricted to the list (#284)
