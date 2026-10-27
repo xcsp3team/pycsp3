@@ -41,26 +41,27 @@ EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty 
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 ACE_EQ = ("xcsp3team/ACE#26: ACE gives wrong solutions for nValues with the condition (eq,k), 1 < k < |X|, and fails when the variables have "
           "different types of domains")
-ACE_NOTIN_INTERVAL = ("(to be reported) ACE gives the solutions of (in,a..b) for element with (notin,a..b) (Problem.postExprSubjectToCondition() "
+ACE_NOTIN_INTERVAL = ("xcsp3team/ACE#36: ACE gives the solutions of (in,a..b) for element with (notin,a..b) (Problem.postExprSubjectToCondition() "
                       "ignores the operator of an interval)")
-ACE_MEMBER = ("(to be reported) ACE gives wrong solutions for element without index (member) with a variable as value (Table.starredMember() puts "
+ACE_MEMBER = ("xcsp3team/ACE#36: ACE gives wrong solutions for element without index (member) with a variable as value (Table.starredMember() puts "
               "the value first, whereas the scope has the list first)")
-ACE_INDEX_AS_VALUE = "(to be reported) ACE gives wrong solutions for element on a list of integers or on a matrix when the index is also the value"
-ACE_REPEATED = "(to be reported) ACE fails without message on element when a variable appears several times in the list (ERROR: i=j x=...)"
-ACE_SAME_INDEXES = ("(to be reported) ACE fails without message on element on a non-square matrix when the same variable is the index of the "
+ACE_INDEX_AS_VALUE = "xcsp3team/ACE#36: ACE gives wrong solutions for element on a list of integers or on a matrix when the index is also the value"
+ACE_REPEATED = "xcsp3team/ACE#36: ACE fails without message on element when a variable appears several times in the list (ERROR: i=j x=...)"
+ACE_SAME_INDEXES = ("xcsp3team/ACE#36: ACE fails without message on element on a non-square matrix when the same variable is the index of the "
                     "row and of the column")
-COSOCO_NOTIN = "(to be reported) cosoco crashes (segmentation fault) on element with (notin,S): the case notin is missing in buildConstraintElement()"
-COSOCO_IN_INTERVAL = "(to be reported) cosoco crashes (segmentation fault) on element with (in,a..b): the interval is read as an empty set"
-COSOCO_MATRIX_VALUE = ("(to be reported) cosoco crashes (segmentation fault) on element on a matrix of integers with an integer as value (the "
+COSOCO_NOTIN = ("xcsp3team/cosoco#106: cosoco crashes (segmentation fault) on element with (notin,S): the case notin is missing in "
+                "buildConstraintElement()")
+COSOCO_IN_INTERVAL = "xcsp3team/cosoco#106: cosoco crashes (segmentation fault) on element with (in,a..b): the interval is read as an empty set"
+COSOCO_MATRIX_VALUE = ("xcsp3team/cosoco#106: cosoco crashes (segmentation fault) on element on a matrix of integers with an integer as value (the "
                        "parser gives the integer as a variable)")
-COSOCO_INDEX_IN_LIST = ("(to be reported) cosoco misses solutions of element when the index is in the list (ElementConstant::filter() removes the "
+COSOCO_INDEX_IN_LIST = ("xcsp3team/cosoco#106: cosoco misses solutions of element when the index is in the list (ElementConstant::filter() removes the "
                         "value from the index instead of the position of the index)")
-COSOCO_REPEATED = "(to be reported) cosoco gives wrong solutions for element when a variable appears several times in the list"
-COSOCO_MATRIX_CONSTANT = ("(to be reported) cosoco gives a Solution Error for element on a non-square matrix of variables with an integer as value "
+COSOCO_REPEATED = "xcsp3team/cosoco#106: cosoco gives wrong solutions for element when a variable appears several times in the list"
+COSOCO_MATRIX_CONSTANT = ("xcsp3team/cosoco#106: cosoco gives a Solution Error for element on a non-square matrix of variables with an integer as value "
                           "(ElementMatrixConstant::isSatisfiedBy() multiplies the row by the number of rows)")
-COSOCO_INDEX_AS_VALUE = "(to be reported) cosoco gives a Solution Error for element on a list of integers when the index is also the value"
-CHOCO_MEMBER = ("(to be reported) CHOCO finds solutions several times for element without index (member), also with CHOCO 6.0.2 and the develop "
-                "version (an index variable is introduced)")
+COSOCO_INDEX_AS_VALUE = "xcsp3team/cosoco#106: cosoco gives a Solution Error for element on a list of integers when the index is also the value"
+CHOCO_MEMBER = ("chocoteam/choco-solver#1270: CHOCO finds solutions several times for element without index (member), also with CHOCO 6.0.2 "
+                "and the develop version (an index variable is introduced)")
 CHOCO_INTERVAL = ("CHOCO 4.10.15-beta (embedded in PyCSP3) and CHOCO 6.0.2 find wrong solutions for element with (in,a..b) and (notin,a..b), "
                   "fixed in the develop version of CHOCO (4e5f043, not reported)")
 CHOCO_MATRIX = ("CHOCO 4.10.15-beta (embedded in PyCSP3) misses solutions of element on a matrix of variables, except with (eq,k) and (ne,k), "
