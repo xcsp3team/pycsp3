@@ -1,0 +1,20 @@
+{
+  "name": "PyCSP3",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "21",
+      "jdkDistro": "tem"
+    },
+    "ghcr.io/devcontainers/features/sshd:1": {}
+  },
+  "postCreateCommand": "pip install --editable . pytest pytest-xdist pytest-timeout cosoco",
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["notebooks/QuickStart.ipynb"]
+    },
+    "vscode": {
+      "extensions": ["ms-python.python", "ms-toolsai.jupyter"]
+    }
+  }
+}
