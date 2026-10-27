@@ -17,7 +17,6 @@ from harness import assert_fails, assert_optimum, assert_solutions, brute_force,
 # Known bugs (each bug is reported in the issue given at the start of its reason)
 LOGICAL_OUTSIDE = ("#284: with -force_element_index, an index that can be outside the list is restricted to the list for the whole model, "
                    "even when the element is in a logical expression (as said in the page Element of the documentation)")
-MEMBER_LOGICAL = "#288: member in a logical expression fails with a message about the second argument of belong()"
 MEMBER_MINI = "#289: with -mini, member gives an element without index, whereas the element <index> is required in the mini-tracks"
 MATRIX_OBJECTIVE = "#290: an element on a matrix as objective gives an objective of type element, which does not exist in XCSP3"
 BOOLEAN = ("#291: the element of a list of 0/1 variables cannot be used with | and ~ (TypeError), and the element of a list of 0/1 "
@@ -48,6 +47,8 @@ COSOCO_REPEATED = "xcsp3team/cosoco#106: cosoco gives wrong solutions for elemen
 COSOCO_MATRIX_CONSTANT = ("xcsp3team/cosoco#106: cosoco gives a Solution Error for element on a non-square matrix of variables with an integer as value "
                           "(ElementMatrixConstant::isSatisfiedBy() multiplies the row by the number of rows)")
 COSOCO_INDEX_AS_VALUE = "xcsp3team/cosoco#106: cosoco gives a Solution Error for element on a list of integers when the index is also the value"
+COSOCO_IN_SET = ("(to be reported) cosoco crashes (segmentation fault) on an intension where in(v,set(...)), with variables in the set, is in a "
+                 "disjunction or an implication")
 CHOCO_MEMBER = ("chocoteam/choco-solver#1270: CHOCO finds solutions several times for element without index (member), also with CHOCO 6.0.2 "
                 "and the develop version (an index variable is introduced)")
 CHOCO_INTERVAL = ("CHOCO 4.10.15-beta (embedded in PyCSP3) and CHOCO 6.0.2 find wrong solutions for element with (in,a..b) and (notin,a..b), "
@@ -611,13 +612,41 @@ def test_element_with_an_index_outside_the_list_in_logical_expressions(run, solv
     ("v + 1 not in x", lambda *t: t[4] + 1 not in t[:4]),
     ("abs(v - 1) in x[:2]", lambda *t: abs(t[4] - 1) in t[:2]),
     ("x[0] in x[1:]", lambda *t: t[0] in t[1:4]),
-    pytest.param("(v in x) | (v == 0)", lambda *t: t[4] in t[:4] or t[4] == 0, marks=bug(MEMBER_LOGICAL)),
 ])
 def test_element_member(run, solver, request, constraint, predicate):
     # v in x (without index) holds iff v is equal to one variable of x
     if constraint in ("v in x", "v in {x[0], x[1], x[2], x[3]}", "v in [x[0], x[1], x[2], x[3]]", "v in (x[0], x[1], x[2], x[3])", "v + 1 in x"):  # element without index
         mark(request, solver, {"ACE": ACE_MEMBER, "CHOCO": CHOCO_MEMBER, "COSOCO": COSOCO_UNSUPPORTED_MEMBER})
     check(run, solver, "x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})", [range(2)] * 4 + [range(3)], predicate)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(v in x) | (v == 0)", lambda *t: t[4] in t[:4] or t[4] == 0),
+    ("(v in x[:3]) | (v == 0)", lambda *t: t[4] in t[:3] or t[4] == 0),
+    ("(v not in x) | (x[0] == 1)", lambda *t: t[4] not in t[:4] or t[0] == 1),
+    ("(v in x) & (v != 0)", lambda *t: t[4] in t[:4] and t[4] != 0),
+    ("(v + 1 in x) | (v == 2)", lambda *t: t[4] + 1 in t[:4] or t[4] == 2),
+    ("(v in [x[0], x[1], 2]) | (v == 0)", lambda *t: t[4] in (t[0], t[1], 2) or t[4] == 0),
+    ("imply(v == 2, belong(v, x))", lambda *t: t[4] != 2 or t[4] in t[:4]),
+    ("imply(v == 0, not_belong(v, x))", lambda *t: t[4] != 0 or t[4] not in t[:4]),
+    ("either(v == 0, belong(v, x))", lambda *t: t[4] == 0 or t[4] in t[:4]),
+])
+def test_element_member_in_logical_expressions(run, solver, request, constraint, predicate):
+    # in a logical expression, member is the intension in(v,set(...)), whatever the number of variables (#288)
+    if "not" not in constraint and "&" not in constraint:
+        bug_for(request, "COSOCO", COSOCO_IN_SET)
+    check(run, solver, "x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})", [range(2)] * 4 + [range(3)], predicate)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(v in y) | (v == 0)", lambda *t: t[6] in t[:6] or t[6] == 0),
+    ("(v not in y) | (y[0] == 1)", lambda *t: t[6] not in t[:6] or t[0] == 1),
+])
+def test_element_member_of_many_variables_in_logical_expressions(run, solver, request, constraint, predicate):
+    if "not" not in constraint:
+        bug_for(request, "COSOCO", COSOCO_IN_SET)
+    check(run, solver, "y = VarArray(size=6, dom=range(2))\nv = Var(dom=range(3))\n" + f"satisfy({constraint}, Sum(y) <= 2)", [range(2)] * 6 + [range(3)],
+          lambda *t: predicate(*t) and sum(t[:6]) <= 2)
 
 
 @pytest.mark.parametrize("constraint, predicate", [
