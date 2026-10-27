@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -12,10 +13,17 @@ from pycsp3.classes.entities import VarEntities, EVar
 from pycsp3.classes.main.variables import Variable, VariableInteger
 from pycsp3.compiler import Compilation
 from pycsp3.dashboard import options
-from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows, ANY
+from pycsp3.tools.utilities import Stopwatch, flatten, GREEN, WHITE, is_windows, ANY, error
 
 
 # from py4j.java_gateway import JavaGateway, Py4JNetworkError
+
+
+def check_java(solver_name):
+    # ACE and Choco are run with Java: when its command is not found, the error is explicit (rather than an exception of subprocess)
+    if shutil.which("java") is None:
+        error("Java (version 11, or later) is needed by the solver " + solver_name + ", but the command java is not found: install Java "
+              + "(see https://github.com/xcsp3team/pycsp3#installation), or use the solver cosoco (not available on Windows), which does not need Java")
 
 
 def process_options(solving):
@@ -421,6 +429,8 @@ class SolverProcess:
 
         verbose = 2 if options.solve or "verbose" in dict_simplified_options else verbose
         command = self.command + " " + (model if model is not None else "") + " " + solver_args
+        if command.split()[0] == "java":
+            check_java(self.name)
 
         if verbose > 0:
             print("\n  * Solving by " + self.name + " in progress ... ")
