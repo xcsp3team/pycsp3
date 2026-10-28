@@ -1228,7 +1228,7 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
         return self if self.val == 0 else self.val % other
 
     def __rmod__(self, other):  # other % self
-        return 0 if self.val == 1 else self.val % other
+        return 0 if self.val == 1 else other % self.val
 
     def __invert__(self):
         assert self.val in (0, 1)
