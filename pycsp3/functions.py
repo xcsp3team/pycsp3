@@ -2016,12 +2016,7 @@ def _constants_as_integers(f):
 
     @functools.wraps(f)
     def _constants_as_integers_wrapper(*args, **kwargs):
-        try:
-            return f(*[_integers_of(arg) for arg in args], **{k: _integers_of(v) for k, v in kwargs.items()})
-        except TypeError as e:
-            if e.__traceback__.tb_next is None:  # the arguments do not match the parameters of f (the error is not raised inside f)
-                raise TypeError(str(e)) from None
-            raise
+        return f(*[_integers_of(arg) for arg in args], **{k: _integers_of(v) for k, v in kwargs.items()})
 
     decorator_wrappers.add(_constants_as_integers_wrapper.__code__)  # the frames of the wrapper are ignored by the inspector
     return _constants_as_integers_wrapper

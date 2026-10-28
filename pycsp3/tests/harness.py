@@ -322,7 +322,8 @@ def assert_fails(r):
         return
     assert r.exception is not None, "the model fails without any message\n" + r.report()
     lines = [line for line in r.stderr.splitlines() if line.strip()]
-    frames = [i for i, line in enumerate(lines) if line.lstrip().startswith("File ")]
+    frames = [i for i, line in enumerate(lines) if line.lstrip().startswith("File ")
+              and not line.rstrip().endswith("in _constants_as_integers_wrapper")]  # the frames of the decorator of the functions of global constraints
     location = lines[frames[-1]] if frames else ""
     statement = lines[frames[-1] + 1].strip() if frames and frames[-1] + 1 < len(lines) else ""
     message = lines[-1].partition(":")[2].strip()
