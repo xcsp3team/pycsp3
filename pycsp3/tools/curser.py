@@ -844,6 +844,10 @@ class OpOverrider:
 
         if isinstance(indexes, str) and functions.var(indexes) is not None:
             indexes = functions.var(indexes)
+        if isinstance(indexes, ConstraintDummyConstant):
+            indexes = indexes.val
+        elif isinstance(indexes, tuple) and any(isinstance(i, ConstraintDummyConstant) for i in indexes):
+            indexes = tuple(i.val if isinstance(i, ConstraintDummyConstant) else i for i in indexes)  # as in m[c, j]
         if isinstance(indexes, int):
             assert isinstance(array, list) and len(array) > 0
             if indexes >= len(array):

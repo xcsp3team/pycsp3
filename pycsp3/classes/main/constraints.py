@@ -1439,6 +1439,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
         assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
+        if isinstance(i, ConstraintDummyConstant):
+            i = i.val
         if isinstance(i, Variable):
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
             self.constraint = ConstraintElementMatrix(lst, index, i)

@@ -7,7 +7,7 @@ Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being co
 
 import pytest
 
-from harness import assert_solutions, brute_force
+from harness import assert_solutions, brute_force, declared_variables
 
 # a constant c whose value is 3, and a variable v (in the predicates: v)
 CV = "c = Maximum(3, 1)\nv = Var(dom=range(-10, 11))\n"
@@ -97,3 +97,31 @@ def test_constant_in_memberships(run, solver, constraint, predicate):
     # constraint (and is solved) when the membership is always true
     r = run(f"c = Maximum(3, 1)\nx = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nL = [c, 4]\nsatisfy(v != 4, {constraint})", solver=solver)
     assert_solutions(r, brute_force([range(4)] * 3 + [range(5)], lambda *t: t[3] != 4 and predicate(*t)))
+
+
+def mjk(t, j, k):
+    """The value of m[j][k] in a tuple whose first six values are the ones of m."""
+    return t[3 * j + k]
+
+
+MI = ((1, 2, 3), (4, 5, 6))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("m[j][c] == v", lambda *t: mjk(t, t[6], 1) == t[8]),
+    ("m[j][c - 1] == v", lambda *t: mjk(t, t[6], 0) == t[8]),
+    ("mi[j][c] == v", lambda *t: MI[t[6]][1] == t[8]),
+    ("m[c, k] == v", lambda *t: mjk(t, 1, t[7]) == t[8]),
+    ("m[j, c] == v", lambda *t: mjk(t, t[6], 1) == t[8]),
+    ("m[c, 1] == v", lambda *t: mjk(t, 1, 1) == t[8]),
+    ("m[c, c] == v", lambda *t: mjk(t, 1, 1) == t[8]),
+    ("mi[c, k] == v", lambda *t: MI[1][t[7]] == t[8]),
+    ("mi[j, c] == v", lambda *t: MI[t[6]][1] == t[8]),
+])
+def test_constant_as_an_index_of_a_matrix(run, solver, constraint, predicate):
+    # the constant c is 1, as the index of a row or of a column, without any auxiliary variable (t[:6] for m, t[6] for j, t[7] for k, t[8] for v)
+    r = run("c = Maximum(1, 0)\nm = VarArray(size=[2, 3], dom=range(2))\nmi = cp_array([[1, 2, 3], [4, 5, 6]])\nj = Var(dom=range(2))\n"
+            f"k = Var(dom=range(3))\nv = Var(dom=range(7))\nsatisfy({constraint})", solver=solver)
+    assert_solutions(r, brute_force([range(2)] * 6 + [range(2), range(3), range(7)], predicate))
+    assert not any(name.startswith("aux") for name in declared_variables(r)), r.report()
+
