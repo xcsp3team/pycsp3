@@ -24,6 +24,16 @@ def test_constant_with_an_integer(run, solver, expression, value):
 
 
 @pytest.mark.parametrize("expression, value", [
+    ("c + 1", 4), ("1 + c", 4), ("c - 1", 2), ("1 - c", -2), ("c * 2", 6), ("2 * c", 6),
+    ("c // 2", 1), ("7 // c", 2), ("c % 2", 1), ("7 % c", 1), ("c + c", 6), ("c * 2 - 1", 5),
+])
+def test_constant_with_an_integer_compared_with_an_integer(run, solver, expression, value):
+    # the result is a constant, and not an integer of Python (the comparison is not evaluated by Python as a Boolean)
+    r = run(CV + f"satisfy(({expression} == {value}) | (v == 0), ({expression} == {value + 1}) | (v == 1))", solver=solver)
+    assert_solutions(r, brute_force(DV, lambda v: v == 1))
+
+
+@pytest.mark.parametrize("expression, value", [
     ("-c", -3), ("+c", 3), ("abs(Minimum(-3, 1))", 3), ("abs(-c)", 3), ("-c + 5", 2),
 ])
 def test_constant_with_a_unary_operator(run, solver, expression, value):
