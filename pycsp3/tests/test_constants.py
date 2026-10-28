@@ -50,3 +50,31 @@ def test_constant_with_a_unary_operator(run, solver, expression, value):
 def test_constant_as_an_index(run, solver, constraint, predicate):
     r = run(f"c = Maximum(3, 1)\nx = VarArray(size=4, dom=range(2))\nsatisfy({constraint})", solver=solver)
     assert_solutions(r, brute_force([range(2)] * 4, predicate))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("AllDifferent(c, v)", lambda *t: t[3] != 3),
+    ("AllDifferent([c, v])", lambda *t: t[3] != 3),
+    ("Count(x, value=c) == 1", lambda *t: t[:3].count(3) == 1),
+    ("Count(x, values=[c, 0]) == 1", lambda *t: sum(1 for w in t[:3] if w in (0, 3)) == 1),
+    ("Exist(x, value=c)", lambda *t: 3 in t[:3]),
+    ("Sum([c, v]) == 5", lambda *t: t[3] == 2),
+    ("Sum(x, condition=(\"eq\", c))", lambda *t: sum(t[:3]) == 3),
+    ("Sum(x[k] for k in range(c - 1)) == c", lambda *t: t[0] + t[1] == 3),
+    ("Maximum(c, v) == 4", lambda *t: t[3] == 4),
+    ("Minimum(x[0], c) == v", lambda *t: min(t[0], 3) == t[3]),
+    ("NValues(c, v) == 1", lambda *t: t[3] == 3),
+])
+def test_constant_in_global_constraints(run, solver, constraint, predicate):
+    # the constant is given as an argument of the function of a global constraint, which receives its value (t[:3] for x, t[3] for v)
+    r = run(f"c = Maximum(3, 1)\nx = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nsatisfy({constraint})", solver=solver)
+    assert_solutions(r, brute_force([range(4)] * 3 + [range(5)], predicate))
+
+
+def test_constant_in_global_constraints_with_comments(run):
+    # the comments of the model are kept for the functions of global constraints, whose arguments are checked by a decorator
+    r = run("c = Maximum(3, 1)\nx = VarArray(size=3, dom=range(4))\nsatisfy(\n    # all different\n    AllDifferent(x),\n"
+            "    # sum\n    Sum(x) > c\n)")
+    assert r.ok, r.report()
+    assert r.xml.find(".//allDifferent").get("note") == "all different", r.report()
+    assert r.xml.find(".//sum").get("note") == "sum", r.report()

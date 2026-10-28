@@ -116,11 +116,15 @@ def browse_code_top_to_bottom(lines, function_name):
     return list(reversed(code))
 
 
+decorator_wrappers = set()  # the code of the wrappers of the decorators of PyCSP3, whose frames are not the ones of the calls in the model
+
+
 def _extract_correct_frame(function_name):
     for i, frame_info in enumerate(reversed(inspect.stack(context=1))):
         if i > 0 and (frame_info.function == function_name or frame_info.function == "__init__" and function_name in frame_info.code_context[0]):
-            return i - 1, previous  # Get the correct frame
-        previous = frame_info
+            return index, previous  # Get the correct frame
+        if frame_info.frame.f_code not in decorator_wrappers:
+            index, previous = i, frame_info
     return None
 
 

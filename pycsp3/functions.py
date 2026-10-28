@@ -1,3 +1,4 @@
+import functools
 import inspect
 import math
 import types
@@ -24,7 +25,7 @@ from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, Var
 from pycsp3.classes.nodes import TypeNode, Node, neg_var
 from pycsp3.dashboard import options
 from pycsp3.tools.curser import queue_in, check_no_negated_membership, columns, OpOverrider, ListInt, ListVar, ListMultipleVar, ListCtr, cursing, convert_to_namedtuples
-from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of
+from pycsp3.tools.inspector import checkType, extract_declaration_for, comment_and_tags_of, comments_and_tags_of_parameters_of, decorator_wrappers
 from pycsp3.tools.utilities import (flatten, is_containing, is_1d_list, is_1d_tuple, is_matrix, ANY, ALL, error, warning, warning_if, error_if, is_2d_list)
 
 from pycsp3.classes.auxiliary.tables import to_starred_table_for_no_overlap1, to_starred_table_for_no_overlap2
@@ -1991,6 +1992,42 @@ def _excepting_tuples(excepting, name):
     return sorted(tuples) if len(tuples) > 0 else None
 
 
+def _integers_of(arg):
+    """
+    Returns the argument with any constant (ConstraintDummyConstant) replaced by its value, also inside lists and tuples (rebuilt only when
+    they contain a constant); a generator is replaced by the list of its elements (because it is consumed when looking for constants)
+    """
+    if isinstance(arg, ConstraintDummyConstant):
+        return arg.val
+    if isinstance(arg, types.GeneratorType):
+        return [_integers_of(v) for v in arg]
+    if isinstance(arg, (list, tuple)):
+        t = [_integers_of(v) for v in arg]
+        if any(u is not v for u, v in zip(t, arg)):
+            return t if isinstance(arg, list) else tuple(t)
+    return arg
+
+
+def _constants_as_integers(f):
+    """
+    Decorator of the functions of global constraints: any constant (ConstraintDummyConstant) given in the arguments, as c[i] for a list c of
+    identical integers, is replaced by its value, as an integer
+    """
+
+    @functools.wraps(f)
+    def _constants_as_integers_wrapper(*args, **kwargs):
+        try:
+            return f(*[_integers_of(arg) for arg in args], **{k: _integers_of(v) for k, v in kwargs.items()})
+        except TypeError as e:
+            if e.__traceback__.tb_next is None:  # the arguments do not match the parameters of f (the error is not raised inside f)
+                raise TypeError(str(e)) from None
+            raise
+
+    decorator_wrappers.add(_constants_as_integers_wrapper.__code__)  # the frames of the wrapper are ignored by the inspector
+    return _constants_as_integers_wrapper
+
+
+@_constants_as_integers
 def AllDifferent(term, *others, excepting=None, matrix=False):
     """
     Builds and returns a constraint AllDifferent.
@@ -2112,6 +2149,7 @@ def _check_lists_of_list_constraint(name, term, others, excepting):
     return lists
 
 
+@_constants_as_integers
 def AllDifferentList(term, *others, excepting=None):
     """
     Builds and returns a constraint AllDifferentList.
@@ -2158,6 +2196,7 @@ def AllDifferentList(term, *others, excepting=None):
     return ECtr(ConstraintAllDifferentList(lists, excepting))
 
 
+@_constants_as_integers
 def AllEqual(term, *others, excepting=None):
     """
     Builds and returns a constraint AllEqual.
@@ -2209,6 +2248,7 @@ def AllEqual(term, *others, excepting=None):
     return ECtr(ConstraintAllEqual(terms, excepting))
 
 
+@_constants_as_integers
 def AllEqualList(term, *others, excepting=None):
     """
     Builds and returns a constraint AllEqualList.
@@ -2278,6 +2318,7 @@ def _ordered(term, others, operator, lengths):
     return ECtr(ConstraintOrdered(terms, operator, lengths))
 
 
+@_constants_as_integers
 def Increasing(term, *others, strict=False, lengths=None):
     """
     Builds and returns a constraint Increasing.
@@ -2312,6 +2353,7 @@ def Increasing(term, *others, strict=False, lengths=None):
     return _ordered(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, lengths)
 
 
+@_constants_as_integers
 def Decreasing(term, *others, strict=False, lengths=None):
     """
     Builds and returns a constraint Decreasing.
@@ -2388,6 +2430,7 @@ def _lex(term, others, operator, matrix):
     return ECtr(ConstraintLexMatrix(lists, operator)) if matrix else ECtr(ConstraintLex(lists, operator))
 
 
+@_constants_as_integers
 def LexIncreasing(term, *others, strict=False, matrix=False):
     """
     Builds and returns a constraint (increasing) Lexicographic.
@@ -2434,6 +2477,7 @@ def LexIncreasing(term, *others, strict=False, matrix=False):
     return _lex(term, others, TypeOrderedOperator.INCREASING if not strict else TypeOrderedOperator.STRICTLY_INCREASING, matrix)
 
 
+@_constants_as_integers
 def LexDecreasing(term, *others, strict=False, matrix=False):
     """
     Builds and returns a constraint (decreasing) Lexicographic.
@@ -2471,6 +2515,7 @@ def LexDecreasing(term, *others, strict=False, matrix=False):
     return _lex(term, others, TypeOrderedOperator.DECREASING if not strict else TypeOrderedOperator.STRICTLY_DECREASING, matrix)
 
 
+@_constants_as_integers
 def Disjoint(term, *others):
     """
     Builds and returns a constraint Disjoint.
@@ -2497,6 +2542,7 @@ def Disjoint(term, *others):
     return ECtr(ConstraintDisjoint(lists))
 
 
+@_constants_as_integers
 def Precedence(within, *, values=None, covered=False):
     """
     Builds and returns a constraint Precedence.
@@ -2607,6 +2653,7 @@ def _term_with_condition(term, condition):
     return Node.build(condition.operator, term, condition.right_operand())
 
 
+@_constants_as_integers
 def Sum(term, *others, condition=None):
     """
     Builds and returns a component Sum (that becomes a constraint when subject to a condition).
@@ -2738,6 +2785,7 @@ def Sum(term, *others, condition=None):
     return _wrapping_by_complete_or_partial_constraint(ConstraintSum(terms, coeffs, condition))
 
 
+@_constants_as_integers
 def Product(term, *others):
     """
     Builds and returns a node 'mul', root of a tree expression where specified arguments are children.
@@ -2945,6 +2993,7 @@ def _exist(name, terms, value, reified_by):
 
 
 
+@_constants_as_integers
 def Count(within, *within_complement, value=None, values=None, condition=None):
     """
     Builds and returns a component Count (that becomes a constraint when subject to a condition).
@@ -2982,6 +3031,7 @@ def Count(within, *within_complement, value=None, values=None, condition=None):
     return _count("Count", flatten(within, within_complement), value, values, condition)
 
 
+@_constants_as_integers
 def Exist(within, *within_complement, value=None, reified_by=None):
     """
     Builds and returns a constraint Count that checks if at least one term takes the specified value.
@@ -3020,6 +3070,7 @@ def Exist(within, *within_complement, value=None, reified_by=None):
     return _exist("Exist", flatten(within, within_complement), value, reified_by)
 
 
+@_constants_as_integers
 def AnyHold(within, *within_complement):
     """
     Builds and returns a constraint Count that checks if at least one term evaluates to 1 (seen as True).
@@ -3042,6 +3093,7 @@ def AnyHold(within, *within_complement):
     return _exist("AnyHold", flatten(within, within_complement), None, None)
 
 
+@_constants_as_integers
 def NotExist(within, *within_complement, value=None):
     """
     Builds and returns a constraint Count that checks that no term takes the specified value.
@@ -3066,6 +3118,7 @@ def NotExist(within, *within_complement, value=None):
     return _count("NotExist", flatten(within, within_complement), value, None, None) == 0
 
 
+@_constants_as_integers
 def NoneHold(within, *within_complement):
     """
     Builds and returns a constraint Count that checks that no term evaluates to 1 (seen as True).
@@ -3088,6 +3141,7 @@ def NoneHold(within, *within_complement):
     return _count("NoneHold", flatten(within, within_complement), None, None, None) == 0
 
 
+@_constants_as_integers
 def ExactlyOne(within, *within_complement, value=None):
     """
     Builds and returns a constraint Count that checks that exactly one term evaluates to 1 (seen as True).
@@ -3110,6 +3164,7 @@ def ExactlyOne(within, *within_complement, value=None):
     return _count("ExactlyOne", flatten(within, within_complement), value, None, None) == 1
 
 
+@_constants_as_integers
 def AtLeastOne(within, *within_complement, value=None):
     """
     Builds and returns a constraint Count that checks that at least one term evaluates to 1 (seen as True).
@@ -3133,6 +3188,7 @@ def AtLeastOne(within, *within_complement, value=None):
     return _exist("AtLeastOne", flatten(within, within_complement), value, None)
 
 
+@_constants_as_integers
 def AtMostOne(within, *within_complement, value=None):
     """
     Builds and returns a constraint Count that checks that at most one term evaluates to 1 (seen as True).
@@ -3158,6 +3214,7 @@ def AtMostOne(within, *within_complement, value=None):
     return _count("AtMostOne", flatten(within, within_complement), value, None, None) <= 1
 
 
+@_constants_as_integers
 def AllHold(within, *within_complement):
     """
     Builds and returns a constraint Count that checks that all terms evaluate to 1 (seen as True).
@@ -3180,6 +3237,7 @@ def AllHold(within, *within_complement):
     return _count("AllHold", terms, None, None, None) == len(terms)
 
 
+@_constants_as_integers
 def Hamming(term, *others):
     """
     Builds and returns a constraint Sum, corresponding to the Hamming distance of the two specified lists.
@@ -3208,6 +3266,7 @@ def Hamming(term, *others):
     return Sum(lists[0][j] != lists[1][j] for j in range(len(lists[0])))
 
 
+@_constants_as_integers
 def NValues(within, *within_complement, excepting=None, condition=None):
     """
     Builds and returns a component NValues (that becomes a constraint when subject to a condition).
@@ -3288,6 +3347,7 @@ def _nvalues(terms, excepting=None, condition=None):  # terms is a flat list
     return _wrapping_by_complete_or_partial_constraint(ctr) if condition is None else PartialConstraint.complete(ctr)
 
 
+@_constants_as_integers
 def NotAllEqual(term, *others):
     """
     Builds and returns a component NValues (capturing NotAllEqual).
@@ -3314,6 +3374,7 @@ def NotAllEqual(term, *others):
     return _nvalues(terms) > 1
 
 
+@_constants_as_integers
 def Cardinality(within, *within_complement, occurrences, closed=False):
     """
     Builds and returns a constraint Cardinality.
@@ -3504,6 +3565,7 @@ def _extremum(name, term, others, condition):
     return _wrapping_by_complete_or_partial_constraint((ConstraintMaximum if name == "Maximum" else ConstraintMinimum)(terms, condition))
 
 
+@_constants_as_integers
 def Maximum(term, *others, condition=None):
     """
     Builds and returns a component Maximum (that becomes a constraint when subject to a condition).
@@ -3531,6 +3593,7 @@ def Maximum(term, *others, condition=None):
     return _extremum("Maximum", term, others, condition)
 
 
+@_constants_as_integers
 def Minimum(term, *others, condition=None):
     """
     Builds and returns a component Minimum (that becomes a constraint when subject to a condition).
@@ -3586,6 +3649,7 @@ def _extremum_arg(name, term, others, rank, condition):
     return _wrapping_by_complete_or_partial_constraint((ConstraintMaximumArg if name == "MaximumArg" else ConstraintMinimumArg)(terms, rank, condition))
 
 
+@_constants_as_integers
 def MaximumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MaximumArg (that becomes a constraint when subject to a condition).
@@ -3619,6 +3683,7 @@ def MaximumArg(term, *others, rank=None, condition=None):
     return _extremum_arg("MaximumArg", term, others, rank, condition)
 
 
+@_constants_as_integers
 def MinimumArg(term, *others, rank=None, condition=None):
     """
     Builds and returns a component MinimumArg (that becomes a constraint when subject to a condition).
@@ -3654,6 +3719,7 @@ def MinimumArg(term, *others, rank=None, condition=None):
     return _extremum_arg("MinimumArg", term, others, rank, condition)
 
 
+@_constants_as_integers
 def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
     """
     Builds a constraint Channel between the two specified lists.
@@ -3725,6 +3791,7 @@ def _avoid_mixed_list(t):  # TODO for simple lists here, and for tuples?
                 t[i] = auxiliary().replace_int(v)
 
 
+@_constants_as_integers
 def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
     """
     Builds and returns a constraint NoOverlap.
@@ -3851,6 +3918,7 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
     return ECtr(ConstraintNoOverlap(origins, lengths, zero_ignored))
 
 
+@_constants_as_integers
 def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=None, condition=None):
     """
     Builds and returns a component Cumulative (that becomes a constraint when subject to a condition).
@@ -3956,6 +4024,7 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     return _wrapping_by_complete_or_partial_constraint(ConstraintCumulative(origins, lengths, ends, heights, Condition.build_condition(condition)))
 
 
+@_constants_as_integers
 def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None, condition=None):
     """
     Builds and returns a component BinPacking, which puts items of given sizes into bins.
@@ -4016,6 +4085,7 @@ def BinPacking(partition, *partition_complement, sizes, limits=None, loads=None,
     return _wrapping_by_complete_or_partial_constraint(ConstraintBinPacking(terms, sizes, condition=Condition.build_condition(condition)))
 
 
+@_constants_as_integers
 def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=None, profits, pcondition=None):
     """
     Builds and returns a component Knapsack, which selects items (possibly several copies of each) having weights and profits.
@@ -4070,6 +4140,7 @@ def Knapsack(selection, *selection_complement, weights, wlimit=None, wcondition=
     return _wrapping_by_complete_or_partial_constraint(ConstraintKnapsack(terms, weights, wcondition, profits, Condition.build_condition(pcondition)))
 
 
+@_constants_as_integers
 def Flow(term, *others, balance, arcs, weights=None, condition=None):
     """
     Builds and returns a component Flow (that becomes a constraint when subject to a condition).
@@ -4131,6 +4202,7 @@ def Flow(term, *others, balance, arcs, weights=None, condition=None):
 ''' Constraints on Graphs'''
 
 
+@_constants_as_integers
 def Circuit(successors, *successors_complement, start_index=0, size=None, no_self_looping=False):
     """
     Builds and returns a constraint Circuit.
@@ -4189,6 +4261,7 @@ def Circuit(successors, *successors_complement, start_index=0, size=None, no_sel
 ''' Other Constraints '''
 
 
+@_constants_as_integers
 def Clause(variables, *variables_complement, phases=None):
     """
     Builds and returns a constraint Clause.
