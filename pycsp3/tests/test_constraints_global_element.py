@@ -1,7 +1,8 @@
 """
 Tests of the constraint Element of the section Constraints (Global) of the API (https://pycsp.org/documentation/api/constraints-global/#Element):
 expressions of the form c[i] (a list of integers indexed by a variable) and m[j][k] (a matrix of integers indexed by two variables), when all the
-integers are identical, with conditions, in logical expressions, as terms of other constraints and in objectives.
+integers are identical, with conditions, in logical expressions, as terms of other constraints and in objectives; and the constraint Element
+without index (member), written v in [...] with a list of variables (and possibly integers).
 
 Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being compared with the ones computed by brute force.
 According to XCSP3-core, element(X, i, (op, k)) holds iff X[i] op k, the first index being 0; when all the integers of X are equal to the same
@@ -100,3 +101,17 @@ def test_element_on_identical_integers_as_objective(run, solver, objective, func
         assert "The objective is the constant 2: there is nothing to optimize" in r.stdout, r.report()
     else:
         assert_optimum(r, brute_force(DC, lambda *t: t[1] != 0), function)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("v in [x[0], x[1]]", lambda *t: t[3] in t[:2]),
+    ("v in [x[0], 2]", lambda *t: t[3] in (t[0], 2)),
+    ("v not in [x[0], 2]", lambda *t: t[3] not in (t[0], 2)),
+    ("v + 1 in [x[0], 2]", lambda *t: t[3] + 1 in (t[0], 2)),
+    ("v in L", lambda *t: t[3] in (t[0], 2)),
+    ("v in [x[0], x[1], x[2], 4]", lambda *t: t[3] in t[:3] + (4,)),
+])
+def test_element_member_of_a_list_written_literally(run, solver, constraint, predicate):
+    # Python changes into a tuple a list given literally on the right of 'in' (t[:3] for x, t[3] for v)
+    check(run, solver, f"x = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nL = [x[0], 2]\nsatisfy({constraint})", [range(4)] * 3 + [range(5)],
+          predicate)

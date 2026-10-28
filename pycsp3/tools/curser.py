@@ -46,6 +46,10 @@ def _replace_node_in(node, values):
     return auxiliary().replace_node(node)
 
 
+def at_least_one_variable_and_possibly_integers(t):  # as the values of v in [x[0], 2]
+    return len(t) > 0 and all(isinstance(w, (Variable, int)) for w in t) and any(isinstance(w, Variable) for w in t)
+
+
 def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
     if not OpOverrider.activated:
         return self.__contains__(other)
@@ -138,6 +142,11 @@ def cursing():
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
             queue_in.append((self, other))
             return True
+        if isinstance(other, Variable) and len(self) > 0 and is_1d_tuple(self, Variable):  # member constraint, as for a list
+            queue_in.append((list(self), other))
+            return True
+        if isinstance(other, (Variable, Node)) and at_least_one_variable_and_possibly_integers(self):
+            return _set_contains(set(self), other)  # variables and integers, handled as a set
         return self.__contains__(other)
 
     # def _list_getitem(self, other):
@@ -181,6 +190,8 @@ def cursing():
             if is_1d_list(self, Variable):
                 queue_in.append((self, other))
                 return True
+        if isinstance(other, (Variable, Node)) and at_least_one_variable_and_possibly_integers(self):
+            return _set_contains(set(self), other)  # variables and integers, handled as a set
         error_if(is_containing(other, Variable),
                  "It seems that you should use a set and not a list, as in x in {...}." + " Your arguments are " + str(other) + " " + str(self))
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
