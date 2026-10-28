@@ -927,13 +927,14 @@ class OpOverrider:
         if isinstance(indexes, Variable):
             if indexes.dom.is_infinite():
                 indexes.dom = Domain(range(len(array)))
-            if isinstance(array, ListInt):
-                if is_1d_list(array, int):
-                    if all(array[0] == v for v in array):
-                        return array[0] #ConstraintDummyConstant(array[0])
-                elif is_2d_list(array, int):
-                    if all(array[0] == t for t in array):  # all rows are identical
-                        return array[0]
+            if isinstance(array, ListInt) and (is_1d_list(array, int) or is_2d_list(array, int)):
+                if all(array[0] == t for t in array):  # all integers (or all rows) are identical
+                    # with identical integers, c[i] is a constant; for example, with c = [2, 2, 2]:
+                    #  - c[i] == 2 calls ConstraintDummyConstant.__eq__(2) and gives ConstraintDummyConstant(1): always true, no constraint is posted
+                    #  - c[i] == 3 gives ConstraintDummyConstant(0): always false, the model is unsatisfiable
+                    #  - c[i] == v builds the node eq(v,2)
+                    #  - minimize(c[i]) gives the message of #221: "The objective is the constant 2"
+                    return ConstraintDummyConstant(array[0]) if isinstance(array[0], int) else array[0]
             return PartialConstraint(ConstraintElement(array, index=indexes))
         if isinstance(indexes, tuple):
             assert len(indexes) > 1
