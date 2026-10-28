@@ -1234,6 +1234,18 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
         assert self.val in (0, 1)
         return ConstraintDummyConstant(1 if self.val == 0 else 0)
 
+    def __neg__(self):
+        return ConstraintDummyConstant(-self.val)
+
+    def __pos__(self):
+        return self
+
+    def __abs__(self):
+        return ConstraintDummyConstant(abs(self.val))
+
+    def __index__(self):  # for using the constant as an index, as in x[c], or in range(c)
+        return self.val
+
     def __str__(self):
         return "Dummy: " + str(self.val)
 

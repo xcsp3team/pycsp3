@@ -21,3 +21,22 @@ DV = [range(-10, 11)]
 def test_constant_with_an_integer(run, solver, expression, value):
     r = run(CV + f"satisfy(v == {expression})", solver=solver)
     assert_solutions(r, brute_force(DV, lambda v: v == value))
+
+
+@pytest.mark.parametrize("expression, value", [
+    ("-c", -3), ("+c", 3), ("abs(Minimum(-3, 1))", 3), ("abs(-c)", 3), ("-c + 5", 2),
+])
+def test_constant_with_a_unary_operator(run, solver, expression, value):
+    r = run(CV + f"satisfy(v == {expression})", solver=solver)
+    assert_solutions(r, brute_force(DV, lambda v: v == value))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("x[c] == 1", lambda *t: t[3] == 1),
+    ("Sum(x[:c]) == 1", lambda *t: sum(t[:3]) == 1),
+    ("Sum(x) in range(c)", lambda *t: sum(t) < 3),
+    ("Sum(x) == [5, 6, 7, 2][c]", lambda *t: sum(t) == 2),
+])
+def test_constant_as_an_index(run, solver, constraint, predicate):
+    r = run(f"c = Maximum(3, 1)\nx = VarArray(size=4, dom=range(2))\nsatisfy({constraint})", solver=solver)
+    assert_solutions(r, brute_force([range(2)] * 4, predicate))
