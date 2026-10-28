@@ -78,3 +78,21 @@ def test_constant_in_global_constraints_with_comments(run):
     assert r.ok, r.report()
     assert r.xml.find(".//allDifferent").get("note") == "all different", r.report()
     assert r.xml.find(".//sum").get("note") == "sum", r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("v in [c, 4]", lambda *t: t[3] in (3, 4)),
+    ("v not in [c, 4]", lambda *t: t[3] not in (3, 4)),
+    ("v + 1 in [c, 4]", lambda *t: t[3] + 1 in (3, 4)),
+    ("v in L", lambda *t: t[3] in (3, 4)),
+    ("Sum(x) in [c, 4]", lambda *t: sum(t[:3]) in (3, 4)),
+    ("Sum(x) in L", lambda *t: sum(t[:3]) in (3, 4)),
+    ("c in x", lambda *t: 3 in t[:3]),
+    ("c not in x", lambda *t: 3 not in t[:3]),
+    ("(c in [1, 3]) | (v == 0)", lambda *t: True),
+    ("(c in cp_array([1, 2])) | (v == 0)", lambda *t: t[3] == 0),
+])
+def test_constant_in_memberships(run, solver, constraint, predicate):
+    # the constant is the value searched for, or among the values (t[:3] for x, t[3] for v)
+    r = run(f"c = Maximum(3, 1)\nx = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nL = [c, 4]\nsatisfy({constraint})", solver=solver)
+    assert_solutions(r, brute_force([range(4)] * 3 + [range(5)], predicate))

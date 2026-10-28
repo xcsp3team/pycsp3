@@ -118,6 +118,8 @@ def cursing():
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
+        if not isinstance(other, (tuple, list, types.GeneratorType)) and any(isinstance(t, ConstraintDummyConstant) for t in self):
+            self = tuple(t.val if isinstance(t, ConstraintDummyConstant) else t for t in self)  # constants among the values, as in v in (c, 4)
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -151,6 +153,8 @@ def cursing():
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
+        if not isinstance(other, (tuple, list, types.GeneratorType)) and any(isinstance(t, ConstraintDummyConstant) for t in self):
+            self = [t.val if isinstance(t, ConstraintDummyConstant) else t for t in self]  # constants among the values, as in v in [c, 4]
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -1012,7 +1016,7 @@ class ListInt(list):
         return ListInt.__mul__(other, self)
 
     def __contains__(self, other):
-        if isinstance(other, PartialConstraint):
+        if isinstance(other, (PartialConstraint, ConstraintDummyConstant)):  # a constant is evaluated when the constraint is posted
             queue_in.append((list(self), other))
             return True
         if len(self) == 0 and isinstance(other, Variable):
@@ -1085,6 +1089,8 @@ class ListVar(list):
     __rmul__ = __mul__
 
     def __contains__(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         if isinstance(other, (int, Variable)):  # member constraint
             queue_in.append((self, other))
             return True
