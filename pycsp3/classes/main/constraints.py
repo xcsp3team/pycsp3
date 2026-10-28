@@ -1203,31 +1203,47 @@ class ConstraintDummyConstant(ConstraintUnmergeable):
     __rxor__ = __xor__  # e ^ c
 
     def __add__(self, other):
+        if isinstance(other, int):
+            return ConstraintDummyConstant(self.val + other)
         return other if self.val == 0 else other + self.val
 
     __radd__ = __add__
 
     def __sub__(self, other):  # self - other
+        if isinstance(other, int):
+            return ConstraintDummyConstant(self.val - other)
         return -other if self.val == 0 else self.val - other
 
     def __rsub__(self, other):  # other - self
+        if isinstance(other, int):
+            return ConstraintDummyConstant(other - self.val)
         return other if self.val == 0 else other - self.val
 
     def __mul__(self, other):
+        if isinstance(other, int):
+            return ConstraintDummyConstant(self.val * other)
         return self if self.val == 0 else other if self.val == 1 else other * self.val
 
     __rmul__ = __mul__
 
     def __floordiv__(self, other):  # self // other
+        if isinstance(other, int):
+            return ConstraintDummyConstant(self.val // other)
         return self if self.val == 0 else self.val // other
 
     def __rfloordiv__(self, other):  # other // self
+        if isinstance(other, int):
+            return ConstraintDummyConstant(other // self.val)
         return other if self.val == 1 else other // self.val
 
     def __mod__(self, other):  # self % other
+        if isinstance(other, int):
+            return ConstraintDummyConstant(self.val % other)
         return self if self.val == 0 else self.val % other
 
     def __rmod__(self, other):  # other % self
+        if isinstance(other, int):
+            return ConstraintDummyConstant(other % self.val)
         return 0 if self.val == 1 else other % self.val
 
     def __invert__(self):
@@ -1423,6 +1439,8 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         lst = self.constraint.arguments[TypeCtrArg.LIST].content
         assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
+        if isinstance(i, ConstraintDummyConstant):
+            i = i.val
         if isinstance(i, Variable):
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
             self.constraint = ConstraintElementMatrix(lst, index, i)

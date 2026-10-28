@@ -46,6 +46,10 @@ def _replace_node_in(node, values):
     return auxiliary().replace_node(node)
 
 
+def at_least_one_variable_and_possibly_integers(t):  # as the values of v in [x[0], 2]
+    return len(t) > 0 and all(isinstance(w, (Variable, int)) for w in t) and any(isinstance(w, Variable) for w in t)
+
+
 def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
     if not OpOverrider.activated:
         return self.__contains__(other)
@@ -118,6 +122,8 @@ def cursing():
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
+        if not isinstance(other, (tuple, list, types.GeneratorType)) and any(isinstance(t, ConstraintDummyConstant) for t in self):
+            self = tuple(t.val if isinstance(t, ConstraintDummyConstant) else t for t in self)  # constants among the values, as in v in (c, 4)
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -136,6 +142,11 @@ def cursing():
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
             queue_in.append((self, other))
             return True
+        if isinstance(other, Variable) and len(self) > 0 and is_1d_tuple(self, Variable):  # member constraint, as for a list
+            queue_in.append((list(self), other))
+            return True
+        if isinstance(other, (Variable, Node)) and at_least_one_variable_and_possibly_integers(self):
+            return _set_contains(set(self), other)  # variables and integers, handled as a set
         return self.__contains__(other)
 
     # def _list_getitem(self, other):
@@ -151,6 +162,8 @@ def cursing():
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
+        if not isinstance(other, (tuple, list, types.GeneratorType)) and any(isinstance(t, ConstraintDummyConstant) for t in self):
+            self = [t.val if isinstance(t, ConstraintDummyConstant) else t for t in self]  # constants among the values, as in v in [c, 4]
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -177,6 +190,8 @@ def cursing():
             if is_1d_list(self, Variable):
                 queue_in.append((self, other))
                 return True
+        if isinstance(other, (Variable, Node)) and at_least_one_variable_and_possibly_integers(self):
+            return _set_contains(set(self), other)  # variables and integers, handled as a set
         error_if(is_containing(other, Variable),
                  "It seems that you should use a set and not a list, as in x in {...}." + " Your arguments are " + str(other) + " " + str(self))
         if isinstance(other, int) and (is_1d_list(self, Variable) or is_1d_tuple(self, Variable)) and len(self) > 0:  # member/element constraint
@@ -829,6 +844,10 @@ class OpOverrider:
 
         if isinstance(indexes, str) and functions.var(indexes) is not None:
             indexes = functions.var(indexes)
+        if isinstance(indexes, ConstraintDummyConstant):
+            indexes = indexes.val
+        elif isinstance(indexes, tuple) and any(isinstance(i, ConstraintDummyConstant) for i in indexes):
+            indexes = tuple(i.val if isinstance(i, ConstraintDummyConstant) else i for i in indexes)  # as in m[c, j]
         if isinstance(indexes, int):
             assert isinstance(array, list) and len(array) > 0
             if indexes >= len(array):
@@ -912,13 +931,14 @@ class OpOverrider:
         if isinstance(indexes, Variable):
             if indexes.dom.is_infinite():
                 indexes.dom = Domain(range(len(array)))
-            if isinstance(array, ListInt):
-                if is_1d_list(array, int):
-                    if all(array[0] == v for v in array):
-                        return array[0] #ConstraintDummyConstant(array[0])
-                elif is_2d_list(array, int):
-                    if all(array[0] == t for t in array):  # all rows are identical
-                        return array[0]
+            if isinstance(array, ListInt) and (is_1d_list(array, int) or is_2d_list(array, int)):
+                if all(array[0] == t for t in array):  # all integers (or all rows) are identical
+                    # with identical integers, c[i] is a constant; for example, with c = [2, 2, 2]:
+                    #  - c[i] == 2 calls ConstraintDummyConstant.__eq__(2) and gives ConstraintDummyConstant(1): always true, no constraint is posted
+                    #  - c[i] == 3 gives ConstraintDummyConstant(0): always false, the model is unsatisfiable
+                    #  - c[i] == v builds the node eq(v,2)
+                    #  - minimize(c[i]) gives the message of #221: "The objective is the constant 2"
+                    return ConstraintDummyConstant(array[0]) if isinstance(array[0], int) else array[0]
             return PartialConstraint(ConstraintElement(array, index=indexes))
         if isinstance(indexes, tuple):
             assert len(indexes) > 1
@@ -1012,7 +1032,7 @@ class ListInt(list):
         return ListInt.__mul__(other, self)
 
     def __contains__(self, other):
-        if isinstance(other, PartialConstraint):
+        if isinstance(other, (PartialConstraint, ConstraintDummyConstant)):  # a constant is evaluated when the constraint is posted
             queue_in.append((list(self), other))
             return True
         if len(self) == 0 and isinstance(other, Variable):
@@ -1085,6 +1105,8 @@ class ListVar(list):
     __rmul__ = __mul__
 
     def __contains__(self, other):
+        if isinstance(other, ConstraintDummyConstant):
+            other = other.val
         if isinstance(other, (int, Variable)):  # member constraint
             queue_in.append((self, other))
             return True
