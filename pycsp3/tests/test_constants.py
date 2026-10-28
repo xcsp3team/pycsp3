@@ -93,6 +93,7 @@ def test_constant_in_global_constraints_with_comments(run):
     ("(c in cp_array([1, 2])) | (v == 0)", lambda *t: t[3] == 0),
 ])
 def test_constant_in_memberships(run, solver, constraint, predicate):
-    # the constant is the value searched for, or among the values (t[:3] for x, t[3] for v)
-    r = run(f"c = Maximum(3, 1)\nx = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nL = [c, 4]\nsatisfy({constraint})", solver=solver)
-    assert_solutions(r, brute_force([range(4)] * 3 + [range(5)], predicate))
+    # the constant is the value searched for, or among the values (t[:3] for x, t[3] for v); v != 4 is posted too, so that the model has a
+    # constraint (and is solved) when the membership is always true
+    r = run(f"c = Maximum(3, 1)\nx = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nL = [c, 4]\nsatisfy(v != 4, {constraint})", solver=solver)
+    assert_solutions(r, brute_force([range(4)] * 3 + [range(5)], lambda *t: t[3] != 4 and predicate(*t)))
