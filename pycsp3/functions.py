@@ -16,8 +16,8 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
     ConstraintDisjoint, ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
-    ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
-    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
+    ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintElementMatrix, ConstraintChannel, ConstraintNoOverlap,
+    ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
     ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic, check_no_boolean
@@ -441,8 +441,14 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             # no value is allowed: a table constraint with an empty set of supports is posted (the model is unsatisfiable)
             warning("A table constraint with an empty set of supports is posted for " + str(left_operand) + ": the model is unsatisfiable", "empty_supports")
             return ECtr(ConstraintExtension([left_operand], [], True, options.keep_hybrid, options.restrict_tables_wrt_domains))
-        if isinstance(right_operand, (tuple, list, set, frozenset)) and is_containing(right_operand, Variable):
-            if len(right_operand) < 4:  # TODO hard coding (introducing an option to adjust that?)
+        if isinstance(right_operand, (tuple, list)):  # the variables of a multi-dimensional list (#287), without holes
+            right_operand = flatten(right_operand)
+        if isinstance(right_operand, (tuple, list, set, frozenset)) and any(isinstance(v, Variable) for v in right_operand):
+            if options.mini:  # in the mini-tracks, the element <index> is required, and the only forms of intension are primitive (#289)
+                error_if(bool_value, "With -mini, " + str(left_operand) + " in " + str(right_operand) + " cannot be posted: the constraint Element "
+                         "without index (member) is not accepted in the mini-tracks, where the element <index> is required")
+                return [_Intension(Node.build(NE, left_operand, y)) for y in right_operand]
+            if len(right_operand) < 4 or not is_containing(right_operand, Variable):  # with integers among the variables, an intension (#286)
                 st = Node.build(SET, right_operand)
                 return _Intension(Node.build(IN, left_operand, st) if bool_value else Node.build(NOTIN, left_operand, st))
             if bool_value:
@@ -472,15 +478,17 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
             ctr = _sum_for_mini(left_operand, Condition.build_condition((operator, right_operand)))
             return ctr if not isinstance(ctr, ConstraintDummyConstant) else _false_constraint() if ctr.val == 0 else None
         ctr = PartialConstraint.complete(left_operand.constraint.set_condition(operator, right_operand))  # a constant if the result is known
+        if isinstance(ctr, Node):  # an element on integers, which is a unary constraint on its index (#294)
+            ctr = _Intension(ctr)
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)")
         ctr = Regular(scope=left_operand, automaton=right_operand)
     elif isinstance(right_operand, MDD):  # it is an MDD constraint
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an MDD: only 'x in M' is possible (constraint MDD)")
         ctr = Mdd(scope=left_operand, mdd=right_operand)
-    elif isinstance(left_operand, int) and (is_1d_list(right_operand, Variable) or is_1d_tuple(right_operand, Variable)):
-        # at least one variable takes the value with 'in' (atLeast1), and none with 'not in' TODO to be replaced by a member/element constraint ?
-        ctr = Count(right_operand, value=left_operand, condition=(TypeConditionOperator.GE, 1) if bool_value else (TypeConditionOperator.EQ, 0))
+    elif isinstance(left_operand, int) and isinstance(right_operand, (tuple, list)) and is_1d_list(flatten(right_operand), Variable):
+        # at least one variable takes the value with 'in' (atLeast1), and none with 'not in', the list being possibly multi-dimensional (#287)
+        ctr = Count(flatten(right_operand), value=left_operand, condition=(TypeConditionOperator.GE, 1) if bool_value else (TypeConditionOperator.EQ, 0))
         if isinstance(ctr, Node):  # a single variable
             ctr = _Intension(ctr)
     # elif isinstance(left_operand, Node):
@@ -969,10 +977,9 @@ def _01_to_node(arg):
     if isinstance(arg, Variable):
         assert arg.dom.is_binary()
         return Node.build(TypeNode.EQ, arg, 1)  # transformed into a basic logical equation
-    if isinstance(arg, PartialConstraint):
-        if not isinstance(arg.constraint, ConstraintElement):  # TODO to be extended (other cases should be possible)
+    if isinstance(arg, PartialConstraint):  # the element of a list of 0/1 terms (variables or integers) is a Boolean (#291)
+        if not isinstance(arg.constraint, ConstraintElement) or not arg.constraint.on_01_terms():
             error("The component " + str(arg) + " is not a constraint: it must be subject to a condition, as in Sum(x) > 10")
-        assert all(isinstance(t, Variable) and t.dom.is_binary() for t in arg.constraint.arguments[TypeCtrArg.LIST].content)  # TODO to be extended
         return arg == 1
     return arg
 
@@ -1021,6 +1028,17 @@ def _group(*_args, block=False):
     entities = _wrap_intension_constraints(entities)
     checkType(entities, [ECtr, ECtrs, EMetaCtr])
     return EBlock(_block_reorder(entities)) if block else EToGather(entities)
+
+
+def _claim_guards(arg):
+    # the conditions on the indexes of the elements of arg (a constraint or a list) that can be outside their lists (-force_element_index), for which
+    # the elements are defined: they are posted with the elements at the top level, restricting the indexes to the lists (#284)
+    if isinstance(arg, ECtr) and len(getattr(arg.constraint, "guards", [])) > 0:
+        guards, arg.constraint.guards = arg.constraint.guards, []
+        return guards
+    if isinstance(arg, (list, tuple)):
+        return [g for a in arg for g in _claim_guards(a)]
+    return []
 
 
 def satisfy_from_auxiliary(t):
@@ -1159,6 +1177,9 @@ def satisfy(*args, no_comment_tags_extraction=False):
             # if len(to_post_aux) > 0:
             #     to_post = EBlock(flatten(to_post, to_post_aux))
             t.append(to_post.note(comments1[i]).tag(tags1[i]))
+        guards = _claim_guards(arg if isinstance(arg, (ECtr, list)) else to_post)
+        if len(guards) > 0:
+            t.append(_group(guards))
             # if isinstance(to_post, ESlide) and len(to_post.entities) == 1:
             #     to_post.entities[0].note(comments1[i]).tag(tags1[i])
     # return EToSatisfy(t)
@@ -1594,8 +1615,9 @@ def _check_belong_arguments(function, x, values):  # function is the name of the
             error("The first argument of " + function + "() must be a variable or an integer, which is not the case of " + str(x)
                   + " (for an expression, the operator " + ("in" if function == "belong" else "not in") + " can be used)")
         if not isinstance(values, (int, range, tuple, list, set, frozenset)) or (
-                isinstance(values, (tuple, list, set, frozenset)) and any(not isinstance(v, int) for v in values)):
-            error("The second argument of " + function + "() must be an integer, a range or a collection of integers, which is not the case of " + str(values))
+                isinstance(values, (tuple, list, set, frozenset)) and any(not isinstance(v, (int, Variable)) for v in flatten(values))):
+            error("The second argument of " + function + "() must be an integer, a range or a collection of integers, which is not the case of " + str(values)
+                  + " (a collection of variables being also accepted)")
 
 
 def belong(x, values):
@@ -1603,7 +1625,8 @@ def belong(x, values):
     Builds and returns a Boolean expression that holds iff the specified term belongs to the specified values.
 
     When the first argument is an integer and the second one a list of variables, the expression holds iff
-    at least one of these variables is assigned this integer.
+    at least one of these variables is assigned this integer. When the first argument is a variable and the second
+    one a list of variables (possibly with integers), the expression holds iff the variable is equal to one of them.
 
     :param x: a variable, or an integer
     :param values: a set of integers (possibly given by a range), or a list of variables
@@ -1625,6 +1648,8 @@ def belong(x, values):
     _check_belong_arguments("belong", x, values)
     if isinstance(x, int):
         return disjunction(y == x for y in values if y is not None)  # None (e.g., a hole of an array) is discarded
+    if isinstance(values, (tuple, list, set, frozenset)) and any(isinstance(v, Variable) for v in flatten(values)):  # member (#288)
+        return Node.build(IN, x, Node.build(SET, flatten(values)))
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
@@ -1649,7 +1674,8 @@ def not_belong(x, values):
     Builds and returns a Boolean expression that holds iff the specified term does not belong to the specified values.
 
     When the first argument is an integer and the second one a list of variables, the expression holds iff
-    none of these variables is assigned this integer.
+    none of these variables is assigned this integer. When the first argument is a variable and the second
+    one a list of variables (possibly with integers), the expression holds iff the variable is different from all of them.
 
     :param x: a variable, or an integer
     :param values: a set of integers (possibly given by a range), or a list of variables
@@ -1671,6 +1697,8 @@ def not_belong(x, values):
     _check_belong_arguments("not_belong", x, values)
     if isinstance(x, int):
         return conjunction(y != x for y in values if y is not None)  # None (e.g., a hole of an array) is discarded
+    if isinstance(values, (tuple, list, set, frozenset)) and any(isinstance(v, Variable) for v in flatten(values)):  # member (#288)
+        return Node.build(NOTIN, x, Node.build(SET, flatten(values)))
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
@@ -2889,7 +2917,7 @@ def _count(name, terms, value, values, condition):
     condition = Condition.build_condition(condition)
     if len(terms) == 0:  # the count of no term is 0
         return _constant_with_condition(0, condition)
-    terms = manage_global_indirection(terms, also_pc=True)
+    terms = manage_global_indirection(terms, also_pc=True, logical=False)
     assert terms is not None
     if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
         s = frozenset(values) if isinstance(values[0], int) else None
@@ -4275,7 +4303,7 @@ def _optimize(term, minimization):
     if isinstance(term, PartialConstraint):
         if isinstance(term.constraint, (ConstraintMaximumArg, ConstraintMinimumArg)):  # there is no type maximumArg (or minimumArg) of objectives
             error(("MaximumArg()" if isinstance(term.constraint, ConstraintMaximumArg) else "MinimumArg()") + " cannot be an objective")
-        if isinstance(term.constraint, (ConstraintElement, ConstraintCount)) \
+        if isinstance(term.constraint, (ConstraintElement, ConstraintElementMatrix, ConstraintCount)) \
                 or isinstance(term.constraint, ConstraintNValues) and term.constraint.arguments[TypeCtrArg.EXCEPT].content is not None:
             term = auxiliary().replace_partial_constraint(term)  # (an objective of type nValues has no element <except>)
         elif isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):

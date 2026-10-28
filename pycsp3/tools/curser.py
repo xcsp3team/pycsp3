@@ -10,7 +10,7 @@ from pycsp3 import functions
 from pycsp3.classes.entities import ECtr, EMetaCtr
 from pycsp3.classes.main.constraints import (
     ScalarProduct, PartialConstraint, ConstraintAllDifferentList, ConstraintSum, ConstraintElement, ConstraintElementMatrix, ConstraintInstantiation,
-    ConstraintRefutation, ConstraintDummyConstant, auxiliary, global_indirection, manage_global_indirection)
+    ConstraintRefutation, ConstraintDummyConstant, auxiliary, global_indirection, manage_global_indirection, element_on_matrix)
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger
 from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.dashboard import options
@@ -46,9 +46,24 @@ def _replace_node_in(node, values):
     return auxiliary().replace_node(node)
 
 
+def check_index_expression(node, n):
+    # an expression given as index of a list of n elements must take only indexes of this list, unless -force_element_index (#282)
+    values = node.possible_values()
+    if not options.force_element_index and (min(values) < 0 or max(values) >= n):
+        error("Problem with an index ; maybe -force_element_index is appropriate!")
+
+
+def _replace_components_in(t):
+    # the components (as x[i] or Sum(x)) of a tuple on the left of 'in' with a table are replaced by auxiliary variables, as the expressions (#285)
+    if isinstance(t, (tuple, list)) and any(isinstance(v, PartialConstraint) for v in t):
+        return type(t)(auxiliary().replace_partial_constraint(v) if isinstance(v, PartialConstraint) else v for v in t)
+    return t
+
+
 def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
     if not OpOverrider.activated:
         return self.__contains__(other)
+    other = _replace_components_in(other)
     if isinstance(other, (int, str)) and (len(self) == 0 or not isinstance(next(iter(self)), Variable)):
         return self.__contains__(other)  # a value and a set of values (not of variables): an ordinary membership
     if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
@@ -115,6 +130,7 @@ def cursing():
         # because sometimes Python changes lists into tuples in comprehension expressions
         if not OpOverrider.activated:
             return self.__contains__(other)
+        other = _replace_components_in(other)
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
@@ -128,6 +144,9 @@ def cursing():
             queue_in.append((list(self), other))  # the values of the condition of the component (any value other than an integer reported when posting)
             return True
         # note that Python changes into a tuple a list given literally on the right of 'in', as in x in [[0, 1], [1, 0]] or x in ['a', 'b']
+        if isinstance(other, Variable) and any(isinstance(v, Variable) for v in self):  # member, as in v in [x[0], x[1]] (#286)
+            queue_in.append((list(self), other))
+            return True
         if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, list, int, str)):
             queue_in.append((list(self), other))
             return True
@@ -148,6 +167,7 @@ def cursing():
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        other = _replace_components_in(other)
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
@@ -608,7 +628,7 @@ class OpOverrider:
             other = other.val
         if isinstance(self, Node) and self.type.is_predicate_operator() and isinstance(other,int) and other == 1:
             return self
-        res = manage_global_indirection(self, other)
+        res = manage_global_indirection(self, other, logical=False)
         if res is None:
             return functions.Iff(self, other, meta=True)
         self, other = res
@@ -638,7 +658,7 @@ class OpOverrider:
             other = other.val
         if isinstance(self, Node) and self.type.is_predicate_operator() and isinstance(other,int) and other == 0:
             return self
-        res = manage_global_indirection(self, other)
+        res = manage_global_indirection(self, other, logical=False)
         if res is None:
             return functions.Xor(self, other, meta=True)  # TODO: is it always appropriate?
         self, other = res
@@ -901,37 +921,28 @@ class OpOverrider:
                 if res is not None and res[1] == 1:  # in case we had x*1 or 1*x, we replace by x
                     indexes = res[0]
                 else:
-                    values = indexes.possible_values()
                     n = len(array)  # note that we force the domain of the aux variable with the parameter values
-                    if not options.force_element_index:
-                        if isinstance(values, range):
-                            error_if(not( 0 <= values.start and values.stop <= n), "Problem with an index ; maybe -force_element_index is appropriate!")
-                        else:
-                            assert is_1d_list(values, int) and len(values) > 0 and 0 <= values[0] and values[-1] < n
-                    indexes = auxiliary().replace_node(indexes, values=range(n))
+                    check_index_expression(indexes, n)
+                    indexes = auxiliary().replace_node(indexes, values=None if options.force_element_index else range(n))  # (outside the list, #284)
         if isinstance(indexes, Variable):
             if indexes.dom.is_infinite():
                 indexes.dom = Domain(range(len(array)))
-            if isinstance(array, ListInt):
-                if is_1d_list(array, int):
-                    if all(array[0] == v for v in array):
-                        return array[0] #ConstraintDummyConstant(array[0])
-                elif is_2d_list(array, int):
-                    if all(array[0] == t for t in array):  # all rows are identical
-                        return array[0]
             return PartialConstraint(ConstraintElement(array, index=indexes))
         if isinstance(indexes, tuple):
             assert len(indexes) > 1
             if any(isinstance(i, (Variable, Node, PartialConstraint, ECtr)) for i in indexes):  # this must be a constraint Element or Element-Matrix
                 assert is_matrix(array) and len(indexes) == 2, "A matrix is expected, with two indexes" + str(array) + " " + str(indexes)
                 n, m = len(array), max(len(row) for row in array)
-                index0 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[0], node_too=True, values=range(n))
-                index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True, values=range(m))
+                for idx, size in zip(indexes, (n, m)):
+                    if isinstance(idx, Node):
+                        check_index_expression(idx, size)
+                force = options.force_element_index  # the indexes are then possibly outside the matrix (#284)
+                index0 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[0], node_too=True,
+                                                                                                               values=None if force else range(n))
+                index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True,
+                                                                                                               values=None if force else range(m))
                 if all(isinstance(i, Variable) for i in (index0, index1)):
-                    if is_2d_list(array, int):
-                        if all(array[0] == t for t in array):  # because all rows are identical, we keep only one dimension
-                            return array[0][index1]
-                    return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
+                    return PartialConstraint(element_on_matrix(array, index0, index1))
                 if isinstance(index0, Variable) and isinstance(index1, int):
                     return PartialConstraint(ConstraintElement(array[:, index1], index=index0))
                 if isinstance(index0, int) and isinstance(index1, Variable):
@@ -944,6 +955,8 @@ class OpOverrider:
                 return ListInt(result) if is_1d_list(result, int) else ListVar(result)
             except TypeError:
                 return result
+        if isinstance(indexes, float):  # (#292)
+            error("The index of a list must be an integer, a variable or an expression, which is not the case of " + str(indexes))
         result = list.__getitem__(array, indexes)
         try:
             return ListVar(result) if lv else ListInt(result)
@@ -1015,6 +1028,7 @@ class ListInt(list):
         if isinstance(other, PartialConstraint):
             queue_in.append((list(self), other))
             return True
+        other = _replace_components_in(other)
         if len(self) == 0 and isinstance(other, Variable):
             queue_in.append((list(self), other))
             return False
@@ -1085,7 +1099,9 @@ class ListVar(list):
     __rmul__ = __mul__
 
     def __contains__(self, other):
-        if isinstance(other, (int, Variable)):  # member constraint
+        if isinstance(other, Node):  # an expression is replaced by an auxiliary variable (#287)
+            other = _replace_node_in(other, self)
+        if isinstance(other, (int, Variable, PartialConstraint)):  # member constraint (the variables being refused as values of a component, #249)
             queue_in.append((self, other))
             return True
         return list.__contains__(self, other)
