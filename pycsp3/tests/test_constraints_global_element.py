@@ -1,8 +1,9 @@
 """
 Tests of the constraint Element of the section Constraints (Global) of the API (https://pycsp.org/documentation/api/constraints-global/#Element):
 expressions of the form c[i] (a list of integers indexed by a variable) and m[j][k] (a matrix of integers indexed by two variables), when all the
-integers are identical, with conditions, in logical expressions, as terms of other constraints and in objectives; and the constraint Element
-without index (member), written v in [...] with a list of variables (and possibly integers).
+integers are identical, with conditions, in logical expressions, as terms of other constraints and in objectives; the constraint Element
+without index (member), written v in [...] with a list of variables (and possibly integers); and an index (variable or expression) that can take
+a value outside the indexes of the list, which is an error, unless -force_element_index is given (the index is then restricted to the list).
 
 Each constraint is solved with ACE, CHOCO and COSOCO, all the solutions being compared with the ones computed by brute force.
 According to XCSP3-core, element(X, i, (op, k)) holds iff X[i] op k, the first index being 0; when all the integers of X are equal to the same
@@ -11,7 +12,12 @@ integer c, and i can only take indexes of X, element(X, i, (op, k)) holds iff c 
 
 import pytest
 
-from harness import assert_optimum, assert_solutions, brute_force, bug_for
+from harness import assert_optimum, assert_solutions, brute_force, bug, bug_for
+
+# Known bugs of PyCSP3
+OUTSIDE = ("#282: an index that can take a value outside the list is neither an error nor restricted with -force_element_index for a list of "
+           "identical integers and a matrix of identical rows, and is restricted without error for an expression as index of a matrix "
+           "(m[j][k + 1], m[j, k + 1], m[j + 1, k])")
 
 # Known bugs of the solvers
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
@@ -22,8 +28,8 @@ C3 = "c = cp_array([2, 2, 2])\ni = Var(dom=range(3))\nv = Var(dom=range(5))\n"
 DC = [range(3), range(5)]
 
 
-def check(run, solver, code, domains, predicate):
-    r = run(code, solver=solver)
+def check(run, solver, code, domains, predicate, args=()):
+    r = run(code, solver=solver, args=args)
     assert_solutions(r, brute_force(domains, predicate))
     return r
 
@@ -125,3 +131,57 @@ def test_element_member_of_a_list_written_literally(run, solver, constraint, pre
     # Python changes into a tuple a list given literally on the right of 'in' (t[:3] for x, t[3] for v)
     check(run, solver, f"x = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nL = [x[0], 2]\nsatisfy({constraint})", [range(4)] * 3 + [range(5)],
           predicate)
+
+
+# the lists and the matrices, with an index (variable or expression) that can take a value outside the indexes
+X3 = "x = VarArray(size=3, dom=range(3))\n"
+M23 = "m = VarArray(size=[2, 3], dom=range(2))\n"
+M22 = "m = VarArray(size=[2, 2], dom=range(2))\n"
+T23 = "t = cp_array([[1, 2, 0], [1, 2, 0]])\nj = Var(dom=range(3))\nk = Var(dom=range(3))\nv = Var(dom=range(3))\n"
+
+
+@pytest.mark.parametrize("code", [
+    X3 + "i = Var(dom=range(4))\nsatisfy(x[i] == 2)",
+    X3 + "i = Var(dom={-1, 2})\nsatisfy(x[i] == 2)",
+    X3 + "j = Var(dom=range(3))\nsatisfy(x[j + 1] == 2)",
+    X3 + "j = Var(dom=range(3))\nsatisfy(x[j - 1] == 2)",
+    X3 + "j = Var(dom=range(3))\nsatisfy(x[abs(j - 3)] == 2)",
+    "x = VarArray(size=3, dom=range(4))\nsatisfy(x[x[0]] == 2)",
+    "t = cp_array([3, 0, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(t[i] == v)",
+    pytest.param("c = cp_array([2, 2, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(c[i] == v)", marks=bug(OUTSIDE)),
+    M23 + "j = Var(dom=range(3))\nk = Var(dom=range(3))\nsatisfy(m[j][k] == 1)",
+    M23 + "j = Var(dom=range(2))\nk = Var(dom=range(4))\nsatisfy(m[j][k] == 1)",
+    M23 + "j = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j + 1][k] == 1)",
+    pytest.param(M23 + "j = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j + 1, k] == 1)", marks=bug(OUTSIDE)),
+    pytest.param(M23 + "j = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j][k + 1] == 1)", marks=bug(OUTSIDE)),
+    pytest.param(M23 + "j = Var(dom=range(2))\nk = Var(dom=range(3))\nsatisfy(m[j, k + 1] == 1)", marks=bug(OUTSIDE)),
+    pytest.param(T23 + "satisfy(t[j][k] == v)", marks=bug(OUTSIDE)),
+    pytest.param(T23 + "satisfy(t[j, k] == v)", marks=bug(OUTSIDE)),
+])
+def test_element_with_an_index_outside_the_list(run, code):
+    # an index that can take a value outside the indexes of the list is an error, unless -force_element_index is given
+    r = run(code)
+    assert not r.ok and "-force_element_index" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("code, domains, predicate", [
+    (X3 + "i = Var(dom=range(5))\nsatisfy(x[i] == 2)", [range(3)] * 3 + [range(5)], lambda *t: t[3] < 3 and t[t[3]] == 2),
+    (X3 + "i = Var(dom={-1, 2})\nsatisfy(x[i] == 2)", [range(3)] * 3 + [[-1, 2]], lambda *t: t[3] == 2 and t[2] == 2),
+    (X3 + "j = Var(dom=range(3))\nsatisfy(x[j + 1] == 2)", [range(3)] * 4, lambda *t: t[3] < 2 and t[t[3] + 1] == 2),
+    (X3 + "j = Var(dom=range(3))\nsatisfy(x[j - 1] == 2)", [range(3)] * 4, lambda *t: t[3] > 0 and t[t[3] - 1] == 2),
+    ("t = cp_array([3, 0, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(t[i] == v)", [range(4)] * 2, lambda i, v: i < 3 and (3, 0, 2)[i] == v),
+    pytest.param("c = cp_array([2, 2, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(4))\nsatisfy(c[i] == v)", [range(4)] * 2, lambda i, v: i < 3 and v == 2,
+                 marks=bug(OUTSIDE)),
+    (M22 + "j = Var(dom=range(3))\nk = Var(dom=range(2))\nsatisfy(m[j][k] == 1)", [range(2)] * 4 + [range(3), range(2)],
+     lambda *t: t[4] < 2 and t[2 * t[4] + t[5]] == 1),
+    (M22 + "j = Var(dom=range(2))\nk = Var(dom=range(2))\nsatisfy(m[j + 1][k] == 1)", [range(2)] * 6, lambda *t: t[4] < 1 and t[2 * (t[4] + 1) + t[5]] == 1),
+    (M22 + "j = Var(dom=range(2))\nk = Var(dom=range(2))\nsatisfy(m[j][k + 1] == 1)", [range(2)] * 6, lambda *t: t[5] < 1 and t[2 * t[4] + t[5] + 1] == 1),
+    (M22 + "j = Var(dom=range(2))\nk = Var(dom=range(2))\nsatisfy(m[j, k + 1] == 1)", [range(2)] * 6, lambda *t: t[5] < 1 and t[2 * t[4] + t[5] + 1] == 1),
+    pytest.param("t = cp_array([[1, 2], [1, 2]])\nj = Var(dom=range(3))\nk = Var(dom=range(2))\nv = Var(dom=range(3))\nsatisfy(t[j][k] == v)",
+     [range(3), range(2), range(3)], lambda j, k, v: j < 2 and (1, 2)[k] == v, marks=bug(OUTSIDE)),
+    pytest.param("t = cp_array([[1, 2], [1, 2]])\nj = Var(dom=range(3))\nk = Var(dom=range(2))\nv = Var(dom=range(3))\nsatisfy(t[j, k] == v)",
+     [range(3), range(2), range(3)], lambda j, k, v: j < 2 and (1, 2)[k] == v, marks=bug(OUTSIDE)),
+])
+def test_element_with_an_index_outside_the_list_and_the_option(run, solver, code, domains, predicate):
+    # with -force_element_index, the index cannot take a value outside the indexes of the list
+    check(run, solver, code, domains, predicate, args=("-force_element_index",))
