@@ -339,3 +339,17 @@ def test_element_on_a_matrix_with_an_index_outside_the_matrix_in_logical_express
     if constraint.startswith(("(m[", "~(m[")):
         bug_for(request, "CHOCO", CHOCO_MATRIX)
     check(run, solver, LOGICAL_M + f"satisfy({constraint})", DLM, predicate, args=args)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("b == conjunction(x[i] == 2, i != 1)", lambda i, b, *x: b == (i < 3 and x[i] == 2 and i != 1)),
+    ("b == ((x[i] == 2) & (i != 1))", lambda i, b, *x: b == (i < 3 and x[i] == 2 and i != 1)),
+    ("b == disjunction(x[i] == 2, i == 1)", lambda i, b, *x: b == ((i < 3 and x[i] == 2) or i == 1)),
+    ("b != conjunction(x[i] == 2, i != 1)", lambda i, b, *x: b != (i < 3 and x[i] == 2 and i != 1)),
+])
+@pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
+def test_element_with_an_index_outside_the_list_in_reified_expressions(run, solver, constraint, predicate, args):
+    # a 0/1 variable compared with a Boolean expression is a logical expression: an element whose index is outside the list does not hold
+    # (t[0] for i, t[1] for b, t[2:] for x)
+    code = "i = Var(dom=range(4))\nb = Var(dom={0, 1})\nx = VarArray(size=3, dom=range(3))\n"
+    check(run, solver, code + f"satisfy({constraint})", [range(4), range(2)] + [range(3)] * 3, predicate, args=args)

@@ -1890,7 +1890,8 @@ class _Auxiliary:
         if isinstance(arg, Node):
             t = arg.type
             logical = t in (TypeNode.OR, TypeNode.NOT, TypeNode.XOR, TypeNode.IFF, TypeNode.IMP, TypeNode.IF) or (t == TypeNode.AND and not positive) or (
-                    t in (TypeNode.EQ, TypeNode.NE) and all(s.type.is_predicate_operator() for s in arg.cnt))  # as (x[i] == 2) == (v == 1)
+                    t.is_relational_operator() and any(s.type.is_predicate_operator() for s in arg.cnt) and all(_boolean(s) for s in arg.cnt))
+            # the last case is a comparison of Boolean expressions, as (x[i] == 2) == (v == 1) or b == conjunction(...) for a 0/1 variable b
             if logical or t == TypeNode.AND:
                 sons = [self.handle_guards(s, positive and not logical) for s in arg.cnt]
                 return arg if all(s1 is s2 for s1, s2 in zip(sons, arg.cnt)) else Node(t, sons)
@@ -1933,6 +1934,11 @@ class _Auxiliary:
         t = self._collected_extension_constraints
         self._collected_extension_constraints = []
         return t
+
+
+def _boolean(node):  # a Boolean expression, a 0/1 variable or the integer 0 or 1
+    return node.type.is_predicate_operator() or (node.type == TypeNode.VAR and node.cnt.dom.is_binary()) or (
+            node.type == TypeNode.INT and node.cnt in (0, 1))
 
 
 class _Guarded:  # an object only depending on guards
