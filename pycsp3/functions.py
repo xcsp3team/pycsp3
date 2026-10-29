@@ -1109,6 +1109,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
                     if isinstance(l, list) and len(l) > 0 and isinstance(l[0], tuple):
                         arg[j] = _reorder(l)
         arg = _01_to_node(arg)
+        arg = auxiliary().handle_guards(arg)  # the elements whose index can be outside the list (#282)
         assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list)), "non authorized type " + str(arg) + " " + str(type(arg))
         comment_at_2 = any(comment != '' for comment in comments2[i])
         tag_at_2 = any(tag != '' for tag in tags2[i])
@@ -1122,7 +1123,7 @@ def satisfy(*args, no_comment_tags_extraction=False):
         elif isinstance(arg, bool):  # a Boolean representing the case of a partial constraint or a node with operator in {IN, NOT IN}
             assert queue_in, "An argument of satisfy() before position " + str(i) + " is badly formed"
             other, partial = queue_in.popleft()
-            to_post = _bool_interpretation_for_in(partial, other, arg)
+            to_post = auxiliary().handle_guards(_bool_interpretation_for_in(partial, other, arg))  # (#282)
             if isinstance(to_post, list):
                 to_post = _group(to_post)
             elif isinstance(to_post, ConstraintDummyConstant):  # a constant (as the count of no term in a set)
@@ -4340,6 +4341,7 @@ def _optimize(term, minimization):
         return satisfy(term != k)
 
     ObjEntities.items = []  # TODO currently, we overwrite the objective if one was posted
+    auxiliary().post_guards_of(term)  # an objective whose elements can have an index outside the list restricts this index (#282)
     if isinstance(term, PartialConstraint):
         if isinstance(term.constraint, (ConstraintMaximumArg, ConstraintMinimumArg)):  # there is no type maximumArg (or minimumArg) of objectives
             error(("MaximumArg()" if isinstance(term.constraint, ConstraintMaximumArg) else "MinimumArg()") + " cannot be an objective")

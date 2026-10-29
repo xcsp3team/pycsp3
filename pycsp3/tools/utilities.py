@@ -542,7 +542,7 @@ _warning_already_printed = {"array_indexing_warning": False, "simplifying_disjun
                             "nooverlap_0_task": False, "nooverlap_1_task": False, "cumulative_0_task": False, "cumulative_1_task": False,
                             "precedence_0_value": False, "precedence_1_value": False, "hybrid_table_cycle": False,
                             "alldifferentlist_1_list": False, "allequallist_1_list": False, "allequal_1_term": False,
-                            "empty_supports": False}
+                            "empty_supports": False, "element_index_outside": False}
 
 
 def warning(message, type_message=None):
