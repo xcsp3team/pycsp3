@@ -38,11 +38,11 @@ def check(run, solver, code, domains, predicate, args=()):
 ALWAYS_FALSE = ("c[i] == 3", "c[i] != 2", "c[i] not in {1, 2}", "~(c[i] == 2)", "m[j, k] == 3")
 
 
-def check_with_v(run, solver, request, code, constraint, domains, predicate, iv):
+def check_with_v(run, solver, request, code, constraint, domains, predicate, iv, args=()):
     # v != 4 is posted too, so that the model has a constraint (and is solved) when the constraint is always true (t[iv] for v)
     if constraint in ALWAYS_FALSE:
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
-    check(run, solver, code + f"satisfy(v != 4, {constraint})", domains, lambda *t: t[iv] != 4 and predicate(*t))
+    check(run, solver, code + f"satisfy(v != 4, {constraint})", domains, lambda *t: t[iv] != 4 and predicate(*t), args)
 
 
 @pytest.mark.parametrize("constraint, predicate", [
@@ -185,3 +185,63 @@ def test_element_with_an_index_outside_the_list(run, code):
 def test_element_with_an_index_outside_the_list_and_the_option(run, solver, code, domains, predicate):
     # with -force_element_index, the index cannot take a value outside the indexes of the list
     check(run, solver, code, domains, predicate, args=("-force_element_index",))
+
+
+# a list of identical integers c and an index i that can take the value 3, outside the list (in the predicates: t[0] for i, t[1] for v, t[2:] for x)
+C3_OUTSIDE = "c = cp_array([2, 2, 2])\ni = Var(dom=range(4))\nv = Var(dom=range(5))\nx = VarArray(size=3, dom=range(3))\n"
+DC_OUTSIDE = [range(4), range(5)] + [range(3)] * 3
+# a matrix of identical integers m and a matrix of identical rows t, with an index j of rows that can take the value 2, outside the matrix
+M_OUTSIDE = "m = cp_array([[2, 2, 2], [2, 2, 2]])\nt = cp_array([[1, 2, 3], [1, 2, 3]])\nj = Var(dom=range(3))\nk = Var(dom=range(3))\nv = Var(dom=range(5))\n"
+DM_OUTSIDE = [range(3), range(3), range(5)]
+
+
+@pytest.mark.parametrize("code", [
+    pytest.param(C3_OUTSIDE + f"satisfy({constraint})", id=constraint, marks=bug(OUTSIDE)) for constraint in [
+        "c[i] == 2", "c[i] == 3", "c[i] != 2", "c[i] < 3", "c[i] in {1, 2}", "c[i] not in {1, 2}", "c[i] + v == 5",
+        "(c[i] == v) | (v == 0)", "(c[i] == 2) | (v == 1)", "(c[i] == 3) | (v == 1)", "~(c[i] == 2)", "If(v == 1, Then=c[i] == 3)",
+        "x[c[i]] == 1", "c[i] in x", "v in [c[i], 4]", "AllDifferent(c[i], v)", "Count(x, value=c[i]) == 1", "Sum([c[i], v]) == 4", "Sum(x) == c[i]"]
+] + [
+    pytest.param(C3_OUTSIDE + f"satisfy(v != 0)\n{objective}", id=objective, marks=bug(OUTSIDE)) for objective in ["minimize(c[i])", "minimize(c[i] + v)"]
+] + [
+    pytest.param(M_OUTSIDE + f"satisfy({constraint})", id=constraint, marks=bug(OUTSIDE)) for constraint in [
+        "m[j][k] == v", "m[j][k] == 2", "m[j, k] == 3", "t[j][k] == v", "t[j][k] == 1", "t[j, k] != 2"]
+])
+def test_element_on_identical_integers_with_an_index_outside_the_list(run, code):
+    # as for any list, an index that can take a value outside the indexes of the list is an error, unless -force_element_index is given
+    r = run(code)
+    assert not r.ok and "-force_element_index" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    pytest.param("c[i] == v", lambda *t: t[1] == 2, marks=bug(OUTSIDE)),
+    pytest.param("c[i] == 2", lambda *t: True, marks=bug(OUTSIDE)),
+    ("c[i] == 3", lambda *t: False),
+    ("c[i] != 2", lambda *t: False),
+    pytest.param("c[i] < 3", lambda *t: True, marks=bug(OUTSIDE)),
+    pytest.param("c[i] in {1, 2}", lambda *t: True, marks=bug(OUTSIDE)),
+    ("c[i] not in {1, 2}", lambda *t: False),
+    pytest.param("c[i] + v == 5", lambda *t: t[1] == 3, marks=bug(OUTSIDE)),
+    pytest.param("x[c[i]] == 1", lambda *t: t[4] == 1, marks=bug(OUTSIDE)),
+    pytest.param("c[i] in x", lambda *t: 2 in t[2:], marks=bug(OUTSIDE)),
+    pytest.param("v in [c[i], 4]", lambda *t: t[1] in (2, 4), marks=bug(OUTSIDE)),
+    pytest.param("AllDifferent(c[i], v)", lambda *t: t[1] != 2, marks=bug(OUTSIDE)),
+    pytest.param("Count(x, value=c[i]) == 1", lambda *t: t[2:].count(2) == 1, marks=bug(OUTSIDE)),
+    pytest.param("Sum([c[i], v]) == 4", lambda *t: t[1] == 2, marks=bug(OUTSIDE)),
+    pytest.param("Sum(x) == c[i]", lambda *t: sum(t[2:]) == 2, marks=bug(OUTSIDE)),
+])
+def test_element_on_identical_integers_with_an_index_outside_the_list_and_the_option(run, solver, request, constraint, predicate):
+    # with -force_element_index, the index i cannot take the value 3, outside the list
+    check_with_v(run, solver, request, C3_OUTSIDE, constraint, DC_OUTSIDE, lambda *t: t[0] < 3 and predicate(*t), 1, ("-force_element_index",))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    pytest.param("m[j][k] == v", lambda *t: t[2] == 2, marks=bug(OUTSIDE)),
+    pytest.param("m[j][k] == 2", lambda *t: True, marks=bug(OUTSIDE)),
+    ("m[j, k] == 3", lambda *t: False),
+    pytest.param("t[j][k] == v", lambda *t: t[2] == t[1] + 1, marks=bug(OUTSIDE)),
+    pytest.param("t[j][k] == 1", lambda *t: t[1] == 0, marks=bug(OUTSIDE)),
+    pytest.param("t[j, k] != 2", lambda *t: t[1] != 1, marks=bug(OUTSIDE)),
+])
+def test_element_on_a_matrix_of_identical_integers_with_an_index_outside_the_matrix_and_the_option(run, solver, request, constraint, predicate):
+    # with -force_element_index, the index j cannot take the value 2, outside the matrix
+    check_with_v(run, solver, request, M_OUTSIDE, constraint, DM_OUTSIDE, lambda *t: t[0] < 2 and predicate(*t), 2, ("-force_element_index",))
