@@ -12,17 +12,20 @@ integer c, and i can only take indexes of X, element(X, i, (op, k)) holds iff c 
 
 import pytest
 
-from harness import assert_optimum, assert_solutions, brute_force, bug_for
+from harness import assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs of PyCSP3
 INT_CONDITION = ("#294: an element on a list of integers compared with an integer has an integer as operand of its condition, which XCSP3-core "
                  "does not allow, and ACE does not handle (unimplemented case for element)")
+NOOVERLAP_ELEMENT = "#302: an element given as an origin or a length of NoOverlap (two dimensions) is written as such in the XCSP3 file"
 
 # Known bugs of the solvers
 CHOCO_MATRIX = ("CHOCO 4.10.15-beta (embedded in PyCSP3) misses solutions of element on a matrix of variables, except with (eq,k) and (ne,k), "
                 "fixed in CHOCO 6.0.2 (not reported)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
+COSOCO_ROWS = "xcsp3team/cosoco#82: cosoco fails on a matrix given by explicit rows (Matrix variable (x does not exist)"
+COSOCO_CLAUSE = "cosoco does not handle clause (Clause constraint not yet supported, s UNSUPPORTED)"
 
 # a list of identical integers c, an index i and a variable v (in the predicates: t[0] for i, t[1] for v)
 C3 = "c = cp_array([2, 2, 2])\ni = Var(dom=range(3))\nv = Var(dom=range(5))\n"
@@ -353,3 +356,32 @@ def test_element_with_an_index_outside_the_list_in_reified_expressions(run, solv
     # (t[0] for i, t[1] for b, t[2:] for x)
     code = "i = Var(dom=range(4))\nb = Var(dom={0, 1})\nx = VarArray(size=3, dom=range(3))\n"
     check(run, solver, code + f"satisfy({constraint})", [range(4), range(2)] + [range(3)] * 3, predicate, args=args)
+
+
+# an index i that can take the value 3, outside the list x, with an element in an argument written as a string in the XCSP3 file (matrix,
+# tuples of NoOverlap, literals of Clause), whose guard must be found too (in the predicates: t[:3] for x, t[3] for i, t[4:] for y)
+STRING_ARGS = "x = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(4))\ny = VarArray(size=3, dom={0, 1})\n"
+DS = [range(2)] * 3 + [range(4)] + [range(2)] * 3
+
+
+def x_i(t):  # x[i], i being restricted to the list (the constraint being posted directly)
+    return t[t[3]]
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("AllDifferent([[x[i], y[0]], [y[1], y[2]]], matrix=True)", lambda *t: x_i(t) != t[4] and t[5] != t[6] and x_i(t) != t[5] and t[4] != t[6]),
+    ("LexIncreasing([[x[i], y[0]], [y[1], y[2]]], matrix=True)", lambda *t: (x_i(t), t[4]) <= (t[5], t[6]) and (x_i(t), t[5]) <= (t[4], t[6])),
+    ("Clause([x[i], y[0]], phases=[True, False])", lambda *t: x_i(t) == 1 or t[4] == 0),
+    pytest.param("NoOverlap(origins=[(x[i], y[0]), (y[1], y[2])], lengths=[(1, 1), (1, 1)])", lambda *t: (x_i(t), t[4]) != (t[5], t[6]),
+                 marks=bug(NOOVERLAP_ELEMENT)),
+    pytest.param("NoOverlap(origins=[(y[0], y[1]), (y[2], y[1])], lengths=[(x[i], 1), (1, 1)])",
+                 lambda *t: x_i(t) == 0 or t[4] + x_i(t) <= t[6] or t[6] + 1 <= t[4], marks=bug(NOOVERLAP_ELEMENT)),
+])
+@pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
+def test_element_with_an_index_outside_the_list_in_an_argument_written_as_a_string(run, solver, request, constraint, predicate, args):
+    # posted directly, the constraint restricts the index of its element to the list, although its argument is written as a string
+    if solver == "COSOCO" and constraint.startswith("Clause"):
+        pytest.skip(COSOCO_CLAUSE)
+    if "matrix=True" in constraint:
+        bug_for(request, "COSOCO", COSOCO_ROWS)
+    check(run, solver, STRING_ARGS + f"satisfy({constraint})", DS, lambda *t: t[3] < 3 and predicate(*t), args=args)

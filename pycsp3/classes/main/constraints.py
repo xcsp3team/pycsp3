@@ -58,7 +58,7 @@ class Diffs:
 
 
 class ConstraintArgument:
-    def __init__(self, name, content, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
+    def __init__(self, name, content, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False, variables=None):
         assert adhoc or isinstance(name, (TypeCtrArg, TypeXML, TypeAnn, main.annotations.TypeAnnArg)), str(name) + " " + str(type(name))
         self.name = name  # name of the argument
         self.attributes = [] if attributes is None else attributes  # list of pairs (key, value) representing the attributes
@@ -67,6 +67,7 @@ class ConstraintArgument:
         self.content_compressible = content_compressible  # indicates if we can try to make the content more compact
         self.content_ordered = content_ordered  # indicates if the content must be kept as it is (order is important)
         self.lifted = lifted  # indicates if the constraint is lifted to several lists (or sets); see specifications
+        self.variables = variables  # the variables (possibly in lists) of a content written as a string (matrix, tuples, literals)
 
     def __eq__(self, other):  # must be called in protection mode (see in functions.py the function protect())
         if not isinstance(other, ConstraintArgument) or self.name != other.name or len(self.attributes) > 0 or len(other.attributes) > 0:
@@ -111,8 +112,8 @@ class Constraint:
             return False
         return [v for v in self.arguments.items() if str(v[0]) != "condition"] == [v for v in other.arguments.items() if str(v[0]) != "condition"]
 
-    def arg(self, name, content, *, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
-        self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc)
+    def arg(self, name, content, *, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False, variables=None):
+        self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc, variables)
         return self
 
     def set_condition(self, operator, right_operand):
@@ -479,7 +480,8 @@ def _is_compressible_matrix(m):
 class ConstraintAllDifferentMatrix(ConstraintUnmergeable):
     def __init__(self, lst, excepting):
         super().__init__(TypeCtr.ALL_DIFFERENT)
-        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst if _is_compressible_matrix(lst) else False)
+        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst if _is_compressible_matrix(lst) else False,
+                 variables=lst)
         self.arg(TypeCtrArg.EXCEPT, excepting)
 
 
@@ -562,7 +564,7 @@ class ConstraintLex(ConstraintUnmergeable):
 class ConstraintLexMatrix(ConstraintUnmergeable):
     def __init__(self, lst, operator):
         super().__init__(TypeCtr.LEX)
-        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst)
+        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst, variables=lst)
         self.arg(TypeCtrArg.OPERATOR, operator)
         self._lists, self._operator = lst, operator  # kept for the decomposition
 
@@ -894,7 +896,7 @@ class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
         self.matrix = lst
-        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst,  # side-effect use of content_compressible for matrix
+        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst, variables=lst,  # side-effect use of content_compressible for matrix
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
                      [(TypeCtrArg.START_COL_INDEX, start_col_index)] if start_col_index else []))
 
@@ -942,9 +944,9 @@ class ConstraintNoOverlap(ConstraintUnmergeable):
     def __init__(self, origins, lengths, zero_ignored):
         super().__init__(TypeCtr.NO_OVERLAP)
         self.arg(TypeCtrArg.ORIGINS, "".join(["(" + ",".join(str(v) for v in t) + ")" for t in origins]) if isinstance(origins[0], tuple) else origins,
-                 content_ordered=True)
+                 content_ordered=True, variables=origins)
         self.arg(TypeCtrArg.LENGTHS, "".join(["(" + ",".join(str(v) for v in t) + ")" for t in lengths]) if isinstance(lengths[0], tuple) else lengths,
-                 content_ordered=True)
+                 content_ordered=True, variables=lengths)
         if not zero_ignored:
             self.attributes.append((TypeXML.ZERO_IGNORED, str(zero_ignored).lower()))
 
@@ -1024,7 +1026,8 @@ class ConstraintCircuit(Constraint):
 class ConstraintClause(Constraint):
     def __init__(self, variables, phases):
         super().__init__(TypeCtr.CLAUSE)
-        self.arg(TypeCtrArg.LIST, [str(v) if phases[i] else "not(" + str(v) + ")" for i, v in enumerate(variables)], content_ordered=True)
+        self.arg(TypeCtrArg.LIST, [str(v) if phases[i] else "not(" + str(v) + ")" for i, v in enumerate(variables)], content_ordered=True,
+                 variables=variables)
 
 
 class ConstraintAdhoc(ConstraintUnmergeable):
@@ -1955,7 +1958,7 @@ def _variables_of(obj):
     if isinstance(obj, (ECtr, PartialConstraint)):
         return _variables_of(obj.constraint)
     if isinstance(obj, Constraint):
-        t = [_variables_of(a.content_compressible if a.name == TypeCtrArg.MATRIX else a.content) for a in obj.arguments.values() if a is not None]
+        t = [_variables_of(a.content if a.variables is None else a.variables) for a in obj.arguments.values() if a is not None]
         return [x for l in t for x in l]
     if isinstance(obj, Condition):
         return _variables_of(obj.right_operand())
