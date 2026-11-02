@@ -727,6 +727,10 @@ class OpOverrider:
             if gi is None:
                 return functions.Not(self, meta=True)
             self = gi
+        if len(auxiliary().guards) > 0 and isinstance(self, (Variable, Node)) and id(self) not in auxiliary().covered and len(auxiliary().guards_of(self)) > 0:
+            # an element whose index is outside the list does not hold: its condition is added before the negation (#282)
+            node = auxiliary().cover(auxiliary().handle_guards(self == 1 if isinstance(self, Variable) else self, positive=False))
+            return auxiliary().cover(OpOverrider.__invert__(node))
         if isinstance(self, VariableInteger):
             return Variable.__invert__(self)
         if isinstance(self, Node) and self.type == TypeNode.NOT:  # ~(~x) is x
@@ -920,19 +924,15 @@ class OpOverrider:
                 if res is not None and res[1] == 1:  # in case we had x*1 or 1*x, we replace by x
                     indexes = res[0]
                 else:
-                    values = indexes.possible_values()
-                    n = len(array)  # note that we force the domain of the aux variable with the parameter values
-                    if not options.force_element_index:
-                        if isinstance(values, range):
-                            error_if(not( 0 <= values.start and values.stop <= n), "Problem with an index ; maybe -force_element_index is appropriate!")
-                        else:
-                            assert is_1d_list(values, int) and len(values) > 0 and 0 <= values[0] and values[-1] < n
-                    indexes = auxiliary().replace_node(indexes, values=range(n))
+                    indexes = auxiliary().replace_element_index(len(array), indexes)  # an auxiliary variable whose domain is the indexes
         if isinstance(indexes, Variable):
             if indexes.dom.is_infinite():
                 indexes.dom = Domain(range(len(array)))
             if isinstance(array, ListInt) and (is_1d_list(array, int) or is_2d_list(array, int)):
                 if all(array[0] == t for t in array):  # all integers (or all rows) are identical
+                    guards = auxiliary().index_guards(len(array), indexes)  # the index must still be an index of the list (#282)
+                    if len(guards) > 0:  # the constant (or the row) is only defined when the index is in the list
+                        return auxiliary().guarded_constant(array[0], guards) if isinstance(array[0], int) else _GuardedRow(array[0], guards)
                     # with identical integers, c[i] is a constant; for example, with c = [2, 2, 2]:
                     #  - c[i] == 2 calls ConstraintDummyConstant.__eq__(2) and gives ConstraintDummyConstant(1): always true, no constraint is posted
                     #  - c[i] == 3 gives ConstraintDummyConstant(0): always false, the model is unsatisfiable
@@ -945,12 +945,14 @@ class OpOverrider:
             if any(isinstance(i, (Variable, Node, PartialConstraint, ECtr)) for i in indexes):  # this must be a constraint Element or Element-Matrix
                 assert is_matrix(array) and len(indexes) == 2, "A matrix is expected, with two indexes" + str(array) + " " + str(indexes)
                 n, m = len(array), max(len(row) for row in array)
+                indexes = tuple(auxiliary().replace_element_index(length, i) if isinstance(i, Node) else i for i, length in zip(indexes, (n, m)))
                 index0 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[0], node_too=True, values=range(n))
                 index1 = auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(indexes[1], node_too=True, values=range(m))
                 if all(isinstance(i, Variable) for i in (index0, index1)):
                     if is_2d_list(array, int):
                         if all(array[0] == t for t in array):  # because all rows are identical, we keep only one dimension
-                            return array[0][index1]
+                            guards = auxiliary().index_guards(n, index0)  # the index of rows must still be an index of the matrix (#282)
+                            return array[0][index1] if len(guards) == 0 else _GuardedRow(array[0], guards)[index1]
                     return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
                 if isinstance(index0, Variable) and isinstance(index1, int):
                     return PartialConstraint(ConstraintElement(array[:, index1], index=index0))
@@ -1050,6 +1052,16 @@ class ListInt(list):
 
     def __str__(self):
         return structured_list(self)
+
+
+class _GuardedRow(ListInt):
+    # a row of a matrix of identical rows, whose index can be outside the matrix: what is taken from it depends on the guards (ids) of this index
+    def __init__(self, row, guards):
+        super().__init__(row)
+        self.guards = frozenset(guards)
+
+    def __getitem__(self, indexes):
+        return auxiliary().with_guards(ListInt(self)[indexes], self.guards)
 
 
 class ListVar(list):
