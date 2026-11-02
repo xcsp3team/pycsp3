@@ -1089,6 +1089,8 @@ def satisfy(*args, no_comment_tags_extraction=False):
             arg = _false_constraint()
         if isinstance(arg, (tuple, set, frozenset, types.GeneratorType)):
             arg = list(arg)
+        if isinstance(arg, list) and any(isinstance(v, types.GeneratorType) for v in arg):  # built now, with the guards of their elements (#282)
+            arg = [list(v) if isinstance(v, types.GeneratorType) else v for v in arg]
         if isinstance(arg, list) and any(v is None for v in arg):
             # TODO: what if there is a trailing comma?
             if len(arg) == len(comments2[i]):

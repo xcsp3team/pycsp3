@@ -1888,7 +1888,7 @@ class _Auxiliary:
         # is outside the list does not hold: the smallest subexpression containing it, below the logical operators, becomes (index in list) & ...
         if len(self.guards) == 0 or id(arg) in self.covered:
             return arg
-        if isinstance(arg, list):
+        if isinstance(arg, (list, tuple, set, frozenset)):  # a tuple or a set can be given in a list of satisfy()
             return [self.handle_guards(a, positive) for a in arg]
         if isinstance(arg, Node):
             t = arg.type
@@ -1962,7 +1962,7 @@ def _variables_of(obj):
         return [x for l in t for x in l]
     if isinstance(obj, Condition):
         return _variables_of(obj.right_operand())
-    if isinstance(obj, (list, tuple)):
+    if isinstance(obj, (list, tuple, set, frozenset)):
         return [x for v in obj for x in _variables_of(v)]
     return []
 

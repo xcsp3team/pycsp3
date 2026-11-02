@@ -385,3 +385,30 @@ def test_element_with_an_index_outside_the_list_in_an_argument_written_as_a_stri
     if "matrix=True" in constraint:
         bug_for(request, "COSOCO", COSOCO_ROWS)
     check(run, solver, STRING_ARGS + f"satisfy({constraint})", DS, lambda *t: t[3] < 3 and predicate(*t), args=args)
+
+
+# an index i that can take the value 3, outside the list x, with an element in a set, a frozenset, a tuple or a generator given in a list of satisfy()
+# (in the predicates: t[:3] for x, t[3] for i, t[4] for y)
+NESTED = "x = VarArray(size=3, dom=range(3))\ni = Var(dom=range(4))\ny = Var(dom=range(2))\n"
+DN = [range(3)] * 3 + [range(4), range(2)]
+
+
+def x_i_eq_2(t):  # x[i] == 2, false when i is outside the list
+    return t[3] < 3 and t[t[3]] == 2
+
+
+@pytest.mark.parametrize("constraints, predicate", [
+    ("[{x[i] == 2}, y == 0]", lambda *t: x_i_eq_2(t) and t[4] == 0),
+    ("[frozenset([x[i] == 2]), y == 0]", lambda *t: x_i_eq_2(t) and t[4] == 0),
+    ("[x[0] == 0, (x[i] == 2, y == 0)]", lambda *t: t[0] == 0 and x_i_eq_2(t) and t[4] == 0),
+    ("[(x[i] == 2 for _ in range(1)), y == 0]", lambda *t: x_i_eq_2(t) and t[4] == 0),
+    ("[{(x[i] == 2) | (y == 1)}, x[0] == 0]", lambda *t: (x_i_eq_2(t) or t[4] == 1) and t[0] == 0),
+    ("[frozenset([(x[i] == 2) | (y == 1)]), x[0] == 0]", lambda *t: (x_i_eq_2(t) or t[4] == 1) and t[0] == 0),
+    ("[x[0] == 0, ((x[i] == 2) | (y == 1), x[1] == 0)]", lambda *t: t[0] == 0 and (x_i_eq_2(t) or t[4] == 1) and t[1] == 0),
+    ("[((x[i] == 2) | (y == 1) for _ in range(1)), x[0] == 0]", lambda *t: (x_i_eq_2(t) or t[4] == 1) and t[0] == 0),
+])
+@pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
+def test_element_with_an_index_outside_the_list_in_a_nested_structure(run, solver, constraints, predicate, args):
+    # a structure nested in a list of satisfy() is handled as a list: posted directly, the element restricts its index; in a logical
+    # expression, it does not hold when its index is outside the list
+    check(run, solver, NESTED + f"satisfy({constraints})", DN, predicate, args=args)
