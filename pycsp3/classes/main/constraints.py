@@ -1782,7 +1782,8 @@ class _Auxiliary:
         if key in self.guard_cache:
             return self.guard_cache[key]
         self._warning_index_outside(index, length, outside)
-        values = range(length) if isinstance(index, Node) else possible_range({v for v in index.dom if 0 <= v < length})
+        inside = None if isinstance(index, Node) else {v for v in index.dom if 0 <= v < length}
+        values = possible_range(inside) if inside else range(length)  # all the indexes for an expression, or for an index never in the list
         aux = self.new_var(values)
         self.guards[aux.id] = (aux, index, sorted(values))
         self.guard_rank[aux.id] = len(self.guard_rank)
@@ -1801,15 +1802,21 @@ class _Auxiliary:
         if key not in self.guard_cache:
             self._warning_index_outside(index, length, outside)
             g = "guard" + str(len(self.guards))
-            self.guards[g] = (None, index, [v for v in index.dom if 0 <= v < length])
+            # all the indexes when the index can never be in the list (the condition never holds)
+            self.guards[g] = (None, index, [v for v in index.dom if 0 <= v < length] or list(range(length)))
             self.guard_rank[g] = len(self.guard_rank)
             self.guard_cache[key] = g
         return self.guards_of(index) | {self.guard_cache[key]}
 
     def _warning_index_outside(self, index, length, outside):
-        error_if(isinstance(index, Variable) and len(outside) == len(index.dom.all_values()),
-                 "The index " + str(index) + " of an element can never be an index of the list (0.." + str(length - 1) + ")")
-        if not options.force_element_index:
+        if options.force_element_index:
+            return
+        values = index.dom.all_values() if isinstance(index, Variable) else index.possible_values()
+        if len(outside) == len(values):  # outside being the values of the index outside 0..length-1, all of them are outside
+            warning("The index " + str(index) + " of an element can never be an index of the list (0.." + str(length - 1) + "): the element never "
+                    "holds, and posted directly, it makes the model unsatisfiable (give -force_element_index to avoid this warning)",
+                    "element_index_never")
+        else:
             warning("The index " + str(index) + " of an element can take values outside the indexes 0.." + str(length - 1) + " of the list ("
                     + ", ".join(str(v) for v in outside[:3]) + (", ..." if len(outside) > 3 else "") + "): the element does not hold for "
                     "these values, and posted directly, it restricts its index to the list (give -force_element_index to avoid this warning)",

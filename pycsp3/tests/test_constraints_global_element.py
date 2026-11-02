@@ -412,3 +412,29 @@ def test_element_with_an_index_outside_the_list_in_a_nested_structure(run, solve
     # a structure nested in a list of satisfy() is handled as a list: posted directly, the element restricts its index; in a logical
     # expression, it does not hold when its index is outside the list
     check(run, solver, NESTED + f"satisfy({constraints})", DN, predicate, args=args)
+
+
+# an index that can never be an index of the list: a variable i with the values 5 and 6, or the expression j + 5, for a list x of variables and a
+# list c of identical integers; the element never holds, with a warning (in the predicates: t[:3] for x, t[3] for i or j, t[4] for y)
+NEVER_I = "x = VarArray(size=3, dom=range(3))\ni = Var(dom={5, 6})\ny = Var(dom=range(2))\nc = cp_array([2, 2, 2])\n"
+NEVER_J = "x = VarArray(size=3, dom=range(3))\nj = Var(dom=range(3))\ny = Var(dom=range(2))\n"
+WARNING_NEVER = "of an element can never be an index of the list"
+
+
+@pytest.mark.parametrize("code, domain, constraint, predicate", [
+    (NEVER_I, [5, 6], "x[i] == 2", lambda *t: False),
+    (NEVER_I, [5, 6], "(x[i] == 2) | (y == 1)", lambda *t: t[4] == 1),
+    (NEVER_I, [5, 6], "~(x[i] == 2)", lambda *t: True),
+    (NEVER_I, [5, 6], "If(y == 1, Then=x[i] == 2)", lambda *t: t[4] != 1),
+    (NEVER_I, [5, 6], "c[i] == 2", lambda *t: False),
+    (NEVER_I, [5, 6], "(c[i] == 2) | (y == 1)", lambda *t: t[4] == 1),
+    (NEVER_J, range(3), "x[j + 5] == 2", lambda *t: False),
+    (NEVER_J, range(3), "(x[j + 5] == 2) | (y == 1)", lambda *t: t[4] == 1),
+])
+@pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
+def test_element_with_an_index_never_in_the_list(run, solver, request, code, domain, constraint, predicate, args):
+    # as in MiniZinc, the element never holds: posted directly, the model is unsatisfiable; the warning is not displayed with -force_element_index
+    if constraint == "c[i] == 2":  # always false, posted as a table with an empty set of supports
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
+    r = check(run, solver, code + f"satisfy({constraint})", [range(3)] * 3 + [domain, range(2)], predicate, args=args)
+    assert (WARNING_NEVER in r.stdout) == (len(args) == 0), r.report()
