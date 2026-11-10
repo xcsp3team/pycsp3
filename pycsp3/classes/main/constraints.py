@@ -1789,7 +1789,7 @@ class _Auxiliary:
         self.guard_cache[key] = aux
         return aux
 
-    def index_guards(self, length, index):
+    def identical_index_guards(self, length, index):
         # returns the guards (ids) of the index of a list of identical integers (or rows), the constant (or the row) being only defined when the
         # index is in the list; there is no element, and so no auxiliary variable for the index (a guard is then simply an id)
         assert isinstance(index, Variable)

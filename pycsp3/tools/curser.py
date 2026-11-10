@@ -930,7 +930,7 @@ class OpOverrider:
                 indexes.dom = Domain(range(len(array)))
             if isinstance(array, ListInt) and (is_1d_list(array, int) or is_2d_list(array, int)):
                 if all(array[0] == t for t in array):  # all integers (or all rows) are identical
-                    guards = auxiliary().index_guards(len(array), indexes)  # the index must still be an index of the list (#282)
+                    guards = auxiliary().identical_index_guards(len(array), indexes)  # the index must still be an index of the list (#282)
                     if len(guards) > 0:  # the constant (or the row) is only defined when the index is in the list
                         return auxiliary().guarded_constant(array[0], guards) if isinstance(array[0], int) else _GuardedRow(array[0], guards)
                     # with identical integers, c[i] is a constant; for example, with c = [2, 2, 2]:
@@ -951,7 +951,7 @@ class OpOverrider:
                 if all(isinstance(i, Variable) for i in (index0, index1)):
                     if is_2d_list(array, int):
                         if all(array[0] == t for t in array):  # because all rows are identical, we keep only one dimension
-                            guards = auxiliary().index_guards(n, index0)  # the index of rows must still be an index of the matrix (#282)
+                            guards = auxiliary().identical_index_guards(n, index0)  # the index of rows must still be an index of the matrix (#282)
                             return array[0][index1] if len(guards) == 0 else _GuardedRow(array[0], guards)[index1]
                     return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
                 if isinstance(index0, Variable) and isinstance(index1, int):
