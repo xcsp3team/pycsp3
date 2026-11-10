@@ -783,10 +783,11 @@ def test_invalid_cardinality_message(run, arguments, message):
     assert not r.ok and message in r.stdout, r.report()
 
 
-@pytest.mark.parametrize("code", [
-    "minimize(Cardinality(x, occurrences={0: 1}))",
-    "satisfy(Cardinality(x, occurrences={0: 1}) + 1 == 2)",
-])
-def test_cardinality_is_not_a_term(run, code):
-    # Cardinality() is a constraint, not a term of an expression or an objective
-    assert_fails(run(X4 + code))
+def test_cardinality_is_not_an_objective(run):
+    # Cardinality() is a constraint, not an objective
+    assert_fails(run(X4 + "minimize(Cardinality(x, occurrences={0: 1}))"))
+
+
+def test_cardinality_as_operand_of_an_arithmetic_operator(run, solver):
+    # as any constraint, Cardinality() is its 0/1 value when it is an operand of an arithmetic operator (bool2int in MiniZinc) (#304)
+    check(run, solver, X4 + "satisfy(Cardinality(x, occurrences={0: 1}) + 1 == 2)", [range(3)] * 4, lambda *t: t.count(0) == 1)
