@@ -1,6 +1,6 @@
 import hashlib
 import marshal
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from itertools import permutations, combinations
 
 from pycsp3 import functions
@@ -1651,8 +1651,7 @@ class _Auxiliary:
         self.cache = []
         self.declared = set()  # the ids of the auxiliary variables declared by the user (Var() without domain), which are always written
         # the guards of the elements whose index can be outside the list (#282): a guard is an auxiliary variable aux replacing the index
-        self.guards = dict()  # the id of each guard -> (guard or None for a list of identical integers, index, indexes of the list)
-        self.guard_rank = dict()  # the id of each guard -> its rank of creation
+        self.guards = dict()  # the id of each guard -> Guard(aux or None for a list of identical integers, index, indexes of the list, rank of creation)
         self.guarded = dict()  # the id of each variable depending on guards (the guards, the values of their elements, ...) -> the ids of the guards
         self.guard_cache = dict()  # (id of the index, length of the list) -> guard
         self.guards_posted = set()  # the ids of the guards for which index == aux has been posted (the index being restricted to the list)
@@ -1785,8 +1784,7 @@ class _Auxiliary:
         inside = None if isinstance(index, Node) else {v for v in index.dom if 0 <= v < length}
         values = possible_range(inside) if inside else range(length)  # all the indexes for an expression, or for an index never in the list
         aux = self.new_var(values)
-        self.guards[aux.id] = (aux, index, values)
-        self.guard_rank[aux.id] = len(self.guard_rank)
+        self.guards[aux.id] = Guard(aux, index, values, len(self.guards))
         self.guarded[aux.id] = frozenset([aux.id]) | self.guards_of(index)  # an index may depend itself on guards (as in x[y[i]])
         self.guard_cache[key] = aux
         return aux
@@ -1803,8 +1801,7 @@ class _Auxiliary:
             self._warning_index_outside(index, length, outside)
             g = "guard" + str(len(self.guards))
             # all the indexes when the index can never be in the list (the condition never holds)
-            self.guards[g] = (None, index, [v for v in index.dom if 0 <= v < length] or list(range(length)))
-            self.guard_rank[g] = len(self.guard_rank)
+            self.guards[g] = Guard(None, index, [v for v in index.dom if 0 <= v < length] or list(range(length)), len(self.guards))
             self.guard_cache[key] = g
         return self.guards_of(index) | {self.guard_cache[key]}
 
@@ -1854,7 +1851,7 @@ class _Auxiliary:
         if g in self.guards_posted:
             return
         self.guards_posted.add(g)
-        aux, index, indexes = self.guards[g]
+        aux, index, indexes, _ = self.guards[g]
         if aux is None:  # the index of a list of identical integers (or rows)
             functions.satisfy(functions.belong(index, indexes), no_comment_tags_extraction=True)
         elif isinstance(index, Variable):
@@ -1870,7 +1867,7 @@ class _Auxiliary:
 
     def ordered(self, guards):
         # the guards in the order of their creation, so that the generated file is always the same
-        return sorted(guards, key=self.guard_rank.get)
+        return sorted(guards, key=lambda g: self.guards[g].rank)
 
     def post_guards_of(self, obj):
         for g in self.ordered(self.guards_of(obj)):
@@ -1879,7 +1876,7 @@ class _Auxiliary:
     def guard_condition(self, g):
         # the condition of the element in a logical expression: its index is in the list; aux is then equal to the index, by a table (aux is
         # equal to its smallest value otherwise)
-        aux, index, indexes = self.guards[g]
+        aux, index, indexes, _ = self.guards[g]
         if aux is None:  # the index of a list of identical integers (or rows): no element, and so no table
             return functions.belong(index, indexes)
         if g not in self.guard_tables:
@@ -1949,6 +1946,9 @@ class _Auxiliary:
 def _boolean(node):  # a Boolean expression, a 0/1 variable or the integer 0 or 1
     return node.type.is_predicate_operator() or (node.type == TypeNode.VAR and node.cnt.dom.is_binary()) or (
             node.type == TypeNode.INT and node.cnt in (0, 1))
+
+
+Guard = namedtuple("Guard", "aux index values rank")  # aux is None for the index of a list of identical integers
 
 
 class _Guarded:  # an object only depending on guards
