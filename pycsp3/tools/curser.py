@@ -98,8 +98,9 @@ def _set_contains(self, other):  # for being able to use 'in' when expressing in
 
 def cursing():
     def _list_mul(self, other):  # for being able to use scalar products
+        # NotImplemented lets Python multiply the list as usual (an exception raised here cannot go through the C callback of forbiddenfruit)
         if not OpOverrider.activated:
-            return self.__mul__(other)
+            return NotImplemented
         if isinstance(self, (tuple, list)) and isinstance(other, (tuple, list)):
             if len(self) == len(other):
                 if is_containing(self, (Variable, Node), check_first_only=True):
@@ -110,7 +111,7 @@ def cursing():
             return ScalarProduct(other, [self] * len(other))
         if isinstance(other, int) and isinstance(self, (tuple, list)) and is_containing(self, (Variable, Node), check_first_only=True):
             return ScalarProduct(self, [other] * len(self))
-        return self.__mul__(other)
+        return NotImplemented
 
     # def _list_rmul(self, other):  # TODO: should we activate it?
     #     return _list_mul(self, other)
