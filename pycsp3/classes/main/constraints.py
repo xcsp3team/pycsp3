@@ -1828,7 +1828,8 @@ class _Auxiliary:
         if len(self.guards) == 0:  # no index can be outside its list in the model (the usual case)
             return frozenset()
         extra = getattr(obj, "extra_guards", None) or getattr(getattr(obj, "constraint", None), "extra_guards", ())  # from a row of identical rows
-        return frozenset().union(*(self.guarded[x.id] for x in _variables_of(obj) if x.id in self.guarded), extra)
+        # the covered nodes do not depend on their guards anymore: their conditions are already in them
+        return frozenset().union(*(self.guarded[x.id] for x in _variables_of(obj, self.covered) if x.id in self.guarded), extra)
 
     def inherit_guards(self, aux, obj):
         # the auxiliary variable aux, replacing the object obj, depends on the guards of obj
@@ -1868,6 +1869,13 @@ class _Auxiliary:
         if len(self.guards) > 0 and isinstance(node, Node):
             self.covered.update(id(n) for n in node.all_nodes_satisfying(lambda r: True))
         return node
+
+    def own_context(self, term):
+        # a Boolean expression used as a term of a count or of a sum is its own Boolean context, as in MiniZinc (bool2int): an element whose index
+        # is outside the list only makes this term false, and the term does not depend on the guards anymore (#284)
+        if not isinstance(term, Node) or not term.type.is_predicate_operator() or id(term) in self.covered or len(self.guards_of(term)) == 0:
+            return term
+        return self.cover(self.handle_guards(term, positive=False))
 
     def ordered(self, guards):
         # the guards in the order of their creation, so that the generated file is always the same
@@ -1960,21 +1968,25 @@ class _Guarded:  # an object only depending on guards
         self.extra_guards = frozenset(guards)
 
 
-def _variables_of(obj):
-    # the variables involved in the specified object (variable, node, constraint, condition, list)
+def _variables_of(obj, skipped=()):
+    # the variables involved in the specified object (variable, node, constraint, condition, list), except in the nodes whose ids are skipped
     if isinstance(obj, Variable):
         return [obj]
     if isinstance(obj, Node):
-        return obj.list_of_vars()
+        if len(skipped) == 0:
+            return obj.list_of_vars()
+        if id(obj) in skipped:
+            return []
+        return ([obj.cnt] if obj.type == TypeNode.VAR else []) if obj.is_leaf() else [x for s in obj.cnt for x in _variables_of(s, skipped)]
     if isinstance(obj, (ECtr, PartialConstraint)):
-        return _variables_of(obj.constraint)
+        return _variables_of(obj.constraint, skipped)
     if isinstance(obj, Constraint):
-        t = [_variables_of(a.content if a.variables is None else a.variables) for a in obj.arguments.values() if a is not None]
+        t = [_variables_of(a.content if a.variables is None else a.variables, skipped) for a in obj.arguments.values() if a is not None]
         return [x for l in t for x in l]
     if isinstance(obj, Condition):
-        return _variables_of(obj.right_operand())
+        return _variables_of(obj.right_operand(), skipped)
     if isinstance(obj, (list, tuple, set, frozenset)):
-        return [x for v in obj for x in _variables_of(v)]
+        return [x for v in obj for x in _variables_of(v, skipped)]
     return []
 
 

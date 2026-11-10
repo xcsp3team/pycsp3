@@ -18,11 +18,10 @@ from harness import assert_optimum, assert_solutions, brute_force, bug, bug_for
 INT_CONDITION = ("#294: an element on a list of integers compared with an integer has an integer as operand of its condition, which XCSP3-core "
                  "does not allow, and ACE does not handle (unimplemented case for element)")
 NOOVERLAP_ELEMENT = "#302: an element given as an origin or a length of NoOverlap (two dimensions) is written as such in the XCSP3 file"
-OWN_CONTEXT = ("#284: the Boolean terms of a count (Exist() with at least three terms, AtLeastOne(), NotExist(), ExactlyOne(), ...) or of a sum "
-               "are not their own Boolean contexts: an element whose index is outside the list makes the whole constraint false, or restricts "
-               "its index when the constraint is posted directly, instead of making only its own term false")
 
 # Known bugs of the solvers
+CHOCO_DUPLICATES = ("CHOCO 4.10.15-beta (embedded in PyCSP3) gives solutions several times for a count or a sum of Boolean expressions "
+                    "guarded by in(...), which the newest CHOCO (develop build) does not (not reported)")
 CHOCO_MATRIX = ("CHOCO 4.10.15-beta (embedded in PyCSP3) misses solutions of element on a matrix of variables, except with (eq,k) and (ne,k), "
                 "fixed in CHOCO 6.0.2 (not reported)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
@@ -402,25 +401,27 @@ def holding(t, n=3):  # the number of terms x[i[j]] == 2 that hold, a term being
     return sum(1 for j in range(n) if t[2 + j] < 2 and t[t[2 + j]] == 2)
 
 
-def by_term(constraint, predicate):  # a case of #284
-    return pytest.param(constraint, predicate, marks=bug(OWN_CONTEXT))
+# the Boolean terms guarded on their own (#284): the embedded CHOCO gives some solutions several times
+OWN_CASES = [
+    (f"Exist({TERMS})", lambda *t: holding(t) >= 1),
+    (f"AtLeastOne({TERMS})", lambda *t: holding(t) >= 1),
+    (f"AnyHold({TERMS})", lambda *t: holding(t) >= 1),
+    (f"NotExist({TERMS})", lambda *t: holding(t) == 0),
+    (f"NoneHold({TERMS})", lambda *t: holding(t) == 0),
+    (f"ExactlyOne({TERMS})", lambda *t: holding(t) == 1),
+    (f"AtMostOne({TERMS})", lambda *t: holding(t) <= 1),
+    (f"Count([{TERMS}], value=1) >= 2", lambda *t: holding(t) >= 2),
+    (f"Sum({TERMS}) >= 1", lambda *t: holding(t) >= 1),
+    (f"Sum({TERMS}) <= 1", lambda *t: holding(t) <= 1),
+    ("Sum(x[i[j]] == 2 for j in range(2)) >= 1", lambda *t: holding(t, 2) >= 1),
+    (f"Exist({TERMS}) | (y == 1)", lambda *t: holding(t) >= 1 or t[5] == 1),
+    (f"If(y == 1, Then=Exist({TERMS}))", lambda *t: t[5] == 0 or holding(t) >= 1),
+    (f"If(y == 1, Then=Sum({TERMS}) >= 1)", lambda *t: t[5] == 0 or holding(t) >= 1),
+]
+OWN_CONSTRAINTS = {constraint for constraint, _ in OWN_CASES}
 
 
-@pytest.mark.parametrize("constraint, predicate", [
-    by_term(f"Exist({TERMS})", lambda *t: holding(t) >= 1),
-    by_term(f"AtLeastOne({TERMS})", lambda *t: holding(t) >= 1),
-    by_term(f"AnyHold({TERMS})", lambda *t: holding(t) >= 1),
-    by_term(f"NotExist({TERMS})", lambda *t: holding(t) == 0),
-    by_term(f"NoneHold({TERMS})", lambda *t: holding(t) == 0),
-    by_term(f"ExactlyOne({TERMS})", lambda *t: holding(t) == 1),
-    by_term(f"AtMostOne({TERMS})", lambda *t: holding(t) <= 1),
-    by_term(f"Count([{TERMS}], value=1) >= 2", lambda *t: holding(t) >= 2),
-    by_term(f"Sum({TERMS}) >= 1", lambda *t: holding(t) >= 1),
-    by_term(f"Sum({TERMS}) <= 1", lambda *t: holding(t) <= 1),
-    by_term("Sum(x[i[j]] == 2 for j in range(2)) >= 1", lambda *t: holding(t, 2) >= 1),
-    by_term(f"Exist({TERMS}) | (y == 1)", lambda *t: holding(t) >= 1 or t[5] == 1),
-    by_term(f"If(y == 1, Then=Exist({TERMS}))", lambda *t: t[5] == 0 or holding(t) >= 1),
-    by_term(f"If(y == 1, Then=Sum({TERMS}) >= 1)", lambda *t: t[5] == 0 or holding(t) >= 1),
+@pytest.mark.parametrize("constraint, predicate", OWN_CASES + [
     (f"AllHold({TERMS})", lambda *t: holding(t) == 3),  # a conjunction posted directly restricts the indexes
     (f"disjunction({TERMS})", lambda *t: holding(t) >= 1),
     # integer terms: the smallest Boolean expression containing the elements is the whole count, which restricts the indexes when posted directly
@@ -430,6 +431,8 @@ def by_term(constraint, predicate):  # a case of #284
 def test_element_with_an_index_outside_the_list_in_boolean_terms(run, solver, constraint, predicate, args):
     # as in MiniZinc, each Boolean term of a count or of a sum is its own Boolean context: an element whose index is outside the list only makes
     # its own term false
+    if solver == "CHOCO" and constraint in OWN_CONSTRAINTS:
+        pytest.skip(CHOCO_DUPLICATES)
     check(run, solver, BOOLEAN_TERMS + f"satisfy({constraint})", DB, predicate, args=args)
 
 
