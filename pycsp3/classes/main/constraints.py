@@ -1554,6 +1554,8 @@ class ScalarProduct:
             self.coeffs = [self.coeffs[i] for i in indexes]
         if any(isinstance(x, ECtr) for x in self.variables):  # a constraint (as x[i] == 2, i being a variable) is its 0/1 value (#304)
             self.variables = [value_of_constraint(x) if isinstance(x, ECtr) else x for x in self.variables]
+        if len(auxiliary().guards) > 0:  # each Boolean term is its own Boolean context, as in MiniZinc (#284)
+            self.variables = [auxiliary().own_context(x) for x in self.variables]
 
     def _combine_with(self, operator, right_operand):
         if len(self.variables) == 1 and isinstance(right_operand, (int, Variable, Node)):  # XCSP3-core requires at least two terms in a sum
@@ -1657,7 +1659,7 @@ class _Auxiliary:
         self.cache = []
         self.declared = set()  # the ids of the auxiliary variables declared by the user (Var() without domain), which are always written
         # the guards of the elements whose index can be outside the list (#282): a guard is an auxiliary variable aux replacing the index
-        self.guards = dict()  # the id of each guard -> Guard(aux or None for a list of identical integers, index, indexes of the list, rank of creation)
+        self.guards = Node.element_guards = dict()  # (seen by Node.build()) the id of each guard -> Guard(aux or None for a list of identical integers, index, indexes of the list, rank of creation)
         self.guarded = dict()  # the id of each variable depending on guards (the guards, the values of their elements, ...) -> the ids of the guards
         self.guard_cache = dict()  # (id of the index, length of the list) -> guard
         self.guards_posted = set()  # the ids of the guards for which index == aux has been posted (the index being restricted to the list)
@@ -1918,7 +1920,8 @@ class _Auxiliary:
                 return arg if all(s1 is s2 for s1, s2 in zip(sons, arg.cnt)) else Node(t, sons)
         guards = self.guards_of(arg)
         if len(guards) > 0 and isinstance(arg, (Node, Variable)) and not positive:
-            return Node.build(TypeNode.AND, *[self.guard_condition(g) for g in self.ordered(guards)], arg)
+            # a copy of the node, which can be covered without covering the node itself (that can also be posted directly, as p in satisfy(p, ~p | q))
+            return Node.build(TypeNode.AND, *[self.guard_condition(g) for g in self.ordered(guards)], arg.copy() if isinstance(arg, Node) else arg)
         for g in self.ordered(guards):
             self.post_guard(g)
         return arg

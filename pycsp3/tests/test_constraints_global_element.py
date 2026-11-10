@@ -494,6 +494,24 @@ def test_element_compared_with_a_value_as_operand_of_an_arithmetic_operator_with
     check(run, solver, BOOLEAN_TERMS + f"satisfy({constraint})", DB, predicate)
 
 
+@pytest.mark.parametrize("code, predicate", [
+    ("satisfy(Sum((x[i[j]] + 1 == 3) * (j + 1) for j in range(3)) >= 3)", lambda *t: weighted(t) >= 3),
+    ("satisfy((x[i[0]] + 1 == 3) + (x[i[1]] == 2) >= 1)", lambda *t: held(t, 0) + held(t, 1) >= 1),
+    ("satisfy([x[i[j]] + 1 == 3 for j in range(3)] * [1, 2, 3] >= 3)", lambda *t: weighted(t) >= 3),
+    ("satisfy(1 - (x[i[0]] + 1 == 3) == y)", lambda *t: 1 - held(t, 0) == t[5]),
+    # an expression posted directly restricts its index to the list, even when it is also used in another expression
+    ("p = x[i[0]] + 1 == 3\nsatisfy(p, p * 2 + (x[i[1]] == 2) >= 1)", lambda *t: held(t, 0) == 1),
+    ("p = x[i[0]] + 1 == 3\nsatisfy(p, Sum([p, x[i[1]] + 1 == 3]) >= 1)", lambda *t: held(t, 0) == 1),
+    ("p = x[i[0]] + 1 == 3\nsatisfy(p, ~p | (y == 1))", lambda *t: held(t, 0) == 1 and t[5] == 1),
+])
+def test_boolean_expression_as_operand_of_an_arithmetic_operator_with_an_index_outside_the_list(run, solver, code, predicate):
+    # as in MiniZinc, a Boolean expression that is an operand of an arithmetic operator (or a term of a scalar product) is its own Boolean
+    # context: it is false when the index of an element in it is outside the list (#284)
+    if solver == "CHOCO" and ("Sum(" in code or "* [" in code):  # posted as a sum of these terms
+        pytest.skip(CHOCO_DUPLICATES)
+    check(run, solver, BOOLEAN_TERMS + code, DB, predicate)
+
+
 # an index i that can take the value 3, outside the list x, with an element in an argument written as a string in the XCSP3 file (matrix,
 # tuples of NoOverlap, literals of Clause), whose guard must be found too (in the predicates: t[:3] for x, t[3] for i, t[4:] for y)
 STRING_ARGS = "x = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(4))\ny = VarArray(size=3, dom={0, 1})\n"
