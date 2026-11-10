@@ -6,7 +6,7 @@ from itertools import product
 from pycsp3.classes import main
 from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeArithmeticOperator, TypeLogicalOperator, TypeOrderedOperator, TypeAbstractOperation
 from pycsp3.classes.auxiliary.enums import auto
-from pycsp3.classes.entities import Entity, EVar
+from pycsp3.classes.entities import Entity, EVar, ECtr
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import flatten, warning, warning_if, neg_range, abs_range, add_range, possible_range
 from pycsp3.dashboard import options
@@ -181,8 +181,12 @@ _TRUE_IF_IDENTICAL = frozenset(id(t) for t in (EQ, LE, GE, IMP, IFF))
 _NARY_SIMPLIFIABLE = frozenset(id(t) for t in (OR, AND, XOR, MIN, MAX, EQ))
 
 
+
+INTEGER_OPERANDS = frozenset({ADD, SUB, MUL, DIV, MOD, TypeNode.POW, DIST, NEG, ABS, MIN, MAX})  # the operators whose operands are integers
+
 class Node(Entity):
     all_nodes = []
+    element_guards = {}  # the guards of the elements whose index can be outside the list, shared with the auxiliary object (#284)
 
     def __init__(self, node_type, args):
         super().__init__(None)
@@ -259,6 +263,9 @@ class Node(Entity):
             return self[0].__str_hybrid__() + ("+" if self.type == TypeNode.ADD else "-") + self[1].__str_hybrid__()
         else:
             assert False, "An hybrid tuple must be of the form col(x)[+or-][integer]"
+
+    def copy(self):  # a copy of the tree, the leaves keeping their variables and values
+        return Node(self.type, self.cnt if self.is_leaf() else [son.copy() for son in self.cnt])
 
     def is_leaf(self):
         return not isinstance(self.cnt, list)  # when unary node, we have also a list (and SET, even empty, is always with a list too)
@@ -658,6 +665,8 @@ class Node(Entity):
                 t.append(Node(TypeNode.PARTIAL, arg))
             elif isinstance(arg, main.constraints.ConstraintDummyConstant):  # a constant (true or false)
                 t.append(Node(INT, arg.val))
+            elif isinstance(arg, ECtr):  # a constraint (as x[i] == 2, i being a variable) is its 0/1 value in an expression (#304)
+                t.extend(Node._create_sons(main.constraints.value_of_constraint(arg)))
             else:
                 raise ValueError("Problem: bad form of predicate " + str(arg))
         return t
@@ -692,6 +701,8 @@ class Node(Entity):
         #     if (args[1] == 1 and type in (TypeNode.MUL, TypeNode.DIV)) or (args[1] == 0 and type in (TypeNode.ADD, TypeNode.SUB)):
         #         return Node(TypeNode.VAR,args[0])
         node = Node(tn, Node._create_sons(*args))
+        if tn in INTEGER_OPERANDS and len(Node.element_guards) > 0:  # a Boolean operand is its own Boolean context (#284)
+            node.cnt = [main.constraints.auxiliary().own_context(son) for son in node.cnt]
         if tn == EQ and all(son.type.is_predicate_operator() for son in node.cnt):
             node = Node(IFF, node.cnt)
         # Reducing the node

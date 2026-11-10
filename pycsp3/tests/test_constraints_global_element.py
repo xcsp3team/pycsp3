@@ -20,6 +20,8 @@ INT_CONDITION = ("#294: an element on a list of integers compared with an intege
 NOOVERLAP_ELEMENT = "#302: an element given as an origin or a length of NoOverlap (two dimensions) is written as such in the XCSP3 file"
 
 # Known bugs of the solvers
+CHOCO_DUPLICATES = ("CHOCO 4.10.15-beta (embedded in PyCSP3) gives solutions several times for a count or a sum of Boolean expressions "
+                    "guarded by in(...), which the newest CHOCO (develop build) does not (not reported)")
 CHOCO_MATRIX = ("CHOCO 4.10.15-beta (embedded in PyCSP3) misses solutions of element on a matrix of variables, except with (eq,k) and (ne,k), "
                 "fixed in CHOCO 6.0.2 (not reported)")
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
@@ -136,6 +138,36 @@ def test_element_member_of_a_list_written_literally(run, solver, constraint, pre
     # Python changes into a tuple a list given literally on the right of 'in' (t[:3] for x, t[3] for v)
     check(run, solver, f"x = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nL = [x[0], 2]\nsatisfy({constraint})", [range(4)] * 3 + [range(5)],
           predicate)
+
+
+# arrays with holes (None): x[1] is a hole of x, and m[0][1] is a hole of m
+HOLES_1D = "x = VarArray(size=3, dom=lambda a: None if a == 1 else range(3))\n"
+HOLES_2D = "m = VarArray(size=[2, 2], dom=lambda a, b: None if b > a else range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(2))\n"
+
+
+@pytest.mark.parametrize("code", [
+    HOLES_1D + "j = Var(dom={0, 2})\nsatisfy(x[j] == 2)",
+    HOLES_1D + "j = Var(dom=range(2))\nsatisfy(x[j] == 2)",
+    HOLES_1D + "j = Var(dom=range(3))\nsatisfy(x[j] == 2)",
+    HOLES_1D + "j = Var(dom=range(3))\nsatisfy((x[j] == 2) | (j == 1))",
+    HOLES_2D + "satisfy(m[j][k] == 1)",
+    HOLES_2D + "satisfy(m[j, k] == 1)",
+    HOLES_2D + "satisfy(m[j][1] == 1)",
+    HOLES_2D + "satisfy(m[0][k] == 1)",
+])
+def test_element_on_an_array_with_holes(run, code):
+    # an array with holes cannot be indexed by a variable: the index of a variable in the list without the holes is not its index in the array
+    r = run(code)
+    assert not r.ok and "has holes (None)" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("code, domains, predicate", [
+    (HOLES_1D + "j = Var(dom=range(2))\nsatisfy(x[::2][j] == 2)", [range(3)] * 2 + [range(2)], lambda x0, x2, j: (x0, x2)[j] == 2),
+    (HOLES_2D + "satisfy(m[j][0] == 1)", [range(2)] * 5, lambda m00, m10, m11, j, k: (m00, m10)[j] == 1),
+    (HOLES_2D + "satisfy(m[1][k] == 1)", [range(2)] * 5, lambda m00, m10, m11, j, k: (m10, m11)[k] == 1),
+])
+def test_element_on_a_part_without_holes_of_an_array_with_holes(run, solver, code, domains, predicate):
+    check(run, solver, code, domains, predicate)
 
 
 # the lists and the matrices, with an index (variable or expression) that can take a value outside the indexes
@@ -356,6 +388,128 @@ def test_element_with_an_index_outside_the_list_in_reified_expressions(run, solv
     # (t[0] for i, t[1] for b, t[2:] for x)
     code = "i = Var(dom=range(4))\nb = Var(dom={0, 1})\nx = VarArray(size=3, dom=range(3))\n"
     check(run, solver, code + f"satisfy({constraint})", [range(4), range(2)] + [range(3)] * 3, predicate, args=args)
+
+
+# indexes i[j] that can take the value 2, outside the list x, in the Boolean terms x[i[j]] == 2 of a count or of a sum
+# (in the predicates: t[:2] for x, t[2:5] for i, t[5] for y)
+BOOLEAN_TERMS = "x = VarArray(size=2, dom=range(3))\ni = VarArray(size=3, dom=range(3))\ny = Var(dom=range(2))\n"
+DB = [range(3)] * 5 + [range(2)]
+TERMS = "x[i[j]] == 2 for j in range(3)"
+
+
+def holding(t, n=3):  # the number of terms x[i[j]] == 2 that hold, a term being false when its index is outside the list
+    return sum(1 for j in range(n) if t[2 + j] < 2 and t[t[2 + j]] == 2)
+
+
+# the Boolean terms guarded on their own (#284): the embedded CHOCO gives some solutions several times
+OWN_CASES = [
+    (f"Exist({TERMS})", lambda *t: holding(t) >= 1),
+    (f"AtLeastOne({TERMS})", lambda *t: holding(t) >= 1),
+    (f"AnyHold({TERMS})", lambda *t: holding(t) >= 1),
+    (f"NotExist({TERMS})", lambda *t: holding(t) == 0),
+    (f"NoneHold({TERMS})", lambda *t: holding(t) == 0),
+    (f"ExactlyOne({TERMS})", lambda *t: holding(t) == 1),
+    (f"AtMostOne({TERMS})", lambda *t: holding(t) <= 1),
+    (f"Count([{TERMS}], value=1) >= 2", lambda *t: holding(t) >= 2),
+    (f"Sum({TERMS}) >= 1", lambda *t: holding(t) >= 1),
+    (f"Sum({TERMS}) <= 1", lambda *t: holding(t) <= 1),
+    ("Sum(x[i[j]] == 2 for j in range(2)) >= 1", lambda *t: holding(t, 2) >= 1),
+    (f"Exist({TERMS}) | (y == 1)", lambda *t: holding(t) >= 1 or t[5] == 1),
+    (f"If(y == 1, Then=Exist({TERMS}))", lambda *t: t[5] == 0 or holding(t) >= 1),
+    (f"If(y == 1, Then=Sum({TERMS}) >= 1)", lambda *t: t[5] == 0 or holding(t) >= 1),
+]
+OWN_CONSTRAINTS = {constraint for constraint, _ in OWN_CASES}
+
+
+@pytest.mark.parametrize("constraint, predicate", OWN_CASES + [
+    (f"AllHold({TERMS})", lambda *t: holding(t) == 3),  # a conjunction posted directly restricts the indexes
+    (f"disjunction({TERMS})", lambda *t: holding(t) >= 1),
+    # integer terms: the smallest Boolean expression containing the elements is the whole count, which restricts the indexes when posted directly
+    ("Count([x[i[j]] for j in range(3)], value=2) >= 1", lambda *t: all(t[2 + j] < 2 for j in range(3)) and holding(t) >= 1),
+])
+@pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
+def test_element_with_an_index_outside_the_list_in_boolean_terms(run, solver, constraint, predicate, args):
+    # as in MiniZinc, each Boolean term of a count or of a sum is its own Boolean context: an element whose index is outside the list only makes
+    # its own term false
+    if solver == "CHOCO" and constraint in OWN_CONSTRAINTS:
+        pytest.skip(CHOCO_DUPLICATES)
+    check(run, solver, BOOLEAN_TERMS + f"satisfy({constraint})", DB, predicate, args=args)
+
+
+WEIGHTED = "x = VarArray(size=2, dom=range(3))\ni = VarArray(size=3, dom=range(2))\ny = Var(dom=range(2))\n"
+DW = [range(3)] * 2 + [range(2)] * 4
+
+
+def held(t, j, v=2):  # the 0/1 value of x[i[j]] == v, false when the index is outside the list
+    return int(t[2 + j] < 2 and t[t[2 + j]] == v)
+
+
+def weighted(t):  # the sum of the terms x[i[j]] == 2 weighted by j + 1
+    return sum(held(t, j) * (j + 1) for j in range(3))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(x[i[0]] == 2) + (x[i[1]] == 2) >= 1", lambda *t: held(t, 0) + held(t, 1) >= 1),
+    ("Sum((x[i[j]] == 2) * (j + 1) for j in range(3)) >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum((x[i[j]] == 2) * y for j in range(3)) >= 1", lambda *t: sum(held(t, j) for j in range(3)) * t[5] >= 1),
+    ("Sum([x[i[j]] == 2 for j in range(3)] * cp_array([1, 2, 3])) >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum(cp_array(x[i[j]] == 2 for j in range(3)) * [1, 2, 3]) >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum(cp_array([1, 2, 3]) * [x[i[j]] == 2 for j in range(3)]) >= 3", lambda *t: weighted(t) >= 3),
+    ("[x[i[j]] == 2 for j in range(3)] * [1, 2, 3] >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum([x[0] == 2, x[i[1]] == 2, x[i[2]] == 1] * [1, 2, 3]) >= 3", lambda *t: int(t[0] == 2) + 2 * held(t, 1) + 3 * held(t, 2, 1) >= 3),
+    ("sum(x[i[j]] == 2 for j in range(3)) == 2", lambda *t: sum(held(t, j) for j in range(3)) == 2),
+    ("y * (x[i[0]] == 2) + (x[i[1]] == 1) * y == 1", lambda *t: t[5] * held(t, 0) + held(t, 1, 1) * t[5] == 1),
+    ("2 * (x[i[0]] == 2) + 3 * (x[i[1]] == 1) == 2", lambda *t: 2 * held(t, 0) + 3 * held(t, 1, 1) == 2),
+    ("-(x[i[0]] == 2) + 1 - (x[i[1]] == 1) == 0", lambda *t: -held(t, 0) + 1 - held(t, 1, 1) == 0),
+    ("1 - (x[i[0]] == 2) == y", lambda *t: 1 - held(t, 0) == t[5]),
+    ("(x[i[0]] == 2) - (x[i[1]] == 2) == 0", lambda *t: held(t, 0) == held(t, 1)),
+    ("(x[i[0]] == 2) * x[i[1]] >= 1", lambda *t: held(t, 0) * t[t[3]] >= 1),
+    ("(x[i[0]] == y) + (x[i[1]] != 1) == 1", lambda *t: int(t[t[2]] == t[5]) + int(t[t[3]] != 1) == 1),
+    # other constraints than element, as operands
+    ("(Sum(x) > 2) + (x[i[0]] == 1) == 1", lambda *t: int(t[0] + t[1] > 2) + held(t, 0, 1) == 1),
+    ("AllDifferent(x) + (x[i[0]] == 1) == 1", lambda *t: int(t[0] != t[1]) + held(t, 0, 1) == 1),
+])
+def test_element_compared_with_a_value_as_operand_of_an_arithmetic_operator(run, solver, constraint, predicate):
+    # an element compared with a value (as x[i[0]] == 2) is a constraint, which is its 0/1 value when it is an operand of an arithmetic operator or
+    # a term of a scalar product, as for any Boolean expression (bool2int in MiniZinc) (#304)
+    check(run, solver, WEIGHTED + f"satisfy({constraint})", DW, predicate)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(x[i[0]] == 2) + (x[i[1]] == 2) >= 1", lambda *t: held(t, 0) + held(t, 1) >= 1),
+    ("Sum((x[i[j]] == 2) * (j + 1) for j in range(3)) >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum((x[i[j]] == 2) * y for j in range(3)) >= 1", lambda *t: sum(held(t, j) for j in range(3)) * t[5] >= 1),
+    ("Sum(cp_array(x[i[j]] == 2 for j in range(3)) * [1, 2, 3]) >= 3", lambda *t: weighted(t) >= 3),
+    ("[x[i[j]] == 2 for j in range(3)] * [1, 2, 3] >= 3", lambda *t: weighted(t) >= 3),
+    ("1 - (x[i[0]] == 2) == y", lambda *t: 1 - held(t, 0) == t[5]),
+    ("(x[i[0]] == 2) - (x[i[1]] == 2) == 0", lambda *t: held(t, 0) == held(t, 1)),
+    # the integer x[i[1]] is not in a Boolean expression: the whole constraint, posted directly, restricts its index to the list
+    ("(x[i[0]] == 2) * x[i[1]] >= 1", lambda *t: t[3] < 2 and held(t, 0) * t[t[3]] >= 1),
+])
+def test_element_compared_with_a_value_as_operand_of_an_arithmetic_operator_with_an_index_outside_the_list(run, solver, constraint, predicate):
+    # as in MiniZinc, the 0/1 value of an element compared with a value is its own Boolean context: it is 0 when the index is outside the list
+    # (#284)
+    if solver == "CHOCO" and ("Sum(" in constraint or "* [" in constraint):  # posted as a sum of these terms
+        pytest.skip(CHOCO_DUPLICATES)
+    check(run, solver, BOOLEAN_TERMS + f"satisfy({constraint})", DB, predicate)
+
+
+@pytest.mark.parametrize("code, predicate", [
+    ("satisfy(Sum((x[i[j]] + 1 == 3) * (j + 1) for j in range(3)) >= 3)", lambda *t: weighted(t) >= 3),
+    ("satisfy((x[i[0]] + 1 == 3) + (x[i[1]] == 2) >= 1)", lambda *t: held(t, 0) + held(t, 1) >= 1),
+    ("satisfy([x[i[j]] + 1 == 3 for j in range(3)] * [1, 2, 3] >= 3)", lambda *t: weighted(t) >= 3),
+    ("satisfy(1 - (x[i[0]] + 1 == 3) == y)", lambda *t: 1 - held(t, 0) == t[5]),
+    # an expression posted directly restricts its index to the list, even when it is also used in another expression
+    ("p = x[i[0]] + 1 == 3\nsatisfy(p, p * 2 + (x[i[1]] == 2) >= 1)", lambda *t: held(t, 0) == 1),
+    ("p = x[i[0]] + 1 == 3\nsatisfy(p, Sum([p, x[i[1]] + 1 == 3]) >= 1)", lambda *t: held(t, 0) == 1),
+    ("p = x[i[0]] + 1 == 3\nsatisfy(p, ~p | (y == 1))", lambda *t: held(t, 0) == 1 and t[5] == 1),
+])
+def test_boolean_expression_as_operand_of_an_arithmetic_operator_with_an_index_outside_the_list(run, solver, code, predicate):
+    # as in MiniZinc, a Boolean expression that is an operand of an arithmetic operator (or a term of a scalar product) is its own Boolean
+    # context: it is false when the index of an element in it is outside the list (#284)
+    if solver == "CHOCO" and ("Sum(" in code or "* [" in code):  # posted as a sum of these terms
+        pytest.skip(CHOCO_DUPLICATES)
+    check(run, solver, BOOLEAN_TERMS + code, DB, predicate)
 
 
 # an index i that can take the value 3, outside the list x, with an element in an argument written as a string in the XCSP3 file (matrix,

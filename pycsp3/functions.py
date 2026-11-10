@@ -2754,6 +2754,8 @@ def Sum(term, *others, condition=None):
     terms = auxiliary().replace_ints(terms) if any(v for v in terms if isinstance(v, int)) else terms
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini and any(
         not isinstance(term, Variable) and not neg_var.matches(term) for term in terms))
+    if len(auxiliary().guards) > 0:  # each Boolean term is its own Boolean context (#284)
+        terms = [auxiliary().own_context(t) for t in terms]
     checkType(terms, ([Variable], [Node], [Variable, Node], [ScalarProduct]))  # , [PartialConstraint], [ECtr]))
     for v in terms:
         if isinstance(v, Variable) and v.dom.type != TypeVar.INTEGER:
@@ -2937,6 +2939,8 @@ def _count(name, terms, value, values, condition):
         return _constant_with_condition(0, condition)
     terms = manage_global_indirection(terms, also_pc=True)
     assert terms is not None
+    if len(auxiliary().guards) > 0:  # each Boolean term is its own Boolean context (#284)
+        terms = [auxiliary().own_context(t) for t in terms]
     if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
         s = frozenset(values) if isinstance(values[0], int) else None
         # a constant that is not counted is discarded, and a constant that is counted is replaced by an auxiliary variable

@@ -40,7 +40,9 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import os
 import sys
+import traceback
 from types import FunctionType
 import ctypes
 import inspect
@@ -364,6 +366,15 @@ def _curse_special(klass, attr, func):
             return func(*args, **kwargs)
         except NotImplementedError:
             return NotImplementedRet
+        except BaseException as e:
+            # (PyCSP3) an exception cannot go through the C callback: ctypes ignores it, and returns a value that is not initialized (Python
+            # then crashes, or gets a random result); the exception is displayed (the message of a SystemExit raised by error() is already
+            # displayed), and the program is stopped
+            if not isinstance(e, SystemExit):
+                traceback.print_exc()
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os._exit(e.code if isinstance(e, SystemExit) and isinstance(e.code, int) else 1)
 
     cfunc = cfunc_t(wrapper)
     tp_func_dict[(klass, attr)] = cfunc

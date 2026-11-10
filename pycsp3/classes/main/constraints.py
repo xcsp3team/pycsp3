@@ -860,6 +860,8 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         super().__init__(TypeCtr.ELEMENT)
         if len(lst) == 0:
             error("A constraint Element on an empty list of variables is encountered. Did you write something like x[:j] instead of x[:,j]?")
+        if index is not None and any(v is None for v in lst):  # the index of a variable in the list would not be its index in the array (#283)
+            error("The list " + str(lst) + " has holes (None), and so, cannot be indexed by a variable (constraint Element)")
         smallest = [] if index is None else index.dom.smallest_value()  # if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
         if index is not None:
@@ -895,6 +897,8 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
 class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
+        if any(v is None for row in lst for v in row):  # the indexes of a variable in the matrix would not be its indexes in the array (#283)
+            error("The matrix " + str(lst) + " has holes (None), and so, cannot be indexed by variables (constraint Element)")
         self.matrix = lst
         self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst, variables=lst,  # side-effect use of content_compressible for matrix
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
@@ -1548,6 +1552,10 @@ class ScalarProduct:
             indexes = [i for i in range(len(self.variables)) if not isinstance(self.coeffs[i], int) or self.coeffs[i] != 0]
             self.variables = [self.variables[i] for i in indexes]
             self.coeffs = [self.coeffs[i] for i in indexes]
+        if any(isinstance(x, ECtr) for x in self.variables):  # a constraint (as x[i] == 2, i being a variable) is its 0/1 value (#304)
+            self.variables = [value_of_constraint(x) if isinstance(x, ECtr) else x for x in self.variables]
+        if len(auxiliary().guards) > 0:  # each Boolean term is its own Boolean context, as in MiniZinc (#284)
+            self.variables = [auxiliary().own_context(x) for x in self.variables]
 
     def _combine_with(self, operator, right_operand):
         if len(self.variables) == 1 and isinstance(right_operand, (int, Variable, Node)):  # XCSP3-core requires at least two terms in a sum
@@ -1651,7 +1659,7 @@ class _Auxiliary:
         self.cache = []
         self.declared = set()  # the ids of the auxiliary variables declared by the user (Var() without domain), which are always written
         # the guards of the elements whose index can be outside the list (#282): a guard is an auxiliary variable aux replacing the index
-        self.guards = dict()  # the id of each guard -> Guard(aux or None for a list of identical integers, index, indexes of the list, rank of creation)
+        self.guards = Node.element_guards = dict()  # (seen by Node.build()) the id of each guard -> Guard(aux or None for a list of identical integers, index, indexes of the list, rank of creation)
         self.guarded = dict()  # the id of each variable depending on guards (the guards, the values of their elements, ...) -> the ids of the guards
         self.guard_cache = dict()  # (id of the index, length of the list) -> guard
         self.guards_posted = set()  # the ids of the guards for which index == aux has been posted (the index being restricted to the list)
@@ -1824,7 +1832,8 @@ class _Auxiliary:
         if len(self.guards) == 0:  # no index can be outside its list in the model (the usual case)
             return frozenset()
         extra = getattr(obj, "extra_guards", None) or getattr(getattr(obj, "constraint", None), "extra_guards", ())  # from a row of identical rows
-        return frozenset().union(*(self.guarded[x.id] for x in _variables_of(obj) if x.id in self.guarded), extra)
+        # the covered nodes do not depend on their guards anymore: their conditions are already in them
+        return frozenset().union(*(self.guarded[x.id] for x in _variables_of(obj, self.covered) if x.id in self.guarded), extra)
 
     def inherit_guards(self, aux, obj):
         # the auxiliary variable aux, replacing the object obj, depends on the guards of obj
@@ -1865,6 +1874,13 @@ class _Auxiliary:
             self.covered.update(id(n) for n in node.all_nodes_satisfying(lambda r: True))
         return node
 
+    def own_context(self, term):
+        # a Boolean expression used as a term of a count or of a sum is its own Boolean context, as in MiniZinc (bool2int): an element whose index
+        # is outside the list only makes this term false, and the term does not depend on the guards anymore (#284)
+        if not isinstance(term, Node) or not term.type.is_predicate_operator() or id(term) in self.covered or len(self.guards_of(term)) == 0:
+            return term
+        return self.cover(self.handle_guards(term, positive=False))
+
     def ordered(self, guards):
         # the guards in the order of their creation, so that the generated file is always the same
         return sorted(guards, key=lambda g: self.guards[g].rank)
@@ -1904,7 +1920,8 @@ class _Auxiliary:
                 return arg if all(s1 is s2 for s1, s2 in zip(sons, arg.cnt)) else Node(t, sons)
         guards = self.guards_of(arg)
         if len(guards) > 0 and isinstance(arg, (Node, Variable)) and not positive:
-            return Node.build(TypeNode.AND, *[self.guard_condition(g) for g in self.ordered(guards)], arg)
+            # a copy of the node, which can be covered without covering the node itself (that can also be posted directly, as p in satisfy(p, ~p | q))
+            return Node.build(TypeNode.AND, *[self.guard_condition(g) for g in self.ordered(guards)], arg.copy() if isinstance(arg, Node) else arg)
         for g in self.ordered(guards):
             self.post_guard(g)
         return arg
@@ -1956,21 +1973,25 @@ class _Guarded:  # an object only depending on guards
         self.extra_guards = frozenset(guards)
 
 
-def _variables_of(obj):
-    # the variables involved in the specified object (variable, node, constraint, condition, list)
+def _variables_of(obj, skipped=()):
+    # the variables involved in the specified object (variable, node, constraint, condition, list), except in the nodes whose ids are skipped
     if isinstance(obj, Variable):
         return [obj]
     if isinstance(obj, Node):
-        return obj.list_of_vars()
+        if len(skipped) == 0:
+            return obj.list_of_vars()
+        if id(obj) in skipped:
+            return []
+        return ([obj.cnt] if obj.type == TypeNode.VAR else []) if obj.is_leaf() else [x for s in obj.cnt for x in _variables_of(s, skipped)]
     if isinstance(obj, (ECtr, PartialConstraint)):
-        return _variables_of(obj.constraint)
+        return _variables_of(obj.constraint, skipped)
     if isinstance(obj, Constraint):
-        t = [_variables_of(a.content if a.variables is None else a.variables) for a in obj.arguments.values() if a is not None]
+        t = [_variables_of(a.content if a.variables is None else a.variables, skipped) for a in obj.arguments.values() if a is not None]
         return [x for l in t for x in l]
     if isinstance(obj, Condition):
-        return _variables_of(obj.right_operand())
+        return _variables_of(obj.right_operand(), skipped)
     if isinstance(obj, (list, tuple, set, frozenset)):
-        return [x for v in obj for x in _variables_of(v)]
+        return [x for v in obj for x in _variables_of(v, skipped)]
     return []
 
 
@@ -1991,6 +2012,17 @@ def auxiliary():
     if not hasattr(auxiliary, "obj") or auxiliary.obj is None:
         auxiliary.obj = _Auxiliary()
     return auxiliary.obj
+
+
+def value_of_constraint(c):
+    # the 0/1 value of a constraint (as x[i] == 2, i being a variable) that is an operand of an arithmetic operator, or a term of a scalar product,
+    # as for any Boolean expression (bool2int in MiniZinc): the expression (or the 0/1 variable) replacing it in a logical expression (#304)
+    assert isinstance(c, ECtr)
+    value = global_indirection(c.constraint)
+    if value is None:  # option -use_meta
+        error("A constraint " + str(c.constraint.name) + " cannot be an operand of an arithmetic operator with the option -use_meta (which builds "
+              "meta-constraints instead of expressions)")
+    return value.val if isinstance(value, ConstraintDummyConstant) else auxiliary().own_context(value)
 
 
 def global_indirection(c):
