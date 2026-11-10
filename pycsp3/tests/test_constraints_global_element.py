@@ -18,8 +18,6 @@ from harness import assert_optimum, assert_solutions, brute_force, bug, bug_for
 INT_CONDITION = ("#294: an element on a list of integers compared with an integer has an integer as operand of its condition, which XCSP3-core "
                  "does not allow, and ACE does not handle (unimplemented case for element)")
 NOOVERLAP_ELEMENT = "#302: an element given as an origin or a length of NoOverlap (two dimensions) is written as such in the XCSP3 file"
-HOLES = ("#283: the holes of an array indexed by a variable are removed from the list of the element, so that the index designates another "
-         "variable, and None is written in the matrix of an element on a matrix with holes")
 OWN_CONTEXT = ("#284: the Boolean terms of a count (Exist() with at least three terms, AtLeastOne(), NotExist(), ExactlyOne(), ...) or of a sum "
                "are not their own Boolean contexts: an element whose index is outside the list makes the whole constraint false, or restricts "
                "its index when the constraint is posted directly, instead of making only its own term false")
@@ -148,7 +146,6 @@ HOLES_1D = "x = VarArray(size=3, dom=lambda a: None if a == 1 else range(3))\n"
 HOLES_2D = "m = VarArray(size=[2, 2], dom=lambda a, b: None if b > a else range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(2))\n"
 
 
-@bug(HOLES)
 @pytest.mark.parametrize("code", [
     HOLES_1D + "j = Var(dom={0, 2})\nsatisfy(x[j] == 2)",
     HOLES_1D + "j = Var(dom=range(2))\nsatisfy(x[j] == 2)",
