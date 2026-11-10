@@ -475,6 +475,25 @@ def test_element_compared_with_a_value_as_operand_of_an_arithmetic_operator(run,
     check(run, solver, WEIGHTED + f"satisfy({constraint})", DW, predicate)
 
 
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(x[i[0]] == 2) + (x[i[1]] == 2) >= 1", lambda *t: held(t, 0) + held(t, 1) >= 1),
+    ("Sum((x[i[j]] == 2) * (j + 1) for j in range(3)) >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum((x[i[j]] == 2) * y for j in range(3)) >= 1", lambda *t: sum(held(t, j) for j in range(3)) * t[5] >= 1),
+    ("Sum(cp_array(x[i[j]] == 2 for j in range(3)) * [1, 2, 3]) >= 3", lambda *t: weighted(t) >= 3),
+    ("[x[i[j]] == 2 for j in range(3)] * [1, 2, 3] >= 3", lambda *t: weighted(t) >= 3),
+    ("1 - (x[i[0]] == 2) == y", lambda *t: 1 - held(t, 0) == t[5]),
+    ("(x[i[0]] == 2) - (x[i[1]] == 2) == 0", lambda *t: held(t, 0) == held(t, 1)),
+    # the integer x[i[1]] is not in a Boolean expression: the whole constraint, posted directly, restricts its index to the list
+    ("(x[i[0]] == 2) * x[i[1]] >= 1", lambda *t: t[3] < 2 and held(t, 0) * t[t[3]] >= 1),
+])
+def test_element_compared_with_a_value_as_operand_of_an_arithmetic_operator_with_an_index_outside_the_list(run, solver, constraint, predicate):
+    # as in MiniZinc, the 0/1 value of an element compared with a value is its own Boolean context: it is 0 when the index is outside the list
+    # (#284)
+    if solver == "CHOCO" and ("Sum(" in constraint or "* [" in constraint):  # posted as a sum of these terms
+        pytest.skip(CHOCO_DUPLICATES)
+    check(run, solver, BOOLEAN_TERMS + f"satisfy({constraint})", DB, predicate)
+
+
 # an index i that can take the value 3, outside the list x, with an element in an argument written as a string in the XCSP3 file (matrix,
 # tuples of NoOverlap, literals of Clause), whose guard must be found too (in the predicates: t[:3] for x, t[3] for i, t[4:] for y)
 STRING_ARGS = "x = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(4))\ny = VarArray(size=3, dom={0, 1})\n"

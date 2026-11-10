@@ -2019,7 +2019,7 @@ def value_of_constraint(c):
     if value is None:  # option -use_meta
         error("A constraint " + str(c.constraint.name) + " cannot be an operand of an arithmetic operator with the option -use_meta (which builds "
               "meta-constraints instead of expressions)")
-    return value.val if isinstance(value, ConstraintDummyConstant) else value
+    return value.val if isinstance(value, ConstraintDummyConstant) else auxiliary().own_context(value)
 
 
 def global_indirection(c):
