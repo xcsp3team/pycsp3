@@ -1785,7 +1785,7 @@ class _Auxiliary:
         inside = None if isinstance(index, Node) else {v for v in index.dom if 0 <= v < length}
         values = possible_range(inside) if inside else range(length)  # all the indexes for an expression, or for an index never in the list
         aux = self.new_var(values)
-        self.guards[aux.id] = (aux, index, sorted(values))
+        self.guards[aux.id] = (aux, index, values)
         self.guard_rank[aux.id] = len(self.guard_rank)
         self.guarded[aux.id] = frozenset([aux.id]) | self.guards_of(index)  # an index may depend itself on guards (as in x[y[i]])
         self.guard_cache[key] = aux
