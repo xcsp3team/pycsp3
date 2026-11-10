@@ -1552,6 +1552,8 @@ class ScalarProduct:
             indexes = [i for i in range(len(self.variables)) if not isinstance(self.coeffs[i], int) or self.coeffs[i] != 0]
             self.variables = [self.variables[i] for i in indexes]
             self.coeffs = [self.coeffs[i] for i in indexes]
+        if any(isinstance(x, ECtr) for x in self.variables):  # a constraint (as x[i] == 2, i being a variable) is its 0/1 value (#304)
+            self.variables = [value_of_constraint(x) if isinstance(x, ECtr) else x for x in self.variables]
 
     def _combine_with(self, operator, right_operand):
         if len(self.variables) == 1 and isinstance(right_operand, (int, Variable, Node)):  # XCSP3-core requires at least two terms in a sum
@@ -2007,6 +2009,17 @@ def auxiliary():
     if not hasattr(auxiliary, "obj") or auxiliary.obj is None:
         auxiliary.obj = _Auxiliary()
     return auxiliary.obj
+
+
+def value_of_constraint(c):
+    # the 0/1 value of a constraint (as x[i] == 2, i being a variable) that is an operand of an arithmetic operator, or a term of a scalar product,
+    # as for any Boolean expression (bool2int in MiniZinc): the expression (or the 0/1 variable) replacing it in a logical expression (#304)
+    assert isinstance(c, ECtr)
+    value = global_indirection(c.constraint)
+    if value is None:  # option -use_meta
+        error("A constraint " + str(c.constraint.name) + " cannot be an operand of an arithmetic operator with the option -use_meta (which builds "
+              "meta-constraints instead of expressions)")
+    return value.val if isinstance(value, ConstraintDummyConstant) else value
 
 
 def global_indirection(c):

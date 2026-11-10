@@ -103,9 +103,9 @@ def cursing():
             return NotImplemented
         if isinstance(self, (tuple, list)) and isinstance(other, (tuple, list)):
             if len(self) == len(other):
-                if is_containing(self, (Variable, Node), check_first_only=True):
+                if is_containing(self, (Variable, Node, ECtr), check_first_only=True):
                     return ScalarProduct(self, other)
-                elif is_containing(other, (Variable, Node), check_first_only=True):
+                elif is_containing(other, (Variable, Node, ECtr), check_first_only=True):
                     return ScalarProduct(other, self)
         if isinstance(self, int) and isinstance(other, (tuple, list)) and is_containing(other, (Variable, Node), check_first_only=True):
             return ScalarProduct(other, [self] * len(other))
@@ -311,13 +311,13 @@ class OpOverrider:
         Variable.__ge__ = Node.__ge__ = OpOverrider.__ge__
         Variable.__gt__ = Node.__gt__ = OpOverrider.__gt__
 
-        Variable.__neg__ = Node.__neg__ = OpOverrider.__neg__
-        Variable.__add__ = Node.__add__ = OpOverrider.__add__
-        Variable.__radd__ = Node.__radd__ = OpOverrider.__radd__
-        Variable.__sub__ = Node.__sub__ = OpOverrider.__sub__
-        Variable.__rsub__ = Node.__rsub__ = OpOverrider.__rsub__
-        Variable.__mul__ = Node.__mul__ = OpOverrider.__mul__
-        Variable.__rmul__ = Node.__rmul__ = OpOverrider.__rmul__
+        ECtr.__neg__ = Variable.__neg__ = Node.__neg__ = OpOverrider.__neg__
+        ECtr.__add__ = Variable.__add__ = Node.__add__ = OpOverrider.__add__
+        ECtr.__radd__ = Variable.__radd__ = Node.__radd__ = OpOverrider.__radd__
+        ECtr.__sub__ = Variable.__sub__ = Node.__sub__ = OpOverrider.__sub__
+        ECtr.__rsub__ = Variable.__rsub__ = Node.__rsub__ = OpOverrider.__rsub__
+        ECtr.__mul__ = Variable.__mul__ = Node.__mul__ = OpOverrider.__mul__
+        ECtr.__rmul__ = Variable.__rmul__ = Node.__rmul__ = OpOverrider.__rmul__
         Variable.__floordiv__ = Node.__floordiv__ = OpOverrider.__floordiv__
         Variable.__rfloordiv__ = Node.__rfloordiv__ = OpOverrider.__rfloordiv__
         Variable.__mod__ = Node.__mod__ = OpOverrider.__mod__
@@ -352,13 +352,13 @@ class OpOverrider:
         Variable.__ge__ = Node.__ge__ = object.__ge__
         Variable.__gt__ = Node.__gt__ = object.__gt__
 
-        Variable.__neg__ = Node.__neg__ = None
-        Variable.__add__ = Node.__add__ = None
-        Variable.__radd__ = Node.__radd__ = None
-        Variable.__sub__ = Node.__sub__ = None
-        Variable.__rsub__ = Node.__rsub__ = None
-        Variable.__mul__ = Node.__mul__ = None
-        Variable.__rmul__ = Node.__rmul__ = None
+        ECtr.__neg__ = Variable.__neg__ = Node.__neg__ = None
+        ECtr.__add__ = Variable.__add__ = Node.__add__ = None
+        ECtr.__radd__ = Variable.__radd__ = Node.__radd__ = None
+        ECtr.__sub__ = Variable.__sub__ = Node.__sub__ = None
+        ECtr.__rsub__ = Variable.__rsub__ = Node.__rsub__ = None
+        ECtr.__mul__ = Variable.__mul__ = Node.__mul__ = None
+        ECtr.__rmul__ = Variable.__rmul__ = Node.__rmul__ = None
         Variable.__floordiv__ = Node.__floordiv__ = None
         Variable.__rfloordiv__ = Node.__rfloordiv__ = None
         Variable.__mod__ = Node.__mod__ = None
@@ -1021,14 +1021,14 @@ class ListInt(list):
                 *[(self[i][j], other[i][j]) for i in range(len(self)) for j in range(len(self[0])) if self[i][j] is not None and other[i][j] is not None])
             assert is_containing(t2, (Variable, Node))
             return ScalarProduct(list(t2), list(t1))
-        if is_containing(flatten(other), (Variable, Node)):
+        if is_containing(flatten(other), (Variable, Node, ECtr)):
             if len(self) == 1:
                 if isinstance(other, Variable):
                     return self[0] * other
                 if isinstance(other, (tuple, list)) and len(other) == 1:
                     return self[0] * other[0]
             return ScalarProduct(other, self)
-        assert is_containing(self, (Variable, Node))
+        assert is_containing(self, (Variable, Node, ECtr))
         return ScalarProduct(self, other)
 
     def __rmul__(self, other):

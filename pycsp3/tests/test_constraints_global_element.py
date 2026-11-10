@@ -436,6 +436,45 @@ def test_element_with_an_index_outside_the_list_in_boolean_terms(run, solver, co
     check(run, solver, BOOLEAN_TERMS + f"satisfy({constraint})", DB, predicate, args=args)
 
 
+WEIGHTED = "x = VarArray(size=2, dom=range(3))\ni = VarArray(size=3, dom=range(2))\ny = Var(dom=range(2))\n"
+DW = [range(3)] * 2 + [range(2)] * 4
+
+
+def held(t, j, v=2):  # the 0/1 value of x[i[j]] == v, false when the index is outside the list
+    return int(t[2 + j] < 2 and t[t[2 + j]] == v)
+
+
+def weighted(t):  # the sum of the terms x[i[j]] == 2 weighted by j + 1
+    return sum(held(t, j) * (j + 1) for j in range(3))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(x[i[0]] == 2) + (x[i[1]] == 2) >= 1", lambda *t: held(t, 0) + held(t, 1) >= 1),
+    ("Sum((x[i[j]] == 2) * (j + 1) for j in range(3)) >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum((x[i[j]] == 2) * y for j in range(3)) >= 1", lambda *t: sum(held(t, j) for j in range(3)) * t[5] >= 1),
+    ("Sum([x[i[j]] == 2 for j in range(3)] * cp_array([1, 2, 3])) >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum(cp_array(x[i[j]] == 2 for j in range(3)) * [1, 2, 3]) >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum(cp_array([1, 2, 3]) * [x[i[j]] == 2 for j in range(3)]) >= 3", lambda *t: weighted(t) >= 3),
+    ("[x[i[j]] == 2 for j in range(3)] * [1, 2, 3] >= 3", lambda *t: weighted(t) >= 3),
+    ("Sum([x[0] == 2, x[i[1]] == 2, x[i[2]] == 1] * [1, 2, 3]) >= 3", lambda *t: int(t[0] == 2) + 2 * held(t, 1) + 3 * held(t, 2, 1) >= 3),
+    ("sum(x[i[j]] == 2 for j in range(3)) == 2", lambda *t: sum(held(t, j) for j in range(3)) == 2),
+    ("y * (x[i[0]] == 2) + (x[i[1]] == 1) * y == 1", lambda *t: t[5] * held(t, 0) + held(t, 1, 1) * t[5] == 1),
+    ("2 * (x[i[0]] == 2) + 3 * (x[i[1]] == 1) == 2", lambda *t: 2 * held(t, 0) + 3 * held(t, 1, 1) == 2),
+    ("-(x[i[0]] == 2) + 1 - (x[i[1]] == 1) == 0", lambda *t: -held(t, 0) + 1 - held(t, 1, 1) == 0),
+    ("1 - (x[i[0]] == 2) == y", lambda *t: 1 - held(t, 0) == t[5]),
+    ("(x[i[0]] == 2) - (x[i[1]] == 2) == 0", lambda *t: held(t, 0) == held(t, 1)),
+    ("(x[i[0]] == 2) * x[i[1]] >= 1", lambda *t: held(t, 0) * t[t[3]] >= 1),
+    ("(x[i[0]] == y) + (x[i[1]] != 1) == 1", lambda *t: int(t[t[2]] == t[5]) + int(t[t[3]] != 1) == 1),
+    # other constraints than element, as operands
+    ("(Sum(x) > 2) + (x[i[0]] == 1) == 1", lambda *t: int(t[0] + t[1] > 2) + held(t, 0, 1) == 1),
+    ("AllDifferent(x) + (x[i[0]] == 1) == 1", lambda *t: int(t[0] != t[1]) + held(t, 0, 1) == 1),
+])
+def test_element_compared_with_a_value_as_operand_of_an_arithmetic_operator(run, solver, constraint, predicate):
+    # an element compared with a value (as x[i[0]] == 2) is a constraint, which is its 0/1 value when it is an operand of an arithmetic operator or
+    # a term of a scalar product, as for any Boolean expression (bool2int in MiniZinc) (#304)
+    check(run, solver, WEIGHTED + f"satisfy({constraint})", DW, predicate)
+
+
 # an index i that can take the value 3, outside the list x, with an element in an argument written as a string in the XCSP3 file (matrix,
 # tuples of NoOverlap, literals of Clause), whose guard must be found too (in the predicates: t[:3] for x, t[3] for i, t[4:] for y)
 STRING_ARGS = "x = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(4))\ny = VarArray(size=3, dom={0, 1})\n"

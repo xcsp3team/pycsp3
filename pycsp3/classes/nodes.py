@@ -6,7 +6,7 @@ from itertools import product
 from pycsp3.classes import main
 from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeArithmeticOperator, TypeLogicalOperator, TypeOrderedOperator, TypeAbstractOperation
 from pycsp3.classes.auxiliary.enums import auto
-from pycsp3.classes.entities import Entity, EVar
+from pycsp3.classes.entities import Entity, EVar, ECtr
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import flatten, warning, warning_if, neg_range, abs_range, add_range, possible_range
 from pycsp3.dashboard import options
@@ -658,6 +658,8 @@ class Node(Entity):
                 t.append(Node(TypeNode.PARTIAL, arg))
             elif isinstance(arg, main.constraints.ConstraintDummyConstant):  # a constant (true or false)
                 t.append(Node(INT, arg.val))
+            elif isinstance(arg, ECtr):  # a constraint (as x[i] == 2, i being a variable) is its 0/1 value in an expression (#304)
+                t.extend(Node._create_sons(main.constraints.value_of_constraint(arg)))
             else:
                 raise ValueError("Problem: bad form of predicate " + str(arg))
         return t
