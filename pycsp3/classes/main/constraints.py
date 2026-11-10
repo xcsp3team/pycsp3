@@ -1903,7 +1903,7 @@ class _Auxiliary:
                 sons = [self.handle_guards(s, positive and not logical) for s in arg.cnt]
                 return arg if all(s1 is s2 for s1, s2 in zip(sons, arg.cnt)) else Node(t, sons)
         guards = self.guards_of(arg)
-        if len(guards) > 0 and isinstance(arg, Node) and not positive:
+        if len(guards) > 0 and isinstance(arg, (Node, Variable)) and not positive:
             return Node.build(TypeNode.AND, *[self.guard_condition(g) for g in self.ordered(guards)], arg)
         for g in self.ordered(guards):
             self.post_guard(g)

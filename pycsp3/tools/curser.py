@@ -729,7 +729,7 @@ class OpOverrider:
             self = gi
         if len(auxiliary().guards) > 0 and isinstance(self, (Variable, Node)) and id(self) not in auxiliary().covered and len(auxiliary().guards_of(self)) > 0:
             # an element whose index is outside the list does not hold: its condition is added before the negation (#282)
-            node = auxiliary().cover(auxiliary().handle_guards(self == 1 if isinstance(self, Variable) else self, positive=False))
+            node = auxiliary().cover(auxiliary().handle_guards(self, positive=False))
             return auxiliary().cover(OpOverrider.__invert__(node))
         if isinstance(self, VariableInteger):
             return Variable.__invert__(self)
