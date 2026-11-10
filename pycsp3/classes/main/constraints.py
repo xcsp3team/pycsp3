@@ -1,6 +1,6 @@
 import hashlib
 import marshal
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from itertools import permutations, combinations
 
 from pycsp3 import functions
@@ -58,7 +58,7 @@ class Diffs:
 
 
 class ConstraintArgument:
-    def __init__(self, name, content, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
+    def __init__(self, name, content, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False, variables=None):
         assert adhoc or isinstance(name, (TypeCtrArg, TypeXML, TypeAnn, main.annotations.TypeAnnArg)), str(name) + " " + str(type(name))
         self.name = name  # name of the argument
         self.attributes = [] if attributes is None else attributes  # list of pairs (key, value) representing the attributes
@@ -67,6 +67,7 @@ class ConstraintArgument:
         self.content_compressible = content_compressible  # indicates if we can try to make the content more compact
         self.content_ordered = content_ordered  # indicates if the content must be kept as it is (order is important)
         self.lifted = lifted  # indicates if the constraint is lifted to several lists (or sets); see specifications
+        self.variables = variables  # the variables (possibly in lists) of a content written as a string (matrix, tuples, literals)
 
     def __eq__(self, other):  # must be called in protection mode (see in functions.py the function protect())
         if not isinstance(other, ConstraintArgument) or self.name != other.name or len(self.attributes) > 0 or len(other.attributes) > 0:
@@ -111,8 +112,8 @@ class Constraint:
             return False
         return [v for v in self.arguments.items() if str(v[0]) != "condition"] == [v for v in other.arguments.items() if str(v[0]) != "condition"]
 
-    def arg(self, name, content, *, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False):
-        self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc)
+    def arg(self, name, content, *, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False, variables=None):
+        self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc, variables)
         return self
 
     def set_condition(self, operator, right_operand):
@@ -479,7 +480,8 @@ def _is_compressible_matrix(m):
 class ConstraintAllDifferentMatrix(ConstraintUnmergeable):
     def __init__(self, lst, excepting):
         super().__init__(TypeCtr.ALL_DIFFERENT)
-        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst if _is_compressible_matrix(lst) else False)
+        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst if _is_compressible_matrix(lst) else False,
+                 variables=lst)
         self.arg(TypeCtrArg.EXCEPT, excepting)
 
 
@@ -562,7 +564,7 @@ class ConstraintLex(ConstraintUnmergeable):
 class ConstraintLexMatrix(ConstraintUnmergeable):
     def __init__(self, lst, operator):
         super().__init__(TypeCtr.LEX)
-        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst)
+        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst, variables=lst)
         self.arg(TypeCtrArg.OPERATOR, operator)
         self._lists, self._operator = lst, operator  # kept for the decomposition
 
@@ -894,7 +896,7 @@ class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
         self.matrix = lst
-        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst,  # side-effect use of content_compressible for matrix
+        self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst, variables=lst,  # side-effect use of content_compressible for matrix
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
                      [(TypeCtrArg.START_COL_INDEX, start_col_index)] if start_col_index else []))
 
@@ -942,9 +944,9 @@ class ConstraintNoOverlap(ConstraintUnmergeable):
     def __init__(self, origins, lengths, zero_ignored):
         super().__init__(TypeCtr.NO_OVERLAP)
         self.arg(TypeCtrArg.ORIGINS, "".join(["(" + ",".join(str(v) for v in t) + ")" for t in origins]) if isinstance(origins[0], tuple) else origins,
-                 content_ordered=True)
+                 content_ordered=True, variables=origins)
         self.arg(TypeCtrArg.LENGTHS, "".join(["(" + ",".join(str(v) for v in t) + ")" for t in lengths]) if isinstance(lengths[0], tuple) else lengths,
-                 content_ordered=True)
+                 content_ordered=True, variables=lengths)
         if not zero_ignored:
             self.attributes.append((TypeXML.ZERO_IGNORED, str(zero_ignored).lower()))
 
@@ -1024,7 +1026,8 @@ class ConstraintCircuit(Constraint):
 class ConstraintClause(Constraint):
     def __init__(self, variables, phases):
         super().__init__(TypeCtr.CLAUSE)
-        self.arg(TypeCtrArg.LIST, [str(v) if phases[i] else "not(" + str(v) + ")" for i, v in enumerate(variables)], content_ordered=True)
+        self.arg(TypeCtrArg.LIST, [str(v) if phases[i] else "not(" + str(v) + ")" for i, v in enumerate(variables)], content_ordered=True,
+                 variables=variables)
 
 
 class ConstraintAdhoc(ConstraintUnmergeable):
@@ -1447,7 +1450,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         elif isinstance(i, int):
             self.constraint = ConstraintElement(lst[:, i], index=index)
         elif isinstance(i, Node):
-            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_node(i, values=range(max(len(row) for row in lst))))
+            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_element_index(max(len(row) for row in lst), i))
 
         return self
 
@@ -1647,6 +1650,13 @@ class _Auxiliary:
         self.prefix = "aux_gb"
         self.cache = []
         self.declared = set()  # the ids of the auxiliary variables declared by the user (Var() without domain), which are always written
+        # the guards of the elements whose index can be outside the list (#282): a guard is an auxiliary variable aux replacing the index
+        self.guards = dict()  # the id of each guard -> Guard(aux or None for a list of identical integers, index, indexes of the list, rank of creation)
+        self.guarded = dict()  # the id of each variable depending on guards (the guards, the values of their elements, ...) -> the ids of the guards
+        self.guard_cache = dict()  # (id of the index, length of the list) -> guard
+        self.guards_posted = set()  # the ids of the guards for which index == aux has been posted (the index being restricted to the list)
+        self.guard_tables = dict()  # the id of each guard -> the variable equal to its index, aux being functionally defined by a table
+        self.covered = set()  # the ids of the nodes already in the scope of the conditions of their guards (below a negation)
 
     def new_var(self, *args):
         dom = args[0] if len(args) == 1 and isinstance(args[0], Domain) else Domain(*args)
@@ -1708,7 +1718,7 @@ class _Auxiliary:
             values = possible_range(pc.constraint.all_possible_values())
         else:
             values = range(pc.constraint.min_possible_value(), pc.constraint.max_possible_value() + 1)
-        aux = self.__replace(pc, Domain(values))
+        aux = self.inherit_guards(self.__replace(pc, Domain(values)), pc.constraint)
         self.cache.append((pc.constraint, aux))
         return aux
 
@@ -1721,7 +1731,7 @@ class _Auxiliary:
         c = cc.constraint
         cond = c.arguments[TypeCtrArg.CONDITION].content
         op, k = cond.operator, cond.right_operand()
-        aux = self.new_var(range(c.min_possible_value(), c.max_possible_value() + 1))
+        aux = self.inherit_guards(self.new_var(range(c.min_possible_value(), c.max_possible_value() + 1)), c)
         c.set_condition(TypeConditionOperator.EQ, aux)
         self._collected_raw_constraints.append(cc)
         return functions.expr(op, aux, k)
@@ -1731,7 +1741,7 @@ class _Auxiliary:
         if values is None:  # otherwise, for the moment, this parameter is used when this is a range for an Element constraint
             values = node.possible_values()
             values = {v for v in values} if len(values) <= 2 else values  # in order to avoid having a range for just 1 or 2 values
-        return self.__replace(node, Domain(values))
+        return self.inherit_guards(self.__replace(node, Domain(values)), node)
 
     def replace_nodes(self, nodes, *, values=None):
         assert isinstance(nodes, list)
@@ -1760,19 +1770,144 @@ class _Auxiliary:
         return terms
 
     def replace_element_index(self, length, index):
-        if index.dom.smallest_value() >= 0 and index.dom.greatest_value() < length:  # if value not outside possible indexes
-            return None
-        if not options.force_element_index:
-            error("Problem with an indexing expression ; maybe -force_element_index is appropriate, "
-                  "or maybe replace array[index] by array[aux] after having posed ((aux := Var()) == index)")
-        aux = self.new_var(possible_range({v for v in index.dom if 0 <= v < length}))
-        functions.satisfy(index == aux)
-
-        # below, should we replace ANY by a specific value (for avoiding interchangeable values)?
-        # self.collect_table(index, aux, {(v, v if 0 <= v < length else ANY) for v in index.dom})
-        # self.collect_table(index, aux, {(v, v) for v in index.dom if 0 <= v < length})
-        # functions.satisfy((index, aux) in {(v, v if 0 <= v < length else ANY) for v in index.dom})
+        # an index (a variable or an expression) that can take values outside the indexes 0..length-1 of the list is replaced by a guard: an
+        # auxiliary variable aux whose domain is the indexes; nothing is posted here (see handle_guards()); an expression taking only indexes is
+        # replaced by an auxiliary variable too (None is returned for such a variable)
+        assert isinstance(index, (Variable, Node))
+        outside = values_outside_indexes(index, length)
+        if len(outside) == 0:
+            return self.replace_node(index, values=range(length)) if isinstance(index, Node) else None
+        key = (id(index), length)
+        if key in self.guard_cache:
+            return self.guard_cache[key]
+        self._warning_index_outside(index, length, outside)
+        inside = None if isinstance(index, Node) else {v for v in index.dom if 0 <= v < length}
+        values = possible_range(inside) if inside else range(length)  # all the indexes for an expression, or for an index never in the list
+        aux = self.new_var(values)
+        self.guards[aux.id] = Guard(aux, index, values, len(self.guards))
+        self.guarded[aux.id] = frozenset([aux.id]) | self.guards_of(index)  # an index may depend itself on guards (as in x[y[i]])
+        self.guard_cache[key] = aux
         return aux
+
+    def identical_index_guards(self, length, index):
+        # returns the guards (ids) of the index of a list of identical integers (or rows), the constant (or the row) being only defined when the
+        # index is in the list; there is no element, and so no auxiliary variable for the index (a guard is then simply an id)
+        assert isinstance(index, Variable)
+        outside = values_outside_indexes(index, length)
+        if len(outside) == 0:
+            return self.guards_of(index)  # the index may depend on guards (as in c[k + 1], k + 1 being replaced by a guard)
+        key = (id(index), length, "identical")
+        if key not in self.guard_cache:
+            self._warning_index_outside(index, length, outside)
+            g = "guard" + str(len(self.guards))
+            # all the indexes when the index can never be in the list (the condition never holds)
+            self.guards[g] = Guard(None, index, [v for v in index.dom if 0 <= v < length] or list(range(length)), len(self.guards))
+            self.guard_cache[key] = g
+        return self.guards_of(index) | {self.guard_cache[key]}
+
+    def _warning_index_outside(self, index, length, outside):
+        if options.force_element_index:
+            return
+        values = index.dom.all_values() if isinstance(index, Variable) else index.possible_values()
+        if len(outside) == len(values):  # outside being the values of the index outside 0..length-1, all of them are outside
+            warning("The index " + str(index) + " of an element can never be an index of the list (0.." + str(length - 1) + "): the element never "
+                    "holds, and posted directly, it makes the model unsatisfiable (give -force_element_index to avoid this warning)",
+                    "element_index_never")
+        else:
+            warning("The index " + str(index) + " of an element can take values outside the indexes 0.." + str(length - 1) + " of the list ("
+                    + ", ".join(str(v) for v in outside[:3]) + (", ..." if len(outside) > 3 else "") + "): the element does not hold for "
+                    "these values, and posted directly, it restricts its index to the list (give -force_element_index to avoid this warning)",
+                    "element_index_outside")
+
+    def guards_of(self, obj):
+        # returns the ids of the guards on which the specified object (variable, node, constraint, list) depends
+        if len(self.guards) == 0:  # no index can be outside its list in the model (the usual case)
+            return frozenset()
+        extra = getattr(obj, "extra_guards", None) or getattr(getattr(obj, "constraint", None), "extra_guards", ())  # from a row of identical rows
+        return frozenset().union(*(self.guarded[x.id] for x in _variables_of(obj) if x.id in self.guarded), extra)
+
+    def inherit_guards(self, aux, obj):
+        # the auxiliary variable aux, replacing the object obj, depends on the guards of obj
+        if len(self.guards) > 0 and len(guards := self.guards_of(obj)) > 0:
+            self.guarded[aux.id] = self.guarded.get(aux.id, frozenset()) | guards
+        return aux
+
+    def guarded_constant(self, value, guards):
+        # a constant (an integer of a list of identical integers) that is only defined when the guards (ids) hold
+        return self.inherit_guards(self.new_var(value), _Guarded(guards))
+
+    def with_guards(self, res, guards):
+        # what is taken from a row of a matrix of identical rows whose index can be outside the matrix depends on the guards (ids) of this index
+        if isinstance(res, (int, ConstraintDummyConstant)):
+            return self.guarded_constant(res if isinstance(res, int) else res.val, guards)
+        if isinstance(res, PartialConstraint):
+            res.constraint.extra_guards = getattr(res.constraint, "extra_guards", frozenset()) | guards
+        elif isinstance(res, Variable) and res.id in self.guarded:  # a guarded constant
+            self.guarded[res.id] |= guards
+        return res
+
+    def post_guard(self, g):
+        # the element is posted directly: its index is restricted to the list by index == aux
+        if g in self.guards_posted:
+            return
+        self.guards_posted.add(g)
+        aux, index, indexes, _ = self.guards[g]
+        if aux is None:  # the index of a list of identical integers (or rows)
+            functions.satisfy(functions.belong(index, indexes), no_comment_tags_extraction=True)
+        elif isinstance(index, Variable):
+            functions.satisfy(index == aux, no_comment_tags_extraction=True)
+        else:
+            self._collected_constraints.append((index, aux))  # as for replace_node(), index == aux is posted with the auxiliary constraints
+
+    def cover(self, node):
+        # the subexpressions of the node (built by a negation) are in the scope of the conditions of their guards
+        if len(self.guards) > 0 and isinstance(node, Node):
+            self.covered.update(id(n) for n in node.all_nodes_satisfying(lambda r: True))
+        return node
+
+    def ordered(self, guards):
+        # the guards in the order of their creation, so that the generated file is always the same
+        return sorted(guards, key=lambda g: self.guards[g].rank)
+
+    def post_guards_of(self, obj):
+        for g in self.ordered(self.guards_of(obj)):
+            self.post_guard(g)
+
+    def guard_condition(self, g):
+        # the condition of the element in a logical expression: its index is in the list; aux is then equal to the index, by a table (aux is
+        # equal to its smallest value otherwise)
+        aux, index, indexes, _ = self.guards[g]
+        if aux is None:  # the index of a list of identical integers (or rows): no element, and so no table
+            return functions.belong(index, indexes)
+        if g not in self.guard_tables:
+            var = index if isinstance(index, Variable) else self.replace_node(index)
+            table = sorted((v, v if v in indexes else indexes[0]) for v in var.dom)
+            self._collected_raw_constraints.append(functions._Extension(scope=[var, aux], table=table))
+            self.guard_tables[g] = var
+        return functions.belong(self.guard_tables[g], indexes)  # for an expression, the variable equal to it
+
+    def handle_guards(self, arg, positive=True):
+        # an argument of satisfy() (or an objective) whose elements can have an index outside their lists (#282): an element posted directly, or in
+        # a conjunction posted directly, restricts its index to the list (index == aux is posted); in a logical expression, an element whose index
+        # is outside the list does not hold: the smallest subexpression containing it, below the logical operators, becomes (index in list) & ...
+        if len(self.guards) == 0 or id(arg) in self.covered:
+            return arg
+        if isinstance(arg, (list, tuple, set, frozenset)):  # a tuple or a set can be given in a list of satisfy()
+            return [self.handle_guards(a, positive) for a in arg]
+        if isinstance(arg, Node):
+            t = arg.type
+            logical = t in (TypeNode.OR, TypeNode.NOT, TypeNode.XOR, TypeNode.IFF, TypeNode.IMP, TypeNode.IF) or (t == TypeNode.AND and not positive) or (
+                    t.is_relational_operator() and any(s.type.is_predicate_operator() for s in arg.cnt) and all(_boolean(s) for s in arg.cnt))
+            # the last case is a comparison of Boolean expressions, as (x[i] == 2) == (v == 1) or b == conjunction(...) for a 0/1 variable b
+            if logical or t == TypeNode.AND:
+                sons = [self.handle_guards(s, positive and not logical) for s in arg.cnt]
+                return arg if all(s1 is s2 for s1, s2 in zip(sons, arg.cnt)) else Node(t, sons)
+        guards = self.guards_of(arg)
+        if len(guards) > 0 and isinstance(arg, (Node, Variable)) and not positive:
+            return Node.build(TypeNode.AND, *[self.guard_condition(g) for g in self.ordered(guards)], arg)
+        for g in self.ordered(guards):
+            self.post_guard(g)
+        return arg
 
     def replace_int(self, v):
         assert isinstance(v, (int, ConstraintDummyConstant))
@@ -1806,6 +1941,50 @@ class _Auxiliary:
         t = self._collected_extension_constraints
         self._collected_extension_constraints = []
         return t
+
+
+def _boolean(node):  # a Boolean expression, a 0/1 variable or the integer 0 or 1
+    return node.type.is_predicate_operator() or (node.type == TypeNode.VAR and node.cnt.dom.is_binary()) or (
+            node.type == TypeNode.INT and node.cnt in (0, 1))
+
+
+Guard = namedtuple("Guard", "aux index values rank")  # aux is None for the index of a list of identical integers
+
+
+class _Guarded:  # an object only depending on guards
+    def __init__(self, guards):
+        self.extra_guards = frozenset(guards)
+
+
+def _variables_of(obj):
+    # the variables involved in the specified object (variable, node, constraint, condition, list)
+    if isinstance(obj, Variable):
+        return [obj]
+    if isinstance(obj, Node):
+        return obj.list_of_vars()
+    if isinstance(obj, (ECtr, PartialConstraint)):
+        return _variables_of(obj.constraint)
+    if isinstance(obj, Constraint):
+        t = [_variables_of(a.content if a.variables is None else a.variables) for a in obj.arguments.values() if a is not None]
+        return [x for l in t for x in l]
+    if isinstance(obj, Condition):
+        return _variables_of(obj.right_operand())
+    if isinstance(obj, (list, tuple, set, frozenset)):
+        return [x for v in obj for x in _variables_of(v)]
+    return []
+
+
+def values_outside_indexes(index, length):
+    """Returns the values that the index (a variable or an expression) of an element can take outside the indexes 0..length-1 of the list."""
+    if isinstance(index, Variable):
+        if index.dom.smallest_value() >= 0 and index.dom.greatest_value() < length:  # the usual case, without iterating over the domain
+            return []
+        values = index.dom
+    else:
+        values = index.possible_values()
+        if isinstance(values, range) and values.start >= 0 and values.stop <= length:
+            return []
+    return [v for v in values if not 0 <= v < length]
 
 
 def auxiliary():
@@ -1877,7 +2056,7 @@ def global_indirection(c):
             assert TypeCtrArg.SUPPORTS in c.arguments  # for the moment
             table = c.arguments[TypeCtrArg.SUPPORTS].content
             assert c.original_small_ordinary_table is not None
-            var = auxiliary().new_var(0, 1)
+            var = auxiliary().inherit_guards(auxiliary().new_var(0, 1), lst)
             auxiliary().collect_table(lst, var, to_reified_ordinary_table(c.original_small_ordinary_table, [x.dom for x in lst]))
             return var
     if pc is None:
