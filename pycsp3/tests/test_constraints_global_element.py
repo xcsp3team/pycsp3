@@ -28,6 +28,8 @@ EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty 
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 COSOCO_ROWS = "xcsp3team/cosoco#82: cosoco fails on a matrix given by explicit rows (Matrix variable (x does not exist)"
 COSOCO_CLAUSE = "cosoco does not handle clause (Clause constraint not yet supported, s UNSUPPORTED)"
+COSOCO_IN_SET = ("xcsp3team/cosoco#113: cosoco crashes (segmentation fault) on a disjunction (or an implication) containing in(v,set(...)) with "
+                 "variables in the set (CosocoCallbacks::createArrays() takes each element of the set as a constant)")
 
 # a list of identical integers c, an index i and a variable v (in the predicates: t[0] for i, t[1] for v)
 C3 = "c = cp_array([2, 2, 2])\ni = Var(dom=range(3))\nv = Var(dom=range(5))\n"
@@ -203,11 +205,54 @@ def test_xcsp3_member_of_an_expression_or_of_a_two_dimensional_list(run, constra
     assert element.find("list").text.strip() == scope and element.find("value").text.strip() == value, r.report()
 
 
-@pytest.mark.parametrize("constraint", ["x[i] in x[1:]", "x[i] not in x[1:]", "Sum(x[:2]) in x[2:]", "x[:2] * [1, 2] in x[2:]", "Maximum(x[:2]) in x[2:]"])
+@pytest.mark.parametrize("constraint", ["x[i] in x[1:]", "x[i] not in x[1:]", "Sum(x[:2]) in x[2:]", "x[:2] * [1, 2] in x[2:]", "Maximum(x[:2]) in x[2:]",
+                                        "(Sum(x[:2]) in x[2:]) | (i == 0)", "(Sum(x[:2]) not in x[2:]) | (i == 0)", "(Maximum(x[:2]) in [x[2], 3]) | (i == 0)",
+                                        "belong(Sum(x[:2]), x[2:])", "not_belong(Sum(x[:2]), x[2:])"])
 def test_element_member_of_a_component(run, constraint):
-    # the values of the condition of a component (element, sum, ...) must be integers (#249), as with a list written literally (#287)
+    # the values of the condition of a component (element, sum, ...) must be integers (#249), as with a list written literally (#287),
+    # also in a logical expression and with belong() (#288)
     r = run(f"x = VarArray(size=4, dom=range(2))\ni = Var(dom=range(4))\nsatisfy({constraint})")
     assert not r.ok and "must be integers" in r.stdout, r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("(v in x) | (v == 0)", lambda *t: t[4] in t[:4] or t[4] == 0),
+    ("(v in x[:3]) | (v == 0)", lambda *t: t[4] in t[:3] or t[4] == 0),
+    ("(v in x[:1]) | (v == 0)", lambda *t: t[4] == t[0] or t[4] == 0),
+    ("(v not in x) | (x[0] == 1)", lambda *t: t[4] not in t[:4] or t[0] == 1),
+    ("(v not in x[:1]) | (x[1] == 1)", lambda *t: t[4] != t[0] or t[1] == 1),
+    ("(v in x) & (v != 0)", lambda *t: t[4] in t[:4] and t[4] != 0),
+    ("(v + 1 in x) | (v == 2)", lambda *t: t[4] + 1 in t[:4] or t[4] == 2),
+    ("(v in [x[0], x[1], 2]) | (v == 0)", lambda *t: t[4] in (t[0], t[1], 2) or t[4] == 0),
+    ("(v in [x[:2], x[2:]]) | (v == 0)", lambda *t: t[4] in t[:4] or t[4] == 0),
+    ("(x[0] in x[1:]) | (v == 0)", lambda *t: t[0] in t[1:4] or t[4] == 0),
+    ("imply(v == 2, belong(v, x))", lambda *t: t[4] != 2 or t[4] in t[:4]),
+    ("imply(v == 0, not_belong(v, x))", lambda *t: t[4] != 0 or t[4] not in t[:4]),
+    ("iff(belong(v, x), v == 1)", lambda *t: (t[4] in t[:4]) == (t[4] == 1)),
+])
+def test_element_member_in_logical_expressions(run, solver, request, constraint, predicate):
+    # in a logical expression (and with belong()), member is the intension in(v,set(...)), whatever the number of variables (#288)
+    if ("|" in constraint or "imply" in constraint) and "not" not in constraint and "x[:1]" not in constraint:
+        bug_for(request, "COSOCO", COSOCO_IN_SET)
+    check(run, solver, f"x = VarArray(size=4, dom=range(2))\nv = Var(dom=range(3))\nsatisfy({constraint})", [range(2)] * 4 + [range(3)], predicate)
+
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("(v in x) | (v == 0)", "or(eq(v,0),in(v,set(x[0],x[1],x[2],x[3])))"),
+    ("(v not in x) | (v == 0)", "or(eq(v,0),notin(v,set(x[0],x[1],x[2],x[3])))"),
+    ("(v in x[:1]) | (v == 0)", "or(eq(v,0),eq(v,x[0]))"),
+    ("(v not in x[:1]) | (v == 0)", "or(eq(v,0),ne(v,x[0]))"),
+    ("(v in y) | (v == 0)", "or(eq(v,0),in(v,set(y[0],y[2])))"),
+    ("(v in [x[1], 2, x[0]]) | (v == 0)", "or(eq(v,0),in(v,set(2,x[0],x[1])))"),
+    ("belong(v, x)", "in(v,set(x[0],x[1],x[2],x[3]))"),
+    ("not_belong(v, [x[0], 2])", "notin(v,set(2,x[0]))"),
+])
+def test_xcsp3_member_in_logical_expressions(run, constraint, expected):
+    # the hole y[1] is discarded; a single variable gives eq or ne (#288)
+    r = run(f"x = VarArray(size=4, dom=range(2))\ny = VarArray(size=3, dom=lambda i: None if i == 1 else range(2))\nv = Var(dom=range(3))\n"
+            f"satisfy({constraint})")
+    assert r.ok, r.report()
+    assert "".join(r.xml.find("constraints/intension").text.split()) == expected, r.report()
 
 
 # arrays with holes (None): x[1] is a hole of x, and m[0][1] is a hole of m
