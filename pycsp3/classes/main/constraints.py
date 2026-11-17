@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import marshal
 from collections import OrderedDict, namedtuple
@@ -111,6 +112,14 @@ class Constraint:
         if self.n_parameters > 0 or other.n_parameters > 0:
             return False
         return [v for v in self.arguments.items() if str(v[0]) != "condition"] == [v for v in other.arguments.items() if str(v[0]) != "condition"]
+
+    def copy(self):
+        # a copy whose arguments can be replaced without modifying the constraint, which can be posted directly or used elsewhere (#306)
+        c = object.__new__(type(self))
+        c.__dict__.update(self.__dict__)
+        c.attributes = list(self.attributes)
+        c.arguments = OrderedDict(self.arguments)
+        return c
 
     def arg(self, name, content, *, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False, variables=None):
         self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc, variables)
@@ -1736,12 +1745,12 @@ class _Auxiliary:
 
     def replace_constraint_with_condition(self, cc):
         assert isinstance(cc, ECtr) and isinstance(cc.constraint, ConstraintWithCondition)
-        c = cc.constraint
+        c = cc.constraint.copy()  # the constraint can also be posted directly, or used elsewhere (#306)
         cond = c.arguments[TypeCtrArg.CONDITION].content
         op, k = cond.operator, cond.right_operand()
         aux = self.inherit_guards(self.new_var(range(c.min_possible_value(), c.max_possible_value() + 1)), c)
         c.set_condition(TypeConditionOperator.EQ, aux)
-        self._collected_raw_constraints.append(cc)
+        self._collected_raw_constraints.append(ECtr(c))
         return functions.expr(op, aux, k)
 
     def replace_node(self, node, *, values=None):
@@ -2042,6 +2051,7 @@ def global_indirection(c):
                 c.reification_posted = True
                 auxiliary()._collected_raw_constraints.append(ECtr(c))
             return Variable.name2obj.get(reif[1], reif[1])  # the 0/1 variable involved in the reification
+        c = c.copy()  # the constraint can also be posted directly, or used elsewhere (#306)
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
         pc = PartialConstraint(c)
@@ -2050,6 +2060,7 @@ def global_indirection(c):
             length = len(c.arguments[TypeCtrArg.LIST].content)
             aux = auxiliary().replace_element_index(length, index)
             if aux:  # this is the case when we need another variable to have a correct indexing
+                c.arguments[TypeCtrArg.INDEX] = copy.copy(c.arguments[TypeCtrArg.INDEX])
                 c.arguments[TypeCtrArg.INDEX].content = aux
     else:
         if isinstance(c, ConstraintAllDifferent):

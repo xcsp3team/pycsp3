@@ -512,6 +512,24 @@ def test_boolean_expression_as_operand_of_an_arithmetic_operator_with_an_index_o
     check(run, solver, BOOLEAN_TERMS + code, DB, predicate)
 
 
+@pytest.mark.parametrize("header, domains, code, predicate", [
+    (WEIGHTED, DW, "p = x[i[0]] == 2\nsatisfy(p, p | (y == 1))", lambda *t: held(t, 0) == 1),
+    (WEIGHTED, DW, "q = Sum(x) > 2\nsatisfy(q, q | (y == 0))", lambda *t: t[0] + t[1] > 2),
+    (WEIGHTED, DW, "p = x[i[0]] == 2\nsatisfy(p | (y == 1), p | (y == 0))", lambda *t: held(t, 0) == 1),
+    (WEIGHTED, DW, "p = x[i[0]] == 2\nsatisfy(p, p + (x[i[1]] == 2) >= 1)", lambda *t: held(t, 0) == 1),
+    (WEIGHTED, DW, "p = x[i[0]] == 2\nsatisfy(p, Sum([p, x[i[1]] == 1]) >= 1)", lambda *t: held(t, 0) == 1),
+    (WEIGHTED, DW, "p = x[i[0]] == 2\nsatisfy(p, ~p | (y == 1))", lambda *t: held(t, 0) == 1 and t[5] == 1),
+    (WEIGHTED, DW, "q = Sum(x) > 2\nsatisfy(q, Exist([q, x[0] == 1]))", lambda *t: t[0] + t[1] > 2),
+    # the index can be outside the list
+    (BOOLEAN_TERMS, DB, "p = x[i[0]] == 2\nsatisfy(p, p | (y == 1))", lambda *t: held(t, 0) == 1),
+    (BOOLEAN_TERMS, DB, "p = x[i[0]] == 2\nsatisfy(p | (y == 1), p | (y == 0))", lambda *t: held(t, 0) == 1),
+])
+def test_constraint_posted_directly_and_used_in_another_expression(run, solver, header, domains, code, predicate):
+    # a constraint (as x[i] == 2, or Sum(x) > 2) used in an expression is replaced there by an expression built from a copy: posted directly,
+    # it keeps its condition (#306)
+    check(run, solver, header + code, domains, predicate)
+
+
 # an index i that can take the value 3, outside the list x, with an element in an argument written as a string in the XCSP3 file (matrix,
 # tuples of NoOverlap, literals of Clause), whose guard must be found too (in the predicates: t[:3] for x, t[3] for i, t[4:] for y)
 STRING_ARGS = "x = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(4))\ny = VarArray(size=3, dom={0, 1})\n"
