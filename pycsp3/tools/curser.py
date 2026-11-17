@@ -50,6 +50,10 @@ def at_least_one_variable_and_possibly_integers(t):  # as the values of v in [x[
     return len(t) > 0 and all(isinstance(w, (Variable, int)) for w in t) and any(isinstance(w, Variable) for w in t)
 
 
+def _is_table(t):  # True if t is a table: tuples, or values without any variable (and not values mixed with variables, as in v in [2, x[0]], #286)
+    return isinstance(t[0], (tuple, list, str)) or isinstance(t[0], int) and not any(isinstance(w, Variable) for w in t)
+
+
 def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
     if not OpOverrider.activated:
         return self.__contains__(other)
@@ -135,7 +139,7 @@ def cursing():
             queue_in.append((list(self), other))  # the values of the condition of the component (any value other than an integer reported when posting)
             return True
         # note that Python changes into a tuple a list given literally on the right of 'in', as in x in [[0, 1], [1, 0]] or x in ['a', 'b']
-        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, list, int, str)):
+        if is_containing(other, Variable) and len(self) > 0 and _is_table(self):
             queue_in.append((list(self), other))
             return True
         if len(self) == 0 and is_containing(other, Variable):  # as for an empty set (e.g., x not in [], where [] is changed into ())
@@ -178,7 +182,7 @@ def cursing():
             other = list(other)
         if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
             other = flatten(other)  # [v for v in other if v]
-        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int, str)):
+        if is_containing(other, Variable) and len(self) > 0 and _is_table(self):
             queue_in.append((self, other))
             return True
         if len(self) == 0 and is_containing(other, Variable):

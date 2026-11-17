@@ -133,11 +133,31 @@ def test_element_on_identical_integers_as_objective(run, solver, objective, func
     ("v + 1 in [x[0], 2]", lambda *t: t[3] + 1 in (t[0], 2)),
     ("v in L", lambda *t: t[3] in (t[0], 2)),
     ("v in [x[0], x[1], x[2], 4]", lambda *t: t[3] in t[:3] + (4,)),
+    ("v in [2, x[0]]", lambda *t: t[3] in (2, t[0])),
+    ("v not in [2, x[0]]", lambda *t: t[3] not in (2, t[0])),
+    ("v in (2, x[0], x[1])", lambda *t: t[3] in (2, t[0], t[1])),
+    ("v in M", lambda *t: t[3] in (2, t[0])),
+    ("v not in M", lambda *t: t[3] not in (2, t[0])),
 ])
 def test_element_member_of_a_list_written_literally(run, solver, constraint, predicate):
-    # Python changes into a tuple a list given literally on the right of 'in' (t[:3] for x, t[3] for v)
-    check(run, solver, f"x = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nL = [x[0], 2]\nsatisfy({constraint})", [range(4)] * 3 + [range(5)],
-          predicate)
+    # Python changes into a tuple a list given literally on the right of 'in' (t[:3] for x, t[3] for v); an integer first (#286)
+    check(run, solver, f"x = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nL = [x[0], 2]\nM = [2, x[0]]\nsatisfy({constraint})",
+          [range(4)] * 3 + [range(5)], predicate)
+
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("v in [x[0], 2]", "in(v,set(2,x[0]))"),
+    ("v in [2, x[0]]", "in(v,set(2,x[0]))"),
+    ("v not in [x[0], 2]", "notin(v,set(2,x[0]))"),
+    ("v in [x[2], 3, x[0], 1, x[1]]", "in(v,set(1,3,x[0],x[1],x[2]))"),
+    ("v in {x[1], 2, x[0]}", "in(v,set(2,x[0],x[1]))"),
+])
+def test_xcsp3_member_of_variables_and_integers(run, constraint, expected):
+    # the integers in increasing order, then the variables by their names, without comparing an integer with a variable (no warning, #286)
+    for _ in range(3):  # the order of a set of Python objects can change from one run to another
+        r = run(f"x = VarArray(size=3, dom=range(4))\nv = Var(dom=range(5))\nsatisfy({constraint})")
+        assert r.ok and "Warning" not in r.stdout + r.stderr, r.report()
+        assert "".join(r.xml.find("constraints/intension").text.split()) == expected, r.report()
 
 
 # arrays with holes (None): x[1] is a hole of x, and m[0][1] is a hole of m
