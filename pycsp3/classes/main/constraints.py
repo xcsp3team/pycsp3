@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import marshal
 from collections import OrderedDict, namedtuple
@@ -111,6 +112,14 @@ class Constraint:
         if self.n_parameters > 0 or other.n_parameters > 0:
             return False
         return [v for v in self.arguments.items() if str(v[0]) != "condition"] == [v for v in other.arguments.items() if str(v[0]) != "condition"]
+
+    def copy(self):
+        # a copy whose arguments can be replaced without modifying the constraint, which can be posted directly or used elsewhere (#306)
+        c = object.__new__(type(self))
+        c.__dict__.update(self.__dict__)
+        c.attributes = list(self.attributes)
+        c.arguments = OrderedDict(self.arguments)
+        return c
 
     def arg(self, name, content, *, attributes=None, content_compressible=True, content_ordered=False, lifted=False, adhoc=False, variables=None):
         self.arguments[name] = ConstraintArgument(name, content, attributes, content_compressible, content_ordered, lifted, adhoc, variables)
@@ -674,6 +683,15 @@ class ConstraintSum(ConstraintWithCondition):
         assert len(vs) == len(cs)
         return sum(ConstraintSum._min_or_max_term_value(x, cs[i], False) for i, x in enumerate(vs))
 
+    def copy(self):
+        # a copy whose terms and coefficients can also be extended (see add()) without modifying the sum (#307)
+        c = super().copy()
+        for name in (TypeCtrArg.LIST, TypeCtrArg.COEFFS):
+            if name in c.arguments:
+                arg = c.arguments[name] = copy.copy(c.arguments[name])
+                arg.content = arg.content_original = list(arg.content)
+        return c
+
     def set_coeffs(self, coefficients):
         # the condition is put back after the coefficients (the order of the elements of <sum> in XCSP3)
         condition = self.arguments.pop(TypeCtrArg.CONDITION, None)
@@ -860,6 +878,8 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         super().__init__(TypeCtr.ELEMENT)
         if len(lst) == 0:
             error("A constraint Element on an empty list of variables is encountered. Did you write something like x[:j] instead of x[:,j]?")
+        if index is not None and any(v is None for v in lst):  # the index of a variable in the list would not be its index in the array (#283)
+            error("The list " + str(lst) + " has holes (None), and so, cannot be indexed by a variable (constraint Element)")
         smallest = [] if index is None else index.dom.smallest_value()  # if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
         self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
         if index is not None:
@@ -895,6 +915,8 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
 class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
+        if any(v is None for row in lst for v in row):  # the indexes of a variable in the matrix would not be its indexes in the array (#283)
+            error("The matrix " + str(lst) + " has holes (None), and so, cannot be indexed by variables (constraint Element)")
         self.matrix = lst
         self.arg(TypeCtrArg.MATRIX, matrix_to_string(lst), content_compressible=lst, variables=lst,  # side-effect use of content_compressible for matrix
                  attributes=([(TypeCtrArg.ST.START_ROW_INDEX, start_row_index)] if start_row_index else []) + (
@@ -1290,11 +1312,11 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     def add_condition(self, operator, right_operand):
         if isinstance(right_operand, (int, Variable)):  # or not isinstance(self.constraint, ConstraintSum):  # and isinstance(right_operand, Variable):
-            return PartialConstraint.complete(self.constraint.set_condition(operator, right_operand))
+            return PartialConstraint.complete(self.constraint.copy().set_condition(operator, right_operand))
         # TODO : which kind of right operand is authorized? just a partial sum?
         assert isinstance(self.constraint, ConstraintSum)
         pc = PartialConstraint.combine_partial_objects(self, TypeNode.SUB, right_operand)  # the 'complex' right operand is moved to the left
-        return ECtr(pc.constraint.set_condition(operator, 0))
+        return ECtr(pc.constraint.copy().set_condition(operator, 0))
 
     def _simplify_with_auxiliary_variables(self, other):
         if isinstance(other, ConstraintDummyConstant):
@@ -1349,7 +1371,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
                 arg = self.constraint.arguments[TypeCtrArg.LIST]
                 arg.content = flatten(arg.content)  # we need to flatten now because it has not been done before
             # return ECtr(self.constraint.set_value(other))  # only value must be replaced for these constraints
-            return ECtr(self.constraint.set_condition(TypeConditionOperator.EQ, other))  # the condition must be replaced
+            return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.EQ, other))  # the condition must be replaced
         return self.add_condition(TypeConditionOperator.EQ, other)
         # pair = self._simplify_with_auxiliary_variables(other)
         # return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
@@ -1358,8 +1380,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         if isinstance(self.constraint, ConstraintSum):
             args = self.constraint.arguments
             cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-            self.constraint.set_coeffs([-c for c in cs])
-            return self
+            return PartialConstraint(self.constraint.copy().set_coeffs([-c for c in cs]))
         return - auxiliary().replace_partial_constraint(self)
 
     def __ne__(self, other):
@@ -1380,12 +1401,10 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __add__(self, other):
         if isinstance(self.constraint, ConstraintSum):
             if isinstance(other, (int, ECtr)) or isinstance(other, PartialConstraint) and not isinstance(other.constraint, ConstraintSum):
-                self.constraint.add(other)
-                return self
+                return PartialConstraint(self.constraint.copy().add(other))
         if isinstance(other, PartialConstraint) and isinstance(other.constraint, ConstraintSum):
             if not isinstance(self.constraint, ConstraintSum):
-                other.constraint.add(self)
-                return other
+                return PartialConstraint(other.constraint.copy().add(self))
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
@@ -1394,8 +1413,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __sub__(self, other):
         if isinstance(self.constraint, ConstraintSum):
             if isinstance(other, (int, ECtr)) or isinstance(other, PartialConstraint) and not isinstance(other.constraint, ConstraintSum):
-                self.constraint.add(-other)
-                return self
+                return PartialConstraint(self.constraint.copy().add(-other))
         if isinstance(other, PartialConstraint) and isinstance(other.constraint, ConstraintSum):
             if not isinstance(self.constraint, ConstraintSum):  # self - other is -other + self
                 return -other + self
@@ -1418,8 +1436,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         # if not options.keep_sum and TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
         #     return auxiliary().replace_partial_constraint(self) * other
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-        self.constraint.set_coeffs([c * other for c in cs])
-        return self
+        return PartialConstraint(self.constraint.copy().set_coeffs([c * other for c in cs]))
 
     __rmul__ = __mul__
 
@@ -1446,12 +1463,11 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             i = i.val
         if isinstance(i, Variable):
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
-            self.constraint = ConstraintElementMatrix(lst, index, i)
-        elif isinstance(i, int):
-            self.constraint = ConstraintElement(lst[:, i], index=index)
-        elif isinstance(i, Node):
-            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_element_index(max(len(row) for row in lst), i))
-
+            return PartialConstraint(ConstraintElementMatrix(lst, index, i))
+        if isinstance(i, int):
+            return PartialConstraint(ConstraintElement(lst[:, i], index=index))
+        if isinstance(i, Node):
+            return PartialConstraint(ConstraintElementMatrix(lst, index, auxiliary().replace_element_index(max(len(row) for row in lst), i)))
         return self
 
     def __contains__(self, item):
@@ -1462,16 +1478,16 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return (index, item) in sorted([(i, v) for i, t in enumerate(lst) for v in t])
 
     def among(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
+        return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.IN, right_operand))
 
     def is_in(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
+        return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.IN, right_operand))
 
     def not_among(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
+        return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.NOTIN, right_operand))
 
     def is_not_in(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
+        return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.NOTIN, right_operand))
 
     def __str__(self):
         c = self.constraint
@@ -1548,6 +1564,10 @@ class ScalarProduct:
             indexes = [i for i in range(len(self.variables)) if not isinstance(self.coeffs[i], int) or self.coeffs[i] != 0]
             self.variables = [self.variables[i] for i in indexes]
             self.coeffs = [self.coeffs[i] for i in indexes]
+        if any(isinstance(x, ECtr) for x in self.variables):  # a constraint (as x[i] == 2, i being a variable) is its 0/1 value (#304)
+            self.variables = [value_of_constraint(x) if isinstance(x, ECtr) else x for x in self.variables]
+        if len(auxiliary().guards) > 0:  # each Boolean term is its own Boolean context, as in MiniZinc (#284)
+            self.variables = [auxiliary().own_context(x) for x in self.variables]
 
     def _combine_with(self, operator, right_operand):
         if len(self.variables) == 1 and isinstance(right_operand, (int, Variable, Node)):  # XCSP3-core requires at least two terms in a sum
@@ -1651,7 +1671,7 @@ class _Auxiliary:
         self.cache = []
         self.declared = set()  # the ids of the auxiliary variables declared by the user (Var() without domain), which are always written
         # the guards of the elements whose index can be outside the list (#282): a guard is an auxiliary variable aux replacing the index
-        self.guards = dict()  # the id of each guard -> Guard(aux or None for a list of identical integers, index, indexes of the list, rank of creation)
+        self.guards = Node.element_guards = dict()  # (seen by Node.build()) the id of each guard -> Guard(aux or None for a list of identical integers, index, indexes of the list, rank of creation)
         self.guarded = dict()  # the id of each variable depending on guards (the guards, the values of their elements, ...) -> the ids of the guards
         self.guard_cache = dict()  # (id of the index, length of the list) -> guard
         self.guards_posted = set()  # the ids of the guards for which index == aux has been posted (the index being restricted to the list)
@@ -1728,12 +1748,12 @@ class _Auxiliary:
 
     def replace_constraint_with_condition(self, cc):
         assert isinstance(cc, ECtr) and isinstance(cc.constraint, ConstraintWithCondition)
-        c = cc.constraint
+        c = cc.constraint.copy()  # the constraint can also be posted directly, or used elsewhere (#306)
         cond = c.arguments[TypeCtrArg.CONDITION].content
         op, k = cond.operator, cond.right_operand()
         aux = self.inherit_guards(self.new_var(range(c.min_possible_value(), c.max_possible_value() + 1)), c)
         c.set_condition(TypeConditionOperator.EQ, aux)
-        self._collected_raw_constraints.append(cc)
+        self._collected_raw_constraints.append(ECtr(c))
         return functions.expr(op, aux, k)
 
     def replace_node(self, node, *, values=None):
@@ -1824,7 +1844,8 @@ class _Auxiliary:
         if len(self.guards) == 0:  # no index can be outside its list in the model (the usual case)
             return frozenset()
         extra = getattr(obj, "extra_guards", None) or getattr(getattr(obj, "constraint", None), "extra_guards", ())  # from a row of identical rows
-        return frozenset().union(*(self.guarded[x.id] for x in _variables_of(obj) if x.id in self.guarded), extra)
+        # the covered nodes do not depend on their guards anymore: their conditions are already in them
+        return frozenset().union(*(self.guarded[x.id] for x in _variables_of(obj, self.covered) if x.id in self.guarded), extra)
 
     def inherit_guards(self, aux, obj):
         # the auxiliary variable aux, replacing the object obj, depends on the guards of obj
@@ -1865,6 +1886,13 @@ class _Auxiliary:
             self.covered.update(id(n) for n in node.all_nodes_satisfying(lambda r: True))
         return node
 
+    def own_context(self, term):
+        # a Boolean expression used as a term of a count or of a sum is its own Boolean context, as in MiniZinc (bool2int): an element whose index
+        # is outside the list only makes this term false, and the term does not depend on the guards anymore (#284)
+        if not isinstance(term, Node) or not term.type.is_predicate_operator() or id(term) in self.covered or len(self.guards_of(term)) == 0:
+            return term
+        return self.cover(self.handle_guards(term, positive=False))
+
     def ordered(self, guards):
         # the guards in the order of their creation, so that the generated file is always the same
         return sorted(guards, key=lambda g: self.guards[g].rank)
@@ -1904,7 +1932,8 @@ class _Auxiliary:
                 return arg if all(s1 is s2 for s1, s2 in zip(sons, arg.cnt)) else Node(t, sons)
         guards = self.guards_of(arg)
         if len(guards) > 0 and isinstance(arg, (Node, Variable)) and not positive:
-            return Node.build(TypeNode.AND, *[self.guard_condition(g) for g in self.ordered(guards)], arg)
+            # a copy of the node, which can be covered without covering the node itself (that can also be posted directly, as p in satisfy(p, ~p | q))
+            return Node.build(TypeNode.AND, *[self.guard_condition(g) for g in self.ordered(guards)], arg.copy() if isinstance(arg, Node) else arg)
         for g in self.ordered(guards):
             self.post_guard(g)
         return arg
@@ -1956,21 +1985,25 @@ class _Guarded:  # an object only depending on guards
         self.extra_guards = frozenset(guards)
 
 
-def _variables_of(obj):
-    # the variables involved in the specified object (variable, node, constraint, condition, list)
+def _variables_of(obj, skipped=()):
+    # the variables involved in the specified object (variable, node, constraint, condition, list), except in the nodes whose ids are skipped
     if isinstance(obj, Variable):
         return [obj]
     if isinstance(obj, Node):
-        return obj.list_of_vars()
+        if len(skipped) == 0:
+            return obj.list_of_vars()
+        if id(obj) in skipped:
+            return []
+        return ([obj.cnt] if obj.type == TypeNode.VAR else []) if obj.is_leaf() else [x for s in obj.cnt for x in _variables_of(s, skipped)]
     if isinstance(obj, (ECtr, PartialConstraint)):
-        return _variables_of(obj.constraint)
+        return _variables_of(obj.constraint, skipped)
     if isinstance(obj, Constraint):
-        t = [_variables_of(a.content if a.variables is None else a.variables) for a in obj.arguments.values() if a is not None]
+        t = [_variables_of(a.content if a.variables is None else a.variables, skipped) for a in obj.arguments.values() if a is not None]
         return [x for l in t for x in l]
     if isinstance(obj, Condition):
-        return _variables_of(obj.right_operand())
+        return _variables_of(obj.right_operand(), skipped)
     if isinstance(obj, (list, tuple, set, frozenset)):
-        return [x for v in obj for x in _variables_of(v)]
+        return [x for v in obj for x in _variables_of(v, skipped)]
     return []
 
 
@@ -1993,6 +2026,17 @@ def auxiliary():
     return auxiliary.obj
 
 
+def value_of_constraint(c):
+    # the 0/1 value of a constraint (as x[i] == 2, i being a variable) that is an operand of an arithmetic operator, or a term of a scalar product,
+    # as for any Boolean expression (bool2int in MiniZinc): the expression (or the 0/1 variable) replacing it in a logical expression (#304)
+    assert isinstance(c, ECtr)
+    value = global_indirection(c.constraint)
+    if value is None:  # option -use_meta
+        error("A constraint " + str(c.constraint.name) + " cannot be an operand of an arithmetic operator with the option -use_meta (which builds "
+              "meta-constraints instead of expressions)")
+    return value.val if isinstance(value, ConstraintDummyConstant) else auxiliary().own_context(value)
+
+
 def global_indirection(c):
     pc = None
     if options.use_meta:
@@ -2010,6 +2054,7 @@ def global_indirection(c):
                 c.reification_posted = True
                 auxiliary()._collected_raw_constraints.append(ECtr(c))
             return Variable.name2obj.get(reif[1], reif[1])  # the 0/1 variable involved in the reification
+        c = c.copy()  # the constraint can also be posted directly, or used elsewhere (#306)
         condition = c.arguments[TypeCtrArg.CONDITION].content
         c.arguments[TypeCtrArg.CONDITION] = None
         pc = PartialConstraint(c)
@@ -2018,6 +2063,7 @@ def global_indirection(c):
             length = len(c.arguments[TypeCtrArg.LIST].content)
             aux = auxiliary().replace_element_index(length, index)
             if aux:  # this is the case when we need another variable to have a correct indexing
+                c.arguments[TypeCtrArg.INDEX] = copy.copy(c.arguments[TypeCtrArg.INDEX])
                 c.arguments[TypeCtrArg.INDEX].content = aux
     else:
         if isinstance(c, ConstraintAllDifferent):

@@ -428,6 +428,52 @@ def test_exist_reified_in_logical_expressions(run, solver, request, context, pre
           lambda *t: t[4] == (1 in t[:n]) and predicate(t[4], t))
 
 
+REIFIED_ON_CONSTRAINTS = [  # terms that are constraints (element, sum, allDifferent) or expressions, and the terms counted (#305)
+    ("[x[:3][x[3]] == 2, x[0] == 1]", lambda t: [t[:3][t[3]] == 2, t[0] == 1]),
+    ("(x[:3][x[3]] == j for j in range(3))", lambda t: [t[:3][t[3]] == j for j in range(3)]),
+    ("(Sum(x[:2]) == j for j in range(2))", lambda t: [t[0] + t[1] == j for j in range(2)]),
+    ("[AllDifferent(x[:3]), x[3] == 0]", lambda t: [len(set(t[:3])) == 3, t[3] == 0]),
+    ("x[0] == 2, x[1] == 2", lambda t: [t[0] == 2, t[1] == 2]),
+    ("x[0] == 2, x[1] > x[2], x[0] == 2", lambda t: [t[0] == 2, t[1] > t[2]]),
+    ("x[0] >= x[0], x[1] == 2", lambda t: [True]),
+    ("Sum(x[:2]), x[2], value=2", lambda t: [t[0] + t[1] == 2, t[2] == 2]),
+    ("(x[:3][x[3]] == 2 for j in range(2)), value=0", lambda t: [t[:3][t[3]] != 2]),
+]
+
+
+@pytest.mark.parametrize("arguments, counted", REIFIED_ON_CONSTRAINTS)
+def test_exist_reified_on_constraints(run, solver, request, arguments, counted):
+    # each constraint given as a term is replaced by its 0/1 value (or by the value of its partial constraint), as in a count (#305)
+    bug_for(request, "CHOCO", CHOCO_REIFIED)
+    if solver == "COSOCO":
+        pytest.skip(COSOCO_REIFIED)
+    check(run, solver, X4 + REIFIED + f"satisfy(Exist({arguments}, reified_by=r))", D4 + [(0, 1)], lambda *t: t[4] == any(counted(t)))
+
+
+@pytest.mark.parametrize("arguments, counted", REIFIED_ON_CONSTRAINTS)
+@pytest.mark.parametrize("negated", [False, True])
+def test_xcsp3_exist_reified_on_constraints(run, arguments, counted, negated):
+    # the list of the element (member) contains only variables (#305)
+    r = run(X4 + REIFIED + f"satisfy(Exist({arguments}, reified_by={'~r' if negated else 'r'}))")
+    assert r.ok, r.report()
+    elements = [c for c in r.xml.iter("element") if c.get("reifiedBy") is not None]
+    assert len(elements) == 1, r.report()
+    assert all(re.fullmatch(r"\w+\[[\d.]*\]", t) for t in elements[0].find("list").text.split()), r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("Exist(x[0] == 2, x[1] == 2, x[2] == 2)", lambda *t: 2 in t[:3]),
+    ("Exist((x[:3][x[3]] == j for j in range(2)), x[3] == 2)", lambda *t: t[:3][t[3]] < 2 or t[3] == 2),
+    ("Exist(Sum(x[:2]) == 1, x[2] == 0, AllDifferent(x[1:]))", lambda *t: t[0] + t[1] == 1 or t[2] == 0 or len(set(t[1:])) == 3),
+])
+def test_exist_by_element_on_constraints(run, solver, request, constraint, predicate):
+    # with the option -exist_by_element, the list of the element contains only variables (#305)
+    bug_for(request, "CHOCO", CHOCO_REIFIED)
+    if solver == "COSOCO":
+        pytest.skip(COSOCO_REIFIED)
+    check(run, solver, X4 + f"satisfy({constraint})", D4, predicate, args=("-exist_by_element",))
+
+
 @pytest.mark.parametrize("constraint", ["Exist(b, reified_by=x[0])", "Exist(b, reified_by=1)", "Exist(b, reified_by=b[0] + b[1])"])
 def test_exist_reified_by_an_invalid_argument(run, constraint):
     r = run(B4 + X4 + f"satisfy({constraint})")

@@ -472,7 +472,7 @@ def _bool_interpretation_for_in(left_operand, right_operand, bool_value):
         if options.mini and isinstance(left_operand.constraint, ConstraintSum):
             ctr = _sum_for_mini(left_operand, Condition.build_condition((operator, right_operand)))
             return ctr if not isinstance(ctr, ConstraintDummyConstant) else _false_constraint() if ctr.val == 0 else None
-        ctr = PartialConstraint.complete(left_operand.constraint.set_condition(operator, right_operand))  # a constant if the result is known
+        ctr = PartialConstraint.complete(left_operand.constraint.copy().set_condition(operator, right_operand))  # a constant if the result is known
     elif isinstance(right_operand, Automaton):  # it is a regular constraint
         error_if(not bool_value, "Currently, the operator 'not in' cannot be used with an automaton: only 'x in A' is possible (constraint Regular)")
         ctr = Regular(scope=left_operand, automaton=right_operand)
@@ -2754,6 +2754,8 @@ def Sum(term, *others, condition=None):
     terms = auxiliary().replace_ints(terms) if any(v for v in terms if isinstance(v, int)) else terms
     auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(terms, nodes_too=options.mini and any(
         not isinstance(term, Variable) and not neg_var.matches(term) for term in terms))
+    if len(auxiliary().guards) > 0:  # each Boolean term is its own Boolean context (#284)
+        terms = [auxiliary().own_context(t) for t in terms]
     checkType(terms, ([Variable], [Node], [Variable, Node], [ScalarProduct]))  # , [PartialConstraint], [ECtr]))
     for v in terms:
         if isinstance(v, Variable) and v.dom.type != TypeVar.INTEGER:
@@ -2937,6 +2939,8 @@ def _count(name, terms, value, values, condition):
         return _constant_with_condition(0, condition)
     terms = manage_global_indirection(terms, also_pc=True)
     assert terms is not None
+    if len(auxiliary().guards) > 0:  # each Boolean term is its own Boolean context (#284)
+        terms = [auxiliary().own_context(t) for t in terms]
     if any(type(t) is Node and t.type is TypeNode.INT for t in terms):  # constant expressions (as x >= x, simplified into 1 by Node.build())
         s = frozenset(values) if isinstance(values[0], int) else None
         # a constant that is not counted is discarded, and a constant that is counted is replaced by an auxiliary variable
@@ -2965,6 +2969,16 @@ def _count(name, terms, value, values, condition):
     return _wrapping_by_complete_or_partial_constraint(ctr) if condition is None else PartialConstraint.complete(ctr)
 
 
+def _member_list(terms):
+    # the list of an element without index (member) contains only variables: each constraint given as a term is replaced by its 0/1 value (or
+    # by the value of its partial constraint), as in a count, and then each expression or constant by an auxiliary variable (#305)
+    terms = manage_global_indirection(terms, also_pc=True)
+    assert terms is not None
+    if len(auxiliary().guards) > 0:  # each Boolean term is its own Boolean context (#284)
+        terms = [auxiliary().own_context(t) for t in terms]
+    return auxiliary().normalize_list(terms)
+
+
 def _exist(name, terms, value, reified_by):
     # at least one term takes the value (or evaluates to 1 if value is None), for Exist() and AtLeastOne(), AnyHold() (whose name is given for the messages)
     negated = isinstance(reified_by, Node) and reified_by.type == TypeNode.NOT and reified_by.cnt[0].type == TypeNode.VAR  # ~r
@@ -2980,12 +2994,12 @@ def _exist(name, terms, value, reified_by):
             reified_by = aux
         if len(terms) == 1:
             return (terms[0] == reified_by) if value is None or isinstance(value, int) and value == 1 else ((terms[0] == value) == reified_by)
-        return ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=reified_by))
+        return ECtr(ConstraintElement(_member_list(terms), index=None, value=value if value is not None else 1, reified_by=reified_by))
     if value is None and len(terms) <= 2:  # the terms are 0/1
         return terms[0] if len(terms) == 1 else disjunction(terms)
     if options.exist_by_element:
         aux = auxiliary().new_var(0, 1)
-        satisfy(ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=aux)))
+        satisfy(ECtr(ConstraintElement(_member_list(terms), index=None, value=value if value is not None else 1, reified_by=aux)))
         return aux
     return _count(name, terms, value, None, None) >= 1
 

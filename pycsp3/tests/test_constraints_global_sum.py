@@ -730,3 +730,24 @@ def test_invalid_sum(run, constraint):
 def test_invalid_sum_message(run, constraint, message):
     r = run(X4 + "s = VarArray(size=2, dom={'a', 'b'})\n" + f"satisfy({constraint})")
     assert not r.ok and message in r.stdout + r.stderr, r.report()
+
+
+LISTS = "x = VarArray(size=2, dom=range(3))\n"
+
+
+def test_exception_raised_by_python_when_multiplying_two_lists(run):
+    # the operator * of lists, redefined for the scalar products, is called by Python through a C callback, which an exception cannot go through:
+    # Python now raises the exception itself (TypeError), which can be caught (a crash before, segmentation fault)
+    r = run(LISTS + "try:\n    [1, 2] * [3, 4]\nexcept TypeError as e:\n    print('caught:', e)\nsatisfy(x[0] == x[1])")
+    assert r.ok and "caught: can't multiply sequence by non-int of type 'list'" in r.lines, r.report()
+
+
+@pytest.mark.parametrize("code, message", [
+    ("satisfy([x[0], x[1]] * [True, 2] >= 1)", "A coefficient of a scalar product must be an integer, a variable or an expression"),
+    ("L = [x[1], 1.5]\nsatisfy(x[0] in L)", "It seems that you should use a set and not a list"),
+])
+def test_error_inside_a_redefined_operator_of_lists(run, code, message):
+    # an error raised inside the redefined operators * and in of lists (C callbacks) stops the program with its message, as any error (a crash
+    # before, or a SystemError)
+    r = run(LISTS + code)
+    assert r.returncode == 1 and message in r.stdout and r.exception is None, r.report()
