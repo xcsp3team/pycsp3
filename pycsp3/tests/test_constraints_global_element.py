@@ -160,6 +160,56 @@ def test_xcsp3_member_of_variables_and_integers(run, constraint, expected):
         assert "".join(r.xml.find("constraints/intension").text.split()) == expected, r.report()
 
 
+@pytest.mark.parametrize("constraint, predicate", [
+    ("v + 1 in x", lambda *t: t[3] + 1 in t[:3]),
+    ("v + 1 not in x", lambda *t: t[3] + 1 not in t[:3]),
+    ("abs(v - 1) in x[:2]", lambda *t: abs(t[3] - 1) in t[:2]),
+    ("v in m", lambda *t: t[3] in t[:3]),
+    ("v in [x[:1], x[1:]]", lambda *t: t[3] in t[:3]),
+    ("v in (x[:1], x[1:])", lambda *t: t[3] in t[:3]),
+    ("v not in [x[:1], x[1:]]", lambda *t: t[3] not in t[:3]),
+    ("1 in [x[:1], x[1:]]", lambda *t: 1 in t[:3]),
+    ("v + 1 in [x[:1], x[1:]]", lambda *t: t[3] + 1 in t[:3]),
+])
+def test_element_member_of_an_expression_or_of_a_two_dimensional_list(run, solver, constraint, predicate):
+    # an expression is replaced by an auxiliary variable, and the variables of a two-dimensional list are considered (#287)
+    check(run, solver, f"x = VarArray(size=3, dom=range(2))\nv = Var(dom=range(3))\nm = [x[:1], x[1:]]\nsatisfy({constraint})",
+          [range(2)] * 3 + [range(3)], predicate)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("v in y", lambda *t: t[3] in t[:3]),
+    ("v not in y", lambda *t: t[3] not in t[:3]),
+    ("1 in y", lambda *t: 1 in t[:3]),
+    ("0 not in y", lambda *t: 0 not in t[:3]),
+    ("v + 1 in y", lambda *t: t[3] + 1 in t[:3]),
+])
+def test_element_member_of_a_two_dimensional_array(run, solver, constraint, predicate):
+    # the variables of a two-dimensional array of variables are considered (#287)
+    check(run, solver, f"y = VarArray(size=[3, 1], dom=range(2))\nv = Var(dom=range(3))\nsatisfy({constraint})", [range(2)] * 3 + [range(3)], predicate)
+
+
+@pytest.mark.parametrize("constraint, scope, value", [
+    ("v + 1 in x", "x[]", "aux_gb[0]"),
+    ("v in y", "y[][]", "v"),
+    ("v in [y[0], y[1]]", "y[][]", "v"),
+    ("v + 1 in y", "y[][]", "aux_gb[0]"),
+])
+def test_xcsp3_member_of_an_expression_or_of_a_two_dimensional_list(run, constraint, scope, value):
+    # with four variables, an element without index on the variables of the list (#287)
+    r = run(f"x = VarArray(size=4, dom=range(2))\ny = VarArray(size=[2, 2], dom=range(2))\nv = Var(dom=range(3))\nsatisfy({constraint})")
+    assert r.ok, r.report()
+    element = r.xml.find("constraints/element")
+    assert element.find("list").text.strip() == scope and element.find("value").text.strip() == value, r.report()
+
+
+@pytest.mark.parametrize("constraint", ["x[i] in x[1:]", "x[i] not in x[1:]", "Sum(x[:2]) in x[2:]", "x[:2] * [1, 2] in x[2:]", "Maximum(x[:2]) in x[2:]"])
+def test_element_member_of_a_component(run, constraint):
+    # the values of the condition of a component (element, sum, ...) must be integers (#249), as with a list written literally (#287)
+    r = run(f"x = VarArray(size=4, dom=range(2))\ni = Var(dom=range(4))\nsatisfy({constraint})")
+    assert not r.ok and "must be integers" in r.stdout, r.report()
+
+
 # arrays with holes (None): x[1] is a hole of x, and m[0][1] is a hole of m
 HOLES_1D = "x = VarArray(size=3, dom=lambda a: None if a == 1 else range(3))\n"
 HOLES_2D = "m = VarArray(size=[2, 2], dom=lambda a, b: None if b > a else range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(2))\n"

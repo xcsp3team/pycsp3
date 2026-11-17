@@ -129,6 +129,8 @@ def cursing():
             return True
         if not isinstance(other, (tuple, list, types.GeneratorType)) and any(isinstance(t, ConstraintDummyConstant) for t in self):
             self = tuple(t.val if isinstance(t, ConstraintDummyConstant) else t for t in self)  # constants among the values, as in v in (c, 4)
+        if not isinstance(other, (tuple, list, types.GeneratorType)) and len(self) > 0 and isinstance(self[0], (tuple, list)) and is_containing(self, Variable):
+            self = flatten(self)  # the variables of a multi-dimensional list, as in v in (x[:2], x[2:]) (#287)
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -169,6 +171,8 @@ def cursing():
             return True
         if not isinstance(other, (tuple, list, types.GeneratorType)) and any(isinstance(t, ConstraintDummyConstant) for t in self):
             self = [t.val if isinstance(t, ConstraintDummyConstant) else t for t in self]  # constants among the values, as in v in [c, 4]
+        if not isinstance(other, (tuple, list, types.GeneratorType)) and len(self) > 0 and isinstance(self[0], (tuple, list)) and is_containing(self, Variable):
+            self = flatten(self)  # the variables of a multi-dimensional list, as in v in [x[:2], x[2:]] (#287)
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -1124,7 +1128,13 @@ class ListVar(list):
     def __contains__(self, other):
         if isinstance(other, ConstraintDummyConstant):
             other = other.val
-        if isinstance(other, (int, Variable)):  # member constraint
+        if len(self) > 0 and isinstance(self[0], (tuple, list)) and is_containing(self, Variable):
+            return flatten(self).__contains__(other)  # the variables of a multi-dimensional list, as in v in m (#287)
+        if isinstance(other, ScalarProduct):
+            other = other.to_partial_sum()
+        if isinstance(other, Node):  # an expression is replaced by an auxiliary variable, as in v + 1 in x (#287)
+            other = _replace_node_in(other, self)
+        if isinstance(other, (int, Variable, PartialConstraint)):  # member constraint (variables refused as values of a component, #249)
             queue_in.append((self, other))
             return True
         return list.__contains__(self, other)
