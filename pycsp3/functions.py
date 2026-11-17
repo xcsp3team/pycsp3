@@ -2969,6 +2969,16 @@ def _count(name, terms, value, values, condition):
     return _wrapping_by_complete_or_partial_constraint(ctr) if condition is None else PartialConstraint.complete(ctr)
 
 
+def _member_list(terms):
+    # the list of an element without index (member) contains only variables: each constraint given as a term is replaced by its 0/1 value (or
+    # by the value of its partial constraint), as in a count, and then each expression or constant by an auxiliary variable (#305)
+    terms = manage_global_indirection(terms, also_pc=True)
+    assert terms is not None
+    if len(auxiliary().guards) > 0:  # each Boolean term is its own Boolean context (#284)
+        terms = [auxiliary().own_context(t) for t in terms]
+    return auxiliary().normalize_list(terms)
+
+
 def _exist(name, terms, value, reified_by):
     # at least one term takes the value (or evaluates to 1 if value is None), for Exist() and AtLeastOne(), AnyHold() (whose name is given for the messages)
     negated = isinstance(reified_by, Node) and reified_by.type == TypeNode.NOT and reified_by.cnt[0].type == TypeNode.VAR  # ~r
@@ -2984,12 +2994,12 @@ def _exist(name, terms, value, reified_by):
             reified_by = aux
         if len(terms) == 1:
             return (terms[0] == reified_by) if value is None or isinstance(value, int) and value == 1 else ((terms[0] == value) == reified_by)
-        return ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=reified_by))
+        return ECtr(ConstraintElement(_member_list(terms), index=None, value=value if value is not None else 1, reified_by=reified_by))
     if value is None and len(terms) <= 2:  # the terms are 0/1
         return terms[0] if len(terms) == 1 else disjunction(terms)
     if options.exist_by_element:
         aux = auxiliary().new_var(0, 1)
-        satisfy(ECtr(ConstraintElement(terms, index=None, value=value if value is not None else 1, reified_by=aux)))
+        satisfy(ECtr(ConstraintElement(_member_list(terms), index=None, value=value if value is not None else 1, reified_by=aux)))
         return aux
     return _count(name, terms, value, None, None) >= 1
 
