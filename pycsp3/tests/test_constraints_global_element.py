@@ -530,6 +530,31 @@ def test_constraint_posted_directly_and_used_in_another_expression(run, solver, 
     check(run, solver, header + code, domains, predicate)
 
 
+# a partial constraint (a sum, an element) stored in a Python variable and used several times (in the predicates: t[:3] for x, t[3] for i, t[4] for y)
+REUSED = "x = VarArray(size=3, dom=range(3))\ni = Var(dom=range(3))\ny = Var(dom=range(3))\n"
+DR = [range(3)] * 5
+# a row of a (square) matrix (in the predicates: t[:9] for M, t[9] for i, t[10] for j)
+REUSED_ROW = "M = VarArray(size=[3, 3], dom=range(2))\ni = Var(dom=range(3))\nj = Var(dom=range(3))\nr = M[i]\n"
+DRR = [range(2)] * 9 + [range(3)] * 2
+
+
+@pytest.mark.parametrize("header, domains, code, predicate", [
+    (REUSED, DR, "s = Sum(x)\nsatisfy(s >= 1, s <= 3)", lambda *t: 1 <= sum(t[:3]) <= 3),
+    (REUSED, DR, "s = Sum(x)\nsatisfy(s in {1, 2}, s != 1)", lambda *t: sum(t[:3]) == 2),
+    (REUSED, DR, "s = Sum(x)\nt = s >= 2\nsatisfy(t, s <= 3)", lambda *t: 2 <= sum(t[:3]) <= 3),
+    (REUSED, DR, "s = Sum(x)\nsatisfy(-s >= -3, s >= 1)", lambda *t: 1 <= sum(t[:3]) <= 3),
+    (REUSED, DR, "s = Sum(x)\nsatisfy(s * 2 >= 3, s <= 3)", lambda *t: 2 <= sum(t[:3]) <= 3),
+    (REUSED, DR, "s = Sum(x)\nsatisfy(s + y >= 4, s <= 2)", lambda *t: sum(t[:3]) + t[4] >= 4 and sum(t[:3]) <= 2),
+    (REUSED, DR, "s = Sum(x)\nsatisfy(s - y >= 1, s - y <= 1, s <= 2)", lambda *t: sum(t[:3]) - t[4] == 1 and sum(t[:3]) <= 2),
+    (REUSED, DR, "e = x[i]\nsatisfy(e >= 1, e <= 1)", lambda *t: t[t[3]] == 1),
+    (REUSED, DR, "e = x[i]\nsatisfy(e == 2, e != 0)", lambda *t: t[t[3]] == 2),
+    (REUSED_ROW, DRR, "satisfy(r[j] == 1, r[0] == 0)", lambda *t: t[3 * t[9] + t[10]] == 1 and t[3 * t[9]] == 0),
+])
+def test_partial_constraint_used_several_times(run, solver, header, domains, code, predicate):
+    # each comparison (or operation) of a partial constraint builds its own constraint, the partial constraint being unchanged (#307)
+    check(run, solver, header + code, domains, predicate)
+
+
 # an index i that can take the value 3, outside the list x, with an element in an argument written as a string in the XCSP3 file (matrix,
 # tuples of NoOverlap, literals of Clause), whose guard must be found too (in the predicates: t[:3] for x, t[3] for i, t[4:] for y)
 STRING_ARGS = "x = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(4))\ny = VarArray(size=3, dom={0, 1})\n"

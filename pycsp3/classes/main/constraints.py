@@ -683,6 +683,15 @@ class ConstraintSum(ConstraintWithCondition):
         assert len(vs) == len(cs)
         return sum(ConstraintSum._min_or_max_term_value(x, cs[i], False) for i, x in enumerate(vs))
 
+    def copy(self):
+        # a copy whose terms and coefficients can also be extended (see add()) without modifying the sum (#307)
+        c = super().copy()
+        for name in (TypeCtrArg.LIST, TypeCtrArg.COEFFS):
+            if name in c.arguments:
+                arg = c.arguments[name] = copy.copy(c.arguments[name])
+                arg.content = arg.content_original = list(arg.content)
+        return c
+
     def set_coeffs(self, coefficients):
         # the condition is put back after the coefficients (the order of the elements of <sum> in XCSP3)
         condition = self.arguments.pop(TypeCtrArg.CONDITION, None)
@@ -1303,11 +1312,11 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     def add_condition(self, operator, right_operand):
         if isinstance(right_operand, (int, Variable)):  # or not isinstance(self.constraint, ConstraintSum):  # and isinstance(right_operand, Variable):
-            return PartialConstraint.complete(self.constraint.set_condition(operator, right_operand))
+            return PartialConstraint.complete(self.constraint.copy().set_condition(operator, right_operand))
         # TODO : which kind of right operand is authorized? just a partial sum?
         assert isinstance(self.constraint, ConstraintSum)
         pc = PartialConstraint.combine_partial_objects(self, TypeNode.SUB, right_operand)  # the 'complex' right operand is moved to the left
-        return ECtr(pc.constraint.set_condition(operator, 0))
+        return ECtr(pc.constraint.copy().set_condition(operator, 0))
 
     def _simplify_with_auxiliary_variables(self, other):
         if isinstance(other, ConstraintDummyConstant):
@@ -1362,7 +1371,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
                 arg = self.constraint.arguments[TypeCtrArg.LIST]
                 arg.content = flatten(arg.content)  # we need to flatten now because it has not been done before
             # return ECtr(self.constraint.set_value(other))  # only value must be replaced for these constraints
-            return ECtr(self.constraint.set_condition(TypeConditionOperator.EQ, other))  # the condition must be replaced
+            return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.EQ, other))  # the condition must be replaced
         return self.add_condition(TypeConditionOperator.EQ, other)
         # pair = self._simplify_with_auxiliary_variables(other)
         # return Node.build(TypeNode.EQ, pair) if pair else self.add_condition(TypeConditionOperator.EQ, other)
@@ -1371,8 +1380,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         if isinstance(self.constraint, ConstraintSum):
             args = self.constraint.arguments
             cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-            self.constraint.set_coeffs([-c for c in cs])
-            return self
+            return PartialConstraint(self.constraint.copy().set_coeffs([-c for c in cs]))
         return - auxiliary().replace_partial_constraint(self)
 
     def __ne__(self, other):
@@ -1393,12 +1401,10 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __add__(self, other):
         if isinstance(self.constraint, ConstraintSum):
             if isinstance(other, (int, ECtr)) or isinstance(other, PartialConstraint) and not isinstance(other.constraint, ConstraintSum):
-                self.constraint.add(other)
-                return self
+                return PartialConstraint(self.constraint.copy().add(other))
         if isinstance(other, PartialConstraint) and isinstance(other.constraint, ConstraintSum):
             if not isinstance(self.constraint, ConstraintSum):
-                other.constraint.add(self)
-                return other
+                return PartialConstraint(other.constraint.copy().add(self))
         pair = self._simplify_operation(other)
         return Node.build(TypeNode.ADD, pair) if pair else PartialConstraint.combine_partial_objects(self, TypeNode.ADD, other)
 
@@ -1407,8 +1413,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __sub__(self, other):
         if isinstance(self.constraint, ConstraintSum):
             if isinstance(other, (int, ECtr)) or isinstance(other, PartialConstraint) and not isinstance(other.constraint, ConstraintSum):
-                self.constraint.add(-other)
-                return self
+                return PartialConstraint(self.constraint.copy().add(-other))
         if isinstance(other, PartialConstraint) and isinstance(other.constraint, ConstraintSum):
             if not isinstance(self.constraint, ConstraintSum):  # self - other is -other + self
                 return -other + self
@@ -1431,8 +1436,7 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         # if not options.keep_sum and TypeCtrArg.COEFFS not in args:  # or only 1 as coeffs? TODO
         #     return auxiliary().replace_partial_constraint(self) * other
         cs = args[TypeCtrArg.COEFFS].content if TypeCtrArg.COEFFS in args else [1] * len(args[TypeCtrArg.LIST].content)
-        self.constraint.set_coeffs([c * other for c in cs])
-        return self
+        return PartialConstraint(self.constraint.copy().set_coeffs([c * other for c in cs]))
 
     __rmul__ = __mul__
 
@@ -1459,12 +1463,11 @@ class PartialConstraint:  # constraint whose condition has not been given such a
             i = i.val
         if isinstance(i, Variable):
             assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
-            self.constraint = ConstraintElementMatrix(lst, index, i)
-        elif isinstance(i, int):
-            self.constraint = ConstraintElement(lst[:, i], index=index)
-        elif isinstance(i, Node):
-            self.constraint = ConstraintElementMatrix(lst, index, auxiliary().replace_element_index(max(len(row) for row in lst), i))
-
+            return PartialConstraint(ConstraintElementMatrix(lst, index, i))
+        if isinstance(i, int):
+            return PartialConstraint(ConstraintElement(lst[:, i], index=index))
+        if isinstance(i, Node):
+            return PartialConstraint(ConstraintElementMatrix(lst, index, auxiliary().replace_element_index(max(len(row) for row in lst), i)))
         return self
 
     def __contains__(self, item):
@@ -1475,16 +1478,16 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         return (index, item) in sorted([(i, v) for i, t in enumerate(lst) for v in t])
 
     def among(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
+        return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.IN, right_operand))
 
     def is_in(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.IN, right_operand))
+        return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.IN, right_operand))
 
     def not_among(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
+        return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.NOTIN, right_operand))
 
     def is_not_in(self, right_operand):
-        return ECtr(self.constraint.set_condition(TypeConditionOperator.NOTIN, right_operand))
+        return ECtr(self.constraint.copy().set_condition(TypeConditionOperator.NOTIN, right_operand))
 
     def __str__(self):
         c = self.constraint
