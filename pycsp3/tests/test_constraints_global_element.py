@@ -849,6 +849,20 @@ def test_element_with_an_index_never_in_the_list(run, solver, request, code, dom
     assert (WARNING_NEVER in r.stdout) == (len(args) == 0), r.report()
 
 
+@pytest.mark.parametrize("constraint, predicate", [
+    ("r[k] == [v, w]", lambda k, v, w: [v, w] == [[1, 2], [3, 0]][k]),
+    ("r[k] == (v, w)", lambda k, v, w: [v, w] == [[1, 2], [3, 0]][k]),
+    ("r[k] == (3, w)", lambda k, v, w: [3, w] == [[1, 2], [3, 0]][k]),
+    ("q[k] == (v, w)", lambda k, v, w: (v, w) == ((1, 2), (3, 0))[k]),
+    ("v in r[k]", lambda k, v, w: v in [[1, 2], [3, 0]][k]),
+    ("r[k] == {v, w}", lambda k, v, w: sorted([v, w]) == sorted([[1, 2], [3, 0]][k])),
+])
+def test_element_on_rows_of_integers(run, solver, constraint, predicate):
+    # a list of rows of integers indexed by a variable gives a row, compared with a list (or a tuple, #293, or a set) of variables
+    code = "r = cp_array([[1, 2], [3, 0]])\nq = cp_array([(1, 2), (3, 0)])\nk = Var(dom=range(2))\nv = Var(dom=range(4))\nw = Var(dom=range(4))\n"
+    check(run, solver, code + f"satisfy({constraint})", [range(2), range(4), range(4)], predicate)
+
+
 # --------------------------------------------------------------------------------------------------- invalid cases
 
 INVALID = "x = VarArray(size=3, dom=range(4))\ni = Var(dom=range(3))\nv = Var(dom=range(5))\nt = cp_array([3, 0, 2])\ny = Var(dom=range(3))\n"
