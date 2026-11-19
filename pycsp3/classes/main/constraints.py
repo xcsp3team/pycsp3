@@ -911,6 +911,10 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             return max(v for v in self.arguments[TypeCtrArg.LIST].content)
         return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
+    def on_01_terms(self):
+        # True iff the list contains only 0/1 variables and integers 0 and 1, so that the element is a Boolean (#291)
+        return all(t in (0, 1) if isinstance(t, int) else isinstance(t, Variable) and t.dom.is_binary() for t in flatten(self.arguments[TypeCtrArg.LIST].content))
+
 
 class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
@@ -1451,6 +1455,35 @@ class PartialConstraint:  # constraint whose condition has not been given such a
 
     def __rmod__(self, other):  # other // self
         return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
+
+    def _boolean(self):
+        # a component used as a Boolean in a logical operation (as the element of a list of 0/1 terms) is replaced by an auxiliary variable,
+        # which must be 0/1 (#291)
+        x = auxiliary().replace_partial_constraint(self)
+        if not (0 <= x.dom.smallest_value() and x.dom.greatest_value() <= 1):
+            error("The component " + str(self) + " is not a constraint: it must be subject to a condition, as in Sum(x) > 10")
+        return x
+
+    def __and__(self, other):
+        return self._boolean() & other
+
+    def __rand__(self, other):
+        return other & self._boolean()
+
+    def __or__(self, other):
+        return self._boolean() | other
+
+    def __ror__(self, other):
+        return other | self._boolean()
+
+    def __xor__(self, other):
+        return self._boolean() ^ other
+
+    def __rxor__(self, other):
+        return other ^ self._boolean()
+
+    def __invert__(self):
+        return ~self._boolean()
 
     def __getitem__(self, i):
         assert isinstance(self.constraint, ConstraintElement), (

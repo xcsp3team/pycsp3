@@ -698,8 +698,7 @@ class OpOverrider:
             # TODO how to extend it (without second condition part) ? should we use an option -dont_combine_bool (pb with JapanEncoding)
             return self if other is False else True
         if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-            assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
+            other = other._boolean()
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Or(self, other, meta=True)
@@ -725,8 +724,7 @@ class OpOverrider:
         # if isinstance(other, bool):  # TODO should we keep it? or use an option -dont_combine_bool
         #     return self if other is True else False
         if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-            assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
+            other = other._boolean()
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.And(self, other, meta=True)
@@ -738,9 +736,7 @@ class OpOverrider:
 
     def __invert__(self):
         if isinstance(self, PartialConstraint):
-            x = auxiliary().replace_partial_constraint(self)
-            assert 0 <= x.dom.smallest_value() and x.dom.greatest_value() <= 1
-            self = x
+            self = self._boolean()
         if isinstance(self, ECtr):
             gi = global_indirection(self.constraint)
             if gi is None:
@@ -767,8 +763,7 @@ class OpOverrider:
             assert other.val in (0, 1)
             other = other.val
         if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-            assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
+            other = other._boolean()
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Xor(self, other, meta=True)

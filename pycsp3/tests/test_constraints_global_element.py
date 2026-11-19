@@ -163,6 +163,43 @@ def test_xcsp3_element_on_a_matrix_as_objective(run, objective):
     assert r.xml.find("constraints/element/matrix") is not None, r.report()
 
 
+# the element of a list of 0/1 terms (variables or integers) is a Boolean, replaced by an auxiliary variable in logical operations (#291)
+# (in the predicates: t[0..2] for b, t[3] for i)
+B3 = "b = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(3))\n"
+DB3 = [range(2)] * 3 + [range(3)]
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("b[i]", lambda *t: t[t[3]] == 1),
+    ("cp_array([0, 1, 1])[i]", lambda *t: t[3] > 0),
+    ("b[i] | b[2 - i]", lambda *t: t[t[3]] == 1 or t[2 - t[3]] == 1),
+    ("b[i] & b[2 - i]", lambda *t: t[t[3]] == 1 and t[2 - t[3]] == 1),
+    ("b[i] & (b[0] == 0)", lambda *t: t[t[3]] == 1 and t[0] == 0),
+    ("(b[0] == 0) | b[i]", lambda *t: t[0] == 0 or t[t[3]] == 1),
+    ("b[0] | b[i]", lambda *t: t[0] == 1 or t[t[3]] == 1),
+    ("~b[i]", lambda *t: t[t[3]] == 0),
+    ("~b[i] | b[0]", lambda *t: t[t[3]] == 0 or t[0] == 1),
+    ("b[i] ^ b[0]", lambda *t: t[t[3]] != t[0]),
+    ("b[0] ^ b[i]", lambda *t: t[t[3]] != t[0]),
+    ("imply(b[0], b[i])", lambda *t: t[0] == 0 or t[t[3]] == 1),
+    ("cp_array([0, 1, 1])[i] | b[0]", lambda *t: t[3] > 0 or t[0] == 1),
+    ("~cp_array([0, 1, 1])[i]", lambda *t: t[3] == 0),
+    ("Maximum(b[1:]) | (b[0] == 1)", lambda *t: t[1] == 1 or t[2] == 1 or t[0] == 1),
+    ("(b[0] == 1) | Maximum(b[1:])", lambda *t: t[1] == 1 or t[2] == 1 or t[0] == 1),
+    ("~Minimum(b) & b[i]", lambda *t: 0 in t[:3] and t[t[3]] == 1),
+])
+def test_element_on_01_terms_in_logical_expressions(run, solver, constraint, predicate):
+    check(run, solver, B3 + f"satisfy({constraint})", DB3, predicate)
+
+
+@pytest.mark.parametrize("constraint", ["x[i]", "x[i] | (v == 1)", "(v == 1) | x[i]", "(v == 1) & x[i]", "~x[i]", "x[i] ^ b[0]", "b[0] ^ x[i]",
+                                        "(v == 1) ^ x[i]", "~cp_array([0, 2, 1])[i]", "Sum(b) | (v == 1)", "(v == 1) | Sum(b)", "~Sum(b)"])
+def test_component_not_01_in_logical_expressions_message(run, constraint):
+    # a component whose values are not 0/1 is not a Boolean: an explicit message instead of a TypeError or an assert without message
+    r = run(B3 + "x = VarArray(size=3, dom=range(3))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})")
+    assert not r.ok and "is not a constraint: it must be subject to a condition" in r.stdout + r.stderr, r.report()
+
+
 @pytest.mark.parametrize("constraint, predicate", [
     ("v in [x[0], x[1]]", lambda *t: t[3] in t[:2]),
     ("v in [x[0], 2]", lambda *t: t[3] in (t[0], 2)),
