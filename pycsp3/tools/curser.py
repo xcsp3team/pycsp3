@@ -50,6 +50,10 @@ def at_least_one_variable_and_possibly_integers(t):  # as the values of v in [x[
     return len(t) > 0 and all(isinstance(w, (Variable, int)) for w in t) and any(isinstance(w, Variable) for w in t)
 
 
+def _is_table(t):  # True if t is a table: tuples, or values without any variable (and not values mixed with variables, as in v in [2, x[0]], #286)
+    return isinstance(t[0], (tuple, list, str)) or isinstance(t[0], int) and not any(isinstance(w, Variable) for w in t)
+
+
 def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
     if not OpOverrider.activated:
         return self.__contains__(other)
@@ -125,6 +129,8 @@ def cursing():
             return True
         if not isinstance(other, (tuple, list, types.GeneratorType)) and any(isinstance(t, ConstraintDummyConstant) for t in self):
             self = tuple(t.val if isinstance(t, ConstraintDummyConstant) else t for t in self)  # constants among the values, as in v in (c, 4)
+        if not isinstance(other, (tuple, list, types.GeneratorType)) and len(self) > 0 and isinstance(self[0], (tuple, list)) and is_containing(self, Variable):
+            self = flatten(self)  # the variables of a multi-dimensional list, as in v in (x[:2], x[2:]) (#287)
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -135,7 +141,7 @@ def cursing():
             queue_in.append((list(self), other))  # the values of the condition of the component (any value other than an integer reported when posting)
             return True
         # note that Python changes into a tuple a list given literally on the right of 'in', as in x in [[0, 1], [1, 0]] or x in ['a', 'b']
-        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (tuple, list, int, str)):
+        if is_containing(other, Variable) and len(self) > 0 and _is_table(self):
             queue_in.append((list(self), other))
             return True
         if len(self) == 0 and is_containing(other, Variable):  # as for an empty set (e.g., x not in [], where [] is changed into ())
@@ -165,6 +171,8 @@ def cursing():
             return True
         if not isinstance(other, (tuple, list, types.GeneratorType)) and any(isinstance(t, ConstraintDummyConstant) for t in self):
             self = [t.val if isinstance(t, ConstraintDummyConstant) else t for t in self]  # constants among the values, as in v in [c, 4]
+        if not isinstance(other, (tuple, list, types.GeneratorType)) and len(self) > 0 and isinstance(self[0], (tuple, list)) and is_containing(self, Variable):
+            self = flatten(self)  # the variables of a multi-dimensional list, as in v in [x[:2], x[2:]] (#287)
         if isinstance(other, ScalarProduct):
             other = other.to_partial_sum()
         # if len(self) == 0:
@@ -178,7 +186,7 @@ def cursing():
             other = list(other)
         if isinstance(other, (tuple, list)) and unique_type_in(other, Variable) and not is_containing(other, Variable):  # removing possible occurrences of None
             other = flatten(other)  # [v for v in other if v]
-        if is_containing(other, Variable) and len(self) > 0 and isinstance(self[0], (list, tuple, int, str)):
+        if is_containing(other, Variable) and len(self) > 0 and _is_table(self):
             queue_in.append((self, other))
             return True
         if len(self) == 0 and is_containing(other, Variable):
@@ -1120,7 +1128,13 @@ class ListVar(list):
     def __contains__(self, other):
         if isinstance(other, ConstraintDummyConstant):
             other = other.val
-        if isinstance(other, (int, Variable)):  # member constraint
+        if len(self) > 0 and isinstance(self[0], (tuple, list)) and is_containing(self, Variable):
+            return flatten(self).__contains__(other)  # the variables of a multi-dimensional list, as in v in m (#287)
+        if isinstance(other, ScalarProduct):
+            other = other.to_partial_sum()
+        if isinstance(other, Node):  # an expression is replaced by an auxiliary variable, as in v + 1 in x (#287)
+            other = _replace_node_in(other, self)
+        if isinstance(other, (int, Variable, PartialConstraint)):  # member constraint (variables refused as values of a component, #249)
             queue_in.append((self, other))
             return True
         return list.__contains__(self, other)

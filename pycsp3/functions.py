@@ -1594,12 +1594,18 @@ def _check_belong_arguments(function, x, values):  # function is the name of the
             error("When the first argument of " + function + "() is an integer, the second argument must be a list of variables, which is not the case of "
                   + str(values))
     else:
-        if not isinstance(x, Variable):
+        if not isinstance(x, (Variable, PartialConstraint)):
             error("The first argument of " + function + "() must be a variable or an integer, which is not the case of " + str(x)
                   + " (for an expression, the operator " + ("in" if function == "belong" else "not in") + " can be used)")
         if not isinstance(values, (int, range, tuple, list, set, frozenset)) or (
-                isinstance(values, (tuple, list, set, frozenset)) and any(not isinstance(v, int) for v in values)):
-            error("The second argument of " + function + "() must be an integer, a range or a collection of integers, which is not the case of " + str(values))
+                isinstance(values, (tuple, list, set, frozenset)) and any(not isinstance(v, (int, Variable)) for v in values if v is not None)):
+            error("The second argument of " + function + "() must be an integer, a range or a collection of integers and variables, which is not the case of "
+                  + str(values))
+        if isinstance(x, PartialConstraint) and isinstance(values, (tuple, list, set, frozenset)):
+            v = next((v for v in values if isinstance(v, Variable)), None)
+            if v is not None:  # a component (as Sum(x)) with variables, refused as outside a logical expression (#249, #287)
+                error("The values of the condition " + ("in" if function == "belong" else "notin") + " " + str(values) + " must be integers, which is not the case of "
+                      + str(v))
 
 
 def belong(x, values):
@@ -1607,7 +1613,8 @@ def belong(x, values):
     Builds and returns a Boolean expression that holds iff the specified term belongs to the specified values.
 
     When the first argument is an integer and the second one a list of variables, the expression holds iff
-    at least one of these variables is assigned this integer.
+    at least one of these variables is assigned this integer. When the first argument is a variable and the second one
+    contains variables (possibly with integers), the expression holds iff the variable is equal to one of them.
 
     :param x: a variable, or an integer
     :param values: a set of integers (possibly given by a range), or a list of variables
@@ -1624,11 +1631,14 @@ def belong(x, values):
 
         # a solution: [0, 1, 2]
     """
+    _check_belong_arguments("belong", x, values)
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
-    _check_belong_arguments("belong", x, values)
     if isinstance(x, int):
         return disjunction(y == x for y in values if y is not None)  # None (e.g., a hole of an array) is discarded
+    if isinstance(values, (tuple, list, set, frozenset)) and any(isinstance(v, Variable) for v in values):  # member, as in (v in x) | (v == 0) (#288)
+        values = [v for v in values if v is not None]  # None (e.g., a hole of an array) is discarded
+        return Node.build(EQ, x, values[0]) if len(values) == 1 else Node.build(IN, x, Node.build(SET, values))
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
@@ -1653,7 +1663,8 @@ def not_belong(x, values):
     Builds and returns a Boolean expression that holds iff the specified term does not belong to the specified values.
 
     When the first argument is an integer and the second one a list of variables, the expression holds iff
-    none of these variables is assigned this integer.
+    none of these variables is assigned this integer. When the first argument is a variable and the second one
+    contains variables (possibly with integers), the expression holds iff the variable is different from all of them.
 
     :param x: a variable, or an integer
     :param values: a set of integers (possibly given by a range), or a list of variables
@@ -1670,11 +1681,14 @@ def not_belong(x, values):
 
         # a solution: [0, 1, 2]
     """
+    _check_belong_arguments("not_belong", x, values)
     if isinstance(x, PartialConstraint):
         x = auxiliary().replace_partial_constraint(x)
-    _check_belong_arguments("not_belong", x, values)
     if isinstance(x, int):
         return conjunction(y != x for y in values if y is not None)  # None (e.g., a hole of an array) is discarded
+    if isinstance(values, (tuple, list, set, frozenset)) and any(isinstance(v, Variable) for v in values):  # member, as in (v in x) | (v == 0) (#288)
+        values = [v for v in values if v is not None]  # None (e.g., a hole of an array) is discarded
+        return Node.build(NE, x, values[0]) if len(values) == 1 else Node.build(NOTIN, x, Node.build(SET, values))
     if isinstance(values, range):
         if values.step != 1 or len(values) < 8 or values.start not in x.dom or (values.stop - 1) not in x.dom:
             values = list(values)
