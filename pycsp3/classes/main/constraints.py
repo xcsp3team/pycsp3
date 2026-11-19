@@ -912,6 +912,18 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             return max(v for v in self.arguments[TypeCtrArg.LIST].content)
         return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
+    def satisfying_indexes(self):
+        # for a list of integers and a condition whose operand is not a variable (which XCSP3-core does not allow, #294), the indexes (in the domain
+        # of the index) of the integers satisfying the condition, and None otherwise
+        if TypeCtrArg.INDEX not in self.arguments or TypeCtrArg.CONDITION not in self.arguments:  # as for an element reified (#305)
+            return None
+        lst = self.arguments[TypeCtrArg.LIST].content
+        condition = self.arguments[TypeCtrArg.CONDITION].content
+        if not isinstance(lst[0], int) or not isinstance(condition, (ConditionValue, ConditionInterval, ConditionSet)):
+            return None
+        values = set(condition.filtering(set(lst)))
+        return [k for k in self.arguments[TypeCtrArg.INDEX].content.dom.all_values() if lst[k] in values]
+
     def on_01_terms(self):
         # True iff the list contains only 0/1 variables and integers 0 and 1, so that the element is a Boolean (#291)
         return all(t in (0, 1) if isinstance(t, int) else isinstance(t, Variable) and t.dom.is_binary() for t in flatten(self.arguments[TypeCtrArg.LIST].content))

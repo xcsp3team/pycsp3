@@ -15,8 +15,6 @@ import pytest
 from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs of PyCSP3
-INT_CONDITION = ("#294: an element on a list of integers compared with an integer has an integer as operand of its condition, which XCSP3-core "
-                 "does not allow, and ACE does not handle (unimplemented case for element)")
 NOOVERLAP_ELEMENT = "#302: an element given as an origin or a length of NoOverlap (two dimensions) is written as such in the XCSP3 file"
 
 # Known bugs of the solvers
@@ -499,8 +497,6 @@ def test_element_on_identical_integers_with_an_index_outside_the_list_restricted
 @pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
 def test_element_on_a_matrix_of_identical_integers_with_an_index_outside_the_matrix_restricted(run, solver, request, constraint, predicate, args):
     # the index j cannot take the value 2, outside the matrix, with or without -force_element_index
-    if constraint == "t[j, k] != 2":
-        bug_for(request, "ACE", INT_CONDITION)
     check_with_v(run, solver, request, M_OUTSIDE, constraint, DM_OUTSIDE, lambda *t: t[0] < 2 and predicate(*t), 2, args, empty_supports=False)
 
 
@@ -861,6 +857,123 @@ def test_element_on_rows_of_integers(run, solver, constraint, predicate):
     # a list of rows of integers indexed by a variable gives a row, compared with a list (or a tuple, #293, or a set) of variables
     code = "r = cp_array([[1, 2], [3, 0]])\nq = cp_array([(1, 2), (3, 0)])\nk = Var(dom=range(2))\nv = Var(dom=range(4))\nw = Var(dom=range(4))\n"
     check(run, solver, code + f"satisfy({constraint})", [range(2), range(4), range(4)], predicate)
+
+
+# ------------------------------------------------------------------------------- element on integers compared with integers (#294)
+
+# XCSP3-core requires a variable in the condition of an element whose list contains integers: posted directly, the element is a unary constraint
+# on its index; in a larger expression, the element is replaced by an auxiliary variable (aux equal to t[i])
+T4 = "t = cp_array([3, 0, 2, 0])\ni = Var(dom=range(4))\ny = Var(dom=range(2))\n"
+
+
+def t4(i):
+    return (3, 0, 2, 0)[i]
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("t[i] == 0", lambda i, y: t4(i) == 0),
+    ("t[i] == 3", lambda i, y: t4(i) == 3),
+    ("t[i] != 0", lambda i, y: t4(i) != 0),
+    ("t[i] < 2", lambda i, y: t4(i) < 2),
+    ("t[i] >= 2", lambda i, y: t4(i) >= 2),
+    ("t[i] in {0, 2}", lambda i, y: t4(i) in (0, 2)),
+    ("t[i] not in {0, 2}", lambda i, y: t4(i) not in (0, 2)),
+    ("t[i] in range(1, 3)", lambda i, y: t4(i) in (1, 2)),
+    ("t[i].among({0, 3})", lambda i, y: t4(i) in (0, 3)),
+    ("t[i].is_not_in({3})", lambda i, y: t4(i) != 3),
+    ("(t[i] in {0, 2, 3}) & (y == 1)", lambda i, y: y == 1),
+    ("t[i] == 7", lambda i, y: False),
+    ("(t[i] < 2) | (y == 1)", lambda i, y: t4(i) < 2 or y == 1),
+    ("~(t[i] == 0)", lambda i, y: t4(i) != 0),
+    ("If(y == 1, Then=t[i] in {2, 3})", lambda i, y: y == 0 or t4(i) in (2, 3)),
+    ("(t[i] == 7) | (y == 1)", lambda i, y: y == 1),
+])
+def test_element_on_integers_compared_with_integers(run, solver, request, constraint, predicate):
+    if constraint == "t[i] == 7":  # the constraint false, posted by a table with an empty set of supports
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
+    check(run, solver, T4 + f"satisfy({constraint})", [range(4), range(2)], predicate)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("If(y == 0, Then=t[i] == 0)", lambda i, y: y == 1 or t4(i) == 0),
+    ("(t[i] < 2) | (y == 1)", lambda i, y: t4(i) < 2 or y == 1),
+])
+def test_element_on_integers_compared_with_integers_in_logical_expressions_with_mini(run, solver, constraint, predicate):
+    # with -mini, in a logical expression, the element is replaced by an auxiliary variable (no unary table to be reified)
+    check(run, solver, T4 + f"satisfy({constraint})", [range(4), range(2)], predicate, args=("-mini",))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("If(y == 0, (t[i] == 0) & (z == 0), Then=i == 1)", lambda i, y, z: not (y == 0 and t4(i) == 0 and z == 0) or i == 1),
+    ("If(y == 0, (t[i] == 0) | (z == 0), Then=i == 1)", lambda i, y, z: not (y == 0 and (t4(i) == 0 or z == 0)) or i == 1),
+])
+def test_element_on_integers_compared_with_integers_in_the_tests_of_if_with_mini(run, solver, constraint, predicate):
+    # with -mini, in the tests of If(), negated when they are several, the element is replaced by an auxiliary variable
+    code = T4 + "z = Var(dom=range(2))\n" + f"satisfy({constraint})"
+    check(run, solver, code, [range(4), range(2), range(2)], predicate, args=("-mini",))
+
+
+# the index i can take the value 3, outside the list t; the index j can take the value 2, outside the matrix m of identical rows
+GUARDED = "t = cp_array([2, 2, 0])\ni = Var(dom=range(4))\nm = cp_array([[1, 2, 3], [1, 2, 3]])\nj = Var(dom=range(3))\nk = Var(dom=range(3))\ny = Var(dom=range(2))\n"
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("t[i] in {0, 2}", lambda i, j, k, y: i < 3),
+    ("t[i] == 0", lambda i, j, k, y: i == 2),
+    ("(t[i] != 5) | (y == 1)", lambda i, j, k, y: i < 3 or y == 1),
+    ("~(t[i] == 2)", lambda i, j, k, y: i >= 2),
+    ("m[j][k] == 1", lambda i, j, k, y: j < 2 and k == 0),
+    ("m[j, k] < 5", lambda i, j, k, y: j < 2),
+    ("~(m[j, k] == 2)", lambda i, j, k, y: j == 2 or k != 1),
+    ("(m[j, k] < 5) | (y == 1)", lambda i, j, k, y: j < 2 or y == 1),
+])
+@pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
+def test_element_on_integers_compared_with_integers_with_an_index_outside(run, solver, constraint, predicate, args):
+    # the element does not hold when its index is outside the list (#282), even when the condition holds for all the integers
+    check(run, solver, GUARDED + f"satisfy({constraint})", [range(4), range(3), range(3), range(2)], predicate, args)
+
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("t[i] == 0", "in(i,set(1,3))"),
+    ("t[i] < 2", "in(i,set(1,3))"),
+    ("t[i] in {0, 2}", "in(i,set(1,2,3))"),
+    ("t[i] not in range(1, 3)", "in(i,set(0,1,3))"),
+    ("t[i].is_not_in({3})", "in(i,set(1,2,3))"),
+    ("t[i] == 3", "eq(i,0)"),
+    ("t[i] > 2", "eq(i,0)"),
+])
+def test_xcsp3_element_on_integers_compared_with_an_integer(run, constraint, expected):
+    r = run(T4 + f"satisfy({constraint})")
+    assert r.ok and r.xml.find("constraints/element") is None, r.report()
+    assert "".join(r.xml.find("constraints/intension").text.split()) == expected, r.report()
+
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("(t[i] < 2) | (y == 1)", "or(lt(aux_gb[0],2),y)"),
+    ("~(t[i] == 0)", "ne(aux_gb[0],0)"),
+    ("If(y == 1, Then=t[i] in {2, 3})", "imp(y,in(aux_gb[0],set(2,3)))"),
+])
+def test_xcsp3_element_on_integers_compared_with_an_integer_in_an_expression(run, constraint, expected):
+    # in a larger expression, the element is replaced by an auxiliary variable: <value> aux </value>, which XCSP3-core allows
+    r = run(T4 + f"satisfy({constraint})")
+    element = r.xml.find("constraints/element")
+    assert r.ok and element is not None and element.find("value").text.split() == ["aux_gb[0]"], r.report()
+    assert "".join(r.xml.find("constraints/intension").text.split()) == expected, r.report()
+
+
+def test_xcsp3_element_on_integers_compared_with_an_integer_in_a_list(run):
+    # the elements posted directly in a list (a constant one being discarded) are unary constraints on their indexes
+    r = run(T4 + "satisfy([t[i] < 2, t[i] in {0, 2, 3}, y == 1])")
+    assert r.ok and r.xml.find(".//element") is None, r.report()
+    assert ["".join(c.text.split()) for c in r.xml.iter("intension")] == ["in(i,set(1,3))", "eq(y,1)"], r.report()
+
+
+def test_xcsp3_element_on_integers_compared_with_an_integer_with_mini(run):
+    # in the mini-tracks, 'in' is not a primitive form of intension: a unary table is posted
+    r = run(T4 + "satisfy(t[i] < 2)", args=("-mini",))
+    assert r.ok and r.xml.find("constraints/element") is None, r.report()
+    c = r.xml.find("constraints/extension")
+    assert c is not None and (c.find("list").text.split(), c.find("supports").text.split()) == (["i"], ["1", "3"]), r.report()
 
 
 # --------------------------------------------------------------------------------------------------- invalid cases
