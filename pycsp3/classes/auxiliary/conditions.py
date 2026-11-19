@@ -2,7 +2,7 @@ from functools import total_ordering
 from types import GeneratorType
 
 from pycsp3.classes import main
-from pycsp3.classes.auxiliary.enums import TypeConditionOperator
+from pycsp3.classes.auxiliary.enums import TypeConditionOperator, TypeVar
 from pycsp3.classes.nodes import Node, TypeNode
 from pycsp3.classes.main.variables import Variable
 from pycsp3.tools.utilities import is_1d_list, is_1d_tuple, ANY, error
@@ -49,6 +49,8 @@ class Condition:
         right_operand = list(condition[1]) if isinstance(condition[1], (set, frozenset, GeneratorType)) else condition[1]
         if type(right_operand) is bool or isinstance(right_operand, (list, tuple)) and any(type(v) is bool for v in right_operand):
             error("A Boolean cannot be the operand of a condition, which is the case of " + str(condition[1]))
+        if isinstance(right_operand, Variable) and right_operand.dom.type != TypeVar.INTEGER:  # (#292)
+            error("A symbolic variable cannot be the operand of a condition, which is the case of " + str(right_operand))
         # checkType(right_operand, (int, Variable, range, [int, Variable]))
         if isinstance(right_operand, range) and right_operand.step != 1:
             right_operand = list(right_operand)

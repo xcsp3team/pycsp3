@@ -12,7 +12,7 @@ integer c, and i can only take indexes of X, element(X, i, (op, k)) holds iff c 
 
 import pytest
 
-from harness import assert_optimum, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs of PyCSP3
 INT_CONDITION = ("#294: an element on a list of integers compared with an integer has an integer as operand of its condition, which XCSP3-core "
@@ -847,3 +847,57 @@ def test_element_with_an_index_never_in_the_list(run, solver, request, code, dom
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     r = check(run, solver, code + f"satisfy({constraint})", [range(3)] * 3 + [domain, range(2)], predicate, args=args)
     assert (WARNING_NEVER in r.stdout) == (len(args) == 0), r.report()
+
+
+# --------------------------------------------------------------------------------------------------- invalid cases
+
+INVALID = "x = VarArray(size=3, dom=range(4))\ni = Var(dom=range(3))\nv = Var(dom=range(5))\nt = cp_array([3, 0, 2])\ny = Var(dom=range(3))\n"
+
+
+@pytest.mark.parametrize("constraint", [
+    "x[i] == None",
+    "x[i] == 'a'",
+    "x[i] == 2.5",
+    "x[i] == True",
+    "x[i] == [1, 2]",
+    "x[i] == {1: 2}",
+    "x[i]",
+    "t[i]",
+    "x[i] | v",
+    "~x[i]",
+    "x[i] == s[0]",
+    "s[i] == 'a'",
+    "x[s[0]] == 2",
+    "x[2.5] == 2",
+    "x[:0][i] == 2",
+    "[x[0], x[1]][i] == 2",
+    "(x[0], x[1])[i] == 2",
+    "cp_array(['a', 'b', 'c'])[i] == 2",
+    "cp_array([True, False, True])[i] == v",
+    "m[i][i][i] == 2",
+    "m[i][i][0] == 2",
+    "x[i] in {y, 2}",
+    "x[i][0] == 2",
+])
+def test_invalid_element(run, constraint):
+    code = INVALID + "s = VarArray(size=3, dom={'a', 'b'})\nm = VarArray(size=[3, 3, 3], dom=range(3))\n"
+    assert_fails(run(code + f"satisfy({constraint})"))
+
+
+@pytest.mark.parametrize("constraint, message", [
+    ("x[:0][i] == 2", "A constraint Element on an empty list of variables is encountered"),
+    ("x[i]", "is not a constraint: it must be subject to a condition"),
+    ("t[i]", "is not a constraint: it must be subject to a condition"),
+    ("x[i] | (v == 1)", "is not a constraint: it must be subject to a condition"),
+    ("~t[i]", "is not a constraint: it must be subject to a condition"),
+    ("x[i] in {y, 2}", "must be integers, which is not the case of y"),
+    ("x[i] == [1, 2]", "cannot be compared with the list [1, 2]"),
+    ("x[s[0]] == 2", "The index of a list must be an integer variable, which is not the case of s[0]"),
+    ("m[i][s[0]] == 1", "The index of a matrix must be an integer variable, which is not the case of s[0]"),
+    ("x[2.5] == 2", "The index of a list must be an integer, a variable or an expression, which is not the case of 2.5"),
+    ("x[i] == s[0]", "A symbolic variable cannot be the operand of a condition, which is the case of s[0]"),
+])
+def test_invalid_element_message(run, constraint, message):
+    code = INVALID + "s = VarArray(size=3, dom={'a', 'b'})\nm = VarArray(size=[3, 3], dom=range(2))\n"
+    r = run(code + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()
