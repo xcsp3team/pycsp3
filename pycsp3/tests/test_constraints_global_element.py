@@ -128,6 +128,41 @@ def test_element_on_identical_integers_as_objective(run, solver, objective, func
         assert_optimum(r, brute_force(DC, lambda *t: t[1] != 0), function)
 
 
+# an element on a matrix as objective, replaced by an auxiliary variable as an element on a list (#290)
+# (in the predicates: t[0..5] for m, t[6] for j, t[7] for k, t[8] for v)
+MJK = "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(3))\nv = Var(dom=range(3))\n"
+DMJK = [range(2)] * 6 + [range(2), range(3), range(3)]
+
+
+def mjk(t):
+    return t[3 * t[6] + t[7]]
+
+
+@pytest.mark.parametrize("objective, function", [
+    ("maximize(m[j][k])", lambda *t: mjk(t)),
+    ("minimize(m[j, k])", lambda *t: mjk(t)),
+    ("minimize(m[j][k] + v)", lambda *t: mjk(t) + t[8]),
+    ("maximize(u[j][k])", lambda *t: ((1, 4, 2), (3, 0, 5))[t[6]][t[7]]),
+    ("minimize(u[j][k])", lambda *t: ((1, 4, 2), (3, 0, 5))[t[6]][t[7]]),
+])
+def test_element_on_a_matrix_as_objective(run, solver, request, objective, function):
+    if "m[j" in objective:
+        bug_for(request, "CHOCO", CHOCO_MATRIX)
+    r = run(MJK + "u = cp_array([[1, 4, 2], [3, 0, 5]])\nsatisfy(m[0][0] != m[1][1], v != 1, k != 1)\n" + objective, solver=solver)
+    assert_optimum(r, brute_force(DMJK, lambda *t: t[0] != t[4] and t[8] != 1 and t[7] != 1), function,
+                   maximize=objective.startswith("maximize"))
+
+
+@pytest.mark.parametrize("objective", ["maximize(m[j][k])", "minimize(t[j][k])", "maximize(m[j, k])", "maximize(m[j][k] + v)"])
+def test_xcsp3_element_on_a_matrix_as_objective(run, objective):
+    # there is no objective of type element in XCSP3: the element is replaced by an auxiliary variable (#290)
+    r = run(MJK + "t = cp_array([[1, 2, 3], [4, 5, 6]])\n" + objective)
+    assert r.ok, r.report()
+    o = r.xml.find("objectives")[0]
+    assert o.get("type") in (None, "expression") and o.find("matrix") is None, r.report()
+    assert r.xml.find("constraints/element/matrix") is not None, r.report()
+
+
 @pytest.mark.parametrize("constraint, predicate", [
     ("v in [x[0], x[1]]", lambda *t: t[3] in t[:2]),
     ("v in [x[0], 2]", lambda *t: t[3] in (t[0], 2)),
