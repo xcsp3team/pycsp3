@@ -1513,13 +1513,15 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
         if isinstance(i, ConstraintDummyConstant):
             i = i.val
+        if isinstance(i, Node):
+            i = auxiliary().replace_element_index(max(len(row) for row in lst), i)
         if isinstance(i, Variable):
-            assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
+            if all(len(row) == 1 for row in lst):  # a matrix of one column, XCSP3-core requiring at least two columns: an element on it (#298)
+                pc = PartialConstraint(ConstraintElement([row[0] for row in lst], index=index))
+                return auxiliary().with_guards(pc, auxiliary().identical_index_guards(1, i))  # the column index must be 0
             return PartialConstraint(ConstraintElementMatrix(lst, index, i))
         if isinstance(i, int):
             return PartialConstraint(ConstraintElement(lst[:, i], index=index))
-        if isinstance(i, Node):
-            return PartialConstraint(ConstraintElementMatrix(lst, index, auxiliary().replace_element_index(max(len(row) for row in lst), i)))
         return self
 
     def __contains__(self, item):
@@ -1727,6 +1729,7 @@ class _Auxiliary:
         self.guarded = dict()  # the id of each variable depending on guards (the guards, the values of their elements, ...) -> the ids of the guards
         self.guard_cache = dict()  # (id of the index, length of the list) -> guard
         self.guards_posted = set()  # the ids of the guards for which index == aux has been posted (the index being restricted to the list)
+        self.guarded_auxiliaries = set()  # the ids of the auxiliary variables of guarded constants and guarded terms (#298)
         self.guard_tables = dict()  # the id of each guard -> the variable equal to its index, aux being functionally defined by a table
         self.covered = set()  # the ids of the nodes already in the scope of the conditions of their guards (below a negation)
 
@@ -1907,16 +1910,31 @@ class _Auxiliary:
 
     def guarded_constant(self, value, guards):
         # a constant (an integer of a list of identical integers) that is only defined when the guards (ids) hold
-        return self.inherit_guards(self.new_var(value), _Guarded(guards))
+        aux = self.inherit_guards(self.new_var(value), _Guarded(guards))
+        self.guarded_auxiliaries.add(aux.id)
+        return aux
+
+    def guarded_term(self, term, guards):
+        # a variable that is only defined when the guards (ids) hold, as the term of a list of one term whose index can be outside the list (#298):
+        # an auxiliary variable aux, term == aux being posted with the auxiliary constraints
+        aux = self.inherit_guards(self.new_var(term.dom.all_values()), _Guarded(frozenset(guards) | self.guards_of(term)))
+        self._collected_constraints.append((term, aux))
+        self.guarded_auxiliaries.add(aux.id)
+        return aux
 
     def with_guards(self, res, guards):
-        # what is taken from a row of a matrix of identical rows whose index can be outside the matrix depends on the guards (ids) of this index
+        # what is taken from a row of a matrix of identical rows (or of a list or a matrix of one term, row or column, #298) whose index can be outside
+        # the matrix depends on the guards (ids) of this index
+        if len(guards) == 0:
+            return res
         if isinstance(res, (int, ConstraintDummyConstant)):
             return self.guarded_constant(res if isinstance(res, int) else res.val, guards)
         if isinstance(res, PartialConstraint):
             res.constraint.extra_guards = getattr(res.constraint, "extra_guards", frozenset()) | guards
-        elif isinstance(res, Variable) and res.id in self.guarded:  # a guarded constant
-            self.guarded[res.id] |= guards
+        elif isinstance(res, Variable):
+            if res.id not in self.guarded_auxiliaries:  # a variable of the model (from a row of variables, #298)
+                return self.guarded_term(res, guards)
+            self.guarded[res.id] |= guards  # a guarded constant (or term), just introduced
         return res
 
     def post_guard(self, g):

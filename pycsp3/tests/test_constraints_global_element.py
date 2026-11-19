@@ -976,6 +976,98 @@ def test_xcsp3_element_on_integers_compared_with_an_integer_with_mini(run):
     assert c is not None and (c.find("list").text.split(), c.find("supports").text.split()) == (["i"], ["1", "3"]), r.report()
 
 
+# ----------------------------------------------------------------------------- element on a list of one term (#298)
+
+# XCSP3-core requires at least two terms in the list of an element, and at least two rows and two columns in its matrix: the term itself, or an
+# element on the row or the column, the other index being 0 (restricted when posted directly, the element being false otherwise in a logical
+# expression, #282)
+X2 = "x = VarArray(size=2, dom=range(3))\n"
+Y4 = "y = Var(dom=range(4))\n"
+M12 = "m = VarArray(size=[1, 2], dom=range(3))\n"
+N21 = "n = VarArray(size=[2, 1], dom=range(3))\n"
+D3, D4 = range(3), range(4)
+
+ONE_TERM = [
+    (X2 + "k = Var(0)\nsatisfy(x[:1][k] == 2)", [D3, D3, [0]], lambda a, b, k: a == 2),
+    (X2 + Y4 + "k = Var(0)\nsatisfy(x[:1][k] == y)", [D3, D3, D4, [0]], lambda a, b, y, k: a == y),
+    (Y4 + "k = Var(0)\nsatisfy(cp_array([2])[k] == y)", [D4, [0]], lambda y, k: y == 2),
+    (X2 + Y4 + "k = Var(0)\nsatisfy((x[:1][k] == 2) | (y == 1))", [D3, D3, D4, [0]], lambda a, b, y, k: a == 2 or y == 1),
+    (X2 + Y4 + "k = Var(0)\nsatisfy(x[:1][k] + y == 3)", [D3, D3, D4, [0]], lambda a, b, y, k: a + y == 3),
+    (X2 + "k = Var(0)\nsatisfy(x[:1][k] in {1, 2})", [D3, D3, [0]], lambda a, b, k: a in (1, 2)),
+    (X2 + Y4 + "k = Var(0)\nsatisfy((cp_array([2])[k] != y) | (x[0] == x[1]))", [D3, D3, D4, [0]], lambda a, b, y, k: y != 2 or a == b),
+    (X2 + "k = Var(range(3))\nsatisfy(x[:1][k] == 2)", [D3, D3, D3], lambda a, b, k: k == 0 and a == 2),
+    (X2 + Y4 + "k = Var(range(3))\nsatisfy((x[:1][k] == 2) | (y == 1))", [D3, D3, D4, D3], lambda a, b, y, k: k == 0 and a == 2 or y == 1),
+    (X2 + Y4 + "k = Var(range(3))\nsatisfy(x[:1][k] + y == 3)", [D3, D3, D4, D3], lambda a, b, y, k: k == 0 and a + y == 3),
+    (X2 + Y4 + "k = Var(range(3))\nsatisfy(Sum([x[:1][k], y]) == 3)", [D3, D3, D4, D3], lambda a, b, y, k: k == 0 and a + y == 3),
+    (X2 + "k = Var(range(3))\nsatisfy(If(k < 1, Then=x[0] == cp_array([2])[k]))", [D3, D3, D3], lambda a, b, k: k >= 1 or a == 2),
+    (X2 + "k = Var(range(3))\nsatisfy(If(k < 1, Then=x[0] == cp_array([x[1]])[k]))", [D3, D3, D3], lambda a, b, k: k >= 1 or a == b),
+    (Y4 + "k = Var(0)\nj = Var(range(2))\nsatisfy(cp_array([[1, 3]])[k][j] == y)", [D4, [0], range(2)], lambda y, k, j: y == (1, 3)[j]),
+    (Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(cp_array([[1], [3]])[k][j] == y)", [D4, range(2), [0]], lambda y, k, j: y == (1, 3)[k]),
+    (Y4 + "k = Var(range(2))\nj = Var(range(3))\nsatisfy(cp_array([[1], [3]])[k, j] == y)", [D4, range(2), D3], lambda y, k, j: j == 0 and y == (1, 3)[k]),
+    (Y4 + "k = Var(0)\nj = Var(0)\nsatisfy(cp_array([[1]])[k][j] == y)", [D4, [0], [0]], lambda y, k, j: y == 1),
+    (M12 + Y4 + "k = Var(0)\nj = Var(range(2))\nsatisfy(m[k][j] == y)", [D3, D3, D4, [0], range(2)], lambda a, b, y, k, j: y == (a, b)[j]),
+    (M12 + Y4 + "k = Var(0)\nj = Var(range(2))\nsatisfy(m[k, j] == y)", [D3, D3, D4, [0], range(2)], lambda a, b, y, k, j: y == (a, b)[j]),
+    (M12 + Y4 + "k = Var(range(3))\nj = Var(range(2))\nsatisfy(m[k][j] == y)", [D3, D3, D4, D3, range(2)],
+     lambda a, b, y, k, j: k == 0 and y == (a, b)[j]),
+    (M12 + Y4 + "k = Var(range(3))\nj = Var(range(2))\nsatisfy((m[k][j] == y) | (y == 0))", [D3, D3, D4, D3, range(2)],
+     lambda a, b, y, k, j: k == 0 and y == (a, b)[j] or y == 0),
+    (N21 + Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(n[k][j] == y)", [D3, D3, D4, range(2), [0]], lambda a, b, y, k, j: y == (a, b)[k]),
+    (N21 + Y4 + "k = Var(range(2))\nj = Var(range(3))\nsatisfy(n[k, j] == y)", [D3, D3, D4, range(2), D3],
+     lambda a, b, y, k, j: j == 0 and y == (a, b)[k]),
+    ("o = VarArray(size=[1, 1], dom=range(3))\n" + Y4 + "k = Var(range(2))\nsatisfy(o[k, k] == y)", [D3, D4, range(2)], lambda a, y, k: k == 0 and y == a),
+    (Y4 + "k = Var(range(2))\nj = Var(range(2))\nsatisfy(cp_array([[1, 3]])[k][j] == y)", [D4, range(2), range(2)],
+     lambda y, k, j: k == 0 and y == (1, 3)[j]),
+    (X2 + Y4 + "k = Var(range(2))\nj = Var(range(2))\nsatisfy((cp_array([[1, 3]])[k][j] == y) | (x[0] == 0))", [D3, D3, D4, range(2), range(2)],
+     lambda a, b, y, k, j: k == 0 and y == (1, 3)[j] or a == 0),
+]
+ONE_TERM_IDS = ["var_eq_int", "var_eq_var", "int_eq_var", "var_or", "var_term", "var_in", "int_ne_var_or", "outside_var_eq_int", "outside_var_or",
+                "outside_var_term", "outside_var_sum", "outside_int_if", "outside_var_if", "row_int", "column_int", "outside_column_int", "cell_int",
+                "row_var", "row_var_tuple", "outside_row_var", "outside_row_var_or", "column_var", "outside_column_var", "outside_cell_var",
+                "outside_row_int", "outside_row_int_or"]
+
+
+@pytest.mark.parametrize("code, domains, predicate", ONE_TERM, ids=ONE_TERM_IDS)
+@pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
+def test_element_on_a_list_of_one_term(run, solver, code, domains, predicate, args):
+    check(run, solver, code, domains, predicate, args)
+
+
+@pytest.mark.parametrize("code, domains, predicate", ONE_TERM, ids=ONE_TERM_IDS)
+def test_xcsp3_element_on_a_list_of_one_term_is_core(run, code, domains, predicate):
+    # no list of one term, and no matrix of one row or one column
+    r = run(code)
+    assert r.ok, r.report()
+    for c in r.xml.iter("element"):
+        assert c.find("matrix") is None and c.find("list") is not None and len(c.find("list").text.split()) >= 2, r.report()
+
+
+@pytest.mark.parametrize("code, expected", [
+    (X2 + "k = Var(0)\nsatisfy(x[:1][k] == 2)", ["eq(x[0],2)"]),
+    (X2 + Y4 + "k = Var(0)\nsatisfy(x[:1][k] + y == 3)", ["eq(add(x[0],y),3)"]),
+    (X2 + "k = Var(range(3))\nsatisfy(x[:1][k] == 2)", ["eq(k,0)", "eq(x[0],aux_gb[0])", "eq(aux_gb[0],2)"]),
+    (X2 + Y4 + "k = Var(range(3))\nsatisfy((x[:1][k] == 2) | (y == 1))", ["or(and(eq(k,0),eq(aux_gb[0],2)),eq(y,1))", "eq(x[0],aux_gb[0])"]),
+    ("o = VarArray(size=[1, 1], dom=range(3))\n" + Y4 + "k = Var(range(2))\nsatisfy(o[k, k] == y)", ["eq(k,0)", "eq(o[0][0],aux_gb[0])", "eq(aux_gb[0],y)"]),
+])
+def test_xcsp3_element_on_a_list_of_one_term(run, code, expected):
+    # the term itself (an auxiliary variable equal to it when its index can be outside the list)
+    r = run(code)
+    assert r.ok and r.xml.find(".//element") is None, r.report()
+    assert ["".join(c.text.split()) for c in r.xml.iter("intension")] == expected, r.report()
+
+
+@pytest.mark.parametrize("code, expected", [
+    (M12 + Y4 + "k = Var(0)\nj = Var(range(2))\nsatisfy(m[k][j] == y)", "m[0][0] m[0][1]"),
+    (N21 + Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(n[k][j] == y)", "n[0][0] n[1][0]"),
+    (N21 + Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(n[k, j] == y)", "n[0][0] n[1][0]"),
+    (Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(cp_array([[1], [3]])[k][j] == y)", "1 3"),
+])
+def test_xcsp3_element_on_a_matrix_of_one_row_or_one_column(run, code, expected):
+    # an element on the row or on the column
+    r = run(code)
+    c = r.xml.find("constraints/element")
+    assert r.ok and c is not None and c.find("matrix") is None and " ".join(c.find("list").text.split()) == expected, r.report()
+
+
 # --------------------------------------------------------------------------------------------------- invalid cases
 
 INVALID = "x = VarArray(size=3, dom=range(4))\ni = Var(dom=range(3))\nv = Var(dom=range(5))\nt = cp_array([3, 0, 2])\ny = Var(dom=range(3))\n"

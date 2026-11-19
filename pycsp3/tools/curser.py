@@ -953,6 +953,14 @@ class OpOverrider:
                     #  - c[i] == v builds the node eq(v,2)
                     #  - minimize(c[i]) gives the message of #221: "The objective is the constant 2"
                     return ConstraintDummyConstant(array[0]) if isinstance(array[0], int) else array[0]
+            if len(array) == 1 and isinstance(array[0], (Variable, list)):
+                # a list of one variable (or a matrix of one row), XCSP3-core requiring at least two terms in the list of an element (and two rows in
+                # its matrix): the variable (or the row) itself, the index being 0 (#298)
+                guards = auxiliary().identical_index_guards(1, indexes)  # the index must still be an index of the list (#282)
+                if isinstance(array[0], Variable):
+                    return auxiliary().with_guards(array[0], guards)
+                row = ListVar(array[0]) if any(isinstance(v, Variable) for v in flatten(array[0])) else ListInt(array[0])
+                return row if len(guards) == 0 else (_GuardedRowVar(row, guards) if isinstance(row, ListVar) else _GuardedRow(row, guards))
             return PartialConstraint(ConstraintElement(array, index=indexes))
         if isinstance(indexes, tuple):
             assert len(indexes) > 1
@@ -967,11 +975,16 @@ class OpOverrider:
                         if all(array[0] == t for t in array):  # because all rows are identical, we keep only one dimension
                             guards = auxiliary().identical_index_guards(n, index0)  # the index of rows must still be an index of the matrix (#282)
                             return array[0][index1] if len(guards) == 0 else _GuardedRow(array[0], guards)[index1]
+                    if n == 1 or m == 1:  # a matrix of one row or one column, XCSP3-core requiring at least two of them: an element on it (#298)
+                        line = array[0] if n == 1 else array[:, 0]
+                        line = ListVar(line) if any(isinstance(v, Variable) for v in line) else ListInt(line)
+                        index, other = (index1, index0) if n == 1 else (index0, index1)
+                        return auxiliary().with_guards(line[index], auxiliary().identical_index_guards(1, other))  # the other index must be 0
                     return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
                 if isinstance(index0, Variable) and isinstance(index1, int):
-                    return PartialConstraint(ConstraintElement(array[:, index1], index=index0))
+                    return array[:, index1][index0]  # (a list of one term is handled there, #298)
                 if isinstance(index0, int) and isinstance(index1, Variable):
-                    return PartialConstraint(ConstraintElement(array[index0], index=index1))
+                    return array[index0][index1]
                 assert False
             # indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
             result = OpOverrider.project_recursive(array, indexes, 0)
@@ -1250,6 +1263,17 @@ class ListVar(list):
 
     def __str__(self):
         return structured_list(self)
+
+
+class _GuardedRowVar(ListVar):
+    # the row of a matrix of one row of variables, whose index can be outside the matrix: what is taken from it depends on the guards (ids) of
+    # this index (#298)
+    def __init__(self, row, guards):
+        super().__init__(row)
+        self.guards = frozenset(guards)
+
+    def __getitem__(self, indexes):
+        return auxiliary().with_guards(ListVar(self)[indexes], self.guards)
 
 
 class ListMultipleVar(list):
