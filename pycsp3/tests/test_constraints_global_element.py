@@ -255,6 +255,31 @@ def test_xcsp3_member_in_logical_expressions(run, constraint, expected):
     assert "".join(r.xml.find("constraints/intension").text.split()) == expected, r.report()
 
 
+# a component (element, sum, maximum) in the scope of a table, replaced by an auxiliary variable as an expression (#285)
+# (in the predicates: t[0..2] for x, t[3] for i, t[4] for v)
+XIV = "x = VarArray(size=3, dom=range(3))\ni = Var(dom=range(3))\nv = Var(dom=range(4))\n"
+DXIV = [range(3)] * 4 + [range(4)]
+
+
+@pytest.mark.parametrize("table, positive", [("in {(1, 2), (2, 3)}", True), ("in [(1, 2), (2, 3)]", True), ("not in {(1, 2), (2, 3)}", False)])
+@pytest.mark.parametrize("term, value", [("x[i]", lambda t: t[t[3]]), ("Sum(x[:2])", lambda t: t[0] + t[1]),
+                                         ("Maximum(x[:2])", lambda t: max(t[:2]))])
+def test_element_in_a_table(run, solver, term, value, table, positive):
+    check(run, solver, XIV + f"satisfy(({term}, v) {table})", DXIV, lambda *t: ((value(t), t[4]) in ((1, 2), (2, 3))) == positive)
+
+
+def test_element_and_expression_in_a_table(run, solver):
+    check(run, solver, XIV + "satisfy((x[i], x[0] + 1, v) in {(1, 2, 2), (2, 1, 3)})", DXIV,
+          lambda *t: (t[t[3]], t[0] + 1, t[4]) in ((1, 2, 2), (2, 1, 3)))
+
+
+def test_xcsp3_element_in_a_table(run):
+    r = run(XIV + "satisfy((x[i], v) in {(1, 2), (2, 3)})")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/extension/list").text.split() == ["aux_gb[0]", "v"], r.report()
+    assert r.xml.find("constraints/element") is not None, r.report()
+
+
 # arrays with holes (None): x[1] is a hole of x, and m[0][1] is a hole of m
 HOLES_1D = "x = VarArray(size=3, dom=lambda a: None if a == 1 else range(3))\n"
 HOLES_2D = "m = VarArray(size=[2, 2], dom=lambda a, b: None if b > a else range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(2))\n"
