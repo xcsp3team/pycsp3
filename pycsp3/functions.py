@@ -3851,6 +3851,13 @@ def _is_mixed_list(t, index=-1):
     return False
 
 
+def _terms_as_variables(terms):
+    # the terms (or the components of the 2D terms, returned as tuples) that are expressions, or components such as an element x[i], a sum, a count,
+    # a maximum..., are replaced by auxiliary variables (#302)
+    return [tuple(_terms_as_variables(t)) if isinstance(t, (tuple, list)) else
+            auxiliary().replace_partial_constraint_and_constraint_with_condition_and_possibly_node(t, node_too=True) for t in terms]
+
+
 def _avoid_mixed_list(t):  # TODO for simple lists here, and for tuples?
     if _is_mixed_list(t):
         for i, v in enumerate(t):  # replacing integers
@@ -3925,37 +3932,23 @@ def NoOverlap(tasks=None, *, origins=None, lengths=None, zero_ignored=True):
         assert len(origins[0]) == len(origins[1]) == len(lengths[0]) == len(lengths[1])
         origins = [(origins[0][i], origins[1][i]) for i in range(len(origins[0]))]
         lengths = [(lengths[0][i], lengths[1][i]) for i in range(len(lengths[0]))]
-    if any(isinstance(v, Node) for v in origins):
-        origins = [auxiliary().replace_node(v) if isinstance(v, Node) else v for v in origins]
+    lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else lengths
+    origins, lengths = _terms_as_variables(origins), _terms_as_variables(lengths)  # 2D origins and lengths given as tuples
     _avoid_mixed_list(origins)
     checkType(origins, [int, Variable])
-    if not isinstance(origins[0], (int, Variable)) and not isinstance(origins[0], tuple):  # if 2D but not tuples
-        origins = [tuple(origin) for origin in origins]
-    lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else lengths
-    if any(isinstance(v, Node) for v in lengths):
-        lengths = [auxiliary().replace_node(v) if isinstance(v, Node) else v for v in lengths]
-    if not isinstance(lengths[0], (int, Variable)) and not isinstance(lengths[0], tuple):  # if 2D but not tuples
-        lengths = [tuple(length) for length in lengths]
     _avoid_mixed_list(lengths)
-    checkType(lengths, ([int, Variable, Node]))
+    checkType(lengths, ([int, Variable]))
     if isinstance(origins, list) and len(origins) > 0 and isinstance(origins[0], tuple) and len(origins[0]) == 2:  # if 2D
         # currently, only variables are authorized in origins
         origins = [(auxiliary().replace_int(u) if isinstance(u, int) else u, auxiliary().replace_int(v) if isinstance(v, int) else v)
                    for (u, v) in origins]
     if isinstance(lengths, list) and len(lengths) > 0 and isinstance(lengths[0], tuple) and len(lengths[0]) == 2:  # if 2D
-        # for the moment, we do not keep nodes in NoOverlap. TODO to be changed?
-        if is_containing(lengths[0], Node):
-            lengths[0] = tuple(auxiliary().replace_nodes(list(lengths[0])))
-        if is_containing(lengths[1], Node):
-            lengths[1] = tuple(auxiliary().replace_nodes(list(lengths[1])))
-        # currently, can handle variables, integers and nodes
+        # a dimension mixing integers and variables: the integers are replaced
         b0 = _is_mixed_list(lengths, 0)
         b1 = _is_mixed_list(lengths, 1)
         if b0 or b1:
-            lengths = [(
-                auxiliary().replace_int(u) if b0 and isinstance(u, int) else auxiliary().replace_node(u) if b0 and isinstance(u, Node) else u,
-                auxiliary().replace_int(v) if b1 and isinstance(v, int) else auxiliary().replace_node(v) if b1 and isinstance(v, Node) else v
-            ) for (u, v) in lengths]
+            lengths = [(auxiliary().replace_int(u) if b0 and isinstance(u, int) else u, auxiliary().replace_int(v) if b1 and isinstance(v, int) else v)
+                       for (u, v) in lengths]
     if options.mini:
         assert zero_ignored is True  # for the moment
         t = []
@@ -4065,23 +4058,14 @@ def Cumulative(tasks=None, *, origins=None, lengths=None, ends=None, heights=Non
     for name, values in (("origins", origins), ("lengths", lengths), ("heights", heights)):  # checked before flatten(), which discards None
         if values is None or (isinstance(values, (tuple, list)) and any(v is None for v in flatten(values, keep_none=True, call_cp_array=False))):
             error("The " + name + " of Cumulative() must be given, and cannot be None")
-    origins = flatten(origins)
-    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(origins, nodes_too=True, int_too=False)
+    origins = _terms_as_variables(flatten(origins))
     _avoid_mixed_list(origins)
     checkType(origins, [Variable])
-    lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else flatten(lengths)
-    auxiliary().replace_partial_constraints_and_constraints_with_condition_and_possibly_nodes(lengths, nodes_too=True)
+    lengths = [lengths for _ in range(len(origins))] if isinstance(lengths, int) else _terms_as_variables(flatten(lengths))
     _avoid_mixed_list(lengths)
     checkType(lengths, ([Variable], [int]))
-    heights = [heights for _ in range(len(origins))] if isinstance(heights, int) else flatten(heights)
+    heights = [heights for _ in range(len(origins))] if isinstance(heights, int) else _terms_as_variables(flatten(heights))
     _avoid_mixed_list(heights)
-    for i, h in enumerate(heights):
-        if isinstance(h, PartialConstraint):
-            heights[i] = auxiliary().replace_partial_constraint(h)
-        elif isinstance(h, Node):
-            heights[i] = auxiliary().replace_node(h)
-        elif isinstance(h, ConstraintDummyConstant):
-            heights[i] = auxiliary().replace_int(h.val)
     checkType(heights, ([Variable], [int]))
     ends = flatten(ends) if ends is not None else ends  # ends is optional
     checkType(ends, ([Variable], type(None)))

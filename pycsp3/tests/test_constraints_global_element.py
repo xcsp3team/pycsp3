@@ -12,10 +12,7 @@ integer c, and i can only take indexes of X, element(X, i, (op, k)) holds iff c 
 
 import pytest
 
-from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
-
-# Known bugs of PyCSP3
-NOOVERLAP_ELEMENT = "#302: an element given as an origin or a length of NoOverlap (two dimensions) is written as such in the XCSP3 file"
+from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug_for
 
 # Known bugs of the solvers
 CHOCO_DUPLICATES = ("CHOCO 4.10.15-beta (embedded in PyCSP3) gives solutions several times for a count or a sum of Boolean expressions "
@@ -25,6 +22,9 @@ CHOCO_MATRIX = ("CHOCO 4.10.15-beta (embedded in PyCSP3) misses solutions of ele
 EMPTY_SUPPORTS = ("(to be reported) ACE and CHOCO fail on a table with an empty set of supports, recognized as false by the parser "
                   "(buildCtrFalse(): RuntimeException: Constraint with only conflicts)")
 COSOCO_ROWS = "xcsp3team/cosoco#82: cosoco fails on a matrix given by explicit rows (Matrix variable (x does not exist)"
+ACE_NOOVERLAP_2D = "(to be reported) ACE gives solutions several times for noOverlap in two dimensions, and fails with a variable length"
+COSOCO_NOOVERLAP_2D = ("(to be reported) cosoco gives solutions several times for noOverlap in two dimensions, and fails with a variable length "
+                       "(Solution Error: Disjunctive2DVar is not valid)")
 COSOCO_CLAUSE = "cosoco does not handle clause (Clause constraint not yet supported, s UNSUPPORTED)"
 COSOCO_IN_SET = ("xcsp3team/cosoco#113: cosoco crashes (segmentation fault) on a disjunction (or an implication) containing in(v,set(...)) with "
                  "variables in the set (CosocoCallbacks::createArrays() takes each element of the set as a constant)")
@@ -777,10 +777,9 @@ def x_i(t):  # x[i], i being restricted to the list (the constraint being posted
     ("AllDifferent([[x[i], y[0]], [y[1], y[2]]], matrix=True)", lambda *t: x_i(t) != t[4] and t[5] != t[6] and x_i(t) != t[5] and t[4] != t[6]),
     ("LexIncreasing([[x[i], y[0]], [y[1], y[2]]], matrix=True)", lambda *t: (x_i(t), t[4]) <= (t[5], t[6]) and (x_i(t), t[5]) <= (t[4], t[6])),
     ("Clause([x[i], y[0]], phases=[True, False])", lambda *t: x_i(t) == 1 or t[4] == 0),
-    pytest.param("NoOverlap(origins=[(x[i], y[0]), (y[1], y[2])], lengths=[(1, 1), (1, 1)])", lambda *t: (x_i(t), t[4]) != (t[5], t[6]),
-                 marks=bug(NOOVERLAP_ELEMENT)),
-    pytest.param("NoOverlap(origins=[(y[0], y[1]), (y[2], y[1])], lengths=[(x[i], 1), (1, 1)])",
-                 lambda *t: x_i(t) == 0 or t[4] + x_i(t) <= t[6] or t[6] + 1 <= t[4], marks=bug(NOOVERLAP_ELEMENT)),
+    ("NoOverlap(origins=[(x[i], y[0]), (y[1], y[2])], lengths=[(1, 1), (1, 1)])", lambda *t: (x_i(t), t[4]) != (t[5], t[6])),
+    ("NoOverlap(origins=[(y[0], y[1]), (y[2], y[1])], lengths=[(x[i], 1), (1, 1)])",
+     lambda *t: x_i(t) == 0 or t[4] + x_i(t) <= t[6] or t[6] + 1 <= t[4]),
 ])
 @pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
 def test_element_with_an_index_outside_the_list_in_an_argument_written_as_a_string(run, solver, request, constraint, predicate, args):
@@ -789,7 +788,40 @@ def test_element_with_an_index_outside_the_list_in_an_argument_written_as_a_stri
         pytest.skip(COSOCO_CLAUSE)
     if "matrix=True" in constraint:
         bug_for(request, "COSOCO", COSOCO_ROWS)
+    if constraint.startswith("NoOverlap"):
+        bug_for(request, "ACE", ACE_NOOVERLAP_2D)
+        bug_for(request, "COSOCO", COSOCO_NOOVERLAP_2D)
     check(run, solver, STRING_ARGS + f"satisfy({constraint})", DS, lambda *t: t[3] < 3 and predicate(*t), args=args)
+
+
+# an element, a sum, a count or a maximum given as an origin, a length or a height of NoOverlap (one or two dimensions) and Cumulative, replaced
+# by an auxiliary variable (#302) (in the predicates: t[:3] for x, t[3] for i, t[4:] for y)
+TERMS = "x = VarArray(size=3, dom=range(3))\ni = Var(dom=range(3))\ny = VarArray(size=3, dom=range(3))\n"
+DT = [range(3)] * 7
+
+
+@pytest.mark.parametrize("term, value", [
+    ("x[i]", lambda t: t[t[3]]),
+    ("Sum(x[0], x[1])", lambda t: t[0] + t[1]),
+    ("Count(x, value=1)", lambda t: t[:3].count(1)),
+    ("Maximum(x)", lambda t: max(t[:3])),
+], ids=["element", "sum", "count", "maximum"])
+@pytest.mark.parametrize("constraint, predicate", [
+    ("NoOverlap(origins=[T, y[0]], lengths=[1, 1])", lambda v, t: v != t[4]),
+    ("NoOverlap(origins=[y[0], y[1]], lengths=[T, 1])", lambda v, t: v == 0 or t[4] + v <= t[5] or t[5] + 1 <= t[4]),
+    ("NoOverlap(tasks=[(T, 1), (y[0], 1)])", lambda v, t: v != t[4]),
+    ("NoOverlap(origins=[(T, y[0]), (y[1], y[2])], lengths=[(1, 1), (1, 1)])", lambda v, t: (v, t[4]) != (t[5], t[6])),
+    ("NoOverlap(origins=[(y[0], y[1]), (y[2], y[1])], lengths=[(T, 1), (1, 1)])", lambda v, t: v == 0 or t[4] + v <= t[6] or t[6] + 1 <= t[4]),
+    ("Cumulative(origins=[T, y[0]], lengths=[1, 1], heights=[1, 1]) <= 1", lambda v, t: v != t[4]),
+    ("Cumulative(origins=[y[0], y[1]], lengths=[T, 1], heights=[1, 1]) <= 1", lambda v, t: v == 0 or t[4] + v <= t[5] or t[5] + 1 <= t[4]),
+    ("Cumulative(origins=[y[0], y[1]], lengths=[1, 1], heights=[T, 1]) <= 1", lambda v, t: v == 0 or v <= 1 and t[4] != t[5]),
+], ids=["noOverlap-origin", "noOverlap-length", "noOverlap-tasks", "noOverlap-2D-origin", "noOverlap-2D-length", "cumulative-origin",
+        "cumulative-length", "cumulative-height"])
+def test_element_and_other_components_as_terms_of_no_overlap_and_cumulative(run, solver, request, term, value, constraint, predicate):
+    if constraint.startswith("NoOverlap(origins=[("):  # two dimensions
+        bug_for(request, "ACE", ACE_NOOVERLAP_2D)
+        bug_for(request, "COSOCO", COSOCO_NOOVERLAP_2D)
+    check(run, solver, TERMS + f"satisfy({constraint.replace('T', term)})", DT, lambda *t: predicate(value(t), t))
 
 
 # an index i that can take the value 3, outside the list x, with an element in a set, a frozenset, a tuple or a generator given in a list of satisfy()
