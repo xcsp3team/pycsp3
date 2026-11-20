@@ -644,7 +644,7 @@ def test_expr_invalid(run, call):
 @pytest.mark.parametrize("call, message", [
     ("belong(x + 1, [1, 2])", "The first argument of belong() must be a variable or an integer, which is not the case of add(x,1) (for an expression, the operator in can be used)"),
     ("not_belong(2, [1, 2])", "When the first argument of not_belong() is an integer, the second argument must be a list of variables, which is not the case of [1, 2]"),
-    ("belong(x, ['a'])", "The second argument of belong() must be an integer, a range or a collection of integers, which is not the case of ['a']"),
+    ("belong(x, ['a'])", "The second argument of belong() must be an integer, a range or a collection of integers and variables, which is not the case of ['a']"),
     ("iff(x > 0)", "iff() must have at least two arguments (possibly given in a list), which is not the case of 1"),
     ("imply(x > 0)", "imply() must have two arguments (a condition and a consequence), which is not the case of 1"),
     ("expr(None, x, y)", "The first argument of expr() must be an operator (a string such as \"lt\" or \"add\", or a TypeNode), which is not the case of None"),

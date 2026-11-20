@@ -12,11 +12,9 @@ integer c, and i can only take indexes of X, element(X, i, (op, k)) holds iff c 
 
 import pytest
 
-from harness import assert_optimum, assert_solutions, brute_force, bug, bug_for
+from harness import assert_fails, assert_optimum, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs of PyCSP3
-INT_CONDITION = ("#294: an element on a list of integers compared with an integer has an integer as operand of its condition, which XCSP3-core "
-                 "does not allow, and ACE does not handle (unimplemented case for element)")
 NOOVERLAP_ELEMENT = "#302: an element given as an origin or a length of NoOverlap (two dimensions) is written as such in the XCSP3 file"
 
 # Known bugs of the solvers
@@ -126,6 +124,78 @@ def test_element_on_identical_integers_as_objective(run, solver, objective, func
         assert "The objective is the constant 2: there is nothing to optimize" in r.stdout, r.report()
     else:
         assert_optimum(r, brute_force(DC, lambda *t: t[1] != 0), function)
+
+
+# an element on a matrix as objective, replaced by an auxiliary variable as an element on a list (#290)
+# (in the predicates: t[0..5] for m, t[6] for j, t[7] for k, t[8] for v)
+MJK = "m = VarArray(size=[2, 3], dom=range(2))\nj = Var(dom=range(2))\nk = Var(dom=range(3))\nv = Var(dom=range(3))\n"
+DMJK = [range(2)] * 6 + [range(2), range(3), range(3)]
+
+
+def mjk(t):
+    return t[3 * t[6] + t[7]]
+
+
+@pytest.mark.parametrize("objective, function", [
+    ("maximize(m[j][k])", lambda *t: mjk(t)),
+    ("minimize(m[j, k])", lambda *t: mjk(t)),
+    ("minimize(m[j][k] + v)", lambda *t: mjk(t) + t[8]),
+    ("maximize(u[j][k])", lambda *t: ((1, 4, 2), (3, 0, 5))[t[6]][t[7]]),
+    ("minimize(u[j][k])", lambda *t: ((1, 4, 2), (3, 0, 5))[t[6]][t[7]]),
+])
+def test_element_on_a_matrix_as_objective(run, solver, request, objective, function):
+    if "m[j" in objective:
+        bug_for(request, "CHOCO", CHOCO_MATRIX)
+    r = run(MJK + "u = cp_array([[1, 4, 2], [3, 0, 5]])\nsatisfy(m[0][0] != m[1][1], v != 1, k != 1)\n" + objective, solver=solver)
+    assert_optimum(r, brute_force(DMJK, lambda *t: t[0] != t[4] and t[8] != 1 and t[7] != 1), function,
+                   maximize=objective.startswith("maximize"))
+
+
+@pytest.mark.parametrize("objective", ["maximize(m[j][k])", "minimize(t[j][k])", "maximize(m[j, k])", "maximize(m[j][k] + v)"])
+def test_xcsp3_element_on_a_matrix_as_objective(run, objective):
+    # there is no objective of type element in XCSP3: the element is replaced by an auxiliary variable (#290)
+    r = run(MJK + "t = cp_array([[1, 2, 3], [4, 5, 6]])\n" + objective)
+    assert r.ok, r.report()
+    o = r.xml.find("objectives")[0]
+    assert o.get("type") in (None, "expression") and o.find("matrix") is None, r.report()
+    assert r.xml.find("constraints/element/matrix") is not None, r.report()
+
+
+# the element of a list of 0/1 terms (variables or integers) is a Boolean, replaced by an auxiliary variable in logical operations (#291)
+# (in the predicates: t[0..2] for b, t[3] for i)
+B3 = "b = VarArray(size=3, dom={0, 1})\ni = Var(dom=range(3))\n"
+DB3 = [range(2)] * 3 + [range(3)]
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("b[i]", lambda *t: t[t[3]] == 1),
+    ("cp_array([0, 1, 1])[i]", lambda *t: t[3] > 0),
+    ("b[i] | b[2 - i]", lambda *t: t[t[3]] == 1 or t[2 - t[3]] == 1),
+    ("b[i] & b[2 - i]", lambda *t: t[t[3]] == 1 and t[2 - t[3]] == 1),
+    ("b[i] & (b[0] == 0)", lambda *t: t[t[3]] == 1 and t[0] == 0),
+    ("(b[0] == 0) | b[i]", lambda *t: t[0] == 0 or t[t[3]] == 1),
+    ("b[0] | b[i]", lambda *t: t[0] == 1 or t[t[3]] == 1),
+    ("~b[i]", lambda *t: t[t[3]] == 0),
+    ("~b[i] | b[0]", lambda *t: t[t[3]] == 0 or t[0] == 1),
+    ("b[i] ^ b[0]", lambda *t: t[t[3]] != t[0]),
+    ("b[0] ^ b[i]", lambda *t: t[t[3]] != t[0]),
+    ("imply(b[0], b[i])", lambda *t: t[0] == 0 or t[t[3]] == 1),
+    ("cp_array([0, 1, 1])[i] | b[0]", lambda *t: t[3] > 0 or t[0] == 1),
+    ("~cp_array([0, 1, 1])[i]", lambda *t: t[3] == 0),
+    ("Maximum(b[1:]) | (b[0] == 1)", lambda *t: t[1] == 1 or t[2] == 1 or t[0] == 1),
+    ("(b[0] == 1) | Maximum(b[1:])", lambda *t: t[1] == 1 or t[2] == 1 or t[0] == 1),
+    ("~Minimum(b) & b[i]", lambda *t: 0 in t[:3] and t[t[3]] == 1),
+])
+def test_element_on_01_terms_in_logical_expressions(run, solver, constraint, predicate):
+    check(run, solver, B3 + f"satisfy({constraint})", DB3, predicate)
+
+
+@pytest.mark.parametrize("constraint", ["x[i]", "x[i] | (v == 1)", "(v == 1) | x[i]", "(v == 1) & x[i]", "~x[i]", "x[i] ^ b[0]", "b[0] ^ x[i]",
+                                        "(v == 1) ^ x[i]", "~cp_array([0, 2, 1])[i]", "Sum(b) | (v == 1)", "(v == 1) | Sum(b)", "~Sum(b)"])
+def test_component_not_01_in_logical_expressions_message(run, constraint):
+    # a component whose values are not 0/1 is not a Boolean: an explicit message instead of a TypeError or an assert without message
+    r = run(B3 + "x = VarArray(size=3, dom=range(3))\nv = Var(dom=range(3))\n" + f"satisfy({constraint})")
+    assert not r.ok and "is not a constraint: it must be subject to a condition" in r.stdout + r.stderr, r.report()
 
 
 @pytest.mark.parametrize("constraint, predicate", [
@@ -253,6 +323,31 @@ def test_xcsp3_member_in_logical_expressions(run, constraint, expected):
             f"satisfy({constraint})")
     assert r.ok, r.report()
     assert "".join(r.xml.find("constraints/intension").text.split()) == expected, r.report()
+
+
+# a component (element, sum, maximum) in the scope of a table, replaced by an auxiliary variable as an expression (#285)
+# (in the predicates: t[0..2] for x, t[3] for i, t[4] for v)
+XIV = "x = VarArray(size=3, dom=range(3))\ni = Var(dom=range(3))\nv = Var(dom=range(4))\n"
+DXIV = [range(3)] * 4 + [range(4)]
+
+
+@pytest.mark.parametrize("table, positive", [("in {(1, 2), (2, 3)}", True), ("in [(1, 2), (2, 3)]", True), ("not in {(1, 2), (2, 3)}", False)])
+@pytest.mark.parametrize("term, value", [("x[i]", lambda t: t[t[3]]), ("Sum(x[:2])", lambda t: t[0] + t[1]),
+                                         ("Maximum(x[:2])", lambda t: max(t[:2]))])
+def test_element_in_a_table(run, solver, term, value, table, positive):
+    check(run, solver, XIV + f"satisfy(({term}, v) {table})", DXIV, lambda *t: ((value(t), t[4]) in ((1, 2), (2, 3))) == positive)
+
+
+def test_element_and_expression_in_a_table(run, solver):
+    check(run, solver, XIV + "satisfy((x[i], x[0] + 1, v) in {(1, 2, 2), (2, 1, 3)})", DXIV,
+          lambda *t: (t[t[3]], t[0] + 1, t[4]) in ((1, 2, 2), (2, 1, 3)))
+
+
+def test_xcsp3_element_in_a_table(run):
+    r = run(XIV + "satisfy((x[i], v) in {(1, 2), (2, 3)})")
+    assert r.ok, r.report()
+    assert r.xml.find("constraints/extension/list").text.split() == ["aux_gb[0]", "v"], r.report()
+    assert r.xml.find("constraints/element") is not None, r.report()
 
 
 # arrays with holes (None): x[1] is a hole of x, and m[0][1] is a hole of m
@@ -402,8 +497,6 @@ def test_element_on_identical_integers_with_an_index_outside_the_list_restricted
 @pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
 def test_element_on_a_matrix_of_identical_integers_with_an_index_outside_the_matrix_restricted(run, solver, request, constraint, predicate, args):
     # the index j cannot take the value 2, outside the matrix, with or without -force_element_index
-    if constraint == "t[j, k] != 2":
-        bug_for(request, "ACE", INT_CONDITION)
     check_with_v(run, solver, request, M_OUTSIDE, constraint, DM_OUTSIDE, lambda *t: t[0] < 2 and predicate(*t), 2, args, empty_supports=False)
 
 
@@ -750,3 +843,280 @@ def test_element_with_an_index_never_in_the_list(run, solver, request, code, dom
         bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
     r = check(run, solver, code + f"satisfy({constraint})", [range(3)] * 3 + [domain, range(2)], predicate, args=args)
     assert (WARNING_NEVER in r.stdout) == (len(args) == 0), r.report()
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("r[k] == [v, w]", lambda k, v, w: [v, w] == [[1, 2], [3, 0]][k]),
+    ("r[k] == (v, w)", lambda k, v, w: [v, w] == [[1, 2], [3, 0]][k]),
+    ("r[k] == (3, w)", lambda k, v, w: [3, w] == [[1, 2], [3, 0]][k]),
+    ("q[k] == (v, w)", lambda k, v, w: (v, w) == ((1, 2), (3, 0))[k]),
+    ("v in r[k]", lambda k, v, w: v in [[1, 2], [3, 0]][k]),
+    ("r[k] == {v, w}", lambda k, v, w: sorted([v, w]) == sorted([[1, 2], [3, 0]][k])),
+])
+def test_element_on_rows_of_integers(run, solver, constraint, predicate):
+    # a list of rows of integers indexed by a variable gives a row, compared with a list (or a tuple, #293, or a set) of variables
+    code = "r = cp_array([[1, 2], [3, 0]])\nq = cp_array([(1, 2), (3, 0)])\nk = Var(dom=range(2))\nv = Var(dom=range(4))\nw = Var(dom=range(4))\n"
+    check(run, solver, code + f"satisfy({constraint})", [range(2), range(4), range(4)], predicate)
+
+
+# ------------------------------------------------------------------------------- element on integers compared with integers (#294)
+
+# XCSP3-core requires a variable in the condition of an element whose list contains integers: posted directly, the element is a unary constraint
+# on its index; in a larger expression, the element is replaced by an auxiliary variable (aux equal to t[i])
+T4 = "t = cp_array([3, 0, 2, 0])\ni = Var(dom=range(4))\ny = Var(dom=range(2))\n"
+
+
+def t4(i):
+    return (3, 0, 2, 0)[i]
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("t[i] == 0", lambda i, y: t4(i) == 0),
+    ("t[i] == 3", lambda i, y: t4(i) == 3),
+    ("t[i] != 0", lambda i, y: t4(i) != 0),
+    ("t[i] < 2", lambda i, y: t4(i) < 2),
+    ("t[i] >= 2", lambda i, y: t4(i) >= 2),
+    ("t[i] in {0, 2}", lambda i, y: t4(i) in (0, 2)),
+    ("t[i] not in {0, 2}", lambda i, y: t4(i) not in (0, 2)),
+    ("t[i] in range(1, 3)", lambda i, y: t4(i) in (1, 2)),
+    ("t[i].among({0, 3})", lambda i, y: t4(i) in (0, 3)),
+    ("t[i].is_not_in({3})", lambda i, y: t4(i) != 3),
+    ("(t[i] in {0, 2, 3}) & (y == 1)", lambda i, y: y == 1),
+    ("t[i] == 7", lambda i, y: False),
+    ("(t[i] < 2) | (y == 1)", lambda i, y: t4(i) < 2 or y == 1),
+    ("~(t[i] == 0)", lambda i, y: t4(i) != 0),
+    ("If(y == 1, Then=t[i] in {2, 3})", lambda i, y: y == 0 or t4(i) in (2, 3)),
+    ("(t[i] == 7) | (y == 1)", lambda i, y: y == 1),
+])
+def test_element_on_integers_compared_with_integers(run, solver, request, constraint, predicate):
+    if constraint == "t[i] == 7":  # the constraint false, posted by a table with an empty set of supports
+        bug_for(request, ("ACE", "CHOCO"), EMPTY_SUPPORTS)
+    check(run, solver, T4 + f"satisfy({constraint})", [range(4), range(2)], predicate)
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("If(y == 0, Then=t[i] == 0)", lambda i, y: y == 1 or t4(i) == 0),
+    ("(t[i] < 2) | (y == 1)", lambda i, y: t4(i) < 2 or y == 1),
+])
+def test_element_on_integers_compared_with_integers_in_logical_expressions_with_mini(run, solver, constraint, predicate):
+    # with -mini, in a logical expression, the element is replaced by an auxiliary variable (no unary table to be reified)
+    check(run, solver, T4 + f"satisfy({constraint})", [range(4), range(2)], predicate, args=("-mini",))
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("If(y == 0, (t[i] == 0) & (z == 0), Then=i == 1)", lambda i, y, z: not (y == 0 and t4(i) == 0 and z == 0) or i == 1),
+    ("If(y == 0, (t[i] == 0) | (z == 0), Then=i == 1)", lambda i, y, z: not (y == 0 and (t4(i) == 0 or z == 0)) or i == 1),
+])
+def test_element_on_integers_compared_with_integers_in_the_tests_of_if_with_mini(run, solver, constraint, predicate):
+    # with -mini, in the tests of If(), negated when they are several, the element is replaced by an auxiliary variable
+    code = T4 + "z = Var(dom=range(2))\n" + f"satisfy({constraint})"
+    check(run, solver, code, [range(4), range(2), range(2)], predicate, args=("-mini",))
+
+
+# the index i can take the value 3, outside the list t; the index j can take the value 2, outside the matrix m of identical rows
+GUARDED = "t = cp_array([2, 2, 0])\ni = Var(dom=range(4))\nm = cp_array([[1, 2, 3], [1, 2, 3]])\nj = Var(dom=range(3))\nk = Var(dom=range(3))\ny = Var(dom=range(2))\n"
+
+
+@pytest.mark.parametrize("constraint, predicate", [
+    ("t[i] in {0, 2}", lambda i, j, k, y: i < 3),
+    ("t[i] == 0", lambda i, j, k, y: i == 2),
+    ("(t[i] != 5) | (y == 1)", lambda i, j, k, y: i < 3 or y == 1),
+    ("~(t[i] == 2)", lambda i, j, k, y: i >= 2),
+    ("m[j][k] == 1", lambda i, j, k, y: j < 2 and k == 0),
+    ("m[j, k] < 5", lambda i, j, k, y: j < 2),
+    ("~(m[j, k] == 2)", lambda i, j, k, y: j == 2 or k != 1),
+    ("(m[j, k] < 5) | (y == 1)", lambda i, j, k, y: j < 2 or y == 1),
+])
+@pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
+def test_element_on_integers_compared_with_integers_with_an_index_outside(run, solver, constraint, predicate, args):
+    # the element does not hold when its index is outside the list (#282), even when the condition holds for all the integers
+    check(run, solver, GUARDED + f"satisfy({constraint})", [range(4), range(3), range(3), range(2)], predicate, args)
+
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("t[i] == 0", "in(i,set(1,3))"),
+    ("t[i] < 2", "in(i,set(1,3))"),
+    ("t[i] in {0, 2}", "in(i,set(1,2,3))"),
+    ("t[i] not in range(1, 3)", "in(i,set(0,1,3))"),
+    ("t[i].is_not_in({3})", "in(i,set(1,2,3))"),
+    ("t[i] == 3", "eq(i,0)"),
+    ("t[i] > 2", "eq(i,0)"),
+])
+def test_xcsp3_element_on_integers_compared_with_an_integer(run, constraint, expected):
+    r = run(T4 + f"satisfy({constraint})")
+    assert r.ok and r.xml.find("constraints/element") is None, r.report()
+    assert "".join(r.xml.find("constraints/intension").text.split()) == expected, r.report()
+
+
+@pytest.mark.parametrize("constraint, expected", [
+    ("(t[i] < 2) | (y == 1)", "or(lt(aux_gb[0],2),y)"),
+    ("~(t[i] == 0)", "ne(aux_gb[0],0)"),
+    ("If(y == 1, Then=t[i] in {2, 3})", "imp(y,in(aux_gb[0],set(2,3)))"),
+])
+def test_xcsp3_element_on_integers_compared_with_an_integer_in_an_expression(run, constraint, expected):
+    # in a larger expression, the element is replaced by an auxiliary variable: <value> aux </value>, which XCSP3-core allows
+    r = run(T4 + f"satisfy({constraint})")
+    element = r.xml.find("constraints/element")
+    assert r.ok and element is not None and element.find("value").text.split() == ["aux_gb[0]"], r.report()
+    assert "".join(r.xml.find("constraints/intension").text.split()) == expected, r.report()
+
+
+def test_xcsp3_element_on_integers_compared_with_an_integer_in_a_list(run):
+    # the elements posted directly in a list (a constant one being discarded) are unary constraints on their indexes
+    r = run(T4 + "satisfy([t[i] < 2, t[i] in {0, 2, 3}, y == 1])")
+    assert r.ok and r.xml.find(".//element") is None, r.report()
+    assert ["".join(c.text.split()) for c in r.xml.iter("intension")] == ["in(i,set(1,3))", "eq(y,1)"], r.report()
+
+
+def test_xcsp3_element_on_integers_compared_with_an_integer_with_mini(run):
+    # in the mini-tracks, 'in' is not a primitive form of intension: a unary table is posted
+    r = run(T4 + "satisfy(t[i] < 2)", args=("-mini",))
+    assert r.ok and r.xml.find("constraints/element") is None, r.report()
+    c = r.xml.find("constraints/extension")
+    assert c is not None and (c.find("list").text.split(), c.find("supports").text.split()) == (["i"], ["1", "3"]), r.report()
+
+
+# ----------------------------------------------------------------------------- element on a list of one term (#298)
+
+# XCSP3-core requires at least two terms in the list of an element, and at least two rows and two columns in its matrix: the term itself, or an
+# element on the row or the column, the other index being 0 (restricted when posted directly, the element being false otherwise in a logical
+# expression, #282)
+X2 = "x = VarArray(size=2, dom=range(3))\n"
+Y4 = "y = Var(dom=range(4))\n"
+M12 = "m = VarArray(size=[1, 2], dom=range(3))\n"
+N21 = "n = VarArray(size=[2, 1], dom=range(3))\n"
+D3, D4 = range(3), range(4)
+
+ONE_TERM = [
+    (X2 + "k = Var(0)\nsatisfy(x[:1][k] == 2)", [D3, D3, [0]], lambda a, b, k: a == 2),
+    (X2 + Y4 + "k = Var(0)\nsatisfy(x[:1][k] == y)", [D3, D3, D4, [0]], lambda a, b, y, k: a == y),
+    (Y4 + "k = Var(0)\nsatisfy(cp_array([2])[k] == y)", [D4, [0]], lambda y, k: y == 2),
+    (X2 + Y4 + "k = Var(0)\nsatisfy((x[:1][k] == 2) | (y == 1))", [D3, D3, D4, [0]], lambda a, b, y, k: a == 2 or y == 1),
+    (X2 + Y4 + "k = Var(0)\nsatisfy(x[:1][k] + y == 3)", [D3, D3, D4, [0]], lambda a, b, y, k: a + y == 3),
+    (X2 + "k = Var(0)\nsatisfy(x[:1][k] in {1, 2})", [D3, D3, [0]], lambda a, b, k: a in (1, 2)),
+    (X2 + Y4 + "k = Var(0)\nsatisfy((cp_array([2])[k] != y) | (x[0] == x[1]))", [D3, D3, D4, [0]], lambda a, b, y, k: y != 2 or a == b),
+    (X2 + "k = Var(range(3))\nsatisfy(x[:1][k] == 2)", [D3, D3, D3], lambda a, b, k: k == 0 and a == 2),
+    (X2 + Y4 + "k = Var(range(3))\nsatisfy((x[:1][k] == 2) | (y == 1))", [D3, D3, D4, D3], lambda a, b, y, k: k == 0 and a == 2 or y == 1),
+    (X2 + Y4 + "k = Var(range(3))\nsatisfy(x[:1][k] + y == 3)", [D3, D3, D4, D3], lambda a, b, y, k: k == 0 and a + y == 3),
+    (X2 + Y4 + "k = Var(range(3))\nsatisfy(Sum([x[:1][k], y]) == 3)", [D3, D3, D4, D3], lambda a, b, y, k: k == 0 and a + y == 3),
+    (X2 + "k = Var(range(3))\nsatisfy(If(k < 1, Then=x[0] == cp_array([2])[k]))", [D3, D3, D3], lambda a, b, k: k >= 1 or a == 2),
+    (X2 + "k = Var(range(3))\nsatisfy(If(k < 1, Then=x[0] == cp_array([x[1]])[k]))", [D3, D3, D3], lambda a, b, k: k >= 1 or a == b),
+    (Y4 + "k = Var(0)\nj = Var(range(2))\nsatisfy(cp_array([[1, 3]])[k][j] == y)", [D4, [0], range(2)], lambda y, k, j: y == (1, 3)[j]),
+    (Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(cp_array([[1], [3]])[k][j] == y)", [D4, range(2), [0]], lambda y, k, j: y == (1, 3)[k]),
+    (Y4 + "k = Var(range(2))\nj = Var(range(3))\nsatisfy(cp_array([[1], [3]])[k, j] == y)", [D4, range(2), D3], lambda y, k, j: j == 0 and y == (1, 3)[k]),
+    (Y4 + "k = Var(0)\nj = Var(0)\nsatisfy(cp_array([[1]])[k][j] == y)", [D4, [0], [0]], lambda y, k, j: y == 1),
+    (M12 + Y4 + "k = Var(0)\nj = Var(range(2))\nsatisfy(m[k][j] == y)", [D3, D3, D4, [0], range(2)], lambda a, b, y, k, j: y == (a, b)[j]),
+    (M12 + Y4 + "k = Var(0)\nj = Var(range(2))\nsatisfy(m[k, j] == y)", [D3, D3, D4, [0], range(2)], lambda a, b, y, k, j: y == (a, b)[j]),
+    (M12 + Y4 + "k = Var(range(3))\nj = Var(range(2))\nsatisfy(m[k][j] == y)", [D3, D3, D4, D3, range(2)],
+     lambda a, b, y, k, j: k == 0 and y == (a, b)[j]),
+    (M12 + Y4 + "k = Var(range(3))\nj = Var(range(2))\nsatisfy((m[k][j] == y) | (y == 0))", [D3, D3, D4, D3, range(2)],
+     lambda a, b, y, k, j: k == 0 and y == (a, b)[j] or y == 0),
+    (N21 + Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(n[k][j] == y)", [D3, D3, D4, range(2), [0]], lambda a, b, y, k, j: y == (a, b)[k]),
+    (N21 + Y4 + "k = Var(range(2))\nj = Var(range(3))\nsatisfy(n[k, j] == y)", [D3, D3, D4, range(2), D3],
+     lambda a, b, y, k, j: j == 0 and y == (a, b)[k]),
+    ("o = VarArray(size=[1, 1], dom=range(3))\n" + Y4 + "k = Var(range(2))\nsatisfy(o[k, k] == y)", [D3, D4, range(2)], lambda a, y, k: k == 0 and y == a),
+    (Y4 + "k = Var(range(2))\nj = Var(range(2))\nsatisfy(cp_array([[1, 3]])[k][j] == y)", [D4, range(2), range(2)],
+     lambda y, k, j: k == 0 and y == (1, 3)[j]),
+    (X2 + Y4 + "k = Var(range(2))\nj = Var(range(2))\nsatisfy((cp_array([[1, 3]])[k][j] == y) | (x[0] == 0))", [D3, D3, D4, range(2), range(2)],
+     lambda a, b, y, k, j: k == 0 and y == (1, 3)[j] or a == 0),
+]
+ONE_TERM_IDS = ["var_eq_int", "var_eq_var", "int_eq_var", "var_or", "var_term", "var_in", "int_ne_var_or", "outside_var_eq_int", "outside_var_or",
+                "outside_var_term", "outside_var_sum", "outside_int_if", "outside_var_if", "row_int", "column_int", "outside_column_int", "cell_int",
+                "row_var", "row_var_tuple", "outside_row_var", "outside_row_var_or", "column_var", "outside_column_var", "outside_cell_var",
+                "outside_row_int", "outside_row_int_or"]
+
+
+@pytest.mark.parametrize("code, domains, predicate", ONE_TERM, ids=ONE_TERM_IDS)
+@pytest.mark.parametrize("args", [(), ("-force_element_index",)], ids=["warning", "option"])
+def test_element_on_a_list_of_one_term(run, solver, code, domains, predicate, args):
+    check(run, solver, code, domains, predicate, args)
+
+
+@pytest.mark.parametrize("code, domains, predicate", ONE_TERM, ids=ONE_TERM_IDS)
+def test_xcsp3_element_on_a_list_of_one_term_is_core(run, code, domains, predicate):
+    # no list of one term, and no matrix of one row or one column
+    r = run(code)
+    assert r.ok, r.report()
+    for c in r.xml.iter("element"):
+        assert c.find("matrix") is None and c.find("list") is not None and len(c.find("list").text.split()) >= 2, r.report()
+
+
+@pytest.mark.parametrize("code, expected", [
+    (X2 + "k = Var(0)\nsatisfy(x[:1][k] == 2)", ["eq(x[0],2)"]),
+    (X2 + Y4 + "k = Var(0)\nsatisfy(x[:1][k] + y == 3)", ["eq(add(x[0],y),3)"]),
+    (X2 + "k = Var(range(3))\nsatisfy(x[:1][k] == 2)", ["eq(k,0)", "eq(x[0],aux_gb[0])", "eq(aux_gb[0],2)"]),
+    (X2 + Y4 + "k = Var(range(3))\nsatisfy((x[:1][k] == 2) | (y == 1))", ["or(and(eq(k,0),eq(aux_gb[0],2)),eq(y,1))", "eq(x[0],aux_gb[0])"]),
+    ("o = VarArray(size=[1, 1], dom=range(3))\n" + Y4 + "k = Var(range(2))\nsatisfy(o[k, k] == y)", ["eq(k,0)", "eq(o[0][0],aux_gb[0])", "eq(aux_gb[0],y)"]),
+])
+def test_xcsp3_element_on_a_list_of_one_term(run, code, expected):
+    # the term itself (an auxiliary variable equal to it when its index can be outside the list)
+    r = run(code)
+    assert r.ok and r.xml.find(".//element") is None, r.report()
+    assert ["".join(c.text.split()) for c in r.xml.iter("intension")] == expected, r.report()
+
+
+@pytest.mark.parametrize("code, expected", [
+    (M12 + Y4 + "k = Var(0)\nj = Var(range(2))\nsatisfy(m[k][j] == y)", "m[0][0] m[0][1]"),
+    (N21 + Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(n[k][j] == y)", "n[0][0] n[1][0]"),
+    (N21 + Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(n[k, j] == y)", "n[0][0] n[1][0]"),
+    (Y4 + "k = Var(range(2))\nj = Var(0)\nsatisfy(cp_array([[1], [3]])[k][j] == y)", "1 3"),
+])
+def test_xcsp3_element_on_a_matrix_of_one_row_or_one_column(run, code, expected):
+    # an element on the row or on the column
+    r = run(code)
+    c = r.xml.find("constraints/element")
+    assert r.ok and c is not None and c.find("matrix") is None and " ".join(c.find("list").text.split()) == expected, r.report()
+
+
+# --------------------------------------------------------------------------------------------------- invalid cases
+
+INVALID = "x = VarArray(size=3, dom=range(4))\ni = Var(dom=range(3))\nv = Var(dom=range(5))\nt = cp_array([3, 0, 2])\ny = Var(dom=range(3))\n"
+
+
+@pytest.mark.parametrize("constraint", [
+    "x[i] == None",
+    "x[i] == 'a'",
+    "x[i] == 2.5",
+    "x[i] == True",
+    "x[i] == [1, 2]",
+    "x[i] == {1: 2}",
+    "x[i]",
+    "t[i]",
+    "x[i] | v",
+    "~x[i]",
+    "x[i] == s[0]",
+    "s[i] == 'a'",
+    "x[s[0]] == 2",
+    "x[2.5] == 2",
+    "x[:0][i] == 2",
+    "[x[0], x[1]][i] == 2",
+    "(x[0], x[1])[i] == 2",
+    "cp_array(['a', 'b', 'c'])[i] == 2",
+    "cp_array([True, False, True])[i] == v",
+    "m[i][i][i] == 2",
+    "m[i][i][0] == 2",
+    "x[i] in {y, 2}",
+    "x[i][0] == 2",
+])
+def test_invalid_element(run, constraint):
+    code = INVALID + "s = VarArray(size=3, dom={'a', 'b'})\nm = VarArray(size=[3, 3, 3], dom=range(3))\n"
+    assert_fails(run(code + f"satisfy({constraint})"))
+
+
+@pytest.mark.parametrize("constraint, message", [
+    ("x[:0][i] == 2", "A constraint Element on an empty list of variables is encountered"),
+    ("x[i]", "is not a constraint: it must be subject to a condition"),
+    ("t[i]", "is not a constraint: it must be subject to a condition"),
+    ("x[i] | (v == 1)", "is not a constraint: it must be subject to a condition"),
+    ("~t[i]", "is not a constraint: it must be subject to a condition"),
+    ("x[i] in {y, 2}", "must be integers, which is not the case of y"),
+    ("x[i] == [1, 2]", "cannot be compared with the list [1, 2]"),
+    ("x[s[0]] == 2", "The index of a list must be an integer variable, which is not the case of s[0]"),
+    ("m[i][s[0]] == 1", "The index of a matrix must be an integer variable, which is not the case of s[0]"),
+    ("x[2.5] == 2", "The index of a list must be an integer, a variable or an expression, which is not the case of 2.5"),
+    ("x[i] == s[0]", "A symbolic variable cannot be the operand of a condition, which is the case of s[0]"),
+])
+def test_invalid_element_message(run, constraint, message):
+    code = INVALID + "s = VarArray(size=3, dom={'a', 'b'})\nm = VarArray(size=[3, 3], dom=range(2))\n"
+    r = run(code + f"satisfy({constraint})")
+    assert not r.ok and message in r.stdout, r.report()

@@ -17,8 +17,8 @@ from pycsp3.classes.main.constraints import (
     ConstraintIntension, ConstraintExtension, ConstraintRegular, ConstraintMdd, ConstraintAllDifferent,
     ConstraintAllDifferentList, ConstraintAllDifferentMatrix, ConstraintAllEqual, ConstraintAllEqualList, ConstraintOrdered, ConstraintLex, ConstraintLexMatrix,
     ConstraintDisjoint, ConstraintPrecedence, ConstraintSum, ConstraintCount, ConstraintNValues, ConstraintCardinality, ConstraintMaximum,
-    ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintChannel, ConstraintNoOverlap, ConstraintCumulative,
-    ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
+    ConstraintMinimum, ConstraintMaximumArg, ConstraintMinimumArg, ConstraintElement, ConstraintElementMatrix, ConstraintChannel, ConstraintNoOverlap,
+    ConstraintCumulative, ConstraintBinPacking, ConstraintKnapsack, ConstraintFlow, ConstraintCircuit, ConstraintClause, ConstraintAdhoc, ConstraintRefutation,
     ConstraintDummyConstant, ConstraintSlide, PartialConstraint, ScalarProduct, auxiliary, manage_global_indirection)
 from pycsp3.classes.main.objectives import ObjectiveExpression, ObjectivePartial
 from pycsp3.classes.main.variables import Domain, Variable, VariableInteger, VariableSymbolic, check_no_boolean
@@ -970,10 +970,9 @@ def _01_to_node(arg):
     if isinstance(arg, Variable):
         assert arg.dom.is_binary()
         return Node.build(TypeNode.EQ, arg, 1)  # transformed into a basic logical equation
-    if isinstance(arg, PartialConstraint):
-        if not isinstance(arg.constraint, ConstraintElement):  # TODO to be extended (other cases should be possible)
+    if isinstance(arg, PartialConstraint):  # the element of a list of 0/1 terms (variables or integers) is a Boolean (#291)
+        if not isinstance(arg.constraint, ConstraintElement) or not arg.constraint.on_01_terms():
             error("The component " + str(arg) + " is not a constraint: it must be subject to a condition, as in Sum(x) > 10")
-        assert all(isinstance(t, Variable) and t.dom.is_binary() for t in arg.constraint.arguments[TypeCtrArg.LIST].content)  # TODO to be extended
         return arg == 1
     return arg
 
@@ -984,6 +983,35 @@ def _false_constraint():
     error_if(x is None, "A constraint is trivially false (constant 0), but the model has no variable")
     warning("A constraint is trivially false (constant 0): the model is unsatisfiable")
     return ECtr(ConstraintExtension([x], [], True, options.keep_hybrid, options.restrict_tables_wrt_domains))  # not _Extension(), which refuses an empty table
+
+
+def _in_of_list(arg):
+    # a Boolean of a list of constraints, given by the operator 'in', is interpreted now (as in _group()), so that an element can be handled (#294)
+    if not isinstance(arg, bool) or len(queue_in) == 0:
+        return arg
+    right_operand, left_operand = queue_in.popleft()
+    return auxiliary().handle_guards(_bool_interpretation_for_in(left_operand, right_operand, arg))  # (#282)
+
+
+def _unary_for_elements(arg):
+    # an element on integers compared with integers, posted directly, is a unary constraint on its index, XCSP3-core requiring a variable in the
+    # condition of an element whose list contains integers (#294); in a larger expression, the element is replaced by an auxiliary variable (aux
+    # equal to t[i]), and is not handled here; None is returned when the constraint always holds (the guards of the index being already posted)
+    if isinstance(arg, list):
+        return [_unary_for_elements(_in_of_list(a)) for a in arg]
+    if not isinstance(arg, ECtr) or not isinstance(arg.constraint, ConstraintElement):
+        return arg
+    indexes = arg.constraint.satisfying_indexes()
+    if indexes is None:
+        return arg
+    index = arg.constraint.arguments[TypeCtrArg.INDEX].content
+    if len(indexes) == 0:
+        return _false_constraint()
+    if len(indexes) == len(index.dom.all_values()):
+        return None
+    if options.mini:  # in the mini-tracks, 'in' is not a primitive form of intension, whereas a unary table is accepted
+        return ECtr(ConstraintExtension([index], indexes, True, options.keep_hybrid, options.restrict_tables_wrt_domains))
+    return Node.build(EQ, index, indexes[0]) if len(indexes) == 1 else Node.build(IN, index, set(indexes))
 
 
 def _group(*_args, block=False):
@@ -1112,6 +1140,15 @@ def satisfy(*args, no_comment_tags_extraction=False):
                         arg[j] = _reorder(l)
         arg = _01_to_node(arg)
         arg = auxiliary().handle_guards(arg)  # the elements whose index can be outside the list (#282)
+        arg = _unary_for_elements(arg)  # the elements on integers compared with integers (#294)
+        if arg is None:
+            continue
+        if isinstance(arg, list) and any(v is None for v in arg):
+            if len(arg) == len(comments2[i]):
+                comments2[i] = [c for j, c in enumerate(comments2[i]) if arg[j] is not None]
+            if len(arg) == len(tags2[i]):
+                tags2[i] = [c for j, c in enumerate(tags2[i]) if arg[j] is not None]
+            arg = [v for v in arg if v is not None]
         assert isinstance(arg, (ECtr, EMetaCtr, ESlide, Node, bool, list)), "non authorized type " + str(arg) + " " + str(type(arg))
         comment_at_2 = any(comment != '' for comment in comments2[i])
         tag_at_2 = any(tag != '' for tag in tags2[i])
@@ -1125,7 +1162,11 @@ def satisfy(*args, no_comment_tags_extraction=False):
         elif isinstance(arg, bool):  # a Boolean representing the case of a partial constraint or a node with operator in {IN, NOT IN}
             assert queue_in, "An argument of satisfy() before position " + str(i) + " is badly formed"
             other, partial = queue_in.popleft()
-            to_post = auxiliary().handle_guards(_bool_interpretation_for_in(partial, other, arg))  # (#282)
+            to_post = _unary_for_elements(auxiliary().handle_guards(_bool_interpretation_for_in(partial, other, arg)))  # (#282, #294)
+            if isinstance(to_post, Node):
+                to_post = _Intension(to_post)
+            elif isinstance(to_post, list):
+                to_post = [v for v in to_post if v is not None]
             if isinstance(to_post, list):
                 to_post = _group(to_post)
             elif isinstance(to_post, ConstraintDummyConstant):  # a constant (as the count of no term in a set)
@@ -4375,7 +4416,7 @@ def _optimize(term, minimization):
     if isinstance(term, PartialConstraint):
         if isinstance(term.constraint, (ConstraintMaximumArg, ConstraintMinimumArg)):  # there is no type maximumArg (or minimumArg) of objectives
             error(("MaximumArg()" if isinstance(term.constraint, ConstraintMaximumArg) else "MinimumArg()") + " cannot be an objective")
-        if isinstance(term.constraint, (ConstraintElement, ConstraintCount)) \
+        if isinstance(term.constraint, (ConstraintElement, ConstraintElementMatrix, ConstraintCount)) \
                 or isinstance(term.constraint, ConstraintNValues) and term.constraint.arguments[TypeCtrArg.EXCEPT].content is not None:
             term = auxiliary().replace_partial_constraint(term)  # (an objective of type nValues has no element <except>)
         elif isinstance(term.constraint, (ConstraintSum, ConstraintMaximum, ConstraintMinimum)):

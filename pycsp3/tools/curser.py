@@ -54,9 +54,17 @@ def _is_table(t):  # True if t is a table: tuples, or values without any variabl
     return isinstance(t[0], (tuple, list, str)) or isinstance(t[0], int) and not any(isinstance(w, Variable) for w in t)
 
 
+def _replace_components_in(t):
+    # the components (as x[i] or Sum(x)) of a tuple on the left of 'in' with a table are replaced by auxiliary variables, as the expressions (#285)
+    if isinstance(t, (tuple, list)) and any(isinstance(v, PartialConstraint) for v in t):
+        return type(t)(auxiliary().replace_partial_constraint(v) if isinstance(v, PartialConstraint) else v for v in t)
+    return t
+
+
 def _set_contains(self, other):  # for being able to use 'in' when expressing intension/extension constraints
     if not OpOverrider.activated:
         return self.__contains__(other)
+    other = _replace_components_in(other)
     if isinstance(other, (int, str)) and (len(self) == 0 or not isinstance(next(iter(self)), Variable)):
         return self.__contains__(other)  # a value and a set of values (not of variables): an ordinary membership
     if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
@@ -124,6 +132,7 @@ def cursing():
         # because sometimes Python changes lists into tuples in comprehension expressions
         if not OpOverrider.activated:
             return self.__contains__(other)
+        other = _replace_components_in(other)
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
@@ -166,6 +175,7 @@ def cursing():
     def _list_contains(self, other):  # for being able to use 'in' when expressing extension constraints
         if not OpOverrider.activated:
             return self.__contains__(other)
+        other = _replace_components_in(other)
         if isinstance(other, ConstraintDummyConstant):  # a constant (as the count of no term), evaluated when the constraint is posted
             queue_in.append((self, other))
             return True
@@ -688,8 +698,7 @@ class OpOverrider:
             # TODO how to extend it (without second condition part) ? should we use an option -dont_combine_bool (pb with JapanEncoding)
             return self if other is False else True
         if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-            assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
+            other = other._boolean()
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Or(self, other, meta=True)
@@ -715,8 +724,7 @@ class OpOverrider:
         # if isinstance(other, bool):  # TODO should we keep it? or use an option -dont_combine_bool
         #     return self if other is True else False
         if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-            assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
+            other = other._boolean()
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.And(self, other, meta=True)
@@ -728,9 +736,7 @@ class OpOverrider:
 
     def __invert__(self):
         if isinstance(self, PartialConstraint):
-            x = auxiliary().replace_partial_constraint(self)
-            assert 0 <= x.dom.smallest_value() and x.dom.greatest_value() <= 1
-            self = x
+            self = self._boolean()
         if isinstance(self, ECtr):
             gi = global_indirection(self.constraint)
             if gi is None:
@@ -757,8 +763,7 @@ class OpOverrider:
             assert other.val in (0, 1)
             other = other.val
         if isinstance(other, PartialConstraint):
-            other = auxiliary().replace_partial_constraint(other)
-            assert 0 <= other.dom.smallest_value() and other.dom.greatest_value() <= 1
+            other = other._boolean()
         res = manage_global_indirection(self, other)
         if res is None:
             return functions.Xor(self, other, meta=True)
@@ -948,6 +953,14 @@ class OpOverrider:
                     #  - c[i] == v builds the node eq(v,2)
                     #  - minimize(c[i]) gives the message of #221: "The objective is the constant 2"
                     return ConstraintDummyConstant(array[0]) if isinstance(array[0], int) else array[0]
+            if len(array) == 1 and isinstance(array[0], (Variable, list)):
+                # a list of one variable (or a matrix of one row), XCSP3-core requiring at least two terms in the list of an element (and two rows in
+                # its matrix): the variable (or the row) itself, the index being 0 (#298)
+                guards = auxiliary().identical_index_guards(1, indexes)  # the index must still be an index of the list (#282)
+                if isinstance(array[0], Variable):
+                    return auxiliary().with_guards(array[0], guards)
+                row = ListVar(array[0]) if any(isinstance(v, Variable) for v in flatten(array[0])) else ListInt(array[0])
+                return row if len(guards) == 0 else (_GuardedRowVar(row, guards) if isinstance(row, ListVar) else _GuardedRow(row, guards))
             return PartialConstraint(ConstraintElement(array, index=indexes))
         if isinstance(indexes, tuple):
             assert len(indexes) > 1
@@ -962,11 +975,16 @@ class OpOverrider:
                         if all(array[0] == t for t in array):  # because all rows are identical, we keep only one dimension
                             guards = auxiliary().identical_index_guards(n, index0)  # the index of rows must still be an index of the matrix (#282)
                             return array[0][index1] if len(guards) == 0 else _GuardedRow(array[0], guards)[index1]
+                    if n == 1 or m == 1:  # a matrix of one row or one column, XCSP3-core requiring at least two of them: an element on it (#298)
+                        line = array[0] if n == 1 else array[:, 0]
+                        line = ListVar(line) if any(isinstance(v, Variable) for v in line) else ListInt(line)
+                        index, other = (index1, index0) if n == 1 else (index0, index1)
+                        return auxiliary().with_guards(line[index], auxiliary().identical_index_guards(1, other))  # the other index must be 0
                     return PartialConstraint(ConstraintElementMatrix(array, index0, index1))
                 if isinstance(index0, Variable) and isinstance(index1, int):
-                    return PartialConstraint(ConstraintElement(array[:, index1], index=index0))
+                    return array[:, index1][index0]  # (a list of one term is handled there, #298)
                 if isinstance(index0, int) and isinstance(index1, Variable):
-                    return PartialConstraint(ConstraintElement(array[index0], index=index1))
+                    return array[index0][index1]
                 assert False
             # indexes = auxiliary().replace_nodes_and_partial_constraints(list(indexes), nodes_too=True)
             result = OpOverrider.project_recursive(array, indexes, 0)
@@ -975,6 +993,8 @@ class OpOverrider:
                 return ListInt(result) if is_1d_list(result, int) else ListVar(result)
             except TypeError:
                 return result
+        if isinstance(indexes, float):  # (#292)
+            error("The index of a list must be an integer, a variable or an expression, which is not the case of " + str(indexes))
         result = list.__getitem__(array, indexes)
         try:
             return ListVar(result) if lv else ListInt(result)
@@ -1046,6 +1066,7 @@ class ListInt(list):
         if isinstance(other, (PartialConstraint, ConstraintDummyConstant)):  # a constant is evaluated when the constraint is posted
             queue_in.append((list(self), other))
             return True
+        other = _replace_components_in(other)
         if len(self) == 0 and isinstance(other, Variable):
             queue_in.append((list(self), other))
             return False
@@ -1242,6 +1263,17 @@ class ListVar(list):
 
     def __str__(self):
         return structured_list(self)
+
+
+class _GuardedRowVar(ListVar):
+    # the row of a matrix of one row of variables, whose index can be outside the matrix: what is taken from it depends on the guards (ids) of
+    # this index (#298)
+    def __init__(self, row, guards):
+        super().__init__(row)
+        self.guards = frozenset(guards)
+
+    def __getitem__(self, indexes):
+        return auxiliary().with_guards(ListVar(self)[indexes], self.guards)
 
 
 class ListMultipleVar(list):

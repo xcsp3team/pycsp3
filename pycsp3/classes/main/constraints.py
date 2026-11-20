@@ -878,6 +878,7 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         super().__init__(TypeCtr.ELEMENT)
         if len(lst) == 0:
             error("A constraint Element on an empty list of variables is encountered. Did you write something like x[:j] instead of x[:,j]?")
+        error_if(index is not None and index.dom.type != TypeVar.INTEGER, "The index of a list must be an integer variable, which is not the case of " + str(index))
         if index is not None and any(v is None for v in lst):  # the index of a variable in the list would not be its index in the array (#283)
             error("The list " + str(lst) + " has holes (None), and so, cannot be indexed by a variable (constraint Element)")
         smallest = [] if index is None else index.dom.smallest_value()  # if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
@@ -911,10 +912,28 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
             return max(v for v in self.arguments[TypeCtrArg.LIST].content)
         return max(x.dom.greatest_value() for x in self.arguments[TypeCtrArg.LIST].content)
 
+    def satisfying_indexes(self):
+        # for a list of integers and a condition whose operand is not a variable (which XCSP3-core does not allow, #294), the indexes (in the domain
+        # of the index) of the integers satisfying the condition, and None otherwise
+        if TypeCtrArg.INDEX not in self.arguments or TypeCtrArg.CONDITION not in self.arguments:  # as for an element reified (#305)
+            return None
+        lst = self.arguments[TypeCtrArg.LIST].content
+        condition = self.arguments[TypeCtrArg.CONDITION].content
+        if not isinstance(lst[0], int) or not isinstance(condition, (ConditionValue, ConditionInterval, ConditionSet)):
+            return None
+        values = set(condition.filtering(set(lst)))
+        return [k for k in self.arguments[TypeCtrArg.INDEX].content.dom.all_values() if lst[k] in values]
+
+    def on_01_terms(self):
+        # True iff the list contains only 0/1 variables and integers 0 and 1, so that the element is a Boolean (#291)
+        return all(t in (0, 1) if isinstance(t, int) else isinstance(t, Variable) and t.dom.is_binary() for t in flatten(self.arguments[TypeCtrArg.LIST].content))
+
 
 class ConstraintElementMatrix(ConstraintWithCondition):
     def __init__(self, lst, index1, index2, value=None, start_row_index=0, start_col_index=0):
         super().__init__(TypeCtr.ELEMENT)
+        for index in (index1, index2):
+            error_if(index.dom.type != TypeVar.INTEGER, "The index of a matrix must be an integer variable, which is not the case of " + str(index))
         if any(v is None for row in lst for v in row):  # the indexes of a variable in the matrix would not be its indexes in the array (#283)
             error("The matrix " + str(lst) + " has holes (None), and so, cannot be indexed by variables (constraint Element)")
         self.matrix = lst
@@ -1347,8 +1366,12 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         if isinstance(self.constraint, ConstraintElement):
             tab = self.constraint.arguments[TypeCtrArg.LIST].content
             idx = self.constraint.arguments[TypeCtrArg.INDEX].content
+            if isinstance(other, tuple) and len(other) > 0:  # a tuple is compared as a list (#293)
+                other = list(other)
             if is_1d_list(other, (int, Variable)):
-                assert isinstance(tab, list) and all(isinstance(row, (tuple, list)) and len(row) == len(other) for row in tab)
+                if not isinstance(tab, list) or any(not isinstance(row, (tuple, list)) or len(row) != len(other) for row in tab):  # #292
+                    error("The element " + str(self) + " cannot be compared with the list " + str(other) + ": only an element on a list of rows (of "
+                          + str(len(other)) + " integers) can be compared with a list")
                 if isinstance(tab[0], tuple):
                     tab = curser.cp_array([curser.cp_array(row) for row in tab])
                 return [tab[:, i][idx] == other[i] for i in range(len(other))]
@@ -1452,6 +1475,35 @@ class PartialConstraint:  # constraint whose condition has not been given such a
     def __rmod__(self, other):  # other // self
         return Node.build(TypeNode.MOD, other, auxiliary().replace_partial_constraint(self))  # auxiliary() solicited  for possibly removing 0 of the domain
 
+    def _boolean(self):
+        # a component used as a Boolean in a logical operation (as the element of a list of 0/1 terms) is replaced by an auxiliary variable,
+        # which must be 0/1 (#291)
+        x = auxiliary().replace_partial_constraint(self)
+        if not (0 <= x.dom.smallest_value() and x.dom.greatest_value() <= 1):
+            error("The component " + str(self) + " is not a constraint: it must be subject to a condition, as in Sum(x) > 10")
+        return x
+
+    def __and__(self, other):
+        return self._boolean() & other
+
+    def __rand__(self, other):
+        return other & self._boolean()
+
+    def __or__(self, other):
+        return self._boolean() | other
+
+    def __ror__(self, other):
+        return other | self._boolean()
+
+    def __xor__(self, other):
+        return self._boolean() ^ other
+
+    def __rxor__(self, other):
+        return other ^ self._boolean()
+
+    def __invert__(self):
+        return ~self._boolean()
+
     def __getitem__(self, i):
         assert isinstance(self.constraint, ConstraintElement), (
                 "\nBad form. Did you forget to use parentheses? " + "For example, you must write (x[0] == x[1])  | (x[0] == x[2]) " +
@@ -1461,13 +1513,15 @@ class PartialConstraint:  # constraint whose condition has not been given such a
         index = self.constraint.arguments[TypeCtrArg.INDEX].content
         if isinstance(i, ConstraintDummyConstant):
             i = i.val
+        if isinstance(i, Node):
+            i = auxiliary().replace_element_index(max(len(row) for row in lst), i)
         if isinstance(i, Variable):
-            assert is_matrix(lst), "Variables in element constraint must be in the form of matrix"
+            if all(len(row) == 1 for row in lst):  # a matrix of one column, XCSP3-core requiring at least two columns: an element on it (#298)
+                pc = PartialConstraint(ConstraintElement([row[0] for row in lst], index=index))
+                return auxiliary().with_guards(pc, auxiliary().identical_index_guards(1, i))  # the column index must be 0
             return PartialConstraint(ConstraintElementMatrix(lst, index, i))
         if isinstance(i, int):
             return PartialConstraint(ConstraintElement(lst[:, i], index=index))
-        if isinstance(i, Node):
-            return PartialConstraint(ConstraintElementMatrix(lst, index, auxiliary().replace_element_index(max(len(row) for row in lst), i)))
         return self
 
     def __contains__(self, item):
@@ -1675,6 +1729,7 @@ class _Auxiliary:
         self.guarded = dict()  # the id of each variable depending on guards (the guards, the values of their elements, ...) -> the ids of the guards
         self.guard_cache = dict()  # (id of the index, length of the list) -> guard
         self.guards_posted = set()  # the ids of the guards for which index == aux has been posted (the index being restricted to the list)
+        self.guarded_auxiliaries = set()  # the ids of the auxiliary variables of guarded constants and guarded terms (#298)
         self.guard_tables = dict()  # the id of each guard -> the variable equal to its index, aux being functionally defined by a table
         self.covered = set()  # the ids of the nodes already in the scope of the conditions of their guards (below a negation)
 
@@ -1855,16 +1910,31 @@ class _Auxiliary:
 
     def guarded_constant(self, value, guards):
         # a constant (an integer of a list of identical integers) that is only defined when the guards (ids) hold
-        return self.inherit_guards(self.new_var(value), _Guarded(guards))
+        aux = self.inherit_guards(self.new_var(value), _Guarded(guards))
+        self.guarded_auxiliaries.add(aux.id)
+        return aux
+
+    def guarded_term(self, term, guards):
+        # a variable that is only defined when the guards (ids) hold, as the term of a list of one term whose index can be outside the list (#298):
+        # an auxiliary variable aux, term == aux being posted with the auxiliary constraints
+        aux = self.inherit_guards(self.new_var(term.dom.all_values()), _Guarded(frozenset(guards) | self.guards_of(term)))
+        self._collected_constraints.append((term, aux))
+        self.guarded_auxiliaries.add(aux.id)
+        return aux
 
     def with_guards(self, res, guards):
-        # what is taken from a row of a matrix of identical rows whose index can be outside the matrix depends on the guards (ids) of this index
+        # what is taken from a row of a matrix of identical rows (or of a list or a matrix of one term, row or column, #298) whose index can be outside
+        # the matrix depends on the guards (ids) of this index
+        if len(guards) == 0:
+            return res
         if isinstance(res, (int, ConstraintDummyConstant)):
             return self.guarded_constant(res if isinstance(res, int) else res.val, guards)
         if isinstance(res, PartialConstraint):
             res.constraint.extra_guards = getattr(res.constraint, "extra_guards", frozenset()) | guards
-        elif isinstance(res, Variable) and res.id in self.guarded:  # a guarded constant
-            self.guarded[res.id] |= guards
+        elif isinstance(res, Variable):
+            if res.id not in self.guarded_auxiliaries:  # a variable of the model (from a row of variables, #298)
+                return self.guarded_term(res, guards)
+            self.guarded[res.id] |= guards  # a guarded constant (or term), just introduced
         return res
 
     def post_guard(self, g):
