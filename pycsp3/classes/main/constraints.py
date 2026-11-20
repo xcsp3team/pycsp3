@@ -2140,7 +2140,7 @@ def global_indirection(c):
             lst = c.arguments[TypeCtrArg.LIST].content
             excepting = c.arguments[TypeCtrArg.EXCEPT].content
             pc = PartialConstraint(ConstraintNValues(lst, None, None))  # the number of distinct values, without excepting
-            condition = Condition.build_condition((TypeConditionOperator.EQ, len(lst)))
+            condition = Condition.build_condition((TypeConditionOperator.GE, len(lst)))  # (equivalent to eq, as NValues(X) <= |X|)
             if excepting is not None:
                 # the terms are all different, except those taking a value v of excepting, which can be repeated: as the number n of distinct values
                 # counts v once, n + sum of max(count(v) - 1, 0) over the values v of excepting must be the number of terms; this sum being never greater

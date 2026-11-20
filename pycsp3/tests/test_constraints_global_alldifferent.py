@@ -216,9 +216,12 @@ def test_alldifferent_in_logical_expressions(run, solver, constraint, predicate)
     ("AllDifferent(x, excepting=0) | (z == 0)", 1, "or(ge(add(aux_gb[0],max(sub(aux_gb[1],1),0)),3),eq(z,0))"),
     ("~AllDifferent(x, excepting=[0, 1])", 2, "lt(add(aux_gb[0],max(sub(aux_gb[1],1),0),max(sub(aux_gb[2],1),0)),3)"),
     ("AllDifferent(x, excepting=5) | (z == 0)", 0, "or(ge(aux_gb[0],3),eq(z,0))"),  # no term can take 5 (no count)
+    ("AllDifferent(x) | (z == 0)", 0, "or(ge(aux_gb[0],3),eq(z,0))"),  # without excepting: ge too (#224)
+    ("~AllDifferent(x)", 0, "lt(aux_gb[0],3)"),
 ])
 def test_xcsp3_alldifferent_excepting_in_logical_expressions(run, constraint, counts, root):
-    # a constraint nValues without except, a constraint count for each value of excepting (that a term can take), and an intension (#223)
+    # a constraint nValues without except, a constraint count for each value of excepting (that a term can take), and an intension (#223); the
+    # number of distinct values being never greater than the number of terms, it is compared with ge, with or without excepting (#224)
     r = run(X3 + "z = Var(range(2))\n" + f"satisfy({constraint})")
     assert r.ok, r.report()
     nvalues = list(r.xml.iter("nValues"))
