@@ -16,23 +16,23 @@ import pytest
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
 # Known bugs (each bug is reported in the issue given at the start of its reason)
-START_INDEX = ("(to be reported) start_index1 and start_index2 are discarded: the XCSP3 has no attribute startIndex, and so the constraint "
+START_INDEX = ("#313: start_index1 and start_index2 are discarded: the XCSP3 has no attribute startIndex, and so the constraint "
                "is posted with indexes starting at 0")
-HOLES = "(to be reported) the holes (None) of a list are silently removed, which shifts the indexes of the next variables"
-DEGENERATED = ("(to be reported) with less than two variables in a list: an assert without message, or an invalid XCSP3 (channel requires "
+HOLES = "#314: the holes (None) of a list are silently removed, which shifts the indexes of the next variables"
+DEGENERATED = ("#315: with less than two variables in a list: an assert without message, or an invalid XCSP3 (channel requires "
                "two variables at least)")
-ASSERTS = "(to be reported) invalid arguments: AssertionError without message, or an empty constraint channel"
-MINI = ("(to be reported) with -mini: start indexes discarded, constraint channel kept (not accepted in the mini-tracks) for one list, and "
+ASSERTS = "#316: invalid arguments: AssertionError without message, or an empty constraint channel"
+MINI = ("#317: with -mini: start indexes discarded, constraint channel kept (not accepted in the mini-tracks) for one list, and "
         "AssertionError without message for two lists of different sizes and for a list with a value")
-ACE_RANGE = ("(to be reported) ACE: wrong solutions (the ith value of a domain is taken as the index i), or ERROR without message (control "
+ACE_RANGE = ("#318: ACE: wrong solutions (the ith value of a domain is taken as the index i), or ERROR without message (control "
              "list.length == idom.initSize() in ElementList), when the values of a variable of a list are not exactly the indexes of the channeled list")
-ACE_REPEATED = "(to be reported) ACE: ERROR without message (control areAllDistinct in ElementList) when a variable is repeated in a list"
-ACE_VALUE = ("(to be reported) ACE: ERROR without message (control in Problem.channel) when the domain of the value is not exactly the "
+ACE_REPEATED = "#319: ACE: ERROR without message (control areAllDistinct in ElementList) when a variable is repeated in a list"
+ACE_VALUE = ("#320: ACE: ERROR without message (control in Problem.channel) when the domain of the value is not exactly the "
              "range of the indexes of the list")
-COSOCO_RANGE = "(to be reported) COSOCO: segmentation fault when the values of a variable of a list are not indexes of the channeled list"
-COSOCO_REPEATED_WRONG = ("(to be reported) COSOCO: wrong solutions when a variable is repeated in the second list, longer than the first "
+COSOCO_RANGE = "#321: COSOCO: segmentation fault when the values of a variable of a list are not indexes of the channeled list"
+COSOCO_REPEATED_WRONG = ("#325: COSOCO: wrong solutions when a variable is repeated in the second list, longer than the first "
                          "one (element constraints posted on a list with a repeated variable)")
-COSOCO_VALUE = ("(to be reported) COSOCO: wrong solutions with a value outside the indexes of the list (no variable of the list "
+COSOCO_VALUE = ("#322: COSOCO: wrong solutions with a value outside the indexes of the list (no variable of the list "
                 "is required to be 1)")
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
@@ -288,7 +288,7 @@ def test_channel_with_a_repeated_variable(run, solver, request, code, domains, p
     # a repeated variable has the same value at two indexes (with lists, there is then no solution)
     if "y[0], y[0]" in code or "x[0], x[0], x[2], x[3]" in code:  # repeated in the list given to element by ACE
         bug_for(request, "ACE", ACE_REPEATED)
-    if "Channel(x, [y[0], y[0], y[2]])" in code:
+    if "x = VarArray(size=2" in code:  # the second list is longer: no allDifferent posted by COSOCO
         bug_for(request, "COSOCO", COSOCO_REPEATED_WRONG)
     elif solver == "COSOCO" and "z = Var" not in code:  # allDifferent posted by COSOCO (lists of the same size)
         pytest.skip(COSOCO_REPEATED)
