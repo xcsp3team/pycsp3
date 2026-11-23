@@ -15,28 +15,26 @@ import pytest
 
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
-# Known bugs (each bug is reported in the issue given at the start of its reason, or described in the section of the PR given there)
-START_INDEX = ("#313: start_index1 and start_index2 are discarded: the XCSP3 has no attribute startIndex, and so the constraint "
-               "is posted with indexes starting at 0")
-HOLES = "#314: the holes (None) of a list are silently removed, which shifts the indexes of the next variables"
-DEGENERATED = ("#315: with less than two variables in a list: an assert without message, or an invalid XCSP3 (channel requires "
-               "two variables at least)")
-ASSERTS = "#316: invalid arguments: AssertionError without message, or an empty constraint channel"
-MINI = ("#317: with -mini: start indexes discarded, constraint channel kept (not accepted in the mini-tracks) for one list, and "
-        "AssertionError without message for two lists of different sizes and for a list with a value")
-ACE_RANGE = ("PR #312, ACE1: ACE: wrong solutions (the ith value of a domain is taken as the index i), or ERROR without message (control "
+# Known bugs of the solvers (each bug is reported in the issue given at the start of its reason)
+ACE_RANGE = ("xcsp3team/ACE#37: ACE: wrong solutions (the ith value of a domain is taken as the index i), or ERROR without message (control "
              "list.length == idom.initSize() in ElementList), when the values of a variable of a list are not exactly the indexes of the channeled list")
-ACE_REPEATED = "PR #312, ACE2: ACE: ERROR without message (control areAllDistinct in ElementList) when a variable is repeated in a list"
-ACE_VALUE = ("PR #312, ACE3: ACE: ERROR without message (control in Problem.channel) when the domain of the value is not exactly the "
+ACE_REPEATED = "xcsp3team/ACE#38: ACE: ERROR without message (control areAllDistinct in ElementList) when a variable is repeated in a list"
+ACE_VALUE = ("xcsp3team/ACE#39: ACE: ERROR without message (control in Problem.channel) when the domain of the value is not exactly the "
              "range of the indexes of the list")
-COSOCO_RANGE = "PR #312, cosoco1: COSOCO: segmentation fault when the values of a variable of a list are not indexes of the channeled list"
-COSOCO_REPEATED_WRONG = ("PR #312, cosoco4: COSOCO: wrong solutions when a variable is repeated in the second list, longer than the first "
+COSOCO_RANGE = "xcsp3team/cosoco#115: COSOCO: segmentation fault when the values of a variable of a list are not indexes of the channeled list"
+COSOCO_REPEATED_WRONG = ("xcsp3team/cosoco#118: COSOCO: wrong solutions when a variable is repeated in the second list, longer than the first "
                          "one (element constraints posted on a list with a repeated variable)")
-COSOCO_VALUE = ("PR #312, cosoco2: COSOCO: wrong solutions with a value outside the indexes of the list (no variable of the list "
+ACE_VALUE_DOMAIN_0 = ("xcsp3team/ACE#39: ACE: ERROR without message (control areAllInitiallyBoolean in Problem.channel) when a variable "
+                      "of the list has the domain {0}")
+COSOCO_START_INDEX = ("xcsp3team/cosoco#117: COSOCO: startIndex ignored (two lists, list with a value): wrong solutions, or no solution found (status UNKNOWN)")
+CHOCO_START_INDEXES = "chocoteam/choco-solver#1270: CHOCO: two lists of the same size with start indexes: the two start indexes are swapped"
+COSOCO_VALUE = ("xcsp3team/cosoco#116: COSOCO: wrong solutions with a value outside the indexes of the list (no variable of the list "
                 "is required to be 1)")
 
 # The cases that a solver says it does not handle, and the symbolic variables (not reported)
 COSOCO_REPEATED = "COSOCO: a variable repeated in a list is not handled (allDifferent: scope contains variable many times)"
+ACE_START_INDEX = "ACE: explicit refusal of startIndex with lists (unimplemented case for channel)"
+COSOCO_START_INDEX_ONE_LIST = "COSOCO: explicit refusal of startIndex with one list (Channel is not implemented with index != 0)"
 SYMBOLIC = "channel on symbolic variables is not part of XCSP3-core"
 
 
@@ -222,8 +220,9 @@ def test_channel_two_lists_of_different_sizes_with_values_out_of_the_indexes(run
 # --------------------------------------------------------------------------------------------------- start indexes
 
 @pytest.mark.parametrize("s", [1, 2, -1])
-def test_channel_one_list_with_a_start_index(run, solver, request, s):
-    request.applymarker(bug(START_INDEX))
+def test_channel_one_list_with_a_start_index(run, solver, s):
+    if solver in ("ACE", "COSOCO"):
+        pytest.skip(ACE_START_INDEX if solver == "ACE" else COSOCO_START_INDEX_ONE_LIST)
     code = arrays(("x", 3, f"range({s}, {s + 3})")) + f"satisfy(Channel(x, start_index1={s}))"
     check(run, solver, code, [range(s, s + 3)] * 3, lambda *t: channel1(t, s))
 
@@ -231,14 +230,20 @@ def test_channel_one_list_with_a_start_index(run, solver, request, s):
 @pytest.mark.parametrize("s1, s2", [(1, 0), (0, 1), (1, 2), (2, 1), (1, 1)])
 def test_channel_two_lists_with_start_indexes(run, solver, request, s1, s2):
     # the values of x are indexes of y (starting at s2), and the values of y are indexes of x (starting at s1)
-    request.applymarker(bug(START_INDEX))
+    if solver == "ACE":
+        pytest.skip(ACE_START_INDEX)
+    bug_for(request, "COSOCO", COSOCO_START_INDEX)
+    if s1 != s2:
+        bug_for(request, "CHOCO", CHOCO_START_INDEXES)
     code = arrays(("x", 3, "range(5)"), ("y", 3, "range(5)"))
     check(run, solver, code + f"satisfy(Channel(x, y, start_index1={s1}, start_index2={s2}))", [range(5)] * 6,
           lambda *t: channel2(t[:3], t[3:], s1, s2))
 
 
 def test_channel_two_lists_of_different_sizes_with_start_indexes(run, solver, request):
-    request.applymarker(bug(START_INDEX))
+    if solver == "ACE":
+        pytest.skip(ACE_START_INDEX)
+    bug_for(request, "COSOCO", COSOCO_START_INDEX)
     code = arrays(("x", 2, "range(1, 4)"), ("y", 3, "range(2, 4)"))
     check(run, solver, code + "satisfy(Channel(x, y, start_index1=2, start_index2=1))", [range(1, 4)] * 2 + [range(2, 4)] * 3,
           lambda *t: channel2(t[:2], t[2:], 2, 1))
@@ -246,7 +251,8 @@ def test_channel_two_lists_of_different_sizes_with_start_indexes(run, solver, re
 
 @pytest.mark.parametrize("s", [1, -1])
 def test_channel_with_a_value_and_a_start_index(run, solver, request, s):
-    request.applymarker(bug(START_INDEX))
+    bug_for(request, "ACE", ACE_VALUE)
+    bug_for(request, "COSOCO", COSOCO_START_INDEX)
     code = arrays(("b", 4, "{0, 1}")) + f"z = Var(dom=range({s}, {s + 4}))\nsatisfy(Channel(b, z, start_index1={s}))"
     check(run, solver, code, [range(2)] * 4 + [range(s, s + 4)], lambda *t: channel3(t[:4], t[4], s))
 
@@ -257,18 +263,20 @@ def test_channel_with_start_indexes_being_0(run, solver):
 
 # ----------------------------------------------------------------------------------------------- arrays with holes
 
-@bug(HOLES)
 def test_channel_one_list_with_holes(run):
     # the index of a variable in the list would not be its index in the array: an explicit error is expected (as for Element, #283)
-    assert_fails(run("x = VarArray(size=4, dom=lambda i: None if i == 1 else range(4))\nsatisfy(Channel(x))"))
+    r = run("x = VarArray(size=4, dom=lambda i: None if i == 1 else range(4))\nsatisfy(Channel(x))")
+    assert_fails(r)
+    assert "has holes (None)" in r.stdout + r.stderr, r.report()
 
 
 @pytest.mark.parametrize("constraint", ["Channel(x, h)", "Channel(h, y)", "Channel(c, z)"])
-@bug(HOLES)
 def test_channel_lists_with_holes(run, constraint):
     code = arrays(("x", 3, "range(5)"), ("y", 5, "range(4)"), ("h", 5, "lambda i: None if i == 1 else range(5)"),
                   ("c", 4, "lambda i: None if i == 1 else {0, 1}")) + "z = Var(dom=range(4))\n"
-    assert_fails(run(code + f"satisfy({constraint})"))
+    r = run(code + f"satisfy({constraint})")
+    assert_fails(r)
+    assert "has holes (None)" in r.stdout + r.stderr, r.report()
 
 
 # ---------------------------------------------------------------------------------------------- repeated variables
@@ -298,17 +306,30 @@ def test_channel_with_a_repeated_variable(run, solver, request, code, domains, p
 # ----------------------------------------------------------------------------------------------- degenerated cases
 
 @pytest.mark.parametrize("code, domains, predicate", [
-    (X4 + "satisfy(Channel([x[0]]), x[3] != 1)", [range(4)] * 2, lambda a, d: a == 0 and d != 1),  # x[0] = j implies x[j] = 0, with j = 0
-    (X4 + "satisfy(Channel(x[0]), x[3] != 1)", [range(4)] * 2, lambda a, d: a == 0 and d != 1),
-    (XY4 + "satisfy(Channel([x[0]], [y[0]]), x[3] != 1)", [range(4)] * 3, lambda a, d, e: a == 0 and e == 0 and d != 1),
-    (XY4 + "satisfy(Channel([x[0]], y[:3]), x[3] != 1)", [range(4)] * 5, lambda a, d, e, f, g: 0 <= a < 3 and (e, f, g)[a] == 0 and d != 1),
-    (BZ + "satisfy(Channel([b[0]], z), b[3] != 1)", [range(2)] * 2 + [range(4)], lambda a, d, z: a == 1 and z == 0 and d != 1),
-    (X4 + "satisfy(Channel([]), x[3] != 1)", [range(4)], lambda d: d != 1),  # no constraint
-], ids=["one variable", "one variable (not in a list)", "two lists of one variable", "first list of one variable", "a list of one variable and a value",
-        "no variable"])
-def test_channel_degenerated(run, solver, request, code, domains, predicate):
-    request.applymarker(bug(DEGENERATED))
-    check(run, solver, code, domains, predicate)
+    (X4 + "satisfy(Channel([x[0]]), x[3] != 1)", D4, lambda *t: t[0] == 0 and t[3] != 1),  # x[0] = j implies x[j] = 0, with j = 0
+    (X4 + "satisfy(Channel(x[0]), x[3] != 1)", D4, lambda *t: t[0] == 0 and t[3] != 1),
+    (X4 + "satisfy(Channel([x[0]], start_index1=2), x[3] != 1)", D4, lambda *t: t[0] == 2 and t[3] != 1),
+    (XY4 + "satisfy(Channel([x[0]], [y[0]]), x[3] != 1)", [range(4)] * 8, lambda *t: t[0] == 0 and t[4] == 0 and t[3] != 1),
+    (XY4 + "satisfy(Channel([x[0]], [y[0]], start_index1=1, start_index2=2))", [range(4)] * 8, lambda *t: t[0] == 2 and t[4] == 1),
+    (XY4 + "satisfy(Channel([x[0]], y[:3]), x[3] != 1)", [range(4)] * 8, lambda *t: 0 <= t[0] < 3 and t[4 + t[0]] == 0 and t[3] != 1),
+    (XY4 + "satisfy(Channel([x[0]], y[:3], start_index1=1, start_index2=1))", [range(4)] * 8, lambda *t: 1 <= t[0] <= 3 and t[3 + t[0]] == 1),
+    (BZ + "satisfy(Channel([b[0]], z), b[3] != 1)", DBZ, lambda *t: t[0] == 1 and t[4] == 0 and t[3] != 1),
+    (BZ + "satisfy(Channel([b[0]], z, start_index1=3))", DBZ, lambda *t: t[0] == 1 and t[4] == 3),
+    (X4 + "satisfy(Channel([]), x[3] != 1)", D4, lambda *t: t[3] != 1),  # no constraint
+    (X4 + "satisfy(Channel([], x), x[3] != 1)", D4, lambda *t: t[3] != 1),  # no constraint (nothing imposed on the second list)
+], ids=["one variable", "one variable (not in a list)", "one variable and a start index", "two lists of one variable",
+        "two lists of one variable and start indexes", "first list of one variable", "first list of one variable and start indexes",
+        "a list of one variable and a value", "a list of one variable, a value and a start index", "no variable", "first list empty"])
+def test_channel_degenerated(run, solver, code, domains, predicate):
+    r = check(run, solver, code, domains, predicate)
+    assert r.xml is None or r.xml.find("constraints//channel") is None, r.report()
+
+
+@pytest.mark.parametrize("constraint", ["Channel([])", "Channel([], x)"])
+def test_channel_discarded_with_a_warning(run, constraint):
+    r = run(X4 + f"satisfy({constraint}, x[0] == 1)")
+    assert r.ok, r.report()
+    assert "A constraint Channel discarded because defined with 0 variables" in r.stdout + r.stderr, r.report()
 
 
 # ------------------------------------------------------------------------------------------------ examples of the doc
@@ -362,17 +383,23 @@ def test_channel_two_lists_mini(run, solver):
     assert r.xml.find("constraints//channel") is None, r.report()
 
 
-@pytest.mark.parametrize("code, domains, predicate", [
-    (X4 + "satisfy(Channel(x))", D4, lambda *t: channel1(t)),
-    (arrays(("x", 2, "range(3)"), ("y", 3, "range(2)")) + "satisfy(Channel(x, y))", [range(3)] * 2 + [range(2)] * 3, lambda *t: channel2(t[:2], t[2:])),
-    (BZ + "satisfy(Channel(b, z))", DBZ, lambda *t: channel3(t[:4], t[4])),
-    (arrays(("x", 3, "range(1, 4)"), ("y", 3, "range(3)")) + "satisfy(Channel(x, y, start_index2=1))", [range(1, 4)] * 3 + [range(3)] * 3,
-     lambda *t: channel2(t[:3], t[3:], 0, 1)),
-], ids=["one list", "lists of different sizes", "a list and a value", "start index"])
-def test_channel_mini(run, solver, request, code, domains, predicate):
-    request.applymarker(bug(MINI))
-    r = check(run, solver, code, domains, predicate, args=["-mini"])
-    assert r.xml.find("constraints//channel") is None, r.report()
+def test_channel_one_list_mini(run, solver):
+    # with -mini, the constraint channel on one list is kept (decision taken for #317)
+    r = check(run, solver, X4 + "satisfy(Channel(x))", D4, lambda *t: channel1(t), args=["-mini"])
+    assert r.xml.find("constraints/channel") is not None, r.report()
+
+
+@pytest.mark.parametrize("code, message", [
+    (arrays(("x", 2, "range(3)"), ("y", 3, "range(2)")) + "satisfy(Channel(x, y))", "two lists of different sizes"),
+    (BZ + "satisfy(Channel(b, z))", "a list of 0/1 variables and a variable (value)"),
+    (arrays(("x", 3, "range(1, 4)"), ("y", 3, "range(3)")) + "satisfy(Channel(x, y, start_index2=1))", "start indexes"),
+    (X4 + "satisfy(Channel(x, start_index1=1))", "start indexes"),
+], ids=["lists of different sizes", "a list and a value", "start index", "one list and a start index"])
+def test_channel_mini_refused(run, code, message):
+    # with -mini, the forms that cannot be posted with the constraints of the mini-tracks are refused explicitly (#317)
+    r = run(code, args=["-mini"])
+    assert_fails(r)
+    assert message + " is not accepted with the option -mini" in r.stdout + r.stderr, r.report()
 
 
 # ----------------------------------------------------------------------------------------------------- XCSP3 files
@@ -400,6 +427,55 @@ def test_xcsp3_channel(run, constraint, expected):
     assert _children(c) == expected, r.report()
 
 
+@pytest.mark.parametrize("constraint, expected", [
+    ("Channel(x, start_index1=1)", [("list", "x[]", {"startIndex": "1"})]),
+    ("Channel(x, y, start_index1=1, start_index2=2)", [("list", "x[]", {"startIndex": "1"}), ("list", "y[]", {"startIndex": "2"})]),
+    ("Channel(x, y, start_index2=-1)", [("list", "x[]", {}), ("list", "y[]", {"startIndex": "-1"})]),
+    ("Channel(x[:2], y, start_index1=3)", [("list", "x[0] x[1]", {"startIndex": "3"}), ("list", "y[]", {})]),
+    ("Channel(b, z, start_index1=1)", [("list", "b[]", {"startIndex": "1"}), ("value", "z", {})]),
+    ("Channel(x, y, start_index1=0, start_index2=0)", [("list", "x[]", {}), ("list", "y[]", {})]),
+])
+def test_xcsp3_channel_with_start_indexes(run, constraint, expected):
+    # the start indexes are written in the XCSP3 file (attribute startIndex of the lists): the solvers handle them, or say that they cannot (#313)
+    r = run(XY4 + arrays(("b", 4, "{0, 1}")) + f"z = Var(dom=range(4))\nsatisfy({constraint})")
+    assert r.ok, r.report()
+    c = r.xml.find("constraints/channel")
+    assert c is not None and len(c) > 0, r.report()
+    assert [(e.tag, " ".join(e.text.split()), dict(e.attrib)) for e in c] == expected, r.report()
+
+
+def test_xcsp3_channel_with_start_indexes_in_a_group(run):
+    r = run("m = VarArray(size=[2, 3], dom=range(1, 4))\nsatisfy(Channel(m[i], start_index1=1) for i in range(2))")
+    assert r.ok, r.report()
+    lists = r.xml.findall("constraints//channel/list")
+    assert [(" ".join(e.text.split()), dict(e.attrib)) for e in lists] == [("m[0][]", {"startIndex": "1"}), ("m[1][]", {"startIndex": "1"})], r.report()
+
+
+# ------------------------------------------------------------------------------- 0/1 variables of fixed value (#316)
+
+def test_channel_with_a_value_and_a_variable_of_domain_0(run, solver, request):
+    # a variable of domain {0} is accepted in the list of 0/1 variables
+    bug_for(request, "ACE", ACE_VALUE_DOMAIN_0)
+    code = "b = VarArray(size=4, dom=lambda i: {0} if i == 1 else {0, 1})\nz = Var(dom=range(4))\nsatisfy(Channel(b, z))"
+    check(run, solver, code, [range(2), range(1), range(2), range(2), range(4)], lambda *t: channel3(t[:4], t[4]))
+
+
+@pytest.mark.parametrize("s", [0, 1])
+def test_channel_with_a_value_and_a_variable_of_domain_1(run, solver, s):
+    # a variable of domain {1} gives the index of the unique 1: the constraint is simplified, with a warning
+    code = (f"b = VarArray(size=4, dom=lambda i: {{1}} if i == 2 else {{0}} if i == 0 else {{0, 1}})\nz = Var(dom=range({s}, {s + 4}))\n"
+            f"satisfy(Channel(b, z, start_index1={s}))")
+    r = check(run, solver, code, [range(1), range(2), range(1, 2), range(2), range(s, s + 4)], lambda *t: channel3(t[:4], t[4], s))
+    assert r.xml.find("constraints//channel") is None, r.report()
+    assert "A constraint Channel simplified because b[2] has the domain {1}" in r.stdout + r.stderr, r.report()
+
+
+def test_channel_with_a_value_and_two_variables_of_domain_1(run):
+    r = run("b = VarArray(size=4, dom=lambda i: {1} if i < 2 else {0, 1})\nz = Var(dom=range(4))\nsatisfy(Channel(b, z))")
+    assert_fails(r)
+    assert "several variables of the list have the domain {1}, which is the case of b[0] and b[1]" in r.stdout + r.stderr, r.report()
+
+
 # --------------------------------------------------------------------------------------------------- invalid cases
 
 @pytest.mark.parametrize("arguments", [
@@ -413,16 +489,36 @@ def test_xcsp3_channel(run, constraint, expected):
     "[x[0], 1, x[2], x[3]]",
     "x, [y[0] + 1, y[1], y[2], y[3]]",
     "b, z + 1",
-    pytest.param("None", marks=bug(ASSERTS)),
-    pytest.param("x, []", marks=bug(ASSERTS)),
-    pytest.param("w, x", marks=bug(ASSERTS)),  # the first list is longer than the second one
-    pytest.param("x, z", marks=bug(ASSERTS)),  # a list and a value, the list not being of 0/1 variables
-    pytest.param("x, [y[0]]", marks=bug(ASSERTS)),
-    pytest.param("b, z, start_index2=1", marks=bug(ASSERTS)),  # start_index2 without a second list (silently discarded)
+    "None",
+    "x, []",
+    "w, x",  # the first list is longer than the second one
+    "x, z",  # a list and a value, the list not being of 0/1 variables
+    "x, [y[0]]",
+    "b, z, start_index2=1",  # start_index2 without a second list (silently discarded)
 ])
 def test_invalid_channel(run, arguments):
     code = XY4 + arrays(("w", 6, "range(6)"), ("b", 4, "{0, 1}")) + "z = Var(dom=range(4))\n"
     assert_fails(run(code + f"satisfy(Channel({arguments}))"))
+
+
+@pytest.mark.parametrize("arguments, message", [
+    ("None", "requires a list of variables as first argument"),
+    ("x, []", "must not be longer than the second one"),
+    ("w, x", "must not be longer than the second one"),
+    ("x, z", "requires a list of 0/1 variables, which is not the case of x[0]"),
+    ("x, [y[0]]", "requires a list of 0/1 variables, which is not the case of x[0]"),
+    ("b, z, start_index2=1", "start_index2 is defined while the second argument of Channel() is a variable (value)"),
+    ("[], z", "requires a non-empty list of 0/1 variables"),
+    ("[x[0] + 1, x[1], x[2], x[3]]", "(expressions are not accepted)"),
+    ("x, [y[0] + 1, y[1], y[2], y[3]]", "(expressions are not accepted)"),
+    ("b, z + 1", "(expressions are not accepted)"),
+])
+def test_invalid_channel_message(run, arguments, message):
+    code = XY4 + arrays(("w", 6, "range(6)"), ("b", 4, "{0, 1}")) + "z = Var(dom=range(4))\n"
+    r = run(code + f"satisfy(Channel({arguments}))")
+    assert_fails(r)
+    assert message in r.stdout + r.stderr, r.report()
+    assert "A node is evaluated as a Boolean" not in r.stdout + r.stderr, r.report()
 
 
 def test_channel_on_symbolic_variables(run, solver):

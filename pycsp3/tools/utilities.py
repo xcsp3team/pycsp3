@@ -543,7 +543,7 @@ _warning_already_printed = {"array_indexing_warning": False, "simplifying_disjun
                             "precedence_0_value": False, "precedence_1_value": False, "hybrid_table_cycle": False,
                             "alldifferentlist_1_list": False, "allequallist_1_list": False, "allequal_1_term": False,
                             "empty_supports": False, "element_index_outside": False,
-                            "element_index_never": False}
+                            "element_index_never": False, "channel_0_variable": False, "channel_fixed_one": False}
 
 
 def warning(message, type_message=None):

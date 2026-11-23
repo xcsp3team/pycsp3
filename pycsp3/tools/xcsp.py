@@ -140,7 +140,7 @@ def _constraint(entity, *, possible_simplified_form=False):
         return _element(TypeCtr.INTENSION, entity, text=c.arguments[TypeCtrArg.FUNCTION].content)
     elt = _element(c.name, entity, attributes=c.attributes)
     arguments = [arg for arg in c.arguments.values() if arg.content is not None]  # we keep only valid (non null) arguments
-    if len(arguments) == 1 and not arguments[0].lifted and (
+    if len(arguments) == 1 and not arguments[0].lifted and len(arguments[0].attributes) == 0 and (
             possible_simplified_form or isinstance(entity, EAnnotation) or arguments[0].name == TypeCtrArg.LIST):
         _text(elt, arguments[0].content)
     else:
@@ -157,7 +157,7 @@ def _constraint_template(group):
         first = group.entities[0]
         arguments = [(k, v) for k, v in group.abstraction.items() if v is not None]  # we keep only valid (non null) arguments
         elt = _element(first.constraint.name, first, attributes=first.constraint.attributes)
-        if len(arguments) == 1 and TypeCtrArg.LIST in group.abstraction:
+        if len(arguments) == 1 and TypeCtrArg.LIST in group.abstraction and len(first.constraint.arguments[TypeCtrArg.LIST].attributes) == 0:
             _text(elt, group.abstraction[TypeCtrArg.LIST])
         else:
             b = str(first.constraint.name) == "element"
