@@ -3819,17 +3819,65 @@ def Channel(list1, list2=None, *, start_index1=0, start_index2=0):
 
         # a solution: [0, 0, 0, 0, 0, 0, 0, 1] 7
     """
-    list1 = flatten(list1)
-    checkType(list1, [Variable])
-    if list2:
-        list2 = flatten(list2)
-        checkType(list2, [Variable])
-        if options.mini:
-            assert len(list1) == len(list2)
-            return [list1[list2[i]] == i for i in range(len(list1))]
+
+    def _variables_of(arg, name):
+        if any(v is None for v in flatten(arg, keep_none=True)):  # the index of a variable in the list would not be its index in the array (#314)
+            error("The " + name + " " + str(arg) + " has holes (None), and so, its variables cannot be channeled by their indexes (constraint Channel)")
+        t = flatten(arg)
+        if any(isinstance(v, Node) for v in t):
+            error("Channel() only accepts variables, which is not the case of the " + name + " " + str(arg) + " (expressions are not accepted)")
+        checkType(t, [Variable])
+        return t
+
+    if list1 is None:
+        error("Channel() requires a list of variables as first argument, which is not the case of None")
     checkType(start_index1, int)
     checkType(start_index2, int)
-    assert start_index2 == 0 or list2 is not None, "start_index2 is defined while list2 is not specified"
+    error_if(options.mini and (start_index1 != 0 or start_index2 != 0), "Channel() with start indexes is not accepted with the option -mini")
+    error_if(start_index2 != 0 and list2 is None, "start_index2 is defined while list2 is not specified")
+    list1 = _variables_of(list1, "first list")
+    if list2 is None:  # first form: a single list
+        if len(list1) == 0:
+            warning("A constraint Channel discarded because defined with 0 variables", "channel_0_variable")
+            return None
+        if len(list1) == 1:  # x[0] = j implies x[j] = 0, so j = 0 (with indexes starting at start_index1)
+            return list1[0] == start_index1
+        return ECtr(ConstraintChannel(list1, start_index1, None, 0))  # with -mini, the constraint is kept (#317)
+    with_value = isinstance(list2, Variable)
+    list2 = _variables_of(list2, "second argument")
+    if with_value or (len(list2) == 1 and len(list1) > 1):  # third form: a list of 0/1 variables and a variable z (the index of the unique 1)
+        error_if(start_index2 != 0, "start_index2 is defined while the second argument of Channel() is a variable (value), and not a list")
+        z = list2[0]
+        if len(list1) == 0:
+            error("Channel() with a variable (value) as second argument requires a non-empty list of 0/1 variables")
+        for v in list1:
+            if not set(v.dom.all_values()) <= {0, 1}:
+                error("Channel() with a variable (value) as second argument requires a list of 0/1 variables, which is not the case of " + str(v))
+        ones = [i for i, v in enumerate(list1) if list(v.dom.all_values()) == [1]]
+        if len(ones) > 1:
+            error("Channel() with a variable (value) cannot be satisfied when several variables of the list have the domain {1}, which is the case of "
+                  + " and ".join(str(list1[i]) for i in ones))
+        if len(ones) == 1 or len(list1) == 1:  # the index of the unique 1 is known: z = k (+ start_index1) and the other variables are 0
+            k = ones[0] if len(ones) == 1 else 0
+            if len(ones) == 1:
+                warning("A constraint Channel simplified because " + str(list1[k]) + " has the domain {1}: " + str(z) + " = " + str(k + start_index1)
+                        + " and the other variables of the list are 0", "channel_fixed_one")
+            return [z == k + start_index1] + [v == (1 if i == k else 0) for i, v in enumerate(list1) if list(v.dom.all_values()) != [1 if i == k else 0]]
+        error_if(options.mini, "Channel() with a list of 0/1 variables and a variable (value) is not accepted with the option -mini")
+        return ECtr(ConstraintChannel(list1, start_index1, [z], 0))
+    # second form: two lists
+    if len(list1) > len(list2):
+        error("The first list given to Channel() must not be longer than the second one, which is not the case of " + str(list1) + " and " + str(list2))
+    if len(list1) == 0:  # nothing is imposed on the second list
+        warning("A constraint Channel discarded because defined with 0 variables", "channel_0_variable")
+        return None
+    if len(list1) == 1:  # x[0] = j (an index of the second list) implies y[j] = 0 (with indexes starting at start_index2 and start_index1)
+        if len(list2) == 1:
+            return [list1[0] == start_index2, list2[0] == start_index1]
+        return list2[list1[0] if start_index2 == 0 else list1[0] - start_index2] == start_index1
+    if options.mini:
+        error_if(len(list1) != len(list2), "Channel() with two lists of different sizes is not accepted with the option -mini")
+        return [list1[list2[i]] == i for i in range(len(list1))]
     return ECtr(ConstraintChannel(list1, start_index1, list2, start_index2))
 
 

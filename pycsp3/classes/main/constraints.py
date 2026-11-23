@@ -801,10 +801,6 @@ class ConstraintCardinality(Constraint):
 ''' Connection Constraints '''
 
 
-def _index_att(v):
-    return []  # [(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
-
-
 class ConstraintMaximum(ConstraintWithCondition):
     def __init__(self, lst, condition=None):
         super().__init__(TypeCtr.MAXIMUM)
@@ -881,8 +877,7 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         error_if(index is not None and index.dom.type != TypeVar.INTEGER, "The index of a list must be an integer variable, which is not the case of " + str(index))
         if index is not None and any(v is None for v in lst):  # the index of a variable in the list would not be its index in the array (#283)
             error("The list " + str(lst) + " has holes (None), and so, cannot be indexed by a variable (constraint Element)")
-        smallest = [] if index is None else index.dom.smallest_value()  # if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
-        self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None)
         if index is not None:
             lst_flatten = flatten(lst)
             # if index.dom.smallest_value() < 0 or index.dom.greatest_value() >= len(lst_flatten):  # if value outside possible indexes
@@ -965,16 +960,23 @@ class ConstraintElementMatrix(ConstraintWithCondition):
 class ConstraintChannel(ConstraintUnmergeable):
     def __init__(self, list1, start_index1, list2, start_index2):
         super().__init__(TypeCtr.CHANNEL)
-        assert list1 is not None
+        assert list1 is not None and len(list1) > 1  # the degenerated cases are handled in Channel() (#315)
+
+        def att(v):  # the start index is written in the XCSP3 file: the solvers have to handle it, or to say that it is not implemented (#313)
+            assert isinstance(v, int), "the start index " + str(v) + " must be an integer (checked in Channel())"
+            return [(TypeCtrArg.START_INDEX, v)] if v != 0 else []
+
         if list2 is None:  # first variant of channel
             assert start_index2 == 0
-            self.arg(TypeCtrArg.LIST, list1, content_ordered=True, attributes=_index_att(start_index1))
+            self.arg(TypeCtrArg.LIST, list1, content_ordered=True, attributes=att(start_index1))
         elif len(list2) > 1:  # second variant of channel
-            assert 1 < len(list1) <= len(list2)
-            self.arg(TypeCtrArg.LIST, [list1, list2], content_ordered=True, lifted=True, attributes=_index_att(start_index1) + _index_att(start_index2))
+            assert len(list1) <= len(list2)
+            # lifted: one list of attributes per list (not concatenated: with a single start index, it would not say which list it belongs to)
+            self.arg(TypeCtrArg.LIST, [list1, list2], content_ordered=True, lifted=True,
+                     attributes=None if start_index1 == start_index2 == 0 else [att(start_index1), att(start_index2)])
         else:  # third variant of channel
-            assert all(var.dom.is_binary() for var in list1) and len(list2) == 1
-            self.arg(TypeCtrArg.LIST, list1, content_ordered=True, attributes=_index_att(start_index1))
+            assert all(set(var.dom.all_values()) <= {0, 1} for var in list1) and start_index2 == 0
+            self.arg(TypeCtrArg.LIST, list1, content_ordered=True, attributes=att(start_index1))
             self.arg(TypeCtrArg.VALUE, list2)
 
 
