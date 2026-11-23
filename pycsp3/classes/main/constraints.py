@@ -801,10 +801,6 @@ class ConstraintCardinality(Constraint):
 ''' Connection Constraints '''
 
 
-def _index_att(v):
-    return []  # [(TypeCtrArg.START_INDEX, v)] if v is not None and v != 0 else []
-
-
 class ConstraintMaximum(ConstraintWithCondition):
     def __init__(self, lst, condition=None):
         super().__init__(TypeCtr.MAXIMUM)
@@ -881,8 +877,7 @@ class ConstraintElement(ConstraintWithCondition):  # currently, not exactly with
         error_if(index is not None and index.dom.type != TypeVar.INTEGER, "The index of a list must be an integer variable, which is not the case of " + str(index))
         if index is not None and any(v is None for v in lst):  # the index of a variable in the list would not be its index in the array (#283)
             error("The list " + str(lst) + " has holes (None), and so, cannot be indexed by a variable (constraint Element)")
-        smallest = [] if index is None else index.dom.smallest_value()  # if isinstance(index.dom[0], IntegerEntity) else index.dom[0]
-        self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None, attributes=_index_att(smallest))
+        self.arg(TypeCtrArg.LIST, lst, content_ordered=index is not None)
         if index is not None:
             lst_flatten = flatten(lst)
             # if index.dom.smallest_value() < 0 or index.dom.greatest_value() >= len(lst_flatten):  # if value outside possible indexes
