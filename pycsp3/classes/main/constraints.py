@@ -963,6 +963,7 @@ class ConstraintChannel(ConstraintUnmergeable):
         assert list1 is not None and len(list1) > 1  # the degenerated cases are handled in Channel() (#315)
 
         def att(v):  # the start index is written in the XCSP3 file: the solvers have to handle it, or to say that it is not implemented (#313)
+            assert isinstance(v, int), "the start index " + str(v) + " must be an integer (checked in Channel())"
             return [(TypeCtrArg.START_INDEX, v)] if v != 0 else []
 
         if list2 is None:  # first variant of channel
@@ -970,6 +971,7 @@ class ConstraintChannel(ConstraintUnmergeable):
             self.arg(TypeCtrArg.LIST, list1, content_ordered=True, attributes=att(start_index1))
         elif len(list2) > 1:  # second variant of channel
             assert len(list1) <= len(list2)
+            # lifted: one list of attributes per list (not concatenated: with a single start index, it would not say which list it belongs to)
             self.arg(TypeCtrArg.LIST, [list1, list2], content_ordered=True, lifted=True,
                      attributes=None if start_index1 == start_index2 == 0 else [att(start_index1), att(start_index2)])
         else:  # third variant of channel
