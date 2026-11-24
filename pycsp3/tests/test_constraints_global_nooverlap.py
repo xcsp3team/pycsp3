@@ -15,38 +15,38 @@ import pytest
 
 from harness import assert_fails, assert_solutions, brute_force, bug, bug_for
 
-# Bugs of PyCSP3 (P<k> to be replaced by the numbers of their issues)
-SIZES = "P1: the sizes of origins and lengths are not checked (a file that is not valid is generated)"
-DIMENSIONS = "P2: the dimensions of the boxes (origins and lengths) are not checked (a file that is not valid is generated)"
-TRANSPOSED = ("P3: origins and lengths given by dimension ([x, y], [w, h]) are taken as boxes when there are two boxes, and two boxes of "
+# Bugs of PyCSP3 (each bug is reported in the issue given at the start of its reason)
+SIZES = "#327: the sizes of origins and lengths are not checked (a file that is not valid is generated)"
+DIMENSIONS = "#328: the dimensions of the boxes (origins and lengths) are not checked (a file that is not valid is generated)"
+TRANSPOSED = ("#329: origins and lengths given by dimension ([x, y], [w, h]) are taken as boxes when there are two boxes, and two boxes of "
               "three dimensions are taken as three boxes of two dimensions")
-INTEGER_ORIGINS_3D = "P4: an integer origin of a box of three dimensions is written as such (XCSP3 requires variables)"
-BOOLEAN = "P5: a Boolean length is written True/False in the XCSP3 file"
-ZERO_IGNORED = "P6: the value of zero_ignored is not checked (written as zeroIgnored=\"none\", or discarded)"
-INVALID = "P7: invalid arguments stop with an assert without message or a Python error raised inside PyCSP3"
-LESS_THAN_TWO = "P8: a constraint NoOverlap with less than two tasks given by origins and lengths, or a single box, is not discarded consistently"
-MINI_2D = "P9: with -mini, NoOverlap in two dimensions fails (TypeError: dom.smallest_value without parentheses)"
-MINI_VARIABLE_LENGTHS = "P10: with -mini, a NoOverlap with variable lengths is discarded silently (warning: a node is evaluated as a Boolean)"
-MINI_ZERO = "P11: with -mini, the tasks of length 0 are not discarded (the tables encode zeroIgnored=false)"
-MINI_ZERO_IGNORED = "P12: with -mini, zero_ignored=False stops with an assert without message"
-META_NEGATION = "P13: ~NoOverlap(...) with the option -use_meta raises a TypeError inside PyCSP3"
-NEGATIVE = "P14 (question): negative lengths are accepted silently"
-TASKS_ZIP = "P15: tasks given by a zip stop with a TypeError (object of type 'zip' has no len()), whereas origins and lengths can be zips"
+INTEGER_ORIGINS_3D = "#330: an integer origin of a box of three dimensions is written as such (XCSP3 requires variables)"
+BOOLEAN = "#331: a Boolean length is written True/False in the XCSP3 file"
+ZERO_IGNORED = "#332: the value of zero_ignored is not checked (written as zeroIgnored=\"none\", or discarded)"
+INVALID = "#333: invalid arguments stop with an assert without message or a Python error raised inside PyCSP3"
+LESS_THAN_TWO = "#334: a constraint NoOverlap with less than two tasks given by origins and lengths, or a single box, is not discarded consistently"
+MINI_2D = "#335: with -mini, NoOverlap in two dimensions fails (TypeError: dom.smallest_value without parentheses)"
+MINI_VARIABLE_LENGTHS = "#336: with -mini, a NoOverlap with variable lengths is discarded silently (warning: a node is evaluated as a Boolean)"
+MINI_ZERO = "#337: with -mini, the tasks of length 0 are not discarded (the tables encode zeroIgnored=false)"
+MINI_ZERO_IGNORED = "#338: with -mini, zero_ignored=False stops with an assert without message"
+META_NEGATION = "#339: ~NoOverlap(...) with the option -use_meta raises a TypeError inside PyCSP3"
+NEGATIVE = "#340 (question): negative lengths are accepted silently"
+TASKS_ZIP = "#341: tasks given by a zip stop with a TypeError (object of type 'zip' has no len()), whereas origins and lengths can be zips"
 
 # Bugs of the solvers (sections of the description of the PR of these tests, to be reported after review)
-ACE_DUPLICATES = ("PR #N, ACE1: ACE gives solutions several times (the auxiliary 0/1 variable posted for each pair of tasks, option noOverlapAux, "
+ACE_DUPLICATES = ("PR #326, ACE1: ACE gives solutions several times (the auxiliary 0/1 variable posted for each pair of tasks, option noOverlapAux, "
                   "is not determined by the origins)")
-ACE_ZERO = "PR #N, ACE2: ACE does not discard the tasks whose length is the integer 0 (zeroIgnored is true by default)"
-ACE_REPEATED = "PR #N, ACE3: ACE: ERROR without message (control in Disjonctive) when a variable is shared by two tasks or boxes"
-CHOCO_ZERO_IGNORED_FALSE = "PR #N, CHOCO1: CHOCO ignores zeroIgnored=false in one dimension (the tasks of length 0 are discarded)"
-COSOCO_DUPLICATES = "PR #N, cosoco1: cosoco gives solutions several times (auxiliary variables __av; the fix of cosoco#73 is not complete)"
-COSOCO_ZERO = "PR #N, cosoco2: cosoco does not discard the tasks whose length is the integer 0 (zeroIgnored is true by default)"
-COSOCO_SHARED = "PR #N, cosoco3: cosoco: wrong solutions (Solution Error) when a variable is shared by two boxes"
-COSOCO_3D = "PR #N, cosoco4: cosoco: missing solutions, or solutions several times, in three dimensions"
-COSOCO_MIXED = "PR #N, cosoco5: cosoco: wrong solutions or segmentation fault when the lengths mix integers and variables (two or three dimensions)"
-PARSER_MIXED = ("PR #N, XCSP3-Java-Tools1: ClassCastException in CtrLoaderInteger.noOverlap (ACE and CHOCO) when the lengths mix integers and "
+ACE_ZERO = "PR #326, ACE2: ACE does not discard the tasks whose length is the integer 0 (zeroIgnored is true by default)"
+ACE_REPEATED = "PR #326, ACE3: ACE: ERROR without message (control in Disjonctive) when a variable is shared by two tasks or boxes"
+CHOCO_ZERO_IGNORED_FALSE = "PR #326, CHOCO1: CHOCO ignores zeroIgnored=false in one dimension (the tasks of length 0 are discarded)"
+COSOCO_DUPLICATES = "PR #326, cosoco1: cosoco gives solutions several times (auxiliary variables __av; the fix of cosoco#73 is not complete)"
+COSOCO_ZERO = "PR #326, cosoco2: cosoco does not discard the tasks whose length is the integer 0 (zeroIgnored is true by default)"
+COSOCO_SHARED = "PR #326, cosoco3: cosoco: wrong solutions (Solution Error) when a variable is shared by two boxes"
+COSOCO_3D = "PR #326, cosoco4: cosoco: missing solutions, or solutions several times, in three dimensions"
+COSOCO_MIXED = "PR #326, cosoco5: cosoco: wrong solutions or segmentation fault when the lengths mix integers and variables (two or three dimensions)"
+PARSER_MIXED = ("PR #326, XCSP3-Java-Tools1: ClassCastException in CtrLoaderInteger.noOverlap (ACE and CHOCO) when the lengths mix integers and "
                 "variables otherwise than variables in the first dimension and integers in the second one")
-ZERO_2D = "PR #N, question Q1: none of the three solvers discards the boxes with a length 0 (zeroIgnored is true by default) in two dimensions"
+ZERO_2D = "PR #326, question Q1: none of the three solvers discards the boxes with a length 0 (zeroIgnored is true by default) in two dimensions"
 COSOCO_OLD = ("xcsp3team/cosoco#73: cosoco 2.6.1 gives solutions several times, or misses solutions with variable lengths (fixed after 2.6.1, "
               "not released)")
 CHOCO_3D_OLD = ("CHOCO 4.10.15: wrong solutions in three dimensions with variable lengths; the develop version says that the case is not "
@@ -742,32 +742,32 @@ def test_nooverlap_with_a_single_box(run):
 # --------------------------------------------------------------------------------------------------- invalid cases
 
 INVALID_CASES = [
-    ("origins=x, lengths=[1, 2]", "P1"),  # sizes
-    ("origins=x[:2], lengths=[1, 2, 3]", "P1"),
-    ("origins=[(x[i], y[i]) for i in range(3)], lengths=[(1, 1), (1, 1)]", "P1"),
-    ("origins=[(x[i], y[i]) for i in range(3)], lengths=2", "P2"),  # dimensions
-    ("origins=[(x[i], y[i]) for i in range(3)], lengths=(1, 2)", "P2"),
-    ("origins=[(x[i], y[i]) for i in range(3)], lengths=[1, 2, 1]", "P2"),
-    ("origins=[(x[i], y[i]) for i in range(2)], lengths=[(1, 1, 1), (1, 1)]", "P2"),
-    ("origins=[(x[0], y[0]), x[1]], lengths=[(1, 1), 2]", "P2"),
-    ("origins=[(x[0],), (x[1],)], lengths=[(1,), (1,)]", "P2"),
-    ("origins=m, lengths=[1, 2, 1, 1]", "P2"),  # the rows of the matrix are boxes
-    ("origins=x, lengths=None", "P7"),  # missing or invalid arguments
-    ("origins=None, lengths=[1, 2, 3]", "P7"),
-    ("", "P7"),
-    ("tasks=[(x[0], 1), (x[1], 2)], origins=x", "P7"),
-    ("tasks=[(x[0], 1), (x[1],)]", "P7"),
-    ("tasks=[(x[0], 1), x[1]]", "P7"),
-    ("tasks=[(x[0], 1), (x[1], 2, 3)]", "P7"),
-    ("[Task(origin=x[i], length=2, height=1) for i in range(3)]", "P7"),
+    ("origins=x, lengths=[1, 2]", "#327"),  # sizes
+    ("origins=x[:2], lengths=[1, 2, 3]", "#327"),
+    ("origins=[(x[i], y[i]) for i in range(3)], lengths=[(1, 1), (1, 1)]", "#327"),
+    ("origins=[(x[i], y[i]) for i in range(3)], lengths=2", "#328"),  # dimensions
+    ("origins=[(x[i], y[i]) for i in range(3)], lengths=(1, 2)", "#328"),
+    ("origins=[(x[i], y[i]) for i in range(3)], lengths=[1, 2, 1]", "#328"),
+    ("origins=[(x[i], y[i]) for i in range(2)], lengths=[(1, 1, 1), (1, 1)]", "#328"),
+    ("origins=[(x[0], y[0]), x[1]], lengths=[(1, 1), 2]", "#328"),
+    ("origins=[(x[0],), (x[1],)], lengths=[(1,), (1,)]", "#328"),
+    ("origins=m, lengths=[1, 2, 1, 1]", "#328"),  # the rows of the matrix are boxes
+    ("origins=x, lengths=None", "#333"),  # missing or invalid arguments
+    ("origins=None, lengths=[1, 2, 3]", "#333"),
+    ("", "#333"),
+    ("tasks=[(x[0], 1), (x[1], 2)], origins=x", "#333"),
+    ("tasks=[(x[0], 1), (x[1],)]", "#333"),
+    ("tasks=[(x[0], 1), x[1]]", "#333"),
+    ("tasks=[(x[0], 1), (x[1], 2, 3)]", "#333"),
+    ("[Task(origin=x[i], length=2, height=1) for i in range(3)]", "#333"),
     ("origins=x, lengths=[1.5, 2, 1]", None),
     ("origins=x, lengths=['a', 2, 1]", None),
-    ("origins=x, lengths=[1, 2, 1], zero_ignored=None", "P6"),
-    ("origins=x, lengths=[1, 2, 1], zero_ignored='no'", "P6"),
-    ("origins=x, lengths=[1, 2, 1], zero_ignored=0", "P6"),
-    ("origins=x, lengths=[-1, 2, 1]", "P14"),
+    ("origins=x, lengths=[1, 2, 1], zero_ignored=None", "#332"),
+    ("origins=x, lengths=[1, 2, 1], zero_ignored='no'", "#332"),
+    ("origins=x, lengths=[1, 2, 1], zero_ignored=0", "#332"),
+    ("origins=x, lengths=[-1, 2, 1]", "#340"),
 ]
-MARKS = {"P1": SIZES, "P2": DIMENSIONS, "P6": ZERO_IGNORED, "P7": INVALID, "P14": NEGATIVE}
+MARKS = {"#327": SIZES, "#328": DIMENSIONS, "#332": ZERO_IGNORED, "#333": INVALID, "#340": NEGATIVE}
 
 
 @pytest.mark.parametrize("arguments", [pytest.param(a, marks=bug(MARKS[p]) if p else ()) for a, p in INVALID_CASES])
